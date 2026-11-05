@@ -26,9 +26,9 @@ spec s = Spec.describe s "Parun.Codec.PlayerStaticAbility" $ do
           PlayerStaticAbility.effect = PlayerEffect.CantCastMoreThan 1
         }
       " {\"scope\":{\"type\":\"AnyPlayer\"},\"effect\":{\"type\":\"CantCastMoreThan\",\"value\":1}} "
-  -- The CR 604.2 clause round-trips as its own key, and the case above proves the
-  -- absent key still decodes -- so a decoder that dropped the field would keep
-  -- that one green and fail here.
+  -- The "as long as" clause (CR 611.3a) round-trips as its own key, and the
+  -- case above proves the absent key still decodes -- so a decoder that dropped
+  -- the field would keep that one green and fail here.
   Spec.it s "MkPlayerStaticAbility with a condition" $
     Common.assertCodec
       s

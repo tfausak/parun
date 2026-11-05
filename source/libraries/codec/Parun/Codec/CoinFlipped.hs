@@ -12,7 +12,7 @@ import qualified Parun.Types.CoinFlipped as CoinFlipped
 -- shape. Runtime-only: GameEvent serialises transcripts, never card data.
 --
 -- "flipper" is REQUIRED and "won" is not, which is CR 705.2's own split: the
--- rule settles a win or a loss for the flips its second sentence describes, and
+-- rule settles a win or a loss for the flips its third sentence describes, and
 -- explicitly settles neither for the ones its first sentence describes. An
 -- absent key is that flip -- not a default standing in for an answer the rule
 -- gives.

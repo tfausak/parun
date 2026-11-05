@@ -40,8 +40,8 @@ data GameSettings = MkGameSettings
     -- Parun.Engine.Defender.defendingPlayers, and designateDefenders reads it
     -- again to decide whether CR 507.1 has a choice to prompt for at all.
     --
-    -- Nothing is CR 507.1's free choice among every opponent, which is what CR
-    -- 506.2's two-player game plays by and what CR 806.2b forbids at three or
+    -- Nothing is CR 507.1's free choice among every opponent, which a two-player
+    -- game has no use for (CR 506.2) and which CR 806.2b forbids at three or
     -- more seats. At two seats it and 'AttackOption.MultiplePlayers' coincide --
     -- the one opponent is the defending player either way -- so the default
     -- changes nothing there.

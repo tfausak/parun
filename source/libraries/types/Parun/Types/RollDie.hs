@@ -22,7 +22,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- Hydra's "roll X dice" is the announced X where Valiant Endeavor's "roll two
 -- d6" is a literal. One is the value the codec elides.
 --
--- `modifier` is CR 706.2's first sentence -- what the roll's OWN instruction
+-- `modifier` is CR 706.2's second sentence -- what the roll's OWN instruction
 -- adds to or subtracts from the natural result (Diviner's Portent, "roll a d20
 -- and add the number of cards in your hand"). Nothing where the instruction
 -- prints none, which is every other roll in data/cards/. Applied to EACH die of

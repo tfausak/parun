@@ -2,10 +2,10 @@ module Parun.Types.Designation where
 
 -- | A designation A PERMANENT can have and nothing else about it: CR 702.112b's
 -- renowned, CR 701.37b's monstrous, CR 701.60b's suspected, CR 719.3b's solved,
--- CR 722.3b's prepared, CR 702.171b's saddled and CR 701.64b's harnessed. Every
--- one of those rules words
--- the mark the same way -- only a permanent can have it, and it is "neither an
--- ability nor part of the permanent's copiable values" -- so they are one
+-- CR 722.3a's prepared, CR 702.171b's saddled and CR 701.64b's harnessed. Those
+-- rules word the mark alike -- only a permanent can have it, and it is "neither
+-- an ability nor part of the permanent's copiable values", where CR 722.3a
+-- leaves that half to CR 707.2's definition -- so they are one
 -- payload rather than a field, an opcode and a read atom apiece
 -- (Parun.Types.Object's `designations`, Effect.Designate,
 -- Quantity.HasDesignation, Filter.HasDesignation). CR 702.158b makes its three

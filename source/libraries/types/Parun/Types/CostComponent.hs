@@ -108,7 +108,7 @@ data CostComponent keyword
     Blight CostAmount.CostAmount
   | -- | CR 701.61a as a cost / Thornvault Forager, Camellia, the Seedmiser: the
     -- paying player forages, and can't pay at all where neither half of rule
-    -- 701.61a can be carried out (CR 608.2d, Parun.Engine.Forage.canForage).
+    -- 701.61a can be carried out (CR 118.3, Parun.Engine.Forage.canForage).
     --
     -- Nullary, rule 701.61a fixing everything but the forager's own two choices --
     -- Parun.Types.Effect's Forage arm is the same instruction from the other

@@ -333,8 +333,8 @@ clause context c
 -- (CR 702.33d, Jilt), "this spell's prowl cost was paid" (CR 702.76a, Morsel
 -- Theft), "it was a token" (Sunpearl Kirin), or any condition an intervening
 -- "if" clause reads ('Trigger.condition'). A condition on a spell is about
--- the spell only in a spell's instructions, the ones a paragraph may break
--- (CR 113.3a).
+-- the spell only in a spell's instructions, the ones this tool lets a paragraph
+-- break ('Target.breaks').
 condition :: Target.Context -> Condition.Condition -> [(Text.Text, Bool)]
 condition context c = case c of
   Condition.Compares (Compares.MkCompares measured Comparison.AtLeast (Quantity.Literal 1)) -> case measured of
@@ -953,7 +953,8 @@ counterWord named kind = case kind of
 
 -- | "Support N" (CR 701.41a), the rules' name for putting a +1/+1 counter on
 -- each of up to N other target creatures, or on a spell up to N target
--- creatures; a paragraph may break only a spell's instructions (CR 113.3a).
+-- creatures; this tool lets a paragraph break only a spell's instructions
+-- ('Target.breaks').
 -- Free: the instruction (Travel Preparations) or its name (Lead by Example).
 supported :: Target.Context -> PutCounters.PutCounters -> [Predicate]
 supported context p = case PutCounters.ref p of

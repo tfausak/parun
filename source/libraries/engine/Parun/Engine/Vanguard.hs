@@ -64,7 +64,7 @@ import qualified Parun.Types.Zone as Zone
 isVanguardFace :: Face.Face Card.Card -> Bool
 isVanguardFace face = Set.member CardType.Vanguard (TypeLine.types (Face.typeLine face))
 
--- | CR 902.6: is this object a vanguard card? Read off the PRINTED face rather
+-- | CR 313.1: is this object a vanguard card? Read off the PRINTED face rather
 -- than through the projection, for Parun.Types.Face.vanguard's reason: rule 313.2
 -- keeps the card in the command zone, where nothing in the pool can copy it or
 -- change its type.

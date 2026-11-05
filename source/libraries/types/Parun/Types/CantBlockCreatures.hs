@@ -7,7 +7,7 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
 
 -- | CR 509.1b's pairwise restriction written from the BLOCKER's side: which
--- blockers are restricted, which attackers they may not block, and CR 508.1c's
+-- blockers are restricted, which attackers they may not block, and that rule's
 -- "unless" gate. Parun.Types.CantBeBlockedBy's mirror.
 data CantBlockCreatures = MkCantBlockCreatures
   { affected :: Affected.Affected,

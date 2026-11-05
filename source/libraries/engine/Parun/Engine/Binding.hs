@@ -263,8 +263,8 @@ facingPlayers :: SlotName
 facingPlayers = SlotName.MkSlotName (Text.pack "thoseFacing")
 
 -- CR 400.7e / CR 603.6c: the reserved slot under which a zone-change trigger's
--- ARRIVING incarnation is bound -- and, since CR 708.7's readers took it, the
--- slot for the object an event trigger's event NAMES more generally.
+-- ARRIVING incarnation is bound -- and, since turned-face-up triggers (CR 603.2)
+-- took it, the slot for the object an event trigger's event NAMES more generally.
 --
 -- ONE slot for both directions of a zone change, because CR 400.7e is one rule
 -- about whatever moved, not a rule about the ability's bearer:
@@ -285,7 +285,7 @@ facingPlayers = SlotName.MkSlotName (Text.pack "thoseFacing")
 --   * this slot is the CARD, wherever the move put it. Everything the ability
 --     DOES to itself, because the other no longer exists to be moved.
 --
--- A THIRD reader, and not a zone change at all: CR 708.7's "whenever a permanent
+-- A THIRD reader, and not a zone change at all: a CR 603.2 "whenever a permanent
 -- is turned face up", whose subject Pine Walker untaps. CR 708.8 leaves one
 -- permanent with one id there, so this slot and `triggerSource` name two
 -- unrelated OBJECTS rather than two incarnations of one card -- the Aether Flash
@@ -718,7 +718,7 @@ tapStatePermanent status = case status of
 -- CR 707.9g: the object a CR 707.5 entry copied, bound for the triggered ability
 -- linked to that replacement -- Wall of Stolen Identity's "the copied
 -- creature". Stamped by Parun.Engine.Event.becomeCopyAs as it arms the ability,
--- and framed there for a clause's CR 707.9f condition too (Undercover
+-- and framed there for a clause's CR 707.9 condition too (Undercover
 -- Operative's "that creature"). Not a target, so the same "no card's
 -- targetSlots may name it" sweep as tappedPermanent above.
 copiedObject :: SlotName
@@ -750,7 +750,7 @@ copiedObject = SlotName.MkSlotName (Text.pack "thatCopiedObject")
 tappedForTotalPower :: SlotName
 tappedForTotalPower = SlotName.MkSlotName (Text.pack "thatTappedForTotalPower")
 
--- CR 601.2f once more, for the component that CHOOSES a card and moves nothing:
+-- CR 601.2h, for the component that CHOOSES a card and moves nothing:
 -- the card a CostComponent.RevealCardFromHand payment revealed -- "the revealed
 -- card" in Living Destiny's "you gain life equal to the revealed card's mana
 -- value". Stamped by Parun.Engine.Cast off the payment CR 601.2h makes, which is
@@ -1103,10 +1103,11 @@ withAnnouncedTargets aiming =
 -- entirely -- one an opponent controls under the relation both readers' printings
 -- narrow to.
 --
--- ONE object, never a group: rule 601.2c makes each chosen target its own
--- becoming, so a spell naming the bearer twice is two events and two abilities,
--- each holding one id -- which is also what keeps two ward triggers from
--- countering one spell twice (CR 701.6a's funnel no-ops on the second).
+-- ONE object, never a group: each chosen object becomes a target once (CR
+-- 601.2c; Unsettled Mariner's ruling), so a spell naming the bearer twice is
+-- one event and one ability (Event.becameTarget), holding one id. Two ward
+-- instances are two abilities, and CR 701.6a's funnel no-ops on the second
+-- counter.
 --
 -- Not a target (nothing was chosen), so the same CR 608.2b posture and the same
 -- "no card's targetSlots may name it" sweep as `castSpell`. A dead id is possible
@@ -1252,7 +1253,7 @@ damagersController = SlotName.MkSlotName (Text.pack "thatDamagersController")
 -- read rather than a "the creature that hit them" opcode.
 --
 -- The name is combat's but the slot is not: IsDealtDamage's per-source reading
--- stamps it for CR 120.3's noncombat damage too, which is Belltower Sphinx's
+-- stamps it for CR 120.2b's noncombat damage too, which is Belltower Sphinx's
 -- "that source's controller". The wire spelling is `thatDamager` and cards
 -- already write it, so the name stays.
 --

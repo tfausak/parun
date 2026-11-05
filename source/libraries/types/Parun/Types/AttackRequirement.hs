@@ -38,7 +38,7 @@ data AttackRequirement = MkAttackRequirement
     -- type says why neither PlayerRef nor PlayerScope reaches the phrase.
     object :: Maybe RequiredDefender.RequiredDefender,
     -- | CR 508.1d's second shape -- "or that it attacks if some condition is
-    -- met" -- read as CR 604.2's "as long as" clause. Otarian Juggernaut's
+    -- met" -- read as an "as long as" clause (CR 611.3a). Otarian Juggernaut's
     -- threshold: "as long as there are seven or more cards in your graveyard,
     -- this creature ... attacks each combat if able". Nothing is the ungated
     -- requirement (Curse of the Nightly Hunt, Berserkers of Blood Ridge).

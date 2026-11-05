@@ -204,9 +204,9 @@ namedUncut given gs ref =
         PlayerRef.EachOpponentExcept name -> do
           excluded <- excluding name
           fmap (filter (`notElem` excluded)) (related' PlayerRelation.Opponent)
-        -- ONE player or none: declining a slot that names several is CR
-        -- 601.2c's own answer, the one Binding.onlyOne gives every other such
-        -- reader. A slot's target is in range already (CR 801.4).
+        -- ONE player or none: declining a slot that names several (CR 601.2c
+        -- lets one hold them) is the answer Binding.onlyOne gives every other
+        -- such reader. A slot's target is in range already (CR 801.4).
         PlayerRef.InSlot name -> case slotPlayers given name of
           Just [pid] -> Just [pid]
           _ -> Nothing

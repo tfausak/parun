@@ -13,7 +13,7 @@ import qualified Parun.Types.SlotName as SlotName
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.Destroy" $ do
-  -- CR 701.19c's count is bound into a slot only when a later effect of the
+  -- CR 701.8's count is bound into a slot only when a later effect of the
   -- same resolution reads it, so the key is absent here and present below.
   Spec.it s "MkDestroy, no bound slot: the key is omitted" $
     Common.assertCodec

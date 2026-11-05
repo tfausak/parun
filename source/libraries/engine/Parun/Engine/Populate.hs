@@ -36,8 +36,8 @@ import qualified Parun.Types.TapState as TapState
 --
 -- The creature half is read off the PROJECTION (CR 613), so a token animated by
 -- a continuous effect is a candidate and a creature token that has stopped being
--- a creature is not. The token half is Game.isToken, CR 111.6's fixed answer,
--- which no effect can change.
+-- a creature is not. The token half is Game.isToken (CR 111.6), which no
+-- continuous effect can change.
 --
 -- ASCENDING, so the single-candidate shortcut below and a transcript are
 -- deterministic -- Parun.Engine.Forage.foodCandidates' posture.

@@ -15,7 +15,7 @@ import qualified Parun.Types.RequirementArity as RequirementArity
 -- axis" -- so Lure's `attacker` alone and Razorgrass Screen's `subject` alone are
 -- each a whole requirement, and neither card writes the other key. "while" is a
 -- third optional field, spelled exactly as Parun.Codec.AttackRequirement and
--- Parun.Codec.BlockPermission spell the same CR 604.2 clause and as
+-- Parun.Codec.BlockPermission spell the same clause (CR 611.3a) and as
 -- Parun.Codec.CombatRestriction spells its opposite, "unless". "arity" is a
 -- fourth, defaulting to CR 509.1c's own counting -- one requirement per creature
 -- -- so only a card meaning the group reading writes it.

@@ -35,8 +35,8 @@ import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 --
 -- UntapR carries NO subject, and DestructionR's is optional: absent, each
 -- rewrite names its subject in its own rule's words, which
--- Parun.Engine.Replacement.scopes reads off the board. CR 201.5 makes a card's
--- reference to itself by name mean just that object, so "regenerate this
+-- Parun.Engine.Replacement.scopes reads off the board. CR 700.7 makes a card's
+-- "this [something]" mean just that object, so "regenerate this
 -- creature" (CR 701.19a) names no other; CR 122.1c's replacement is minted onto
 -- the permanent whose counters create it, so "this permanent" is the object it
 -- was minted for; and CR 702.89a's "enchanted permanent" is an attachment away

@@ -18,7 +18,7 @@ import qualified Parun.Types.Together as Together
 -- creature"). This retires the whole hand-carved family of colour- and
 -- type-restricted target constructors (#40): each is now one data value.
 --
--- CR 601.2c's "another" is not a third field: it is a Filter.Not inside the
+-- The printed "another" is not a third field: it is a Filter.Not inside the
 -- Filter, which is what makes the exclusion agree with the Pool's own recipient
 -- tagging. A separate field was applied by deleting a Recipient.ToObject, which
 -- never matched the ToCreature tags a Creatures pool produces, so "another

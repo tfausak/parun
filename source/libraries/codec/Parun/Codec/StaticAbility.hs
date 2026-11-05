@@ -19,11 +19,11 @@ import qualified Parun.Types.StaticAbility as StaticAbility
 -- format is one affected set and an ARRAY of modifications -- never one entry
 -- per layer.
 --
--- The CR 604.2 "as long as" gate is OPTIONAL, and absent means unconditional:
--- every card written before it existed encodes byte-for-byte as it did. The CR
--- 604.2 override beside it -- "if this leaves the battlefield, this effect
--- continues until end of turn" -- is optional for the same reason, and absent
--- means the effect ends with its permanent.
+-- The "as long as" gate (CR 611.3a) is OPTIONAL, and absent means
+-- unconditional: every card written before it existed encodes byte-for-byte as
+-- it did. The CR 604.2 override beside it -- "if this leaves the battlefield,
+-- this effect continues until end of turn" -- is optional for the same reason,
+-- and absent means the effect ends with its permanent.
 --
 -- CR 113.6b's zone clause is optional and defaults to EMPTY, which is the
 -- ability stating no zone at all: every card written before the field existed

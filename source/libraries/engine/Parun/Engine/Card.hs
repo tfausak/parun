@@ -65,10 +65,11 @@ import qualified Parun.Types.TypeLine as TypeLine
 -- no name, no subtypes, and no mana cost". CR 702.37a words the morph cast's
 -- version identically, so FaceDownCharacteristics.defaultValue serves both.
 --
--- A SUBSTITUTION and not a layer, which is CR 708.2's own reading: "Any listed
+-- A SUBSTITUTION and not a continuous effect, which is CR 708.2's own reading: "Any listed
 -- characteristics are the COPIABLE VALUES of that object's characteristics."
--- Copiable values are where the CR 613 fold starts, so this replaces the printed
--- face at Parun.Engine.Game.faceOf and every layer then runs on top of it. CR
+-- Copiable values are what layer 1 leaves (CR 613.2c) and this is layer 1b (CR
+-- 613.2b), so this replaces the printed face at Parun.Engine.Game.faceOf and
+-- layers 2-7 then run on top of it. CR
 -- 708.10 says as much from the other side -- a face-down permanent that becomes
 -- a copy of another permanent still has these characteristics.
 --
@@ -397,10 +398,9 @@ flippedFace card =
 -- docs/design.md section 2.11's rule against baking arity in is what makes this a
 -- `tail` rather than a pair.
 --
--- A read of the CARD and not of an object, which is CR 722.2b: "the existence and
--- values of these alternative characteristics are part of the object's copiable
--- values". Parun.Engine.Prepare is the one caller, and it asks at the moment CR
--- 722.3c mints.
+-- A read of the CARD and not of an object: the printed half of
+-- Game.prepareSpellOf, its one engine caller, which answers for the object as CR
+-- 722.2b asks.
 prepareFace :: Card.Card -> Maybe (Face.Face Card.Card)
 prepareFace card = case Card.layout card of
   Layout.Normal -> Nothing
@@ -450,7 +450,7 @@ merge2 l r =
         { -- CR 709.4a gives the card BOTH names and no joined one, and a single
           -- CardName cannot carry that: this field is a RENDERING of the two, in
           -- the form docs/rules.txt's own Examples write, unspaced -- "Fire//Ice"
-          -- (lines 3882, 5747) and "Assault//Battery" (line 5746). What the object
+          -- (lines 3890, 5765) and "Assault//Battery" (line 5764). What the object
           -- has for rules purposes is combinedNames above, which every name
           -- question goes through (Parun.Engine.Projection.hasName).
           Face.name = CardName.join (Face.name l NonEmpty.:| [Face.name r]),
@@ -603,7 +603,8 @@ merge2 l r =
           -- of CR 613.8a does admit a pair of characteristic-defining abilities, but
           -- neither of a pair like this changes what the other does (clause (b)), and
           -- CR 613.8b's fallback is timestamp order again. Nothing is asked of a
-          -- player either, since CR 613 hands nobody a choice of order, so the bias
+          -- player either, since CR 613.7m's choice orders objects and these are one
+          -- object's two abilities, so the bias
           -- is where the rules run out, as it is for the printed boxes above.
           -- docs/decisions.md, "Which half of a split card answers for a box
           -- both halves have". Parun.CardSpec's "CR 709.4 the left half answers
@@ -1057,9 +1058,8 @@ landFaces card =
         Layout.Room -> byDefault
         -- CR 710.2 leaves a flip card in a hand showing only its normal
         -- characteristics, so the default view is what a player would play as a
-        -- land. No flip card prints a land face -- CR 710.1a's text box holds the
-        -- ability that flips a permanent -- so the filter below drops the pair
-        -- either way.
+        -- land. No flip card prints a land face (Scryfall: layout:flip t:land is
+        -- empty), so the filter below drops the pair either way.
         Layout.Flip -> byDefault
         Layout.Adventure -> byDefault
         -- CR 720.4 leaves an omen card in a hand showing only its normal
@@ -1213,9 +1213,10 @@ backFace card =
         -- what CR 712.4c asks for there too: a meld card IS a double-faced card
         -- (CR 712.1), so 712.14a's second sentence is not what excludes it --
         -- "unlike other double-faced cards, meld cards cannot be transformed or
-        -- converted. Any instructions to do so are ignored" is, and a card put
-        -- onto the battlefield with no back face to turn to enters showing its
-        -- front face under CR 712.14's default.
+        -- converted. Any instructions to do so are ignored" is. Such a card would
+        -- enter showing its front face under CR 712.14's default, but
+        -- Parun.Engine.Event's `refused` reads this Nothing and leaves it in its zone
+        -- (gap #6257).
         Layout.Meld {} -> Nothing
 
 -- CR 701.27a: "To transform a permanent, turn it over so that its other face is
@@ -1223,7 +1224,7 @@ backFace card =
 -- the whole of what a transform writes.
 --
 -- Takes the face the permanent shows now (Nothing being its front face, CR
--- 712.8a) and answers the one it would show after. Nothing wherever the rules
+-- 712.8d) and answers the one it would show after. Nothing wherever the rules
 -- say nothing happens instead:
 --
 --   * CR 701.27c / 712.9: "If a spell or ability instructs a player to transform
@@ -1272,7 +1273,7 @@ turnedOver mName card = case Card.layout card of
   Layout.Omen -> Nothing
   -- CR 701.27c / 712.9 again: a preparation card is not represented by a
   -- double-faced card, so an instruction to transform one does nothing.
-  -- Becoming prepared is not a turn either -- CR 722.3b makes it a
+  -- Becoming prepared is not a turn either -- CR 722.3a makes it a
   -- designation, which Parun.Engine.Prepare writes.
   Layout.Preparation -> Nothing
   Layout.Transforming -> nextFace mName card
@@ -1353,7 +1354,7 @@ enteringFace card shown = case Card.layout card of
   -- there is no half for this move to carry.
   Layout.Preparation -> Nothing
   -- CR 712.11 casts one with its front face up, so for an ordinary cast `shown`
-  -- IS the front face and CR 712.8a would resolve Nothing to that same face. The
+  -- IS the front face and CR 712.8d would resolve Nothing to that same face. The
   -- two answers part where CR 712.11a's cast does put a back face on the stack.
   -- Both of that rule's wordings reach it: "transformed", which CR 310.12b's
   -- defeated Siege reaches (Parun.BattleSpec's "she may then cast it TRANSFORMED
@@ -1420,8 +1421,9 @@ manaCostFace card live = case Card.layout card of
   -- written about a nonmodal double-faced permanent alone, and CR 712.8f states
   -- the modal rule with no exception at all -- "While a modal double-faced spell
   -- is on the stack or a modal double-faced permanent is on the battlefield, it
-  -- has only the characteristics of the face that's up." Mana value is a
-  -- characteristic (CR 109.3), so the face that's up is where it is read from.
+  -- has only the characteristics of the face that's up." Mana cost is a
+  -- characteristic (CR 109.3) and mana value derives from it (CR 202.3), so the
+  -- face that's up is where it is read from.
   Layout.ModalDoubleFaced -> live
   -- The live face, there being one. CR 712.8e's exception is written about a
   -- nonmodal double-faced permanent; CR 712.8g states the meld rule separately
@@ -1537,8 +1539,8 @@ isDoubleFaced card = case Card.layout card of
 -- A SUBSTITUTION and not a pair of real static abilities, which is the reading CR
 -- 709.5's own last sentence gives: "These abilities, as well as which half of that
 -- permanent a characteristic is in, are part of that object's copiable values."
--- Copiable values are where the CR 613 fold STARTS, so the subtraction has to be
--- done before layer 1 rather than inside layer 3 or 6 -- and doing it as layers
+-- Copiable values are what layer 1 leaves (CR 613.2c), so the subtraction has to
+-- be done in the seed rather than inside layer 3 or 6 -- and doing it as layers
 -- would be wrong twice over. It would let a later timestamp or a dependency
 -- reorder it, which copiable values cannot be; and CR 707.2 would then copy a
 -- Room's whole text and leave the copy's doors unsubtractable, where the rule
@@ -1559,9 +1561,10 @@ isDoubleFaced card = case Card.layout card of
 -- faces agree on their shared type line". Without it unionTypeLines above would
 -- merge two disagreeing halves into a line neither prints.
 --
--- The NAME is rebuilt rather than folded, because CR 709.4a's join is over the
--- names the object HAS: a Room with one door open has one name, and joining an
--- emptied one would leave the "Roaring Furnace//" of a half that was subtracted.
+-- The NAME is rebuilt rather than folded, because the rendering joins the
+-- names the object HAS (CR 709.4a): a Room with one door open has one name, and
+-- joining an emptied one would leave the "Roaring Furnace//" of a half that was
+-- subtracted.
 -- With no door open it has no name at all, which is the empty CardName
 -- faceDownFace uses for CR 708.2a's "no name" -- the same value
 -- Parun.Engine.Projection.View.baseCharacteristics gives an object with no card behind
@@ -1681,8 +1684,8 @@ subtractHalf face =
       Face.specialActions = []
     }
 
--- The face of this card with the given name, if it has one. CR 709.4a: a card's
--- faces are referred to BY NAME, which is what a player names in paper and what
+-- The face of this card with the given name, if it has one. A name is what a
+-- player names in paper and what
 -- survives in a recorded answer; the Ord on Card.faces is printed order and carries
 -- no identity.
 --
@@ -1735,7 +1738,8 @@ modeTargetSlots idx face = Modal.modeTargetSlots idx (Face.spell face)
 -- mode and which occurrence of it, in printed order -- the Seq is kept sorted by
 -- the casting path. Out-of-range indices contribute nothing (total via
 -- Seq.lookup). Modes rather than a flat effect list, for the reason
--- Modal.chosenModes gives: the mode is the unit CR 603.5's "may" covers.
+-- Modal.chosenModes gives: the mode is the unit CR 700.2c scopes targets to,
+-- and it holds the clauses CR 603.5's "may" covers.
 chosenModes :: Seq.Seq ModeIndex.ModeIndex -> Face.Face Card.Card -> [(ModeInstance.ModeInstance, Mode.Mode Card.Card (GrantedAbility.GrantedAbility Card.Card))]
 chosenModes chosen face = Modal.chosenModes chosen (Face.spell face)
 

@@ -78,7 +78,7 @@ spec s = Spec.describe s "Parun.Codec.EntryRiders" $ do
       (EntryRiders.codec Common.text)
       EntryRiders.MkEntryRiders {EntryRiders.tapped = TapState.Untapped, EntryRiders.attacking = Nothing, EntryRiders.blocking = Nothing, EntryRiders.transformed = False, EntryRiders.counters = Map.fromList [(CounterKind.PlusOnePlusOne, Quantity.Literal 2), (CounterKind.MinusOneMinusOne, Quantity.Literal 1)], EntryRiders.under = EntryController.Instructed (PlayerRef.Relative PlayerRelation.You), EntryRiders.exiledFaceDown = False, EntryRiders.attachedTo = Nothing, EntryRiders.faceDown = Nothing, EntryRiders.noted = False, EntryRiders.characteristics = Seq.empty}
       " {\"counters\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"count\":{\"type\":\"Literal\",\"value\":2}},{\"kind\":{\"type\":\"MinusOneMinusOne\"},\"count\":{\"type\":\"Literal\",\"value\":1}}]} "
-  -- CR 107.3c: the count need not be a literal at all -- Printlifter Ooze's X,
+  -- CR 107.3: the count need not be a literal at all -- Printlifter Ooze's X,
   -- defined by the ability's own text, which is why this field is a Quantity.
   Spec.it s "MkEntryRiders, a counter count that is not a literal" $
     Common.assertCodec

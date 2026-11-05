@@ -10,17 +10,18 @@ import qualified Parun.Types.ChooseBetween as ChooseBetween
 -- However, some modal spells include the instruction 'You may choose the same
 -- mode more than once.'" The first two constructors are those two sentences --
 -- 'ChooseExactly' is the default, 'ChooseExactlyWithRepeats' the printed
--- exception (Mystic Confluence is its one printing). Both carry n = how many
+-- exception (Mystic Confluence, Fiery Confluence). Both carry n = how many
 -- modes are chosen, with
 -- n = 1 for a charm AND for every non-modal card (one mode, forced).
 --
 -- 'ChooseBetween' is the third printed shape: an instruction naming a RANGE
 -- rather than a number, `least` then `most`, both inclusive. "Choose one or
 -- both --" over two modes (Vandalize) is 1 to 2, and CR 702.120a's escalate
--- ("Choose one or more --") is 1 to the printed mode count. Repeat-free: no
--- printing pairs a range with CR 700.2d's exception, which is why there is no
--- fourth constructor and why Parun.Engine.Modal may read `most` where it means
--- "the count" on the repeating arm.
+-- ("Choose one or more --") is 1 to the printed mode count. Repeat-free: there is
+-- no fourth constructor for a range with CR 700.2d's exception (Moment of
+-- Reckoning's "Choose up to four", absent from the pool) (gap #6252), which is why
+-- Parun.Engine.Modal may read `most` where it means "the count" on the repeating
+-- arm.
 --
 -- CR 700.2i's pawprint is a future constructor: it bounds a WEIGHTED total
 -- rather than a number of modes, so no range over mode counts states it.

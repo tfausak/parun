@@ -28,7 +28,7 @@ import qualified Parun.Types.Zone as Zone.Type
 -- Dinosaur Headdress's looks.
 -- @duration@ is defaulted to Nothing, the copy every printing but Vesuvan
 -- Shapeshifter's makes. @recipient@ is defaulted to the entering object and
--- @optional@ to CR 707.5's "may", which the self-copying printings write
+-- @optional@ to the printed "may", which the self-copying printings write
 -- (Clone); a printed "choose" (Metamorphic Alteration) or a mandatory "enter
 -- as a copy" (Essence of the Wild) writes False.
 codec :: (Typeable.Typeable ability, Eq ability, Typeable.Typeable effect, Eq effect) => Codec.Codec ability -> Codec.Codec effect -> Codec.Codec (AsCopy.AsCopy ability effect)

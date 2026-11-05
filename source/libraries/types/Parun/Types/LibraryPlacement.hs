@@ -18,11 +18,11 @@ import qualified Parun.Types.Quantity as Quantity
 -- is entered, the posture the tap state and the stated position already take --
 -- settled by the move rather than by a second write afterward.
 --
--- The OWNER and not the resolving spell's controller, which is CR 401.2 read
--- through the card ("its owner puts it") and is the same decider CR 401.4 names
--- for the arrangement where the text names nobody else ('ArrangedBy'). A reader
--- who knows CR 608.2f's secondary sentence would otherwise hand this to the
--- controller.
+-- The OWNER and not the resolving spell's controller, which is the card's own
+-- text ("its owner puts it"), a CR 608.2d choice, and is the same decider CR
+-- 401.4 names for the arrangement where the text names nobody else
+-- ('ArrangedBy'). A reader who knows CR 608.2f's secondary sentence would
+-- otherwise hand this to the controller.
 data LibraryPlacement
   = Stated LibraryPosition.LibraryPosition
   | OwnerChooses

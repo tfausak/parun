@@ -116,7 +116,7 @@ data Response
     -- Its own constructor rather than ChoseX reused, though both carry one
     -- Natural: this type's rule at the top, and here the difference is the whole
     -- point -- a transcript of a player ANNOUNCING a number must not satisfy a
-    -- prompt that asked randomness, which is CR 701.9b's distinction.
+    -- prompt that asked randomness, which is CR 706.1a's equally likely outcomes.
     RolledDie Natural.Natural
   | -- | The place randomness put a conjured card at, for Parun.Types.Prompt's
     -- RandomDepth. Its own constructor rather than RolledDie reused, for that
@@ -135,7 +135,7 @@ data Response
     -- Its own constructor rather than CalledCoin reused, though both carry one
     -- CoinFace: this type's rule at the top, and here the difference is the whole
     -- point -- a transcript of a player ANNOUNCING a call must not satisfy a
-    -- prompt that asked randomness, which is CR 701.9b's distinction.
+    -- prompt that asked randomness, which is CR 705.1's equal likelihood.
     FlippedCoin CoinFace.CoinFace
   | -- | CR 705.2: the face the flipping player called -- FlippedCoin's opposite
     -- number, the announcement rather than the randomness.
@@ -636,11 +636,11 @@ data Response
     -- transcript against the wrong one would reorder a sweep instead of a batch
     -- of stamps.
     OrderedTimestamps [Natural.Natural]
-  | -- | CR 605.3a: the order a player chose to activate a batch of mana
-    -- abilities in, as a permutation of the offered indices. A separate
-    -- constructor from the ones above for their reason: replaying a transcript
-    -- against the wrong one would reorder a batch of stamps instead of a batch
-    -- of activations.
+  | -- | CR 605.3, which fixes no order: the order a player chose to activate a
+    -- batch of mana abilities in, as a permutation of the offered indices. A
+    -- separate constructor from the ones above for their reason: replaying a
+    -- transcript against the wrong one would reorder a batch of stamps instead
+    -- of a batch of activations.
     OrderedManaActivations [Natural.Natural]
   | -- | CR 616.1: the index of the replacement effect a player chose to apply
     -- next.
@@ -766,7 +766,7 @@ data Response
     ChoseExtra OptionalDecision.OptionalDecision
   | -- | CR 118.12a: whether the player a resolving spell or ability offered a
     -- cost to chose to pay it. Distinct from ChoseOptional, which records CR
-    -- 603.5's "may" and is always answered by the resolving controller.
+    -- 603.5's "may".
     ChoseToPay PaymentDecision.PaymentDecision
   | -- | CR 118.13a / 601.2b, and every other moment an announcement is made at
     -- (Parun.Engine.Cost.announce): which way the payer announced they
@@ -823,7 +823,7 @@ data Response
     ReturnedCommander CommandZoneDecision.CommandZoneDecision
   | -- | CR 616.1e's answer: whether the controller applies CR 903.9b's offer first.
     ChoseCommandZoneOfferFirst OptionalDecision.OptionalDecision
-  | -- | CR 401.2's answer: the end of their library an owner picked for one card.
+  | -- | CR 608.2d's answer: the end of their library an owner picked for one card.
     ChoseLibraryEnd LibraryPosition.LibraryPosition
   | -- | CR 401.4's answer: the order an owner chose for the cards arriving at one
     -- end of their library, as a permutation of the offered indices.

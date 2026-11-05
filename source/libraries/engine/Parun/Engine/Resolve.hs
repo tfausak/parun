@@ -377,7 +377,7 @@ resolveSpellWith runSubgame oid = do
                   -- chosen twice make its offer twice.
                   Monad.foldM_
                     ( \(answers, picked, ran) (cIdx, clause) -> do
-                        -- CR 608.2c's "If you do" first: a clause hanging off one
+                        -- CR 118.12's "If you do" first: a clause hanging off one
                         -- the fold has not recorded is skipped entirely, so no
                         -- later gate raises a prompt whose answer cannot matter.
                         let hangs = ifTakenHolds ran clause
@@ -463,8 +463,8 @@ resolveSpellWith runSubgame oid = do
 -- the same way.
 --
 -- The keyword AND the card types come off the PROJECTION, ascendOnSpellResolution's
--- reading of CR 613.1f and CR 613.1d: a spell granted gift by a text-changing
--- effect gives one, and one whose text was blanked does not. The type test is what
+-- reading of CR 613.1f and CR 613.1d: a spell granted gift by an ability-adding
+-- effect gives one, and one stripped by an ability-removing effect does not. The type test is what
 -- rule 702.174b's two halves are told apart by.
 --
 -- That type test is a REGRESSION FENCE rather than proved behaviour: Stack's
@@ -541,8 +541,8 @@ applyEpic oid controller = do
   Monad.when (Keyword.Engine.hasEpic (Map.keysSet (Projection.keywordsOf oid gs))) $ do
     -- Rule 702.50a's FIRST ability, as the stored player effect Silence's opcode
     -- stores (CR 611.1 / 613.11), with Expiry.Never for "for the rest of the
-    -- game" and CR 109.5's "you" -- the spell's controller as it resolved (CR
-    -- 603.7d) -- baked in as the seat. Scoped rather than Named: no slot was
+    -- game" and CR 109.5's "you" -- the spell's controller as it resolved --
+    -- baked in as the seat. Scoped rather than Named: no slot was
     -- targeted, so there is nothing of CR 601.2c's to bake.
     State.modify' $ \g ->
       let (ts, g1) = Game.freshTimestamp g
@@ -586,11 +586,11 @@ applyEpic oid controller = do
 -- resolved this game": file the resolving spell's names under its controller in
 -- GameState.resolvedNames, answering whether none of them was there already.
 --
--- Called from both of CR 608.2's resolving roads -- here for an instant or
--- sorcery, and from Parun.Engine.Stack for a permanent spell -- and from neither
--- fizzle, since a spell CR 608.2b removes did not resolve. The names come off
--- the PROJECTION, so a spell that is a copy of another (CR 707.2) files the
--- copied name. The permanent road is a REGRESSION FENCE: no permanent card in
+-- Called from both of CR 608's resolving roads -- here (CR 608.2) for an instant
+-- or sorcery, and from Parun.Engine.Stack (CR 608.3) for a permanent spell -- and
+-- from neither fizzle, since a spell CR 608.2b removes did not resolve. The names
+-- come off the PROJECTION, so a spell that is a copy of another (CR 707.2) files
+-- the copied name. The permanent road is a REGRESSION FENCE: no permanent card in
 -- data/cards/ shares a paradigm card's name.
 noteResolved :: ObjectId -> PlayerId -> Game Bool
 noteResolved oid controller = do
@@ -725,8 +725,9 @@ finishSpell settle oid face controller = do
     -- the timestamp that identifies the row to Replacement.rowApplied.
     rowWhen holds install = if holds then fmap Just (State.state (install oid controller)) else pure Nothing
     -- CR 702.88a's two conditions. The keyword is read off the PROJECTION and
-    -- not off `face`, so a spell granted rebound by a text-changing effect
-    -- rebounds and one whose text was blanked does not (CR 613.1f); rule 702.88c
+    -- not off `face`, so a spell granted rebound by an ability-adding effect
+    -- rebounds and one stripped by an ability-removing effect does not (CR 613.1f);
+    -- rule 702.88c
     -- makes a second instance redundant, which membership is. The zone is CR
     -- 601.2a's, which Object.castFrom stored as the cast began -- Nothing for a
     -- copy put on the stack rather than cast (CR 707.10), which rule 702.88a's
@@ -742,12 +743,12 @@ finishSpell settle oid face controller = do
       Keyword.Engine.hasRebound (Map.keysSet (Projection.keywordsOf oid gs))
         && maybe False fromOwnHand (Game.lookupObject oid gs)
     fromOwnHand obj = Object.castFrom obj == Just Zone.Hand && Object.owner obj == controller
-    -- Never per CR 611.2a: CR 715.3d states no duration. What ends it is CR
-    -- 400.7 -- leaving exile mints a new incarnation, and newIncarnation clears
+    -- Never for CR 715.3d's duration, as long as the card stays exiled: what ends
+    -- it is CR 400.7 -- leaving exile mints a new incarnation, and newIncarnation clears
     -- the field.
     permission newId =
       -- CR 715.3d says nothing about mana, in either sense: neither CR
-      -- 118.14's rider nor CR 118.9a's alternative cost, so the Adventure half
+      -- 118.14's rider nor CR 118.9's alternative cost, so the Adventure half
       -- is cast for its printed cost. Its "that player may play it" counts no
       -- plays.
       (ExilePlayPermission.defaultValue controller newId)
@@ -859,7 +860,7 @@ resolveModesWith runSubgame stackId srcId modes = do
                   -- `fizzles` is False.
                   Monad.foldM_
                     ( \(answers, picked, ran) (cIdx, clause) -> do
-                        -- CR 608.2c's "If you do" first, off the same fold the
+                        -- CR 118.12's "If you do" first, off the same fold the
                         -- spell path keeps. Proved on this path, not merely
                         -- fenced: Aetherplasm's second clause hangs on its first,
                         -- and Parun.CombatEffectSpec's "declining to return
@@ -947,7 +948,7 @@ recordAbilityResolution obj = case Object.source obj of
   Source.OfTrigger triggered -> State.modify' (Event.recordEvent (GameEvent.TriggeredAbilityResolved triggered))
   _ -> pure ()
 
--- CR 608.2c: does this clause's printed "If you do" hold? A clause naming no
+-- CR 118.12: does this clause's printed "If you do" hold? A clause naming no
 -- earlier one always happens; one that names an earlier clause of this mode
 -- instance happens only if that clause's instructions ran -- Tweeze's "you may
 -- discard a card. If you do, draw a card".
@@ -988,7 +989,7 @@ asCostWhenNamed indexed cIdx body =
    in if any (elem cIdx . names . snd) indexed then Event.payingOnResolution True body else body
 
 -- The other end of the same fold: a clause's ordinal is recorded exactly when
--- its instructions ran, which is what CR 608.2c's "If you do" asks about. One
+-- its instructions ran, which is what CR 118.12's "If you do" asks about. One
 -- writer for both resolution paths, so the spell loop and the ability loop
 -- cannot disagree about what "you did" means.
 --
@@ -1225,7 +1226,7 @@ facedVillainously picked cIdx clause = case Clause.orElse clause of
 -- condition again before performing the limb, so choosing it does nothing. No
 -- card states the shape -- the callers' own fence says no either-or in
 -- data/cards prints a condition at all -- and telling the two conjuncts apart in
--- the offer is what it would take. CR 608.2c's "If you do" is the same: a limb
+-- the offer is what it would take. CR 118.12's "If you do" is the same: a limb
 -- hanging off an earlier clause is not a shape any either-or prints.
 --
 -- The seat is bound under Binding.facingPlayers before its limb runs, which is

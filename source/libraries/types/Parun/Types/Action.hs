@@ -39,8 +39,8 @@ data Action
     -- later ones.
     --
     -- A CardName, not an index into Card.faces. CR 709.4a is what gives a
-    -- card's faces names at all, and CR 709.3 has the player choose a half by
-    -- naming it, so a name is the reference the rules themselves use. It is
+    -- card's faces names at all, and CR 709.3 has the player choose a half,
+    -- so its name is a reference the rules themselves offer. It is
     -- also the one that survives a decision log: a name either resolves to a
     -- face or fails loudly, where an index silently replays as the WRONG half
     -- if the card data is ever reordered.
@@ -140,8 +140,8 @@ data Action
     -- unrelated abilities offers two actions and the player picks which. What it
     -- costs is printed beside that name on the permanent. WHO ignores it
     -- is the player taking the action, which is the priority holder; whether it
-    -- is offered to them at all is CR 116.2d's own question, answered by
-    -- Parun.Engine.Ignore.canIgnore.
+    -- is offered to them at all is the printed sentence's question (CR 116.2d says
+    -- only "a player"), answered by Parun.Engine.Ignore.canIgnore.
     Ignore ObjectId.ObjectId AbilityName.AbilityName
   | -- | CR 116.2k / 702.170a: pay a card's plot cost and exile it from your hand,
     -- or from the zone CR 702.170f lets plot function in, making it a plotted

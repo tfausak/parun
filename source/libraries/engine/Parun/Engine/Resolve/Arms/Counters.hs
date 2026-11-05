@@ -142,7 +142,7 @@ counter settle resolving source controller legal (Counter.MkCounter ref mSlot mS
   gs <- State.get
   let named = objectRefObjects legal resolving controller source gs ref
       -- CR 113.7: each named ability's source, read BEFORE the funnel runs --
-      -- CR 608.2n makes a countered ability cease, so afterwards there is no
+      -- CR 701.6a makes a countered ability cease, so afterwards there is no
       -- object left to walk from.
       sourceOf = Map.fromList (Maybe.mapMaybe (\oid -> fmap ((,) oid) (Game.abilitySourceOf oid gs)) named)
   -- CR 701.6a: counter each named object through the single funnel, which picks
@@ -241,7 +241,7 @@ putCounters resolving source controller legal chosen (PutCounters.MkPutCounters 
       -- HOW MANY, read per recipient against the one pre-effect state, so a
       -- division's part (Quantity.Share, Effect.Divide's) is each member's
       -- own: DealDamage's amountFor. Every other quantity reads the same for
-      -- every recipient, CR 608.2f's one evaluation for the whole set. An
+      -- every recipient, CR 608.2h's one evaluation for the whole set. An
       -- unevaluable or zero amount places nothing on that recipient.
       amountFor target =
         let sharing = context {Filter.shares = Binding.sharesOf (Recipient.ToObject target) (slotBindings resolving gs)}
@@ -331,7 +331,7 @@ putCountersFrom resolving source controller legal (PutCountersFrom.MkPutCounters
       -- CR 608.2c: the set is swept as this instruction is reached, and an
       -- illegal slot (CR 608.2b) or a player recipient answers with nobody.
       targets = objectRefObjects legal resolving controller source gs ref
-      -- CR 122.8's second sentence: an ability that "specifies what kind(s) of
+      -- CR 122.8's third sentence: an ability that "specifies what kind(s) of
       -- counters to place" places "the same number of each of those kinds of
       -- counter the first object had", so a named kind narrows the tally to
       -- itself -- Selfless Police Captain's "put its +1/+1 counters", where
@@ -373,8 +373,8 @@ putCountersFrom resolving source controller legal (PutCountersFrom.MkPutCounters
 -- Parun.Engine.Engine.runGameAsked, where the registry is, and covers this arm
 -- and the entry twin alike by covering the one Prompt they share.
 --
--- ASSIGNED and not unioned in, the entry twin's own write: CR 608.2c scopes
--- "the chosen name" to the resolution that chose it, so a permanent that
+-- ASSIGNED and not unioned in, the entry twin's own write: "the chosen name" is
+-- read as the one the resolving instruction chose, so a permanent that
 -- resolves this instruction twice must answer about the SECOND name alone.
 -- Petra Sphinx activated on two turns is the producer that made the difference
 -- observable -- every earlier one was an instant or a sorcery, whose next cast
@@ -466,7 +466,7 @@ fromOutsideTheGame source controller payload = Event.bringInto payload source co
 --
 -- `resolving` and not `source`: the two coincide for a spell, and this arm is
 -- about the object ON THE STACK. The faceOf gate is what makes an ability inert
--- here -- CR 113.7a's ability object has no card behind it, so exiling it would
+-- here -- CR 405.1's ability object has no card behind it, so exiling it would
 -- take the ability off the stack in the middle of its own resolution.
 exileThisSpell :: Game () -> ObjectId -> Game ()
 exileThisSpell settle resolving = do
@@ -474,7 +474,7 @@ exileThisSpell settle resolving = do
   Monad.when (Maybe.isJust (Game.faceOf resolving gs)) (Event.changeZone settle resolving Zone.Exile)
 
 -- CR 122: PutCounters' mirror, deliberately NOT through a CR 614.16 gate --
--- nothing in CR 614 replaces a removal.
+-- that rule is about placing, and no ReplacementEffect class pairs with a removal.
 removeCounters :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> RemoveCounters.RemoveCounters -> Game ()
 removeCounters resolving source controller legal (RemoveCounters.MkRemoveCounters kind quantity slot mTally) = do
   gs <- State.get
@@ -1330,7 +1330,7 @@ blight resolving source controller legal (Blight.Type.MkBlight ref quantity mSlo
   -- to put the counters on, bound for a later clause of this same resolution to
   -- read (CR 608.2c) -- Grub, Notorious Auntie's token copy of it. Bound off the
   -- CHOICE and not off the counters, which is rule 701.68c's own wording: a
-  -- blight of zero (CR 122.6), and one whose counters a replacement kept off,
+  -- blight of zero (CR 701.68a), and one whose counters a replacement kept off,
   -- name a creature just the same.
   --
   -- ACROSS blighters, the Effect.Mill slot's one/many split: one chosen creature
@@ -1971,7 +1971,7 @@ takeExtraTurnArm resolving source controller legal takeExtraTurn = do
   -- CR 500.7: the most recently created turn is taken first, so each taker is
   -- pushed onto the head and the last pushed is the first popped -- a stack.
   --
-  -- CR 500.11 / 113.7: the skips ride ALONG on each entry, naming that turn and
+  -- CR 500.11 / 614.10: the skips ride ALONG on each entry, naming that turn and
   -- no other; Engine.takeNextTurn installs them as the turn begins (see
   -- Parun.Types.ExtraTurn).
   --

@@ -179,7 +179,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s [] (Normalise.normalise x (Text.pack "({T}: Add {G}.)"))
     Spec.assertEq s (fmap Text.pack ["haste", "horsemanship"]) (Normalise.normalise x (Text.pack "Haste; horsemanship (This creature can't be blocked except by creatures with horsemanship.)"))
 
-  -- CR 201.5 / 201.5c: a card names itself by its name, a legendary one by
+  -- CR 201.5 / 201.5c / 700.7: a card names itself by its name, a legendary one by
   -- the part before the comma, and newer Oracle text as "this creature".
   Spec.it s "normalise writes every self-reference alike, and only whole words" $ do
     let rograkh = CardName.MkCardName (Text.pack "Rograkh, Son of Rohgahh")
@@ -251,9 +251,9 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let insurance = spell [clause [loseLife (PlayerRef.InSlot target) 2, draw (PlayerRef.Relative PlayerRelation.You) 1]] [(target, TargetSlot.required Pool.Players Nothing)]
     Spec.assertEq s [[Text.pack "Target player loses 2 life. Draw a card.", Text.pack "Target player loses 2 life.\nDraw a card.", Text.pack "Target player loses 2 life. Then draw a card.", Text.pack "Target player loses 2 life and you draw a card."]] (Oracle.abilities insurance)
 
-  -- CR 113.2c / 113.3a: text pairs with a card's abilities as a multiset, each
-  -- ability in one of its own wordings, and a spell's instructions are one
-  -- ability even across paragraphs (Bargain).
+  -- CR 113.2c: text pairs with a card's abilities as a multiset, each ability in
+  -- one of its own wordings. This tool pairs a spell's instructions as one unit,
+  -- even across paragraphs (Bargain).
   Spec.it s "says matches each ability against its own wordings" $ do
     let ring = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.TapThis]) (addMana 1)
         tomb = ring {ActivatedAbility.modal = payload [clause [addMana 1, damage [(you, 2)]]] []}
@@ -340,7 +340,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "At the beginning of the upkeep of enchanted creature's controller, that player draws a card.")) (Oracle.render (at upkeep hostController [draw (PlayerRef.InSlot thatPlayer) 1]))
     Spec.assertEq s (Just (Text.pack "At the beginning of the end step of enchanted creature's controller, Spark deals 1 damage to that player.")) (Oracle.render (at end hostController [damage [(thatPlayer, 1)]]))
 
-  -- CR 508.3a / 509.3a / 510.1: the source's combat events, which can recur
+  -- CR 508.3a / 509.3a / 510.2: the source's combat events, which can recur
   -- and so open with "Whenever", or "When" on a source that destroys itself
   -- (Loyal Sentry); the defending player and the creature it blocks are named
   -- as the event names them. Once named, the source is "it" or its name.
@@ -436,8 +436,8 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let mob = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.SacrificeThis]) (damage [(you, 3)])
     Spec.assertEq s [[Text.pack "Sacrifice Spark: It deals 3 damage to you.", Text.pack "Sacrifice Spark: Spark deals 3 damage to you."]] (Oracle.abilities (withFace (\f -> f {Face.activatedAbilities = [mob]})))
 
-  -- CR 113.2c: a paragraph break starts another ability, so only a spell's
-  -- instructions (one spell ability, CR 113.3a) may be broken across lines.
+  -- CR 113.2c: a paragraph break starts another ability, so the renderer breaks
+  -- only a spell's instructions, whose sentences it pairs as one unit.
   Spec.it s "render keeps a triggered ability's sentences in one paragraph" $ do
     let slots = [(target, TargetSlot.required Pool.Creatures Nothing)]
         apart = triggered (TriggerCondition.Enters EntersTrigger.defaultValue) [clause [damage [(target, 2)]], clause [gainLife 2]] slots

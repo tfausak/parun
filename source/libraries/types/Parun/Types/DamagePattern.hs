@@ -27,7 +27,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- trivial predicate, so a pattern that says nothing about the source needs no
 -- "any source" arm -- ZoneChangePattern.whatObject's shape, for its reason.
 --
--- CR 614.15's "this way" is spelled in that same Filter as `Filter.IsSource`,
+-- CR 614.15's "own effect(s)" is spelled in that same Filter as `Filter.IsSource`,
 -- the atom asking whether the candidate IS the evaluation's source object:
 -- Galvanic Blast's metalcraft clause replaces the damage its own resolution
 -- deals and nothing else. An identity enum beside the Filter would be a second
@@ -46,15 +46,16 @@ import qualified Parun.Types.SlotName as SlotName
 -- PreventAllDamage, NextDamageInstance and RedirectDamage) share one
 -- `installDamageRow`, and all but the CR 615.8 shield thread a printed KIND
 -- through -- Turn the Tables' "all combat damage", Decorated Griffin's "the next
--- 1 combat damage"; no printing of CR 615.8's shape narrows the kind, so that
--- opcode has no such field and passes Nothing. The last producer is a RULE
+-- 1 combat damage"; no card in data/cards/ of CR 615.8's shape narrows the kind
+-- (Impulsive Maneuvers would), so that opcode has no such field and passes
+-- Nothing. The last producer is a RULE
 -- rather than a resolution: CR 702.16e's player half, which
 -- Parun.Engine.Replacement.collect mints naming the protected seat, since a
 -- PlayerRelation would have to be read against a perspective this row's CR 109.5
 -- "you" is not.
 --
 -- The remaining producer is not a shield at all: CR 615.12's stored prohibition
--- and its CR 614.9 twin carry this same pattern, and Resolve's Effect.AffectPlayers
+-- and its CR 614.17 twin carry this same pattern, and Resolve's Effect.AffectPlayers
 -- arm bakes `boundRecipient` below into this field as it stores one --
 -- Whippoorwill's "damage that would be dealt to THAT CREATURE this turn can't be
 -- prevented".
@@ -63,7 +64,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- are not one field: `whichRecipient` names an id the engine baked, where this
 -- one describes the recipient by characteristic -- Stormwild Capridor's "dealt
 -- to this creature" is `Just Filter.IsSource`, read against the candidate's own
--- source the way `whatSource` reads CR 614.15's "this way". `Just` admits only an
+-- source the way `whatSource` reads CR 614.15's "own effect(s)". `Just` admits only an
 -- OBJECT recipient matching the filter, since a Filter describes objects and CR
 -- 120.3a's player is not one. A Maybe rather than `And []`, for exactly that
 -- reason: the trivial filter would otherwise have to mean "any object OR any
@@ -122,7 +123,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- downstream of that arm ever reads a slot, and CR 608.2b's unfilled or illegal
 -- slot stores no effect at all.
 --
--- Only the CR 615.12 / 614.9 prohibitions can carry it. A prevention shield's
+-- Only the CR 615.12 / 614.17 prohibitions can carry it. A prevention shield's
 -- pattern is built by Parun.Engine.Resolve.Common.installDamageRow, which has
 -- already baked its recipient and writes Nothing here.
 data DamagePattern = MkDamagePattern

@@ -1334,7 +1334,7 @@ answerActionChoice key verb choices asked =
           case Choices.x choices of
             Just x
               -- A refused move's out-of-range X goes to the engine, whose
-              -- CR 601.2b bound is what reverses it.
+              -- CR 101.1 gate and CR 601.2 reversal are what reverse it.
               | (minimumX <= x && x <= maximumX) || Maybe.isJust undoing -> do
                   updateChoices (\current -> current {Choices.x = Nothing})
                   pure x
@@ -1641,7 +1641,7 @@ resolveObject ref gs = case ref of
     _ -> Nothing
   -- Read off the turn's log rather than the stack, so the spell is still named
   -- once it has resolved or been countered: an effect it left behind keeps it as
-  -- its source (CR 113.7a).
+  -- its source.
   Reference.SpellOf source -> do
     card <- sourceObject source
     case List.reverse (castsOf card gs) of
@@ -1785,7 +1785,7 @@ resolveBlock gs key kind offered (blocker, attackers) = do
   attackerIds <- mapM (resolveOffered gs key kind offered) (Set.toAscList attackers)
   pure (blockerId, Set.fromList attackerIds)
 
--- | CR 510.1a: a recipient must be one the prompt offered a threshold for.
+-- | CR 510.1b-d: a recipient must be one the prompt offered a threshold for.
 resolveDamage :: GameState.GameState -> When.When -> Text.Text -> Set.Set Recipient.Recipient -> (Reference.Reference, Natural) -> Run (Recipient.Recipient, Natural)
 resolveDamage gs key kind offered (ref, amount) = do
   offers <- describeAll gs (Maybe.mapMaybe Recipient.objectOf (Set.toList offered))

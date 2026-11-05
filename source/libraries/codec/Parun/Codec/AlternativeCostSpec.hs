@@ -29,7 +29,7 @@ spec s = Spec.describe s "Parun.Codec.AlternativeCost" $ do
           AlternativeCost.cost = Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost []), Cost.components = []}
         }
       " {\"cost\":{\"mana\":[]}} "
-  -- CR 604.2's "as long as" clause on one,
+  -- The "as long as" clause (CR 611.3a) on one,
   -- Asmoranomardicadaistinaculdacar's: the condition is the payload a recursive
   -- decoder could lose, so it is round-tripped alongside a mana part that is not
   -- {0}.

@@ -35,7 +35,7 @@ data ObjectRef
     -- holds a group, which is a definition rather than a target (CR 115.10a).
     InSlot SlotName.SlotName
   | -- | CR 109.2 / Day of Judgment: every permanent on the battlefield matching
-    -- the Filter, swept when the effect executes (CR 608.2c).
+    -- the Filter, swept when the effect executes (CR 608.2h).
     EachMatching (Filter.Filter Keyword.Keyword)
   | -- | CR 109.2a / Rise of the Dark Realms: every card matching the Filter in the
     -- graveyards the payload's ZoneScope names.
@@ -80,7 +80,7 @@ data ObjectRef
     -- proves that a clause naming this arm beside an EachMatching is one CR 608.2f
     -- batch.
     EachPlayer
-  | -- | CR 102.1 / 120.3a / Soul Immolation: every opponent of the resolving
+  | -- | CR 102.2 / 102.3 / 120.3a / Soul Immolation: every opponent of the resolving
     -- controller, the arm above narrowed by CR 109.5's perspective.
     EachOpponent
   | -- | CR 614.12a / 120.3a / Stuffy Doll: the player this effect's source chose as
@@ -161,7 +161,7 @@ data ObjectRef
   | -- | CR 608.2b / Capricious Efreet: one object randomness names out of what the
     -- inner ref names as the effect runs -- a target slot's still-legal members.
     AtRandom ObjectRef
-  | -- | CR 608.2d / 701.42a: the permanents on the battlefield -- or the objects
+  | -- | CR 608.2d: the permanents on the battlefield -- or the objects
     -- in another shared zone, Mirror of Fate's exile -- matching the payload's
     -- Filter that its chooser picks as the effect runs, one or up to a ceiling
     -- (Hanweir Battlements, Wormfang Crab; Tovolar, Dire Overlord, Teferi, Hero
@@ -173,7 +173,8 @@ data ObjectRef
   | -- | CR 508.1b / 608.2h: the player, planeswalker or battle the creature a slot
     -- holds is attacking, or was attacking as it left (Scorch Spitter).
     AttackedBy SlotName.SlotName
-  | -- | CR 400.7: the object a slot holds, followed to wherever it is now.
+  | -- | CR 400.7j with the printed "from anywhere": the object a slot holds,
+    -- followed to wherever it is now.
     FromAnywhere FromAnywhere.FromAnywhere
   | -- | CR 608.2f: every object each ref names, as one action on all of them --
     -- Hanweir Battlements' source and chosen permanent, proved by Parun.MeldSpec's

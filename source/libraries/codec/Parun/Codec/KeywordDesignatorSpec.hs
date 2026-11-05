@@ -30,7 +30,7 @@ spec s = Spec.describe s "Parun.Codec.KeywordDesignator" $ do
       (KeywordDesignator.OfKeyword Keyword.Exhaust)
       " {\"type\":\"OfKeyword\",\"value\":{\"type\":\"Exhaust\"}} "
 
-  -- CR 607.2i / 702.33e: Scrapshooter's "if the gift was promised".
+  -- CR 607.2i / 702.174b: Scrapshooter's "if the gift was promised".
   Spec.it s "Printed" $
     Common.assertCodec
       s

@@ -17,7 +17,7 @@ data LimitUnless = MkLimitUnless
     -- | How a nonzero count of blockers must compare to the limit: AtMost is
     -- Charging Rhino's "can't be blocked by more than one creature", AtLeast
     -- Phyrexian Colossus' "can't be blocked except by three or more creatures".
-    -- Blocking with none is never refused (CR 509.1b). Elided at AtMost.
+    -- Blocking with none is never refused (CR 509.1c's Example). Elided at AtMost.
     comparison :: Comparison.Comparison,
     -- | Nothing is the bound on the WHOLE declaration (Silent Arbiter), Just the
     -- bound on the creatures blocking EACH attacker it names, counted per

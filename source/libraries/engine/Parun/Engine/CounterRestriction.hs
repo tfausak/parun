@@ -21,12 +21,9 @@
 -- rule 122.5 forbids outright. A third, CR 118.3's: a cost putting counters on
 -- the object can't be paid (Parun.Engine.Cost.canPayComponent).
 --
--- Asked AFTER CR 616.1's replacement loop has settled the placement, not before,
--- and the settled object is what it is asked about. A row may redirect a
--- placement onto a different object (Replacement.asCounters answers an ObjectId),
--- so the object the prohibition is about is the one that would actually receive
--- the counters rather than the one the effect named. Rule 614 replaces events
--- that would happen; rule 101.2 then refuses what rule 614 settled on.
+-- Asked AFTER CR 616.1's replacement loop has settled the placement, not before.
+-- No row moves a placement to another object: ReplacementEffect.CounterR carries
+-- only a Scaling, so the settled object is the one the effect named.
 module Parun.Engine.CounterRestriction where
 
 import qualified Data.Set as Set

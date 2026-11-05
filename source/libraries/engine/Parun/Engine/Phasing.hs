@@ -28,8 +28,8 @@
 -- permanent and so covers a phased-out one without naming it.
 --
 -- A stored "can't phase in" (Prohibition.PhaseIn, Teferi, Timeless Voyager) is the
--- other effect on that far side: `phasingIn` asks it by id. CR 702.26e leaves it
--- standing, as an effect naming the permanent as phased out.
+-- other effect on that far side: `phasingIn` asks it by id. CR 702.26b's "except"
+-- leaves it standing, as an effect naming the permanent as phased out.
 --
 -- The object itself does NOT move zones, which is CR 702.26d: Object.zone stays
 -- Zone.Battlefield, nothing goes through Parun.Engine.Event's zone-change funnel,
@@ -66,9 +66,11 @@
 -- untap step after that player's next turn would have begun". `orphanSchedule`
 -- is the moment CR 800.4k decides that turn does not begin, and the
 -- PhasedOut.Orphaned row it writes is what `phasingIn` then takes at whatever
--- untap step comes next. Rule 702.26n's first sentence needs nothing here:
--- CR 702.26k's clause is Parun.Engine.Game.removeFromZones, and CR 800.4a's exile
--- clause is vacuous for a phased-out permanent, which no battlefield walk finds.
+-- untap step comes next. Rule 702.26n's first sentence names two things. CR
+-- 702.26k's leaving the game is Parun.Engine.Game.removeFromZones. CR 800.4a's exile
+-- reaches a phased-out permanent by that sentence, but
+-- Parun.Engine.Departure.controlledBy walks the battlefield and does not find one
+-- (gap #6254).
 --
 -- CR 702.26f, one of the two continuous-effect consequences of being gone, needs
 -- nothing here. A "for as long as" duration (CR 611.2b) counting the

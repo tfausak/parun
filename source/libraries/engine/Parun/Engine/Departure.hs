@@ -474,7 +474,7 @@ givesControlOnEntryTo pid active =
 -- stack:
 --
 --   1. CR 110.2's DEFAULT controller (Projection.defaultControllerOf):
---      Object.enteredUnder where a rule recorded one, otherwise CR 108.4a's
+--      Object.enteredUnder where a rule recorded one, otherwise
 --      Object.owner. Only CR 407.3's ante cards change Object.owner, and none
 --      names an object on the stack, so the first clause deleted every object
 --      `pid` owned. Object.enteredUnder is written by four writers and no
@@ -491,7 +491,7 @@ givesControlOnEntryTo pid active =
 --      gave away), and so can a spell cast off another player's card, which is
 --      what clause 4 is for.
 --   2. a stored layer-2 SetController, whose PlayerId is BAKED at resolution
---      (CR 611.2c). The second clause deleted every stored effect whose payload
+--      (CR 608.2h). The second clause deleted every stored effect whose payload
 --      is `pid`, whichever object it affects.
 --   3. a layer-2 control-granting STATIC ability
 --      (Modification.SetControllerToSource, CR 613.1b), which
@@ -685,7 +685,7 @@ exileOrphanedByEndedControl = do
 --
 -- CR 104.2c: survivors all on one team are that team winning, however many
 -- they are. CR 104.4d's draw is the empty case. CR 809.5a is this too: an
--- emperor wins only when every opponent has left, CR 104.2b's effect being the
+-- emperor wins only when every opponent has left, CR 104.3h's effect being the
 -- opponents losing (Parun.Engine.Resolve.Arms.Zones's WinGame arm).
 outcomeAfterLeaving :: [PlayerId] -> GameState -> Maybe Result
 outcomeAfterLeaving leaving gs = case Game.stillPlaying gs of

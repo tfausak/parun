@@ -23,8 +23,9 @@ import qualified Parun.Types.Quantity as Quantity
 -- reader tells which arm it is looking at. Parun.Types.Mill is what spinning out
 -- looks like -- a mill is "these players, this many" plus CR 728.1's tally, so
 -- it has its own record rather than a nullable field here. Parun.Types.Draw left
--- the same way, over CR 121.1's "and reveal it" (#1899), Parun.Types.LifeLoss over
--- CR 728.1a's cause, and Parun.Types.Blight over CR 701.68c's blighted creature.
+-- the same way, over CR 121.6c's additional action, "and reveal it" (#1899),
+-- Parun.Types.LifeLoss over CR 728.1a's cause, and Parun.Types.Blight over CR
+-- 701.68c's blighted creature.
 data PlayerQuantity = MkPlayerQuantity
   { player :: PlayerRef.PlayerRef,
     quantity :: Quantity.Quantity

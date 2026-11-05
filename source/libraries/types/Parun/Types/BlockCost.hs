@@ -8,7 +8,7 @@ import qualified Parun.Types.PerCreature as PerCreature
 
 -- | CR 509.1b / CR 509.1d: one printed COST TO BLOCK (Oppressive Rays). CR 509.1b
 -- classifies it as a RESTRICTION -- the second arm of its parenthetical, whose
--- condition CR 509.1d-509.1f then determine and pay -- and CR 509.1c's second
+-- condition CR 509.1d-509.1f then determine and pay -- and CR 509.1c's third
 -- sentence makes paying it optional.
 --
 -- The SEVENTH carrier of a printed static ability, alongside

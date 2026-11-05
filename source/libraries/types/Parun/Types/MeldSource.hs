@@ -24,9 +24,9 @@ import qualified Parun.Types.PrintingId as PrintingId
 -- appropriate zone) and CR 701.27g's exclusion of an object represented by more
 -- than one card from being a transformed permanent.
 --
--- NonEmpty rather than a pair: CR 701.42a says "two cards" of a meld pair, but
--- nothing in rule 701.42 or rule 712.4 fixes the count for the readers above,
--- which all quantify over "each card that represents it". Parun.Engine.Game's
+-- NonEmpty rather than a pair: CR 701.42a and CR 712.4a say "two cards" of a
+-- meld pair, but the readers above all quantify over "each card that represents
+-- it", so none depends on the count. Parun.Engine.Game's
 -- componentsOf is the shared reader, and CR 730.3's merged permanents answer it
 -- the same way (Parun.Types.Source's OfMerge arm).
 --

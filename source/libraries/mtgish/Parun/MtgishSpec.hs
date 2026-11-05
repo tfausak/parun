@@ -198,8 +198,9 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
   Spec.it s "reads a creature target as a creature slot" $ do
     Spec.assertEq s [Pool.Creatures] (fmap TargetSlot.pool (spellSlots (translated giantGrowth)))
 
-  -- CR 115.1 / 601.2c: "another target creature" of a spell is another than
-  -- the first target, which mtgish names by its reference, not the source.
+  -- A printed "another target creature" (against CR 601.2c's default) is
+  -- another than the first target, which mtgish names by its reference, not the
+  -- source.
   Spec.it s "reads another target as other than the target it names" $ do
     Spec.assertEq s (Right ()) (accepts fallOfTheHammer)
     let filters = fmap TargetSlot.filter (Map.elems (spellSlotMap (translated fallOfTheHammer)))

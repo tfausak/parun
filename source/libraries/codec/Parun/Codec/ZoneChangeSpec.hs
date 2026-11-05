@@ -25,8 +25,8 @@ spec s = Spec.describe s "Parun.Codec.ZoneChange" $ do
           }
       )
       " {\"departed\":1,\"object\":2,\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}} "
-  -- The same id on both sides, which is what a library-to-graveyard mill writes
-  -- (CR 113.6k): the shape the engine reads when nothing "became" anything.
+  -- The same id on both sides, which is ProposedEvent.WouldChangeZone's shape:
+  -- nothing has moved yet, so nothing "became" anything.
   Spec.it s "MkZoneChange, the same id throughout" $
     Common.assertCodec
       s

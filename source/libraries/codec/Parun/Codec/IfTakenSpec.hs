@@ -9,7 +9,7 @@ import qualified Parun.Types.IfTaken as IfTaken
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.IfTaken" $ do
-  -- CR 608.2c: Worms of the Earth's "if a player does either", both ordinals.
+  -- CR 118.12: Worms of the Earth's "if a player does either", both ordinals.
   Spec.it s "AnyTaken" $
     Common.assertCodec
       s
@@ -23,7 +23,7 @@ spec s = Spec.describe s "Parun.Codec.IfTaken" $ do
       IfTaken.codec
       (IfTaken.NoneTaken (NonEmpty.singleton (ClauseIndex.MkClauseIndex 2)))
       " {\"type\":\"NoneTaken\",\"value\":[2]} "
-  -- CR 608.2c / 609.3: Lich's "If you can't".
+  -- CR 118.12 / 609.3: Lich's "If you can't".
   Spec.it s "Couldnt" $
     Common.assertCodec
       s

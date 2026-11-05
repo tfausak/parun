@@ -34,7 +34,8 @@ symbol s = braced $ case s of
   ManaSymbol.Snow -> Text.pack "S"
   ManaSymbol.Variable -> Text.pack "X"
 
--- | A mana cost's symbols in order; the cost of no symbols is {0} (CR 202.1).
+-- | A mana cost's symbols in order (CR 202.1); the pool writes {0} (CR 118.5) as
+-- a cost of no symbols.
 manaCost :: ManaCost.ManaCost -> Text.Text
 manaCost m = case ManaCost.unwrap m of
   [] -> braced (Text.pack "0")

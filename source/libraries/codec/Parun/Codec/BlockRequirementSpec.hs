@@ -38,8 +38,8 @@ spec s = Spec.describe s "Parun.Codec.BlockRequirement" $ do
       (BlockRequirement.MkBlockRequirement (Just Affected.Attached) Nothing Nothing RequirementArity.EachSubject)
       " {\"subject\":{\"type\":\"Attached\"}} "
   -- Seton's Desire's shape: CR 509.1c's second reading, "or that it must block
-  -- if some condition is met", written as CR 604.2's "as long as" clause over
-  -- the cards in the controller's graveyard -- the same threshold clause
+  -- if some condition is met", written as an "as long as" clause (CR 611.3a)
+  -- over the cards in the controller's graveyard -- the same threshold clause
   -- Parun.Codec.AttackRequirementSpec spells for Otarian Juggernaut.
   Spec.it s "a gated requirement" $
     Common.assertCodec

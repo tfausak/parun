@@ -7,7 +7,7 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
 
 -- | CR 509.1b's PAIRWISE restriction: which attackers are restricted, which
--- blockers are barred from them, and CR 508.1c's "unless" gate.
+-- blockers are barred from them, and that rule's "unless" gate.
 
 -- Its own record rather than [[AffectedUnless]] plus a field, because the two
 -- creature-naming halves are not interchangeable: 'affected' is the set of

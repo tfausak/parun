@@ -92,7 +92,7 @@ data Source
     --
     -- ITS OWN CONSTRUCTOR, and neither of the two it resembles: OfCard would make
     -- CR 704.5e's "a copy of a spell in a zone other than the stack ceases to
-    -- exist" unaskable, and OfToken is CR 111.3 token-ness, which a copy of a
+    -- exist" unaskable, and OfToken is CR 111.1 token-ness, which a copy of a
     -- spell acquires only as CR 707.10f's permanent is put onto the battlefield
     -- (Parun.Engine.Event's zone-change funnel rewrites it there).
     OfSpellCopy PrintingId.PrintingId

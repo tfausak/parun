@@ -60,7 +60,7 @@ fromJson = Codec.decode codec
 
 -- One constructor, so four cases: rule 702.6a's equip ability as
 -- Parun.Engine.Keyword mints it, carrying CR 602.5d's SorcerySpeed clause, CR
--- 602.2's default of no clause at all,
+-- 117.1b's default of no clause at all,
 -- whose key is elided, Kongming's Contraptions' TWO clauses, which is what
 -- the key being an array is for, and the same equip ability carrying the stamp
 -- its minter put on it.
@@ -137,8 +137,8 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           (Just (Keyword.Equip (Equip.MkEquip (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 1])) []) Nothing EquipTarget.Creature)))
       )
       " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"modal\":{\"modes\":[{}]},\"restrictions\":[{\"type\":\"SorcerySpeed\"}],\"keyword\":{\"type\":\"Equip\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"quality\":null}}} "
-  -- CR 602.2: no rider is the default for nearly every ability, so the key stays
-  -- out of the JSON.
+  -- CR 117.1b: no rider is the default for nearly every ability, so the key
+  -- stays out of the JSON.
   Spec.it s "an unrestricted ability omits the restrictions key, and an absent key decodes to none" $
     Common.assertJsonCodec
       s

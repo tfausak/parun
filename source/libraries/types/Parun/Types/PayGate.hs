@@ -26,7 +26,8 @@ import qualified Parun.Types.Quantity as Quantity
 -- cost, paid when the spell or ability resolves" -- which is the whole reason
 -- this cannot ride Parun.Types.Face.additionalCosts, .additionalCostChoices or
 -- .alternativeCosts. Those
--- are announced and paid at CR 601.2f-h, as the spell is cast, by its caster.
+-- are announced at CR 601.2b and paid at CR 601.2f-h, as the spell is cast, by
+-- its caster.
 --
 -- A field on Parun.Types.Clause rather than an arm of Parun.Types.Effect, for
 -- Parun.Types.Optionality's reason carried over: it gates an instruction list on
@@ -119,7 +120,7 @@ data PayGate = MkPayGate
     -- 118.5 makes payable and which admits the IfPaid branch, and CR 118.6's
     -- unpayable Nothing when it has none, which Cost.canPay refuses. Zero copies
     -- of an unpayable cost is not a free one; see #2875. A quantity that will not
-    -- evaluate is zero too (CR 107.1b).
+    -- evaluate is zero too (CR 107.2).
     --
     -- ONE COST, not several offers: rule 702.24a says "either the entire set of
     -- costs is paid, or none of them is paid. Partial payments aren't allowed",
@@ -131,8 +132,8 @@ data PayGate = MkPayGate
     -- A Quantity and not a counter kind, Parun.Types.CostReduction.perEach's
     -- reason: rule 702.24a's own count is Quantity.ObjectCounters, and every
     -- other printing of the family counts something else entirely -- Rakshasa's
-    -- Disdain a graveyard, Oppressive Will a hand, Override a board. A CR 613
-    -- type change reaches it through
+    -- Disdain a graveyard, Oppressive Will a hand, Override a board. A CR 612.1
+    -- text change reaches it through
     -- Parun.Engine.Projection.Rewrite.rewriteQuantity, as rewriteEffect's own
     -- descent already does.
     --

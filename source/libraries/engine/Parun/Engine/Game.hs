@@ -1160,7 +1160,7 @@ cardOfWithLastKnown :: ObjectId -> GameState -> Maybe Card
 cardOfWithLastKnown oid gs = cardOfSource gs (sourceOfWithLastKnown oid gs)
 
 -- The card behind a Source, if it has one. An ability on the stack does not: it
--- is an object in its own right (CR 113.7a), and the card is its SOURCE's.
+-- is an object in its own right (CR 113.1c), and the card is its SOURCE's.
 --
 -- Takes the GameState because the three card-shaped constructors name their
 -- printing rather than carrying it (#1592). Both callers above already held it.
@@ -1208,7 +1208,7 @@ cardOfPrinting pid gs = fmap Printing.card (printingOf pid gs)
 --
 -- The same arms and the same answers as `cardOfSource`, so a source with no card
 -- and no interned characteristics behind it -- an activated ability, a triggered
--- ability, CR 725.2's inherent trigger (CR 113.7a) -- answers Nothing and there
+-- ability, CR 725.2's inherent trigger (CR 405.1) -- answers Nothing and there
 -- is nothing to copy.
 printingIdOfSource :: Source.Source -> Maybe PrintingId.PrintingId
 printingIdOfSource source = case source of
@@ -1561,7 +1561,7 @@ landFacesOf obj card = case copyStampOf obj of
     | otherwise -> []
 
 -- CR 201.1 / 707.2: the names a card shows off the battlefield -- its copy
--- stamp's when it has one, CR 709.4's combined names otherwise. What CR 305.1's
+-- stamp's when it has one, CR 709.4's combined names otherwise. What CR 101.2's
 -- land-play prohibitions are asked of.
 copiableNamesOf :: Object.Object -> Card -> Set.Set CardName.CardName
 copiableNamesOf obj card = maybe (Card.combinedNames card) PC.names (copyStampOf obj)
@@ -1635,16 +1635,16 @@ halvesOf :: ObjectId -> GameState -> Maybe Card
 halvesOf = faceUpCopiable halvesCardOf
 
 -- The face of the card an object is showing. Nothing when the id is unknown or
--- the object has no card behind it (an ability on the stack, CR 113.7a).
+-- the object has no card behind it (an ability on the stack, CR 405.1).
 --
 -- The seam every characteristic read goes through -- which is why CR 708.2's
 -- substitution is HERE and nowhere else. "Face-down spells and face-down
 -- permanents have no characteristics other than those listed by the ability or
 -- rules that allowed the spell or permanent to be face down", and CR 708.2a
 -- fixes the list for an ability that names none. Those listed values are the
--- object's COPIABLE values, so they replace the printed face at the point every
--- read starts from rather than being folded in as a CR 613 layer -- see
--- Card.faceDownFace.
+-- object's COPIABLE values, CR 613.2b's layer 1b, so they replace the printed
+-- face at the point every read starts from rather than being gathered as a
+-- continuous effect -- see Card.faceDownFace.
 --
 -- The object still HAS its card (Object.source), and faceUpFaceOf below is how
 -- CR 702.37e reads the morph cost off it. Parun.Engine.Visibility.sees answers
@@ -1675,7 +1675,7 @@ faceOfObject gs obj = case Object.facing obj of
 --
 -- EMPTY for a face-down object, which is CR 708.2a's "no name" said in the one
 -- way a set can say it, and empty again for an id that names nothing or an
--- object with no card behind it (CR 113.7a: an ability on the stack).
+-- object with no card behind it (CR 405.1: an ability on the stack).
 namesOf :: ObjectId -> GameState -> Set.Set CardName.CardName
 namesOf oid gs = case fmap Object.facing (lookupObject oid gs) of
   Just (Facing.FaceDown _) -> Set.empty
@@ -2012,7 +2012,8 @@ lastKnownOf oid gs = Monad.join (liveOrLastKnown (const Nothing) Just oid gs)
 -- CR 107.3m: the value of X announced for the spell that became this object,
 -- and 0 for every object no such spell stands behind. Read off the OBJECT, not
 -- the projection: an announcement is not a characteristic, so no CR 613 layer
--- can write it and CR 707.2 does not copy it. A source already gone answers
+-- can write it, and CR 707.2 copies the value of X only for an object on the
+-- stack, so a Clone has none. A source already gone answers
 -- from its last known information (CR 113.7a), which is what a legend-rule
 -- casualty's own enters trigger reads; the
 -- cr-107-3m-a-gadwick-lost-to-the-legend-rule-still-draws-its-x scenario is the
@@ -2388,7 +2389,7 @@ withFlipped status oid gs = gs {GameState.objects = Map.adjust (\o -> o {Object.
 --
 --   * the id names nothing on the BATTLEFIELD. CR 701.27a transforms a
 --     PERMANENT, which CR 110.1 makes an object on the battlefield.
---   * the id names nothing at all, or nothing with a card behind it (CR 113.7a).
+--   * the id names nothing at all, or nothing with a card behind it (CR 405.1).
 --   * Card.turnedOver declines -- CR 701.27c's card that is not double-faced,
 --     CR 701.27d's instant or sorcery face -- for the card, or for every
 --     component of a merged permanent (CR 730.2i).
@@ -2524,7 +2525,7 @@ facesTurned before after =
 -- with the layout's own view for the same reason. Card.faces is a NonEmpty, so
 -- the head is total and a card with no front face cannot arise.
 --
--- An object with no card behind it (CR 113.7a: an ability on the stack) answers
+-- An object with no card behind it (CR 405.1: an ability on the stack) answers
 -- True as well, which is the same answer as "nothing has turned it over" and is
 -- what both callers want. Parun.Engine.Daytime asks this of battlefield
 -- permanents, where CR 110.1 leaves no such object, and reads it beside a
@@ -2587,7 +2588,8 @@ isSpell oid gs = case lookupObject oid gs of
 -- The two together are what countering needs: an effect that counters only
 -- spells must not reach an ability, and one that counters abilities must not
 -- reach a spell. Parun.Engine.Event.counter branches on this to choose between
--- CR 701.6a's graveyard and CR 608.2n's cease.
+-- CR 701.6a's graveyard for a spell and its bare removal from the stack for an
+-- ability.
 --
 -- CR 725.2's sourceless inherent monarch triggers are triggered abilities all
 -- the same, so a Stifle may counter one. An emblem stays in the command zone
@@ -3522,7 +3524,7 @@ diedChange event = do
   change <- movedChange event
   if ZoneChange.from change == Zone.Battlefield && ZoneChange.to change == Zone.Graveyard then Just change else Nothing
 
--- CR 400.7's link read back for a card that says "from anywhere" (Tempest
+-- CR 400.7j's finding, read back for a card that says "from anywhere" (Tempest
 -- Efreet, Timmerian Fiends): the objects this id is now, following each logged
 -- zone change from the id that left to every id that arrived -- several where a
 -- merged or melded permanent came apart, all of which the effect finds (CR
@@ -4097,7 +4099,7 @@ attackersInTheirLastTurn gs victim =
 -- Every road onto the blocked status records the event and CR 509.3c keeps it to
 -- one per combat, so an `any` is the whole question: CR 509.1a's declaration, CR
 -- 509.1h's effect, CR 509.4's blocker put onto the battlefield, and an effect's
--- reassignment under CR 509.1b -- Parun.Engine.Combat's declareBlockers,
+-- reassignment under CR 509.3b -- Parun.Engine.Combat's declareBlockers,
 -- becomeBlocked, putOntoBattlefieldBlocking and switchBlockers.
 wasBlockedThisTurn :: GameState -> ObjectId -> Bool
 wasBlockedThisTurn gs oid = any ((== Just oid) . blockedAttacker . LoggedEvent.event) (GameState.events gs)
@@ -4148,7 +4150,8 @@ chooseUpTo ceiling_ candidates prompt = again Set.empty
 -- Exactly: every candidate where there are as many as the count or fewer --
 -- CR 608.2d leaves one legal answer at as many, and CR 609.3 takes what there
 -- is at fewer -- and otherwise ONE ask per pick, each over the candidates the
--- earlier picks left, since CR 608.2d cannot choose the same object twice.
+-- earlier picks left, since "two cards" names two different cards (CR 608.2c's
+-- rules of English).
 -- One seat answering several asks in sequence is the same decision as one
 -- simultaneous choice of that many, CR 101.4c leaving the order to that
 -- player.

@@ -295,8 +295,8 @@ import qualified Parun.Types.ZoneScope as ZoneScope
 -- returns one ability PER INSTANCE -- `Poisonous 1` twice is two abilities and two
 -- poison counters, not one ability for 2. (Contrast CR 702.164b, where toxic's N
 -- values are SUMMED -- Projection.totalToxic.) Most of the arms below say the same
--- under their own rule; a keyword whose rule states no such clause gets it from CR
--- 603.2's general reason instead.
+-- under their own rule; a keyword whose rule states no such clause gets it from
+-- CR 113.2c instead.
 --
 -- Order is the Map's, which is Keyword's Ord -- rule-number order, and stable. The
 -- CR 603.3b ordering prompt indexes into the scan's canonical order, so this being
@@ -396,7 +396,7 @@ abilitiesFor keyword count = case keyword of
   Keyword.Transfigure _ -> []
   Keyword.Afflict n -> List.genericReplicate count (afflict n)
   Keyword.BattleCry -> List.genericReplicate count battleCry
-  -- CR 603.2: none of the three rules states an "each instance" clause, so the
+  -- CR 113.2c: none of the three rules states an "each instance" clause, so the
   -- general reason gives one ability per instance -- a second copy of the
   -- keyword mints a second token, and CR 301.5c leaves the Equipment on the
   -- one its controller ends up attached to.
@@ -404,8 +404,9 @@ abilitiesFor keyword count = case keyword of
   Keyword.ForMirrodin -> List.genericReplicate count (attachToOwnToken rebelToken)
   Keyword.JobSelect -> List.genericReplicate count (attachToOwnToken heroToken)
   Keyword.Evolve -> List.genericReplicate count evolve
-  -- Rule 702.110 prints no "each instance" clause, so CR 603.2's general reason
-  -- gives one ability per instance: two copies of exploit offer two sacrifices.
+  -- Rule 702.110 prints no "each instance" clause, so CR 113.2c's general
+  -- reason gives one ability per instance: two copies of exploit offer two
+  -- sacrifices.
   Keyword.Exploit -> List.genericReplicate count exploit
   -- CR 702.172a and 702.183a mint nothing: both are static abilities of a
   -- spell on the stack, read at CR 601.2b by Parun.Engine.Cast.
@@ -477,7 +478,7 @@ abilitiesFor keyword count = case keyword of
   Keyword.Trample -> []
   Keyword.TrampleOverPlaneswalkers -> []
   Keyword.Vigilance -> []
-  -- CR 702.21a's ability, one per instance for CR 603.2's general reason, so a
+  -- CR 702.21a's ability, one per instance for CR 113.2c's general reason, so a
   -- spell targeting a doubly warded permanent is offered both costs.
   Keyword.Ward w -> List.genericReplicate count (ward w)
   Keyword.Banding -> []
@@ -505,7 +506,7 @@ abilitiesFor keyword count = case keyword of
   Keyword.Devour _ -> []
   Keyword.Amplify _ -> []
   Keyword.Changeling -> []
-  -- CR 603.2: rule 702.75a states no "each instance" clause, so the general
+  -- CR 113.2c: rule 702.75a states no "each instance" clause, so the general
   -- reason gives one ability per instance.
   Keyword.Hideaway n -> List.genericReplicate count (hideaway n)
   Keyword.Reinforce {} -> []
@@ -521,7 +522,7 @@ abilitiesFor keyword count = case keyword of
   Keyword.ChooseABackground -> []
   Keyword.DoctorsCompanion -> []
   -- CR 702.124j is the odd one of the five: it "represents two abilities",
-  -- and the second functions in the game rather than before it. CR 603.2 gives
+  -- and the second functions in the game rather than before it. CR 113.2c gives
   -- one ability per instance, rule 702.124j stating no clause of its own.
   Keyword.PartnerWith name -> List.genericReplicate count (partnerWith name)
   Keyword.Escalate _ -> []
@@ -600,9 +601,9 @@ abilitiesFor keyword count = case keyword of
   Keyword.Gift something -> perPayment count (gift something)
   Keyword.Foretell _ -> []
   Keyword.Companion _ -> []
-  -- CR 702.94a's linked triggered half, one per instance for CR 603.2's general
-  -- reason. Minted HERE rather than in a hand-only roster because WHERE it
-  -- functions is CR 113.6k's question, answered in Event.zonesTriggeredFrom.
+  -- CR 702.94a's linked triggered half, one per instance for CR 113.2c's
+  -- general reason. Minted HERE rather than in a hand-only roster because WHERE
+  -- it functions is CR 113.6k's question, answered in Event.zonesTriggeredFrom.
   Keyword.Miracle cost -> List.genericReplicate count (miracle cost)
   Keyword.StartYourEngines -> []
   Keyword.Ascend -> []
@@ -619,8 +620,9 @@ abilitiesFor keyword count = case keyword of
   Keyword.Exert -> []
   -- CR 702.154b's triggered ability is minted, but not here: it is linked to the
   -- CR 508.1g cost, so it exists only where that cost was paid. Parun.Engine.Combat
-  -- arms `enlistReflexive` as CR 603.12's reflexive entry at the moment of the
-  -- tap, which is also what keeps rule 702.154d's instances independent.
+  -- arms `enlistReflexive` as a TriggerCondition.Reflexive entry at the moment
+  -- of the tap (CR 607.2h), which is also what keeps rule 702.154d's instances
+  -- independent.
   Keyword.Enlist -> []
   -- CR 702.184a is an ACTIVATED ability; battlefieldAbilitiesFor mints it.
   Keyword.Station -> []
@@ -1797,7 +1799,7 @@ encore cost =
               ForEach.members = LoopMembers.Every,
               ForEach.slot = encoreOpponentSlot,
               ForEach.body = Seq.fromList [copied, required],
-              -- CR 608.2f's first sentence: one action over the opponents, so the
+              -- CR 608.2f's second sentence: one action over the opponents, so the
               -- copies enter together (CR 603.6a).
               ForEach.individually = False,
               ForEach.payGate = Nothing,
@@ -2092,7 +2094,7 @@ battlefieldAbilitiesFor keyword count = fmap (mintedBy keyword) $ case keyword o
   Keyword.Forecast -> []
   Keyword.PowerUp -> []
   Keyword.ClassLevel _ -> []
-  -- Exerting is a cost paid at CR 508.1g, which Combat.declareAttackers offers
+  -- Exerting is a cost chosen at CR 508.1g, which Combat.declareAttackers offers
   -- rather than the stack.
   Keyword.Exert -> []
   Keyword.Enlist -> []
@@ -2204,8 +2206,8 @@ crew n =
 -- crew does not print.
 --
 -- THE EFFECT is Effect.Designate, where crew's arm adds card types: CR 702.171b
--- makes saddled a designation, "neither an ability nor part of the permanent's
--- copiable values", which is exactly what Object.designations holds. Aimed at
+-- makes saddled a designation, "not a part of the permanent's copiable values",
+-- which is exactly what Object.designations holds. Aimed at
 -- Binding.triggerSource, so the permanent is named and never TARGETED (CR
 -- 115.10a), crew's posture and renown's. No value rides with the mark -- CR
 -- 701.37c's X is monstrosity's alone.
@@ -2406,7 +2408,7 @@ outlast cost =
 -- [something]' appears in the rule for that keyword ability rather than in the
 -- ability itself." A Filter beside the pool, so the control question is part of
 -- target legality and is re-asked at resolution (CR 608.2b): an Equipment whose
--- host changed hands in between fizzles. CR 301.5b's separate restriction -- that
+-- host changed hands in between fizzles. CR 301.5's separate restriction -- that
 -- an Equipment may only be attached to a creature at all -- is
 -- Parun.Engine.Attach's and is not restated here.
 --
@@ -2466,8 +2468,8 @@ equipTarget = SlotName.MkSlotName (Text.pack "equipped")
 -- counterpart to CR 702.6c, so this payload stays a bare Cost.
 --
 -- Pool.Permanents narrowed by Filter.HasCardType Land, where equip takes
--- Pool.Creatures whole: CR 115.1a gives the creature pool a constructor and
--- there is no land pool. The recipient that reaches Object.attachedTo is
+-- Pool.Creatures whole: the creature pool has a constructor and there is no
+-- land pool. The recipient that reaches Object.attachedTo is
 -- therefore Recipient.ToObject rather than ToCreature -- which is what
 -- Parun.Engine.Attach.attachmentFor's Fortification branch answers with, since
 -- rule 301.6 names a land and not a creature.
@@ -3850,8 +3852,8 @@ optionalCosts = filter (Maybe.isJust . optionalCost) . Set.toAscList
 -- at CR 601.2b and added to whichever candidate cost was announced (CR 601.2f).
 --
 -- A LIST, flashbackCosts' shape, and for the mirror-image reason: rule 702.42
--- states no limit on how many entwine abilities an object has (contrast CR
--- 702.41b for affinity and CR 702.43b for modular), and entwine's cost is
+-- states no multiple-instances clause (contrast CR 702.41b for affinity and CR
+-- 702.43b for modular), and entwine's cost is
 -- ADDITIONAL rather than alternative, so CR 118.8a's "any number of additional
 -- costs may be applied" makes two of them a SUM rather than a choice. The
 -- summing is Parun.Engine.Cast.entwineOffer's, since CR 601.2f's addition lives
@@ -4051,18 +4053,19 @@ manaSubstitutesFor symbol keywords =
         _ -> Nothing
    in Maybe.mapMaybe substituteOf (Set.toAscList keywords)
 
--- The one exile CR 702.34a, CR 702.127a and CR 702.133a all print, in the same
--- words. Filter.IsSource, because the rule says "this card". `whenDestination =
--- Nothing` is the rule's "instead of putting it anywhere else" -- every
+-- The one exile CR 702.34a, CR 702.127a, CR 702.133a and CR 702.180a all print,
+-- in the same words. Filter.IsSource, because the rule says "this card".
+-- `whenDestination = Nothing` is the rule's "instead of putting it anywhere else" -- every
 -- destination, not the graveyard alone, so Reprieve returning a flashed-back
 -- spell to its owner's hand exiles it instead (Parun.CastSpec's "CR 702.34a a
 -- flashback spell bounced off the stack is exiled, not returned to hand").
 --
--- GATED on the clause each of the three rules puts in front of it, and the three
+-- GATED on the clause each of the four rules puts in front of it, and the four
 -- clauses are not the same question. `castFor` is the keyword whose candidate cost
 -- the cast was announced for, which rule 702.34a's "if the flashback cost was
--- paid" and rule 702.133a's jump-start clause each ask about; rule 702.127a asks
--- only whether the cast came from a graveyard. Parun.Engine.Cast installs what this
+-- paid", rule 702.133a's jump-start clause and rule 702.180a's each ask about;
+-- rule 702.127a asks only whether the cast came from a graveyard.
+-- Parun.Engine.Cast installs what this
 -- returns without ever inspecting it.
 castFromGraveyardReplacementsOf :: Set Keyword -> Maybe Keyword -> [ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))]
 castFromGraveyardReplacementsOf keywords castFor =
@@ -4076,7 +4079,7 @@ castFromGraveyardReplacementsOf keywords castFor =
       (if any (paidFor . Keyword.Flashback) (flashbackCosts keywords) then [castFromGraveyardExile] else [])
         -- CR 702.127a's THIRD static ability, word for word CR 702.34a's second
         -- ability, so it is the same effect and not a sibling. The one of the
-        -- three that does NOT read `castFor`: rule 702.127a conditions its exile
+        -- four that does NOT read `castFor`: rule 702.127a conditions its exile
         -- on the zone alone, so an aftermath half cast from a graveyard for any
         -- cost is exiled.
         <> (if Set.member Keyword.Aftermath keywords then [castFromGraveyardExile] else [])
@@ -4272,11 +4275,11 @@ blitzDraw =
 -- stamps both at the permanent's own timestamp. Layer 4 (CR 613.1d), which
 -- Parun.Engine.Projection.layer reads off the modification.
 --
--- "DURING YOUR TURN" is CR 604.2's "as long as" clause and not a duration: the
--- effect is re-asked on every projection (CR 613.5), so it switches off at the
--- turn handoff with no resolution and nothing to expire. CR 102.1's active player
--- is the whole of it -- rule 702.161a says "your turn", so the comparison is
--- against the ability's own controller (PlayerRelation.You).
+-- "DURING YOUR TURN" is an "as long as" clause (CR 611.3a) and not a duration:
+-- the effect is re-asked on every projection (CR 613.5), so it switches off at
+-- the turn handoff with no resolution and nothing to expire. CR 102.1's active
+-- player is the whole of it -- rule 702.161a says "your turn", so the
+-- comparison is against the ability's own controller (PlayerRelation.You).
 --
 -- No functionsFrom, leaving CR 113.6's battlefield default standing: rule
 -- 702.161a says "this permanent".
@@ -4430,7 +4433,7 @@ mintedReplacementsFor keyword count = case keyword of
   -- CR 702.98a's FIRST static ability, riot's row with the declining half deleted.
   -- Filter.IsSource and one row per instance for riot's reasons.
   Keyword.Unleash -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.Unleash))
-  -- CR 702.63a's FIRST ability, a CR 614.1c self-replacement in riot's exact
+  -- CR 702.63a's FIRST ability, a CR 614.1c replacement in riot's exact
   -- position. Riot's rewrite asks a question and this one does not, so the count
   -- rides the rewrite rather than a prompt. ONE ROW PER INSTANCE, and CR 702.63c
   -- makes the counters add up, each rewrite placing its own N.
@@ -4494,7 +4497,7 @@ mintedReplacementsFor keyword count = case keyword of
   -- entering object where the row applies, as the sunburst arm below.
   Keyword.Modular Nothing -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.ModularSunburst))
   -- CR 702.44a's one static ability, the arm above's row with both halves left
-  -- to the board: rule 702.44b's count is the colors of mana spent on the
+  -- to the board: rule 702.44a's count is the colors of mana spent on the
   -- entering object (Parun.Engine.Projection.colorsSpentOf) and the kind turns
   -- on whether it is entering as a creature, neither of them knowable from a
   -- keyword and a count. Parun.Engine.Event reads both where the row applies.
@@ -4527,7 +4530,7 @@ mintedReplacementsFor keyword count = case keyword of
   -- Glittering Lion's printed shield with the quality written into the SOURCE
   -- half -- Filter.IsSource in the recipient position is the permanent this
   -- keyword is on (Stormwild Capridor's spelling), and the quality is matched
-  -- against the damage's source at the event, which is CR 609.7b's recheck.
+  -- against the damage's source at the event, which is when CR 702.16e asks.
   --
   -- ONE ROW whatever the count, unlike riot's replicate: CR 702.16m makes a
   -- second instance of protection from the same quality redundant, and a second
@@ -4536,7 +4539,7 @@ mintedReplacementsFor keyword count = case keyword of
   -- The PERMANENT half only. Rule 702.16e's "or player" is unreachable from a
   -- keyword -- a player has no keywords, the same split
   -- Parun.Engine.Target.targetable states for CR 702.16b -- so the player half is
-  -- minted from the CR 613.11 axis instead, by Parun.Engine.Replacement.collect's
+  -- minted from the CR 613.10 axis instead, by Parun.Engine.Replacement.collect's
   -- third segment.
   Keyword.Protection protection ->
     [ ReplacementEffect.DamageR
@@ -4571,8 +4574,9 @@ mintedReplacementsFor keyword count = case keyword of
   Keyword.Afflict _ -> []
   Keyword.Fear -> []
   Keyword.Intimidate -> []
-  -- CR 702.37a's plain morph mints nothing: rule 702.37a is one alternative cost
-  -- and one special action, and neither rewrites an event.
+  -- CR 702.37a's plain morph mints nothing: rule 702.37 is one alternative cost
+  -- (CR 702.37a) and one special action (CR 702.37e), and neither rewrites an
+  -- event.
   Keyword.Morph (Morph.MkMorph _ MorphVariant.Plain) -> []
   -- CR 702.37b's SECOND clause, minted the way riot's is: "As this permanent is
   -- turned face up, put a +1/+1 counter on it if its megamorph cost was paid to
@@ -5153,8 +5157,8 @@ mintedAttachRestrictionsOf = concatMap mintedAttachRestrictionsFor . Map.keys
 
 -- The same rows asked of the STANDING halves instead -- CR 704.5m's bury and CR
 -- 704.5n's detach, which Parun.Engine.AttachRestriction.removesGiven serves,
--- where the function above serves CR 701.3a's move. The two questions differ on
--- exactly one sentence in rule 702, so this narrows those rows rather than
+-- where the function above serves CR 701.3a's move. The two questions differ only on
+-- rules 702.16n and 702.16p, so this narrows those rows rather than
 -- restating two hundred keyword arms.
 mintedRemovalRestrictionsOf :: Map Keyword Natural -> [AttachRestriction.AttachRestriction]
 mintedRemovalRestrictionsOf = concatMap mintedRemovalRestrictionsFor . Map.keys
@@ -5171,9 +5175,9 @@ mintedRemovalRestrictionsOf = concatMap mintedRemovalRestrictionsFor . Map.keys
 -- from the same quality is a distinct key in the keyword map when its exception
 -- differs, so its own unnarrowed row still removes what this one spares.
 --
--- The WILDCARD is right rather than absorbing: rule 702.16n is the only sentence
--- in rule 702 that parts removal from refusal, so every other keyword removes
--- exactly what it refuses.
+-- The WILDCARD is right rather than absorbing: rules 702.16n and 702.16p are the
+-- only sentences in rule 702 that part removal from refusal, so every other
+-- keyword removes exactly what it refuses.
 mintedRemovalRestrictionsFor :: Keyword -> [AttachRestriction.AttachRestriction]
 mintedRemovalRestrictionsFor keyword =
   let rows = mintedAttachRestrictionsFor keyword
@@ -5308,7 +5312,7 @@ mintedAttachRestrictionsFor keyword = case keyword of
   --
   -- The PERMANENT half of rule 702.16c only. That rule reaches "a permanent or
   -- player with protection", and a player has no keywords for this mint to read,
-  -- so the player half rides the CR 613.11 axis instead --
+  -- so the player half rides the CR 613.10 axis instead --
   -- Parun.Types.PlayerEffect.HasProtectionFrom, read by
   -- Parun.Engine.Attach.attachmentFor and Parun.Engine.Sba.fallsOff through
   -- Parun.Engine.PlayerEffect.protectedFrom. Rule 702.16d has no player half.
@@ -5800,7 +5804,9 @@ functionsOnBattlefield keyword = case keyword of
   Keyword.Suspend _ -> False
   Keyword.Transmute _ -> False
   Keyword.Unearth _ -> False
-  -- CR 113.6n: deck construction, before the game begins.
+  -- CR 113.6n: deck construction, before the game begins, but for Companion,
+  -- which functions outside the game (CR 702.139a), and HiddenAgenda, as its
+  -- card is put into the command zone (CR 702.106a).
   Keyword.ChooseABackground -> False
   Keyword.Companion _ -> False
   Keyword.DoctorsCompanion -> False
@@ -6198,7 +6204,8 @@ myriadExile =
 -- planeswalker they control": a CR 508.4 choice narrowed to the iteration's
 -- opponent, made by the controller in Parun.Engine.Combat and elided at one
 -- candidate. An opponent who is not a defending player narrows to nothing, and
--- the token enters not attacking (CR 508.4a) -- which is what a game not using CR
+-- the token enters not attacking, by analogy with CR 508.4a, which stops short
+-- of a player who never defended -- which is what a game not using CR
 -- 802's option leaves.
 --
 -- Rule 702.116a's "you may" is PER OPPONENT, so it is the loop's own
@@ -6233,7 +6240,7 @@ myriad =
               ForEach.members = LoopMembers.AnyNumber,
               ForEach.slot = myriadOpponentSlot,
               ForEach.body = Seq.singleton copy,
-              -- CR 608.2f's first sentence: one action over the opponents, so rule
+              -- CR 608.2f's second sentence: one action over the opponents, so rule
               -- 702.116a's tokens all enter at the same time (CR 603.6a).
               ForEach.individually = False,
               ForEach.payGate = Nothing,
@@ -6456,7 +6463,7 @@ graft =
 --
 -- Condition.Any because rule 702.100a's "and/or" compares two DIFFERENT
 -- characteristics. STRICTLY greater, spelled as "at least one more" since CR
--- 208.1's power and toughness are whole numbers and Comparison has no strict arm.
+-- 107.1's numbers are integers and Comparison has no strict arm.
 -- CR 702.100c then falls out: a permanent that is not a creature has no power or
 -- toughness (CR 208.3), and Condition.holds reads an unanswerable side as False.
 --
@@ -6545,9 +6552,9 @@ soulbondSelfEnters =
 -- it false. Asking the bound slot only whether it is unpaired left the ability
 -- on the stack and put rule 702.95a's "you may" to a player the rule had stopped
 -- asking; Parun.KeywordTriggerSpec's "CR 603.4 an entrant alice no longer
--- controls is not asked about" is what proves it does not. Creature-ness is the
--- one of the three CR 702.95c would also have caught, and it is asked here
--- rather than left to that rule because the two answers are then
+-- controls is not asked about" is what proves it does not. Creature-ness and
+-- control are the two of the three CR 702.95c would also have caught, and they
+-- are asked here rather than left to that rule because the two answers are then
 -- indistinguishable -- the pairing does not happen either way -- so there is
 -- nothing to put to anybody.
 soulbondOtherEnters :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
@@ -6628,7 +6635,7 @@ prowess =
 -- round: PayBranch.IfPaid is rule 702.101a's "if you do", and the "may" IS the
 -- gate's offer (CR 118.12), which is why the clause is Optionality.Mandatory.
 --
--- ONE CLAUSE for two instructions, which is CR 608.2d's single announcement: the
+-- ONE CLAUSE for two instructions, which is CR 118.12's one "if you do": the
 -- loss and the gain hang off the one payment. The gain reads the loss's own
 -- tally rather than a count of opponents, because rule 702.101a says "the total
 -- life lost this way" and CR 614.1 may leave a seat losing nothing --
@@ -6855,11 +6862,12 @@ bushidoHalf condition n =
 -- do, this creature gets +X\/+0 until end of turn, where X is the tapped
 -- creature's power". Frenzy's pump shape with the bonus read off a slot.
 --
--- TriggerCondition.Reflexive, because rule 702.154a's "when you do" is CR
--- 603.12's form: Parun.Engine.Combat.declareAttackers arms one entry per enlist
--- instance whose cost was actually paid, and the entry's EXISTENCE is that
--- rule's affirmative answer. Arming per payment is also CR 702.154d -- two
--- enlist instances each fire for their own tap and no other.
+-- TriggerCondition.Reflexive, the carrier for rule 702.154a's linked "when you
+-- do" (CR 607.2h; not CR 603.12, nothing resolving):
+-- Parun.Engine.Combat.declareAttackers arms one entry per enlist instance whose
+-- cost was actually paid, and the entry's EXISTENCE is the affirmative answer.
+-- Arming per payment is also CR 702.154d -- two enlist instances each fire for
+-- their own tap and no other.
 --
 -- THE BONUS reads Binding.tappedPermanent, station's slot for the same question
 -- ("the tapped creature"), bound at the arming to the creature the cost tapped.
@@ -7188,7 +7196,7 @@ decayedSacrifice =
 --
 -- ONE clause holding BOTH effects, under one Optionality.Optional -- rule 702.39a
 -- prints one "may", and its "if you do" makes the untap conditional on the same
--- answer (CR 608.2e). The requirement's ATTACKER is Binding.triggerSource and
+-- answer (CR 118.12). The requirement's ATTACKER is Binding.triggerSource and
 -- never a target (CR 115.10a).
 provoke :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 provoke =
@@ -7803,7 +7811,7 @@ servoToken =
 -- the rule's "this Equipment" needs no slot of its own. CR 701.3b is what makes
 -- the Equipment stay put when the token is gone or the Equipment itself has left
 -- the battlefield: Event.attach is the funnel that holds it, and the token is
--- still created either way (CR 111.1).
+-- still created either way (CR 101.3).
 attachToOwnToken :: Card -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 attachToOwnToken token =
   let spawn =
@@ -8521,7 +8529,7 @@ gravestorm =
 -- copies the spell and may choose new targets for that copy."
 --
 -- `storm` above's trigger split into TWO CLAUSES: the first sentence is CR
--- 603.5's "may" over one copy, and the rest hangs off it through CR 608.2c's
+-- 603.5's "may" over one copy, and the rest hangs off it through CR 118.12's
 -- "if you do" (Clause.ifTaken naming clause 0), so a declined copy chooses no
 -- opponent and makes no second copy either.
 --
@@ -8851,7 +8859,7 @@ suspendLastCounter keyword =
               OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
               OfferCast.optionality = CastObligation.Optional,
               OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Just keyword, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0},
-              -- rule 702.62a's "cast it": one card, the one the slot names.
+              -- rule 702.62a's "play it": one card, the one the slot names.
               OfferCast.repetition = CastRepetition.Once,
               OfferCast.copied = False,
               OfferCast.verb = PermissionVerb.Play,
@@ -8954,8 +8962,8 @@ hasRebound = Set.member Keyword.Rebound
 -- CR 702.50a: does this object have epic? Membership, as rule 702.88c's
 -- redundancy makes hasRebound's. Read by Parun.Engine.Resolve.finishSpell off
 -- Projection.keywordsOf and never off the printed face, so a spell GRANTED epic
--- by a text-changing effect gets both abilities and one whose text was blanked
--- gets neither (CR 613.1f).
+-- by an ability-adding effect gets both abilities and one stripped by an
+-- ability-removing effect gets neither (CR 613.1f).
 hasEpic :: Set Keyword -> Bool
 hasEpic = Set.member Keyword.Epic
 
@@ -9477,9 +9485,12 @@ champion quality = [championEnters quality, championLeaves]
 -- linked second ability could name.
 --
 -- The sacrifice's CR 608.2c condition therefore reads the exile PILE rather than
--- CR 118.12's answer to the "may", which differs only where something replaces
--- the exile a willing controller announced -- stricter than printed there, the
--- sacrifice happening when rule 118.12 would not have it. A quality nothing on
+-- CR 118.12's answer to the "may". They differ where something replaces the exile
+-- a willing controller announced -- stricter than printed there, the sacrifice
+-- happening when rule 118.12 would not have it -- and where another instance of the
+-- trigger already exiled (Yarok, the Desecrated): the pile is every instance's, so
+-- the creature stays when rule 118.12 would have it sacrificed (gap #6240). A
+-- quality nothing on
 -- the battlefield matches leaves that pile empty however the "may" is answered,
 -- so the sacrifice follows, which is what "unless" demands -- proved by
 -- Parun.KeywordTriggerSpec's "CR 702.72a with no other Merfolk to exile the

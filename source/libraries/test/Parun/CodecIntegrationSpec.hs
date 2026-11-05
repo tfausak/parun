@@ -111,7 +111,7 @@ spec s registry corpus = Spec.describe s "Parun.Codec (integration)" $ do
   -- no registry fixture -- a synthetic Card proves them just as well -- so they
   -- moved to Parun.Codec.FaceSpec with the rest of a face's own coverage.
   -- TargetSlot's own per-constructor coverage (a bare pool, a filtered pool,
-  -- and the Not IsSource conjunct that carries CR 601.2c's "another", #163)
+  -- and the Not IsSource conjunct that carries the printed "another", #163)
   -- lives in Parun.Codec.TargetSlotSpec now; Filter's own per-constructor and
   -- nested-And/Or/Not coverage lives in Parun.Codec.FilterSpec.
   -- EntryRewrite's own per-constructor coverage lives in

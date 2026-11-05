@@ -959,7 +959,7 @@ performTurnFaceUp road announcedX oid = do
       -- abilities and apply nothing.
       --
       -- BEFORE the event record, and that half is observable: a CR 614.1e
-      -- ability and a CR 708.7 trigger on one card would otherwise be
+      -- ability and a turned-face-up trigger on one card would otherwise be
       -- ordered the wrong way round, and CR 708.11's "not afterward" is
       -- exactly the sentence that decides it. Parun.FaceDownSpec's second
       -- turnFaceUp call is what proves this body is reached only from
@@ -1343,8 +1343,8 @@ unscannedEvents :: GameState -> [GameEvent]
 unscannedEvents = fmap LoggedEvent.event . unscannedGrouped
 
 -- The events the STATE-BASED ACTION check has not yet consumed -- CR 704.5h's
--- "since the last state-based action check", and the same boundary CR 903.9a
--- names. Parun.Engine.Sba hands these to Parun.Engine.Commander.returnable, the
+-- "since the last time state-based actions were checked", and the same boundary
+-- CR 903.9a names. Parun.Engine.Sba hands these to Parun.Engine.Commander.returnable, the
 -- other reader.
 unscannedSbaEvents :: GameState -> [GameEvent]
 unscannedSbaEvents gs =
@@ -1457,8 +1457,8 @@ mintOutside pid printingId gs =
 -- would be created in any zone, it isn't created." A conjured card is owned by
 -- the conjuring player, so a departed one creates nothing -- and the check is
 -- ahead of Game.intern, since a printing interned for a card that is never
--- minted is a row nothing points at. Not CR 800.4b's third sentence, which the
--- token funnel createTokens cites: that rule leaves the object in its current
+-- minted is a row nothing points at. Not CR 800.4b's third sentence
+-- (createTokens cites the second): that rule leaves the object in its current
 -- zone, and a conjured card is in no zone to remain in.
 --
 -- Nothing is this funnel's word for a card that was not created, the empty Seq's
@@ -1583,8 +1583,8 @@ conjureOntoBattlefield settle controller card copied count tapped = do
 -- make the same one. An emblem is an object (CR 109.1) owned by the player who
 -- gets it (CR 114.2), so a departed one gets nothing -- and the check is ahead
 -- of Game.intern, since a printing interned for an emblem that is never minted
--- is a row nothing points at. Not CR 800.4b's third sentence, which the token
--- funnel cites: that rule speaks of the battlefield and the stack, and an
+-- is a row nothing points at. Not CR 800.4b's third sentence (the token
+-- funnel cites the second): that rule speaks of the battlefield and the stack, and an
 -- emblem goes to the command zone.
 --
 -- Nothing is this funnel's word for an emblem that was not created, `conjure`'s
@@ -1637,8 +1637,8 @@ createEmblem pid card = do
 -- admits, in interning order.
 --
 -- The Filter is evaluated against the PRINTED FACE, which is the whole of what a
--- card outside the game has: CR 604.3 makes a characteristic-defining ability the
--- one thing that functions out there, and Projection.viewOfCard reads it off the
+-- card outside the game has: CR 604.3 has a characteristic-defining ability
+-- function out there, and Projection.viewOfCard reads it off the
 -- face. No object exists to project (CR 400.11), so there is nothing else to ask.
 --
 -- A printing whose count has fallen to zero is not offered. `take` below deletes
@@ -1855,9 +1855,8 @@ arrivalShuffles destination = case destination of
   OutsideDestination.Exile -> False
 
 -- CR 400.11b: take one copy of this printing out of the player's pool and mint
--- the card where the destination says. Split out from `bringInto` above because
--- it is the half every other road into the game will want -- CR 727.2's restart
--- (#135) -- and that reveals nothing. CR 707.13's copy takes `mintOutside`
+-- the card where the destination says. Split out from `bringInto` above, the half
+-- that reveals nothing. CR 707.13's copy takes `mintOutside`
 -- instead, since it is minted from nothing rather than spent from a pool. The
 -- SPEND is the whole of what it adds over `mintCard`, which Alchemy's conjure
 -- reaches with nothing to spend.
@@ -2344,15 +2343,15 @@ chooseAndApply settle asOf batch diverting allowances applied prevented exiledBy
     -- residue's after it, both against whatever prompts they raise in that
     -- order.
     --
-    -- CR 614.5's other direction is not kept: an effect the covered half's
-    -- continuation applies is not recorded for the residue, so it may apply
-    -- to both halves. Harmless for every rewrite in the tree, each being
-    -- distributive over a split (a doubling of 2 and of 3 is a doubling of
-    -- 5); a non-distributive rewrite reaching both halves would be what
-    -- refutes it, and none has a producer.
+    -- An effect the covered half's continuation applies is not recorded for the
+    -- residue, so it applies to each half. Right when the halves have different
+    -- recipients, each its own event (Pyromancer's Gauntlet's and Torbran's
+    -- rulings); where both land on one recipient a non-distributive rewrite
+    -- has by then applied to each (gap #6251).
     --
-    -- The two halves may end up on the SAME recipient, which CR 120.4 deals
-    -- as one event; resolveDamageBatch rejoins them once the batch is done
+    -- The two halves may end up on the SAME recipient, which docs/decisions.md's
+    -- "Whether one instruction naming a recipient twice deals one damage event"
+    -- makes one event; resolveDamageBatch rejoins them once the batch is done
     -- (Replacement.oneEventPerRecipient), rather than here, because a later
     -- iteration can still move either half.
     Just candidate
@@ -3315,7 +3314,7 @@ apply settle batch applied candidate event =
       -- `orGraveyard` is Frankenstein's Monster's "If you can't, put this creature
       -- into its owner's graveyard instead of onto the battlefield": too few
       -- candidates for the Exactly count exiles nothing, and answering Nothing
-      -- unmakes the entry, the SacrificeToEnter arm's "if you don't" (CR 614.12).
+      -- unmakes the entry, the SacrificeToEnter arm's "if you don't" (CR 614.1a).
       -- That arm's CR 614.12b forward check has nothing to guard here: X is the
       -- only count the one such card prints, and CR 107.3m makes it 0 for every
       -- permanent but the one a resolving spell became, which enters alone.
@@ -3341,7 +3340,7 @@ apply settle batch applied candidate event =
                 context = Replacement.candidateContext gs candidate
                 announcedX = Game.announcedXOf oid gs
                 amount quantity = maybe 0 Integer.toNaturalSaturating (Quantity.evaluate viewOf context (Projection.boardAsEntering gs) oid (Quantity.substituteAnnouncedX announcedX quantity))
-            -- CR 614.12: "If you can't" is too few candidates for the count, so
+            -- CR 614.1a: "If you can't" is too few candidates for the count, so
             -- nothing is exiled and the entry is unmade.
             let cannot = case count of
                   HowMany.Exactly q -> orGraveyard && Natural.length offered < amount q
@@ -3350,9 +3349,9 @@ apply settle batch applied candidate event =
               then pure Nothing
               else do
                 -- One card is asked through Game.chooseAmong: with no candidate
-                -- nothing is exiled, and with ONE the instruction names that card --
-                -- a forced selection rather than options a player could tell apart,
-                -- which is ObjectRef.ChosenCardInGraveyard's own elision (CR 101.3).
+                -- nothing is exiled (CR 101.3), and with ONE the instruction names that
+                -- card -- a forced selection rather than options a player could tell
+                -- apart, which is ObjectRef.ChosenCardInGraveyard's own elision.
                 -- "Any number" is asked at one candidate, declining being a second
                 -- answer. FILTERED, NOT TRUSTED (#222), inside pickCounted: an answer
                 -- naming a card that was never offered would otherwise exile a card
@@ -3393,9 +3392,9 @@ apply settle batch applied candidate event =
       --
       -- NOT changeZoneAttaching's CR 303.4f branch widened. That branch is a RULE
       -- about every Aura arriving with no host named, runs before CR 616.1's loop
-      -- and buries the card when it finds none (CR 303.4g). This is the card's own
-      -- static ability (CR 603.6d, CR 614.1c): it is ordered against the entry's
-      -- other replacements, a copy of the Blade gets it (CR 707.5), it goes when
+      -- and leaves the card where it is when it finds none (CR 303.4g). This is the
+      -- card's own static ability (CR 603.6d, CR 614.1c): it is ordered against the
+      -- entry's other replacements, a copy of the Blade gets it (CR 707.5), it goes when
       -- the ability goes, and CR 301.5e has the Equipment enter unattached where
       -- no candidate exists.
       --
@@ -3680,7 +3679,7 @@ apply settle batch applied candidate event =
       -- pending map is what puts these in the entry's own CR 616.1 pool, so CR
       -- 614.16's multipliers reach them.
       --
-      -- The COUNT is CR 702.44b's "each color of mana spent to cast it", read
+      -- The COUNT is CR 702.44a's "each color of mana spent to cast it", read
       -- off the entering object's CR 400.7d record
       -- (Parun.Engine.Projection.colorsSpentOf). A SET, so two mana of one colour
       -- are one colour, and CR 106.1b's colorless is not one of them.
@@ -3692,7 +3691,7 @@ apply settle batch applied candidate event =
       -- The KIND is rule 702.44a's own fork, "if this object is entering as a
       -- creature, IGNORING ANY TYPE-CHANGING EFFECTS that would affect it" --
       -- which is what the COPIABLE characteristics answer, CR 613.1a's layer 1
-      -- being everything before CR 613.1d's layer 4. Projection.project would
+      -- coming before CR 613.1d's layer 4. Projection.project would
       -- read the live card types instead and let an opponent's March of the
       -- Machines turn the Goblet's charge counters into +1/+1 counters.
       EntryRewrite.Sunburst -> do
@@ -3894,9 +3893,9 @@ apply settle batch applied candidate event =
       -- (UnderControlOf).
       --
       -- NO CONDITION asked here. Rule 702.54a's is Bloodthirst's and lives in
-      -- Replacement.admitsEntry; this arm's producer states its own on CR 604.2's
-      -- clause, which Projection.replacementsOf asked before the row was
-      -- collected.
+      -- Replacement.admitsEntry; this arm's producer states its own on an "as
+      -- long as" clause (CR 611.3a), which Projection.replacementsOf asked
+      -- before the row was collected.
       EntryRewrite.RunEffects effects -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
@@ -4675,7 +4674,7 @@ apply settle batch applied candidate event =
     -- iteration re-collects against it, so a second Bruvac the Grandiloquent
     -- quadruples a mill and a second Tekuthal, Inquiry Dominus a proliferate, and
     -- CR 614.5 keeps THIS row off the modified event it just made. The seat is
-    -- the one the EVENT named -- rule 701.17a's "they" is the milling player,
+    -- the one the EVENT named -- rule 701.17a's "that player" is the milling player,
     -- never the row's controller.
     --
     -- The proposed count IS the whole input: the scaling is stated on the
@@ -5298,8 +5297,8 @@ becomeCopyAs batch candidate asCopy oid = do
 -- why the override lives at the stamp rather than in the projection.
 --
 -- Everything else in CR 202.3 rides through untouched, including the copy's own
--- printed cost being irrelevant (CR 707.2, the parenthetical's "even if the card
--- representing that copy is itself a double-faced card") -- the snapshot is the
+-- printed cost being irrelevant (CR 707.2; CR 202.3b's parenthetical, "even if the
+-- card representing that copy is itself a double-faced card") -- the snapshot is the
 -- COPIED object's throughout, so a Clone that is itself a Transforming card
 -- would get 0 here for the same reason a Clone printed {3}{U} does.
 --
@@ -5401,8 +5400,9 @@ copiedSnapshotWithLastKnown oid gs = case Game.lastKnownOf oid gs of
 --
 -- Answers Nothing when the object entered, and otherwise why it did not: CR
 -- 614.1a's "instead" from an EntryRewrite.SacrificeToEnter arm that could not be
--- paid, or CR 614.12's "if you can't" from an EntryRewrite.ExileFromGraveyard
--- arm carrying `orGraveyard` -- the two EntryR arms that answer `Nothing` -- or
+-- paid, or the same "instead" after the "if you can't" of an
+-- EntryRewrite.ExileFromGraveyard arm carrying `orGraveyard` -- the two EntryR
+-- arms that answer `Nothing` -- or
 -- CR 303.4g from seatEnteringAura, or CR 614.6's redirect (EntryRefusal.Diverted).
 -- Each caller unmakes the entry, but for a minted object's redirect, which
 -- this places.
@@ -5455,7 +5455,7 @@ runEntry settle diverting origin given oid = do
   case outcome of
     Just (ProposedEvent.WouldChangeZone zc _ position _) -> do
       Monad.void (takeEnteringCounters oid)
-      -- CR 614.6 / 603.12: the entry never happened, so the "when you do" a
+      -- CR 614.6 / 707.9g: the entry never happened, so the "when you do" a
       -- copy entry rewrite armed (becomeCopyAs) does not fire. Proved by the
       -- scenario hallowed-moonlight-stops-a-diverted-copy-s-when-you-do.
       State.modify' (\gs -> gs {GameState.delayedTriggers = Seq.filter (\entry -> not (DelayedTrigger.source entry == oid && isReflexive entry)) (GameState.delayedTriggers gs)})
@@ -5747,9 +5747,10 @@ resolveDamage allowances spent de = do
 --
 -- Replacement.oneEventPerRecipient undoes a split where it moved nothing: a
 -- counted redirect aimed AT the recipient its chosen source is already damaging
--- lands both halves on that one permanent, and CR 120.4 deals it one event. Run
--- over the whole batch because a half can come back as a DamageThread; the key's
--- source component keeps a CR 510.2 batch's separate dealers apart.
+-- lands both halves on that one permanent, and docs/decisions.md's "Whether one
+-- instruction naming a recipient twice deals one damage event" makes it one
+-- event. Run over the whole batch because a half can come back as a DamageThread;
+-- the key's source component keeps a CR 510.2 batch's separate dealers apart.
 --
 -- Each event still runs its OWN CR 616.1 loop and the loop's unit is still one
 -- event, which is what CR 614.5 and CR 615.10 both describe. Three things this
@@ -5881,9 +5882,9 @@ putCounters :: CounterCause.CounterCause -> ObjectId -> CounterKind.CounterKind 
 putCounters = putCountersWithin Nothing
 
 -- The funnel itself, with a limit on the total of the settled kind the settled
--- object may reach: PutCounters.totalAtMost's reading, asked after CR 616.1's loop
--- for the reason the prohibition in settleCounters is (CR 101.2), and landing what
--- fits (CR 609.3). A permanent already past the limit takes none and loses none.
+-- object may reach: PutCounters.totalAtMost's reading, asked after CR 616.1's loop,
+-- which settles the count it limits (CR 101.2), and landing what fits (CR 609.3).
+-- A permanent already past the limit takes none and loses none.
 putCountersWithin :: Maybe Natural -> CounterCause.CounterCause -> ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> Game Natural
 putCountersWithin totalAtMost cause oid kind n = do
   resolved <- resolveCounters cause oid kind n
@@ -5916,11 +5917,9 @@ settleCounters putter target settledKind settledCount
         -- CR 101.2 with CR 122.6: a permanent an effect in force says can't have
         -- counters put on it takes none, whatever allowed or directed the
         -- placement (Solemnity, Melira Sylvok Outcast). Asked HERE, on the settled
-        -- object and the settled kind, rather than ahead of resolveCounters: CR
-        -- 616.1's loop may redirect a placement onto a different object, so the
-        -- object the prohibition is about is the one that would actually receive
-        -- the counters. Rule 614 replaces events that would happen; rule 101.2
-        -- then refuses what rule 614 settled on.
+        -- object and the settled kind, after resolveCounters rather than ahead of
+        -- it (gap #6235). No row of CR 616.1's loop moves a placement to another
+        -- object or kind: `apply`'s CounterR arm rewrites only the count.
         --
         -- Both of CR 122.6's roads reach this door -- a placement onto a permanent
         -- already on the battlefield, and the counters an object is given as it
@@ -5981,7 +5980,7 @@ putOwnCounters oid kind n = do
 -- these. It sees them in THIS loop, as a row against the same WouldEnter event,
 -- which is what lets CR 616.1 order the two.
 --
--- CR 614.1c also admits "a number of ... counters ... equal to [something]"
+-- CR 614.1c also admits a printed "a number of ... counters ... equal to"
 -- (Undergrowth Scavenger), so the amount is a Quantity and is evaluated ONCE
 -- here (CR 608.2h: information the effect requires is determined only once, when
 -- the effect is applied), when the row applies, rather than per iteration of the
@@ -6064,11 +6063,10 @@ takeBackCopyException oid = State.modify' $ \gs ->
 -- well: CR 606.4's loyalty (Parun.Engine.Cost's RemoveLoyaltyFromThis arm) and CR
 -- 118.1's counter removal (its RemoveCountersFromThis arm).
 --
--- NO CR 614.16 loop, unlike putCounters above, and that asymmetry is the rule's
--- rather than a shortcut: 614.16 replaces a PLACEMENT -- "if an effect would put
--- one or more counters on a permanent" -- and no ReplacementEffect class in
--- Parun.Types.ReplacementEffect pairs with a removal, so there is nothing for a
--- loop to offer this to.
+-- NO CR 614.16 loop, unlike putCounters above: 614.16 replaces a PLACEMENT --
+-- "if an effect would put one or more counters on a permanent" -- and no ReplacementEffect class in
+-- Parun.Types.ReplacementEffect pairs with a removal (gap #6258), so there is
+-- nothing for a loop to offer this to.
 --
 -- SATURATING: removing more than are present leaves the kind absent from the map
 -- rather than negative, which is what keeps Object.counters a tally of what is
@@ -6467,9 +6465,10 @@ keepCoin flipper faces =
 -- roll: how many dice to throw, and how many of the lowest rolls CR 706.6 then
 -- ignores -- see Parun.Types.Throw.
 --
--- A count of ZERO raises nothing: rule 706.1's "one or more dice" is not met by an
--- instruction that rolls none, so there is no event to replace and no row gets its
--- CR 614.5 opportunity. (CR 107.2's posture upstream is what produces that count.)
+-- A count of ZERO raises nothing: Pixie Guide's "if you would roll one or more
+-- dice" is not met by an instruction that rolls none, so there is no event to
+-- replace and no row gets its CR 614.5 opportunity. (CR 107.2's posture upstream
+-- is what produces that count.)
 --
 -- Answers Left where CR 614.6 replaced the roll with a coin flip (Pokey, the
 -- Scallywagg): the coins are flipped HERE, through `settleCoins`, and the numbers
@@ -6587,8 +6586,9 @@ changeZone settle oid requestedDest = Monad.void (changeZoneReturning settle oid
 -- the engine never learns which card is entering. The rule's SECOND sentence is
 -- the same refusal CR 712.14b gets below -- "if a player is instructed to put a
 -- card that isn't a double-faced card onto the battlefield transformed or
--- converted, that card stays in its current zone" -- which is exactly a card
--- whose layout gives Card.backFace nothing to answer with.
+-- converted, that card stays in its current zone" -- read here as a card whose
+-- layout gives Card.backFace nothing to answer with, which takes in a meld card
+-- though CR 712.1 makes it double-faced (gap #6257).
 --
 -- CR 712.14a and NOT CR 702.145b's entering-transformed ability, which is a
 -- different mechanism: an ability causing a permanent to enter transformed is a
@@ -6654,11 +6654,11 @@ changeZoneEnteringIn settle asOf batch seed source oid requestedDest position ri
              )
       -- CR 712.14: "A double-faced card put onto the battlefield from a zone
       -- other than the stack enters the battlefield with its front face up by
-      -- default", which Object.face records as Nothing (CR 712.8a).
+      -- default", which Object.face records as Nothing (CR 712.8d).
       shown = if onto then fmap Face.name mBack else Nothing
       -- CR 110.2a: the effect states otherwise, so the player it instructed stops
-      -- being the answer and CR 110.2's default -- the owner, which is what
-      -- `Nothing` means to the funnel -- takes over. Undying and persist are what
+      -- being the answer and the owner it names -- which is what `Nothing` means
+      -- to the funnel -- takes over. Undying and persist are what
       -- print it (CR 702.93a, CR 702.79a).
       under2 = if EntryRiders.under riders == EntryController.Owner then Nothing else under
       -- CR 708.3: "objects that are put onto the battlefield face down are
@@ -6967,8 +6967,8 @@ changeZoneResolvingReturning settle oid requestedDest = changeZoneAttaching sett
 -- `under` is the arriving incarnation's default controller -- CR 110.2a's entry
 -- controller on the battlefield, CR 405.4's caster on the stack -- Nothing for
 -- every door but changeZoneEntering and changeZoneCasting, and Nothing on the
--- first of those too for a move whose effect names no player, which by CR 110.2
--- and CR 108.4a leaves the owner answering. `shown` is CR 709.3's chosen
+-- first of those too for a move whose effect names no player, where
+-- Projection.defaultControllerOf answers the owner. `shown` is CR 709.3's chosen
 -- half or CR 712.13's carried face, Nothing for every door but
 -- changeZoneShowing. `facing` is CR 110.5's face-up/face-down status, FaceUp for
 -- every door but changeZoneFaceDown (CR 708.4) and a changeZoneEntering whose
@@ -7372,7 +7372,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- which decides whether CR 800.4a's second clause can end it
               -- (Parun.DepartureSpec's Meandering Towershell case is the proof).
               --
-              -- BATTLEFIELD ONLY, the rule's own scope (CR 110.2, CR 110.5d):
+              -- BATTLEFIELD ONLY, the rule's own scope (CR 110.2, CR 109.4):
               -- Projection.controllerOf answers for an object in any zone, so an
               -- ungated write would give a graveyard card a controller.
               --
@@ -7395,8 +7395,8 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- a library call the same function. What is set back here is only
               -- what this MOVE decides: the destination, CR 613.7d's moment of
               -- entry, CR 110.5b's "enters tapped" (meaningful only for a
-              -- battlefield destination, CR 110.5a), CR 110.2a's entry
-              -- controller, CR 701.3's attach-on-entry seed, and CR 709.3a's
+              -- battlefield destination, CR 110.5d), CR 110.2a's entry
+              -- controller, CR 303.4 / 301.5e's attach-on-entry seed, and CR 709.3a's
               -- chosen half.
               --
               -- `face` is among what newIncarnation clears, which is right by
@@ -7491,18 +7491,17 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- battlefield, where CR 704.5e would remove it, and the CR 614.1c
               -- entry loop and every CR 603.6a trigger must already see a token
               -- entering. NOT "created" (CR 111.13): this is a zone change and
-              -- not Event.createTokens, so no CR 111.3 minted-entry event and no
+              -- not Event.createTokens, so no CR 111.2 minted-entry event and no
               -- CR 614.16 count replacement reaches it. Every other Source, and
               -- every other destination, is carried across unchanged.
               --
               -- The token keeps the copy's snapshot (CR 111.13: "the
               -- characteristics of the spell that became that token"), the way
-              -- createTokens stamps a token copy's. UNOBSERVED, said plainly
-              -- rather than left to look tested: every copy in the pool is of a
-              -- card-backed spell, whose snapshot is the printing the token's
-              -- Source already names, so dropping the stamp leaves the suite
-              -- green. A copy carrying a CR 707.9b exception is what would tell
-              -- them apart, and no producer in data/cards/ applies one to a spell.
+              -- createTokens stamps a token copy's. A copy of a card-backed
+              -- spell has as its snapshot the printing the token's Source already
+              -- names, so a copy carrying a CR 707.9b exception is what tells them
+              -- apart: Parun.CopySpec's "CR 707.9b Double Major's copy isn't
+              -- legendary, so CR 704.5j leaves both" reads one through the stamp.
               --
               -- A cast copy of a CARD resolves the same way (CR 608.3f's "copy of
               -- a permanent spell"; Garth One-Eye's rulings, 2021-06-18), so its
@@ -7580,8 +7579,8 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                     -- it. Both are regression fences rather than proven
                     -- behaviour -- dropping them leaves the suite green.
                     Object.exiledFaceDown = concealed && dest == requestedDest && dest == Zone.Exile,
-                    -- CR 107.3m: the one thing CR 400.7's forgetting carries
-                    -- across, and the rule states it as an exception. The value
+                    -- CR 107.3m: carried across CR 400.7's forgetting under CR
+                    -- 400.7d, as an exception to CR 107.3i. The value
                     -- of X for a permanent's enters-the-battlefield replacement
                     -- effect is the value chosen for the spell that became it,
                     -- so the announcement is read off the DEPARTING object's
@@ -7800,7 +7799,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               then do
                 -- CR 303.4f's "that player" is CR 110.2a's entry controller, which
                 -- is `under` -- falling back to the owner when the effect named
-                -- nobody, per CR 110.2 and CR 108.4a, exactly as the field's own
+                -- nobody, exactly as the field's own
                 -- note above says.
                 let chooser = Maybe.fromMaybe pid under
                     -- entryHostsFor builds a bare source context: rule 303.4f's
@@ -8063,7 +8062,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                 let exiler = Maybe.fromMaybe lastController ((exiledBy >>= \replacer -> Projection.controllerOf replacer placed) <|> under)
                     cards = [arrival | (arrival, Just component) <- zip (newId : Foldable.toList trailingIds0) (leading : fmap Just (Foldable.toList trailing)), Game.componentIsCard component]
                 Restamp.orderFor exiler start cards
-              -- CR 408.1's command zone is one shared area rather than one per
+              -- CR 400.1's command zone is one shared area rather than one per
               -- player, so placeObject's `pid` decides nothing about where the
               -- card lands here; it is Object.owner all the same, which is rule
               -- 903.9b's "its owner" for a stolen commander.
@@ -8187,9 +8186,9 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                     fallen <- case refusal of
                       Nothing -> pure Seq.empty
                       -- CR 614.1a: EntryRewrite.SacrificeToEnter's "if you don't, put
-                      -- it into its owner's graveyard", and CR 614.12's
-                      -- EntryRewrite.ExileFromGraveyard "if you can't", the entry
-                      -- unmade as CR 712.13a's is below. A card that was already in the graveyard
+                      -- it into its owner's graveyard", and
+                      -- EntryRewrite.ExileFromGraveyard's "if you can't", the
+                      -- entry unmade as CR 712.13a's is below. A card that was already in the graveyard
                       -- stays there.
                       Just EntryRefusal.Unpaid -> do
                         State.put unentered
@@ -8500,7 +8499,7 @@ relink :: ObjectId -> ObjectId -> ExileLink.ExileLink -> ExileLink.ExileLink
 relink oldId newId link =
   if ExileLink.source link == oldId then link {ExileLink.source = newId} else link
 
--- carryOver's CR 614.1c half: "that creature enters with an additional +1/+1
+-- carryOver's CR 614.1d half: "that creature enters with an additional +1/+1
 -- counter on it" (Boreal Outrider) is a replacement from another source (CR
 -- 614.12) watching ONE event, the spell becoming a permanent and entering (CR
 -- 608.3a). CR 614.1 applies it as that event would happen, while its slot still
@@ -8565,7 +8564,7 @@ findDeclinedMadness old new gs =
 -- target is declared on the stack against a permanent (CR 601.2c), so no id it
 -- holds is ever a permanent spell's.
 --
--- PlayerEffect.DamageCantBePrevented and its CR 614.9 twin carry the same
+-- PlayerEffect.DamageCantBePrevented and its CR 614.17 twin carry the same
 -- pattern type and are left alone: neither sentence is a prevention effect, so
 -- CR 400.7c does not speak to them. Whippoorwill's stored prohibition does name
 -- an object -- DamagePattern.whichRecipient, baked from a slot -- and it is a
@@ -8649,8 +8648,8 @@ reanchor oldId newIds eff = case ContinuousEffect.affected eff of
 --
 -- Everything is read from `gs`, the board the permanent is still on and still
 -- projecting from, so what is handed over is the effect that was actually
--- applying. CR 611.2c then fixes its set for good: the noncreature artifacts
--- Titania's Song names at THIS instant, never the live filter -- an artifact
+-- applying. Its set is then fixed for good, by analogy with CR 611.2c: the
+-- noncreature artifacts Titania's Song names at THIS instant, never the live filter -- an artifact
 -- that enters after the Song is gone is not animated. Parun.ExpirySpec's
 -- whole-card case proves both halves, and its Humility case is the control for
 -- the gate: an ability with no such clause hands over nothing and ends at once.
@@ -8772,7 +8771,8 @@ permissionRiders src gs played =
 -- The gate also precedes the replacement loop, per CR 614.7: an event that never
 -- happens neither applies nor consumes a regeneration shield. Otherwise the
 -- would-be-destroyed event is offered to CR 616.1, and a survivor goes to its
--- owner's graveyard via changeZone. Ungated for CR 701.19c (#42).
+-- owner's graveyard via changeZone. CR 701.19c is Replacement.admits, asked in
+-- that loop.
 --
 -- The door for a batch that is a whole event whose caller does not care what died;
 -- destroyReturning is the same door for a caller that does, destroyInBatch for a
@@ -8897,7 +8897,7 @@ destructionsStanding asOf cause regenerability oids = do
 --
 --   * a SPELL goes to its owner's graveyard through the changeZone funnel, so
 --     Rest in Peace's redirect and CR 400.7's new incarnation still compose;
---   * an ABILITY ceases (CR 608.2n). Not a zone change: an ability has no owner's
+--   * an ABILITY ceases (CR 701.6a). Not a zone change: an ability has no owner's
 --     graveyard, nothing arrives anywhere, and there is no destination for CR 614
 --     to replace.
 --
@@ -8937,7 +8937,7 @@ destructionsStanding asOf cause regenerability oids = do
 -- can't-be-countered gates, since through CR 101.2 such a spell was never
 -- countered; and a move the CR 616.1 loop cancelled, which leaves the spell on
 -- the stack. The ability branch is not one of them -- that countering really
--- happened, and CR 608.2n leaving no object behind is exactly why the event is
+-- happened, and CR 701.6a leaving no object behind is exactly why the event is
 -- the only record of it.
 --
 -- `source` and `controller` are the countering spell or ability and its controller
@@ -8961,7 +8961,7 @@ counter settle source controller oid = do
 -- Slime's "if a permanent's ability is countered this way" wants WHICH, walked
 -- to its CR 113.7 source under the id the caller named. Delay's "exile it with
 -- three time counters on it" wants the incarnation. An ability leaves no new
--- object at all (CR 608.2n), so it has none.
+-- object at all (CR 701.6a), so it has none.
 --
 -- `destinationOf` is where each countered SPELL goes: CR 701.6a's graveyard, or
 -- the zone a Parun.Types.CounterDestination names instead -- Delay's exile,
@@ -9009,7 +9009,7 @@ counterOne settle before destination counterer source controller oid = do
     -- The typed question again, so this module never sees a ManaRiderEffect
     -- constructor; Parun.Engine.ManaRider is where the casing lives.
     Just _ | ManaRider.uncounterable oid gs -> pure Nothing
-    -- CR 608.2n, reached before the CR 113.6g gate because that gate asks about a
+    -- CR 701.6a, reached before the CR 113.6g gate because that gate asks about a
     -- spell's own card and an ability has none -- Game.faceOf answers Nothing for
     -- one, so asking first would fall through to the graveyard move by accident.
     Just _ | Game.isAbility oid gs -> do
@@ -9250,9 +9250,7 @@ detach subject = do
 -- Projection.controllerOf, which is what every other reader of an affected
 -- object's controller already asks (PlayerEffect.matchesObject, and
 -- Replacement.chooserOf for CR 616.1's chooser). For a
--- SPELL that is a re-derivation rather than the stored fact CR 405.4 describes,
--- and it falls back to the owner (#83); a spell cast from a zone its owner does
--- not hold would therefore be read against the wrong player here.
+-- SPELL that reads the caster CR 405.4 names, off Object.enteredUnder.
 protectedFromCountering :: ObjectId -> ObjectId -> GameState -> Bool
 protectedFromCountering counterer oid gs =
   maybe False (\pid -> PlayerEffect.cantBeCountered pid counterer oid gs) (Projection.controllerOf oid gs)
@@ -9468,9 +9466,8 @@ createTokens settle controller card copy n tapped entering attached marks = do
         Nothing -> pure []
         Just (owner, lots) -> do
           -- CR 111.5's rollback point below, captured AFTER resolveTokens rather
-          -- than before it: rule 614.3's use counts are spent by a replacement
-          -- that applied to the creation event, and rule 111.5 unmakes the token
-          -- rather than the event.
+          -- than before it, so a rule 614.3 use a replacement spent on the creation
+          -- event stays spent when the batch is refused (gap #6238).
           unminted <- State.get
           -- ONE lot came in; several come out when a CR 614.1a append (Queen
           -- Allenal of Ruadach) put another shape into the event. Every lot is
@@ -9508,7 +9505,7 @@ createTokens settle controller card copy n tapped entering attached marks = do
           -- Parun.Engine.Projection reads an object that exists. Nothing observes
           -- the interval: placeObject writes only GameState.objects and the zone
           -- index, and every road out of this function that could be seen -- the
-          -- CR 122.6a counters, each token's CR 616.1 entry loop, the CR 111.3
+          -- CR 122.6a counters, each token's CR 616.1 entry loop, the CR 111.2
           -- minted-entry event -- is below this gate. So a refused batch leaves
           -- the board exactly as `unminted` had it, which is rule 111.5's "the
           -- token is not created" and not "a token that dies at once".
@@ -9567,7 +9564,7 @@ createTokens settle controller card copy n tapped entering attached marks = do
               pure []
             else do
               -- CR 303.4: an Aura ENTERS attached, so the host is written before the
-              -- entry loop and before the CR 111.3 minted entry below, with no fresh
+              -- entry loop and before the CR 111.2 minted entry below, with no fresh
               -- timestamp, which is rule 701.3c's for a permanent that MOVES onto a
               -- host. settleMinted records that it became attached. The move funnel's
               -- own door (changeZoneEntering's entrySeed) writes the same field the same
@@ -9666,7 +9663,7 @@ settleMinted start ids = do
 -- Nothing departed, so `departed` is the arrival's own id. Harmless rather than a
 -- fiction readers must know about: from == to == Battlefield already fails every
 -- departure test (CR 603.6c), and neither road that reaches this has a
--- `lastKnown` entry to find -- a token has no prior incarnation (CR 111.3), and a
+-- `lastKnown` entry to find -- a token has no prior incarnation (CR 111.2), and a
 -- conjured card was in no zone.
 recordMintedEntry :: ObjectId -> Game ()
 recordMintedEntry newId = do
@@ -9721,7 +9718,7 @@ meld settle controller victims resultCard = do
       -- record is filed as it ceases, exactly as changeZoneAttaching's write does
       -- for every other zone change -- rule 608.2h scopes its look-back by "the
       -- public zone it was expected to be in" rather than by the battlefield, and
-      -- exile is such a zone (CR 400.1, CR 406.3). The melding ability's own
+      -- exile is such a zone (CR 400.2, CR 406.3). The melding ability's own
       -- source is one of these cards, so without the record a clause of the very
       -- resolution that melded them could no longer say what its source was.
       -- What answers for them AS A GROUP afterwards is Game.componentsOf over the
@@ -9742,8 +9739,8 @@ meld settle controller victims resultCard = do
           mkObj ts =
             -- CR 110.2, sentence 1: a permanent's owner is the owner of the
             -- card that represents it, which for a melded permanent is the
-            -- one owner all of them share -- `meldable` checked that, since
-            -- CR 701.42b's pair has no other reading of "its owner".
+            -- one owner all of them share -- `meldable` checked that, every
+            -- printed melding ability saying "you both own and control".
             (Object.new owner (Source.OfMeld (MeldSource.MkMeldSource {MeldSource.result = resultId, MeldSource.components = cards})) Zone.Battlefield ts)
               { -- CR 108.3: the first card's identity, read off the board before
                 -- forgetObject above; each card's own rides in `cards`.
@@ -9845,11 +9842,10 @@ meld settle controller victims resultCard = do
 -- Parun.MeldSpec's "CR 701.42b/701.42c a meld card of another pair melds nothing"
 -- is the proof.
 --
--- Two or more, from rule 701.42a's "the two cards in a meld pair": one object is
--- not a meld, and a melding ability whose counterpart is gone by resolution
--- refuses here. Not EXACTLY two -- MeldSource and Game.componentsOf both quantify
--- over "each card that represents it" and nothing downstream fixes the number --
--- and the difference is unobservable, CR 712.5's meld pairs being pairs.
+-- Two or more: one object is not a meld, and a melding ability whose counterpart
+-- is gone by resolution refuses here. CR 701.42b's limit to two cards needs no
+-- check: every melding ability names itself and one permanent, so a third never
+-- arrives.
 meldable :: [ObjectId] -> GameState -> Maybe (PlayerId, Zone, NonEmpty.NonEmpty (ObjectId, PrintingId.PrintingId))
 meldable victims gs = do
   (first, rest) <- case victims of
@@ -9928,10 +9924,10 @@ meldable victims gs = do
 -- rule: no CR 613.7f timestamp, because rule 730.2e's second sentence says
 -- "other effects don't count it as being turned face up" and CR 613.7f's new
 -- timestamp is for a permanent that turns over; and no GameEvent.TurnedFaceUp,
--- so the CR 708.7 abilities performTurnFaceUp records that
+-- so the turned-face-up abilities (CR 603.2) performTurnFaceUp records that
 -- event for do not trigger. Each component keeps its own status
 -- (Parun.Types.ShownComponent), so a face-down card under a face-up topmost one
--- stays face down (CR 708.9, 712.15a) until CR 730.2f's Game.withFacing turns
+-- stays face down (CR 730.2e) until CR 730.2f's Game.withFacing turns
 -- them all.
 --
 -- Each side's record is read at LAYER 1a, before layer 1b's face-down
@@ -10252,7 +10248,8 @@ lastKnownFrom gs oid obj =
     (Vanguard.homeZoneOf oid gs)
     -- CR 400.1: the pile it left.
     (Game.pileHolderOf oid gs)
-    -- CR 604.2's clauses, asked while there is still a board to ask them of.
+    -- The "as long as" clauses (CR 611.3a), asked while there is still a board
+    -- to ask them of.
     (Projection.lapsedGrantsOf (Projection.fullView gs) characteristics oid gs)
     (Game.isTapped oid gs)
   where
@@ -10440,9 +10437,9 @@ spentWith candidate = Set.insert (ReplacementCandidate.identity candidate)
 -- 614.5): the rows that already had their opportunity at the event it replaces.
 -- `settle` is drawSeries'.
 --
--- For CR 121.1's "and reveal IT" (#1899): Just the id the card ARRIVED in the
--- hand under (CR 400.7), which is where a later clause of the same resolution
--- names it.
+-- For CR 121.6c's additional action, "and reveal IT" (#1899): Just the id the
+-- card ARRIVED in the hand under (CR 400.7), which is where a later clause of the
+-- same resolution names it.
 --
 -- Nothing where there is no such card -- a draw a replacement took (CR 614.6), an
 -- empty library (CR 104.3c is then the whole of what happened), or a move a
@@ -11076,7 +11073,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> False
-  -- CR 603.2b names no turn, so the bystander reading is unscoped like the
+  -- CR 603.6c names no turn, so the bystander reading is unscoped like the
   -- self-scoped one above.
   TriggerCondition.CardPutIntoGraveyard _ -> False
   -- The third arm carrying a TurnScope, and the classification follows the FIELD
@@ -11127,7 +11124,7 @@ controllerTurnScoped cond = case cond of
   -- The same rule with no TurnScope to read: a spell can be cast on anybody's
   -- turn, so its own cast trigger is not the controller's-turn kind either.
   TriggerCondition.SelfCast -> False
-  -- Nor an activation, which CR 602.2 allows on anybody's turn.
+  -- Nor an activation, which CR 117.1b allows on anybody's turn.
   TriggerCondition.AbilityActivated _ -> False
   -- The condition carries no TurnScope, and an opponent can target the bearer on
   -- anybody's turn.

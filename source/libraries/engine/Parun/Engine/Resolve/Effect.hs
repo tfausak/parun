@@ -125,12 +125,12 @@ import qualified Parun.Types.Zone as Zone
 
 -- CR 608.2g: make the offer Effect.OfferCast carries, once or over again.
 --
--- CR 601.3's choice among the named cards is `offerCastOnce` below; this is the
--- repetition Parun.Types.CastRepetition names -- Fevered Suspicion's "you may cast
--- ANY NUMBER of spells from among those nonland cards", where Shell of the Last
--- Kappa's "cast A SPELL from among cards exiled with Shell of the Last Kappa"
--- stops after one. CR 608.2g's own "which may include casting other spells this
--- way" is what admits the repeat.
+-- CR 608.2d's choice among the named cards is `offerCastOnce` below; this is
+-- the repetition Parun.Types.CastRepetition names -- Fevered Suspicion's "you
+-- may cast ANY NUMBER of spells from among those nonland cards", where Shell of
+-- the Last Kappa's "cast A SPELL from among cards exiled with Shell of the Last
+-- Kappa" stops after one. CR 608.2g's own "which may include casting other
+-- spells this way" is what admits the repeat.
 --
 -- The card a round took is dropped from the next round's candidates rather than
 -- the round re-reading the whole set: CR 400.7 has already made the cast card a
@@ -200,10 +200,11 @@ offerOutsideCopy runSubgame context caster printingId offer = do
       then g {GameState.objects = Map.delete copyId (GameState.objects g), GameState.outsideCopies = Set.delete copyId (GameState.outsideCopies g)}
       else g
 
--- One round of the offer above: CR 601.3's choice among the cards `named` still
--- holds, and the cast if it is taken. Answers the id of the card that was cast,
--- which is what tells the caller whether to go round again, beside the spell
--- CR 601.2a put on the stack, which a land play and CR 601.2e's reversal lack.
+-- One round of the offer above: CR 608.2d's choice among the cards `named`
+-- still holds, and the cast if it is taken. Answers the id of the card that was
+-- cast, which is what tells the caller whether to go round again, beside the
+-- spell CR 601.2a put on the stack, which a land play and CR 601.2e's reversal
+-- lack.
 --
 -- The four questions, in the order the rules ask them:
 --
@@ -223,8 +224,8 @@ offerOutsideCopy runSubgame context caster printingId offer = do
 --      the resulting spell (CR 702.85a).
 --
 -- Questions 3 and 4 are asked of EACH half of EACH named card separately (CR
--- 709.3a, CR 712.11c); where more than one survives, CR 601.3's choice is put to
--- the caster before
+-- 709.3a, CR 712.11c); where more than one survives, CR 608.2d's choice is put
+-- to the caster before
 -- the "may" below, since CR 118.8c's excuse is a property of the spell being
 -- cast. At CastObligation.Mandatory the cast is not a decision, so
 -- Prompt.OfferedCast is elided; question 4 is what a printed "if able" comes to
@@ -237,8 +238,8 @@ offerOutsideCopy runSubgame context caster printingId offer = do
 --
 -- Under PermissionVerb.Play a named land is offered too, as CR 305.2a's land
 -- play during a resolution (CR 601.1a's "play"), under the special action's
--- per-player limits (Cast.landDropOpen: CR 305.2b, 305.3) and CR 305.1's
--- prohibitions, and not its phase or empty stack, which an instruction lifts.
+-- per-player limits (Cast.landDropOpen: CR 305.2b, 305.3) and CR 101.2's
+-- prohibitions, and not CR 305.1's phase or empty stack, which an instruction lifts.
 -- Parun.GameSpec's "CR 305.2a gameplay: Word of Command makes bob play a land
 -- on his turn" proves it.
 --
@@ -254,8 +255,9 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
       -- payment.
       alternative = CastOffer.withoutPayingManaCost offer || Maybe.isJust (CastOffer.payingInstead offer)
       -- CR 712.11a for the transformed rider; CR 709.3, CR 712.11b, CR 715.3 and
-      -- CR 720.3 otherwise, via Game.castableFacesOf. Nothing for a card with no back face
-      -- (CR 712.14a): an offer that cannot be made is not made.
+      -- CR 720.3 otherwise, via Game.castableFacesOf. Nothing for a card with no back face,
+      -- CR 712.11a's cast having no face to put on the stack: an offer that cannot
+      -- be made is not made.
       --
       -- Less Card.convertedFace under an alternative, which is CR 118.9a: a spell
       -- takes one alternative cost, and that face is on the list only because CR
@@ -322,9 +324,10 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
             -- costs ride along.
             --
             -- CR 601.2b's tag rides along: an offer stating which keyword
-            -- ability is behind its cost (rule 702.62a's third ability and rule
-            -- 702.35a's second) hands that keyword to the candidate, so the cast
-            -- records it as Object.castUsing exactly as a printed alternative does.
+            -- ability is behind its cost (rule 702.62a's third ability, rule
+            -- 702.35a's second and rule 702.88a's delayed one) hands that keyword to
+            -- the candidate, so the cast records it as Object.castUsing exactly as a
+            -- printed alternative does.
             -- CastOffer.offeredBy is Nothing for every other offer, which is
             -- Cost.untagged's own value.
             --
@@ -402,8 +405,8 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
       keyOf entry = case entry of
         Left (oid, _, name) -> (oid, name)
         Right (oid, name, _, _) -> (oid, name)
-  -- No survivor is no offer; one survivor is one outcome, so CR 601.3's choice is
-  -- elided there rather than asked.
+  -- No survivor is no offer; one survivor is one outcome, so CR 608.2d's choice
+  -- is elided there rather than asked.
   chosen <- case everything of
     [] -> pure Nothing
     [sole] -> pure (Just sole)
@@ -723,9 +726,8 @@ runPreventionRiders runSubgame = do
 -- source's own amount: Comeuppance deals each attacker the damage prevented from
 -- it, and Deflecting Palm's "that source's controller" reads the one source
 -- bound. CR 615.5's "amount of damage that was prevented" is the SUM over the
--- recipients this application covered from that source, rule 615.13 counting
--- the application and not the recipients (Divine Deflection throws one lot of
--- 3, not a 2 and a 1). The amount is a Quantity.InSlot read of the reserved
+-- recipients this application covered from that source (two recipients of one
+-- source: one lot of 3, not a 2 and a 1). Two sources run twice. The amount is a Quantity.InSlot read of the reserved
 -- Binding.eventAmount slot, published through GameState.ambientAmounts rather
 -- than bound onto an object, because the shielded recipient may be a PLAYER.
 -- Restored rather than cleared, so this cannot clobber an outer amount.
@@ -802,9 +804,9 @@ runEntryEffect runSubgame pending = do
 --
 -- For damage, every caller runs it BEFORE runPreventionRiders and before the
 -- next state-based action check: the replaced event and the rest of its batch
--- were simultaneous (CR 616.1), so what happens instead of it lands before CR
--- 704.5g reads the board. For a loss of the game or a draw, it runs after each
--- draw of a sequence, an instruction's or a replacement's (Event.drawSeries, CR
+-- were simultaneous (CR 608.2f, 614.6), so what happens instead of it lands
+-- before CR 704.5g reads the board. For a loss of the game or a draw, it runs
+-- after each draw of a sequence, an instruction's or a replacement's (Event.drawSeries, CR
 -- 614.11a), after each resolved instruction and in every settle before
 -- priority; a loss a
 -- state-based action check meets runs inside that check instead (Sba.performStateBasedActions' `instead`, runDamageRewriteEffect).
@@ -914,7 +916,7 @@ throwSettled runSubgame roll perDie = do
       -- CR 706.2b's FIRST step, taken before the instruction's own modifier
       -- is added below: a source other than this instruction offers to throw
       -- the same die again and take the new number as the natural result
-      -- (Clam-I-Am). CR 706.1a's "the same die", so `sides` is unchanged and
+      -- (Clam-I-Am). CR 706.2b's "rerolling that die", so `sides` is unchanged and
       -- the second answer is filtered back against the same range.
       --
       -- RECURSIVE, because the offer is a static ability and its gate is on
@@ -1539,7 +1541,7 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
 -- `effectViewOf`, so CR 113.7a's last known record answers for a source that has
 -- already left, with the announcement id CR 601.2b stamped on the RESOLVING
 -- object -- Resolve.Slots' TopOfLibrary depth is the same pair. An unevaluable
--- or negative count is zero copies (CR 107.1b). Whether such an ability should
+-- or negative count is zero copies (CR 107.2, 107.1b). Whether such an ability should
 -- be offering anything at all is its own text's business: rule 702.24a's
 -- intervening "if" is what stops it (CR 603.4), proved at
 -- Parun.KeywordTriggerSpec's "a Unicorn murdered in response".

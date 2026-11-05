@@ -74,7 +74,8 @@ data DamageRewrite effect
     -- it.
     --
     -- A separate arm from PreventAll rather than PreventAll plus CR 615.5's
-    -- rider, because the counter removal is not an additional EFFECT: rule 122.1c
+    -- rider, because the counter removal, though an additional effect, is the
+    -- rule's own: rule 122.1c
     -- is one sentence of the rulebook, so what it removes is fixed and needs
     -- neither Parun.Types.PreventionRider's snapshotted targets nor its
     -- controller. So it needs none of DamageR.riders either: this pair is
@@ -116,10 +117,10 @@ data DamageRewrite effect
     -- of N would be spent by the first event and let the second through whole.
     --
     -- PER EVENT, where rule 702.64b says "from any one source at any one time".
-    -- The two agree over what a board can produce: a source deals its damage to
-    -- one recipient in one event, and CR 510.4's two combat damage steps -- the
-    -- one way one source hits one creature twice -- are the different TIMES rule
-    -- 702.64b's own second sentence lets the ceiling renew at.
+    -- CR 510.4's two combat damage steps are the different TIMES rule 702.64b's own
+    -- second sentence lets the ceiling renew at. A redirect (Pariah) can land two
+    -- events from one source on one recipient at one time, and each takes the
+    -- ceiling (gap #6255).
     --
     -- Power Leak's "prevent X of that damage" is this ceiling on a CR 614.15
     -- self-replacement with Uses.Once, its X settled as the row is installed.

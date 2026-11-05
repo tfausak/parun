@@ -43,7 +43,7 @@ data Transformed = MkTransformed
     characteristics :: ProjectedCharacteristics.ProjectedCharacteristics,
     controller :: Maybe PlayerId.PlayerId,
     attachments :: Set.Set ObjectId.ObjectId,
-    -- | CR 604.2: the "as long as" clauses of its granted activated abilities
+    -- | CR 611.3a: the "as long as" clauses of its granted activated abilities
     -- that did not hold the instant the turn finished, which `characteristics`
     -- carries unasked (Parun.Engine.Projection.View.lapsedGrantsOf).
     -- data/scenarios/transform's Synthetic Turnabout Audit pair is the proof.

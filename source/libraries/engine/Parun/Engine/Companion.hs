@@ -183,7 +183,7 @@ reveal pid = do
 --
 -- Four conjuncts, one per clause of the rule: they chose a companion, they have
 -- not taken the action yet this game, the window is a main phase of their own
--- turn with the stack empty (Turn.sorcerySpeedWindow, which is CR 116.2k's
+-- turn with the stack empty (Turn.sorcerySpeedWindow, which is CR 702.170a's
 -- window too), and the {3} is payable.
 --
 -- A FIFTH that rule 116.2g leaves implicit: the card is still outside the game.

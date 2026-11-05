@@ -380,11 +380,11 @@ mostOf selection = case selection of
 -- CR 700.2d: does this instruction print "You may choose the same mode more than
 -- once"? False is that rule's default -- "that player normally can't choose the
 -- same mode more than once" -- and is what all but a handful of cards in the pool
--- answer, Mystic Confluence being the one PRINTING of the exception.
+-- answer, Mystic Confluence and Fiery Confluence being PRINTINGS of the exception.
 --
--- True implies leastOf == mostOf: no printing pairs the exception with a range,
--- which is why Parun.Types.ModeSelection has no such constructor and why the
--- repeating arms below read one bound and mean "the count".
+-- True implies leastOf == mostOf: Parun.Types.ModeSelection has no constructor
+-- pairing the exception with a range (Moment of Reckoning does) (gap #6252), which
+-- is why the repeating arms below read one bound and mean "the count".
 allowsRepeatsIn :: ModeSelection.ModeSelection -> Bool
 allowsRepeatsIn selection = case selection of
   ModeSelection.ChooseExactly _ -> False

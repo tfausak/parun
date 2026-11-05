@@ -56,8 +56,8 @@ data Object = MkObject
     -- the base a CR 613.1b layer-2 effect then overrides, written for the two
     -- arrivals CR 109.4 gives a controller: CR 110.2's battlefield entry and CR
     -- 405.4 / 601.2a's cast, which fixes a spell's controller as the card is put
-    -- onto the stack (#83). Nothing is CR 108.4a's fallback to the owner, which
-    -- covers a token, a land played from hand and an ability (CR 113.8);
+    -- onto the stack (#83). Nothing falls back to the owner, which is right
+    -- for a token (CR 111.2) and an ability (CR 113.8);
     -- Game.setOwner pins it before an ownership change, so control stays put.
     --
     -- NOT a control-changing EFFECT: CR 800.4c distinguishes an effect that gives
@@ -76,8 +76,8 @@ data Object = MkObject
     -- categories parun models, `tapped` above being the first. FaceDown
     -- SUBSTITUTES the object's printed characteristics wholesale at
     -- Parun.Engine.Game.faceOf for the ones CR 708.2 lists -- CR 708.2a's 2/2 with
-    -- no name for everything that lists none -- rather than being a CR 613 layer,
-    -- those characteristics being the object's copiable values.
+    -- no name for everything that lists none -- which is CR 613.2b's layer 1b, done
+    -- at the seed since those characteristics are the object's copiable values.
     --
     -- Reaches a SPELL as well as a permanent, though CR 110.5d gives only
     -- permanents status: CR 708.4 turns an object face down before it is put onto
@@ -134,7 +134,7 @@ data Object = MkObject
     -- Repetition group is what proves it.
     --
     -- Per-incarnation: reset by newIncarnation (CR 400.7), the effect's own rider
-    -- through Event.changeZoneEntering being CR 406.3's "otherwise".
+    -- through Event.changeZoneEntering being CR 406.3's "exiled face down".
     exiledFaceDown :: Bool,
     -- | CR 406.3's exception to `exiledFaceDown` above: the grants of permission
     -- to look at this card, put here by the instruction that allowed it
@@ -248,7 +248,7 @@ data Object = MkObject
     -- a copiable value and per-incarnation, for that field's reasons.
     chosenSubtype :: Map.Map Acquisition.Acquisition Subtype.Subtype,
     -- | CR 201.4: the card names chosen for this object, keyed by who chose each. THREE moments
-    -- write it -- CR 614.1c's as-enters choice (Null Chamber), CR 608.2c's
+    -- write it -- CR 614.1c's as-enters choice (Null Chamber), CR 608.2d's
     -- on-resolution one (Ancient Vendetta) and CR 702.106a's hidden agenda
     -- (Immediate Action) -- and every reader asks the effect's SOURCE,
     -- chosenColors's direction.
@@ -259,8 +259,8 @@ data Object = MkObject
     -- never chose, which matches no card at all (CR 201.2a). Not a copiable value
     -- and per-incarnation, for chosenColors's reasons.
     --
-    -- ASSIGNED by both writers and never added to, so CR 608.2c's scope holds for
-    -- a PERMANENT that chooses on two separate resolutions: the later choice is
+    -- ASSIGNED by both writers and never added to, which keeps one choice in force
+    -- for a PERMANENT that chooses on two separate resolutions: the later one is
     -- the whole of what "the chosen name" then means (Petra Sphinx activated
     -- twice, Parun.ResolveSpec).
     chosenNames :: Map.Map Acquisition.Acquisition (Map.Map PlayerId.PlayerId CardName.CardName),
@@ -277,7 +277,7 @@ data Object = MkObject
     -- reasons, save for CR 400.7d's carry of the promises to the permanent the
     -- spell becomes.
     chosenPlayers :: Map.Map Acquisition.Acquisition (Map.Map PlayerChoice.PlayerChoice PlayerId.PlayerId),
-    -- | CR 107.1c: the last number chosen for this object, assigned by each choice
+    -- | CR 607.2d: the last number chosen for this object, assigned by each choice
     -- (Shapeshifter's as it enters and each upkeep). Read by Quantity.ChosenNumber
     -- off the effect's SOURCE. Not a copiable value and per-incarnation, for
     -- chosenColors's reasons.
@@ -328,8 +328,8 @@ data Object = MkObject
     -- | CR 601.3: the standing permission to play this card, as the player who
     -- holds it, the duration it lasts and how they may spend mana for it (CR
     -- 118.14). TWO producers: Parun.Engine.Resolve.finishSpell writes CR 715.3d's,
-    -- taking Expiry.Never since that rule states no duration (CR 611.2a), and
-    -- Effect.GrantPlayFromExile writes the one a card states.
+    -- taking Expiry.Never since its duration is the card staying exiled, which CR
+    -- 400.7 ends, and Effect.GrantPlayFromExile writes the one a card states.
     --
     -- STATE, where every other casting permission parun has is a fact about a
     -- CARD: this one is true of one incarnation and names one player, so a
@@ -416,7 +416,7 @@ data Object = MkObject
     -- the prepared permanent remains on the battlefield and has the prepared
     -- designation" needs the permanent to look at, and Parun.Engine.Sba looks
     -- there; "the prepared permanent's controller may cast the copy" needs the
-    -- CONTROLLER, which CR 109.4 lets change, so Parun.Engine.Cast reads it live
+    -- CONTROLLER, which CR 613.1b can move, so Parun.Engine.Cast reads it live
     -- off the named permanent rather than off a stored seat; and "that permanent
     -- loses the prepared designation at the time the spell becomes cast (see rule
     -- 601.2i)" needs the permanent again, which Parun.Engine.Cast reads one step
@@ -504,10 +504,9 @@ data Object = MkObject
     -- from the half that was cast every time the permanent enters.
     unlockedHalves :: Set.Set RoomHalf.RoomHalf,
     -- | Every designation this permanent has: CR 702.112b's renowned, CR 701.37b's
-    -- monstrous, CR 701.60b's suspected, CR 719.3b's solved, CR 722.3b's
+    -- monstrous, CR 701.60b's suspected, CR 719.3b's solved, CR 722.3a's
     -- prepared and CR 701.64b's harnessed, which
-    -- Parun.Types.Designation holds as one type because those rules word the mark
-    -- identically. A Set where ringBearerFor above is a Maybe PlayerId, none of
+    -- Parun.Types.Designation holds as one type because they behave alike. A Set where ringBearerFor above is a Maybe PlayerId, none of
     -- those rules naming a player.
     --
     -- STORED rather than projected, each of those rules calling the mark "neither
@@ -818,7 +817,7 @@ data Object = MkObject
     --
     -- Only a GRANTED one: a printed permission projects off the face in every
     -- zone, and stamping it here would report two instances of one keyword (CR
-    -- 613.1f). Cast.grantedCastKeyword is that test, and it is what makes this
+    -- 113.2c). Cast.grantedCastKeyword is that test, and it is what makes this
     -- rule 400.7g's field rather than a second castUsing above.
     --
     -- NOT a copiable value (CR 707.2), and not per-permanent either: rule 400.7g
@@ -897,7 +896,7 @@ data Object = MkObject
     -- and returns may activate its exhaust ability again, which is the rule
     -- rather than an omission.
     --
-    -- THE ABILITY BY VALUE, the grain rule 702.177a's reminder states ("Activate
+    -- THE ABILITY BY VALUE, the grain exhaust's reminder text states ("Activate
     -- each exhaust ability only once"): Draconautics Engineer prints two exhaust
     -- abilities and spending one leaves the other, while Greenbelt Guardian's
     -- other ability carries no rider at all. A Bool could say neither. The same
@@ -974,7 +973,7 @@ new o s z t =
       -- that permanent.
       flipped = False,
       -- CR 406.3: exiled cards are kept face up by default, and every other zone
-      -- is face up outright. Event.changeZoneEntering is the "otherwise".
+      -- is face up outright. Event.changeZoneEntering is the "exiled face down".
       exiledFaceDown = False,
       exileLookers = Set.empty,
       revealed = Set.empty,
@@ -1098,8 +1097,8 @@ newSettled o s z t = (new o s z t) {sickness = Sickness.Settled o}
 -- `timestamp`, which the caller is DECIDING rather than forgetting. A field
 -- added to Object is therefore reset here by default; one that survives the move
 -- must be carried across below. A caller overrides the rest the same way -- CR
--- 110.5b's "enters tapped", CR 708.4's face-down status and CR 701.3's
--- attach-on-entry are choices the move makes about the new object.
+-- 110.5b's "enters tapped", CR 708.4's face-down status and CR 303.4 /
+-- 301.5e's attach-on-entry are choices the move makes about the new object.
 newIncarnation :: Object -> Object
 newIncarnation object =
   (new (owner object) (source object) (zone object) (timestamp object))

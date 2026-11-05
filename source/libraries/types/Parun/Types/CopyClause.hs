@@ -6,9 +6,9 @@ import qualified Parun.Types.WithCounters as WithCounters
 
 -- | CR 707.9: one part of a copy effect's "except ..." clause -- the
 -- characteristics it modifies and the counters it adds, applied whenever the
--- copy is made, or only if a condition holds (CR 707.9f): Spark Double's "it
--- enters with an additional +1\/+1 counter on it if it's a creature", Vizier of
--- Many Faces' "if this creature was embalmed, ...".
+-- copy is made, or only if a condition holds: Spark Double's "it enters with an
+-- additional +1\/+1 counter on it if it's a creature" (CR 707.9f), Vizier of Many
+-- Faces' "if this creature was embalmed, ..." (CR 707.9).
 --
 -- A condition is judged against the permanent as the copy effect would make it
 -- with only the UNCONDITIONAL parts applied (Parun.Engine.Event.becomeCopyAs), its

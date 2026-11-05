@@ -62,16 +62,14 @@ import qualified Parun.Types.RuleAbilities as RuleAbilities
 -- and two Curses are two sources and therefore two emissions.
 --
 -- `candidates` is CR 508.1a's chosen-from set, and it carries the "if able" of
--- "attacks each combat if able". `targets` is CR 508.1b's announcement list,
--- every one of which any candidate may legally be announced as attacking --
--- parun models no restriction on WHAT a creature attacks, only on whether it
--- attacks. Both are passed IN rather than computed here, as BlockRequirement
+-- "attacks each combat if able". `targets` is CR 508.1b's announcement list.
+-- Both are passed IN rather than computed here, as BlockRequirement
 -- takes its `able` predicate and its `attackers`, so this module never learns
 -- the restrictions.
 --
 -- A requirement that does NOT name its object mints one pair per target, which
 -- is Curse of the Nightly Hunt's "attack each combat if able" and the posture
--- BlockRequirement.instances takes for an absent axis. CR 508.1a caps how many
+-- BlockRequirement.instances takes for an absent axis. CR 508.1b caps how many
 -- of those one creature can obey at one -- a creature attacks a single target --
 -- so attacking anything attains that requirement's maximum.
 --
@@ -260,7 +258,7 @@ instances candidates targets gs =
       lifeOf :: PlayerId -> GameState -> Integer
       lifeOf pid state = maybe 0 Player.life (Map.lookup pid (GameState.players state))
       -- CR 508.1d's second shape -- "or that it attacks if some condition is
-      -- met" -- read as CR 604.2's "as long as" clause and asked exactly as
+      -- met" -- read as an "as long as" clause (CR 611.3a) and asked exactly as
       -- BlockPermission.instances asks its own `while`: a gate that does not
       -- hold mints nothing. The opposite polarity to
       -- CombatRestriction.inForce's "unless", where a gate that holds lifts the

@@ -259,8 +259,9 @@ data TriggerCondition
     -- (Cult of the Waxing Moon), matched against what the event SAMPLED rather
     -- than against the board the CR 117.5 scan reads.
     PermanentTransforms (Filter.Filter Keyword.Keyword)
-  | -- | CR 708.7's other written form read by a bystander (Aven Farseer),
-    -- filtered and read live after CR 708.8 restores the copiable values.
+  | -- | CR 708.7 through CR 603.2: the other written form, read by a bystander
+    -- (Aven Farseer), filtered and read live after CR 708.8 restores the copiable
+    -- values.
     PermanentTurnedFaceUp (Filter.Filter Keyword.Keyword)
   | -- | CR 708.9: "whenever a face-down permanent is revealed as it leaves the
     -- battlefield" (Synthetic Unmasking Witness).
@@ -287,7 +288,7 @@ data TriggerCondition
     -- Self-scoped; the TriggerFrequency is Mighty Servant of Leuk-o's "for the
     -- first time each turn", as AttackerTrigger's is one rule over.
     --
-    -- Rule 702.122e's second sentence is read off Parun.Engine.Binding.crewers,
+    -- Rule 702.122e's last sentence is read off Parun.Engine.Binding.crewers,
     -- which Parun.Engine.Event.Binding stamps for every match: an intervening
     -- "if" counts that slot rather than the board, so it means only the
     -- creatures that paid the cost of the activation that caused the trigger.

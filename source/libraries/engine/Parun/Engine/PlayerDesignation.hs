@@ -119,8 +119,9 @@ grant pid mark gs =
 --
 -- The keyword AND the card types are read off the projection rather than off the
 -- printed face, `gaining`'s reading of CR 613.1f and CR 613.1d: a spell granted
--- ascend by a text-changing effect ascends and one whose text was blanked does
--- not, and layer 4 is what says which card types the resolving object has.
+-- ascend by an ability-adding effect ascends and one stripped by an
+-- ability-removing effect does not, and layer 4 is what says which card types
+-- the resolving object has.
 -- `Keyword.Engine.isSpellCard` is the same classification rule 702.55a's two
 -- halves are told apart by.
 --

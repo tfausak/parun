@@ -29,7 +29,7 @@ module Parun.Types.ManaSpending where
 -- of it can depend on which unit is being spent; Celestial Dawn's sentence says
 -- different things about two manas of one pool and so is applied to the SUPPLY
 -- each unit offers. A static "mana of any type" with no cast permission of its own
--- (Vizier of the Menagerie) is that type's `casting`, re-read live (CR 604.2).
+-- (Vizier of the Menagerie) is that type's `casting`, re-read live (CR 611.3a).
 data ManaSpending
   = -- | The default, and every cost in the game that no effect has spoken about:
     -- a demand for red mana is served by red mana.

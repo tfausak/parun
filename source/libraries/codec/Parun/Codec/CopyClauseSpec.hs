@@ -33,7 +33,7 @@ spec s = Spec.describe s "Parun.Codec.CopyClause" $ do
       (CopyClause.codec Common.text)
       (CopyClause.MkCopyClause Nothing [] (Just (WithCounters.one CounterKind.PlusOnePlusOne (Quantity.Literal 1))))
       " {\"counters\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"count\":{\"type\":\"Literal\",\"value\":1}}]} "
-  -- CR 707.9f: Vizier of Many Faces' colour, under its embalmed condition.
+  -- CR 707.9: Vizier of Many Faces' colour, under its embalmed condition.
   Spec.it s "MkCopyClause, a condition" $
     Common.assertCodec
       s

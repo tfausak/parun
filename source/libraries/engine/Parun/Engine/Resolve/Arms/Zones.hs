@@ -199,10 +199,11 @@ moveToZone settle resolving source controller legal chosen (MoveToZone.MkMoveToZ
       -- (Replacement.matchesPrinted).
       -- The engine installs one row naming NO destination -- CR 702.34a's
       -- exile, Parun.Engine.Keyword.castFromGraveyardExile -- which admits the
-      -- battlefield too. It separates nothing either: the three rules that
+      -- battlefield too. It separates nothing either: the four rules that
       -- install it arm it onto an INSTANT OR SORCERY spell alone (CR 702.34a
       -- and CR 702.133a say so outright; CR 702.127a's aftermath is printed on
-      -- a split card's instant and sorcery halves), and no such spell is a
+      -- a split card's instant and sorcery halves, and CR 702.180a's harmonize
+      -- on instants and sorceries), and no such spell is a
       -- member of a batch entering the battlefield. A card whose ZoneChangeR
       -- watched the battlefield and could match a member of such a batch would
       -- separate them.
@@ -311,7 +312,7 @@ moveToZone settle resolving source controller legal chosen (MoveToZone.MkMoveToZ
         -- it.
         declined <- State.gets (\gs -> any (\lasting -> MoveDuration.hasHappened lasting resolving source controller gs) duration)
         Monad.unless declined $ do
-          -- WHICH objects move, gathered first and moved second, so the CR 401.2
+          -- WHICH objects move, gathered first and moved second, so the CR 608.2d
           -- and CR 401.4 questions between the two steps are asked of the whole
           -- batch.
           let gather r = case r of
@@ -455,7 +456,7 @@ moveToZone settle resolving source controller legal chosen (MoveToZone.MkMoveToZ
           -- CR 701.40's keyword action is what a face-down battlefield arrival
           -- out of a library IS. Both of the rule's own restrictions are in it --
           -- MULTIPLE, so a single card takes the ordinary path, and THEIR
-          -- LIBRARY, which CR 108.3 makes the owner's, so a manifest out of
+          -- LIBRARY, which CR 400.3 makes the owner's, so a manifest out of
           -- another player's library or out of exile (Ghastly Conscription) stays
           -- one event.
           arrived <- case instructed of
@@ -589,7 +590,8 @@ exchangeCardZones settle resolving source controller legal chosen (ExchangeCardZ
 -- The owners are read before either, because the shuffle runs whether or not the
 -- move did (CR 701.24c): a cancelled move leaves no incarnation and no owner, and
 -- the effect's own PlayerRef is what covers that and CR 701.24d's empty set. The
--- UNION of the two, since rule 701.24's objects go to their owners' libraries and
+-- UNION of the two, since CR 400.3 sends rule 701.24's objects to their owners'
+-- libraries and
 -- the named player need not be one of them. Each library is shuffled ONCE (CR
 -- 608.2f), and CR 701.24a makes WHO shuffles unobservable.
 --
@@ -652,7 +654,7 @@ exchangeOwnership resolving source controller legal (ExchangeOwnership.MkExchang
 -- CR 407.4: "the owner of an object is the only player who can ante that
 -- object". Each named object one of the named players owns moves to the
 -- ante, all of them as one event (CR 608.2f); any other is left where it is,
--- and a move that names nobody writes nothing, so CR 608.2c's "If you do"
+-- and a move that names nobody writes nothing, so CR 118.12's "If you do"
 -- reads it as not having happened. The pure sweep, the read effectIsImpossible's
 -- Ante arm makes, so the offer and the instruction name the same objects.
 ante :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Ante.Ante -> Game ()
@@ -700,7 +702,7 @@ shuffle resolving source controller legal ref = do
 offerCastArm :: (Game Result -> Filter.Context -> (Quantity.Type.Quantity -> Maybe Integer) -> [ObjectId] -> PlayerId -> CastObligation.CastObligation -> PermissionVerb.PermissionVerb -> Maybe PlayerId -> CastRepetition.CastRepetition -> Bool -> CastOffer.CastOffer -> Game [ObjectId]) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> OfferCast.OfferCast -> Game ()
 offerCastArm offerCast runSubgame resolving source controller legal chosen (OfferCast.MkOfferCast ref caster optionality verb offer repetition copied controlWhileResolving slot) = do
   -- Named HERE rather than inside offerCast so that one function takes the
-  -- objects and never the reference: CR 601.3's offer over a set (Shell of the
+  -- objects and never the reference: CR 608.2g's offer over a set (Shell of the
   -- Last Kappa) and over one target (Tinybones, the Pickpocket) are then the
   -- same call. Asked, since CR 608.2d's choice may name the card: Word of
   -- Command's "choose a card from it" out of the hand its look bound.
@@ -996,7 +998,7 @@ forEach applyEffectWith loopOffers runSubgame resolving source controller legal 
   --
   -- The bracket is over the WHOLE fold and not over each member's token
   -- creation, because rule 608.2f's unit is the action the loop states, not one
-  -- opcode of it -- and the ForEach.individually flag is the same rule's second
+  -- opcode of it -- and the ForEach.individually flag is the same rule's third
   -- sentence, which Soulfire Eruption's example states outright.
   --
   -- Nothing here reorders the members: the bracket changes which events are one
@@ -1064,8 +1066,8 @@ forEachNumber applyLoopBody runSubgame resolving source controller legal chosen 
 --
 -- Parun.ZoneChangeSpec's Kindle the Carnage group proves both the second run and
 -- the rescope, and its Trade Secrets group the chooser. The CR 800.4g
--- reassignment is a fence here: no board lets a player leave the game partway
--- through a resolution.
+-- reassignment is a fence here: no printing's body makes its chooser leave, and
+-- CR 104.3a's concession is asked only at priority (see #144).
 --
 -- The gate (CR 706.3c's "Roll again" on one row of a results table) is read
 -- live after each run, as RepeatIf's condition is; one that fails asks the
@@ -1156,7 +1158,7 @@ draw settle resolving source controller legal (Draw.MkDraw ref quantity mSlot) =
             Monad.when (List.genericLength got < n) Common.fallShort
             pure got
       _ -> pure []
-  -- CR 121.1's "and reveal IT": the cards the draw put into a hand, for a later
+  -- CR 121.6c's "and reveal IT": the cards the draw put into a hand, for a later
   -- clause of this resolution to name (#1899). The ids are the ones the CR 400.7
   -- funnel ANSWERED -- the incarnation in the hand -- so a reader finds the card
   -- where the rule says it is; a draw a replacement diverted (CR 121.6c, even to
@@ -1198,7 +1200,8 @@ mill settle resolving source controller legal (Mill.MkMill ref quantity mTally m
   --
   -- Then recorded as the mill it was (CR 701.17a): a cancelled move is no card
   -- milled, so ONE entry per miller holding that player's whole batch, since
-  -- rule 701.17a mills them at once -- and recorded even for a card a
+  -- they are milled at once (Contaminated Drink's ruling) -- and recorded even
+  -- for a card a
   -- replacement diverted elsewhere, since it was milled wherever it ended up.
   milledBy <- Monad.forM wanted $ \(pid, n) -> do
     (taken, arrived) <- Event.millFromReturningTaken settle pid n
@@ -1318,8 +1321,8 @@ lookAt resolving source controller legal chosen (LookAt.MkLookAt ref slot looker
   gs <- State.get
   Monad.forM_ named $ \oid ->
     Monad.forM_ (playerRefPlayers legal resolving source controller gs looker) $ \pid -> Event.look pid oid
-  -- Several cards take the group, which Filter.IsBound reads as CR 701.20e's
-  -- "among them".
+  -- Several cards take the group, which Filter.IsBound reads as a card's
+  -- printed "among them".
   Common.bindObjects resolving (Just slot) named
 
 -- CR 608.2c: Parun.Types.Guess. The card is named first and bound -- Master of
@@ -1512,7 +1515,7 @@ connive settle resolving source controller legal (Connive.Type.MkConnive quantit
   -- Explore's sweep and order, CR 701.50c stating CR 701.44d's rule over again,
   -- its seats read through last known information by CR 701.50b.
   ordered <- Common.forEachOrder resolving Nothing id (Common.objectRefRecipients legal resolving controller source gs ref)
-  -- CR 701.50d's N, read ONCE as this instruction is reached (CR 608.2c):
+  -- CR 701.50d's N, read ONCE as this instruction is reached (CR 608.2h):
   -- Raffine, Scheming Seer's "the number of attacking creatures" cannot move
   -- because an earlier conniver in the same instruction drew and discarded.
   -- Amass's arm for the unevaluable case.
@@ -1522,7 +1525,7 @@ connive settle resolving source controller legal (Connive.Type.MkConnive quantit
 
 -- The card names the set, so CR 701.9b's default choice -- the discarding
 -- player's -- does not arise and the discarding player is not prompted. Named
--- ONCE as this instruction is reached (CR 608.2c) and then fixed (CR 608.2f),
+-- ONCE as this instruction is reached (CR 608.2c) and then fixed (CR 608.2h),
 -- and buried through the same funnel the counted branch below uses, so CR
 -- 701.9a's move is RECORDED as a discard -- writing it as a zone change instead
 -- would land every card in the right graveyard and leave
@@ -1811,7 +1814,7 @@ exchangeValues settle resolving source controller legal (ExchangeValues.MkExchan
 --
 -- Evaluated ONCE PER RECIPIENT, a card being able to name a number that is each
 -- recipient's own (Biorhythm). Every evaluation and delta is read off `gs`, the
--- state before any life moves (CR 608.2f).
+-- state before any life moves (CR 608.2h).
 --
 -- Each delta goes through changeLifeByDelta, which proposes a DOWNWARD one as a
 -- life loss and an UPWARD one as a life gain, since rule 119.5 spells a lower
@@ -1882,7 +1885,7 @@ winGame resolving source controller legal ref = do
 -- CR 104.4c with CR 801.15: the game is a draw for the controller and each
 -- player within their range, who leave it; everyone else plays on. Under an
 -- unlimited range, or for CR 801.18's planar source, that is the whole
--- table, which CR 104.2a's settle then records as the draw.
+-- table, which the settle then records as CR 104.4c's draw.
 drawGame :: ObjectId -> PlayerId -> Game ()
 drawGame source controller = do
   gs <- State.get
@@ -2161,7 +2164,7 @@ vote resolving source controller legal (Vote.MkVote starter choices secret) = do
       -- knowledge gets more votes or the vote is tied" compares the two tallies,
       -- and an absent slot would read as no answer rather than as zero.
       --
-      -- Rule 701.38a's tie-break is arithmetic and not an outcome of its own,
+      -- A printed tie-break is arithmetic and not an outcome of its own,
       -- which is why no tie is recorded anywhere.
       Foldable.for_ voteWords $ \word ->
         State.modify' (Common.bindAmountSlot resolving source word (Natural.length (filter (== Just (BallotChoice.ForWord word)) ballots)))

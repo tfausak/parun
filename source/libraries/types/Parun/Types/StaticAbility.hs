@@ -45,8 +45,8 @@ data StaticAbility ability = MkStaticAbility
     -- predicate over game state -- a static ability is "simply true", so there is
     -- no moment at which the clause is checked and latched.
     --
-    -- NOT a duration, and the distinction is CR 611.2c's parenthetical: a "for as
-    -- long as" duration (CR 611.2b, Parun.Types.Duration.ForAsLongAs) ENDS a stored
+    -- NOT a duration, and the distinction is CR 611.2b's against CR 611.3a's: a "for
+    -- as long as" duration (Parun.Types.Duration.ForAsLongAs) ENDS a stored
     -- effect that a resolution created, once and for good, while this gate is
     -- re-asked on every projection (CR 613.5) and so turns the same effect off and
     -- on again as the board moves, with no resolution and no trigger in between.
@@ -56,14 +56,15 @@ data StaticAbility ability = MkStaticAbility
     -- states none, which is nearly all of them.
     --
     -- Structural rather than a Condition, and that is the whole point: CR 113.6
-    -- decides which zone's walk gathers an ability at all, BEFORE CR 604.2's
-    -- clause is asked of anything. A zone written as a condition would be
-    -- answered only for an ability some walk had already kept, so it could
-    -- narrow a gather but never widen one -- Anger's effect would still be
-    -- gathered off the battlefield and never off the graveyard. Empty leaves CR
-    -- 113.6's own defaults standing: the battlefield for a permanent, the stack
-    -- for an instant or a sorcery (CR 113.6's first sentence), the command zone
-    -- for an emblem (CR 114.4), everywhere for a cast permission (CR 113.6f).
+    -- decides which zone's walk gathers an ability at all, BEFORE the "as long
+    -- as" clause (CR 611.3a) is asked of anything. A zone written as a
+    -- condition would be answered only for an ability some walk had already
+    -- kept, so it could narrow a gather but never widen one -- Anger's effect
+    -- would still be gathered off the battlefield and never off the graveyard.
+    -- Empty leaves CR 113.6's own defaults standing: the battlefield for a
+    -- permanent, the stack for an instant or a sorcery (CR 113.6's first
+    -- sentence), the command zone for an emblem (CR 114.4), everywhere for a
+    -- cast permission (CR 113.6f).
     --
     -- CR 113.6b's "only" is why a stated set OVERRIDES those defaults rather
     -- than adding to them, CR 113.6f included: Viral Spawning's Corrupted
@@ -87,8 +88,9 @@ data StaticAbility ability = MkStaticAbility
     -- permanent; Just d is the card overriding that with a duration of its own.
     --
     -- The handover is Parun.Engine.Event's, at the moment the permanent leaves,
-    -- and what it hands over is a STORED effect (CR 611.2). So the clause moves
-    -- the ability's effect from one side of CR 611.2c to the other: the live
+    -- and what it hands over is stored as if a resolution had made it, a reading
+    -- no rule forces. So the clause treats the ability's effect as CR 611.2c treats
+    -- a resolution's: the live
     -- `affected` set below is resolved to the concrete objects it names right
     -- then, and never re-derived again.
     --

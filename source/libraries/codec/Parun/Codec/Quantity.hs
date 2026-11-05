@@ -135,7 +135,7 @@ codec =
       Arm.payload "TagWasSpentOfOwnColor" ProductionTag.codec Quantity.TagWasSpentOfOwnColor (\x -> case x of Quantity.TagWasSpentOfOwnColor y -> Just y; _ -> Nothing),
       Arm.nullary "ChosenColorsItIs" Quantity.ChosenColorsItIs,
       Arm.nullary "ChosenNumber" Quantity.ChosenNumber,
-      -- CR 202.1a's amount, nothing on the wire for the same reason: the object is
+      -- CR 702.191a's amount, nothing on the wire for the same reason: the object is
       -- whichever one the quantity is evaluated against.
       Arm.payload "ManaSpent" ManaSpent.codec Quantity.ManaSpent (\x -> case x of Quantity.ManaSpent y -> Just y; _ -> Nothing),
       -- CR 111.6's status and CR 508.1k / 509.1g's two combat facts, all with
@@ -230,7 +230,7 @@ codec =
       -- "you", so a card writing this arm states the zone alone unless its
       -- clause is agentless.
       Arm.payload "WasCastFrom" CastFrom.codec Quantity.WasCastFrom (\x -> case x of Quantity.WasCastFrom y -> Just y; _ -> Nothing),
-      -- CR 509.1h's declaration read against the object the quantity is aimed at,
+      -- CR 509.1g's declaration read against the object the quantity is aimed at,
       -- so only the number of blockers skipped is on the wire.
       Arm.payload "BlockersBeyond" Common.natural Quantity.BlockersBeyond (\x -> case x of Quantity.BlockersBeyond y -> Just y; _ -> Nothing),
       -- A slot and a whole Quantity, in that order: which object to aim at, then

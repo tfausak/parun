@@ -238,8 +238,8 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- text declares by name (Face.delayedAbilities), seeded with that text and
     -- so copiable with it -- a Clone arms the text it copied, not its printed
     -- card's. No layer 6 removal writes it: a delayed ability is not ON the
-    -- object (CR 603.7d), so only an ability that arms one decides whether it is
-    -- created.
+    -- object (CR 603.7, 603.2d), so only an ability that arms one decides
+    -- whether it is created.
     delayedAbilities :: Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)),
     -- | CR 702.5a / 613 layer 6: this object's enchant abilities after the layer
     -- system -- what restricts an Aura spell's target and what the Aura can
@@ -318,7 +318,7 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     --
     -- A list rather than a set or a map: two swaps compose in order (Faerie ->
     -- Elf then Elf -> Goblin is not the same pair of effects as the reverse),
-    -- which is CR 613.1's timestamp order the fold already walks in.
+    -- which is CR 613.7's timestamp order the fold already walks in.
     --
     -- Not copiable, and structurally so: CR 707.2's list of copiable values holds
     -- no text change, and this is written by the layer fold rather than by the
@@ -326,8 +326,8 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     wordChanges :: [ChangeWord.ChangeWord],
     -- | CR 612.3: the `keywords` counts as the LAST layer-3 text change left
     -- them, before CR 613.1f grants any: what CR 702.161a's full text mints its
-    -- static abilities from. Counts and not a Set, because CR 702.135b makes
-    -- each instance its own ability.
+    -- static abilities from. Counts and not a Set, because CR 113.2c has
+    -- each instance function independently.
     --
     -- Not copiable, for wordChanges' reason and by the same construction.
     textChangedKeywords :: Map.Map Keyword.Keyword Natural.Natural,
@@ -411,10 +411,10 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- characteristics: CR 722.3c mints a copy whose card is this face alone, and
     -- CR 722.3a's gate asks only whether one exists.
     --
-    -- The prepared DESIGNATION is not here, and that is CR 722.3b's own scope
-    -- rather than an omission: it is a designation, which CR 722.3a's own wording
-    -- and Parun.Types.Designation's argument keep off the copiable values, so a
-    -- permanent that copies a prepared one is not prepared and mints nothing.
+    -- The prepared DESIGNATION is not here, and that is no omission: CR 722.3a
+    -- makes it a designation, no part of the printed text CR 707.2 derives copiable
+    -- values from (Parun.Types.Designation's argument), so a permanent that copies
+    -- a prepared one is not prepared and mints nothing.
     prepare :: Maybe (Face.Face Card.Card),
     -- | CR 715.2b / 720.2b: the Adventure or Omen half this object has, copiable
     -- like `prepare`, and read by Game.castableFacesOf.

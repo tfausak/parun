@@ -70,7 +70,8 @@ data CastOffer = MkCastOffer
     restriction :: Maybe (Filter.Filter Keyword.Keyword),
     -- | CR 601.2b: the keyword ability whose cost this offer states, or Nothing
     -- for an offer no keyword ability is behind -- which is every offer but rule
-    -- 702.62a's third ability and rule 702.35a's second.
+    -- 702.62a's third ability, rule 702.35a's second and rule 702.88a's delayed
+    -- one.
     -- Parun.Engine.Resolve.Effect.offerCast writes it
     -- onto the candidate it builds, so it reaches Parun.Types.Object's castUsing
     -- as any printed alternative's tag does.

@@ -138,7 +138,7 @@ evaluateFor viewOf context gs announcedOn oid = evaluateAgainst viewOf context g
 -- caller but one supplies both, through evaluateFor above.
 --
 -- The exception is a member of an Aggregation.Greatest over Scope.InHistory,
--- which has a view and no object: CR 608.2h's snapshot describes a past event
+-- which has a view and no object: CR 608.2i's snapshot describes a past event
 -- rather than anything on the battlefield now. So the view is passed
 -- alongside rather than looked up from `mOid`, and the arms that read
 -- characteristics read it; Quantity.InSlot, which reads BINDINGS rather than
@@ -229,9 +229,10 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         --     601.2b's announced X. THE ANNOUNCEMENT IS OFF-OBJECT ON TWO OF THIS
         --     CALLER'S THREE ROADS, which is why it needs a channel of its own: CR
         --     603.3d chooses a trigger's targets before the ability object carries any
-        --     binding at all, and CR 601.2c chooses a spell's before CR 601.2i stamps
-        --     the X onto it, so on neither can the two readings above reach what the
-        --     announcement already holds, and the caller hands it over instead.
+        --     binding at all, and CR 601.2c chooses a spell's before
+        --     Cast.castProposed stamps the X onto it, so on neither can the two
+        --     readings above reach what the announcement already holds, and the
+        --     caller hands it over instead.
         --
         --     The third road is CR 707.10c's, and there the announcement IS on the
         --     object: Resolve.chooseNewTargetsFor re-chooses a copy's targets off a
@@ -400,13 +401,13 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- Terminating: the payload is a strictly smaller subterm.
         Quantity.AgainstLastCardExiledWith (AgainstLastCardExiledWith.MkAgainstLastCardExiledWith criterion inner) ->
           lastCardExiledWith viewOf context gs criterion >>= \o -> evaluateAgainst viewOf context gs announcedOn (Just o) (viewOf o) inner
-        -- CR 107.1: Nothing propagates from any operand -- a calculation over a
-        -- number nobody could determine is not a number either.
+        -- Nothing propagates from any operand; CR 107.2's 0 is the reader's to apply,
+        -- and inside a calculation only determineWith applies it.
         Quantity.Arithmetic arithmetic -> fmap calculate (traverse recur arithmetic)
-        -- CR 107.1: Nothing propagates from the value as from any operand, but NOT
-        -- from a limit: "not more than the creature's toughness" says nothing
-        -- when there is no creature (Parun.Types.AtMost), so a limit naming no
-        -- number is skipped. Drain Life at a battle gains all the damage dealt
+        -- Nothing propagates from the value as from any operand (CR 107.2's 0 is the
+        -- reader's), but NOT from a limit: "not more than the creature's toughness"
+        -- says nothing when there is no creature (Parun.Types.AtMost), so a limit
+        -- naming no number is skipped. Drain Life at a battle gains all the damage dealt
         -- (docs/decisions.md, "Drain Life's limits at a target they don't name").
         Quantity.AtMost (AtMost.MkAtMost inner limits) -> fmap (\n -> minimum (n : Maybe.mapMaybe recur (Foldable.toList limits))) (recur inner)
         -- CR 208.2a / 608.2h: delegate to the general Count fold (Parun.Engine.Count),
@@ -670,7 +671,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- Nothing for an undefined choice (CR 607.5a), which `determine` makes 0
         -- in a CDA's calculation (CR 107.2, 208.2a).
         Quantity.ChosenNumber -> fmap toInteger (Filter.sourceChosenNumber context)
-        -- CR 202.1a's amount, the arm above's read one field over and a COUNT
+        -- CR 702.191a's amount, the arm above's read one field over and a COUNT
         -- rather than a 0/1: rule 702.191a's "the amount of mana spent to cast that
         -- spell". Zero for a spell cast for no mana, which is an ordinary answer.
         Quantity.ManaSpent part -> case part of
@@ -763,7 +764,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         --
         -- Nor Combat.declaredAttackedThisStep, its step-scoped twin: melee's words are
         -- "this combat", which CR 511.3's span matches and CR 500.1's does not. The two
-        -- coincide for every melee trigger printed -- CR 508.1m puts the trigger on the
+        -- coincide for every melee trigger printed -- CR 508.2b puts the trigger on the
         -- stack in the step the declaration happened in -- so the fields are apart
         -- because the two rules ask different questions, not because a card tells them
         -- apart today.
@@ -1030,10 +1031,10 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- Dungeon.remove writes it there and the log GameEvent.PlayerActed goes
         -- into is cleared at every turn handoff.
         --
-        -- LIVE, which is what CR 604.2 needs: Gloom Stalker's "as long as you've
-        -- completed a dungeon" is re-asked by Projection.conditionHolds on every
-        -- projection, so the double strike appears in the same settle that CR 704.5t
-        -- removed the dungeon in.
+        -- LIVE, which is what CR 611.3a needs: Gloom Stalker's "as long as
+        -- you've completed a dungeon" is re-asked by Projection.conditionHolds
+        -- on every projection, so the double strike appears in the same settle
+        -- that CR 704.5t removed the dungeon in.
         --
         -- An ABSENT player answers 0 rather than Nothing, as SpellsCast's absent
         -- entry does: having completed none is an answered question. What is unanswered
@@ -1065,9 +1066,10 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- through the injected view, an entry being an event and not a characteristic --
         -- and CardsDiscardedThisTurn's in extent: Engine.beginTurnOf clears the log at
         -- the turn handoff, so "this turn" is the log's own reach and nothing here names
-        -- a window. LIVE matters for CR 604.2 -- Projection.conditionHolds re-asks this
-        -- every time the projection is taken, so the hexproof goes away at the handoff
-        -- rather than at whatever moment a snapshot had been captured.
+        -- a window. LIVE matters for CR 611.3a -- Projection.conditionHolds
+        -- re-asks this every time the projection is taken, so the hexproof goes
+        -- away at the handoff rather than at whatever moment a snapshot had
+        -- been captured.
         --
         -- Game.enteredBattlefield and not a Scope.InHistory count: that arm matches a
         -- Filter against the event's characteristic snapshot, where this asks whether one
@@ -1192,7 +1194,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
                   && elem (SpellWasCast.player cast) casters
               wasCast = any (maybe False castFromZone . Game.castOf . LoggedEvent.event) (GameState.events gs)
           pure (if elem owner pids && wasCast then 1 else 0)
-        -- CR 509.1h's declaration: how many creatures are blocking the object this
+        -- CR 509.1g: how many creatures are blocking the object this
         -- evaluation is aimed at, less the skipped count, floored at 0 -- one for rule
         -- 702.23a's "beyond the first", none for Gang of Elk's "each creature
         -- blocking it". A blocked creature whose blockers have all left reads 0

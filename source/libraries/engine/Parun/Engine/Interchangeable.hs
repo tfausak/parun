@@ -636,7 +636,7 @@ attackedLastTurnNames oid entry = case entry of
     attacker == oid || attackTargetNames oid target
 
 -- Whether any OTHER object names this one: an Aura or Equipment attached to it,
--- which CR 303.4 stores on the rider rather than on the host, a spell or
+-- which Object.attachedTo stores on the rider rather than on the host, a spell or
 -- ability on the stack that took it as a target (CR 601.2c) or that named it as
 -- something an instruction produced, and a spell whose gift promise is for the
 -- instance it grants (CR 702.174a, Parun.Types.KeywordInstance). Binding's other
@@ -647,10 +647,10 @@ attackedLastTurnNames oid entry = case entry of
 -- source's (Cost.chooseSource), and no board in the suite taps one of two
 -- granters of a promised gift for mana, so dropping it leaves the suite green.
 --
--- A spell's targets reach Object.bindings only as CR 601.2i finishes the cast,
--- so the window CR 601.2g opens for that same cast cannot see them; every
--- earlier spell on the stack is visible. Parun.ManaSourceSpec's "an Elf a spell on the
--- stack targets is a candidate of its own" case is the two-step proof.
+-- A spell's targets reach Object.bindings at CR 601.2c (Cast.castProposed), so
+-- the window CR 601.2g opens for that same cast sees them, as it does every
+-- earlier spell's. Parun.ManaSourceSpec's "an Elf a spell on the stack targets
+-- is a candidate of its own" case drives an earlier spell's.
 --
 -- The ATTACHMENT arm is proved rather than a fence, and Betrayal ({U} Aura,
 -- "Whenever enchanted creature becomes tapped, you draw a card") is what proves

@@ -63,7 +63,7 @@ suspendOf oid gs = do
 --   * they could BEGIN TO CAST it by putting it onto the stack -- rule 116.2f's
 --     own window, and the whole of it: that rule states no phase and no empty
 --     stack, so this is deliberately neither Parun.Engine.Turn.sorcerySpeedWindow
---     (CR 116.2k's plot, CR 116.2m's unlock) nor Foretell's own-turn test. A
+--     (CR 702.170a's plot, CR 116.2m's unlock) nor Foretell's own-turn test. A
 --     sorcery still only suspends at sorcery speed, because that is what
 --     beginning to cast a sorcery asks for -- through Cast.couldBeginToCast, the
 --     same conjuncts the cast offer is gated on, so the two cannot drift. CR
@@ -113,8 +113,8 @@ suspendable pid gs = filter (\oid -> canSuspend pid oid gs) (Game.zoneMembers Zo
 -- placement takes rather than a second one written here.
 --
 -- Unobservable as two steps rather than one, which is what rule 702.62a's "exile
--- it WITH N time counters on it" asks for: CR 116.1 gives no player priority
--- inside a special action, so nothing can look at the card in exile between the
+-- it WITH N time counters on it" asks for: CR 116.3 gives priority only after
+-- a special action, so nothing can look at the card in exile between the
 -- two.
 --
 -- CounterCause.ByRule, not ByEffect: rule 702.62a is a keyword ability's own

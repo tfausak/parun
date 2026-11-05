@@ -322,7 +322,7 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       " {\"type\":\"EntersAttachedTo\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"CanHostSubject\"}]}} "
   -- CR 614.1c: the rewrite that runs an effect -- Monstrous War-Leech's "mill
   -- four cards". Its "if it was kicked" is NOT here: that clause rides
-  -- Parun.Types.PrintedReplacement one level up (CR 604.2).
+  -- Parun.Types.PrintedReplacement one level up (CR 611.3a).
   Spec.it s "RunEffects (Monstrous War-Leech)" $
     Common.assertCodec
       s

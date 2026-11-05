@@ -56,9 +56,9 @@ import qualified Parun.Types.Zone as Zone
 
 -- | CR 309.1 \/ 205.2a: is this a dungeon card? Read off the PRINTED type line
 -- rather than the projection, because CR 309.2c keeps a dungeon in the command
--- zone and this reader takes the printed card (#4711) -- and because nothing
--- in the rules changes a dungeon's card type: CR 613 layer 4 reaches permanents,
--- and CR 309.2c makes a dungeon card never one.
+-- zone and this reader takes the printed card (#4711) -- and because CR 309.2c
+-- makes a dungeon card never a permanent, so an effect worded for permanents
+-- never reaches it.
 isDungeonFace :: Face.Face Card.Type.Card -> Bool
 isDungeonFace face = Set.member CardType.Dungeon (TypeLine.types (Face.typeLine face))
 

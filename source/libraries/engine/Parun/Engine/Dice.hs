@@ -136,7 +136,7 @@ spendLimit stated modifier gs = case stated of
 -- every copy of the minimum at once would leave [5] for both.
 --
 -- A TIE is asked about only where the board can tell the tied rolls apart.
--- Rule 706.6's second sentence gives the roller the choice "if multiple results
+-- Rule 706.6's third sentence gives the roller the choice "if multiple results
 -- are tied for the lowest". Tied rolls are equal NUMBERS, so where nothing else
 -- separates them dropping either leaves the instruction the same results, and
 -- where the rules leave nothing to ask, don't prompt -- the first is taken, so a

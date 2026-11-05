@@ -21,7 +21,7 @@ import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 -- cast, an ability's source, and the permanent a special action is taken on.
 --
 -- FIVE payment fields and not one per payment the engine can make: CR 116.2
--- alone lists eleven special actions, and what earns a field is a PRINTED rider
+-- alone lists twelve special actions, and what earns a field is a PRINTED rider
 -- naming that payment. Foretelling (CR 116.2h), plotting (CR 116.2k), CR
 -- 508.1j \/ 509.1f's combat toll and CR 118.12's resolution-time payment share
 -- Parun.Types.PaymentSubject's ForNeither arm with nothing here, none of them

@@ -4459,7 +4459,7 @@ exchangeTextBoxSpec s registry = Spec.describe s "ExchangeTextBoxes" $ do
 
   -- CR 612.1: a text-changing effect leaves the name, the type line and the P/T
   -- box alone. That is the whole of what separates CR 612.5 from a copy effect
-  -- (CR 706/707) and from CR 612.6's full text, so a board where the 3/3 became
+  -- (CR 707) and from CR 612.6's full text, so a board where the 3/3 became
   -- a 1/1 would be a copy and not an exchange.
   Spec.it s "CR 612.1 both creatures keep their own name and power/toughness" $ do
     sentry <- S.printingOf s registry "Ogre Sentry"

@@ -249,8 +249,8 @@ zoneAbilitiesOf pcs zone oid gs = case (Game.faceOf oid gs, Game.lookupObject oi
 -- The command zone answers the owner as well, and its two rules say so
 -- themselves rather than leaning on rule 602.2's fallback: CR 902.6 makes the
 -- controller of a face-up vanguard card its owner, and CR 114.2 makes an emblem
--- both owned and controlled by the player it was created for. Rule 400.3 puts
--- every other card in that zone in its owner's, as it does a hand and a
+-- both owned and controlled by the player it was created for. CR 108.4a answers
+-- with its owner for every other card in that zone, as it does in a hand and a
 -- graveyard. Parun.Engine.Event's command-zone trigger walk takes the owner for
 -- the same two rules, so the two cannot disagree about who a vanguard's
 -- abilities belong to.
@@ -298,7 +298,7 @@ mayActivateGiven grants pid srcId ability gs = case activatorOfGiven grants srcI
 -- The objects whose activated abilities `pid` may be offered, which is the
 -- candidate half of CR 602.2 as mayActivateGiven above is the permission half:
 -- what this player controls, plus their own hand, graveyard and command zone (CR
--- 400.3, and CR 902.6 / CR 114.2 for the two objects rule 113.6p names there),
+-- 400.3, and CR 902.6 / CR 114.2 for two of the objects rule 113.6p names there),
 -- plus CR 602.1b's exception -- a permanent someone else controls whose ability
 -- says this player may activate it.
 --

@@ -139,7 +139,7 @@ import qualified Parun.Types.ZoneScope as ZoneScope
 -- The two frames are SEPARATE, and keeping them apart is the whole point:
 --
 --   * `source` is the object the targeting is relative to -- the spell object at
---     cast, the source permanent for an ability. It frames only CR 601.2c's
+--     cast, the source permanent for an ability. It frames only the printed
 --     "another", carried as the Filter's own Not IsSource (#163), so that drops
 --     whichever tag the Pool produced and re-validation sees the same rule
 --     selection did.
@@ -301,8 +301,7 @@ inRangeGiven grants you recipient gs = case (Recipient.playerOf recipient, Recip
 -- target.
 --
 -- No slot bindings, and neither caller can want any: both ask what an ENCHANT
--- slot admits, and the slot CR 303.4a declares draws from the battlefield,
--- which no ZoneScope reaches.
+-- slot admits, which CR 702.5a makes the ability's own restriction.
 admittedRecipients :: Maybe PlayerId -> ObjectId -> TargetSlot -> GameState -> Set Recipient
 admittedRecipients perspective source slot gs =
   admittedGiven Nothing (wholePools gs) perspective False Map.empty (Game.acquisitionOf source gs) source slot gs
@@ -545,8 +544,8 @@ lastKnownAdmits perspective source slot host gs =
 -- A total case for basePoolGiven's reason: a new Pool constructor must break the
 -- build here rather than default to an answer.
 --
--- Every battlefield pool reads the last known CARD TYPES, since CR 110.1 makes
--- being a permanent a fact about the object's types. The record carries no zone
+-- Every battlefield pool reads the last known CARD TYPES, since CR 110.4 makes
+-- which objects can be permanents a fact about their types. The record carries no zone
 -- of its own, so what is read is what the object WAS rather than where it was;
 -- the caller only ever asks about an ability's source, which was a permanent
 -- while it existed.
@@ -575,8 +574,8 @@ poolHeldLastKnown pool view =
         -- Only the planeswalker half can be asked: the player half is looked up by
         -- PlayerId, as Pool.Players below is. A REGRESSION FENCE rather than a
         -- proven behaviour: the one caller asks about an ENCHANT slot, and CR
-        -- 702.5a's "Enchant [object or player]" cannot name this pair, so
-        -- answering False here reddens nothing.
+        -- 702.5d keeps an Aura that can enchant a player off permanents, which
+        -- rules this pair out, so answering False here reddens nothing.
         Pool.PlayersAndPlaneswalkers -> hasType CardType.Planeswalker
         Pool.Players -> False
         Pool.Spells -> False
@@ -1037,7 +1036,7 @@ playerRecipients gs = Set.fromList (fmap Recipient.ToPlayer (Game.stillPlaying g
 permanentRecipients :: GameState -> Set Recipient
 permanentRecipients gs = Set.fromList (fmap Recipient.ToObject (Set.toList (GameState.battlefield gs)))
 
--- CR 112.1: only spells (Source.OfCard) on the stack, tagged ToObject; abilities
+-- CR 112.1 / 112.1a: only spells on the stack, tagged ToObject; abilities
 -- and permanents are excluded by Game.isSpell.
 spellRecipients :: GameState -> Set Recipient
 spellRecipients gs = Set.fromList (fmap Recipient.ToObject (filter (\oid -> Game.isSpell oid gs) (GameState.stack gs)))
@@ -1077,7 +1076,7 @@ abilityRecipients gs = Set.fromList (fmap Recipient.ToObject (filter (\oid -> Ga
 --
 --   * Scoped is PlayerEffect.playersInScope's, rather than a second reading of
 --     CR 109.5 written here: that function folds the one membership test, which
---     is where PlayerScope.Related Opponent's CR 806.1 argument lives. Nothing -> no
+--     is where PlayerScope.Related Opponent's CR 102.3 argument lives. Nothing -> no
 --     players is its report of an absent perspective -- the vacuous posture every
 --     player-referencing Filter atom takes. PlayerScope.Related AnyPlayer never reaches
 --     it: "a graveyard" names the whole table with no perspective to lack.
@@ -1087,13 +1086,14 @@ abilityRecipients gs = Set.fromList (fmap Recipient.ToObject (filter (\oid -> Ga
 --     lookup at both of CR 115's moments, and the moments differ only in what
 --     the caller passes:
 --
---       - CR 601.2c chooses every target AT ONCE, so nothing has been announced
---         yet and legalSets passes the named slot's own LEGAL SET. The union
---         over it is every card the announcement could reach -- a superset of
---         any one coherent answer, which selectionLegal then judges whole. No
---         order between the two slots is invented, which is what a
---         one-slot-at-a-time prompt would have to do. The SET stays the union;
---         it is the COUNT that slotCapacities narrows to one coherent answer.
+--       - CR 601.2c's one announcement states no order among targets, so
+--         nothing has been announced yet and legalSets passes the named slot's
+--         own LEGAL SET. The union over it is every card the announcement could
+--         reach -- a superset of any one coherent answer, which selectionLegal
+--         then judges whole. No order between the two slots is invented, which
+--         is what a one-slot-at-a-time prompt would have to do. The SET stays
+--         the union; it is the COUNT that slotCapacities narrows to one
+--         coherent answer.
 --       - CR 608.2b re-checks a spell whose slots are FILLED, so Resolve passes
 --         the chosen targets and the union is over the one player named.
 --
@@ -1307,10 +1307,10 @@ aimingRanges reader perspective source announced slots sets gs =
 
 -- One legal set per named slot; casting prompts with exactly this map. `source`
 -- is the object the targeting is relative to -- the spell object at cast, the
--- source permanent for an ability. CR 601.2c's "another" needs no separate pass:
--- a slot that excludes its source says so with Not IsSource, and a slot that does
--- not is untouched, so Prodigal Sorcerer may still target itself with AnyTarget
--- (CR 115.4). CR 115.5's self-exclusion is
+-- source permanent for an ability. The printed "another" needs no separate
+-- pass: a slot that excludes its source says so with Not IsSource, and a slot
+-- that does not is untouched, so Prodigal Sorcerer may still target itself with
+-- AnyTarget (CR 115.4). CR 115.5's self-exclusion is
 -- a DIFFERENT rule: unconditional, and firing only where its own words do, for a
 -- source that is itself on the stack -- see legalRecipients.
 --
@@ -1333,11 +1333,11 @@ legalSets kind reader perspective unannounced seed source slots gs =
 
 -- The same map on a board the caller already walked -- see legalRecipientsGiven.
 --
--- TWO PASSES, because CR 601.2c makes one slot's legal set depend on another's:
+-- TWO PASSES, because a card may make one slot's legal set depend on another's:
 -- a ZoneScope.InSlot pool names a slot and so may a CR 202.3 computed bound, so
 -- the first pass answers every slot with no bindings at all and the second
 -- re-answers only the slots that name one (secondPass), against the first pass.
--- The rule chooses every target AT ONCE, so there is no order to consult -- what
+-- CR 601.2c states no order among targets, so there is none to consult -- what
 -- a dependent slot is offered is the UNION over the answers the slot it names
 -- could still take, and selectionLegal is where the announcement is judged as one
 -- act.
@@ -1536,8 +1536,9 @@ boundSiblings declared slot =
 --
 --   * the POOL names a slot (dependsOnSlot below), which is Dwell on the Past's
 --     "their graveyard";
---   * the FILTER reads one, which is CR 601.2c's "another" between two slots of
---     one announcement -- Fall of the Hammer's Not (IsBound "dealer");
+--   * the FILTER reads one, which is a printed "another" between two slots of
+--     one announcement, overriding CR 601.2c's default -- Fall of the Hammer's
+--     Not (IsBound "dealer");
 --   * the CR 202.3 computed BOUND names one (boundNamesSibling above).
 --
 -- A fourth reads no sibling but the slot's OWN other targets: TargetSlot's
@@ -1652,7 +1653,7 @@ countingBy reader perspective seed source gs =
 -- announcement.
 --
 -- What CR 707.10c's re-choice offers a spell that became a copy of a card and so
--- announced nothing (CR 707.2: "it stops having any targets").
+-- announced nothing (Transcantation's ruling: "it stops having any targets").
 fixedCount :: TargetSlot -> Maybe Natural
 fixedCount slot = case TargetSlot.count slot of
   SlotCount.Printed (TargetCount.MkTargetCount n (Just m)) | n == m && n > 0 -> Just n
@@ -1766,11 +1767,11 @@ slotCapacities counting x slots sets gs =
 -- target is its controller's and its second an opponent's.
 --
 -- ONE OFFER, many prompts. Every group is narrowed from the same `sets`, built
--- once by the caller off the board before any answer, so CR 601.2c's "all at
--- once" still holds of what may be named; what the split changes is only which
--- seat is asked. A later group therefore cannot be offered less because an
--- earlier one answered, and the joint check (selectionLegal, jointlyCoherent) is
--- still taken over the whole announcement afterwards.
+-- once by the caller off the board before any answer, so CR 601.2c's one
+-- announcement still holds of what may be named; what the split changes is only
+-- which seat is asked. A later group therefore cannot be offered less because
+-- an earlier one answered, and the joint check (selectionLegal,
+-- jointlyCoherent) is still taken over the whole announcement afterwards.
 --
 -- The controller's slots go first (Ord on Maybe), and the rest follow in the
 -- chooser's own order. Rule 601.2c fixes no order between choosers; this one is
@@ -1800,8 +1801,8 @@ chooseTargets reader pid oid source seed x slots sets = do
       ( \(named, mine) -> do
           seat <- chooserOf pid oid source seed named
           case seat of
-            -- CR 601.2c has nobody to announce with, which is CR 102.2's game of one
-            -- seat under an "of an opponent's choice" slot. The slots go unanswered,
+            -- CR 601.2c has nobody to announce with, where a game of one seat has no
+            -- opponent under an "of an opponent's choice" slot. The slots go unanswered,
             -- which the callers' own gate then refuses (CR 601.2e, CR 602.2, CR
             -- 603.3d's removal).
             Nothing -> pure (Map.empty, Set.empty)
@@ -2085,17 +2086,17 @@ pileMembers perspective pile gs =
 -- caster who could not find three legal targets has not announced an illegal
 -- number, they were never offered it.
 --
--- THE JOINT CHECK is the third conjunct, and it is what makes CR 601.2c's "all
--- at once" a whole answer rather than an order: a slot that names another slot
--- was OFFERED the union over that slot's candidates (legalSetsGiven), so
+-- THE JOINT CHECK is the third conjunct, and it is what makes CR 601.2c's one
+-- announcement a whole answer rather than an order: a slot that names another
+-- slot was OFFERED the union over that slot's candidates (legalSetsGiven), so
 -- membership in `sets` alone would let a caster take a card from one player's
 -- graveyard while targeting another -- or name one creature in both of Fall of
--- the Hammer's slots, which rule 601.2c's "another" forbids. Re-deriving the
--- dependent slots against `chosen` under `seed` -- exactly the derivation CR
--- 608.2b will make at resolution, which reads the object's whole binding
--- environment -- judges the announcement as the single act the rule makes it,
--- with neither slot resolved before the other. jointlyJudged is which slots those
--- are, in both readings.
+-- the Hammer's slots, which the card's "another" forbids, against CR 601.2c's
+-- default. Re-deriving the dependent slots against `chosen` under `seed` --
+-- exactly the derivation CR 608.2b will make at resolution, which reads the
+-- object's whole binding environment -- judges the announcement as the single
+-- act the rule makes it, with neither slot resolved before the other.
+-- jointlyJudged is which slots those are, in both readings.
 --
 -- An announced COUNT is measured against slotCapacities rather than against the
 -- union, so a caster is never offered more targets for a graveyard-scoped slot
@@ -2341,8 +2342,9 @@ subsetsOfSize n xs
 --
 -- `extra` is the slots EVERY mode carries in addition to its own -- CR 303.4a's
 -- enchant slot, declared by the card rather than by a mode, which castability
--- must see or an Aura with no legal creature would be castable and then countered
--- on resolution (CR 601.2c). An ability has no enchant slot and passes Map.empty.
+-- must see or an Aura with no legal creature would be offered for casting and
+-- then taken back (CR 601.2c, 601.2e). An ability has no enchant slot and
+-- passes Map.empty.
 fillableModes :: StackObjectKind.StackObjectKind -> Maybe AbilityName.AbilityName -> Maybe PlayerId -> Map SlotName Binding.Type.Binding -> ObjectId -> Map SlotName TargetSlot -> Modal.Modal Card (GrantedAbility.GrantedAbility Card) -> GameState -> Set ModeIndex
 fillableModes kind reader perspective seed source extra modal gs =
   fillableModesGiven kind reader (wholePools gs) perspective seed source extra modal gs
@@ -2419,8 +2421,8 @@ fillableModesGiven kind reader pools perspective seed source extra modal gs =
 -- environment (slotContext's boundAmounts): a player substituted into an atom
 -- leaves the slot answerable by itself, where a bound reading CR 603.2's number
 -- has to reach Parun.Engine.Quantity, which takes a Context and no bindings. The
--- order is not CR 601.2c's
--- simultaneity problem that a slot depending on ANOTHER SLOT is
+-- order is not the one-announcement problem
+-- that a slot depending on ANOTHER SLOT is
 -- (Parun.Types.ZoneScope's InSlot, two passes in legalSetsGiven): a trigger's
 -- event bindings are fixed before the ability is put on the stack, so nothing
 -- being chosen now can change them.

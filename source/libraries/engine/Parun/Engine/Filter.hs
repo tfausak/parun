@@ -128,7 +128,7 @@ data View = MkView
     -- (Asmoranomardicadaistinaculdacar).
     --
     -- EMPTY where there is nothing named to read: a player view, an ability on
-    -- the stack (CR 113.7a), and a face-down object, whose CR 708.2a "no name"
+    -- the stack (CR 405.1), and a face-down object, whose CR 708.2a "no name"
     -- an empty set is the honest spelling of.
     names :: Set.Set CardName.CardName,
     cardTypes :: Set.Set CardType.CardType,
@@ -181,8 +181,8 @@ data View = MkView
     controller :: Maybe PlayerId.PlayerId,
     -- CR 108.3 / 110.2: the candidate's OWNER -- the player who started the game
     -- with the card in their deck, or (CR 111.2) the player who created the
-    -- token. Read straight off Object.owner, which setup writes once and no rule
-    -- ever rewrites: CR 613.1b's layer 2 changes CONTROL, and rule 108.3 has no
+    -- token. Read straight off Object.owner, which only CR 407.3's ante cards
+    -- rewrite (Game.setOwner): CR 613.1b's layer 2 changes CONTROL, and rule 108.3 has no
     -- counterpart, so no projection is consulted.
     --
     -- Just wherever `controller` above is, and in more besides, on an OBJECT
@@ -196,8 +196,8 @@ data View = MkView
     -- whose object left no CR 608.2h record behind answers neither.
     --
     -- Nothing only where there is no OBJECT to read it off: a player view, an
-    -- event snapshot, or a printed card being matched by a search, which CR
-    -- 109.1 makes an object of nothing. HeldBy Owner is vacuously False there, the
+    -- event snapshot, or a printed card being matched by a search, whose
+    -- view holds no object to read. HeldBy Owner is vacuously False there, the
     -- posture power and controller take.
     owner :: Maybe PlayerId.PlayerId,
     -- CR 400.1: which ZONE the candidate object is in -- what IsInZone reads.
@@ -206,8 +206,8 @@ data View = MkView
     -- as `token` and `tapped` below are read off the object.
     --
     -- Nothing where there is no OBJECT to read it off -- a player view, an event
-    -- snapshot, or a printed card being matched by a search, which CR 109.1 makes
-    -- an object of nothing -- so IsInZone is vacuously False there, the posture
+    -- snapshot, or a printed card being matched by a search, whose view holds no
+    -- object to read -- so IsInZone is vacuously False there, the posture
     -- `controller` and `identity` already take. Nothing too for an object
     -- outside the game (CR 400.11), which is in no zone.
     zone :: Maybe Zone.Zone,
@@ -357,7 +357,7 @@ data View = MkView
     couldAttackThisTurn :: Bool,
     -- CR 508.1a: was this candidate DECLARED as an attacker this COMBAT PHASE?
     -- Read from GameState.combat like `attacking`, and off a different field of
-    -- it: CR 506.4 removal ends the attacking and CR 506.4a leaves the
+    -- it: CR 506.4 removal ends the attacking and leaves the
     -- declaration standing, and CR 508.1k writes `attacking` only after CR
     -- 508.1j's payment while this is written before it.
     declaredAttackerThisCombat :: Bool,
@@ -449,9 +449,9 @@ data View = MkView
     -- layers rather than re-entering `gather`. A nest inside a nest descends the
     -- filter, which is finite, so an attachment CYCLE terminates too.
     --
-    -- View has no derived Eq, Ord or Show, and this field is why: CR 303.4 lets
-    -- an effect momentarily produce a cycle of attachments before CR 704.5m's
-    -- pass, and a structural walk would not terminate on one. Nothing needed
+    -- View has no derived Eq, Ord or Show, and this field is why: attachments
+    -- can form a cycle (CR 303.4d bars only an Aura enchanting itself), and a
+    -- structural walk would not terminate on one. Nothing needed
     -- them -- no type embeds a View, so no derived instance depended on them
     -- either.
     attachedToView :: Maybe View,
@@ -621,7 +621,7 @@ data View = MkView
     -- is the whole of what the atom buys: CR 708.2a's substitution lives in
     -- faceOf, so a projected read of a manifested land answers "2/2 creature" and
     -- this one answers "land". The same read CR 701.40b's special action takes at
-    -- Parun.Engine.FaceDown.manifestCostOf.
+    -- Parun.Engine.FaceDown.creatureCardCostOf.
     --
     -- `Maybe View` and never the candidate's own view, AttachedTo's
     -- `attachedToView` shape: an object with no card behind it -- a token, an
@@ -798,7 +798,7 @@ data View = MkView
     -- TagWasSpentOfOwnColor arm, answering Boreal Outrider's. `manaSpentAmount`
     -- below is the same record's other question.
     --
-    -- KEYED by tag, and the value is the colours (CR 202.2) of the units that
+    -- KEYED by tag, and the value is the colours (CR 106.1a) of the units that
     -- carried it: Parun.Types.ProductionTag is the closed half of what a unit
     -- carries (see its header), so the keys are a classification the vocabulary
     -- can ask about rather than a pool to case over, and the colours are the one
@@ -810,7 +810,7 @@ data View = MkView
     -- Non-empty for a permanent a spell paid with tagged mana became, which is CR
     -- 400.7d's exception to the forgetting (see Parun.Types.Object.manaSpent).
     manaSpentTagColors :: Map.Map ProductionTag.ProductionTag (Set.Set Color.Color),
-    -- | CR 202.1a: how many mana were spent to pay for this candidate -- the
+    -- | CR 601.2h / 702.191a: how many mana were spent to pay for this candidate -- the
     -- COUNT of the units `manaSpentTagColors` above classifies, read off the same
     -- Object.manaSpent and 0 where there is no object to read it off. Its one
     -- reader is Parun.Engine.Quantity's ManaSpent arm, answering rule 702.191a's
@@ -856,9 +856,8 @@ data View = MkView
     -- CR 702.184c: does this candidate's controller's station abilities read a
     -- tapped creature's toughness instead of its power? The projected mirror
     -- of ProjectedCharacteristics.grantsStationToughness -- read off the
-    -- projection on the battlefield and off the printed face otherwise (a
-    -- static ability functions in every zone CR 113.6 allows, and Tapestry
-    -- Warden's own is unrestricted). No Filter atom consults it: it is here
+    -- projection, and False for a printed face, CR 113.6 leaving Tapestry
+    -- Warden's ability functioning on the battlefield. No Filter atom consults it: it is here
     -- for Parun.Engine.Quantity's StationMeasure arm, which walks the
     -- battlefield through the same ViewOf every other Quantity arm reads.
     --
@@ -882,7 +881,7 @@ data View = MkView
 playerView :: PlayerId.PlayerId -> View
 playerView pid =
   MkView
-    { -- CR 201.1 gives a name to an OBJECT, and CR 109.1's list of what an
+    { -- CR 109.3 gives a name to an OBJECT, and CR 109.1's list of what an
       -- object is has no player in it.
       names = Set.empty,
       cardTypes = Set.empty,
@@ -1060,9 +1059,9 @@ playerView pid =
       -- same sentence.
       manaSpentAmount = 0,
       manaSpentOnX = [],
-      -- CR 602.1: an activated ability is an ability OF AN OBJECT, and CR 109.1's
-      -- list of what an object is has no player in it -- `keywords` above, one
-      -- rule over.
+      -- CR 113.1a: an activated ability is an ability OF AN OBJECT, and CR
+      -- 109.1's list of what an object is has no player in it -- `keywords`
+      -- above, one rule over.
       activatedAbilityKinds = Set.empty,
       -- CR 702.184c reaches a permanent's controller, and a player view built
       -- from a bare PlayerId has no permanent behind it to grant this at all.
@@ -1439,9 +1438,9 @@ data Context = MkContext
     -- CR 202.3 computed bound in, and which has no other way to reach an
     -- announcement not yet stamped on an object: CR 603.3d chooses a trigger's
     -- targets before the ability object carries any binding at all, and CR 601.2c
-    -- chooses a spell's before CR 601.2i stamps the X onto it. It is also what the
-    -- Measures atom's AmountInSlot operand reads, which is a read `matches` makes
-    -- directly.
+    -- chooses a spell's before Cast.castProposed stamps the X onto it. It is
+    -- also what the Measures atom's AmountInSlot operand reads, which is a read
+    -- `matches` makes directly.
     --
     -- The other fillers: Parun.Engine.Resolve.Slots.effectContext supplies the
     -- resolving object's own stamped amounts, which is the position that operand
@@ -1519,7 +1518,7 @@ data Context = MkContext
     -- each, for the one atom that compares a candidate's against them
     -- (HasChosenName, Ancient Vendetta). Filled by
     -- Parun.Engine.SourceContext with the source's other choices, so every
-    -- position framed by its source answers it: a resolution's (CR 608.2c's
+    -- position framed by its source answers it: a resolution's (CR 608.2d's
     -- choice during a resolution -- Ancient Vendetta's search, Predict's tally,
     -- Petra Sphinx's revealed card) and a replacement row's, where rule
     -- 702.16e's MINTED shield writes it (CR 614.1c's as-enters choice, Runed
@@ -1642,7 +1641,7 @@ data Context = MkContext
     -- Vacuously False everywhere else, sourceChosenColors's posture, and fenced by
     -- the same lint's subtype twin.
     sourceChosenSubtype :: Maybe Subtype.Subtype,
-    -- CR 107.1c: the number the SOURCE last chose, for Quantity.ChosenNumber.
+    -- CR 607.2d: the number the SOURCE last chose, for Quantity.ChosenNumber.
     -- Filled where sourceChosenColors above is.
     sourceChosenNumber :: Maybe Natural.Natural,
     -- CR 607.2a: the last card exiled with the source, for IsLastExiledWithSource.
@@ -2117,7 +2116,8 @@ matches context view predicate = case predicate of
   -- is the posture the atom above takes.
   --
   -- MEMBERSHIP, so a slot bound to a GROUP admits every one of its members: CR
-  -- 701.17c's "from among them" is a question about the whole batch a mill,
+  -- 701.17c's look-back, as in Midnight Tilling's "from among them", is a question
+  -- about the whole batch a mill,
   -- a look or a move named, and a slot naming one object is the singleton case
   -- of it rather than a different question.
   --
@@ -2439,9 +2439,8 @@ matches context view predicate = case predicate of
   -- attach, where the set is empty.
   Filter.HostOfSubjectHasCardType cardType -> Set.member cardType (subjectHostCardTypes context)
   -- CR 111.6: a token isn't a card. A live read of what the object is
-  -- represented by (Object.source), never a stamp on the candidate -- and unlike
-  -- the two arms above it cannot change while the game runs, because CR 111.3
-  -- makes a token's characteristics equivalent to a card's.
+  -- represented by (Object.source), never a stamp on the candidate, because CR
+  -- 730.2d can change the answer as a permanent merges.
   Filter.IsToken -> token view
   -- CR 903.3's designation, read off the owner's deck rather than off the
   -- candidate: `token` above's posture, and immutable for the same kind of
@@ -2577,7 +2576,8 @@ stickerKindOf content = case content of
 --
 -- HasSubtype, HasColor and HasKeyword are the atoms REWRITTEN here. The rest
 -- name a card type, a supertype, a number, a relation, a status, a designation,
--- or a keyword FAMILY, none of which CR 612's word swap reaches -- see the
+-- or a keyword FAMILY, none of which a text changer's word families name
+-- (Parun.Types.WordFamily; CR 612.2's are examples) -- see the
 -- HasKeywordFamily arm below for why the family is in that list while HasKeyword
 -- is not. Written
 -- out exhaustively rather than with a catch-all, so a later atom that can carry a
@@ -2736,16 +2736,16 @@ rewrite pairs predicate = case predicate of
   Filter.IsPairedWithSource -> predicate
   Filter.BlockPartnerOfSource _ -> predicate
   Filter.HasDesignation _ -> predicate
-  -- Untouched: CR 612.1 swaps a subtype, a colour or a card type word, and this
+  -- Untouched: a text change swaps a word used as its family (CR 612.2), and this
   -- atom names none -- "an activated ability that isn't a mana ability" has no
   -- word inside it for Artificial Evolution to reach.
   Filter.HasActivatedAbility _ -> predicate
   Filter.IsInZone _ -> predicate
-  -- Untouched for IsInZone's reason: CR 612.1 swaps a subtype, a colour or a card
-  -- type word, and a zone name is none of the three.
+  -- Untouched for IsInZone's reason: a text change swaps a word used as its family
+  -- (CR 612.2), and a zone name is none.
   Filter.WasCastFrom _ -> predicate
-  -- Untouched for IsInZone's reason once more: CR 612.1 swaps a subtype, a colour
-  -- or a card type word, and a Parun.Types.ProductionTag names none of the three --
+  -- Untouched for IsInZone's reason once more: a text change swaps a word used as
+  -- its family (CR 612.2), and a Parun.Types.ProductionTag names none --
   -- "mana from an artifact" is a fact about a PAST production event, not a word
   -- on this object for Artificial Evolution to reach.
   Filter.TagWasSpent _ -> predicate
@@ -3019,7 +3019,7 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Devour devour -> Keyword.Type.Devour devour {Devour.quality = fmap (rewrite pairs) (Devour.quality devour)}
   -- CR 702.38a's payload is a count too, and its "share a creature type with
   -- it" names no word at all: the types are the entering object's own, which CR
-  -- 612.2a reaches by changing that object rather than this keyword.
+  -- 612.1 reaches by changing that object rather than this keyword.
   Keyword.Type.Amplify _ -> keyword
   Keyword.Type.Exalted -> keyword
   -- CR 702.92a, 702.163a and 702.182a are nullary: their creature-type words
@@ -3289,8 +3289,8 @@ rewriteWhichCounters pairs which = case which of
 -- fence: no printing pairs any of them with a basic land type, so no test can
 -- falsify them. Magmatic
 -- Insight's "discard a land card" and Hakbal of the Surging Soul's "a land card
--- from your hand" come closest and are still not one -- CR 612.2 swaps a SUBTYPE
--- word, and the land CARD TYPE is not one.
+-- from your hand" come closest and are still not one -- no text changer's family
+-- names the land CARD TYPE (Parun.Types.WordFamily).
 rewriteComponent :: [(TextWord.TextWord, TextWord.TextWord)] -> CostComponent.CostComponent Keyword.Type.Keyword -> CostComponent.CostComponent Keyword.Type.Keyword
 rewriteComponent pairs = overComponent (rewrite pairs) (rewriteWhichCounters pairs)
 

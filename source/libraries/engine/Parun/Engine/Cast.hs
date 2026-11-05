@@ -129,8 +129,8 @@ import qualified Parun.Types.ZoneScope as ZoneScope
 
 -- CR 117.1a's second sentence: the window a NONINSTANT spell is cast in -- a
 -- main phase of its controller's own turn, with an empty stack. Every noninstant
--- card type restates it (CR 301.1, 302.1, 303.1, 306.1, 307.1), and this one
--- predicate is all five. The priority requirement is implicit: the engine only
+-- card type restates it (CR 301.1, 302.1, 303.1, 306.1, 307.1, 310.1), and this
+-- one predicate is all six. The priority requirement is implicit: the engine only
 -- offers actions to the player who holds priority.
 --
 -- The window the CARD TYPE gets, which is not always the window the card gets:
@@ -336,7 +336,7 @@ instantSpeed oid face gs = Card.isInstant face || flashOn oid face gs
 --
 -- The two limbs are disjoined rather than merged because they answer about
 -- different things: a split card off the stack shows both halves' printed
--- keywords at once (CR 709.4a), so the projection cannot say WHICH half a printed
+-- keywords at once (CR 709.4c), so the projection cannot say WHICH half a printed
 -- flash sits on, and this reads it as flash on either. What would refute that is
 -- a split card printing flash on one half only; an api.scryfall.com search for
 -- is:split o:flash on 2026-08-18 returned none, so nothing separates the two
@@ -783,10 +783,11 @@ castAimable key announced x pid oid gs = case Game.faceOf oid gs of
 --     argument is shared because Cost.substituteX is.
 --
 --   * as a BLIGHT (Cost.substituteX again, over a CostComponent.Blight).
---     Monotone VACUOUSLY, CR 701.68b refusing a blight only where the player
---     controls no creature and naming no number of counters that is too many
---     -- so this route never fails and the climb needs `mCeiling` below to
---     stop. Soul Immolation is the card whose X reaches a cost only this way.
+--     Monotone VACUOUSLY, CR 701.68b refusing a blight only where no creature
+--     the player controls can take the counters and naming no number of counters
+--     that is too many -- so this route answers the same at every X and the
+--     climb needs `mCeiling` below to stop. Soul Immolation is the card whose X
+--     reaches a cost only this way.
 --
 -- `mCeiling` is CR 101.1's, evaluated off the face being cast (Cost.maximumX)
 -- and passed straight through: it bounds the search as well as the
@@ -1119,7 +1120,7 @@ stampCastGrant granted sid gs =
 --
 -- The second is the difference between the keywords the object HAS and its
 -- copiable ones (CR 707.2). A printed flashback is in the seed of every
--- projection of the spell already, so carrying it would report CR 613.1f's two
+-- projection of the spell already, so carrying it would report CR 113.2c's two
 -- instances of one ability; only an effect's grant is missing on the far side of
 -- CR 400.7's move. Read through the projection and never off the face, so a card
 -- that is a copy of something else is measured against what it copies.
@@ -1375,8 +1376,9 @@ castableZones pid oid face gs =
         -- object-scoped arm to read beside the player-scoped one, and the
         -- nearest thing -- Panglacial Wurm's
         -- CastingPermission.CastFromLibraryWhileSearching -- is deliberately not
-        -- read here: rule 601.3's exception for that one is scoped to a search
-        -- in progress, which castableWhileSearching answers instead.
+        -- read here: the card's "While you're searching your library" scopes it
+        -- to a search in progress, which castableWhileSearching answers
+        -- instead.
         --
         -- The FACE goes unread, where the graveyard arm needs it: the
         -- permission's Filter is matched against the object's projection, which
@@ -1435,7 +1437,7 @@ exileOpen pid oid face gs =
 --
 -- Read LIVE off the permanent the copy names rather than off an
 -- Object.playPermission stamped at the mint, and the rule is why: it names the
--- prepared permanent's CONTROLLER, which CR 109.4 lets change while the copy sits
+-- prepared permanent's CONTROLLER, which CR 613.1b can move while the copy sits
 -- in exile. A stored seat would keep letting the old controller cast it.
 --
 -- Parun.Engine.Prepare.copyStands is the rest of the sentence -- the permanent is
@@ -1575,7 +1577,7 @@ widerSpending one other = case (one, other) of
 -- the exiling clause admits and Kellan Joins Up's is "a nonland card with mana
 -- value 3 or less", which reaches an INSTANT -- and CR 117.1a hands an instant
 -- every priority its controller has. Every card the pool PRINTS plot on is a
--- creature (Djinn of Fool's Fall, Aloe Alchemist), for which CR 307.5 would have
+-- creature (Djinn of Fool's Fall, Aloe Alchemist), for which CR 117.1a would have
 -- covered the clause anyway. data/scenarios/special-action's "CR 702.170d a
 -- plotted instant is castable only in its owner's main phase with the stack
 -- empty" is what proves the narrowing, one board per conjunct.
@@ -1600,7 +1602,8 @@ permitsCastPlotted pid oid gs = Maybe.fromMaybe False $ do
 --     card from the actor's own hand. The two words are the same player here and
 --     the owner is the one that survives CR 400.7's new incarnation. Rule
 --     702.143d's route into the same stamp (Effect.MakeForetold) names the owner
---     outright, so the conjunct reads for both.
+--     only for looking and leaves "it may be cast" passive; the conjunct reads the
+--     caster as that owner.
 --   * the turn is a LATER one, "after the current turn has ended". A strict
 --     comparison on GameState.turnNumber, plotted's clause exactly.
 --
@@ -1728,8 +1731,8 @@ inCastableZone pid oid name gs =
 -- learning from data a restriction it already knows. Reading a supertype and a
 -- card type is the same closed-half act as CR 704.5j's legend rule.
 --
--- The SPELL's own type line is read PRINTED (Card.isLegendary), on CR 205.4a's
--- authority: a supertype is a read of the printed type line. Not because the
+-- The SPELL's own type line is read PRINTED (Card.isLegendary), a shortcut no
+-- rule grants: CR 205.4a says only where a card's supertypes are printed. Not because the
 -- card lacks a projection in the hand or graveyard it is asked from -- CR 613.1
 -- names no zone and Projection.viewOfObject reaches every one of them. The two
 -- can differ only for an effect granting or removing a supertype there (CR
@@ -1926,8 +1929,9 @@ turnedUpForPlay oid facing gs = case facing of
   Facing.FaceUp -> gs {GameState.objects = Map.adjust (\o -> o {Object.exiledFaceDown = False}) oid (GameState.objects gs)}
 
 -- Affordable and correctly timed, actually in a zone this player may cast it
--- from, fillable, and prohibited by nothing. CR 601.2b: affordable means at least
--- ONE candidate cost is payable.
+-- from, fillable, and prohibited by nothing. CR 601.2b offers the candidate
+-- costs and CR 601.2h pays one: affordable means at least ONE candidate cost is
+-- payable.
 --
 -- THREE prohibitions, not one, because they are carried by three different
 -- things: a continuous effect on the player (Rule of Law, Silence), the card's
@@ -2337,14 +2341,15 @@ projectedKeywords oid gs = Map.keysSet (Projection.keywordsOf oid gs)
 
 -- The library cards this player may cast while searching their own library:
 -- permitted, not prohibited, affordable, and with a fillable target set.
--- Deliberately omits timingOk -- the permission IS the CR 601.3 timing exception
--- (the ruling: "follows all normal rules ... except for timing").
+-- Deliberately omits timingOk -- the permission excepts timing, by the card's
+-- ruling ("follows all normal rules ... except for timing").
 --
 -- The prohibition is NOT omitted, and that is the point: CR 601.3 is one sentence
--- with two halves, and the Panglacial permission excepts only the timing one, so
--- a Rule of Law still stops a cast from the library, and so does a Null Chamber
--- that named the Wurm. CR 205.4e's restriction rides along for the same reason;
--- a regression fence, since no test casts a legendary sorcery while searching.
+-- with two halves, and the Panglacial permission answers only the "allows" one,
+-- so a Rule of Law still stops a cast from the library, and so does a Null
+-- Chamber that named the Wurm. CR 205.4e's restriction rides along for the same
+-- reason; a regression fence, since no test casts a legendary sorcery while
+-- searching.
 --
 -- Those three conjuncts, and the affordability and target-fillability beside
 -- them, are `castableWhenOffered` below -- shared with CR 608.2g's other
@@ -2375,9 +2380,9 @@ castableWhileSearching pid gs =
   let allowed oid face facing =
         let name = Face.name face
             -- The same stamped state `castable` gates on, for the same rule:
-            -- CR 601.3's exception is about TIMING, so the half and facing a
-            -- library cast is evaluated against are still CR 709.3a's and CR
-            -- 708.4's.
+            -- the Panglacial ruling's exception is about TIMING, so the half
+            -- and facing a library cast is evaluated against are still CR
+            -- 709.3a's and CR 708.4's.
             proposed = asProposed oid name facing gs
          in permitsCastWhileSearching oid face proposed
               && castableWhenOffered ManaSpending.AsProduced pid oid name (Cost.candidateCostsFor pid name oid proposed) proposed
@@ -2429,11 +2434,11 @@ castableWhenOffered spending pid oid name candidates proposed =
   -- one can resolve ABOVE the split-second spell and offer a cast while it is
   -- still there.
   not (SplitSecond.inForce proposed)
-    -- CR 601.3's prohibit half, CR 601.2c's fillability and CR 601.2b's
-    -- affordability, asked per candidate for `castable`'s reason and through its
-    -- predicates: CR 702.103d judges a bestow announcement on the Aura it makes of
-    -- the spell, and an offer that hands in the card's own list (CR 118.9's
-    -- absent) carries that candidate.
+    -- CR 601.3's prohibit half, CR 601.2c's fillability and CR 601.2h's
+    -- affordability, asked per candidate for `castable`'s reason and through
+    -- its predicates: CR 702.103d judges a bestow announcement on the Aura it
+    -- makes of the spell, and an offer that hands in the card's own list (CR
+    -- 118.9's absent) carries that candidate.
     --
     -- A REGRESSION FENCE on this path rather than a proved behaviour: no board in
     -- the pool puts a CastOffer together with a bestow card and either a
@@ -2472,7 +2477,8 @@ castWhileSearching perform pid = do
           -- half or facing the offer did not include is rejected even when the
           -- card's other one was offered (CR 709.3a, 708.4).
           Monad.when (elem (oid, name, facing) options) $ do
-            -- Untimed: the permission IS the CR 601.3 timing exception.
+            -- Untimed: the permission IS the card's timing exception (its
+            -- ruling).
             castSpellWith perform False False [] ManaSpending.AsProduced pid oid name facing
             castWhileSearching perform pid
 
@@ -3079,7 +3085,7 @@ followIntoPools old new gs =
 -- resolution one -- Quantity.TimesPaid (which optional additional costs CR
 -- 601.2b's announcement declared, and how many times), Quantity.CastUsing (which
 -- ALTERNATIVE cost candidate it settled on -- awaken, cleave, overload and the
--- other CR 601.3-listed candidates), and Quantity.Literal, the threshold side of
+-- other CR 601.2b candidates), and Quantity.Literal, the threshold side of
 -- every such comparison. Nothing else qualifies, on purpose: CR 601.2c narrows
 -- targets for exactly these two readings, so a clash's coin flip, a random flip, or a comparison against CR 601.2b's own X (not yet
 -- announced when trimModeTargetSlotsBy runs, see below) must NOT be treated as
@@ -3455,9 +3461,10 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
       -- Nothing narrows the mode prompt by what the extra cost is affordable at.
       -- CR 601.2b puts the mode choice ahead of the cost, so a player may choose
       -- both modes and then find the total unpayable; the filter below drops every
-      -- candidate, and the cast rewinds under CR 601.2e to the moment before it
-      -- was proposed, leaving the spell castable again for fewer modes. That is
-      -- rule 601.2e's own process, not a divergence from it.
+      -- candidate, and the cast rewinds under CR 733.1 (CR 601.2h refusing the
+      -- payment) to the moment before it was proposed, leaving the spell
+      -- castable again for fewer modes. That is rule 733.1's own process, not a
+      -- divergence from it.
       let escalated = escalateTotal (Keyword.escalateCosts keywords) (Natural.length chosenModes)
           withEscalate candidate = maybe candidate (Cost.plus candidate) escalated
           -- CR 700.2h: the chosen modes' own printed costs, levied HERE for
@@ -3767,11 +3774,12 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
               -- gate applies.
               let announcedAtX = maybe chargedCost (\x -> Cost.substituteX x chargedCost) mAmount
                   -- CR 601.2e / 202.3e: the spell's mana value with X announced,
-                  -- read off the stack incarnation as CR 601.2i will stamp it.
-                  -- PlayerEffect.choiceCouldEscape let the cast BEGIN; this is
-                  -- where the chosen X is judged, against Void Winnower's
-                  -- prohibition and Serra Paragon's permission alike, and
-                  -- PlayerEffect.choiceCouldApply's flash window with them.
+                  -- read off the stack incarnation as CR 601.2c's record will
+                  -- stamp it. PlayerEffect.choiceCouldEscape let the cast
+                  -- BEGIN; this is where the chosen X is judged, against Void
+                  -- Winnower's prohibition and Serra Paragon's permission
+                  -- alike, and PlayerEffect.choiceCouldApply's flash window
+                  -- with them.
                   --
                   -- The payability gate and the announcement below read the same
                   -- board, so a cost modifier naming a mana value sees the X the
@@ -3858,11 +3866,11 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
                   -- else is seeded: no target has been chosen yet, and the modes
                   -- are not a target slot's to read.
                   --
-                  -- Binding.fromChoices is the same writer CR 601.2i stamps the
-                  -- object with below, so the offer and the announcement's record
-                  -- cannot spell one X two ways -- which is what makes CR 608.2b's
-                  -- re-check (Resolve.stillLegal, off Object.bindings) re-derive
-                  -- the same set.
+                  -- Binding.fromChoices is the same writer CR 601.2c's record
+                  -- stamps the object with below, so the offer and the
+                  -- announcement's record cannot spell one X two ways -- which
+                  -- is what makes CR 608.2b's re-check (Resolve.stillLegal, off
+                  -- Object.bindings) re-derive the same set.
                   --
                   -- The COUNT reads the same announcement through its own
                   -- argument two lines down (SlotCount.at); the bound reads it
@@ -4040,16 +4048,16 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
                         -- additional cost was announced, never which candidate
                         -- carried it.
                         Payment.Paid bound -> do
-                          -- CR 601.2f: the slots the PAYMENT bound -- the card a
-                          -- RevealCardFromHand component showed -- folded onto
-                          -- the spell, so "the revealed card's mana value" has a
-                          -- name to read at resolution (Living Destiny). After
-                          -- the payment because that is when the payment knows
-                          -- them, and onto the SPELL because that is the object
-                          -- whose effects read it, Parun.Engine.Activate's route
-                          -- one carrier over. CR 118.12's payment during a
-                          -- resolution is folded the same way
-                          -- (Parun.Engine.Resolve.Common.foldPaid).
+                          -- CR 601.2h: the slots the PAYMENT bound -- the card
+                          -- a RevealCardFromHand component showed -- folded
+                          -- onto the spell, so "the revealed card's mana value"
+                          -- has a name to read at resolution (Living Destiny).
+                          -- After the payment because that is when the payment
+                          -- knows them, and onto the SPELL because that is the
+                          -- object whose effects read it,
+                          -- Parun.Engine.Activate's route one carrier over. CR
+                          -- 118.12's payment during a resolution is folded the
+                          -- same way (Parun.Engine.Resolve.Common.foldPaid).
                           State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setPaid bound (Object.bindings o)}) sid (GameState.objects g)})
                           -- CR 107.3 / 601.2h: which of the spent mana could have
                           -- paid X (Object.manaSpentOnX), split off the total as
@@ -4167,7 +4175,7 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
                           Monad.mapM_ (Cost.revealPaying (Just sid) pid) drawn
                           Monad.when (castFrom == Just Zone.Graveyard) (armCastFromGraveyard pid keywordsBefore castFor sid)
                           -- CR 903.8: the cast is now announced, so this is a
-                          -- "previous time they cast it from the command zone"
+                          -- previous cast of it from the command zone
                           -- for every later one. Here rather than at CR 601.2a's
                           -- move, because everything above this line can still
                           -- reject the cast and rewind to `before` -- a proposal
@@ -4179,8 +4187,8 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
                           -- rule 903.8 lets nobody else cast it from there.
                           --
                           -- Counted against `sid`, the spell CR 601.2a moved to
-                          -- the stack: rule 903.8's "each previous time they cast
-                          -- IT" is per commander (CR 702.124d), and the printing
+                          -- the stack: rule 903.8's count of previous casts of
+                          -- IT is per commander (CR 702.124d), and the printing
                           -- the designation names rides Source.OfCard across CR
                           -- 400.7's fresh id.
                           Monad.when (castFrom == Just Zone.Command) (State.modify' (Commander.recordCast pid sid))

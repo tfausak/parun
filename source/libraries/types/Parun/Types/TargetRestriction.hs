@@ -27,7 +27,7 @@ import qualified Parun.Types.StackObjectKind as StackObjectKind
 -- modules that may read it.
 data TargetRestriction affected = MkTargetRestriction
   { -- | Which objects can't be targeted, re-derived every time it is asked (CR
-    -- 613.11), as Parun.Types.CrewRestriction's set is.
+    -- 611.3a), as Parun.Types.CrewRestriction's set is.
     affected :: affected,
     -- | CR 115.1's kind of spell or ability the prohibition stops. "Spells or
     -- abilities" is one row per kind.

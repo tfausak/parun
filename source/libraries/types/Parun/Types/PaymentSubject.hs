@@ -13,7 +13,7 @@ import qualified Parun.Types.ObjectId as ObjectId
 -- \/ 709.5e's and CR 116.2b's are two special actions' -- a restricted mana may
 -- admit any of them, under a predicate each (Parun.Types.ManaRestriction).
 --
--- FOUR named payments and not one per special action: CR 116.2 lists eleven, and
+-- FOUR named payments and not one per special action: CR 116.2 lists twelve, and
 -- what earns an arm is a PRINTED rider naming that payment. Nothing printed names
 -- foretelling or plotting, so those share ForNeither with CR 508.1j \/ 509.1f's
 -- combat toll and CR 118.12's resolution-time payment, which are no special

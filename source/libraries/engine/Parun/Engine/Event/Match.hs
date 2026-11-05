@@ -303,9 +303,9 @@ answersEffectCrossing blocker before after = Set.lookupMin (Set.difference after
 --
 -- A count's creatures come off the EVENT and never off Combat.blockers, which
 -- by the time a condition is scanned holds every arrival that came after the one
--- being answered: CR 509.2a puts these triggers on the stack before any player
--- gets priority, and CR 614.16 can double one token-making effect into several
--- arrivals at once.
+-- being answered: CR 603.3 puts these triggers on the stack the next time a
+-- player would receive priority, and CR 614.16 can double one token-making
+-- effect into several arrivals at once.
 blocks :: Filter.Context -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> BlockTrigger.BlockTrigger -> GameEvent -> Bool
 blocks context board gs (BlockTrigger.MkBlockTrigger role creature count) event =
   let admits = admittedAt context board gs
@@ -338,10 +338,10 @@ blocks context board gs (BlockTrigger.MkBlockTrigger role creature count) event 
         -- match on GameEvent.BecameBlocking.
         (BlockRole.Attacker, BlockCount.Once, GameEvent.AttackerBlocked a) -> admits (AttackerBlocked.attacker a) creature
         -- CR 509.3d: the pair read from the ATTACKING side, once per blocker.
-        -- The producer is deliberately not read: rule 509.3d's third sentence is
-        -- the one form of CR 509.3 that CR 509.4's "never blocked" does not
-        -- silence, and Parun.CombatCostSpec's PutOntoBattlefieldBlocking group is
-        -- the proof.
+        -- The producer is deliberately not read: rule 509.3d's fourth sentence is
+        -- a form of CR 509.3 that CR 509.4's "never blocked" does not silence (CR
+        -- 509.3c's arrival clause is the other), and Parun.CombatCostSpec's
+        -- PutOntoBattlefieldBlocking group is the proof.
         (BlockRole.Attacker, BlockCount.EachCreature others, GameEvent.BecameBlocking b) ->
           admits (BecameBlocking.attacker b) creature && admits (BecameBlocking.blocker b) others
         -- CR 509.3e from the attacking side: the BECOMING, which the whole
@@ -398,7 +398,7 @@ crewingsOf bearer gs =
 -- puts the ordinal inside the description -- so the Filter and the zone are
 -- applied to each earlier cast too. And over the caster's own alone: Mangara, the
 -- Diplomat's "an opponent casts THEIR second spell" counts per opponent. Each earlier one is read through
--- Count.snapshotView, the CR 608.2h snapshot its event recorded, because CR
+-- Count.snapshotView, the CR 608.2i snapshot its event recorded, because CR
 -- 601.2a's stack incarnation is long gone for every cast but the one being
 -- matched.
 --
@@ -536,8 +536,8 @@ enters context board gs bearer you t event = case Game.enteredBattlefieldChange 
 -- - Attached reads the departed host's own record of what was attached to it
 --   (LastKnown.attached), filed from the pre-move board: CR 704.5m buries an
 --   Aura and CR 704.5n unattaches an Equipment in the same SBA batch, so the
---   bearer no longer says what it was attached to. CR 303.4m makes an
---   Equipment's link the same as an Aura's.
+--   bearer no longer says what it was attached to. CR 301.5f makes an
+--   Equipment's link the same as CR 303.4m makes an Aura's.
 -- - Haunted compares against the id GameState.haunting files the bearer under,
 --   which rule 702.55b keeps "regardless of whether or not that object is still
 --   a creature", so no characteristic is read.
@@ -1307,7 +1307,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- constructor IS the match.
   --
   -- A countered SPELL is silence rather than a miss, which is the whole point of
-  -- the two arms: CR 608.2n cancels a spell and an ability by different means,
+  -- the two arms: CR 701.6a cancels a spell and an ability by different means,
   -- and Baral, Chief of Compliance reads the other one.
   --
   -- The bearer is not part of the match, SpellOrAbilityCounters' posture: the
@@ -1737,7 +1737,8 @@ armMatches bindings board gs bearer you cond event = case cond of
                     sampled {Filter.attachedViews = Maybe.mapMaybe (Projection.viewWithLastKnownAnywhere gs) (Set.toAscList (Transformed.attachments transformed))}
                     f
     _ -> False
-  -- CR 708.7's OTHER written form, read by a bystander: "whenever a permanent is
+  -- CR 708.7 through CR 603.2, the OTHER written form, read by a bystander:
+  -- "whenever a permanent is
   -- turned face up". Matching Enters' shape against Self Enters', and for its
   -- reason -- the bearer frames the match rather than being it. The bearer is the
   -- Filter.Context's source (so `Not IsSource` would be an "another"), and its
@@ -1831,7 +1832,7 @@ armMatches bindings board gs bearer you cond event = case cond of
     GameEvent.CountersPut {} -> False
     -- Nor the declaration rule 702.149a's own trigger reads: training FIRES on an
     -- attack and this condition fires on that ability resolving, so an ability
-    -- removed before it resolves (CR 608.2b) trains nothing.
+    -- removed before it resolves (CR 701.6a) trains nothing.
     GameEvent.AttackerDeclared {} -> False
     _ -> False
   -- CR 702.110b read by a bystander (Skull Skaab): SelfExploits' event, with
@@ -1856,7 +1857,7 @@ armMatches bindings board gs bearer you cond event = case cond of
     GameEvent.BecameCrewed ev ->
       Crewing.vehicle ev == bearer && case frequency of
         TriggerFrequency.EveryTime -> True
-        -- Rule 702.122e's "for the first time each turn", counted the way
+        -- Mighty Servant of Leuk-o's "for the first time each turn", counted the way
         -- `attacks` counts declarations and for its reasons: the
         -- crewing being matched is already logged when the scan reaches here, so
         -- "the first time" is "the only one so far", and Engine.handoffTurn
@@ -1893,7 +1894,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- unlocked designations and gets the other, or when it has neither designation
   -- and gains both." The whole of that sentence is the flag the event carries,
   -- decided where the designation was written; this arm reads it and asks who
-  -- controls the permanent.
+  -- unlocked the permanent.
   --
   -- NOT scoped to the bearer, which is where this parts company with
   -- SelfHalfUnlocked above: Balemurk Leech is a creature watching every Room on
@@ -1972,7 +1973,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   --   * its chapter must be the source's FINAL chapter number (CR 714.2d), which
   --     is why the source's projection is read rather than the event alone;
   --   * the source must be a Saga with one or more chapter abilities
-  --     (Saga.tracksLore, CR 714.1 / 704.5s's own phrase). CR 714.2d gives a
+  --     (Saga.tracksLore, CR 714.4 / 704.5s's own phrase). CR 714.2d gives a
   --     permanent with no chapter abilities a final chapter number of 0, so
   --     without that conjunct a "{r0}" chapter ability on any permanent at all
   --     would match -- no card prints one, and the gate is still the one the

@@ -91,9 +91,9 @@ playerOf controllerOf target gs = case target of
   AttackTarget.OfPlaneswalker pw -> controllerOf pw gs
   -- CR 310.9d while the battle is there: the protector is the defending player
   -- relative to it, including CR 310.11's mid-repair battle whose designation
-  -- names nobody. Once it has left, CR 506.4c keeps the creature attacking a
-  -- battle with no live object, and CR 508.5's second sentence still asks for its
-  -- protector -- so the second arm is CR 608.2h's filed designation
+  -- names nobody. Once it has left, CR 506.4c keeps the creature attacking,
+  -- with no live battle left to read, and CR 508.5's second sentence still asks
+  -- for its protector -- so the second arm is CR 608.2h's filed designation
   -- (Parun.Types.LastKnown's protector) and never the head of defendingPlayers,
   -- which CR 802.2a denies is an answer at all once several players defend.
   --

@@ -6,8 +6,8 @@ import qualified Parun.Types.Keyword as Keyword
 
 -- | CR 118.9: one alternative cost a face PRINTS, which its controller may pay
 -- rather than the spell's mana cost -- and, when the card states one, the
--- condition rule 604.2 gates that permission on. An effect may grant one too
--- (Parun.Types.GrantedAbility.SelfAlternativeCost, Mine Security).
+-- condition rule 611.3a re-reads for that permission. An effect may grant one
+-- too (Parun.Types.GrantedAbility.SelfAlternativeCost, Mine Security).
 --
 -- A Cost plus a Condition rather than a bare Cost, because the two printings part
 -- exactly there: Fireblast's alternative is offered on every board, while
@@ -26,8 +26,8 @@ import qualified Parun.Types.Keyword as Keyword
 -- Parun.Types.Filter through a Count, and that Filter is already fixed at
 -- Parun.Types.Keyword, so there is no parameter left to thread.
 --
--- The condition is a printed static ability's "as long as" clause (CR 604.2), so
--- CR 604.7 forbids answering it from an object's last known information; the
+-- The condition is a printed static ability's "as long as" clause (CR 611.3a),
+-- so CR 604.7 forbids answering it from an object's last known information; the
 -- evaluation at Parun.Engine.Cost.costsFor is of a card sitting in a zone, which
 -- has one.
 data AlternativeCost = MkAlternativeCost

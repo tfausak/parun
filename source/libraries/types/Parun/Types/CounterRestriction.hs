@@ -16,21 +16,22 @@ import qualified Parun.Types.Keyword as Keyword
 -- the 'can't' effect takes precedence". CR 122.6 says WHICH placements the
 -- printed phrase reaches: counters put on the object while it is on the
 -- battlefield, and counters an object is given as it enters. Both roads reach
--- Parun.Engine.Event.settleCounters, which is where a PLACEMENT consults this;
+-- Parun.Engine.Event.settleCounters, which is where a PLACEMENT consults this,
+-- after CR 616.1's loop (gap #6235);
 -- CR 122.5's third impossibility is the second reader, in Parun.Engine.Resolve's
 -- Effect.MoveCounters arm.
 --
 -- NOT a Parun.Types.ReplacementEffect, and this type exists to draw that line. CR
 -- 614.16 replaces a PLACEMENT -- a row scaling one to zero still describes an
 -- event that was possible and was then replaced, with something "put instead" --
--- while these cards say "can't", which is CR 101.2's word. CR 613.11 files the
--- resulting continuous effect outside rule 614 entirely, and CR 101.2 has no
+-- while these cards say "can't", which is CR 101.2's word. CR 614.17 says such
+-- an effect is not a replacement effect, and CR 101.2 has no
 -- "choose which applies" step for CR 616.1 to run.
 --
 -- Parun.Types.EntryRestriction's shape and its filing, one game action over: CR
 -- 613.11 puts a continuous effect that "affects game rules rather than objects"
--- outside the layer system, CR 101.2a says such an effect is not an ability being
--- added or removed, and no layer of Parun.Engine.Projection rewrites them. Every step of
+-- outside the layer system, CR 101.2a holds rule 101.2 clear of adding abilities to
+-- objects and removing them, and no layer of Parun.Engine.Projection rewrites them. Every step of
 -- that type's argument for why it cannot be a Parun.Types.Modification holds here
 -- unchanged.
 --

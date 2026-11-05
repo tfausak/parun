@@ -58,7 +58,7 @@ import qualified Parun.Types.Keyword as Keyword
 -- serves, and CR 701.3a has no counterpart.
 --
 -- Gathered LIVE from the battlefield on every read and never captured, the
--- posture every sibling above takes -- so CR 613.11 lets the prohibition reach
+-- posture every sibling above takes -- so CR 611.3a lets the prohibition reach
 -- permanents that were not on the battlefield when it began, and a Consecrate
 -- Land leaving lifts it with nothing to unwind.
 --

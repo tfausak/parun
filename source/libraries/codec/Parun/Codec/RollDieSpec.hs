@@ -31,7 +31,7 @@ spec s = Spec.describe s "Parun.Codec.RollDie" $ do
           RollDie.store = Nothing
         }
       " {\"sides\":20,\"slot\":\"result\"} "
-  -- CR 706.2's first sentence: the instruction's own modifier, which an
+  -- CR 706.2's second sentence: the instruction's own modifier, which an
   -- always-absent optional field would round-trip vacuously.
   Spec.it s "MkRollDie with a modifier" $
     Common.assertCodec

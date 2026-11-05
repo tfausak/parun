@@ -43,7 +43,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- Prompt.FlipCoin as a permanent enters and consumes the face on the spot, where
 -- this opcode binds a tally for a later effect to read.
 --
--- `flipper` is CR 705.1's player the instruction is aimed at: You for every
+-- `flipper` is CR 705.2's player the instruction is aimed at: You for every
 -- printing but Mana Clash's "target opponent", whose own flip is its second
 -- instruction. A PlayerRef rather than Parun.Types.RollDie's PlayerScope,
 -- because the seat can be a target. Each flipper flips in APNAP order (CR

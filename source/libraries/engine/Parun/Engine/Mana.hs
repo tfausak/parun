@@ -288,7 +288,7 @@ noActivations = Activations.MkActivations {Activations.times = 0, Activations.cl
 -- -- Doubling Cube's {3} leaves the pool it then doubles. Every other read is
 -- off `gs`.
 --
--- CR 106.12a's "any type that land produced" reads the types off the tap that
+-- Mana Flare's "any type that land produced" reads the types off the tap that
 -- fired the ability, the slot in `bound` naming the permanent: nothing on the
 -- board answers for them (Parun.Types.TappedForMana). CR 605.4a applies the
 -- ability right after that tap, so its latest tap is the one. Without the slot
@@ -853,8 +853,7 @@ readsPool (clause, _) = any (poolProduction . ManaAddition.production) (Maybe.ma
       ManaProduction.ProducedByTapped -> False
 
 -- CR 603.7a / 106.6a: the delayed ability a Parun.Types.WhenSpent creates as
--- one mana is produced, its text read off the source's rules text now (CR
--- 603.7c).
+-- one mana is produced, its text read off the source's rules text now.
 -- Nothing for a name the card does not declare, which Parun.AbilitySlotLintSpec
 -- keeps unreachable.
 spendTriggerOf :: PlayerId -> ObjectId -> GameState -> WhenSpent.WhenSpent -> Maybe SpendTrigger.SpendTrigger
@@ -975,8 +974,8 @@ pricedOptionsVisiting visited paid poolBoard pcs oid gs =
       countContext = Projection.sourceContext gs (Projection.controllerOf oid gs) oid
       pricedContext = (Projection.framedByBindings gs paid countContext) {Filter.boundAmounts = Map.mapMaybe Binding.Type.amount paid}
       howManyIn context addition = max 0 (Integer.toIntSaturating (Maybe.fromMaybe 0 (Quantity.evaluate (Projection.fullView gs) context gs oid (ManaAddition.count addition))))
-      -- CR 105.4's choice is per INSTRUCTION, so the count replicates the unit
-      -- AFTER the type is picked: two of any one color offer five options
+      -- "Any one color" is one CR 105.4 choice per INSTRUCTION, so the count
+      -- replicates the unit AFTER the type is picked: two of any one color offer five options
       -- here, not twenty-five. Loot, the Pathfinder's "{G}, {T}: Add three mana
       -- of any one color" is the printing that proves it -- data/scenarios/mana
       -- reads three units of one colour off one activation -- and Stadium
@@ -1163,8 +1162,8 @@ lastExiledWith reader acquisition oid gs = Game.lastExiled (Game.linkedPile read
 -- adds will carry. THE one place they are decided; manaOptionsOfGiven just above
 -- is where the payment path stamps them onto a unit, and Parun.Engine.Resolve's
 -- Effect.AddMana arm is where a resolving ability's own producer does (CR
--- 605.1b). They are captured rather than looked up later because the mana
--- outlives the source (Parun.Types.ManaUnit).
+-- 605.4a, 605.5a). They are captured rather than looked up later because the
+-- mana outlives the source (Parun.Types.ManaUnit).
 --
 -- CR 106.3 is what makes reading the SOURCE the right question: mana produced by
 -- an ability has that ability's source (CR 113.7) -- the permanent being tapped
@@ -1176,7 +1175,7 @@ lastExiledWith reader acquisition oid gs = Game.lastExiled (Game.linkedPile read
 -- subtype, and Shadow the Hedgehog's "mana from an artifact" one line further,
 -- CR 205.2a's card type.
 --
--- CR 205.4g and CR 205.3g are PERMANENT-scoped and CR 106.3's first clause is
+-- CR 205.4g is PERMANENT-scoped and CR 106.3's first clause is
 -- wider, so this read would be too narrow for a source that is not a permanent. Nothing reaches
 -- it with one. Parun.Engine.Cost.tapForMana and payableResolutions take their oid
 -- from manaSourcesGiven, which filters the battlefield; Parun.Engine.Resolve's
@@ -1394,7 +1393,7 @@ endManaRetention gs =
 -- Takes the window that is ending rather than being a bare
 -- endCombatManaRetention, so its three callers spell it exactly as they spell
 -- Expiry.dropAtEndOf beside it: Engine.runStepThatBegan for a combat phase whose
--- last step ended, and Parun.Engine.Resolve's CR 724.1d and CR 724.2e arms for
+-- last step ended, and Parun.Engine.Resolve's CR 724.1d and CR 724.2d arms for
 -- one ended part-way through with no last step to ask.
 --
 -- EQUALITY on the selector, not Turn.inWindow's containment, for exactly
@@ -2298,9 +2297,10 @@ monocoloredHybridGeneric = 2
 announce :: PaymentSubject.PaymentSubject -> Capacity -> ManaSpending -> PlayerId -> ObjectId -> (ManaCost -> [ManaCost]) -> Natural -> Natural -> [Claim] -> ManaCost -> Game (ManaCost, Natural, Natural)
 announce subject capacity spending pid oid total outside outsideEnergy claimed (ManaCost.MkManaCost symbols) =
   let -- "Payable" here means SOME completion of the remaining announcements pays
-      -- it, which is what CR 601.2b's last sentence makes the question. Enumerated
-      -- here rather than left to canPay's own `resolutions` so that each completion
-      -- is an announcement-free cost by the time `total` sees it.
+      -- it, since CR 601.2 reverses a casting at any step it cannot comply
+      -- with. Enumerated here rather than left to canPay's own `resolutions` so
+      -- that each completion is an announcement-free cost by the time `total`
+      -- sees it.
       --
       -- `done` is the reversed prefix already announced, `ways` the symbols this
       -- route would leave in place of the one being asked about, and `extra` the
@@ -2315,7 +2315,7 @@ announce subject capacity spending pid oid total outside outsideEnergy claimed (
       -- One symbol's announcement, through Game.chooseAmong.
       --
       -- With NO payable route the cost is unpayable and there is nothing to
-      -- announce: the payment fails (CR 118.6, CR 601.2h). `fallback` is returned
+      -- announce: the payment fails (CR 118.3, CR 601.2h). `fallback` is returned
       -- only because this must return SOMETHING; it is not a choice, because there
       -- is no payable option for it to choose between.
       --
@@ -2365,7 +2365,7 @@ announce subject capacity spending pid oid total outside outsideEnergy claimed (
         -- colour the board cannot produce, and what elides the second prompt
         -- outright where one colour is payable. The mana route is offered at all
         -- only where some colour is: a PaysMana with no payable half would strand
-        -- the payment CR 601.2b's last sentence promises.
+        -- the payment: an unpayable cost (CR 601.2h), which CR 601.2 reverses.
         symbol@(ManaSymbol.HybridPhyrexian (HybridPhyrexian.MkHybridPhyrexian l r)) : rest -> do
           gs <- State.get
           let halves = hybridHalves (ManaType.Colored l) (ManaType.Colored r)
@@ -2523,7 +2523,7 @@ canPay capacity pid = canPayCommitting PaymentSubject.ForNeither capacity ManaSp
 --
 -- The same callers claim objects, and only from the components (Cost.claimOf):
 -- Village Rites' "sacrifice a creature" and Phyrexian Tower's are one demand on
--- one creature under CR 118.3, exactly as two sources' are (#1134). Zero and
+-- one creature under CR 118.10, exactly as two sources' are (#1134). Zero and
 -- empty everywhere else, which is what `canPay` is.
 canPayCommitting :: PaymentSubject.PaymentSubject -> Capacity -> ManaSpending -> PlayerId -> Natural -> Natural -> [Claim] -> ManaCost -> GameState -> Bool
 canPayCommitting subject capacity spending pid committed committedEnergy claimed cost gs =
@@ -2733,8 +2733,8 @@ sourceOptions clauses admitting contends demanded needs supplies =
                 else [0 .. ceiling_]
             -- CR 107.4e's hybrid and CR 107.4f's Phyrexian inside a mana ability's
             -- OWN cost, resolved the way the cost being paid is: one option per
-            -- resolution, so the board picks. ManaSpending.AsProduced because rule
-            -- 118.14's permission is granted for a CAST, and this is an activation.
+            -- resolution, so the board picks. ManaSpending.AsProduced because this
+            -- is a mana ability's activation, which no printed CR 118.14 clause reaches.
             -- Every activation takes the same resolution, save where each
             -- announces its own X.
             resolvedAt eaten = if null (ManaCost.unwrap eaten) then [([], 0, 0)] else resolutions ManaSpending.AsProduced eaten
@@ -3014,8 +3014,8 @@ payableResolutions subject capacity spending pid committed committedEnergy claim
 -- snapshot of one GameState, and this is a pure function of the same one.
 --
 -- A board is JOINTLY PAYABLE or it is no board: the activations it is made of
--- are several claims on one pool, so CR 118.3's "fully" reaches across the
--- sources exactly as it reaches across one cost's components -- one creature
+-- are several claims on one pool, so CR 118.10 reaches across the sources as CR
+-- 118.3's "fully" reaches across one cost's components -- one creature
 -- cannot be sacrificed to both Ashnod's Altar and Phyrexian Tower, and counting
 -- each source alone against the untouched board said it could (#1126). One
 -- untapped creature cannot pay for two Springleaf Drums either, which is the same

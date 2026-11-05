@@ -93,7 +93,7 @@ foretellCostsOf oid gs = case Game.cardOfHandMember oid gs of
 --   * the window is THIS PLAYER'S OWN TURN -- "any time a player has priority
 --     during their turn". Nothing more: rule 702.143a asks for neither a main
 --     phase nor an empty stack, so this is deliberately NOT
---     Parun.Engine.Turn.sorcerySpeedWindow, which CR 116.2k's plot and CR
+--     Parun.Engine.Turn.sorcerySpeedWindow, which CR 702.170a's plot and CR
 --     116.2m's unlock both are. Parun.SpecialActionSpec pairs the two boards that
 --     prove the difference.
 --   * the {2} is payable. An action the player cannot take is not offered, which

@@ -22,7 +22,7 @@ import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.Quantity as Quantity.Type
 
 -- | One counter kind and the count an object enters with, which is a Quantity
--- rather than a number (CR 122.6, CR 107.3c): Printlifter Ooze's "X +1/+1
+-- rather than a number (CR 122.6, CR 107.3): Printlifter Ooze's "X +1/+1
 -- counters on it, where X is the number of other creatures you control".
 --
 -- A PAIR PER KIND, where this used to be 'Common.multiset' -- a plain array with

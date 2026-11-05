@@ -18,10 +18,11 @@ import qualified Parun.Types.Ward as Ward
 -- what a face-down object is, carried on Facing's FaceDown arm so
 -- Parun.Engine.Game.faceOf has something to read it from.
 --
--- COPIABLE, not a layer. CR 708.2's second sentence -- "any listed
+-- COPIABLE, in layer 1b. CR 708.2's second sentence -- "any listed
 -- characteristics are the copiable values of that object's characteristics" --
--- is why this replaces the printed face at Parun.Engine.Card.faceDownFace rather
--- than being applied as a CR 613 layer over it. CR 708.10 is the same fact from
+-- is why this replaces the printed face at Parun.Engine.Card.faceDownFace, CR
+-- 613.2b's layer 1b, rather than being gathered as a continuous effect over it.
+-- CR 708.10 is the same fact from
 -- the other side: a face-down permanent that becomes a copy of something still
 -- has these characteristics.
 --

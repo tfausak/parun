@@ -25,7 +25,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 
--- CR 702.185b: "it becomes a warped card", stamped with the turn the warp
+-- CR 702.185b: what makes it a warped card, stamped with the turn the warp
 -- ability's delayed trigger exiled it on -- which is what CR 702.185a's "after
 -- the current turn has ended" is compared against.
 --

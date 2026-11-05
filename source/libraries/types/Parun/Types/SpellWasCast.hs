@@ -39,7 +39,7 @@ data SpellWasCast = MkSpellWasCast
     -- read it off later -- CR 702.185c's "a spell was warped this turn"
     -- (Quantity.SpellsCastUsingThisTurn).
     castUsing :: Maybe Keyword.Keyword,
-    -- | CR 604.2: the "as long as" clauses of its granted activated abilities
+    -- | CR 611.3a: the "as long as" clauses of its granted activated abilities
     -- that did not hold as it became cast, which `characteristics` carries
     -- unasked (Parun.Engine.Projection.View.lapsedGrantsOf).
     lapsedGrants :: Set.Set Condition.Condition

@@ -24,7 +24,7 @@ spec s = Spec.describe s "Parun.Codec.CostBasis" $ do
       )
       " {\"slot\":\"put\",\"reducedBy\":[{\"type\":\"Generic\",\"value\":2}]} "
   -- The unreduced reading, which elides the key: {0} off a mana cost is that
-  -- mana cost (CR 118.5).
+  -- mana cost.
   Spec.it s "MkCostBasis, an unreduced mana cost" $
     Common.assertCodec
       s

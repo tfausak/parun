@@ -328,7 +328,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       fromJson
       (Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))) (ManaProduction.OfType (ManaType.Colored Color.Green)) (Quantity.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing))
       " {\"type\":\"AddMana\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}}}} "
-  -- CR 605.3a / CR 106.13: Drain Power's two clauses.
+  -- CR 605.3 / CR 106.13: Drain Power's two clauses.
   Spec.it s "ActivateManaAbilities" $
     Common.assertJsonCodec
       s
@@ -1002,7 +1002,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       )
       " {\"type\":\"Replace\",\"value\":{\"duration\":{\"type\":\"UntilEndOfTurn\"},\"uses\":{\"type\":\"Once\"},\"origin\":{\"type\":\"Other\"},\"effect\":{\"type\":\"DestructionR\",\"value\":{\"rewrite\":{\"type\":\"Regenerate\"}}}}} "
   -- CR 614.15 / 616.1a: a self-replacement gated on a nonzero threshold.
-  -- CR 702's ability words have no rules meaning, so "Metalcraft" itself
+  -- CR 207.2c's ability words have no rules meaning, so "Metalcraft" itself
   -- encodes nothing.
   Spec.it s "Replace (a conditional self-replacement)" $
     Common.assertJsonCodec
@@ -1107,7 +1107,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
               ForEach.slot = SlotName.MkSlotName (Text.pack "victim"),
               ForEach.body =
                 Seq.singleton (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "victim"))) (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot (SlotName.MkSlotName (Text.pack "exiled")) (Quantity.Measure Measure.ManaValue))))) Nothing Nothing Nothing Nothing Nothing)),
-              -- CR 608.2f's second sentence, which that rule's own Soulfire
+              -- CR 608.2f's third sentence, which that rule's own Soulfire
               -- Eruption example states: the library cannot be exiled from twice
               -- at the same time.
               ForEach.individually = True,
@@ -1554,7 +1554,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
           /= toJson (Effect.Tap (Tap.plain (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))))
       )
       "Detain and Tap of the same slot encode differently"
-  -- CR 701.66a, the one rule 701 arm carrying an ObjectRef: the count rides
+  -- CR 701.66a, a rule 701 arm carrying an ObjectRef: the count rides
   -- beside it, so a codec that dropped either field would leave an earthbend with
   -- no land or with no counters. Both ObjectRef arms, Detain's reason -- rule
   -- 701.66a's own wording is the slot, and the filter arm costs nothing.
@@ -2636,8 +2636,8 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       fromJson
       Effect.Learn
       " {\"type\":\"Learn\"} "
-  -- CR 701.58a: rule 701.58a fixes the listing and the card, so the payload is
-  -- the bare PlayerRef -- whose library the top card comes off.
+  -- CR 701.58a fixes the listing and the opcode's printings say the top card, so
+  -- the payload is the bare PlayerRef -- whose library the top card comes off.
   Spec.it s "Cloak" $
     Common.assertJsonCodec
       s

@@ -15,7 +15,7 @@ import qualified Parun.Types.RequirementArity as RequirementArity
 -- | "object", "while" and "arity" are all ordinary defaulted fields, omitted
 -- when the card narrows neither axis and means CR 508.1d's own counting -- one
 -- requirement per creature the subject names. "while" is spelled exactly as
--- Parun.Codec.BlockPermission spells the same CR 604.2 clause and as
+-- Parun.Codec.BlockPermission spells the same clause (CR 611.3a) and as
 -- Parun.Codec.CombatRestriction spells its opposite, "unless".
 --
 -- The key is "subject" and not "attacker": CR 508.1d's requirement names the

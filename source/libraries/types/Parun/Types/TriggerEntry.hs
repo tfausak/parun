@@ -13,7 +13,7 @@ import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 --
 -- Two fields and not four, and the two it drops are the point. `controller` is
 -- the player the whole prompt is addressed to, so it is constant across the
--- batch. `bindings` is deliberately ABSENT: CR 603.6a fires one trigger per
+-- batch. `bindings` is deliberately ABSENT: CR 603.2c fires one trigger per
 -- entrant, so a Soul Warden watching two creatures enter contributes two entries
 -- differing only in which creature each remembers -- and those really are
 -- interchangeable, since either order gains the same life. Carrying the bindings

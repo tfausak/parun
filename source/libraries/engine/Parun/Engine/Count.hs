@@ -101,7 +101,7 @@ type ViewOf = ObjectId -> Maybe Filter.View
 -- Aggregation.Total read it; the others ignore it.
 --
 -- BOTH the candidate's object and its view, because an InHistory candidate has
--- only the second: its view is a CR 608.2h snapshot of a past event, so a
+-- only the second: its view is a CR 608.2i snapshot of a past event, so a
 -- reader demanding an object could never answer one. For an InZone
 -- candidate the view IS `viewOf` of the id beside it, so the two agree.
 type QuantityOf quantity = Maybe ObjectId -> Filter.View -> quantity -> Maybe Integer
@@ -289,7 +289,7 @@ wasDiscarded gs oid =
 
 -- CR 701.9c / 109.3: does this count ask nothing of its members' characteristics,
 -- so that a member whose characteristics are undefined still answers it? A tally
--- of members narrowed by identity and ownership alone (CR 108.3: an owner is not
+-- of members narrowed by identity and ownership alone (CR 109.3: an owner is not
 -- a characteristic). Any other atom answers False, keeping CR 400.7j's gate --
 -- Psychic Miasma's "a land card" among them.
 countsWithoutCharacteristics :: Aggregation.Aggregation quantity -> Filter.Type.Filter keyword -> Bool
@@ -624,7 +624,7 @@ keep predicate context mv = case mv of
 -- union, not the length of the list.
 --
 -- Each member carries the object it came from when there is one, and its view
--- either way. An InHistory member has no object -- its view is a CR 608.2h
+-- either way. An InHistory member has no object -- its view is a CR 608.2i
 -- snapshot of a past event rather than of anything on the battlefield now --
 -- so Greatest and Total hand the reader both and let it answer from whichever
 -- it can.
@@ -799,7 +799,7 @@ slotPlayers context gs name = case Map.lookup name (Filter.slotPlayers context) 
     recipients <- Map.lookup name (Binding.targetsOf (Object.bindings obj))
     Just (Maybe.mapMaybe Recipient.playerOf (Set.toList recipients))
 
--- CR 608.2h: the view of a past event, built from the snapshot the event
+-- CR 608.2i: the view of a past event, built from the snapshot the event
 -- recorded rather than from any object that may no longer exist.
 --
 -- The snapshot fills the characteristic fields it records (see viewOfSnapshot
@@ -904,8 +904,8 @@ snapshotView viewOf gs shape event = case event of
   -- both would count one countering twice. It carries no snapshot either.
   -- Becomes a real view the day an EventShape names countering (#162).
   GameEvent.SpellCountered _ -> Nothing
-  -- The sibling has no Moved event beside it either, CR 608.2n ceasing the
-  -- ability rather than moving it, and carries no snapshot for the same reason.
+  -- The sibling has no Moved event beside it either, CR 701.6a removing the
+  -- ability from the stack rather than moving it, and carries no snapshot for the same reason.
   GameEvent.AbilityCountered _ -> Nothing
   GameEvent.HalfUnlocked {} -> Nothing
   GameEvent.TurnedFaceUp _ -> Nothing
@@ -1026,12 +1026,12 @@ arrivalMatches arrival zc =
 -- No record only where nothing departed: Event.recordMintedEntry's
 -- battlefield-to-battlefield entry of a token or conjured card, which no shape
 -- here counts as a departure. The bare snapshot answers there, with no
--- controller, owner, counters or lapsed CR 604.2 clauses to read. Only a
--- MovedBetween naming the battlefield as both ends reaches it, which no printed
--- look-back can, a token's creation (CR 111.2) being no move from the
--- battlefield; the MovedFrom arm refuses it (Game.leftOrigin). Once the token
--- has left, the CardArrivedIn arm reads the record its departure filed, clauses
--- and all (LastKnown.lapsedGrants).
+-- controller, owner, counters or lapsed "as long as" clauses (CR 611.3a) to
+-- read. Only a MovedBetween naming the battlefield as both ends reaches it,
+-- which no printed look-back can, a token's creation (CR 111.2) being no move
+-- from the battlefield; the MovedFrom arm refuses it (Game.leftOrigin). Once
+-- the token has left, the CardArrivedIn arm reads the record its departure
+-- filed, clauses and all (LastKnown.lapsedGrants).
 departedView :: ViewOf -> GameState -> ZoneChange.ZoneChange -> PC.ProjectedCharacteristics -> Filter.View
 departedView viewOf gs zc snapshot = case Map.lookup (ZoneChange.departed zc) (GameState.lastKnown gs) of
   Just lastKnown -> lastKnownView viewOf (ZoneChange.departed zc) gs lastKnown {LastKnown.characteristics = snapshot}
@@ -1188,7 +1188,7 @@ declaredBlockerThisCombat :: ObjectId -> GameState -> Bool
 declaredBlockerThisCombat oid gs = Set.member oid (Combat.declaredBlockers (GameState.combat gs))
 
 -- CR 121.1, 701.17a, 608.2i: how this object left a library this turn. Only
--- Resolve's Mill arm appends the event, so a surveil's or an explore's bin stays
+-- a mill appends the event, so a surveil's or an explore's bin stays
 -- out; only Event.drawCard stamps the tally, so a tutor stays out.
 leftLibraryThisTurn :: ObjectId -> GameState -> Set.Set LibraryDeparture.LibraryDeparture
 leftLibraryThisTurn oid gs =
@@ -1312,7 +1312,7 @@ abilitiesOf deploys pc =
 -- control" passes over an earlier activation that targeted a creature SPELL.
 -- CR 113.6p's home beside it is what Synthetic First Rehearsal's "whose source
 -- has an activated ability" reads (data/scenarios/vanguard's past-activation
--- scenario); CR 604.2's lapsed sample is a regression fence.
+-- scenario); the lapsed sample (CR 611.3a) is a regression fence.
 pastView :: ObjectSnapshot.ObjectSnapshot -> Filter.View
 pastView snapshot =
   (viewOfSnapshot False (ObjectSnapshot.controller snapshot) (Just (ObjectSnapshot.owner snapshot)) False Map.empty (ObjectSnapshot.zone snapshot) (ObjectSnapshot.home snapshot) (ObjectSnapshot.lapsedGrants snapshot) (ObjectSnapshot.characteristics snapshot))
@@ -1359,11 +1359,11 @@ abilityMeets criteria stamp named kind loyalty =
 -- `deploy` says whether CR 804.2 reaches the snapshot: the game uses the option
 -- and the snapshot is of a permanent (CR 109.2).
 --
--- `zone` with `home`, and `lapsed`, are CR 604.2's two halves of an "as long
--- as" grant, as they stood when the snapshot was taken: the zone the object was
--- in and the one its unstated abilities functioned in
--- (AbilityZone.grantFunctionsIn, CR 113.6 / 113.6p), and the clauses that did
--- not hold there
+-- `zone` with `home`, and `lapsed`, are the zone half (CR 604.2) and the clause
+-- half (CR 611.3a) of an "as long as" grant, as they stood when the snapshot
+-- was taken: the zone the object was in and the one its unstated abilities
+-- functioned in (AbilityZone.grantFunctionsIn, CR 113.6 / 113.6p), and the
+-- clauses that did not hold there
 -- (Projection.View.lapsedGrantsOf), since the snapshot carries each granted
 -- ability with its clause unasked.
 viewOfSnapshot :: Bool -> Maybe PlayerId -> Maybe PlayerId -> Bool -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural.Natural -> Zone.Zone -> Zone.Zone -> Set.Set Condition.Condition -> PC.ProjectedCharacteristics -> Filter.View
@@ -1405,7 +1405,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       -- The SpellCast arm supplies it too, off Game.ownerWithLastKnown rather than off a
       -- record alone, since a spell still on the stack has none.
       Filter.owner = mOwner,
-      -- CR 400.1: a snapshot records characteristics (CR 608.2h) and no zone, and
+      -- CR 400.1: a snapshot records characteristics and no zone, and
       -- the object it was taken of has since moved or ceased to exist, so IsInZone
       -- is vacuously False against one.
       Filter.zone = Nothing,
@@ -1439,8 +1439,8 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       Filter.blocked = Set.empty,
       Filter.declaredThisTurn = Set.empty,
       Filter.couldAttackThisTurn = False,
-      -- CR 508.1a / 509.1a: a snapshot is CR 608.2h's record of an object, and
-      -- combat status is no characteristic of one (CR 109.3), so it has nothing
+      -- CR 508.1a / 509.1a: a snapshot holds characteristics alone, and combat
+      -- status is no characteristic (CR 109.3), so it has nothing
       -- to answer with -- `attacking` and `blocking` above take the same
       -- posture.
       Filter.declaredAttackerThisCombat = False,
@@ -1486,14 +1486,14 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       -- snapshot, which no card in `data/cards/` notices: every printed
       -- "commander creatures you own" is a battlefield static ability.
       Filter.commander = False,
-      -- CR 113.3b: CR 608.2h's record is of characteristics rather than of an
+      -- CR 113.3b: a snapshot holds characteristics rather than an
       -- object on the stack, so there is no ability here to be either kind.
       Filter.activatedAbility = Nothing,
       -- CR 113.1c, the line above widened: still no ability on the stack here to
       -- be one of either kind.
       Filter.ability = False,
-      -- CR 114.5, the two lines above's reason one rule over: CR 608.2h's record
-      -- is of CHARACTERISTICS, and being an emblem is none of the ones CR 109.3
+      -- CR 114.5, the two lines above's reason one rule over: a snapshot holds
+      -- CHARACTERISTICS, and being an emblem is none of the ones CR 109.3
       -- lists, so nothing a snapshot holds can say it was taken of one. NOT that
       -- an emblem has no characteristics -- CR 114.3 leaves it the abilities its
       -- creating effect defined, which CR 109.3 counts as characteristics.
@@ -1501,11 +1501,12 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       -- CR 113.7, for the line above's reason: no ability, so no source.
       Filter.abilitySource = Nothing,
       Filter.tapped = False,
-      -- CR 110.5a says status is not a characteristic, and CR 608.2h's record is
-      -- of characteristics -- so a snapshot holds nothing to answer this with,
-      -- `tapped` above's reason one status category over.
+      -- CR 110.5a says status is not a characteristic, and a snapshot holds only
+      -- characteristics -- so it holds nothing to answer this with,
+      -- `tapped` above's reason one status category over. Unlike `tapped`,
+      -- lastKnownView supplies no answer for a departed object (gap #6249).
       Filter.faceDown = False,
-      -- CR 608.2h's record holds characteristics rather than the card that carried
+      -- A snapshot holds characteristics rather than the card that carried
       -- them, so there is no printed face here for CR 708.12 to read -- `faceDown`
       -- above's reason, one rule over.
       Filter.representedCard = Nothing,
@@ -1587,7 +1588,7 @@ snapshotRoster deploy zone home lapsed snapshot =
   let functions = AbilityZone.grantFunctionsIn home (PC.delayedAbilities snapshot) zone
    in filter (\ability -> functions ability && grantHeld lapsed ability) (abilitiesOf (Deploy.grants deploy snapshot) snapshot)
 
--- CR 604.2: is this ability granted, given the "as long as" clauses a sample
+-- CR 611.3a: is this ability granted, given the "as long as" clauses a sample
 -- recorded as lapsed? An ability with no clause always is.
 grantHeld :: Set.Set Condition.Condition -> ActivatedAbility.ActivatedAbility card ability -> Bool
 grantHeld lapsed = maybe True (`Set.notMember` lapsed) . ActivatedAbility.condition
@@ -1613,8 +1614,8 @@ grantHeld lapsed = maybe True (`Set.notMember` lapsed) . ActivatedAbility.condit
 -- viewOfSnapshot's PC-derived set and not to this record update is silently read
 -- LIVE here, and neither -Werror nor any test says so. Keep the two in step.
 --
--- `lapsed` is CR 604.2's sample beside the snapshot (viewOfSnapshot), and the
--- zone the battlefield, the only one a permanent turns over in.
+-- `lapsed` is the sample (CR 611.3a) beside the snapshot (viewOfSnapshot), and
+-- the zone the battlefield, the only one a permanent turns over in.
 overlaySnapshot :: Bool -> Set.Set Condition.Condition -> PC.ProjectedCharacteristics -> Filter.View -> Filter.View
 overlaySnapshot deploy lapsed snapshot live =
   let sampled = viewOfSnapshot deploy (Filter.controller live) (Filter.owner live) (Filter.token live) (Filter.counters live) Zone.Battlefield Zone.Battlefield lapsed snapshot

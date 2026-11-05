@@ -13,8 +13,9 @@ import qualified Parun.Types.PlayerId as PlayerId
 -- settle. A reader asks `sickness obj == Settled pid` for the specific player
 -- whose turn and control are at issue.
 --
--- Two writers, both moments CR 302.6 names: Engine.settleAll writes
--- `Settled pid` at pid's untap step for everything pid controls; and
+-- Two writers, for CR 302.6's continuity: Engine.settleAll writes
+-- `Settled pid` at pid's untap step for everything pid controls, so not when
+-- that step is skipped (gap #6241); and
 -- Engine.checkControlContinuity DROPS a `Settled p` whose object p no longer
 -- controls. Control is DERIVED, so nothing announces a change and the check
 -- samples wherever the board can change -- the same diff Event.sampleControl

@@ -27,16 +27,16 @@ import qualified Parun.Types.PayGate as PayGate
 -- payload, so a concrete `Effect Card` here would make the two modules mutually
 -- importing.
 data Clause card ability = MkClause
-  { -- | CR 608.2c's "If you do": which EARLIER clause of this mode this one
+  { -- | CR 118.12's "If you do": which EARLIER clause of this mode this one
     -- hangs off, so that declining that one skips this one too. Tweeze's "you
     -- may discard a card. If you do, draw a card" is the witness -- the draw is
     -- a clause of its own naming the "may" clause's ordinal. Nothing is the
     -- unmarked case every other card in the corpus takes. The clause named is
     -- CR 118.12's cost, paid on resolution (Parun.Engine.Resolve.asCostWhenNamed).
     --
-    -- CR 608.2c is the whole authority: the controller "follows its instructions
-    -- in the order written", and later text may modify the meaning of earlier
-    -- text, so this is clause sequencing rather than a rule of its own. That is
+    -- CR 118.12 names the sentence and CR 608.2c orders it: the controller "follows
+    -- its instructions in the order written", and later text may modify the
+    -- meaning of earlier text, so this is clause sequencing. That is
     -- why the reference is CR 608.2e's ordinal (Parun.Types.ClauseIndex), the one
     -- Parun.Types.PayGate.offeredAt already names, and why it is read against the
     -- clauses of THIS mode instance (CR 700.2d).
@@ -55,10 +55,9 @@ data Clause card ability = MkClause
     -- Keyed on the ANSWER the named clause's own riders produced -- did its
     -- instructions run -- and never on the board afterwards, which is PayGate's
     -- posture (CR 118.12's "regardless of what events actually occurred")
-    -- carried over to CR 603.5's "may". Baral, Chief of Compliance needs none of
-    -- this: its "you may draw a card. If you do, discard a card" folds into one
-    -- optional clause because CR 121.3 makes the draw happen whenever it is
-    -- chosen, so the answer and the action cannot come apart.
+    -- carried over to CR 603.5's "may". Baral, Chief of Compliance's "you may draw
+    -- a card. If you do, discard a card" is this field: CR 118.12 keys it on the
+    -- choice, regardless of whether a replacement took the draw.
     --
     -- A MANDATORY named clause has no answer to key on, so the board answers
     -- after all: it counts only if CR 118.12's payment was started, which a
@@ -140,8 +139,8 @@ data Clause card ability = MkClause
     -- rather than wrapping each effect and why the asker rides the rider, and
     -- Parun.Engine.Resolve.exercises for where the choice is asked.
     --
-    -- A clause spanning two instructions is ONE question, which is what CR
-    -- 608.2d's single announcement calls for: "you may draw a card and lose 1
+    -- A clause spanning two instructions is ONE question, which is one printed
+    -- "may" read as English (CR 608.2c): "you may draw a card and lose 1
     -- life" is one clause and one prompt. Two adjacent printed "may"s are two
     -- clauses and two prompts. That grouping is structural, which is why the
     -- span is the carrier and an individual instruction is not -- nothing about
@@ -161,7 +160,7 @@ data Clause card ability = MkClause
     -- other end of the same question, a gate over one clause of two.
     --
     -- The five riders are independent, and Parun.Engine.Resolve asks them in
-    -- printed order: `ifTaken` first (CR 608.2c's "If you do" prefixes the
+    -- printed order: `ifTaken` first (CR 118.12's "If you do" prefixes the
     -- sentence, and a clause whose predecessor was declined is no question to
     -- ask), then `condition` (CR 701.46a prints its "if" ahead of the
     -- instructions), then `orElse` (a branch a player did not announce has no

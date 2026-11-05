@@ -16,8 +16,9 @@ data DealDamage = MkDealDamage
     -- prove each is one batch, which is what a CR 615.7 shield covering a player
     -- and their permanents can tell apart.
     --
-    -- Two clauses naming ONE recipient are one event of the total, not two: CR
-    -- 120.4's event is one source, one recipient, one moment, and
+    -- Two clauses naming ONE recipient are one event of the total, not two
+    -- (docs/decisions.md, "Whether one instruction naming a recipient twice deals
+    -- one damage event"), and
     -- Parun.Engine.Replacement.oneEventPerRecipient is where the sum happens. Char
     -- aimed at its own caster is the sentence, and Parun.ReplacementSpec's Ajani
     -- Steadfast emblem case is the proof.
@@ -81,7 +82,7 @@ data DealDamage = MkDealDamage
     -- prevention and redirection: Parun.Types.LifeLoss's `tally`, for damage.
     tally :: Maybe SlotName.SlotName,
     -- | Where to bind, as a group, the objects and players the instruction
-    -- actually dealt damage to (CR 120.3), for a later effect to name --
+    -- actually dealt damage to (CR 120.4b), for a later effect to name --
     -- Incinerate's "a creature dealt damage this way", Chandra, Roaring Flame's
     -- "each player dealt damage this way". Settled like `tally`: a recipient
     -- whose damage was all prevented (CR 615) was dealt none and is not bound.

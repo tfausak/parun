@@ -12,7 +12,7 @@ import qualified Parun.Types.SlotName as SlotName
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.PutCountersFrom" $ do
   -- No count: CR 122.8's per-kind tally is what crosses. `kind` defaults to the
-  -- whole tally -- rule 122.8's first sentence -- so it writes no key here.
+  -- whole tally -- rule 122.8's second sentence -- so it writes no key here.
   Spec.it s "MkPutCountersFrom, no kind named" $
     Common.assertCodec
       s
@@ -24,7 +24,7 @@ spec s = Spec.describe s "Parun.Codec.PutCountersFrom" $ do
           }
       )
       " {\"from\":\"self\",\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
-  -- CR 122.8's second sentence, the kind written down.
+  -- CR 122.8's third sentence, the kind written down.
   Spec.it s "MkPutCountersFrom, a kind named" $
     Common.assertCodec
       s

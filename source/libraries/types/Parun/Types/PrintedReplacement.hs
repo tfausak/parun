@@ -55,12 +55,12 @@ data PrintedReplacement card ability effect = MkPrintedReplacement
     --
     -- Structural rather than a Condition, for the reason
     -- Parun.Types.StaticAbility.functionsFrom is: CR 113.6 decides which zone's
-    -- walk gathers a row at all, BEFORE CR 604.2's clause is asked of anything, so
-    -- a zone written as a condition could narrow a gather but never widen one.
-    -- Empty leaves CR 113.6's own defaults standing -- the battlefield for a
-    -- permanent, the command zone for an emblem (CR 113.6p / 114.4) -- and CR
-    -- 113.6b's "only" is why a stated set REPLACES those defaults rather than
-    -- adding to them.
+    -- walk gathers a row at all, BEFORE the "as long as" clause (CR 611.3a) is
+    -- asked of anything, so a zone written as a condition could narrow a gather
+    -- but never widen one. Empty leaves CR 113.6's own defaults standing -- the
+    -- battlefield for a permanent, the command zone for an emblem (CR 113.6p /
+    -- 114.4) -- and CR 113.6b's "only" is why a stated set REPLACES those
+    -- defaults rather than adding to them.
     --
     -- The reader is Parun.Engine.Projection.replacementsAffecting, which asks the
     -- set with its default folded in on the battlefield and in the command zone,

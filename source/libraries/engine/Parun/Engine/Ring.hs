@@ -443,7 +443,7 @@ theRingIsLegendary =
       -- zone -- the default gatherGiven's emblem walk supplies -- stands.
       StaticAbility.functionsFrom = Set.empty,
       -- CR 604.2 as written: the emblem's ability is not a card's text saying
-      -- its effect outlives the emblem, and CR 114.4 keeps the emblem in the
+      -- its effect outlives the emblem, and CR 114.1 keeps the emblem in the
       -- command zone anyway.
       StaticAbility.lingers = Nothing,
       StaticAbility.name = Nothing,

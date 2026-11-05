@@ -10,8 +10,8 @@ import qualified Parun.Types.PlayerId as PlayerId
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.Milled" $ do
-  -- Two cards in one event, which is CR 701.17a's "all at once" and the reason
-  -- the payload holds a sequence rather than one card.
+  -- Two cards in one event, milled "all at once" (Contaminated Drink's ruling),
+  -- the reason the payload holds a sequence rather than one card.
   Spec.it s "MkMilled" $
     Common.assertCodec
       s

@@ -14,7 +14,7 @@ import qualified Parun.Types.PutCountersFrom as PutCountersFrom
 -- | A bare object keyed by the record's field names. The tag that picks it is
 -- written by Parun.Codec.Effect's PutCountersFrom arm.
 --
--- `kind` defaults to the whole tally -- what CR 122.8's first sentence means --
+-- `kind` defaults to the whole tally -- what CR 122.8's second sentence means --
 -- so data/cards/iron-apprentice.json writes no key at all and only a card
 -- naming a kind (data/cards/selfless-police-captain.json) writes one.
 codec :: Codec.Codec PutCountersFrom.PutCountersFrom

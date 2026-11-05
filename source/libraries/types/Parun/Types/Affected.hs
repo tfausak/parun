@@ -21,8 +21,8 @@ import qualified Parun.Types.ObjectId as ObjectId
 -- The one crossing between the two is StaticAbility.lingers: an ability whose
 -- text keeps its effect alive past its own permanent hands a STORED effect over
 -- as the permanent leaves, and Parun.Engine.Projection.frozenStaticParts resolves
--- its dynamic set to a TheseObjects at that instant -- CR 611.2c, which now
--- governs it.
+-- its dynamic set to a TheseObjects at that instant, by analogy with CR 611.2c,
+-- which does not itself reach a static ability's effect.
 data Affected
   = -- | CR 611.2c: a fixed id set, NOT a predicate.
     TheseObjects (Set.Set ObjectId.ObjectId)

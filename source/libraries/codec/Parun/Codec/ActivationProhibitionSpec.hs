@@ -14,7 +14,7 @@ import qualified Parun.Types.ProhibitedCost as ProhibitedCost
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.ActivationProhibition" $ do
-  -- Arrest's second clause (CR 602.2 / CR 101.2), which names no kind, so the
+  -- Arrest's second clause (CR 602.5 / CR 101.2), which names no kind, so the
   -- key is absent -- the wire form data/cards/arrest.json writes.
   Spec.it s "MkActivationProhibition, no kind named" $
     Common.assertCodec

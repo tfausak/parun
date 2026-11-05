@@ -18,7 +18,7 @@ import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.ExilePlayPermission as ExilePlayPermission
 
 -- | Every axis 'Fields.required', because none of them has a default the rules
--- give: `spending` is CR 118.14's rider, `alternativeCost` is CR 118.9a's,
+-- give: `spending` is CR 118.14's rider, `alternativeCost` is CR 118.9's,
 -- `increase` and `landEnters` are CR 601.2f's and CR 614.1d's, `budget` is
 -- CR 601.3's count of plays left, and `origin`
 -- is CR 715.3d's own question -- a permission written without any of them

@@ -20,8 +20,8 @@ import qualified Parun.Types.SlotName as SlotName
 -- here would need an hs-boot file. Instantiated at `Effect card` where the arm
 -- is declared.
 data ForEach effect = MkForEach
-  { -- | The set swept ONCE, before the first iteration -- CR 608.2f's "which
-    -- objects" half, the same read every other ObjectRef-taking opcode makes.
+  { -- | The set swept ONCE, before the first iteration (CR 608.2h), the same
+    -- read every other ObjectRef-taking opcode makes.
     -- Nothing the body does adds to or removes from it.
     ref :: ObjectRef.ObjectRef,
     -- | Whether the body runs for every swept member or for the ones the
@@ -48,7 +48,7 @@ data ForEach effect = MkForEach
     -- rather than one per member. Parun.CombatCostSpec's
     -- PutOntoBattlefieldBlocking group proves it.
     body :: Seq.Seq effect,
-    -- | CR 608.2f's SECOND sentence: True where the loop's action "can't be
+    -- | CR 608.2f's THIRD sentence: True where the loop's action "can't be
     -- processed simultaneously", so each member is considered individually and
     -- its events stand apart from the next member's. False -- rule 608.2f's "in
     -- most cases", and what a card that says nothing gets -- runs the whole loop

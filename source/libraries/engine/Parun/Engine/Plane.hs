@@ -59,7 +59,8 @@ isOrphanedPhenomenonAbility :: ObjectId -> GameState -> Bool
 isOrphanedPhenomenonAbility oid gs = maybe False (`List.notElem` Game.stillPlaying gs) (phenomenonOwnerOf oid gs)
 
 -- | CR 311.5 / 312.4 / 901.6: the planar controller, normally the active
--- player. While that seat has left (CR 800.4j keeps it active), CR 800.4p's
+-- player. While that seat has left (CR 800.4j leaves the turn with no active
+-- player, though GameState.activePlayer still names the seat), CR 800.4p's
 -- heir: the next still-playing seat in turn order. Derived, not stored: the
 -- designation moves only off a departing holder and reverts at the next turn,
 -- so the walk from the active seat always finds it. Parun.PlanechaseSpec's "CR

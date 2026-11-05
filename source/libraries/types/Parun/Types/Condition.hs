@@ -8,7 +8,7 @@ import qualified Parun.Types.DuringPhase as DuringPhase
 -- CR 117.5 boundary), an intervening "if" (CR 603.4 when the trigger event
 -- occurs, CR 608.2a again on resolution), a "for as long as" duration
 -- (CR 611.2b, Parun.Engine.Expiry.arm and Parun.Engine.Expiry.sweepConditional),
--- a printed static ability's "as long as" clause (CR 604.2,
+-- a printed static ability's "as long as" clause (CR 611.3a,
 -- Parun.Types.StaticAbility.condition and Parun.Engine.Projection.gatherStatic),
 -- that same clause on a printed REPLACEMENT ability
 -- (Parun.Types.PrintedReplacement.condition and
@@ -17,7 +17,7 @@ import qualified Parun.Types.DuringPhase as DuringPhase
 -- Parun.Engine.Replacement.collect).
 --
 -- The duration and the "as long as" clauses are the pair most easily confused,
--- and CR 611.2c's parenthetical keeps them apart: the duration ENDS a stored
+-- and CR 611.2b and CR 611.3a keep them apart: the duration ENDS a stored
 -- effect once, while the clause gates one that is re-derived every read.
 --
 -- ONE comparison, one step-or-phase window, and a disjunction and a

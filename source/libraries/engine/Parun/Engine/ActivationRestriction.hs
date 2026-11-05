@@ -56,8 +56,8 @@ import Parun.Types.PlayerId (PlayerId)
 -- ALL of them, which is what CR 602.5's "prohibited from being activated" means:
 -- one clause failing is a prohibition in force, and a card printing two joins
 -- them with "and". The empty list leaves the ability whatever window the rules
--- already give it -- CR 602.2's priority, CR 605.3a's two for a mana ability --
--- and passes vacuously.
+-- already give it -- CR 117.1b's priority, CR 605.3a's two for a mana
+-- ability -- and passes vacuously.
 --
 -- Priority is not re-checked here. Parun.Engine.Activate's caller is
 -- Action.legalActions, which the priority loop asks only of the player who has

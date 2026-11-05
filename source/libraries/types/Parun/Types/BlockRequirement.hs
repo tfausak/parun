@@ -73,7 +73,7 @@ data BlockRequirement = MkBlockRequirement
     -- use for.
     attacker :: Maybe Affected.Affected,
     -- | CR 509.1c's second shape -- "or that it must block if some condition is
-    -- met" -- read as CR 604.2's "as long as" clause. Seton's Desire's
+    -- met" -- read as an "as long as" clause (CR 611.3a). Seton's Desire's
     -- threshold: "as long as there are seven or more cards in your graveyard,
     -- all creatures able to block enchanted creature do so". Nothing is the
     -- ungated requirement (Lure, Prized Unicorn, Razorgrass Screen).

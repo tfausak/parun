@@ -200,7 +200,7 @@ resolveOneWith runSubgame = do
                in do
                     Resolve.resolveModesWith runSubgame oid srcId (Modal.chosenModes chosen modal)
                     afterMadness (TriggeredAbility.condition ability) srcId gs
-        -- CR 114.5: an emblem is never on the stack (created into the command
+        -- CR 114.1: an emblem is never on the stack (created into the command
         -- zone, never cast). Drop it, like a token.
         Source.OfEmblem _ -> State.put gs {GameState.stack = rest}
         Source.OfSpellCopy printingId -> resolveCardBacked runSubgame oid rest printingId
@@ -222,13 +222,12 @@ resolveOneWith runSubgame = do
           -- your speed is less than 4" is one, and eliding it would let a
           -- trigger that waited on the stack raise a speed already at max.
           --
-          -- No board reaches the removal today, and the branch is here because
-          -- CR 608.2a says so rather than because anything observes it: rule
-          -- 702.179d admits one trigger a turn and nothing else in the pool moves
-          -- a player's speed, so the answer cannot change between the CR 603.4
-          -- check in Event.interveningHolds and this one. The two are mutually
-          -- redundant, not jointly redundant -- Parun.SpeedSpec's "speed stops at
-          -- 4" case fails when BOTH are removed.
+          -- Rule 702.179d admits one trigger a turn, so the answer changes between
+          -- the CR 603.4 check in Event.interveningHolds and this one only if an
+          -- effect raises speed while the trigger waits: Synthetic Speed Boost
+          -- under a flash grant (Leyline of Anticipation). Short of that board the
+          -- two are mutually redundant, not jointly redundant -- Parun.SpeedSpec's
+          -- "speed stops at 4" case fails when BOTH are removed.
           --
           -- The view is the same unscoped one the arm above passes, so the rule
           -- cannot mean one thing for a borne trigger and another for an inherent
@@ -337,7 +336,7 @@ mutatingTarget oid gs = do
 
 -- CR 608.3 for a resolving spell that has a printing behind it -- CR 108's card
 -- (Source.OfCard) and CR 112.1a's copy of one (Source.OfSpellCopy), which CR 608.2
--- resolves "exactly as it resolves the original": effects then CR 608.2n's
+-- resolves as it does any spell: effects then CR 608.2n's
 -- graveyard for a nonpermanent, where CR 704.5e removes a copy; the battlefield
 -- for a permanent, where CR 608.3f makes a copy a token AS IT ARRIVES --
 -- Parun.Engine.Event's zone-change funnel rewrites the arriving incarnation's
@@ -505,7 +504,7 @@ resolveCardBacked runSubgame oid rest printingId = do
                 -- a flag on one.
                 --
                 -- The side is asked HERE, as the spell resolves, which is where
-                -- rule 702.140c puts the choice -- not at CR 601.2b's
+                -- rule 702.140c puts the choice -- not at CR 601.2c's
                 -- announcement, where the target itself is chosen. Never elided:
                 -- CR 730.2a makes the two answers differ in the merged
                 -- permanent's every characteristic.

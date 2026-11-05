@@ -5,7 +5,7 @@ import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.ProhibitedCost as ProhibitedCost
 
--- | CR 602.2 / CR 101.2: one printed ACTIVATION PROHIBITION -- an effect saying
+-- | CR 602.5 / CR 101.2: one printed ACTIVATION PROHIBITION -- an effect saying
 -- an object's "activated abilities can't be activated". Arrest and Volrath's
 -- Curse state it of every one of them; Realmbreaker's Grasp states it of every
 -- one but a mana ability.
@@ -21,8 +21,8 @@ import qualified Parun.Types.ProhibitedCost as ProhibitedCost
 -- NOT a Parun.Types.Modification, for the reason
 -- Parun.Types.SacrificeRestriction states at length: CR 613.11 puts a continuous
 -- effect that "affects game rules rather than objects" outside the layer
--- system, CR 101.2a says such an effect is not an ability being added or
--- removed, and no layer of Parun.Engine.Projection rewrites them. Losing the ability and
+-- system, CR 101.2a holds rule 101.2 clear of adding abilities to objects
+-- and removing them, and no layer of Parun.Engine.Projection rewrites them. Losing the ability and
 -- being unable to activate it are observably different -- an ability nothing
 -- removed still triggers Parun.Types.Filter's keyword reads and still answers
 -- Tsabo's Web -- so a layer-6 removal would be the wrong reading rather than a

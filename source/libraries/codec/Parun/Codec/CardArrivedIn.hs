@@ -10,8 +10,9 @@ import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.CardArrivedIn as CardArrivedIn
 
 -- | A bare object keyed by the record's field names, as Parun.Codec.MovedBetween
--- is. `excluding` is defaulted rather than required because the empty set is CR
--- 712.21e's own reading -- "from anywhere" -- rather than a convenience.
+-- is. `excluding` is defaulted rather than required because the empty set is what
+-- CR 712.21e's "changed zones" asks -- no condition on the origin -- rather than
+-- a convenience.
 codec :: Codec.Codec CardArrivedIn.CardArrivedIn
 codec = Fields.object $ do
   to <- Fields.required "to" Zone.codec CardArrivedIn.to

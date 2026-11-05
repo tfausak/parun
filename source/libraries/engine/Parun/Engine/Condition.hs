@@ -1,5 +1,5 @@
--- CR 603.8 / 603.4 / 611.2b / 604.2: is this Condition currently true? The only
--- module that may evaluate a Parun.Types.Condition -- the standing
+-- CR 603.8 / 603.4 / 611.2b / 611.3a: is this Condition currently true? The
+-- only module that may evaluate a Parun.Types.Condition -- the standing
 -- Parun.Engine.Expiry has over Parun.Types.Expiry and Parun.Engine.Projection over
 -- Modification.
 --
@@ -120,7 +120,7 @@ inheritedX condition oid gs = case condition of
 -- which carries the argument). Applied where a stored condition outlives its
 -- resolution -- Parun.Engine.Expiry.arm as a "for as long as" duration begins, and
 -- a granted play permission's condition -- and nowhere else: a condition a STATIC
--- ability states (CR 604.2) is re-derived every projection with no resolution
+-- ability states (CR 611.3a) is re-derived every projection with no resolution
 -- behind it, and an intervening "if" (CR 603.4) is read while the bindings are
 -- still reachable.
 bakeBound :: Map.Map SlotName (Set Recipient) -> Condition.Type.Condition -> Condition.Type.Condition

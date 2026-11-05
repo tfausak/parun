@@ -38,15 +38,16 @@ import qualified Parun.Types.SpendTrigger as SpendTrigger
 -- its identity, and a reference would dangle by construction: mana outlives its
 -- source, and CR 400.7 mints a fresh id on every zone change. The id inside
 -- `spendTrigger` is not the exception it looks like: it is the delayed ability's
--- source (CR 603.7c), read through last-known information as any delayed
+-- source (CR 603.7d-e), read through last-known information as any delayed
 -- ability's is, and nothing asks it about the mana. Properties are
 -- stamped at production time, by whichever of the two producers is adding the
 -- mana: Parun.Engine.Mana.manaOptionsOfGiven for a mana ability paid inline (CR
 -- 605.3b), and Parun.Engine.Resolve's Effect.AddMana arm for an ability that
--- resolves off the stack (CR 605.1b). Both read them from the same decider,
--- Parun.Engine.Mana.productionTagsGiven. CR 106.13's transfer stamps nothing: it
--- moves whole units between pools (Parun.Engine.Mana.moveMana), which is how that
--- rule's second sentence keeps every field below unchanged.
+-- resolves in the ordinary way (CR 605.5a) or a triggered mana ability (CR
+-- 605.4a). Both read them from the same decider,
+-- Parun.Engine.Mana.productionTagsGiven. CR 106.13's transfer stamps nothing:
+-- it moves whole units between pools (Parun.Engine.Mana.moveMana), which is how
+-- that rule's second sentence keeps every field below unchanged.
 data ManaUnit = MkManaUnit
   { manaType :: ManaType.ManaType,
     tags :: Set.Set ProductionTag.ProductionTag,

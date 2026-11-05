@@ -18,7 +18,7 @@ newtype CardName = MkCardName
 -- CR 709.4a's plural axis is Parun.Types.ProjectedCharacteristics.names, which
 -- every rules question about a name goes through. docs/rules.txt's own
 -- Examples write a split card's name joined by "//", unspaced -- "Fire//Ice"
--- (lines 3882, 5747) and "Assault//Battery" (line 5746). CR 709.4a itself
+-- (lines 3890, 5765) and "Assault//Battery" (line 5764). CR 709.4a itself
 -- gives no example.
 --
 -- Unspaced rather than the printed "Wax // Wane" is a decision already made,

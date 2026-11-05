@@ -16,7 +16,7 @@ import qualified Parun.Types.ActivationRestriction as ActivationRestriction
 -- 602.5's OnlyIf a condition and CR 602.5b's TimesEachTurn a count; the other
 -- arms still render as bare tags.
 --
--- There is no tag for "no rider": CR 602.2's default is the EMPTY LIST on the
+-- There is no tag for "no rider": CR 117.1b's default is the EMPTY LIST on the
 -- ability, which Parun.Codec.ActivatedAbility writes by omitting the key.
 codec :: Codec.Codec ActivationRestriction.ActivationRestriction
 codec =

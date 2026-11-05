@@ -12,7 +12,7 @@ import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 -- mana was produced, carried on each unit (Parun.Types.ManaUnit) until the unit
 -- is spent. CR 106.6a: one per mana produced.
 --
--- The ability's text, source and controller are fixed at creation (CR 603.7c,
+-- The ability's text, source and controller are fixed at creation (CR 603.7a,
 -- 603.7e), so they are stamped here rather than looked up at the spend, when the
 -- source may be gone.
 data SpendTrigger = MkSpendTrigger

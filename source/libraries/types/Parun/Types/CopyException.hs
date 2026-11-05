@@ -28,7 +28,8 @@ import qualified Parun.Types.Supertype as Supertype
 -- change, and Multiversal Recruitment's "except it isn't legendary" is that
 -- sentence over CR 707.1's token mint.
 --
--- Every arm writes into the COPIABLE snapshot, never into a CR 613 layer, which
+-- Every arm writes into the COPIABLE snapshot (CR 613.2a's layer 1a), never into
+-- a later CR 613 layer, which
 -- is what CR 707.9a and CR 707.9b both require: the excepted value or ability
 -- "becomes part of the copiable values" of the copy. A token copy of the copy
 -- therefore inherits the excepted value with no further machinery, where a

@@ -8,9 +8,10 @@
 -- The offer side and the payment side, exactly as Parun.Engine.Room is for CR
 -- 116.2m: what the ignore then SUPPRESSES is each carrier's own question, asked
 -- through Parun.Engine.IgnoredAbility, and this module asks none of them. It asks
--- only WHO the ability is affecting, which is the rule's own gate on the offer --
--- a typed question, so no PlayerEffect, PlayerScope, CombatRestriction or
--- ActivationProhibition constructor is visible here.
+-- only WHO the ability is affecting, which is every printed producer's gate on
+-- the offer (CR 116.2d says only "a player") -- a typed question, so no
+-- PlayerEffect, PlayerScope, CombatRestriction or ActivationProhibition
+-- constructor is visible here.
 module Parun.Engine.Ignore where
 
 import qualified Control.Monad as Monad
@@ -40,10 +41,10 @@ import qualified Parun.Types.SpecialAction as SpecialAction
 -- Every ignore this permanent's copiable rules text grants: which ability each
 -- names (CR 116.2d's "that ability") and what it charges.
 --
--- Read off Projection.specialActionsOf and never Card.combined: CR 604.1 has a
--- static ability function from the face the permanent actually shows, and CR
--- 707.2a has a copy derive its abilities from the rules text it copied -- which
--- is the same accessor, and so the same answer, as
+-- Read off Projection.specialActionsOf and never Card.combined: CR 712.8d-f
+-- give a double-faced permanent only the characteristics of the face it shows,
+-- and CR 707.2a has a copy derive its abilities from the rules text it
+-- copied -- which is the same accessor, and so the same answer, as
 -- Parun.Engine.PlayerEffect.playerAbilitiesOf gives for the prohibition this
 -- permission accompanies.
 --
@@ -73,7 +74,7 @@ ignoreCostOf oid name gs = case fmap snd (filter (\(n, _) -> n == name) (ignoreG
 --
 --   * the permanent grants the permission under that name, which also settles
 --     that it is on the battlefield with a face to read it from;
---   * the rule's own WHO -- this player is one the NAMED ability is actually
+--   * the producers' WHO -- this player is one the NAMED ability is actually
 --     affecting, which is what every printed producer's sentence says. Leonin
 --     Arbiter's "any player" is the AnyPlayer scope its own prohibition carries,
 --     and Damping Engine's "that player" is the one player its scope reaches; a
@@ -108,7 +109,7 @@ canIgnore pid oid name gs = case ignoreCostOf oid name gs of
   Nothing -> False
   Just cost -> (PlayerEffect.affectedBy pid oid name gs || affectedThrough pid oid name gs) && Cost.canPay PaymentSubject.ForNeither pid oid cost gs
 
--- CR 116.2d's WHO for an ability aimed at an OBJECT: does this player CONTROL a
+-- The printed WHO for an ability aimed at an OBJECT: does this player CONTROL a
 -- permanent the named ability restricts? That is "that creature's controller",
 -- read live rather than off the Aura -- the enchanted creature's controller is
 -- offered the action, and the Aura's controller is not.

@@ -21,7 +21,8 @@ data RollModifier
     --
     -- The discarded number is NOT CR 706.6's ignored roll: that rule treats a
     -- roll as never having happened, while a rerolled die's first result
-    -- happened and has already triggered CR 706.1's "you roll one or more dice".
+    -- happened and has already triggered any ability that triggers "whenever a
+    -- player rolls one or more dice" (CR 706.7's words).
     Reroll
   | -- | CR 706.2b's SECOND step: increase or decrease the result by this amount,
     -- the direction chosen as the modifier is applied (Night Shift of the Living

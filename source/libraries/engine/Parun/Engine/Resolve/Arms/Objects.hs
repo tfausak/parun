@@ -202,7 +202,7 @@ create settle resolving source controller legal chosen (Create.MkCreate quantity
   -- CR 508.4's rider, read ONCE ahead of the minting loop for mBlocked's
   -- reason.
   let mAttack = Common.entryAttack legal resolving entry gs
-  -- PER CREATOR, every amount off the same pre-effect `gs` (CR 608.2f), so one
+  -- PER CREATOR, every amount off the same pre-effect `gs` (CR 608.2h), so one
   -- seat's tokens cannot change how many the next seat gets.
   --
   --
@@ -642,7 +642,7 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
     -- and a slot an Effect.Counter bound (Psychic Rebuttal's "the spell
     -- countered this way").
     Monad.forM_ (if Game.isSpell original gs || Game.isAbility original gs then Game.lookupObject original gs else Map.lookup original (GameState.stackArchive gs)) $ \obj ->
-      -- CR 707.10's "that player copies it": WHO puts the copy onto the stack,
+      -- CR 707.10: WHO puts the copy onto the stack,
       -- which is the copy's owner and controller and CR 707.10c's chooser --
       -- Meletis Charlatan's "the controller of target instant or sorcery spell".
       -- Read off the same pre-effect `gs` as the objects (CR 608.2f), and
@@ -699,7 +699,7 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
               -- Projection.copiableCharacteristics answers for all three and CR
               -- 707.3 holds for free. The LIVE reader, not the last-known one: the
               -- object was just looked up, so there is nothing to resurrect. An
-              -- ABILITY has no card behind it at all (CR 113.7a; Game.cardOf
+              -- ABILITY has no card behind it at all (CR 405.1; Game.cardOf
               -- answers Nothing for one), so there is nothing to snapshot -- CR
               -- 707.10b's "the same source as the original ability" is the whole of
               -- what its copy carries, and it rides in `copySource` above. That
@@ -724,9 +724,10 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
                 StackObjectKind.Spell | Maybe.isJust (Game.lookupObject original gs) -> Binding.setOwnCopy (except (Event.copiedSnapshot original gs))
                 -- An ARCHIVED spell's exceptions are re-folded over the snapshot
                 -- GameState.stackArchive holds. A REGRESSION FENCE rather than a
-                -- proved line: no road to the archive states an exception --
-                -- rule 702.50a's epic does not, and neither does a copy-this-spell
-                -- keyword trigger (Parun.Engine.Keyword.copiesOf).
+                -- proved line: no effect on a road to the archive carries an exception --
+                -- rule 702.50a's epic writes its own into the archived snapshot
+                -- (Keyword.withoutEpic), and a copy-this-spell keyword trigger
+                -- (Parun.Engine.Keyword.copiesOf) states none.
                 StackObjectKind.Spell -> maybe id (Binding.setOwnCopy . except) (Game.copyStampOf obj)
                 StackObjectKind.ActivatedAbility -> id
                 StackObjectKind.TriggeredAbility -> id

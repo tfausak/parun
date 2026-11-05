@@ -86,9 +86,9 @@ import qualified Parun.Types.TapState as TapState
 -- and Parun.CardSpec's corpus lint holds that no Create in the pool sets it.
 --
 -- `counters` is CR 122.6's "an object that's given counters as it enters the
--- battlefield", said by the EFFECT rather than by the permanent -- undying's and
--- persist's "return it to the battlefield ... with a +1/+1 counter on it" (CR
--- 702.93a, CR 702.79a).
+-- battlefield", said by the EFFECT rather than by the permanent -- undying's
+-- "return it to the battlefield ... with a +1/+1 counter on it" (CR 702.93a) and
+-- persist's "... with a -1/-1 counter on it" (CR 702.79a).
 -- The same rider one opcode over is incubate's "create an Incubator token that
 -- enters the battlefield with N +1/+1 counters on it" (CR 701.53a).
 -- A rider and not an Effect.PutCounters afterwards, because the permanent must
@@ -120,7 +120,7 @@ import qualified Parun.Types.TapState as TapState
 -- of CR 608.2h. A card writes EntryRiders Quantity -- Printlifter Ooze's "the
 -- token enters with X +1/+1 counters on it, where X is the number of other
 -- creatures you control", whose X is defined by the ability's own text (CR
--- 107.3c) -- while the funnel takes EntryRiders Natural, a settled number.
+-- 107.3) -- while the funnel takes EntryRiders Natural, a settled number.
 -- Parun.Engine.Resolve.Common.freezeRiders is the one bridge: it evaluates each count
 -- once, when the effect is applied, which is the rule the parameter exists to
 -- state. A Quantity reaching the funnel unevaluated is then a type error rather
@@ -217,7 +217,7 @@ import qualified Parun.Types.TapState as TapState
 -- the rule's "and any other applicable effects": Nomad Mythmaker's "attached to
 -- a creature you control". Read by the MOVETOZONE alone
 -- (Parun.Engine.Resolve.Arms.Zones's moveOne). Parun.EffectLintSpec fences both
--- arms; putFound carries CR 303.4a's fixed host down its own road instead.
+-- arms; putFound carries CR 303.4i's fixed host down its own road instead.
 --
 -- NOT the road CR 701.58a's cloak takes, though the pairing it needs -- the 2/2
 -- with ward {2} FaceDownCharacteristics.disguisedValue is, under

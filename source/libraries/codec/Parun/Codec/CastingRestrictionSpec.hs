@@ -71,7 +71,7 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
       CastingRestriction.codec
       (CastingRestriction.DuringTurn TurnScope.OpponentsTurn)
       " {\"type\":\"DuringTurn\",\"value\":{\"type\":\"OpponentsTurn\"}} "
-  -- Serra Avenger's "your first, second, or third turns of the game" (CR 500.7).
+  -- Serra Avenger's "your first, second, or third turns of the game" (CR 601.3).
   Spec.it s "NotDuringFirstTurns" $
     Common.assertCodec
       s
@@ -92,7 +92,7 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
       CastingRestriction.codec
       CastingRestriction.AfterBlockersDeclared
       " {\"type\":\"AfterBlockersDeclared\"} "
-  -- Blood Frenzy's "only before the combat damage step" (CR 506.7a, 506.7d).
+  -- Blood Frenzy's "only before the combat damage step" (CR 506.7, 506.7d).
   Spec.it s "BeforeStep" $
     Common.assertCodec
       s

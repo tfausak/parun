@@ -12,7 +12,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 -- when the ability triggered; for an activated one, the CR 602.2 activator.
 --
 -- Shared by Parun.Types.TriggerCondition's StepBegins (CR 603.2b) and SpellCast
--- (CR 601.2i), and by Parun.Types.ActivationRestriction's DuringPhase (CR 307.5).
+-- (CR 601.2i), and by Parun.Types.ActivationRestriction's DuringPhase (CR 500.1, CR 102.1).
 --
 -- A CR 603.7 delayed ability keyed to "the NEXT end step" is EachTurn: any
 -- player's end step qualifies, and its once-ness comes from the delayed store

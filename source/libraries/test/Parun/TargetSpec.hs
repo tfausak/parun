@@ -41,7 +41,7 @@
 --
 -- Fall of the Hammer is beside it because it is the other way one slot can
 -- depend on another: not the POOL a slot draws from but the FILTER it is
--- narrowed by, which is CR 601.2c's "another" between two slots of one
+-- narrowed by, which is a printed "another" between two slots of one
 -- announcement. Its case reads the same union-offer plus joint-check pair
 -- Dwell's does, and turns on an announcement the joint check has to reject.
 -- Synthetic Hammer Refrain is that card under CR 700.2d's repeat, where the
@@ -845,7 +845,7 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
   -- object ON THE STACK, which for an activated ability is the ability, not the
   -- permanent it was activated from. Prodigal Sorcerer's "{T}: This creature
   -- deals 1 damage to any target" may therefore still name the Sorcerer, which
-  -- is the reading Target.legalSets' own note takes for CR 601.2c's "another"
+  -- is the reading Target.legalSets' own note takes for a printed "another"
   -- (a slot that excludes its source says so with Not IsSource).
   Spec.it s "CR 115.5 does not stop Prodigal Sorcerer's ability targeting its own source" $ do
     sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
@@ -1836,9 +1836,10 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
   --
   -- The engine offers the UNION over the player slot's own candidates, which is
   -- what the first assertion pins, and judges the announcement WHOLE
-  -- (Target.selectionLegal). That is the rule's "all at once" without inventing
-  -- an order between the slots -- and the union is why the second run's card has
-  -- to be rejected by the joint check rather than by never having been offered.
+  -- (Target.selectionLegal). That is CR 601.2c's one announcement, without
+  -- inventing an order between the slots -- and the union is why the second
+  -- run's card has to be rejected by the joint check rather than by never
+  -- having been offered.
   --
   -- THREE SEATS, because two collapse the reading under test: with alice and bob
   -- alone, "bob's graveyard" and "not the caster's graveyard" pick out the same
@@ -1974,8 +1975,9 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
     Spec.assertBool s (elem hammerId (Game.zoneMembers Zone.Hand S.alice castAtSelf)) "and the spell is back in alice's hand"
     Spec.assertEqWith s "naming bob's Rats instead, the Piker's two damage is marked on them" (S.damageOf ratsId atRats) (Just 2)
     Spec.assertEqWith s "with the Piker itself unharmed" (S.damageOf dealerId atRats) (Just 0)
-    -- CR 601.2c's "another" is about the OBJECT, not its controller: alice's own
-    -- Wall is a legal victim, which is the whole difference from Rabid Bite.
+    -- The printed "another" is about the OBJECT, not its controller: alice's
+    -- own Wall is a legal victim, which is the whole difference from Rabid
+    -- Bite.
     Spec.assertEqWith s "naming alice's own Wall, the same two damage is marked on it" (S.damageOf wallId atWall) (Just 2)
     -- The union posture, last: the victim slot is still OFFERED the Piker at CR
     -- 601.2c, which is what makes the first assertion a joint-check rejection
@@ -2062,7 +2064,7 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
     Spec.assertBool s (not (activates alone)) "with the Defense alone on the battlefield, its ability is not offered at all"
     Spec.assertBool s (activates together) "and with a Piker beside it, the same ability off the same floating five is offered"
 
-  -- The three cases above put CR 601.2c's "another" on a card chosen once. CR
+  -- The three cases above put a printed "another" on a card chosen once. CR
   -- 700.2d puts it on a card whose mode may be chosen twice, and then the
   -- filter's slot NAME has to follow the occurrence exactly as the key and the
   -- pool do -- read under its printed name from occurrence 1 it names occurrence
@@ -2124,7 +2126,7 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
       (Set.fromList (fmap Recipient.ToCreature [firstDealerId, secondDealerId, wallId]))
     Spec.assertEqWith s "and its dealer slot only alice's two" (slotNamed "dealer#1") (Set.fromList (fmap Recipient.ToCreature [firstDealerId, secondDealerId]))
 
-  -- The case above puts CR 601.2c's "another" -- a FILTER's read of a sibling
+  -- The case above puts a printed "another" -- a FILTER's read of a sibling
   -- slot -- on a repeated mode. This is the slot's THIRD read of one, CR 202.3's
   -- computed bound, which has to follow the occurrence exactly as the key, the
   -- pool and the filter do: read under its printed name from occurrence 1 it
@@ -2427,7 +2429,7 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
   -- The Piker is the control, as in the rule-702 cases above -- without it,
   -- "the creature without toxic is excluded" could pass on an empty legal set.
   -- Bob's Stalker separates the family question from the CR 109.5 controller one,
-  -- and the entering Raptor itself pins CR 601.2c's "another" (Not IsSource).
+  -- and the entering Raptor itself pins the printed "another" (Not IsSource).
   Spec.it s "CR 702.164a Flensing Raptor's trigger reaches toxic 1 and toxic 2 alike, and nothing else" $ do
     raptor <- S.printingOf s registry "Flensing Raptor"
     stalker <- S.printingOf s registry "Branchblight Stalker"

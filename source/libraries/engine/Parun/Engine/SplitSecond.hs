@@ -1,4 +1,4 @@
--- CR 702.61: split second, a keyword that restricts what OTHER players may do.
+-- CR 702.61: split second, a keyword that restricts what every player may do.
 -- CR 702.61a states it as a static ability of a spell on the stack, so it is a
 -- rules-modifying
 -- continuous effect (CR 611.1's third clause) rather than an ability object, and

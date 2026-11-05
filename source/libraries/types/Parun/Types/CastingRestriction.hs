@@ -60,7 +60,7 @@ data CastingRestriction
     -- Parun.Engine.Turn.attackedThisStep as their reader.)
     --
     -- data/cards/synthetic-belated-rally.json is the one card without the
-    -- step clause beside it, which is what lets a test tell CR 508.6's step from
+    -- step clause beside it, which is what lets a test tell CR 500.1's step from
     -- the combat phase.
     --
     -- Not a timing window at all, which is why it is its own arm rather than a
@@ -94,7 +94,7 @@ data CastingRestriction
     -- "during combat" gives every combat phase of the turn its own window rather
     -- than only the first (CR 506.7d).
     AfterBlockersDeclared
-  | -- | CR 506.7a / 506.7d: "Cast this spell only before [the step]" -- Blood
+  | -- | CR 506.7 / 506.7d: "Cast this spell only before [the step]" -- Blood
     -- Frenzy's "before the combat damage step". The mirror of
     -- Parun.Types.ActivationRestriction's arm of this name (CR 506.7g), sharing
     -- Parun.Engine.Turn.beforeStep as its reader.
@@ -108,7 +108,7 @@ data CastingRestriction
     -- step of it -- Siren's Call's "during an opponent's turn". The mirror of
     -- Parun.Types.ActivationRestriction's arm of this name.
     DuringTurn TurnScope.TurnScope
-  | -- | CR 500.7: not castable during the caster's first this-many turns of the
+  | -- | CR 601.3: not castable during the caster's first this-many turns of the
     -- game -- Serra Avenger's "your first, second, or third turns" is 3.
     NotDuringFirstTurns Natural
   | -- | CR 601.3: castable only if this condition holds (Illusory Angel).

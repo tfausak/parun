@@ -58,8 +58,8 @@ data PlayerRelation
 --
 -- Sits beside the type for the reason Parun.Types.Recipient.objectOf does: it is a
 -- fact about what the shape means rather than about the board -- it reads no game
--- state beyond the roster of teams, which CR 800.2 settles before the game begins
--- -- and callers on both sides of the module graph need it.
+-- state beyond the roster of teams (CR 808.1), which is settled before the game
+-- begins (CR 808.3) -- and callers on both sides of the module graph need it.
 --
 -- A departed candidate is judged like any other -- a trigger on "an opponent
 -- loses the game" has to recognise the loser -- so narrowing to the players

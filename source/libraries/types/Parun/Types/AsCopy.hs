@@ -77,7 +77,7 @@ data AsCopy ability effect = MkAsCopy
     -- `duration`, the copy is a static ability's (CR 611.3a), stored to follow
     -- the host for as long as the source exists (CopyCoverage.SourceHost).
     recipient :: CopyRecipient.CopyRecipient,
-    -- | CR 707.5's "you may" (Clone), False for a printed "choose"
+    -- | Clone's printed "you may", False for a printed "choose"
     -- (Metamorphic Alteration's "choose a creature") or a mandatory "enter as
     -- a copy" (Essence of the Wild).
     optional :: Bool

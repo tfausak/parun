@@ -104,8 +104,8 @@ data Prompt r where
   -- Parun.Types.ObjectRef.RandomCardInGraveyard,
   -- Parun.Types.ObjectRef.RandomCardInLibrary, Parun.Types.ObjectRef.AtRandom,
   -- Parun.Types.DiscardCards' selection).
-  -- Neither Decider nor PlayerId: randomness is not a choice, and CR 701.24a
-  -- makes who it is asked of unobservable; the caller filters the answer back.
+  -- Neither Decider nor PlayerId: randomness is not a choice, so who it is
+  -- asked of is unobservable; the caller filters the answer back.
   RandomObject :: NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
   -- | CR 103.2d: which of these sheet positions randomness draws next.
   -- RandomObject's reasons for carrying neither Decider nor PlayerId.
@@ -234,7 +234,8 @@ data Prompt r where
   -- face the prompt is raised with is one of them. Not raised where every coin
   -- agrees, which no card can tell from either answer.
   ChooseCoinResult :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty CoinFace.CoinFace -> Prompt CoinFace.CoinFace
-  -- | CR 514.2. The [ObjectId] is the hand; the Natural is how many to discard.
+  -- | CR 514.1 / 701.9b. The [ObjectId] is the hand; the Natural is how many to
+  -- discard.
   ChooseDiscard :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt [ObjectId.ObjectId]
   -- | CR 701.22a: the top cards of the scrying player's library, top-first;
   -- the answer is (bottom, top), each reading from that end inward.
@@ -487,8 +488,9 @@ data Prompt r where
   -- for CR 101.1's card-stated ceiling).
   --
   -- Advisory: the answer is filtered against neither. Announcing past what the
-  -- player can pay is answered by CR 601.2h's reversal (#741); outside what the
-  -- card permits, by the caller's own gate (CR 101.1, CR 101.2).
+  -- player can pay is answered by CR 733.1's reversal of a failed CR 601.2h
+  -- payment (#741); outside what the card permits, by the caller's own gate (CR
+  -- 101.1, CR 101.2).
   ChooseX :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> SlotName.SlotName -> Natural.Natural -> Natural.Natural -> Prompt Natural.Natural
   -- | CR 702.42a: whether the modal spell is entwined, before ChooseModes; the
   -- Cost is what entwining adds (CR 601.2f).
@@ -573,10 +575,11 @@ data Prompt r where
   -- owner's command-zone offer ahead of the other applicable replacement effects;
   -- asked only when that controller is not the owner.
   ChooseCommandZoneOfferFirst :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision
-  -- | CR 401.2: which end of a library a card arrives at where the effect
-  -- leaves it open; the owner is asked (CR 400.3), in APNAP order, or the
-  -- countering spell's controller where it says "your choice" (Hinder). Never
-  -- elided; a stated end (Parun.Types.LibraryPlacement.Stated) is not asked.
+  -- | CR 608.2d: which end of a library a card arrives at where the effect
+  -- leaves it open; the owner is asked, the text saying "its owner puts it", in
+  -- APNAP order, or the countering spell's controller where it says "your
+  -- choice" (Hinder). Never elided; a stated end
+  -- (Parun.Types.LibraryPlacement.Stated) is not asked.
   -- The Natural is how many cards stay above the upper option, which a Top
   -- answer picks: 0 for the top itself, 1 for "second from the top".
   ChooseLibraryEnd :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt LibraryPosition.LibraryPosition
@@ -647,7 +650,7 @@ data Prompt r where
   -- Matrix's untap step choice, CR 502.3).
   ChooseCardType :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty CardType.CardType -> Prompt CardType.CardType
   -- | CR 201.4: the card name a player chooses, as an object enters (CR 614.1c)
-  -- or as a resolution instructs (CR 608.2c); the Filter is CR 201.4a's
+  -- or as a resolution instructs (CR 608.2d); the Filter is CR 201.4a's
   -- restriction, and the PlayerId is the chooser, asked in APNAP order. The Seq
   -- is the names the choosers before this one already chose (CR 101.4b).
   --
@@ -906,10 +909,11 @@ data Prompt r where
   -- Parun.Engine.Restamp.order, per group in APNAP order, for two or more. CR
   -- 712.21b / 730.3b ask it of the exiler instead (Parun.Engine.Restamp.orderFor).
   OrderTimestamps :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt [Natural.Natural]
-  -- | CR 605.3a: the order one player activates a batch of mana abilities in
-  -- when an effect has them activate several at once (Drain Power), first named
-  -- activated first; asked by Parun.Engine.Resolve.Arms.Damage's ActivateManaAbilities
-  -- arm, per seat in APNAP order (CR 101.4), for two or more permanents.
+  -- | CR 605.3, which fixes no order: the order one player activates a batch of
+  -- mana abilities in when an effect has them activate several at once (Drain
+  -- Power), first named activated first; asked by
+  -- Parun.Engine.Resolve.Arms.Damage's ActivateManaAbilities arm, per seat in
+  -- APNAP order (CR 101.4), for two or more permanents.
   OrderManaActivations :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt [Natural.Natural]
   -- | CR 103.5: whether the player takes a mulligan, once per round in turn
   -- order until they keep; the offer carries what a player at a table sees.

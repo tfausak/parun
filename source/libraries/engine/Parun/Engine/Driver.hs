@@ -57,10 +57,10 @@ drive observers answerer budget stop gs = do
 
 -- WHO ANSWERS a prompt: the Decider it carries, which CR 723.5 makes the seat
 -- that makes every choice a controlled player would make. Not the PlayerId the
--- prompt is about; the two differ only while CR 723.1's effect is running.
--- Prompt.Concede is the exception CR 723.6 names and answers with its own seat,
--- and the random and shuffle prompts answer Nothing -- randomness is not a
--- choice, so no seat makes it.
+-- prompt is about; the two differ only while a CR 723.1 or CR 723.2 effect is
+-- running. Prompt.Concede is the exception CR 723.6 names and answers with its
+-- own seat, and the random and shuffle prompts answer Nothing -- randomness is
+-- not a choice, so no seat makes it.
 --
 -- Total on purpose: a hand-kept catalog over a GADT this size drifts silently,
 -- and the wildcard that would let it drift is what -Wincomplete-patterns is here

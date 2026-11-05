@@ -14,9 +14,9 @@ data StepBegins = MkStepBegins
     -- different cards in a turn holding an extra main phase, where CR 505.1a
     -- makes every main phase after the first a postcombat one.
     ordinal :: Maybe Natural.Natural,
-    -- | CR 603.2a's "your" versus an unscoped "each". Not a default a card may
-    -- omit -- "at the beginning of the end step" and "at the beginning of YOUR
-    -- end step" are different cards.
+    -- | CR 603.2b, with CR 109.5's "your" versus an unscoped "each". Not a
+    -- default a card may omit -- "at the beginning of the end step" and "at the
+    -- beginning of YOUR end step" are different cards.
     scope :: TurnScope.TurnScope
   }
   deriving (Eq, Ord, Show)
