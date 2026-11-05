@@ -434,10 +434,23 @@ lightsOf oid gs = case fmap Object.source (lookupObject oid gs) of
 -- not, the back being the physical card's.
 sideDeckBack :: ObjectId -> GameState -> Maybe SideDeck.SideDeck
 sideDeckBack oid gs = case fmap Object.source (lookupObject oid gs) of
-  Just (Source.OfCard pid) ->
-    let printed subtype = any (any (Set.member subtype . TypeLine.subtypes . Face.typeLine) . Card.Type.faces . Printing.card) (printingOf pid gs)
-     in Maybe.listToMaybe [kind | (subtype, kind) <- [(Subtype.Attraction, SideDeck.Attraction), (Subtype.Contraption, SideDeck.Contraption)], printed subtype]
+  Just (Source.OfCard pid) -> sideDeckBackOf . Printing.card =<< printingOf pid gs
   _ -> Nothing
+
+-- | `sideDeckBack`, of a card rather than an object.
+sideDeckBackOf :: Card.Type.Card -> Maybe SideDeck.SideDeck
+sideDeckBackOf card =
+  let printed subtype = any (Set.member subtype . TypeLine.subtypes . Face.typeLine) (Card.Type.faces card)
+   in Maybe.listToMaybe [kind | (subtype, kind) <- [(Subtype.Attraction, SideDeck.Attraction), (Subtype.Contraption, SideDeck.Contraption)], printed subtype]
+
+-- | CR 108.2a: is this a nontraditional card? A card type CR 309.1, 311.1,
+-- 312.1, 313.1 and 314.1 see only on one, or a supplementary deck's back
+-- (`sideDeckBackOf`: CR 717.1, the Unstable FAQ). A classification of the printing, never a case
+-- on which card it is.
+isNontraditional :: Card.Type.Card -> Bool
+isNontraditional card =
+  let nontraditional = Set.fromList [CardType.Dungeon, CardType.Plane, CardType.Phenomenon, CardType.Vanguard, CardType.Scheme]
+   in Maybe.isJust (sideDeckBackOf card) || not (all (Set.disjoint nontraditional . TypeLine.types . Face.typeLine) (Card.Type.faces card))
 
 -- Reject-not-repair, as payment already does: only a genuine permutation of the
 -- offered indices is honoured. Anything else -- a short answer, a duplicate, an

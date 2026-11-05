@@ -1694,7 +1694,9 @@ createEmblem pid card = do
 -- printing. Parun.OutsideTheGameSpec's Ring of Ma'rûf pair proves it. CR 407.3
 -- bars an ante card the same way when the game is not played for ante
 -- (Parun.Engine.Ante.barred), face down or not; Parun.OutsideTheGameSpec's
--- Burning Wish pair proves it.
+-- Burning Wish pair proves it. CR 108.5 bars a nontraditional card
+-- (Game.isNontraditional) likewise, a dungeon by CR 309.2d; its Death Wish case
+-- proves it.
 eligible :: Filter.Type.Filter Keyword.Type.Keyword -> ObjectId -> PlayerId -> GameState.GameState -> [OutsideCard.OutsideCard]
 eligible predicate source pid gs =
   let pool = maybe Map.empty Player.outsideTheGame (Map.lookup pid (GameState.players gs))
@@ -1705,11 +1707,10 @@ eligible predicate source pid gs =
       matchesFace face = Filter.matches context (Projection.viewOfCard face) predicate
       admits printingId = case Game.cardOfPrinting printingId gs of
         Nothing -> False
-        Just card -> let face = Game.resolveFaceFor Nothing card in not (Conspiracy.isConspiracyFace face) && not (Ante.barred (GameState.settings gs) face) && matchesFace face
-      -- CR 407.3 whatever the facing: a face-down ante card is still one.
-      barredPrinting printingId = case Game.cardOfPrinting printingId gs of
-        Nothing -> False
-        Just card -> Ante.barred (GameState.settings gs) (Game.resolveFaceFor Nothing card)
+        Just card -> let face = Game.resolveFaceFor Nothing card in not (Conspiracy.isConspiracyFace face) && not (barred card) && matchesFace face
+      barred card = Game.isNontraditional card || Ante.barred (GameState.settings gs) (Game.resolveFaceFor Nothing card)
+      -- CR 108.5 and 407.3 whatever the facing: a face-down card is still what it is.
+      barredPrinting printingId = maybe False barred (Game.cardOfPrinting printingId gs)
       -- Parun.Engine.Card.faceDownFace is the same substitution
       -- Parun.Engine.Game.faceOfObject performs for an object in this game, so
       -- the two frames cannot disagree about what a face-down object is.

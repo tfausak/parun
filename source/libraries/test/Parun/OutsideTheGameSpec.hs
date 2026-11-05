@@ -33,6 +33,7 @@
 -- does, and Synthetic Wishful Djinn's, two of which put CR 616.1's choice.
 module Parun.OutsideTheGameSpec where
 
+import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
@@ -1205,6 +1206,19 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
         forAnte = gs {GameState.settings = (GameState.settings gs) {GameSettings.ante = True}}
     Spec.assertEqWith s "CR 407.3 not playing for ante, her hand gets nothing" (printingsIn Zone.Hand S.alice (resolveWish exercising wishId gs)) []
     Spec.assertEqWith s "playing for ante, the same wish brings it in" (printingsIn Zone.Hand S.alice (resolveWish exercising wishId forAnte)) [contract]
+  -- CR 108.5: a nontraditional card "remains outside the game". Death Wish
+  -- admits any card, so each of a plane, a scheme, a vanguard, an Attraction and
+  -- a Contraption is offered by nothing but the bar; Hill Giant is the control.
+  Spec.it s "CR 108.5 Death Wish cannot bring in a nontraditional card" $ do
+    swamp <- S.printingOf s registry "Swamp"
+    wish <- S.printingOf s registry "Death Wish"
+    giant <- S.printingOf s registry "Hill Giant"
+    outsiders <- traverse (S.printingOf s registry) ["Agyrem", "All in Good Time", "Barrin", "Bumper Cars", "Arms Depot"]
+    let fetched card = let (gs, wishId) = wishBoard swamp wish [(card, 1)] in resolveWish exercising wishId gs
+    Monad.forM_ outsiders $ \card -> do
+      Spec.assertEqWith s ("CR 108.5 her hand gets no " <> show (S.nameOf (Printing.card card))) (printingsIn Zone.Hand S.alice (fetched card)) []
+      Spec.assertEqWith s "CR 108.5 and it remains outside the game" (Map.elems (poolOf S.alice (fetched card))) [1]
+    Spec.assertEqWith s "the same wish brings a traditional card in" (printingsIn Zone.Hand S.alice (fetched giant)) [giant]
   -- CR 903.11: an ordinary effect brings nothing into a Commander game. The pair
   -- differs only in alice's designated commander; Zirda, the creature in her
   -- pool, is what Living Wish admits.
