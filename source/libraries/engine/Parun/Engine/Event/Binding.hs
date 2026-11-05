@@ -1314,7 +1314,8 @@ attackBindings gs bearer you trigger event = case (trigger, event) of
 -- No arrival here is a CR 903.9c command-zone component: that split happens
 -- only under CR 903.9b's replacement, for a move to a hand or a library, and
 -- every arm above that can see such a move binds nothing for a hidden
--- destination (CR 400.7e).
+-- destination (CR 400.7e). A CR 730.3e split's cards ARE here, in whatever zone
+-- the row sent them: CR 730.3c's effect finds all of the new objects.
 setBecameArrivals :: Moved.Moved -> Map.Map SlotName.SlotName Binding -> Map.Map SlotName.SlotName Binding
 setBecameArrivals m = case Moved.arrivals m of
   only Seq.:<| Seq.Empty -> Binding.setBecame only

@@ -1985,7 +1985,7 @@ bringInFrom destination pid outerId gs = case Map.lookup outerId (GameState.outs
 -- alongside it because it acts on the card in the zone it is leaving, and
 -- `apply` already holds that id -- see the arm there for why that is a
 -- convenience rather than a constraint.
-resolveZoneChange :: Maybe GameState -> Maybe DiscardCause.DiscardCause -> LibraryPosition.LibraryPosition -> Bool -> ZoneChange -> Game (Maybe ZoneChange, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId, LibraryPosition.LibraryPosition)
+resolveZoneChange :: Maybe GameState -> Maybe DiscardCause.DiscardCause -> LibraryPosition.LibraryPosition -> Bool -> ZoneChange -> Game (Maybe ZoneChange, Maybe ObjectId, Bool, ComponentSplit, LibraryPosition.LibraryPosition)
 resolveZoneChange asOf discarded requestedPosition resolving zc = do
   (outcome, _, _, exiledBy, shuffling, splitEarly) <- applyReplacementsFully (pure ()) asOf Set.empty Map.empty Set.empty (ProposedEvent.WouldChangeZone zc discarded requestedPosition resolving)
   -- CR 401.2's end as the loop left it: a redirect into a library may state one.
@@ -1993,16 +1993,26 @@ resolveZoneChange asOf discarded requestedPosition resolving zc = do
         Just (ProposedEvent.WouldChangeZone _ _ settledPosition _) -> settledPosition
         _ -> requestedPosition
   case outcome >>= Replacement.asZoneChange of
-    Nothing -> pure (Nothing, exiledBy, shuffling, Nothing, position)
+    Nothing -> pure (Nothing, exiledBy, shuffling, Map.empty, position)
     Just settled -> do
       gs <- State.get
-      case splitEarly of
-        -- CR 903.9c's split already taken inside the loop: the commander card is
-        -- spoken for, so the rest is not offered again.
-        Just component -> pure (Just (toJunkyard gs settled), exiledBy, shuffling, Just component, position)
-        Nothing -> do
+      if not (Map.null splitEarly)
+        -- A split already taken inside the loop: CR 903.9c's has spoken for the
+        -- commander card, and CR 730.3e's for every card, so neither leaves a
+        -- commander in the rest to offer.
+        then pure (Just (toJunkyard gs settled), exiledBy, shuffling, splitEarly, position)
+        else do
           (redirected, splitOff) <- offerCommandZone (toJunkyard gs settled)
-          pure (Just redirected, exiledBy, shuffling, splitOff, position)
+          pure (Just redirected, exiledBy, shuffling, commandSplit splitOff, position)
+
+-- Where a departing merged or melded permanent's split-off card components go,
+-- by printing, the rest following the move: CR 903.9c's commander card and CR
+-- 730.3e's cards under a token. Empty on every other move.
+type ComponentSplit = Map PrintingId.PrintingId (Zone, LibraryPosition.LibraryPosition)
+
+-- CR 903.9c: the commander card offerCommandZone split off, to the command zone.
+commandSplit :: Maybe PrintingId.PrintingId -> ComponentSplit
+commandSplit = foldMap (\component -> Map.singleton component (Zone.Command, LibraryPosition.defaultValue))
 
 -- CR 717.6: a card with an Astrotorium back bound anywhere but the battlefield,
 -- exile or the command zone goes to the command zone instead, where it is face
@@ -2100,10 +2110,11 @@ offerCommandZone zc = do
 --
 -- No case on effect identity: the question is the proposed event's destination
 -- ZONE and whether its subject is a commander, as `offerCommandZone`'s.
-offerCommandZoneFirst :: GameState -> ProposedEvent -> [ReplacementCandidate] -> Maybe PrintingId.PrintingId -> Game (Maybe (ProposedEvent, Maybe PrintingId.PrintingId))
-offerCommandZoneFirst gs event bucket split = case (event, split, fmap Replacement.bucketOf (Maybe.listToMaybe bucket)) of
-  (ProposedEvent.WouldChangeZone zc discarded position resolving, Nothing, Just ReplacementBucket.Other)
-    | Just owner <- Commander.commandZoneOffer zc gs -> do
+offerCommandZoneFirst :: GameState -> ProposedEvent -> [ReplacementCandidate] -> ComponentSplit -> Game (Maybe (ProposedEvent, ComponentSplit))
+offerCommandZoneFirst gs event bucket split = case (event, fmap Replacement.bucketOf (Maybe.listToMaybe bucket)) of
+  (ProposedEvent.WouldChangeZone zc discarded position resolving, Just ReplacementBucket.Other)
+    | Map.null split,
+      Just owner <- Commander.commandZoneOffer zc gs -> do
         picked <- case Replacement.chooserOf gs event of
           Just chooser | chooser /= owner -> do
             answer <- Game.choose (Prompt.ChooseCommandZoneOfferFirst (Decide.deciderFor chooser gs) chooser (ZoneChange.departed zc))
@@ -2114,9 +2125,9 @@ offerCommandZoneFirst gs event bucket split = case (event, split, fmap Replaceme
           else do
             (redirected, component) <- offerCommandZone zc
             pure $ case component of
-              Just _ -> Just (event, component)
+              Just _ -> Just (event, commandSplit component)
               Nothing
-                | ZoneChange.to redirected /= ZoneChange.to zc -> Just (ProposedEvent.WouldChangeZone redirected discarded position resolving, Nothing)
+                | ZoneChange.to redirected /= ZoneChange.to zc -> Just (ProposedEvent.WouldChangeZone redirected discarded position resolving, split)
                 | otherwise -> Nothing
   _ -> pure Nothing
 
@@ -2279,7 +2290,7 @@ applyReplacementsIn settle asOf batch spent event = do
 -- source's damage to one recipient across the batch (Replacement.Tally).
 applyReplacementsReporting :: Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> ProposedEvent -> Game ([ProposedEvent], [Replacement.DamageThread], Replacement.Tally)
 applyReplacementsReporting asOf batch allowances spent earlier event = do
-  (outcome, residue, prevented, _, _, _) <- loop (pure ()) asOf batch Nothing allowances spent earlier Nothing False Nothing event
+  (outcome, residue, prevented, _, _, _) <- loop (pure ()) asOf batch Nothing allowances spent earlier Nothing False Map.empty event
   let (added, dealt) = Either.partitionEithers residue
   pure (Maybe.maybeToList outcome <> dealt, added, prevented)
 
@@ -2300,13 +2311,13 @@ applyReplacementsReporting asOf batch allowances spent earlier event = do
 -- carried in per event: it caps what a countdown covers here, and a share of 0
 -- keeps its row out of CR 616.1's offer entirely. Empty for every caller but
 -- the batch, which is every caller but resolveDamage.
-applyReplacementsFully :: Game () -> Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
-applyReplacementsFully settle asOf batch allowances spent = loop settle asOf batch Nothing allowances spent mempty Nothing False Nothing
+applyReplacementsFully :: Game () -> Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, ComponentSplit)
+applyReplacementsFully settle asOf batch allowances spent = loop settle asOf batch Nothing allowances spent mempty Nothing False Map.empty
 
--- The last accumulator is CR 903.9c's split, taken when the owner accepted CR
--- 903.9b's offer for a melded or merged commander inside the loop -- see
--- `offerCommandZoneFirst`.
-loop :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+-- The last accumulator is the component split: CR 903.9c's, taken when the
+-- owner accepted CR 903.9b's offer for a melded or merged commander inside the
+-- loop (`offerCommandZoneFirst`), and CR 730.3e's (`chooseAndApply`).
+loop :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> ComponentSplit -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, ComponentSplit)
 loop settle asOf batch diverting allowances applied prevented exiledBy shuffling split event = do
   gs <- State.get
   -- From scratch each iteration: collect against the CURRENT state (or, for a
@@ -2333,7 +2344,10 @@ loop settle asOf batch diverting allowances applied prevented exiledBy shuffling
       -- once, in this loop. Parun.ReplacementSpec's "a Corpsejack Menace reanimated
       -- beside a modular creature doubles nothing" is the proof.
       notSibling candidate = not (Set.member (ReplacementCandidate.source candidate) batch)
-      fresh = filter (\candidate -> unused candidate && notSibling candidate && not (Replacement.allocatedOut allowances candidate) && Replacement.ceilingLeft gs prevented candidate event /= Just 0) (Replacement.applicable asOf gs event)
+      -- CR 730.3e: once every card component is split off, a row reaching only
+      -- them has nothing left to move.
+      cardsLeft candidate = Map.null split || not (all (`Map.member` split) (cardPrintings gs event) && Replacement.cardComponentsOnly asOf gs event candidate)
+      fresh = filter (\candidate -> unused candidate && notSibling candidate && cardsLeft candidate && not (Replacement.allocatedOut allowances candidate) && Replacement.ceilingLeft gs prevented candidate event /= Just 0) (Replacement.applicable asOf gs event)
   case Replacement.highestBucket fresh of
     -- CR 616.1c / 614.12: an entering object (`diverting`, the zone it leaves)
     -- is offered to the battlefield-bound zone-change redirects once CR
@@ -2365,7 +2379,7 @@ loop settle asOf batch diverting allowances applied prevented exiledBy shuffling
 -- The CR 616.1 choice among the card-borne candidates of one bucket, and its
 -- application. Split out of `loop` so `offerCommandZoneFirst` can stand in front
 -- of it.
-chooseAndApply :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> GameState -> ProposedEvent -> [ReplacementCandidate] -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+chooseAndApply :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> ComponentSplit -> GameState -> ProposedEvent -> [ReplacementCandidate] -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, ComponentSplit)
 chooseAndApply settle asOf batch diverting allowances applied prevented exiledBy shuffling split gs event bucket = do
   picked <- Replacement.choose gs event bucket
   case picked of
@@ -2427,7 +2441,37 @@ chooseAndApply settle asOf batch diverting allowances applied prevented exiledBy
           Replacement.consume (ReplacementCandidate.identity candidate)
           let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
           pure (Nothing, [Left (de, applied1), Left (also, applied1)], prevented, exiledBy, shuffling, split)
+    -- CR 730.3e: a row reaching a merged permanent that is a token only through
+    -- its card components moves those, and the rest of the event -- the
+    -- permanent and its token components, which is how it still dies (CR 700.4)
+    -- -- keeps its destination and goes on through the loop. The row's own
+    -- rewrite says where the cards go. Parun.MutateSpec's Cubwarden under a Cat
+    -- token with Leyline of the Void proves it.
+    Just candidate
+      | Replacement.cardComponentsOnly asOf gs event candidate -> do
+          stepped <- stepChosen settle batch applied prevented exiledBy shuffling split candidate event
+          case stepped of
+            Left done -> pure done
+            -- A declined "may" leaves the event as it was, and the cards with it.
+            Right (applied1, prevented1, exiledBy1, shuffling1, rewritten@(ProposedEvent.WouldChangeZone moved _ position _))
+              | rewritten /= event ->
+                  let cards = Map.fromList (fmap (\printing -> (printing, (ZoneChange.to moved, position))) (cardPrintings gs event))
+                   in loop settle asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 (Map.union split cards) event
+            Right (applied1, prevented1, exiledBy1, shuffling1, rewritten) -> loop settle asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 split rewritten
     Just candidate -> applyChosen settle asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event
+
+-- CR 730.3e: the printings of the card components of the merged permanent a zone
+-- change moves, which a row reaching only cards splits off. Empty for any other
+-- event or object.
+cardPrintings :: GameState -> ProposedEvent -> [PrintingId.PrintingId]
+cardPrintings gs event = case event of
+  ProposedEvent.WouldChangeZone zc _ _ _ ->
+    [ Game.printingOfComponent component
+    | obj <- Maybe.maybeToList (Game.lookupObject (ZoneChange.object zc) gs),
+      component <- Foldable.toList (Game.componentsOf (Object.source obj)),
+      not (Game.componentIsToken component)
+    ]
+  _ -> []
 
 -- CR 614.1a: the noncombat damage a DamageRewrite.AlsoToSourceController row adds
 -- beside the event it replaces, from the row's source, sized as the event is now,
@@ -2458,7 +2502,7 @@ rejoinUnmoved covered rest = case (covered, rest) of
 -- One iteration of `loop`: apply the chosen candidate to the event and continue
 -- with what comes back. Split out so the partial-cover branch above and the
 -- ordinary one apply a candidate the same way.
-applyChosen :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+applyChosen :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> ComponentSplit -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, ComponentSplit)
 applyChosen settle asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event = do
   stepped <- stepChosen settle batch applied prevented exiledBy shuffling split candidate event
   case stepped of
@@ -2468,7 +2512,7 @@ applyChosen settle asOf batch diverting allowances applied prevented exiledBy sh
 -- The application itself, short of continuing the loop: Left for an outcome that
 -- ends this thread, Right for the rewritten event and the accumulators the loop
 -- continues it with.
-stepChosen :: Game () -> Set ObjectId -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Either (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId) (Set CandidateId, Replacement.Tally, Maybe ObjectId, Bool, ProposedEvent))
+stepChosen :: Game () -> Set ObjectId -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> ComponentSplit -> ReplacementCandidate -> ProposedEvent -> Game (Either (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, ComponentSplit) (Set CandidateId, Replacement.Tally, Maybe ObjectId, Bool, ProposedEvent))
 stepChosen settle batch applied prevented exiledBy shuffling split candidate event = do
   gs <- State.get
   -- CR 615.12: the chosen effect is a prevention effect and this damage
@@ -5593,7 +5637,7 @@ runEntry settle diverting origin given oid = do
   outcome <-
     if barredBefore
       then pure Nothing
-      else (\(settled, _, _, _, _, _) -> settled) <$> loop settle Nothing batch diverting Map.empty Set.empty mempty Nothing False Nothing (ProposedEvent.WouldEnter oid)
+      else (\(settled, _, _, _, _, _) -> settled) <$> loop settle Nothing batch diverting Map.empty Set.empty mempty Nothing False Map.empty (ProposedEvent.WouldEnter oid)
   barredAfter <- case outcome of
     Just (ProposedEvent.WouldChangeZone {}) -> pure False
     Just _ -> barred
@@ -8155,23 +8199,26 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                   -- permanent and each component representing it that isn't a
                   -- commander are put into the appropriate zone, and the card
                   -- that represents it and is a commander is put into the command
-                  -- zone". `splitOff` is Nothing on every other move, and the
-                  -- partition then leaves every component headed for `dest`
-                  -- exactly as CR 712.21 alone does.
+                  -- zone". CR 730.3e's is the same shape: the cards under a token
+                  -- go where the row reaching only them sent them. `splitOff` is
+                  -- empty on every other move, and the partition then leaves
+                  -- every component headed for `dest` exactly as CR 712.21 alone
+                  -- does.
                   --
                   -- The event's own `to` still names the zone the move was
-                  -- headed for; the card split off announces its OWN arrival
-                  -- below, as a GameEvent.CardArrived naming the command zone,
-                  -- which is how CR 903.9c's two arrivals in two different zones
-                  -- are both said.
+                  -- headed for; each card split off announces its OWN arrival
+                  -- below, as a GameEvent.CardArrived naming its zone, which is
+                  -- how two arrivals in two different zones are both said.
                   --
                   -- Only a CARD component goes to the command zone, whatever
                   -- printing the others were interned under: CR 903.9c splits off
                   -- "the card that represents it and is a commander", and a token
                   -- (CR 111.6) is none. Game.componentIsToken is that read, and
                   -- Commander.commanderCardOf takes it on the way in, so the two
-                  -- agree about which component the designation can sit on.
-                  (commandComponents, destComponents) = Seq.partition (\component -> not (Game.componentIsToken component) && Just (Game.printingOfComponent component) == splitOff) components
+                  -- agree about which component the designation can sit on. CR
+                  -- 730.3e's split moves cards only, by the same read.
+                  (splitComponents, destComponents) = Seq.partition (\component -> not (Game.componentIsToken component) && Map.member (Game.printingOfComponent component) splitOff) components
+                  splitGroups = Map.fromListWith (flip (<>)) [(target, Seq.singleton component) | component <- Foldable.toList splitComponents, Just target <- [Map.lookup (Game.printingOfComponent component) splitOff]]
                   -- CR 123.5c: only the component `keeps` names takes the
                   -- departing permanent's stickers.
                   asComponent keeps zone mComponent ts =
@@ -8190,6 +8237,10 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- CR 903.9b's offer puts ONE card into the library, and one card
               -- has one arrangement.
               arranged <- arrangeComponents pid dest destComponents
+              -- CR 730.3a again, for each zone the split sends cards to.
+              splitArranged <-
+                fmap (Seq.fromList . concat) . Monad.forM (Map.toList splitGroups) $ \((zone, at), group) ->
+                  fmap (fmap (\component -> (zone, at, component)) . Foldable.toList) (arrangeComponents pid zone group)
               let (leading, trailing) = case Seq.viewl arranged of
                     Seq.EmptyL -> (Nothing, Seq.empty)
                     c Seq.:< cs -> (Just c, cs)
@@ -8198,8 +8249,8 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- placement so CR 613.7k's restamp follows that object's own
               -- stamp. One candidate keeps them unasked, there being nothing to
               -- choose.
-              let keepers = (if Game.isHiddenZone dest then [] else fmap Left [0 .. Seq.length arranged - 1]) <> fmap Right [0 .. Seq.length commandComponents - 1]
-                  printingOfKeeper keeper = Game.printingOfComponent (either (Seq.index arranged) (Seq.index commandComponents) keeper)
+              let keepers = (if Game.isHiddenZone dest then [] else fmap Left [0 .. Seq.length arranged - 1]) <> [Right index | (index, (zone, _, _)) <- zip [0 :: Int ..] (Foldable.toList splitArranged), not (Game.isHiddenZone zone)]
+                  printingOfKeeper keeper = Game.printingOfComponent (either (Seq.index arranged) (\index -> let (_, _, component) = Seq.index splitArranged index in component) keeper)
               keeper <-
                 if Seq.null components || Seq.null (Object.stickers obj)
                   then pure Nothing
@@ -8246,16 +8297,27 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- player, so placeObject's `pid` decides nothing about where the
               -- card lands here; it is Object.owner all the same, which is rule
               -- 903.9b's "its owner" for a stolen commander.
-              commandIds <-
+              splitIds <-
                 Monad.forM
-                  (Seq.zip (Seq.fromList [0 .. Seq.length commandComponents - 1]) commandComponents)
-                  ( \(index, component) -> do
-                      commandId <- placeObject pid (asComponent (keeper == Just (Right index)) Zone.Command (Just component)) Zone.Command position
+                  (Seq.zip (Seq.fromList [0 .. Seq.length splitArranged - 1]) splitArranged)
+                  ( \(index, (zone, at, component)) -> do
+                      splitId <- placeObject pid (asComponent (keeper == Just (Right index)) zone (Just component)) zone at
                       -- CR 613.7k.
-                      State.modify' (Game.restampStickers commandId)
-                      pure commandId
+                      State.modify' (Game.restampStickers splitId)
+                      pure (zone, at, splitId)
                   )
-              let trailingIds = trailingIds0 <> commandIds
+              -- CR 730.3b for the cards a CR 730.3e row exiled: the exiler is that
+              -- row's controller.
+              Monad.when (any (\(zone, _, _) -> zone == Zone.Exile) splitIds) $ do
+                placed <- State.get
+                let exiler = Maybe.fromMaybe lastController (exiledBy >>= \replacer -> Projection.controllerOf replacer placed)
+                Restamp.orderFor exiler start [splitId | (Zone.Exile, _, splitId) <- Foldable.toList splitIds]
+              -- CR 401.4 / 404.3, as for `dest` below.
+              Monad.forM_ (Map.keys splitGroups) $ \(zone, at) -> do
+                let into = [splitId | (zone', at', splitId) <- Foldable.toList splitIds, zone' == zone, at' == at]
+                Monad.when (zone == Zone.Library && not shuffling) (State.modify' (noteArrival pid (ArrivalEnd.IntoLibrary at) (Seq.fromList into)))
+                Monad.when (zone == Zone.Graveyard) (State.modify' (noteArrival pid ArrivalEnd.OntoGraveyard (Seq.fromList into)))
+              let trailingIds = trailingIds0 <> fmap (\(_, _, splitId) -> splitId) splitIds
               -- `newId` heads the answer, so a caller that can only act on one
               -- object acts on the first card the arrangement named -- the first
               -- the meld recorded, where nobody was asked for one.
@@ -8578,7 +8640,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                   -- No characteristics snapshot: the departing permanent's is on the
                   -- Moved event beside this, and the arriving CARD is a live object
                   -- in a public zone for a trigger to read.
-                  Monad.forM_ (fmap ((,) dest) trailingIds0 <> fmap ((,) Zone.Command) commandIds) $ \(zone, arrival) ->
+                  Monad.forM_ (fmap ((,) dest) trailingIds0 <> fmap (\(zone, _, splitId) -> (zone, splitId)) splitIds) $ \(zone, arrival) ->
                     State.modify'
                       . recordEvent
                       . GameEvent.CardArrived
