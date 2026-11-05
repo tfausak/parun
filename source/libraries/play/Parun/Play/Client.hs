@@ -195,6 +195,13 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
       ( Text.pack "Choose the mana " <> objectName view source <> Text.pack " makes:" : numbered (fmap (foldMap Render.manaType) yields),
         fmap (R.Number . toInteger . subtract 1) . one (Natural.length yields)
       )
+  "ChooseManaSpentOnX" -> do
+    source <- field "source" offer
+    shares <- field "shares" offer >>= decoded (Common.list (Common.list Codec.ManaType.codec))
+    pure
+      ( Text.pack "Choose the mana you spent on X for " <> objectName view source <> Text.pack ":" : numbered (fmap (foldMap Render.manaType) shares),
+        fmap (R.Number . toInteger . subtract 1) . one (Natural.length shares)
+      )
   "ChooseX" -> do
     source <- field "source" offer
     variable <- field "variable" offer >>= textOf

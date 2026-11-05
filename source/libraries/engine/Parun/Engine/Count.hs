@@ -68,6 +68,7 @@ import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LibraryDeparture as LibraryDeparture
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
+import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.Milled as Milled
@@ -1569,7 +1570,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       Filter.manaSpentTagColors = Map.empty,
       -- The same field one question over -- `manaSpentTagColors` above, same sentence.
       Filter.manaSpentAmount = 0,
-      Filter.manaSpentOnX = [],
+      Filter.manaSpentOnX = Mana.MkMana [],
       -- CR 602.1 / 605.1a off the snapshot, which is what it reads for `keywords`
       -- and `power` too -- so this answers what the object HAD at the event,
       -- through abilitiesOf, the roster every view builder reads, less what CR

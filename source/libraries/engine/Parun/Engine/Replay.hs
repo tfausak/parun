@@ -121,6 +121,7 @@ encode p answer = case p of
   Prompt.PayLifeForMana {} -> Response.PaidLifeForMana answer
   Prompt.ChooseManaYield {} -> Response.ChoseManaYield answer
   Prompt.ChooseManaToSpend {} -> Response.ChoseManaToSpend answer
+  Prompt.ChooseManaSpentOnX {} -> Response.ChoseManaSpentOnX answer
   Prompt.ChooseProliferate {} -> Response.ChoseProliferation answer
   Prompt.ChooseRedistribution {} -> Response.ChoseRedistribution answer
   Prompt.ChooseRingBearer {} -> Response.ChoseRingBearer answer
@@ -368,6 +369,9 @@ decode p response = case p of
     _ -> Nothing
   Prompt.ChooseManaToSpend {} -> case response of
     Response.ChoseManaToSpend unit -> Just unit
+    _ -> Nothing
+  Prompt.ChooseManaSpentOnX {} -> case response of
+    Response.ChoseManaSpentOnX mana -> Just mana
     _ -> Nothing
   Prompt.ChooseManaYield {} -> case response of
     Response.ChoseManaYield mana -> Just mana
@@ -930,6 +934,9 @@ defaultAnswer p = case p of
   -- Every offered unit pays the symbol and leaves the rest of the cost payable
   -- (Parun.Engine.Mana.spendable), so the head is a legal payment.
   Prompt.ChooseManaToSpend _ _ candidates -> NonEmpty.head candidates
+  -- Every offered pool is one the payment could have spent on X
+  -- (Parun.Engine.Mana.xShares).
+  Prompt.ChooseManaSpentOnX _ _ _ candidates -> NonEmpty.head candidates
   -- CR 701.34a: any number includes none, so declining is always legal.
   Prompt.ChooseProliferate {} -> (Set.empty, Set.empty)
   -- Redistributing among nobody: "any number of players" includes none, and the

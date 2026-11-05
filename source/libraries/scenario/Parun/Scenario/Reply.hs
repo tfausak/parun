@@ -350,6 +350,7 @@ shapeOf prompt = case prompt of
   Prompt.PayLifeForMana {} -> viaCodec Codec.OptionalDecision.codec
   Prompt.ChooseManaYield _ _ _ offered -> indexed (NonEmpty.toList offered)
   Prompt.ChooseManaToSpend {} -> viaCodec Codec.ManaUnit.codec
+  Prompt.ChooseManaSpentOnX _ _ _ offered -> indexed (NonEmpty.toList offered)
   Prompt.ChooseProliferate {} -> pairOf (setOf object) (setOf player)
   Prompt.ChooseRedistribution {} -> mapOf player player
   Prompt.ChooseRingBearer {} -> object

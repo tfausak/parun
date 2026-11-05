@@ -1027,6 +1027,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseClause _ _ _ _ clauses neither _ -> maybe neither (`elem` clauses) chosen
   Prompt.Type.ChooseModes _ _ _ modes _ -> all (`Set.member` modes) chosen
   Prompt.Type.ChooseManaToSpend _ _ units -> chosen `elem` units
+  Prompt.Type.ChooseManaSpentOnX _ _ _ shares -> chosen `elem` shares
   Prompt.Type.AnnouncePhyrexianPayment _ _ _ _ payments -> chosen `elem` payments
   Prompt.Type.AnnounceHybridPayment _ _ _ _ payments -> chosen `elem` payments
   Prompt.Type.AnnounceHybridHalf _ _ _ _ types -> chosen `elem` types

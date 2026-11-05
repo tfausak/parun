@@ -46,6 +46,7 @@ bot = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.ChooseManaSource _ _ _ sources -> fmap Just (SplitMix.pick sources)
   Prompt.ChooseExtraManaSource _ _ sources -> SplitMix.pick (Nothing NonEmpty.<| fmap Just sources)
   Prompt.ChooseManaToSpend _ _ units -> SplitMix.pick units
+  Prompt.ChooseManaSpentOnX _ _ _ shares -> SplitMix.pick shares
   Prompt.ChooseX _ _ _ _ least greatest -> SplitMix.between least greatest
   Prompt.ChooseOptional {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
   Prompt.PayLifeForMana {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])

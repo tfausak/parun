@@ -1,8 +1,8 @@
 -- The static reading of an effect: which slots it defines and reads, which
 -- object and player references it carries, whether its slots are exhaustive
--- and whether it reads X. Pure over the effect's shape; Parun.CardSpec's lints
--- and Parun.Engine.Resolve.Effect both ask it. Split out of
--- Parun.Engine.Resolve for size; nothing here resolves anything.
+-- and whether it reads X or the mana spent on it. Pure over the effect's
+-- shape; Parun.CardSpec's lints and Parun.Engine.Resolve.Effect both ask it.
+-- Split out of Parun.Engine.Resolve for size; nothing here resolves anything.
 module Parun.Engine.Resolve.Slots where
 
 import qualified Data.Containers.ListUtils as ListUtils
@@ -60,6 +60,7 @@ import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.Blight as Blight.Type
 import qualified Parun.Types.Card as Card.Type
+import qualified Parun.Types.CastOffer as CastOffer
 import qualified Parun.Types.CastRepetition as CastRepetition
 import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
@@ -255,6 +256,7 @@ import qualified Parun.Types.SlotPerPlayer as SlotPerPlayer
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.StackObjectKind as StackObjectKind
+import qualified Parun.Types.StaticRead as StaticRead
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TargetSlot as TargetSlot
@@ -373,7 +375,7 @@ placementQuantities placement = case placement of
 -- the token's text, and Parun.Engine.Resolve.Common.bakeTokenCharacteristics is
 -- where that happens -- against the RESOLUTION's own object, context and slots,
 -- so a box naming a slot is this effect speaking and all three walkers below
--- (slotsOf, ownSlotsAreExhaustive, readsX) have to report it -- Phyrexian
+-- (slotsOf, ownSlotsAreExhaustive, hasRead) have to report it -- Phyrexian
 -- Rebirth's "where X is the number of creatures destroyed this way".
 --
 -- P/T is the whole of it because it is the whole of what bakeTokenCharacteristics
@@ -591,7 +593,7 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
 
 -- The Quantities an ObjectRef carries: the two library walks' counts.
 -- Exhaustive, no wildcard, and every payload destructured positionally rather
--- than as `{}`: slotsAreExhaustive, readsX and Parun.CardSpec's Count traversal
+-- than as `{}`: slotsAreExhaustive, hasRead and Parun.CardSpec's Count traversal
 -- all reach a nested Quantity through this, over effectObjectRefs below rather
 -- than arm by arm, so this is the one place a payload gaining a Quantity field
 -- has to be revisited -- a `{}` here would keep compiling, which is the shape
@@ -710,7 +712,7 @@ copyTargetsRefs targets = case targets of
 -- are its own answer here, reached by whichever caller recurses.
 --
 -- The single enumeration of where an ObjectRef sits in an opcode. Its readers
--- -- slotsOf here, and slotsAreExhaustive, readsX and Parun.CardSpec's Count
+-- -- slotsOf here, and slotsAreExhaustive, hasRead and Parun.CardSpec's Count
 -- traversal below -- call this rather than naming the opcodes themselves, so
 -- they cannot come to disagree about which opcodes hold a ref. The test a
 -- reader can apply: no arm of any of those four names an ObjectRef field.
@@ -1248,7 +1250,7 @@ controlSidesSlots sides = case sides of
 
 -- The one legitimate home of `case effect of`: this module is the VM's opcode
 -- semantics (design.md section 1). slotsOf is the read half of the dataflow lint;
--- X is not one of its reads, readsX below being X's own half.
+-- X is not one of its reads, hasRead below being X's own half.
 --
 -- The ObjectRefs and the PlayerRefs this effect holds are taken from
 -- effectObjectRefs and effectPlayerRefs at the head rather than arm by arm, so
@@ -2000,7 +2002,7 @@ overRelations f re = case re of
 -- Declared apart from replacementRowReads beside it because what a nested effect
 -- reads is not a Filter or a Quantity but a whole effect's worth of reads --
 -- slotsOf's answer -- and the three consumers that ask what a row reads
--- (replacementRowSlots above, slotsAreExhaustive and readsX below) each want it
+-- (replacementRowSlots above, slotsAreExhaustive and hasRead below) each want it
 -- through their own recursion rather than flattened.
 --
 -- No wildcard, replacementRowReads' discipline: an arm that comes to nest a
@@ -2428,44 +2430,48 @@ conditionSlotsAreExhaustive condition = case condition of
   Condition.Type.All conditions -> all conditionSlotsAreExhaustive conditions
   Condition.Type.During _ -> True
 
--- conditionSlots' mirror for X: does either side of any comparison read it?
-conditionReadsX :: Condition.Type.Condition -> Bool
-conditionReadsX condition = case condition of
-  Condition.Type.Compares c -> Quantity.readsX (Compares.measured c) || Quantity.readsX (Compares.threshold c)
-  Condition.Type.Any conditions -> any conditionReadsX conditions
-  Condition.Type.All conditions -> any conditionReadsX conditions
+-- conditionSlots' mirror for a static read: does either side of any
+-- comparison make it?
+conditionHasRead :: StaticRead.StaticRead -> Condition.Type.Condition -> Bool
+conditionHasRead wanted condition = case condition of
+  Condition.Type.Compares c -> Quantity.hasRead wanted (Compares.measured c) || Quantity.hasRead wanted (Compares.threshold c)
+  Condition.Type.Any conditions -> any (conditionHasRead wanted) conditions
+  Condition.Type.All conditions -> any (conditionHasRead wanted) conditions
   Condition.Type.During _ -> False
 
--- Does any of these effects read X? A card that reads X must declare it in its
--- cost (CR 107.3, CR 107.3a, CR 118.4), the same reads-equal-declares contract
--- slotsOf draws for target slots.
+-- Does any of these effects make the read `wanted` names? A card that reads X
+-- must declare it in its cost (CR 107.3, CR 107.3a, CR 118.4), the same
+-- reads-equal-declares contract slotsOf draws for target slots; one that reads
+-- the mana spent on X has its payer asked which mana that was (CR 601.2h,
+-- Parun.Engine.Cost.recordXShares).
 --
 -- NOTE: when an opcode gains a Quantity FIELD, add its arm here by hand. A new
 -- OPCODE the compiler forces, this case being exhaustive; widening an existing
 -- one it does not, since an arm written `{} -> False` keeps compiling. That is
 -- how a Quantity nested in an ObjectRef went unread once (#2729), so those are
 -- taken from effectObjectRefs ahead of the case and no arm below names one.
-readsX :: [Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Bool
-readsX =
-  let -- A ref's filter too: Ugin, the Spirit Dragon's "mana value X or less".
-      refReadsX ref = any Quantity.readsX (objectRefQuantities ref) || Map.member Binding.variableX (objectRefSlots ref)
-      effectReadsX effect = any refReadsX (effectObjectRefs effect) || effectOwnReadsX effect
-      -- effectReadsX's half that is not an ObjectRef's: this opcode's own fields,
-      -- and its nested effects through the recursion back into readsX.
-      effectOwnReadsX effect = case effect of
-        Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _ _) -> any (Quantity.readsX . DamagePart.quantity) parts
+hasRead :: StaticRead.StaticRead -> [Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Bool
+hasRead wanted =
+  let isX = wanted == StaticRead.ReadsX
+      -- A ref's filter too: Ugin, the Spirit Dragon's "mana value X or less".
+      refHasRead ref = any (Quantity.hasRead wanted) (objectRefQuantities ref) || (isX && Map.member Binding.variableX (objectRefSlots ref))
+      effectHasRead effect = any refHasRead (effectObjectRefs effect) || effectOwnHasRead effect
+      -- effectHasRead's half that is not an ObjectRef's: this opcode's own fields,
+      -- and its nested effects through the recursion back into hasRead.
+      effectOwnHasRead effect = case effect of
+        Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _ _) -> any (Quantity.hasRead wanted . DamagePart.quantity) parts
         Effect.Fight {} -> False
         -- Untamed Might's "+X/+X" sits inside the Modification, not on the effect.
-        Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ modification _ _) -> any Quantity.readsX (Projection.quantitiesOf modification)
+        Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ modification _ _) -> any (Quantity.hasRead wanted) (Projection.quantitiesOf modification)
         Effect.ChangeText {} -> False
         -- Wizard's Rockets' "Add X mana".
-        Effect.AddMana addition -> Quantity.readsX (ManaAddition.count addition)
-        Effect.Firebend addition -> Quantity.readsX (ManaAddition.count addition)
+        Effect.AddMana addition -> Quantity.hasRead wanted (ManaAddition.count addition)
+        Effect.Firebend addition -> Quantity.hasRead wanted (ManaAddition.count addition)
         Effect.ActivateManaAbilities _ -> False
         Effect.MoveMana _ -> False
         -- The filter too: Citanul Flute's "mana value X or less" compares against
         -- X itself (Operand.AmountInSlot), which no Quantity holds.
-        Effect.Search (Search.MkSearch _ _ _ _ quantity filter_ descriptions _ _ _ _ _ _ _ _) -> any Quantity.readsX quantity || any (Set.member Binding.variableX . Filter.boundSlots) (filter_ : Foldable.toList descriptions)
+        Effect.Search (Search.MkSearch _ _ _ _ quantity filter_ descriptions _ _ _ _ _ _ _ _) -> any (Quantity.hasRead wanted) quantity || (isX && any (Set.member Binding.variableX . Filter.boundSlots) (filter_ : Foldable.toList descriptions))
         Effect.ExileAllGraveyards -> False
         Effect.Proliferate -> False
         Effect.Reroll -> False
@@ -2475,10 +2481,10 @@ readsX =
         Effect.ChooseQuality _ -> False
         Effect.FromOutsideTheGame _ -> False
         Effect.ExileThisSpell -> False
-        Effect.Bolster quantity -> Quantity.readsX quantity
-        Effect.Amass (Amass.Type.MkAmass quantity _ _) -> Quantity.readsX quantity
-        Effect.Blight (Blight.Type.MkBlight _ quantity _) -> Quantity.readsX quantity
-        Effect.Earthbend (Earthbend.MkEarthbend quantity _) -> Quantity.readsX quantity
+        Effect.Bolster quantity -> Quantity.hasRead wanted quantity
+        Effect.Amass (Amass.Type.MkAmass quantity _ _) -> Quantity.hasRead wanted quantity
+        Effect.Blight (Blight.Type.MkBlight _ quantity _) -> Quantity.hasRead wanted quantity
+        Effect.Earthbend (Earthbend.MkEarthbend quantity _) -> Quantity.hasRead wanted quantity
         Effect.Airbend {} -> False
         Effect.TemptWithTheRing -> False
         Effect.OpenAttraction -> False
@@ -2496,9 +2502,9 @@ readsX =
         Effect.Venture {} -> False
         Effect.ExileHandThenDraw -> False
         Effect.NoteManaSpent -> False
-        Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity _) -> Quantity.readsX quantity
+        Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity _) -> Quantity.hasRead wanted quantity
         Effect.Vote {} -> False
-        Effect.Bid bid -> Quantity.readsX (Bid.opening bid)
+        Effect.Bid bid -> Quantity.hasRead wanted (Bid.opening bid)
         Effect.RestartGame _ -> False
         Effect.ControlPlayerNextTurn _ -> False
         Effect.ControlPlayerThisResolution _ -> False
@@ -2512,70 +2518,70 @@ readsX =
         Effect.ExchangeBlocks _ -> False
         -- The entry rider is a nested position of its own, CR 122.6's count per
         -- kind, and no ObjectRef holds it.
-        Effect.MoveToZone (MoveToZone.MkMoveToZone _ _ riders _ _ placement _) -> any Quantity.readsX (riderQuantities riders <> placementQuantities placement)
-        Effect.Draw (Draw.MkDraw _ quantity _) -> Quantity.readsX quantity
-        Effect.Mill (Mill.MkMill _ quantity _ _) -> Quantity.readsX quantity
+        Effect.MoveToZone (MoveToZone.MkMoveToZone _ _ riders _ _ placement _) -> any (Quantity.hasRead wanted) (riderQuantities riders <> placementQuantities placement)
+        Effect.Draw (Draw.MkDraw _ quantity _) -> Quantity.hasRead wanted quantity
+        Effect.Mill (Mill.MkMill _ quantity _ _) -> Quantity.hasRead wanted quantity
         Effect.Reveal {} -> False
         Effect.LookAt {} -> False
         Effect.Guess {} -> False
-        Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
-        Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
-        Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
+        Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.hasRead wanted quantity
+        Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.hasRead wanted quantity
+        Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.hasRead wanted quantity
         Effect.Clash {} -> False
         Effect.AsYouCascade {} -> False
         Effect.Explore {} -> False
         Effect.Assemble {} -> False
         Effect.ArrangeInLibrary {} -> False
-        Effect.Connive (Connive.MkConnive quantity _) -> Quantity.readsX quantity
+        Effect.Connive (Connive.MkConnive quantity _) -> Quantity.hasRead wanted quantity
         Effect.Discard subject -> case subject of
-          Discard.Counted (CountedDiscard.MkCountedDiscard _ quantity _) -> Quantity.readsX quantity
+          Discard.Counted (CountedDiscard.MkCountedDiscard _ quantity _) -> Quantity.hasRead wanted quantity
           Discard.These {} -> False
-          Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard _ (AnyNumberMatching.MkAnyNumberMatching _ atMost) _) -> any Quantity.readsX atMost
-        Effect.LoseLife (LifeLoss.MkLifeLoss _ quantity _ _) -> Quantity.readsX quantity
-        Effect.GainLife (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
+          Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard _ (AnyNumberMatching.MkAnyNumberMatching _ atMost) _) -> any (Quantity.hasRead wanted) atMost
+        Effect.LoseLife (LifeLoss.MkLifeLoss _ quantity _ _) -> Quantity.hasRead wanted quantity
+        Effect.GainLife (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.hasRead wanted quantity
         Effect.ExchangeLifeTotals _ -> False
         Effect.ExchangeValues _ -> False
         Effect.ExchangeZones _ -> False
         Effect.ExchangeCardZones _ -> False
-        Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
+        Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.hasRead wanted quantity
         Effect.LoseGame {} -> False
         Effect.WinGame {} -> False
         Effect.DrawGame {} -> False
         Effect.RedistributeLifeTotals -> False
-        Effect.IncreaseSpeed (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
-        Effect.DecreaseSpeed d -> Quantity.readsX (SpeedDecrease.quantity d)
+        Effect.IncreaseSpeed (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.hasRead wanted quantity
+        Effect.DecreaseSpeed d -> Quantity.hasRead wanted (SpeedDecrease.quantity d)
         -- The token's printed P/T box reaches CR 601.2b's X too: it is the
         -- creating effect's number (tokenBoxQuantities).
-        Effect.Create (Create.MkCreate quantity card riders _ _ _) -> any Quantity.readsX (quantity : riderQuantities riders <> tokenBoxQuantities card)
-        Effect.Conjure conjure -> any Quantity.readsX (conjureQuantities conjure)
-        Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ quantity _ _) -> Quantity.readsX quantity
-        Effect.CreateCopy (CreateCopy.MkCreateCopy quantity _ riders _ _ _) -> any Quantity.readsX (quantity : riderQuantities riders)
+        Effect.Create (Create.MkCreate quantity card riders _ _ _) -> any (Quantity.hasRead wanted) (quantity : riderQuantities riders <> tokenBoxQuantities card)
+        Effect.Conjure conjure -> any (Quantity.hasRead wanted) (conjureQuantities conjure)
+        Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ quantity _ _) -> Quantity.hasRead wanted quantity
+        Effect.CreateCopy (CreateCopy.MkCreateCopy quantity _ riders _ _ _) -> any (Quantity.hasRead wanted) (quantity : riderQuantities riders)
         Effect.BecomeCopy {} -> False
         -- CR 601.2b's X reaches the effects a rewrite or a CR 615.5 rider nests,
         -- the three prevention opcodes' posture with their own riders.
         -- Aladdin's Lamp's count sits on the row, not on an effect it holds.
-        Effect.Replace (Replace.MkReplace _ _ _ _ re) -> readsX (replacementRowEffects re) || any Quantity.readsX (snd (replacementRowReads re))
+        Effect.Replace (Replace.MkReplace _ _ _ _ re) -> hasRead wanted (replacementRowEffects re) || any (Quantity.hasRead wanted) (snd (replacementRowReads re))
         Effect.SkipPhase {} -> False
         -- CR 601.2b's X reaches the rider too.
-        Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ quantity rider) -> Quantity.readsX quantity || readsX (Foldable.toList rider)
-        Effect.LaterPayment (LaterPayment.MkLaterPayment _ _ effects) -> readsX (Foldable.toList effects)
-        Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> readsX (Foldable.toList rider)
-        Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ rider _) -> readsX (Foldable.toList rider)
-        Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ amount _ _ _ _ _ _ _) -> any Quantity.readsX amount
+        Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ quantity rider) -> Quantity.hasRead wanted quantity || hasRead wanted (Foldable.toList rider)
+        Effect.LaterPayment (LaterPayment.MkLaterPayment _ _ effects) -> hasRead wanted (Foldable.toList effects)
+        Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> hasRead wanted (Foldable.toList rider)
+        Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ rider _) -> hasRead wanted (Foldable.toList rider)
+        Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ amount _ _ _ _ _ _ _) -> any (Quantity.hasRead wanted) amount
         Effect.Counter {} -> False
-        Effect.PutCounters (PutCounters.MkPutCounters _ quantity _ _) -> Quantity.readsX quantity
-        Effect.Divide divide -> Quantity.readsX (Divide.quantity divide)
+        Effect.PutCounters (PutCounters.MkPutCounters _ quantity _ _) -> Quantity.hasRead wanted quantity
+        Effect.Divide divide -> Quantity.hasRead wanted (Divide.quantity divide)
         Effect.PutCountersFrom {} -> False
-        Effect.RemoveCounters (RemoveCounters.MkRemoveCounters _ quantity _ _) -> Quantity.readsX quantity
-        Effect.RemoveCountersAmong (RemoveCountersAmong.MkRemoveCountersAmong count _ _ _) -> any Quantity.readsX (RemovalCount.quantityOf count)
-        Effect.MoveCounters (MoveCounters.MkMoveCounters _ kinds _ _) -> any Quantity.readsX (MovedKinds.quantityOf kinds)
-        Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters _ _ quantity) -> Quantity.readsX quantity
-        Effect.RemovePlayerCounters removal -> Quantity.readsX (RemovePlayerCounters.quantity removal)
+        Effect.RemoveCounters (RemoveCounters.MkRemoveCounters _ quantity _ _) -> Quantity.hasRead wanted quantity
+        Effect.RemoveCountersAmong (RemoveCountersAmong.MkRemoveCountersAmong count _ _ _) -> any (Quantity.hasRead wanted) (RemovalCount.quantityOf count)
+        Effect.MoveCounters (MoveCounters.MkMoveCounters _ kinds _ _) -> any (Quantity.hasRead wanted) (MovedKinds.quantityOf kinds)
+        Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters _ _ quantity) -> Quantity.hasRead wanted quantity
+        Effect.RemovePlayerCounters removal -> Quantity.hasRead wanted (RemovePlayerCounters.quantity removal)
         -- CR 107.14's amount is asked for as the spell resolves, never CR
         -- 601.2b's announced X.
         Effect.PayAnyEnergy _ -> False
-        Effect.ChooseNumber number -> any Quantity.readsX (ChooseNumber.upTo number)
-        Effect.BindAmount payload -> Quantity.readsX (BindAmount.quantity payload)
+        Effect.ChooseNumber number -> any (Quantity.hasRead wanted) (ChooseNumber.upTo number)
+        Effect.BindAmount payload -> Quantity.hasRead wanted (BindAmount.quantity payload)
         Effect.Tap _ -> False
         Effect.Untap _ -> False
         Effect.Unattach _ -> False
@@ -2607,7 +2613,7 @@ readsX =
         Effect.CreateEmblem {} -> False
         Effect.BecomeMonarch {} -> False
         Effect.TakeTheInitiative {} -> False
-        Effect.Designate (Designate.MkDesignate _ _ value) -> any Quantity.readsX value
+        Effect.Designate (Designate.MkDesignate _ _ value) -> any (Quantity.hasRead wanted) value
         Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> False
         Effect.Unsuspect _ -> False
         Effect.SetHalfLocked (SetHalfLocked.MkSetHalfLocked {}) -> False
@@ -2628,37 +2634,39 @@ readsX =
         Effect.ChoosePlayer _ -> False
         Effect.ChooseSector _ -> False
         Effect.ChoosePlayerAtRandom _ -> False
-        Effect.ChoosePermanents choice -> any Quantity.readsX (HowMany.quantity (ChosenPermanents.count (ChoosePermanents.permanents choice)))
+        Effect.ChoosePermanents choice -> any (Quantity.hasRead wanted) (HowMany.quantity (ChosenPermanents.count (ChoosePermanents.permanents choice)))
         -- CR 706.2's modifier and CR 706.1's count are ordinary Quantities, so
         -- either may be the X the caster announced (CR 601.2b; Neverwinter
         -- Hydra's "roll X dice").
-        Effect.RollDie rollDie -> Quantity.readsX (RollDie.count rollDie) || any Quantity.readsX (RollDie.modifier rollDie)
+        Effect.RollDie rollDie -> Quantity.hasRead wanted (RollDie.count rollDie) || any (Quantity.hasRead wanted) (RollDie.modifier rollDie)
         -- The number of coins is an ordinary Quantity, so it may be the X the
         -- caster announced (Flock of Rabid Sheep's "flip X coins").
-        Effect.FlipCoin flipCoin -> Quantity.readsX (FlipCoin.count flipCoin)
+        Effect.FlipCoin flipCoin -> Quantity.hasRead wanted (FlipCoin.count flipCoin)
         -- The number of turns is an ordinary Quantity too.
-        Effect.TakeExtraTurn takeExtraTurn -> Quantity.readsX (TakeExtraTurn.count takeExtraTurn)
+        Effect.TakeExtraTurn takeExtraTurn -> Quantity.hasRead wanted (TakeExtraTurn.count takeExtraTurn)
         Effect.ShuffleIntoLibrary {} -> False
         Effect.Ante {} -> False
         -- The ticket-cost cap may be the X announced for the spell that became
         -- the source (Pin Collection, CR 107.3m).
-        Effect.PutSticker putSticker -> any Quantity.readsX (PutSticker.ticketCap putSticker)
+        Effect.PutSticker putSticker -> any (Quantity.hasRead wanted) (PutSticker.ticketCap putSticker)
         Effect.SetOwner {} -> False
         Effect.ExchangeOwnership {} -> False
         Effect.Shuffle {} -> False
-        Effect.OfferCast offer -> any Quantity.readsX (repetitionQuantities (OfferCast.repetition offer))
+        -- Illusionary Mask's "whose mana cost could be paid by ... the mana you
+        -- spent on {X}" reads that mana.
+        Effect.OfferCast offer -> any (Quantity.hasRead wanted) (repetitionQuantities (OfferCast.repetition offer)) || (wanted == StaticRead.ReadsManaSpentOnX && CastOffer.payableFromSpent (OfferCast.offer offer))
         Effect.OfferNamedCopy {} -> False
         Effect.OfferNotedCopy {} -> False
         Effect.GrantPlayFromExile {} -> False
         -- CR 608.2f's body is an effect list like any other, so an X inside it counts.
-        Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> readsX (Foldable.toList body)
-        Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo _ body) -> Quantity.readsX upTo || readsX (Foldable.toList body)
-        Effect.Repeat (Repeat.MkRepeat _ body gate _ ifAgain) -> any conditionReadsX gate || readsX (Foldable.toList (body <> ifAgain))
-        Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> conditionReadsX condition || readsX (Foldable.toList (process <> ifHolds))
+        Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> hasRead wanted (Foldable.toList body)
+        Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo _ body) -> Quantity.hasRead wanted upTo || hasRead wanted (Foldable.toList body)
+        Effect.Repeat (Repeat.MkRepeat _ body gate _ ifAgain) -> any (conditionHasRead wanted) gate || hasRead wanted (Foldable.toList (body <> ifAgain))
+        Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> conditionHasRead wanted condition || hasRead wanted (Foldable.toList (process <> ifHolds))
         Effect.Heal _ -> False
         Effect.ChooseNewTargets _ -> False
         Effect.ChangeTargets _ -> False
-   in any effectReadsX
+   in any effectHasRead
 
 -- slotsOf's mirror for ONE effect: the slots it BINDS rather than reads, which
 -- is also the set Parun.CardSpec's reserved-name sweep ranges over. Exhaustive

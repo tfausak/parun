@@ -717,13 +717,13 @@ offerCastArm offerCast runSubgame resolving source controller legal chosen (Offe
       -- CastOffer.payableFromSpent: only a card whose mana cost the mana spent
       -- on this ability's {X} could pay stays on offer. That mana is
       -- Object.manaSpent less what paid the rest of the total
-      -- (Object.manaSpentOnX), so a cost increase's mana is not counted; any
-      -- share the payment leaves open will do. The CARD's mana cost, which in a
-      -- hand is Card.combined's (CR 709.4, 712.8a, 715.4).
+      -- (Object.manaSpentOnX), so a cost increase's mana is not counted, and
+      -- the payer said which mana that was as the payment settled. The CARD's
+      -- mana cost, which in a hand is Card.combined's (CR 709.4, 712.8a, 715.4).
       ability = Game.lookupObject resolving gs
       spent = maybe (Mana.Type.MkMana []) Object.manaSpent ability
-      shares = Maybe.fromMaybe [spent] (ability >>= Object.manaSpentOnX)
-      affordable oid = not (CastOffer.payableFromSpent offer) || maybe False (\card -> any (`Mana.couldPayFrom` Face.manaCost (Card.combined card)) shares) (Game.cardOf oid gs)
+      onX = Maybe.fromMaybe spent (ability >>= Object.manaSpentOnX)
+      affordable oid = not (CastOffer.payableFromSpent offer) || maybe False (Mana.couldPayFrom onX . Face.manaCost . Card.combined) (Game.cardOf oid gs)
   -- CR 608.2g names "a player", and a reference resolving to nobody offers the
   -- cast to nobody.
   spells <-

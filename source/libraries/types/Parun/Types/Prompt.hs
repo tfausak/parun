@@ -48,6 +48,7 @@ import qualified Parun.Types.KickerDecision as KickerDecision
 import qualified Parun.Types.LandOrNonland as LandOrNonland
 import qualified Parun.Types.LearnMode as LearnMode
 import qualified Parun.Types.LibraryPosition as LibraryPosition
+import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaOption as ManaOption
 import qualified Parun.Types.ManaSymbol as ManaSymbol
@@ -277,6 +278,10 @@ data Prompt r where
   -- spent; elided where every way of paying leaves the same pool
   -- (Parun.Engine.Mana.leftovers).
   ChooseManaToSpend :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty ManaUnit.ManaUnit -> Prompt ManaUnit.ManaUnit
+  -- | CR 601.2h: which of the spent mana paid the object's X, once its payment
+  -- settles; asked only of an object that reads that mana and only where the
+  -- payment leaves several pools (Parun.Engine.Cost.recordXShares).
+  ChooseManaSpentOnX :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty Mana.Mana -> Prompt Mana.Mana
   -- | CR 701.34a: which of the permanents and players holding a counter get
   -- one more of each kind; elided only when both lists are empty.
   ChooseProliferate :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> [PlayerId.PlayerId] -> Prompt (Set.Set ObjectId.ObjectId, Set.Set PlayerId.PlayerId)

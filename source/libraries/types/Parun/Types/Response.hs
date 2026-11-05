@@ -32,6 +32,7 @@ import qualified Parun.Types.KickerDecision as KickerDecision
 import qualified Parun.Types.LandOrNonland as LandOrNonland
 import qualified Parun.Types.LearnMode as LearnMode
 import qualified Parun.Types.LibraryPosition as LibraryPosition
+import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaOption as ManaOption
 import qualified Parun.Types.ManaSymbol as ManaSymbol
@@ -189,6 +190,8 @@ data Response
   | -- | CR 601.2h: the one mana the payer chose to spend on the symbol being
     -- paid.
     ChoseManaToSpend ManaUnit.ManaUnit
+  | -- | CR 601.2h: the mana the payer says paid the object's X.
+    ChoseManaSpentOnX Mana.Mana
   | -- | CR 701.34a: the permanents and players a proliferating player chose. A
     -- pair rather than two constructors, because one prompt asks one question.
     ChoseProliferation (Set.Set ObjectId.ObjectId, Set.Set PlayerId.PlayerId)

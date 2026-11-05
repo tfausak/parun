@@ -1157,6 +1157,17 @@ combatReplaySpec s =
           Spec.assertEqWith s "the plain one round trips" (Replay.decode p (Replay.encode p plain)) (Just plain)
           Spec.assertEqWith s "the snow one round trips" (Replay.decode p (Replay.encode p snow)) (Just snow)
           Spec.assertEqWith s "and a yield does not decode as one" (Replay.decode p (Response.ChoseManaYield (oneMana Color.Red))) Nothing
+        -- CR 601.2h: which mana paid X is a decision, so it has to survive a
+        -- transcript like any other. Two pools, so a decode returning the head
+        -- would pass one leg by accident.
+        Spec.it s "ChooseManaSpentOnX round-trips through the transcript" $ do
+          let unit color = ManaUnit.MkManaUnit {ManaUnit.manaType = ManaType.Colored color, ManaUnit.tags = Set.empty, ManaUnit.retention = ManaRetention.Ordinary, ManaUnit.restriction = Nothing, ManaUnit.rider = Nothing, ManaUnit.spendTrigger = Nothing, ManaUnit.sourceChoices = Nothing, ManaUnit.sourceLastExiled = Nothing}
+              black = Mana.Type.MkMana [unit Color.Black]
+              red = Mana.Type.MkMana [unit Color.Red]
+              p = Prompt.ChooseManaSpentOnX decider S.alice (ObjectId.MkObjectId 7) (black NonEmpty.:| [red])
+          Spec.assertEqWith s "black round trips" (Replay.decode p (Replay.encode p black)) (Just black)
+          Spec.assertEqWith s "red round trips" (Replay.decode p (Replay.encode p red)) (Just red)
+          Spec.assertEqWith s "and a mana unit does not decode as one" (Replay.decode p (Response.ChoseManaToSpend (unit Color.Red))) Nothing
         Spec.it s "a mana-source choice does not decode as a mana-yield choice" $ do
           -- Discriminating: this fails if ChooseManaYield reuses ChoseManaSource
           -- rather than getting its own constructor.

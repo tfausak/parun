@@ -100,6 +100,7 @@ deciderOf prompt = case prompt of
   Prompt.PayLifeForMana decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseManaYield decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseManaToSpend decider _ _ -> Just (Decider.unwrap decider)
+  Prompt.ChooseManaSpentOnX decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseProliferate decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseRedistribution decider _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseRingBearer decider _ _ -> Just (Decider.unwrap decider)

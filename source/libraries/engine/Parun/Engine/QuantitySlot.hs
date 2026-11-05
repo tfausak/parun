@@ -67,7 +67,7 @@ foldCount :: (Monoid m) => (quantity -> m) -> Count.Type.Count quantity -> m
 foldCount f = Const.getConst . overCount (Const.Const . f)
 
 -- Does the per-member quantity of a count satisfy the predicate?
--- Parun.Engine.Quantity.readsX is the one caller.
+-- Parun.Engine.Quantity.hasRead is the one caller.
 anyCount :: (quantity -> Bool) -> Count.Type.Count quantity -> Bool
 anyCount predicate = Monoid.getAny . foldCount (Monoid.Any . predicate)
 

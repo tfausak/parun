@@ -3236,6 +3236,7 @@ library types
     Parun.Types.StatedFlip
     Parun.Types.StateDigest
     Parun.Types.StaticAbility
+    Parun.Types.StaticRead
     Parun.Types.Status
     Parun.Types.StepBegan
     Parun.Types.StepBegins

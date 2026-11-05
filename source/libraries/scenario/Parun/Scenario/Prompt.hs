@@ -46,6 +46,7 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.PayLifeForMana {} -> "PayLifeForMana"
   Prompt.ChooseManaYield {} -> "ChooseManaYield"
   Prompt.ChooseManaToSpend {} -> "ChooseManaToSpend"
+  Prompt.ChooseManaSpentOnX {} -> "ChooseManaSpentOnX"
   Prompt.ChooseProliferate {} -> "ChooseProliferate"
   Prompt.ChooseRedistribution {} -> "ChooseRedistribution"
   Prompt.ChooseRingBearer {} -> "ChooseRingBearer"

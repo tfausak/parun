@@ -824,11 +824,11 @@ data View = MkView
     -- reader is Parun.Engine.Quantity's ManaSpent arm, answering rule 702.191a's
     -- "the amount of mana spent to cast that spell".
     manaSpentAmount :: Natural.Natural,
-    -- | CR 107.3 / 601.2h: the shares of that mana that could have paid the
-    -- candidate's X (Parun.Types.Object.manaSpentOnX), none where nothing
-    -- recorded any. Its one reader is Parun.Engine.Quantity's ManaSpent arm,
-    -- answering Soul Burn's "the amount of {B} spent on X".
-    manaSpentOnX :: [Mana.Mana],
+    -- | CR 107.3 / 601.2h: the mana that paid the candidate's X
+    -- (Parun.Types.Object.manaSpentOnX), none where nothing recorded any. Its
+    -- one reader is Parun.Engine.Quantity's ManaSpent arm, answering Soul Burn's
+    -- "the amount of {B} spent on X".
+    manaSpentOnX :: Mana.Mana,
     -- CR 602.1 / 605.1a: which kinds of activated ability does the candidate
     -- have? The kinds and not the ability list, because that is the whole of what
     -- Filter.HasActivatedAbility asks and this module holds no board to measure an
@@ -1067,7 +1067,7 @@ playerView pid =
       -- A player is no object to have been paid for -- `manaSpentTagColors` above,
       -- same sentence.
       manaSpentAmount = 0,
-      manaSpentOnX = [],
+      manaSpentOnX = Mana.MkMana [],
       -- CR 113.1a: an activated ability is an ability OF AN OBJECT, and CR
       -- 109.1's list of what an object is has no player in it -- `keywords`
       -- above, one rule over.

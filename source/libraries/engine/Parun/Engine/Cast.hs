@@ -119,6 +119,7 @@ import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Parun.Types.Splice as Splice
 import qualified Parun.Types.StackObjectKind as StackObjectKind
+import qualified Parun.Types.StaticRead as StaticRead
 import qualified Parun.Types.Supertype as Supertype
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TargetSlot as TargetSlot
@@ -508,7 +509,7 @@ gateXs pid oid gs cost =
 -- the announced binding rather than one of its own.
 readsAnnouncedX :: PlayerId -> ObjectId -> Cost Keyword -> GameState -> Bool
 readsAnnouncedX pid oid cost gs =
-  Cost.hasVariable cost && any (Quantity.readsX . CostReduction.perEach) (Cost.selfSentences pid oid gs)
+  Cost.hasVariable cost && any (Quantity.hasRead StaticRead.ReadsX . CostReduction.perEach) (Cost.selfSentences pid oid gs)
 
 -- The same question asked at some OTHER value of X. `payableCost` is this at CR
 -- 601.2b's floor, and `affordableX` is this climbed; one predicate, so what the
@@ -4060,10 +4061,10 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
                           -- 118.12's payment during a resolution is folded the
                           -- same way (Parun.Engine.Resolve.Common.foldPaid).
                           State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setPaid bound (Object.bindings o)}) sid (GameState.objects g)})
-                          -- CR 107.3 / 601.2h: which of the spent mana could have
-                          -- paid X (Object.manaSpentOnX), split off the total as
+                          -- CR 107.3 / 601.2h: which of the spent mana paid X
+                          -- (Object.manaSpentOnX), split off the total as
                           -- confineX split it.
-                          State.modify' (Cost.recordXShares (PaymentSubject.Casting sid) pid sid (Cost.splitX confinement <$> mAmount <*> pure adjustments <*> Cost.Type.mana announcedCost <*> Cost.Type.mana totalledPaid))
+                          Cost.recordXShares (PaymentSubject.Casting sid) pid sid (Slots.hasRead StaticRead.ReadsManaSpentOnX (Card.allEffects face)) (Cost.splitX confinement <$> mAmount <*> pure adjustments <*> Cost.Type.mana announcedCost <*> Cost.Type.mana totalledPaid)
                           -- CR 702.51c: the creatures tapped to pay for mana in
                           -- this spell's total cost convoked it, so the relation
                           -- is recorded at the payment and a spell that is

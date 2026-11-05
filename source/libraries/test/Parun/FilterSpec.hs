@@ -35,6 +35,7 @@ import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.LibraryDeparture as LibraryDeparture
 import qualified Parun.Types.Lookback as Lookback
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
+import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
@@ -151,7 +152,7 @@ blackCreature =
       Filter.prototyped = False,
       Filter.manaSpentTagColors = Map.empty,
       Filter.manaSpentAmount = 0,
-      Filter.manaSpentOnX = [],
+      Filter.manaSpentOnX = Mana.MkMana [],
       -- CR 602.1 / 605.1a: a vanilla creature as far as this axis goes, so the
       -- atom's own cases below say which view they want rather than inheriting it.
       Filter.activatedAbilityKinds = Set.empty,
@@ -239,7 +240,7 @@ devoidBigCreature =
       Filter.prototyped = False,
       Filter.manaSpentTagColors = Map.empty,
       Filter.manaSpentAmount = 0,
-      Filter.manaSpentOnX = [],
+      Filter.manaSpentOnX = Mana.MkMana [],
       Filter.activatedAbilityKinds = Set.empty,
       Filter.grantsStationToughness = False
     }
