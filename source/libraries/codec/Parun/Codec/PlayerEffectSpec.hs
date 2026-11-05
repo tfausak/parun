@@ -29,6 +29,7 @@ import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
+import qualified Parun.Types.KeywordRiderGrant as KeywordRiderGrant
 import qualified Parun.Types.LandAllowance as LandAllowance
 import qualified Parun.Types.LoyaltyClause as LoyaltyClause
 import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
@@ -48,6 +49,7 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerScope as PlayerScope
 import qualified Parun.Types.PlotFromZone as PlotFromZone
 import qualified Parun.Types.RevealObligation as RevealObligation
+import qualified Parun.Types.RiderClause as RiderClause
 import qualified Parun.Types.RollModifier as RollModifier
 import qualified Parun.Types.ShownCards as ShownCards
 import qualified Parun.Types.Shows as Shows
@@ -250,13 +252,20 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       (PlayerEffect.MayPlayAsThoughItHadFlash (Filter.HasCardType CardType.Creature))
       " {\"type\":\"MayPlayAsThoughItHadFlash\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
-  -- CR 602.5d / Leonin Shikari: "equip abilities", the family with its cost dropped.
-  Spec.it s "ActivateKeywordAtInstantSpeed, Leonin Shikari's equip abilities" $
+  -- CR 602.5d / Leonin Shikari: "equip abilities", the family with its cost dropped,
+  -- of any permanent.
+  Spec.it s "KeywordRiderGrant, Leonin Shikari's equip abilities" $
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.ActivateKeywordAtInstantSpeed (KeywordDesignator.OfFamily KeywordFamily.Equip))
-      " {\"type\":\"ActivateKeywordAtInstantSpeed\",\"value\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Equip\"}}} "
+      ( PlayerEffect.KeywordRiderGrant
+          KeywordRiderGrant.MkKeywordRiderGrant
+            { KeywordRiderGrant.abilities = KeywordDesignator.OfFamily KeywordFamily.Equip,
+              KeywordRiderGrant.relaxes = RiderClause.InstantSpeed,
+              KeywordRiderGrant.permanents = Filter.And []
+            }
+      )
+      " {\"type\":\"KeywordRiderGrant\",\"value\":{\"abilities\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Equip\"}},\"relaxes\":{\"type\":\"InstantSpeed\"},\"permanents\":{\"type\":\"And\",\"value\":[]}}} "
   -- CR 606.3 / The Wandering Emperor: "her loyalty abilities", the source itself.
   Spec.it s "LoyaltyGrant, The Wandering Emperor's own" $
     Common.assertCodec

@@ -920,6 +920,8 @@ library codec
     Parun.Codec.KeywordFamilySpec
     Parun.Codec.KeywordInstance
     Parun.Codec.KeywordInstanceSpec
+    Parun.Codec.KeywordRiderGrant
+    Parun.Codec.KeywordRiderGrantSpec
     Parun.Codec.KeywordsAre
     Parun.Codec.KeywordsAreSpec
     Parun.Codec.KeywordSpec
@@ -1403,6 +1405,8 @@ library codec
     Parun.Codec.RevealTimingSpec
     Parun.Codec.RevealWindow
     Parun.Codec.RevealWindowSpec
+    Parun.Codec.RiderClause
+    Parun.Codec.RiderClauseSpec
     Parun.Codec.RollDie
     Parun.Codec.RollDieSpec
     Parun.Codec.RollModifier
@@ -2892,6 +2896,7 @@ library types
     Parun.Types.KeywordDesignator
     Parun.Types.KeywordFamily
     Parun.Types.KeywordInstance
+    Parun.Types.KeywordRiderGrant
     Parun.Types.KeywordsAre
     Parun.Types.KeywordTally
     Parun.Types.KickerDecision
@@ -3172,6 +3177,7 @@ library types
     Parun.Types.RevealObligation
     Parun.Types.RevealTiming
     Parun.Types.RevealWindow
+    Parun.Types.RiderClause
     Parun.Types.RollAdjustment
     Parun.Types.RollDie
     Parun.Types.RollModifier

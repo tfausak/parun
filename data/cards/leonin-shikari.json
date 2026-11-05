@@ -21,11 +21,20 @@
       "playerAbilities": [
         {
           "effect": {
-            "type": "ActivateKeywordAtInstantSpeed",
+            "type": "KeywordRiderGrant",
             "value": {
-              "type": "OfFamily",
-              "value": {
-                "type": "Equip"
+              "abilities": {
+                "type": "OfFamily",
+                "value": {
+                  "type": "Equip"
+                }
+              },
+              "permanents": {
+                "type": "And",
+                "value": []
+              },
+              "relaxes": {
+                "type": "InstantSpeed"
               }
             }
           },

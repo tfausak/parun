@@ -1,0 +1,46 @@
+{
+  "description": "CR 702.142a / 602.5b Birgi, God of Storytelling: an attacked Duskwielder boasts twice on alice's turn and not a third time, and the one that did not attack boasts not at all",
+  "note": "Three Swamps pay three boasts, so the third Swamp left untapped shows the third boast refused by its count rather than its cost. The second Duskwielder never attacks, so CR 702.142a's other rider still withholds its boast under Birgi.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Birgi, God of Storytelling", "label": "birgi", "ready": true},
+          {"card": "Duskwielder", "label": "attacker", "ready": true},
+          {"card": "Duskwielder", "label": "idle", "ready": true},
+          {"card": "Swamp", "label": "swamp-1", "ready": true},
+          {"card": "Swamp", "label": "swamp-2", "ready": true},
+          {"card": "Swamp", "label": "swamp-3", "ready": true}
+        ]
+      },
+      {"name": "bob"}
+    ],
+    "active": "alice",
+    "step": "DeclareAttackers"
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$attacker"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Activate": {"object": "$attacker", "targets": ["$bob"], "mana": ["$swamp-1", null]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {"View": {"of": "Offered", "player": "alice", "is": ["Pass", "Activate $attacker", "ActivateManaAbility $swamp-2", "ActivateManaAbility $swamp-3"]}}
+    },
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Activate": {"object": "$attacker", "targets": ["$bob"], "mana": ["$swamp-2", null]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {"View": {"of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $swamp-3"]}}
+    }
+  ],
+  "final": [
+    {"Life": {"player": "bob", "life": 18}},
+    {"Life": {"player": "alice", "life": 22}},
+    {"Tapped": {"object": "$swamp-3", "tapped": false}}
+  ]
+}

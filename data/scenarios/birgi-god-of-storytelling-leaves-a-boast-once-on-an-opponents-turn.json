@@ -1,0 +1,46 @@
+{
+  "description": "CR 702.142a / 602.5b Birgi, God of Storytelling: on bob's turn, the Duskwielder alice took after it attacked boasts once and not twice",
+  "note": "Only a creature that attacked on another player's turn can boast there, so bob attacks with it and alice takes it with Ray of Command (CR 506.4 removes it from combat, and it still attacked this turn). Birgi's trigger on that cast adds the R that pays the boast, and the untapped Swamp shows the second boast refused by its count rather than its cost.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Birgi, God of Storytelling", "label": "birgi", "ready": true},
+          {"card": "Island", "label": "island-1", "ready": true},
+          {"card": "Island", "label": "island-2", "ready": true},
+          {"card": "Island", "label": "island-3", "ready": true},
+          {"card": "Island", "label": "island-4", "ready": true},
+          {"card": "Swamp", "label": "swamp", "ready": true}
+        ],
+        "hand": [{"card": "Ray of Command", "label": "ray"}]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{"card": "Duskwielder", "label": "wielder", "ready": true}]
+      }
+    ],
+    "active": "bob",
+    "step": "DeclareAttackers"
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$wielder"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Cast": {"object": "$ray", "targets": ["$wielder"], "mana": ["$island-1", "$island-2", "$island-3", "$island-4", null]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"View": {"of": "Controller", "object": "$wielder", "is": "alice"}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Activate": {"object": "$wielder", "targets": ["$bob"], "mana": [null]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {"View": {"of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $swamp"]}}
+    }
+  ],
+  "final": [
+    {"Life": {"player": "bob", "life": 19}},
+    {"Life": {"player": "alice", "life": 21}},
+    {"Tapped": {"object": "$swamp", "tapped": false}}
+  ]
+}

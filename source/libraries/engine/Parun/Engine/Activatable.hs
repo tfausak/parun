@@ -381,17 +381,20 @@ loyaltyOk pid srcId ability gs =
               )
        )
 
--- CR 602.5: the ability's printed rider holds, or holds once an effect letting
--- the player activate it "any time you could cast an instant" (Leonin Shikari)
--- reads its CR 602.5d clause as CR 602.5e's. The permission is asked only when
--- the rider as printed refuses, so a board without one pays nothing for it.
--- Parun.ActivateSpec's InstantSpeedEquip group proves it.
+-- CR 602.5: the ability's printed rider holds, or holds once every grant
+-- reaching it has relaxed its clause -- Leonin Shikari's reads CR 602.5d's
+-- clause as CR 602.5e's, Birgi's raises CR 602.5b's count. Each relaxation only
+-- widens, so applying all of them at once admits whatever any subset would. The
+-- grants are asked only when the rider as printed refuses, so a board without
+-- one pays nothing for them. Parun.ActivateSpec's InstantSpeedEquip group
+-- proves the first, data/scenarios/activate's Birgi cases the second.
 riderOk :: PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> Bool
 riderOk pid srcId ability gs =
   let printed = Keyword.restrictionsOf ability
+      grants = PlayerEffect.keywordRiderGrants (ActivatedAbility.keyword ability) pid srcId gs
    in ActivationRestriction.restrictionsOk pid srcId (Just ability) printed gs
-        || ( PlayerEffect.activatesKeywordAtInstantSpeed (ActivatedAbility.keyword ability) pid gs
-               && ActivationRestriction.restrictionsOk pid srcId (Just ability) (fmap ActivationRestriction.atInstantSpeed printed) gs
+        || ( not (null grants)
+               && ActivationRestriction.restrictionsOk pid srcId (Just ability) (fmap (\r -> foldr ActivationRestriction.relaxedBy r grants) printed) gs
            )
 
 loyaltyActivatedThisTurn :: ObjectId -> GameState -> Bool

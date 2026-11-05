@@ -1,0 +1,36 @@
+{
+  "description": "Harnfel, Horn of Bounty: alice discards her Forest to exile her top two cards, then plays the Mountain and casts the Shock from exile",
+  "note": "The Mountain playable from exile proves the permission rather than the land play, alice having made none; the discarded Forest stays in her graveyard, not among the cards she may play.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Birgi, God of Storytelling", "face": "Harnfel, Horn of Bounty", "label": "harnfel", "ready": true}
+        ],
+        "hand": [{"card": "Forest", "label": "forest"}],
+        "library": [
+          {"card": "Mountain"},
+          {"card": "Shock"},
+          {"card": "Island", "label": "island"}
+        ]
+      },
+      {"name": "bob"}
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$harnfel"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Graveyard", "is": ["Forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["$island"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"PlayLand": "Mountain"}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "Shock", "targets": ["$bob"], "mana": ["Mountain"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"}
+  ],
+  "final": [
+    {"Life": {"player": "bob", "life": 18}},
+    {"Count": {"player": "alice", "zone": "Battlefield", "card": "Mountain", "count": 1}}
+  ]
+}
