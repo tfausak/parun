@@ -178,10 +178,10 @@ base pid oid gs = case Game.lookupObject oid gs of
         | otherwise -> Visibility.Obscured -- CR 708.5
 
 -- | CR 402.3: whether this player may look at that player's hand -- their own,
--- or under CR 808.5, 809.7 and 810.5 a teammate's. CR 811.5 allows it in Alternating Teams only between teammates seated
--- next to each other, read as CR 811.4's limit reads it (Game.neighbours); see
--- docs/decisions.md, "Whether Alternating Teams teammates review hands across
--- an emptied seat".
+-- or under CR 808.5, 809.7 and 810.5 a teammate's. CR 811.5 allows the latter
+-- in Alternating Teams only between teammates seated next to each other, read
+-- as CR 811.4's limit reads it (Game.neighbours); see docs/decisions.md,
+-- "Whether Alternating Teams teammates review hands across an emptied seat".
 reviewsHandOf :: PlayerId -> PlayerId -> GameState.GameState -> Bool
 reviewsHandOf pid owner gs =
   let settings = GameState.settings gs

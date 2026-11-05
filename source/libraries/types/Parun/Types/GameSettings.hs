@@ -103,7 +103,8 @@ data GameSettings = MkGameSettings
     twoHeadedGiant :: Bool,
     -- | CR 811: whether this is an Alternating Teams game. Read through
     -- Parun.Engine.Combat.attackableOpponents for CR 811.4's attack limit, which
-    -- filters whatever the attack option above allows (CR 811.2b).
+    -- filters whatever the attack option above allows (CR 811.2b), and
+    -- Parun.Engine.Visibility.reviewsHandOf for CR 811.5's.
     -- Parun.Engine.AlternatingTeams.setUp writes it with teams (CR 811.1) over a
     -- seating it checks (CR 811.3).
     alternatingTeams :: Bool,
