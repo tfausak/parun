@@ -53,9 +53,10 @@ data PendingTrigger = MkPendingTrigger
     -- stamps on the stack object (GameState.stackedIn).
     firedBy :: Maybe LoggedEvent.LoggedEvent,
     -- | CR 113.2c: how many value-identical instances of `ability` the source
-    -- bore as it triggered, 1 unless a printing or a grant repeats it. The
-    -- allowance Parun.Engine.Event.withinTriggerLimit gives a "triggers only
-    -- once" rider, since the instances themselves are equal values.
+    -- bore as it triggered, 1 unless one printing or one granter repeats it
+    -- (two granters' grants are unequal, Parun.Engine.Binding.acquiredFrom).
+    -- The allowance Parun.Engine.Event.withinTriggerLimit gives a "triggers
+    -- only once" rider, since those instances are equal values.
     copies :: Natural,
     -- | CR 113.7a: the delayed abilities the source's rules text declared as
     -- this ability TRIGGERED (PC.delayedAbilities), which Engine.placeBorne

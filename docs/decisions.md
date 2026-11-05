@@ -67,6 +67,27 @@ Entries are ordered by the first rule each cites.
   component is a spell copy is no token".
 - **Issue**: none.
 
+## A rider ability regained from one granter stays spent
+
+- **Question**: A permanent loses a "triggers only once each turn" or "activate
+  only once" ability a granter gave it, then gets it back from the SAME granter
+  (Well Rested moved off and back by Aura Graft). Is it a new ability, unspent?
+  The rulings on Tyvar the Bellicose, Dionus and Cursed Wombat settle only a
+  new granter's grant, and only for a triggered ability.
+- **Rules**: CR 113.2c, 400.7, 602.5b, 613.7e; CR of 2026-08-07.
+- **Decision**: The same ability, still spent: a grant is named for its
+  granter object (`Binding.acquiredFrom`), not for its timestamp. A new
+  granter, including one that left and returned (CR 400.7), gives a new
+  ability. The activated side reads the same, CR 113.2c being all that speaks
+  to it.
+- **Rejected**: A new ability on each re-grant, keyed by the grant's
+  timestamp: CR 613.7e re-stamps a moved Aura without changing which object
+  grants, and the rulings speak of the granting object.
+- **Site**: `Parun.Engine.Projection`'s `GainAbility` arm;
+  `data/scenarios/well-rested-moved-back-by-aura-graft-stays-spent.json`
+  proves it.
+- **Issue**: #4627.
+
 ## Who says which new target takes a replaced target's part of a division
 
 - **Question**: CR 115.7f keeps a divided spell's division through a change of
