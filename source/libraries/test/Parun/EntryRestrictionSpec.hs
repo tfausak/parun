@@ -40,7 +40,9 @@ import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Replay as Replay
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Engine.Stack as Stack
+import Parun.PreventionSpec (wasAskedToReplace)
 import qualified Parun.Registry as Registry
+import Parun.ShieldCounterSpec (aimingAtObject)
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
 import qualified Parun.Types.CardName as CardName
@@ -55,7 +57,9 @@ spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = do
   Spec.describe s "Grafdigger's Cage" $ do
     exhumeCase s registry
-  Spec.describe s "Worms of the Earth" (tokenCase s registry)
+  Spec.describe s "Worms of the Earth" $ do
+    tokenCase s registry
+    replacedTokenCase s registry
 
 -- The names of the permanents `after` has that `before` did not, sorted. CR 400.7
 -- mints a fresh id at the destination, so an arrival can only be found this way.
@@ -207,6 +211,66 @@ tokenCase s registry = do
     let before = board willow [cage]
         after = run before
     Spec.assertEqWith s "the Forest Dryad token entered anyway" (arrivals before after) [Just token]
+
+-- CR 614.17c: a token creation that can't happen offers no replacement, and
+-- CR 111.5 refuses an appended token by itself. Both boards hold Worms of the
+-- Earth, each against a paired board without it.
+--
+-- Cackling Counterpart copies Dryad Arbor, a land, so the creation can't
+-- happen: Doubling Season and Queen Allenal of Ruadach both apply to the
+-- creation otherwise, and two rows ask CR 616.1 for an order.
+--
+-- Involuntary Employment's Treasure brings Chatterfang's Squirrel, which
+-- Maskwood Nexus makes every creature type and Life and Limb then makes a
+-- Forest land, while the Treasure is no land.
+replacedTokenCase :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+replacedTokenCase s registry = do
+  let named = CardName.MkCardName . Text.pack
+      onBoard pid name = S.countOnBattlefieldByName (named name) pid
+      place pid cards g = foldr (\c g1 -> snd (S.addPermanent c pid g1)) g cards
+      run answer spell gs =
+        let ((_, after), responses) = Replay.record answer gs (S.cast S.alice spell >> Stack.resolveTop)
+         in (after, responses)
+      arbor worms = do
+        island <- S.printingOf s registry "Island"
+        counterpart <- S.printingOf s registry "Cackling Counterpart"
+        dryad <- S.printingOf s registry "Dryad Arbor"
+        season <- S.printingOf s registry "Doubling Season"
+        queen <- S.printingOf s registry "Queen Allenal of Ruadach"
+        let (dryadId, g1) = S.addPermanent dryad S.alice (S.landsInPlay island 3)
+            (g2, spell) = S.handOne counterpart (place S.alice (season : queen : worms) g1)
+        let (after, responses) = run (aimingAtObject dryadId) spell g2
+        pure (arrivals g2 after, after, responses)
+      squirrel worms = do
+        mountain <- S.printingOf s registry "Mountain"
+        employment <- S.printingOf s registry "Involuntary Employment"
+        piker <- S.printingOf s registry "Goblin Piker"
+        chatterfang <- S.printingOf s registry "Chatterfang, Squirrel General"
+        nexus <- S.printingOf s registry "Maskwood Nexus"
+        limb <- S.printingOf s registry "Life and Limb"
+        let (pikerId, g1) = S.addPermanent piker S.bob (S.landsInPlay mountain 4)
+            (g2, spell) = S.handOne employment (place S.alice (chatterfang : nexus : limb : worms) g1)
+        pure (fst (run (aimingAtObject pikerId) spell g2))
+  Spec.it s "CR 616.1 without Worms the Arbor's token copy is doubled and brings a Soldier" $ do
+    (arrived, after, responses) <- arbor []
+    Spec.assertEqWith s "the Soldier was created" (onBoard S.alice "Soldier Token" after > 0) True
+    Spec.assertEqWith s "and the Arbor's copies beside it" (length arrived > onBoard S.alice "Soldier Token" after) True
+    Spec.assertBool s (wasAskedToReplace responses) "alice ordered the two replacements"
+  Spec.it s "CR 614.17c a token copy of a land under Worms is not created, and nothing replaces it" $ do
+    worms <- S.printingOf s registry "Worms of the Earth"
+    (arrived, after, responses) <- arbor [worms]
+    Spec.assertEqWith s "the counterpart resolved into alice's graveyard (CR 608.2n)" (elem (named "Cackling Counterpart") (namesIn Zone.Graveyard S.alice after)) True
+    Spec.assertEqWith s "CR 111.5 no copy, and CR 614.17c no Soldier" arrived []
+    Spec.assertBool s (not (wasAskedToReplace responses)) "CR 614.17c no replacement was offered"
+  Spec.it s "CR 614.1a without Worms the Treasure brings a Squirrel" $ do
+    after <- squirrel []
+    Spec.assertEqWith s "one Treasure" (onBoard S.alice "Treasure Token" after) 1
+    Spec.assertEqWith s "and one Squirrel" (onBoard S.alice "Squirrel Token" after) 1
+  Spec.it s "CR 111.5 under Worms the Squirrel that would be a land is not created, and the Treasure is" $ do
+    worms <- S.printingOf s registry "Worms of the Earth"
+    after <- squirrel [worms]
+    Spec.assertEqWith s "CR 111.5 the Treasure was created" (onBoard S.alice "Treasure Token" after) 1
+    Spec.assertEqWith s "CR 111.5 and the Squirrel was not" (onBoard S.alice "Squirrel Token" after) 0
 
 -- The card names in one player's zone. Local rather than hoisted into
 -- Parun.Support, which rebuilds every spec in the tree.
