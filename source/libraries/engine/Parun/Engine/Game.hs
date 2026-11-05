@@ -611,7 +611,7 @@ isHiddenZone zone = case zone of
 -- two players' piles (CR 400.1: each has their own library, hand and graveyard;
 -- Parun.Engine.Event.alreadyIn logs nothing within one pile). CR 400.8 and CR
 -- 400.10's object "doesn't change zones" though it is a new one, and a token
--- created onto the battlefield (CR 701.7a, Parun.Engine.Event.recordMintedEntry)
+-- created onto the battlefield (CR 701.7a, Parun.Engine.Event.recordMintedArrival)
 -- left nothing.
 leftOrigin :: ZoneChange.ZoneChange -> Bool
 leftOrigin zc

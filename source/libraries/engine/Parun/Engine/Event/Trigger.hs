@@ -1190,7 +1190,7 @@ eventTriggers events gs =
       -- battlefield" arrive as a matcher arm alone.
       --
       -- The `to /= Battlefield` guard is CR 603.6c's own word "another": the
-      -- pseudo-move recordMintedEntry emits for a permanent minted straight onto
+      -- pseudo-move recordMintedArrival emits for a permanent minted straight onto
       -- the battlefield is not a departure.
       --
       -- The departing id is what the placed trigger carries as its SOURCE (CR
@@ -1424,7 +1424,7 @@ eventTriggers events gs =
       -- this narrowing is about. `leftGraveyard`'s argument one zone over.
       --
       -- CR 111.3's token and a conjured card, which no rule covers, come through too:
-      -- recordMintedEntry writes from == to == Battlefield, which fails every
+      -- recordMintedArrival writes from == to == Battlefield, which fails every
       -- departure test and passes this arrival one -- so a token created partway
       -- through a batch and buried by CR 704.5f before the boundary is withheld
       -- from the batch's earlier events for the same reason a returning card is.

@@ -1140,7 +1140,7 @@ leftBattlefieldSpec s registry =
             (1, 1, 0)
           Spec.assertEqWith s "setup: both went to bob's hand" (length (Game.zoneMembers Zone.Hand S.bob (bounce theirMountain (bounce theirGiant ready)))) 2
         -- CR 111.3 / 603.6c: a token ENTERING is logged as a Battlefield to
-        -- Battlefield move (Event.recordMintedEntry), and nothing left.
+        -- Battlefield move (Event.recordMintedArrival), and nothing left.
         Spec.it s "CR 603.6c a nonland token entering is no permanent leaving, so Insatiable Skittermaw gets no counter" $ do
           (skittermawId, _, _, ready) <- board "Insatiable Skittermaw"
           hillGiant <- S.printingOf s registry "Hill Giant"

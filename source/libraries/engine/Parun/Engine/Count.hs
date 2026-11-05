@@ -817,9 +817,9 @@ snapshotView viewOf gs shape event = case event of
   GameEvent.Moved (Moved.MkMoved zc snapshot _ _ _ _ _ _) -> case shape of
     EventShape.MovedBetween (MovedBetween.MkMovedBetween from to) ->
       if ZoneChange.from zc == from && ZoneChange.to zc == to then Just (departedView viewOf gs zc snapshot) else Nothing
-    -- CR 603.6c: to another zone, so Event.recordMintedEntry's Battlefield to
-    -- Battlefield entry of a token or conjured card is not a departure, nor CR
-    -- 400.8's re-exiled card (Game.leftOrigin).
+    -- CR 603.6c: to another zone, so Event.recordMintedArrival's same-zone
+    -- arrival of a token or conjured card is not a departure, nor CR 400.8's
+    -- re-exiled card (Game.leftOrigin).
     EventShape.MovedFrom from ->
       if ZoneChange.from zc == from && Game.leftOrigin zc then Just (departedView viewOf gs zc snapshot) else Nothing
     -- CR 712.21e's second half, whose unit is the CARD: this event announces the
@@ -1022,13 +1022,13 @@ arrivalMatches arrival zc =
 -- events that reach here carry it differently: a Moved event stamps its own, and
 -- a CardArrived event has none of its own to stamp.
 --
--- No record only where nothing departed: Event.recordMintedEntry's
--- battlefield-to-battlefield entry of a token or conjured card, which no shape
--- here counts as a departure. The bare snapshot answers there, with no
--- controller, owner, counters or lapsed "as long as" clauses (CR 611.3a) to
--- read. Only a MovedBetween naming the battlefield as both ends reaches it,
--- which no printed look-back can, a token's creation (CR 111.2) being no move
--- from the battlefield; the MovedFrom arm refuses it (Game.leftOrigin). Once
+-- No record only where nothing departed: Event.recordMintedArrival's
+-- same-zone arrival of a token or conjured card, which no shape here counts as
+-- a departure. The bare snapshot answers there, with no controller, owner,
+-- counters or lapsed "as long as" clauses (CR 611.3a) to read. Only a
+-- MovedBetween naming one zone as both ends reaches it, which no printed
+-- look-back can, a token's creation (CR 111.2) being no move from the
+-- battlefield; the MovedFrom arm refuses it (Game.leftOrigin). Once
 -- the token has left, the CardArrivedIn arm reads the record its departure
 -- filed, clauses and all (LastKnown.lapsedGrants).
 departedView :: ViewOf -> GameState -> ZoneChange.ZoneChange -> PC.ProjectedCharacteristics -> Filter.View
