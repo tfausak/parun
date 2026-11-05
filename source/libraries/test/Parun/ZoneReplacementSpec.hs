@@ -10,18 +10,23 @@ module Parun.ZoneReplacementSpec where
 
 import qualified Data.List as List
 import qualified Data.Maybe as Maybe
+import qualified Data.Text as Text
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
+import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
+import qualified Parun.Types.PlayerActed as PlayerActed
+import qualified Parun.Types.PlayerAction as PlayerAction
 import qualified Parun.Types.Prompt as Prompt
+import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.Revealed as Revealed
 import qualified Parun.Types.Zone as Zone
 
@@ -160,6 +165,28 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
     Spec.assertEqWith s "the control: a card with no such row is discarded, and that library keeps the order it had" (Game.zoneMembers Zone.Library S.alice control) stock
     Spec.assertEqWith s "the fixture really stocked three cards for the reversal to move" (length stock) 3
     Spec.assertEqWith s "and the control card really was discarded" (length (Game.zoneMembers Zone.Graveyard S.alice control)) 1
+  -- CR 701.24g: Wrath of God's one destruction (Event.destroy) puts Gravebane
+  -- Zombie on top of bob's library and shuffles Progenitus into it at the same
+  -- time, in either order of their moves, so the reversing shuffle randomizes
+  -- Progenitus and the Swamp and never the Zombie. Still one shuffle (CR
+  -- 701.24f). data/scenarios/zone-change's two CR 701.24g scenarios are the
+  -- whole-card cases; this one answers the shuffle with a genuine permutation,
+  -- which a scenario's exact answer cannot do across both readings.
+  Spec.it s "CR 701.24g a card put on top as a library is shuffled stays on top" $ do
+    zombie <- S.printingOf s registry "Gravebane Zombie"
+    progenitus <- S.printingOf s registry "Progenitus"
+    swamp <- S.printingOf s registry "Swamp"
+    let (_, g1) = S.addLibraryCard swamp S.bob (Setup.emptyGame S.bothPlayers)
+        (zombieId, g2) = S.addPermanent zombie S.bob g1
+        (progenitusId, gs) = S.addPermanent progenitus S.bob g2
+        destroying order = S.runPure reversingShuffle gs (Event.destroy (pure ()) Regenerability.Regenerable order)
+        library after = fmap (`S.soleFaceName` after) (Game.zoneMembers Zone.Library S.bob after)
+        shuffles after = length [() | GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Shuffle _) <- S.eventsOf after]
+        expected = fmap (CardName.MkCardName . Text.pack) ["Gravebane Zombie", "Progenitus", "Swamp"]
+    Spec.assertEqWith s "CR 701.24g the Zombie moving first stays on top of the shuffle" (library (destroying [zombieId, progenitusId])) expected
+    Spec.assertEqWith s "and moving second lands on top of it" (library (destroying [progenitusId, zombieId])) expected
+    Spec.assertEqWith s "CR 701.24f one shuffle, the Zombie moving first" (shuffles (destroying [zombieId, progenitusId])) 1
+    Spec.assertEqWith s "and moving second" (shuffles (destroying [progenitusId, zombieId])) 1
   -- CR 701.20a: the same redirect shows the card. The same pair, since
   -- Parun.Engine.Event.discard reveals nothing on its own -- CR 701.9c is what
   -- the reveal buys, a card discarded into a hidden zone unrevealed having

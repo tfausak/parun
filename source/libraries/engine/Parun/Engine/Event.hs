@@ -10923,8 +10923,8 @@ shuffleLibrary = shuffleLibraryExcept Set.empty
 -- the open arrivingTogether scope already put at an end of it (noteArrival),
 -- which then go back to that end in the order they held. A card put there LATER
 -- in the scope lands on the shuffled library and needs nothing. Still one
--- Prompt.Shuffle and one Shuffle event (CR 701.24f). data/scenarios/zone-change's
--- CR 701.24g Wrath of God scenarios, in both id orders, are the proof.
+-- Prompt.Shuffle and one Shuffle event (CR 701.24f). Parun.ZoneReplacementSpec's
+-- CR 701.24g case is the proof, in both orders of the moves.
 shuffleAroundArrivals :: PlayerId -> Game ()
 shuffleAroundArrivals pid = do
   pending <- State.gets (foldMap Foldable.toList . GameState.arrivals)
