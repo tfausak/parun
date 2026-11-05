@@ -5246,9 +5246,9 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   ReplacementEffect.LifeLossR {} -> []
   ReplacementEffect.LifeGainR {} -> []
   -- The pattern is one ControllerRelation; the wish filter a FromOutsideTheGame
-  -- rewrite carries is the one Filter a draw row can hold (Ring of Maʼrûf), and
-  -- it is CR 400.11c's, so it takes the same framing Effect.FromOutsideTheGame's
-  -- does.
+  -- rewrite carries is the one Filter a draw row can hold (Ring of Maʼrûf) beside
+  -- one a KeepOneOfTopThenDraw count reads, and it is CR 400.11c's, so it takes
+  -- the same framing Effect.FromOutsideTheGame's does.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.FromOutsideTheGame payload)) -> outsideTheGameFramed [FromOutsideTheGame.filter payload]
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.GainLife _)) -> []
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.Dredge _)) -> []
@@ -5258,6 +5258,7 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.RevealUntilChosenKind) -> []
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.DrawInstead _)) -> []
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> []
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.KeepOneOfTopThenDraw quantity)) -> quantityFilters quantity
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.MaySkipFor _)) -> []
   ReplacementEffect.DrawCountR {} -> []
   ReplacementEffect.InstructionR {} -> []

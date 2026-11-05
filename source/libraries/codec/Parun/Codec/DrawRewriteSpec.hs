@@ -1,6 +1,7 @@
 module Parun.Codec.DrawRewriteSpec where
 
 import qualified Data.Sequence as Seq
+import qualified Data.Text as Text
 import qualified Parun.Codec.DrawRewrite as DrawRewrite
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
@@ -8,6 +9,8 @@ import qualified Parun.Types.DrawRewrite as DrawRewrite
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Parun.Types.OutsideDestination as OutsideDestination
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.SlotName as SlotName
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.DrawRewrite" $ do
@@ -83,6 +86,13 @@ spec s = Spec.describe s "Parun.Codec.DrawRewrite" $ do
       (DrawRewrite.codec Common.natural)
       DrawRewrite.DiscardThenDrawOrMill
       " {\"type\":\"DiscardThenDrawOrMill\"} "
+  -- CR 614.1a / 701.20e: Aladdin's Lamp.
+  Spec.it s "KeepOneOfTopThenDraw" $
+    Common.assertCodec
+      s
+      (DrawRewrite.codec Common.natural)
+      (DrawRewrite.KeepOneOfTopThenDraw (Quantity.InSlot (SlotName.MkSlotName (Text.pack "X"))))
+      " {\"type\":\"KeepOneOfTopThenDraw\",\"value\":{\"type\":\"InSlot\",\"value\":\"X\"}} "
   -- CR 614.10: Island Sanctuary.
   Spec.it s "MaySkipFor" $
     Common.assertCodec

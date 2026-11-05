@@ -1931,13 +1931,14 @@ drawRewriteReads rewrite = case rewrite of
   DrawRewrite.RevealUntilChosenKind -> ([], [])
   DrawRewrite.DrawInstead _ -> ([], [])
   DrawRewrite.DiscardThenDrawOrMill -> ([], [])
+  DrawRewrite.KeepOneOfTopThenDraw quantity -> ([], [quantity])
   DrawRewrite.MaySkipFor _ -> ([], [])
 
 -- replacementRowReads as a slot map. Arity One for every FILTER read, a
 -- Filter.IsBound being a membership test rather than a target slot; the QUANTITY
 -- half is quantitySlots' answer, so a Quantity.InSlot reports SlotArity.Amount --
--- CR 614.1c's WithCounters and CR 702.37b's are the two rewrites that can carry
--- one. The two capture sites take Map.keysSet, so the arity reaches only slotsOf's
+-- CR 614.1c's WithCounters, CR 702.37b's and DrawRewrite.KeepOneOfTopThenDraw's
+-- count can carry one. The two capture sites take Map.keysSet, so the arity reaches only slotsOf's
 -- Replace arm.
 replacementRowSlots :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Map.Map SlotName SlotArity
 replacementRowSlots re =
@@ -2561,7 +2562,8 @@ readsX =
         Effect.BecomeCopy {} -> False
         -- CR 601.2b's X reaches the effects a rewrite or a CR 615.5 rider nests,
         -- the three prevention opcodes' posture with their own riders.
-        Effect.Replace (Replace.MkReplace _ _ _ _ re) -> readsX (replacementRowEffects re)
+        -- Aladdin's Lamp's count sits on the row, not on an effect it holds.
+        Effect.Replace (Replace.MkReplace _ _ _ _ re) -> readsX (replacementRowEffects re) || any Quantity.readsX (snd (replacementRowReads re))
         Effect.SkipPhase {} -> False
         -- CR 601.2b's X reaches the rider too.
         Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ quantity rider) -> Quantity.readsX quantity || readsX (Foldable.toList rider)
