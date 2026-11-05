@@ -696,34 +696,20 @@ traverseExpiries edit gs =
           fmap
             (\kept -> o {Object.playPermission = fmap (\e -> p {ExilePlayPermission.expiry = e}) kept})
             (edit (ExilePlayPermission.source p) (ExilePlayPermission.expiry p))
-      set ce co re pe br ar op ap ev ia dt ob =
-        gs
-          { GameState.continuousEffects = ce,
-            GameState.copyEffects = co,
-            GameState.replacements = re,
-            GameState.playerEffects = pe,
-            GameState.blockRequirements = br,
-            GameState.attackRequirements = ar,
-            GameState.objectProhibitions = op,
-            GameState.attackProhibitions = ap,
-            GameState.evasions = ev,
-            GameState.ignoredAbilities = ia,
-            GameState.delayedTriggers = dt,
-            GameState.objects = ob
-          }
-   in set
-        <$> rows edit ContinuousEffect.source ContinuousEffect.expiry (\x e -> x {ContinuousEffect.expiry = e}) (GameState.continuousEffects gs)
-        <*> rows edit ActiveCopy.source ActiveCopy.expiry (\x e -> x {ActiveCopy.expiry = e}) (GameState.copyEffects gs)
-        <*> rows edit ActiveReplacement.source ActiveReplacement.expiry (\x e -> x {ActiveReplacement.expiry = e}) (GameState.replacements gs)
-        <*> rows edit ActivePlayerEffect.source ActivePlayerEffect.expiry (\x e -> x {ActivePlayerEffect.expiry = e}) (GameState.playerEffects gs)
-        <*> rows edit ActiveBlockRequirement.source ActiveBlockRequirement.expiry (\x e -> x {ActiveBlockRequirement.expiry = e}) (GameState.blockRequirements gs)
-        <*> rows edit ActiveAttackRequirement.source ActiveAttackRequirement.expiry (\x e -> x {ActiveAttackRequirement.expiry = e}) (GameState.attackRequirements gs)
-        <*> rows edit ActiveObjectProhibition.source ActiveObjectProhibition.expiry (\x e -> x {ActiveObjectProhibition.expiry = e}) (GameState.objectProhibitions gs)
-        <*> rows edit ActiveAttackProhibition.source ActiveAttackProhibition.expiry (\x e -> x {ActiveAttackProhibition.expiry = e}) (GameState.attackProhibitions gs)
-        <*> rows edit ActiveEvasion.source ActiveEvasion.expiry (\x e -> x {ActiveEvasion.expiry = e}) (GameState.evasions gs)
-        <*> rows edit IgnoredAbility.source IgnoredAbility.expiry (\x e -> x {IgnoredAbility.expiry = e}) (GameState.ignoredAbilities gs)
-        <*> fmap (Seq.fromList . Maybe.catMaybes) (traverse delayed (Foldable.toList (GameState.delayedTriggers gs)))
-        <*> traverse object (GameState.objects gs)
+   in fmap (foldr ($) gs) . sequenceA $
+        [ (\xs g -> g {GameState.continuousEffects = xs}) <$> rows edit ContinuousEffect.source ContinuousEffect.expiry (\x e -> x {ContinuousEffect.expiry = e}) (GameState.continuousEffects gs),
+          (\xs g -> g {GameState.copyEffects = xs}) <$> rows edit ActiveCopy.source ActiveCopy.expiry (\x e -> x {ActiveCopy.expiry = e}) (GameState.copyEffects gs),
+          (\xs g -> g {GameState.replacements = xs}) <$> rows edit ActiveReplacement.source ActiveReplacement.expiry (\x e -> x {ActiveReplacement.expiry = e}) (GameState.replacements gs),
+          (\xs g -> g {GameState.playerEffects = xs}) <$> rows edit ActivePlayerEffect.source ActivePlayerEffect.expiry (\x e -> x {ActivePlayerEffect.expiry = e}) (GameState.playerEffects gs),
+          (\xs g -> g {GameState.blockRequirements = xs}) <$> rows edit ActiveBlockRequirement.source ActiveBlockRequirement.expiry (\x e -> x {ActiveBlockRequirement.expiry = e}) (GameState.blockRequirements gs),
+          (\xs g -> g {GameState.attackRequirements = xs}) <$> rows edit ActiveAttackRequirement.source ActiveAttackRequirement.expiry (\x e -> x {ActiveAttackRequirement.expiry = e}) (GameState.attackRequirements gs),
+          (\xs g -> g {GameState.objectProhibitions = xs}) <$> rows edit ActiveObjectProhibition.source ActiveObjectProhibition.expiry (\x e -> x {ActiveObjectProhibition.expiry = e}) (GameState.objectProhibitions gs),
+          (\xs g -> g {GameState.attackProhibitions = xs}) <$> rows edit ActiveAttackProhibition.source ActiveAttackProhibition.expiry (\x e -> x {ActiveAttackProhibition.expiry = e}) (GameState.attackProhibitions gs),
+          (\xs g -> g {GameState.evasions = xs}) <$> rows edit ActiveEvasion.source ActiveEvasion.expiry (\x e -> x {ActiveEvasion.expiry = e}) (GameState.evasions gs),
+          (\xs g -> g {GameState.ignoredAbilities = xs}) <$> rows edit IgnoredAbility.source IgnoredAbility.expiry (\x e -> x {IgnoredAbility.expiry = e}) (GameState.ignoredAbilities gs),
+          (\xs g -> g {GameState.delayedTriggers = xs}) . Seq.fromList . Maybe.catMaybes <$> traverse delayed (Foldable.toList (GameState.delayedTriggers gs)),
+          (\xs g -> g {GameState.objects = xs}) <$> traverse object (GameState.objects gs)
+        ]
 
 -- One carrier's list under traverseExpiries' edit, survivors in order.
 rows :: (Applicative f) => (ObjectId -> Expiry -> f (Maybe Expiry)) -> (r -> ObjectId) -> (r -> Expiry) -> (r -> Expiry -> r) -> [r] -> f [r]
