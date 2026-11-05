@@ -116,7 +116,15 @@
                           ],
                           "individually": true,
                           "ref": {
-                            "type": "EachOpponent"
+                            "type": "Players",
+                            "value": {
+                              "players": {
+                                "type": "Relative",
+                                "value": {
+                                  "type": "Opponent"
+                                }
+                              }
+                            }
                           },
                           "slot": "opponent"
                         }

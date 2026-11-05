@@ -1391,10 +1391,8 @@ data Question
 
 -- Which question an ObjectRef arm puts, if any.
 --
--- ObjectRef.ChosenPlayer is NOT one, despite the name: the seat was chosen on
--- entry and is read out of stored state here. ObjectRef.EachCardFromAmong is not
--- one either -- "all" states no count and hands out no choice, so CR 608.2d has
--- nobody to ask.
+-- ObjectRef.EachCardFromAmong is NOT one: "all" states no count and hands out no
+-- choice, so CR 608.2d has nobody to ask.
 --
 -- Exhaustive with no `_`, so a new arm has to be classified rather than
 -- defaulting to "a read".
@@ -1412,9 +1410,6 @@ questionOf ref = case ref of
   ObjectRef.EachSpell {} -> Nothing
   ObjectRef.EachAbility {} -> Nothing
   ObjectRef.EachOnStack {} -> Nothing
-  ObjectRef.EachPlayer -> Nothing
-  ObjectRef.EachOpponent -> Nothing
-  ObjectRef.ChosenPlayer -> Nothing
   -- Nor is an indirection to a seat: every PlayerRef arm is a read.
   ObjectRef.Players _ -> Nothing
   ObjectRef.TopOfLibrary {} -> Nothing
@@ -2118,10 +2113,6 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           ObjectRef.EachSpell _ -> False
           ObjectRef.EachAbility _ -> False
           ObjectRef.EachOnStack _ -> False
-          ObjectRef.EachPlayer -> False
-          ObjectRef.EachOpponent -> False
-          -- Names a player and so moves no object at all, the arm above's answer.
-          ObjectRef.ChosenPlayer -> False
           ObjectRef.Players _ -> False
           ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary player depth) -> case depth of
             Quantity.Type.Literal n -> n <= 1 && namesOneSeat player

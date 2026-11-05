@@ -22,6 +22,7 @@ import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PayObligation as PayObligation
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.PlayersWho as PlayersWho
 import qualified Parun.Types.SlotName as SlotName
 
 -- | The @effect@ parameter is instantiated at 'Text.Text' rather than at
@@ -59,7 +60,7 @@ spec s = Spec.describe s "Parun.Codec.ForEach" $ do
       s
       codec
       ( ForEach.MkForEach
-          { ForEach.ref = ObjectRef.EachPlayer,
+          { ForEach.ref = ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing),
             ForEach.members = LoopMembers.Every,
             ForEach.slot = SlotName.MkSlotName (Text.pack "victim"),
             ForEach.body = Seq.empty,
@@ -70,7 +71,7 @@ spec s = Spec.describe s "Parun.Codec.ForEach" $ do
             ForEach.startingWith = Nothing
           }
       )
-      " {\"ref\":{\"type\":\"EachPlayer\"},\"slot\":\"victim\",\"body\":[]} "
+      " {\"ref\":{\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"slot\":\"victim\",\"body\":[]} "
   -- Rule 702.116a's "for each opponent ..., you may": the one non-default
   -- membership, so the key is on the wire.
   Spec.it s "MkForEach over any number of its members" $
@@ -78,7 +79,7 @@ spec s = Spec.describe s "Parun.Codec.ForEach" $ do
       s
       codec
       ( ForEach.MkForEach
-          { ForEach.ref = ObjectRef.EachOpponent,
+          { ForEach.ref = ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.Opponent) Nothing),
             ForEach.members = LoopMembers.AnyNumber,
             ForEach.slot = SlotName.MkSlotName (Text.pack "opponent"),
             ForEach.body = Seq.singleton (Text.pack "mint"),
@@ -87,7 +88,7 @@ spec s = Spec.describe s "Parun.Codec.ForEach" $ do
             ForEach.startingWith = Nothing
           }
       )
-      " {\"ref\":{\"type\":\"EachOpponent\"},\"members\":{\"type\":\"AnyNumber\"},\"slot\":\"opponent\",\"body\":[\"mint\"]} "
+      " {\"ref\":{\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}},\"members\":{\"type\":\"AnyNumber\"},\"slot\":\"opponent\",\"body\":[\"mint\"]} "
   -- Cleansing's "for each land, destroy that land unless any player pays 1
   -- life": CR 118.12a's gate offered per member.
   Spec.it s "MkForEach with a pay gate" $
@@ -122,7 +123,7 @@ spec s = Spec.describe s "Parun.Codec.ForEach" $ do
       s
       codec
       ( ForEach.MkForEach
-          { ForEach.ref = ObjectRef.EachPlayer,
+          { ForEach.ref = ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing),
             ForEach.members = LoopMembers.Every,
             ForEach.slot = SlotName.MkSlotName (Text.pack "chooser"),
             ForEach.body = Seq.singleton (Text.pack "choose"),
@@ -131,5 +132,5 @@ spec s = Spec.describe s "Parun.Codec.ForEach" $ do
             ForEach.startingWith = Just (PlayerRef.Relative PlayerRelation.You)
           }
       )
-      " {\"ref\":{\"type\":\"EachPlayer\"},\"slot\":\"chooser\",\"body\":[\"choose\"],\"startingWith\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"ref\":{\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"slot\":\"chooser\",\"body\":[\"choose\"],\"startingWith\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

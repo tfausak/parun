@@ -164,7 +164,6 @@ import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerAction as PlayerAction
-import qualified Parun.Types.PlayerChoice as PlayerChoice
 import qualified Parun.Types.PlayerControl as PlayerControl
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerInstruction as PlayerInstruction
@@ -794,9 +793,6 @@ askingObjects resolving source controller legal chosen ref = case ref of
   ObjectRef.EachSpell _ -> swept
   ObjectRef.EachAbility _ -> swept
   ObjectRef.EachOnStack _ -> swept
-  ObjectRef.EachPlayer -> swept
-  ObjectRef.EachOpponent -> swept
-  ObjectRef.ChosenPlayer -> swept
   ObjectRef.Players _ -> swept
   ObjectRef.TopOfLibrary _ -> swept
   ObjectRef.TopOfLibraryUntil _ -> swept
@@ -1159,29 +1155,17 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   ObjectRef.EachSpell _ -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
   ObjectRef.EachAbility _ -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
   ObjectRef.EachOnStack _ -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
-  -- CR 120.3a: a player is a damage recipient. The printed nouns "each player"
-  -- and "each opponent" (CR 102.1, 109.5), resolved as the PlayerRef they
-  -- spell and in APNAP order (CR 608.2f), so CR 801.10's range and CR 102.1's
-  -- departed seat are cut where every other reference cuts them.
-  -- Parun.RangeOfInfluenceSpec's and Parun.DepartureSpec's Fanatic of Mogis
-  -- prove both.
-  ObjectRef.EachPlayer -> fmap Recipient.ToPlayer (apnapPlayersOf (PlayerRef.Relative PlayerRelation.AnyPlayer) legal resolving source controller gs)
-  ObjectRef.EachOpponent -> fmap Recipient.ToPlayer (apnapPlayersOf (PlayerRef.Relative PlayerRelation.Opponent) legal resolving source controller gs)
-  -- CR 120.3a, one seat wide: the player the SOURCE chose as it entered (CR
-  -- 614.12a), the printed noun for PlayerRef.ChosenPlayerOfBound over the
-  -- source's own slot (CR 113.7a) -- not `resolving`, which for a triggered
-  -- ability is the ability object and never carries the choice. So CR 608.2h's
-  -- last known information answers for a source that has left, and CR 801.10
-  -- cuts a chosen player outside the controller's range: Parun.RangeOfInfluenceSpec's
-  -- "CR 801.10 a chosen player outside the controller's range is dealt no
-  -- damage" proves it.
-  ObjectRef.ChosenPlayer -> fmap Recipient.ToPlayer (apnapPlayersOf (PlayerRef.ChosenPlayerOfBound Binding.triggerSource PlayerChoice.AsEnters) legal resolving source controller gs)
-  -- CR 120.3a, at whatever width the reference has: the seats a PlayerRef names,
-  -- which for Deflecting Palm's HolderOfBound is CR 108.4's controller of the
-  -- object a slot holds, read through CR 608.2h's last known information. The
-  -- player Filter narrows them as the sweep beside it is read, as the effect
-  -- executes (CR 608.2h): Disorder's "each player who controls a white
-  -- creature", proved by the scenario
+  -- CR 120.3a: a player is a damage recipient, at whatever width the
+  -- reference has -- "each player" (CR 102.1), "each opponent" (CR 102.2,
+  -- 109.5), the seat Stuffy Doll chose (CR 614.12a), Deflecting Palm's
+  -- HolderOfBound -- in APNAP order (CR 608.2f), so CR 801.10's range and CR 102.1's departed seat are cut
+  -- where every other reference cuts them. Parun.RangeOfInfluenceSpec's and
+  -- Parun.DepartureSpec's Fanatic of Mogis prove both, and
+  -- Parun.RangeOfInfluenceSpec's "CR 801.10 a chosen player outside the
+  -- controller's range is dealt no damage" the chosen seat. The player Filter
+  -- narrows them as the sweep beside it is read, as the effect executes (CR
+  -- 608.2h): Disorder's "each player who controls a white creature", proved by
+  -- the scenario
   -- cr-608-2c-disorder-deals-damage-to-each-player-who-controls-a-white-creature.
   ObjectRef.Players (PlayersWho.MkPlayersWho playerRef who) ->
     let context = effectContext gs resolving controller source legal (slotBindings resolving gs)

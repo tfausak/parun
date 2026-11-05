@@ -1023,9 +1023,6 @@ refReachesLibrary ref = case ref of
   ObjectRef.EachSpell _ -> False
   ObjectRef.EachAbility _ -> False
   ObjectRef.EachOnStack _ -> False
-  ObjectRef.EachPlayer -> False
-  ObjectRef.EachOpponent -> False
-  ObjectRef.ChosenPlayer -> False
   ObjectRef.Players _ -> False
   ObjectRef.ChosenCardInGraveyard {} -> False
   -- FALSE: the position is in a GRAVEYARD, so the ref itself reaches no library.

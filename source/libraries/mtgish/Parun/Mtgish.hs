@@ -138,6 +138,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerScope as PlayerScope
 import qualified Parun.Types.PlayerStaticAbility as PlayerStaticAbility
+import qualified Parun.Types.PlayersWho as PlayersWho
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Power as Power
 import qualified Parun.Types.PrintedReplacement as PrintedReplacement
@@ -1515,8 +1516,8 @@ damageRecipient context value = do
     "EachPlayer" -> do
       relation <- Node.argument n >>= players
       case relation of
-        PlayerRelation.AnyPlayer -> Right ObjectRef.EachPlayer
-        PlayerRelation.Opponent -> Right ObjectRef.EachOpponent
+        PlayerRelation.AnyPlayer -> Right (ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative relation) Nothing))
+        PlayerRelation.Opponent -> Right (ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative relation) Nothing))
         _ -> Node.untranslated n
     t | Just s <- Map.lookup t (references context) -> Right (ObjectRef.InSlot s)
     _ -> Node.untranslated n

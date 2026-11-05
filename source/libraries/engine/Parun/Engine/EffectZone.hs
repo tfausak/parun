@@ -127,9 +127,6 @@ zonesFunctionedAgainst itself delayed effect = case effect of
     ObjectRef.EachSpell _ -> Set.empty
     ObjectRef.EachAbility _ -> Set.empty
     ObjectRef.EachOnStack _ -> Set.empty
-    ObjectRef.EachPlayer -> Set.empty
-    ObjectRef.EachOpponent -> Set.empty
-    ObjectRef.ChosenPlayer -> Set.empty
     ObjectRef.Players _ -> Set.empty
     ObjectRef.TopOfLibrary {} -> Set.empty
     ObjectRef.TopOfLibraryUntil {} -> Set.empty

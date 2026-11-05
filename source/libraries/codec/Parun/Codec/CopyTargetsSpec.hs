@@ -8,7 +8,9 @@ import qualified Parun.Types.CopyTargets as CopyTargets
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.ObjectRef as ObjectRef
+import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.PlayersWho as PlayersWho
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.CopyTargets" $ do
@@ -20,8 +22,8 @@ spec s = Spec.describe s "Parun.Codec.CopyTargets" $ do
     Common.assertCodec
       s
       CopyTargets.codec
-      (CopyTargets.ForEach (ObjectRef.EachMatching (Filter.HeldBy Holder.Controller PlayerRelation.You) NonEmpty.:| [ObjectRef.EachPlayer]))
-      " {\"type\":\"ForEach\",\"value\":[{\"type\":\"EachMatching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},{\"type\":\"EachPlayer\"}]} "
+      (CopyTargets.ForEach (ObjectRef.EachMatching (Filter.HeldBy Holder.Controller PlayerRelation.You) NonEmpty.:| [ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing)]))
+      " {\"type\":\"ForEach\",\"value\":[{\"type\":\"EachMatching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},{\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}]} "
   Spec.it s "Stated" $
     Common.assertCodec
       s

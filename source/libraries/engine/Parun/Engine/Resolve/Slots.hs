@@ -529,10 +529,6 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   ObjectRef.EachSpell _ -> Map.empty
   ObjectRef.EachAbility _ -> Map.empty
   ObjectRef.EachOnStack _ -> Map.empty
-  ObjectRef.EachPlayer -> Map.empty
-  ObjectRef.EachOpponent -> Map.empty
-  -- The seat comes from the source's own entry choice (CR 614.12a), not a slot.
-  ObjectRef.ChosenPlayer -> Map.empty
   -- The seat is objectRefPlayerRefs' half, joined at the head (Deflecting
   -- Palm's HolderOfBound); the narrowing Filter is a read like a sweep's.
   ObjectRef.Players (PlayersWho.MkPlayersWho _ who) -> foldMap filterSlotsOf who
@@ -616,9 +612,6 @@ objectRefQuantities ref = case ref of
   ObjectRef.EachSpell _ -> []
   ObjectRef.EachAbility _ -> []
   ObjectRef.EachOnStack _ -> []
-  ObjectRef.EachPlayer -> []
-  ObjectRef.EachOpponent -> []
-  ObjectRef.ChosenPlayer -> []
   -- A seat, never a count.
   ObjectRef.Players _ -> []
   ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary _ count) -> [count]
@@ -676,9 +669,6 @@ objectRefPlayerRefs ref = case ref of
   ObjectRef.EachSpell _ -> []
   ObjectRef.EachAbility _ -> []
   ObjectRef.EachOnStack _ -> []
-  ObjectRef.EachPlayer -> []
-  ObjectRef.EachOpponent -> []
-  ObjectRef.ChosenPlayer -> []
   -- The reference IS a seat, so it is its own whole answer here.
   ObjectRef.Players (PlayersWho.MkPlayersWho player _) -> [player]
   ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary player _) -> [player]
@@ -3272,9 +3262,6 @@ objectRefObjects legal resolving controller source gs ref = case ref of
           (\oid -> Filter.matches context (viewOf oid) filter_)
           (GameState.stack gs)
   -- Names players and so no objects at all.
-  ObjectRef.EachPlayer -> []
-  ObjectRef.EachOpponent -> []
-  ObjectRef.ChosenPlayer -> []
   ObjectRef.Players _ -> []
   -- CR 401.2's ordered pile, whose head is the top (CR 121.1). The depth is taken
   -- from EACH named library, top first, and a shorter library gives what it has

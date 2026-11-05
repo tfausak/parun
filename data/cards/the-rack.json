@@ -105,7 +105,18 @@
                                 }
                               },
                               "ref": {
-                                "type": "ChosenPlayer"
+                                "type": "Players",
+                                "value": {
+                                  "players": {
+                                    "type": "ChosenPlayerOfBound",
+                                    "value": [
+                                      "self",
+                                      {
+                                        "type": "AsEnters"
+                                      }
+                                    ]
+                                  }
+                                }
                               }
                             }
                           ]

@@ -166,10 +166,9 @@ data PlayerRef
     --
     -- HolderOfBound's shape one field over, and a separate arm for the reason
     -- that one is separate from InSlot: the slot holds an OBJECT, and what is
-    -- asked of it is a record rather than a characteristic. Parun.Types.ObjectRef's
-    -- ChosenPlayer is the same read from the other type, for a clause whose
-    -- recipient position takes an ObjectRef (Stuffy Doll's damage). A permanent
-    -- that has left answers through CR 608.2h's last known information.
+    -- asked of it is a record rather than a characteristic. Stuffy Doll's damage
+    -- reads it through Parun.Types.ObjectRef's Players. A permanent that has left
+    -- answers through CR 608.2h's last known information.
     ChosenPlayerOfBound SlotName.SlotName PlayerChoice.PlayerChoice
   | -- | CR 508.6: the players attacking the player a slot names, narrowed by
     -- relation -- Curse of Vitality's "each opponent attacking that player".

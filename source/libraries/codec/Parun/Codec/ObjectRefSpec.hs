@@ -104,38 +104,23 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       ObjectRef.codec
       (ObjectRef.EachOnStack (Filter.HeldBy Holder.Controller PlayerRelation.Opponent))
       " {\"type\":\"EachOnStack\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}}} "
-  Spec.it s "EachPlayer" $
+  -- "each opponent" is a relation the resolution's CR 109.5 "you" answers, so
+  -- the PlayerRef carries no seat (Soul Immolation).
+  Spec.it s "Players each opponent" $
     Common.assertCodec
       s
       ObjectRef.codec
-      ObjectRef.EachPlayer
-      " {\"type\":\"EachPlayer\"} "
-  -- Nullary like EachPlayer above, and for CR 109.5 rather than an economy: the
-  -- perspective an opponent is relative to is CR 109.5's "you", which the
-  -- resolution supplies, so the arm has no player to carry.
-  Spec.it s "EachOpponent" $
-    Common.assertCodec
-      s
-      ObjectRef.codec
-      ObjectRef.EachOpponent
-      " {\"type\":\"EachOpponent\"} "
-  -- Nullary like EachPlayer above, and for a rule: CR 614.12a made the choice as
-  -- the source entered, so the ref names it rather than restating it.
-  Spec.it s "ChosenPlayer" $
-    Common.assertCodec
-      s
-      ObjectRef.codec
-      ObjectRef.ChosenPlayer
-      " {\"type\":\"ChosenPlayer\"} "
-  -- The one arm here that names a seat INDIRECTLY, so unlike the three above it
-  -- carries a payload: Deflecting Palm's "that source's controller".
+      (ObjectRef.Players PlayersWho.MkPlayersWho {PlayersWho.players = PlayerRef.Relative PlayerRelation.Opponent, PlayersWho.who = Nothing})
+      " {\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
+  -- A seat named through an object a slot holds: Deflecting Palm's "that
+  -- source's controller".
   Spec.it s "Players" $
     Common.assertCodec
       s
       ObjectRef.codec
       (ObjectRef.Players PlayersWho.MkPlayersWho {PlayersWho.players = PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "thatDamageSource")), PlayersWho.who = Nothing})
       " {\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"thatDamageSource\"}}}} "
-  -- Nullary like EachPlayer above, and for a rule rather than an economy: CR
+  -- Nullary for a rule rather than an economy: CR
   -- 400.2 makes a hand hidden, so this arm names only the resolving
   -- controller's own and carries neither a player nor a filter.
   Spec.it s "EachCardInYourHand" $
@@ -467,7 +452,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
   Spec.it s "every arm carries a distinct tag" $
     Spec.assertEqWith
       s
-      "a slot, a battlefield sweep, a graveyard sweep, your own hand sweep, a scoped hand sweep, your own library sweep, every card you own, the linked exile sweep, the stack's spells, the stack's abilities, the whole stack, the player sweep, the opponent sweep, the chosen player, an indirection to a seat, a library's top cards, a walk of a library, a graveyard's top card, a chosen graveyard card, a chosen card in hand, a chosen card from among a group, every card from among a group, a random card in hand, a random card in a graveyard, a random card in a library, a battlefield choice, the source with one chosen permanent and what is attached to a bound object all encode differently"
+      "a slot, a battlefield sweep, a graveyard sweep, your own hand sweep, a scoped hand sweep, your own library sweep, every card you own, the linked exile sweep, the stack's spells, the stack's abilities, the whole stack, a seat, a library's top cards, a walk of a library, a graveyard's top card, a chosen graveyard card, a chosen card in hand, a chosen card from among a group, every card from among a group, a random card in hand, a random card in a graveyard, a random card in a library, a battlefield choice, the source with one chosen permanent and what is attached to a bound object all encode differently"
       ( Set.size
           ( Set.fromList
               [ Codec.encode ObjectRef.codec (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))),
@@ -481,9 +466,6 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
                 Codec.encode ObjectRef.codec (ObjectRef.EachSpell (Filter.Not Filter.IsSource)),
                 Codec.encode ObjectRef.codec (ObjectRef.EachAbility (Filter.Not Filter.IsSource)),
                 Codec.encode ObjectRef.codec (ObjectRef.EachOnStack (Filter.Not Filter.IsSource)),
-                Codec.encode ObjectRef.codec ObjectRef.EachPlayer,
-                Codec.encode ObjectRef.codec ObjectRef.EachOpponent,
-                Codec.encode ObjectRef.codec ObjectRef.ChosenPlayer,
                 Codec.encode ObjectRef.codec (ObjectRef.Players PlayersWho.MkPlayersWho {PlayersWho.players = PlayerRef.Relative PlayerRelation.You, PlayersWho.who = Nothing}),
                 Codec.encode ObjectRef.codec (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 3))),
                 Codec.encode ObjectRef.codec (ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil (PlayerRef.Relative PlayerRelation.You) (Filter.Not (Filter.HasCardType CardType.Land)) (Quantity.Literal 1))),
@@ -496,12 +478,12 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
                 Codec.encode ObjectRef.codec (ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) (Filter.And []) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (PlayerRef.Relative PlayerRelation.You) (Filter.And []) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) HowMany.one Zone.Battlefield)),
-                Codec.encode ObjectRef.codec (ObjectRef.AllOf (ObjectRef.EachPlayer NonEmpty.:| [])),
+                Codec.encode ObjectRef.codec (ObjectRef.AllOf (ObjectRef.EachCardInYourHand NonEmpty.:| [])),
                 Codec.encode ObjectRef.codec (ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound (SlotName.MkSlotName (Text.pack "target")) (Filter.HasCardType CardType.Creature)))
               ]
           )
       )
-      28
+      25
   -- A tag the decoder does not know is an error rather than a silent slot. The
   -- tag has to be one no arm will ever claim -- @EachOpponent@ stood here until
   -- that became a real arm, and the case then failed rather than going quiet,

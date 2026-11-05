@@ -171,6 +171,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerSacrifices as PlayerSacrifices
 import qualified Parun.Types.PlayerScope as PlayerScope
+import qualified Parun.Types.PlayersWho as PlayersWho
 import qualified Parun.Types.PreventAllDamage as PreventAllDamage
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
 import qualified Parun.Types.Prohibit as Prohibit
@@ -278,8 +279,8 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart ObjectRef.EachPlayer (Quantity.Literal 2))) Nothing Nothing Nothing Nothing Nothing))
-      " {\"type\":\"DealDamage\",\"value\":{\"parts\":[{\"ref\":{\"type\":\"EachPlayer\"},\"quantity\":{\"type\":\"Literal\",\"value\":2}}]}} "
+      (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing)) (Quantity.Literal 2))) Nothing Nothing Nothing Nothing Nothing))
+      " {\"type\":\"DealDamage\",\"value\":{\"parts\":[{\"ref\":{\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"quantity\":{\"type\":\"Literal\",\"value\":2}}]}} "
   -- Both ObjectRef arms have to survive the trip through the payload.
   Spec.it s "ModifyTarget round-trips both ObjectRef arms" $ do
     Common.assertJsonCodec
