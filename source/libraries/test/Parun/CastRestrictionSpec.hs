@@ -845,7 +845,7 @@ bountyName = CardName.MkCardName (Text.pack "Synthetic Bounded Bounty")
 boundedFusedName = CardName.MkCardName (Text.pack "Synthetic Bounded Blaze//Synthetic Bounded Bounty")
 
 -- Three seats, so "each opponent" is not the same set as "each player": an
--- ObjectRef.EachPlayer in the left half's place would take life from alice too.
+-- PlayerRelation.AnyPlayer in the left half's place would take life from alice too.
 --
 -- Alice controls three Goblin Pikers -- the left half's ceiling, 3 -- and
 -- `artifacts` Chromatic Spheres, which is the right half's. Eight lands, four of

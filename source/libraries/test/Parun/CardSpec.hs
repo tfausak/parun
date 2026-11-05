@@ -839,7 +839,7 @@ playerRefPositions =
         ("player-sacrifices", Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (plantedPlayer "ps") (Filter.Type.And []) one Nothing), [plantedPlayer "ps"]),
         ("flip-coin", Effect.FlipCoin FlipCoin.MkFlipCoin {FlipCoin.count = one, FlipCoin.reading = CoinReading.Heads, FlipCoin.slot = SlotName.MkSlotName (Text.pack "fc"), FlipCoin.misses = Nothing, FlipCoin.flipper = plantedPlayer "fc"}, [plantedPlayer "fc"]),
         ("choose-card-name", Effect.ChooseCardName (ChooseCardName.MkChooseCardName (plantedPlayer "cn") (Filter.Type.And []) Nothing), [plantedPlayer "cn"]),
-        ("for-each-starting-with", Effect.ForEach (ForEach.MkForEach ObjectRef.EachPlayer LoopMembers.Every (SlotName.MkSlotName (Text.pack "each")) Seq.empty False Nothing (Just (plantedPlayer "fe-start"))), [plantedPlayer "fe-start"]),
+        ("for-each-starting-with", Effect.ForEach (ForEach.MkForEach (ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing)) LoopMembers.Every (SlotName.MkSlotName (Text.pack "each")) Seq.empty False Nothing (Just (plantedPlayer "fe-start"))), [plantedPlayer "fe-start"]),
         ("repeat", Effect.Repeat (Repeat.MkRepeat (plantedPlayer "rp-chooser") Seq.empty Nothing (Just (plantedPlayer "rp-other")) Seq.empty), [plantedPlayer "rp-chooser", plantedPlayer "rp-other"]),
         ("choose-number", Effect.ChooseNumber (ChooseNumber.MkChooseNumber (SlotName.MkSlotName (Text.pack "number")) Nothing (plantedPlayer "cn-chooser")), [plantedPlayer "cn-chooser"]),
         ("offer-cast", Effect.OfferCast (OfferCast.MkOfferCast (plantedRef "oc-ref") (plantedPlayer "oc-caster") CastObligation.Optional PermissionVerb.Cast CastOffer.defaultValue CastRepetition.Once False False Nothing), [plantedPlayer "oc-caster"]),
@@ -4187,12 +4187,6 @@ objectRefFilters ref = case ref of
   -- Glen Elendra's Answer's "all spells your opponents control and all
   -- abilities your opponents control" states its own too, for the same reason.
   ObjectRef.EachOnStack f -> unframed [f]
-  -- Molten Disaster's "each player" holds no Filter to lint.
-  ObjectRef.EachPlayer -> []
-  ObjectRef.EachOpponent -> []
-  -- Stuffy Doll's "the chosen player" holds none either: the seat was named by a
-  -- choice made on entry, never by characteristics.
-  ObjectRef.ChosenPlayer -> []
   -- The PlayerRef names players by relation, by slot or through CR 108.4's
   -- controller, never by characteristics; Disorder's "who controls a white
   -- creature" is the narrowing Filter, matched against each player.
@@ -7437,7 +7431,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
      in Spec.assertEqWith
           s
           "the dealer slot is read"
-          (Map.keysSet (Resolve.slotsOf (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart ObjectRef.EachPlayer (Quantity.Type.Literal 3))) (Just ghost) Nothing Nothing Nothing Nothing))))
+          (Map.keysSet (Resolve.slotsOf (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing)) (Quantity.Type.Literal 3))) (Just ghost) Nothing Nothing Nothing Nothing))))
           (Set.singleton ghost)
   -- The SPELL half of CR 601.2b's contract: what a card's own modes read is
   -- announced against the card's own cost -- mana cost, additional costs and

@@ -11,6 +11,9 @@ import qualified Parun.Types.ExcessDestination as ExcessDestination
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.ObjectRef as ObjectRef
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.PlayersWho as PlayersWho
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SlotName as SlotName
 
@@ -53,7 +56,7 @@ spec s = Spec.describe s "Parun.Codec.DealDamage" $ do
                       DamagePart.quantity = Quantity.Literal 3
                     },
                   DamagePart.MkDamagePart
-                    { DamagePart.ref = ObjectRef.EachPlayer,
+                    { DamagePart.ref = ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing),
                       DamagePart.quantity = Quantity.Literal 2
                     }
                 ],
@@ -64,5 +67,5 @@ spec s = Spec.describe s "Parun.Codec.DealDamage" $ do
             DealDamage.excessTally = Just (SlotName.MkSlotName (Text.pack "over"))
           }
       )
-      " {\"parts\":[{\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flying\"}}},\"quantity\":{\"type\":\"Literal\",\"value\":3}},{\"ref\":{\"type\":\"EachPlayer\"},\"quantity\":{\"type\":\"Literal\",\"value\":2}}],\"dealer\":\"dealer\",\"excess\":{\"type\":\"ToRecipientController\"},\"tally\":\"dealt\",\"damaged\":\"hit\",\"excessTally\":\"over\"} "
+      " {\"parts\":[{\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flying\"}}},\"quantity\":{\"type\":\"Literal\",\"value\":3}},{\"ref\":{\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"quantity\":{\"type\":\"Literal\",\"value\":2}}],\"dealer\":\"dealer\",\"excess\":{\"type\":\"ToRecipientController\"},\"tally\":\"dealt\",\"damaged\":\"hit\",\"excessTally\":\"over\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DealDamage.codec

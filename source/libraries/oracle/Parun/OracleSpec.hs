@@ -130,6 +130,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerScope as PlayerScope
 import qualified Parun.Types.PlayerStaticAbility as PlayerStaticAbility
+import qualified Parun.Types.PlayersWho as PlayersWho
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Power as Power
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
@@ -302,7 +303,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s [[Text.pack "Spark deals 1 damage to any target and 1 damage to you."]] (Oracle.abilities brothers)
     let tomb = ring {ActivatedAbility.modal = payload [clause [addMana 1, damage [(you, 2)]]] []}
     Spec.assertEq s [[Text.pack "{T}: Add {G}. Spark deals 2 damage to you.", Text.pack "{T}: Add {G}. Then Spark deals 2 damage to you."]] (Oracle.abilities (withFace (\f -> f {Face.activatedAbilities = [tomb]})))
-    let earthquake = spell [clause [Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList [DamagePart.MkDamagePart (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature)) (Quantity.Literal 2), DamagePart.MkDamagePart ObjectRef.EachPlayer (Quantity.Literal 2)]) Nothing Nothing Nothing Nothing Nothing)]] []
+    let earthquake = spell [clause [Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList [DamagePart.MkDamagePart (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature)) (Quantity.Literal 2), DamagePart.MkDamagePart (ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing)) (Quantity.Literal 2)]) Nothing Nothing Nothing Nothing Nothing)]] []
     Spec.assertEq s [[Text.pack "Spark deals 2 damage to each creature and each player."]] (Oracle.abilities earthquake)
     let jagged = spell [clause [damage [(target, 3)]]] [(target, (TargetSlot.required Pool.Creatures Nothing) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2))})]
     Spec.assertEq s (Just (Text.pack "Spark deals 3 damage to each of two target creatures.")) (Oracle.render jagged)
@@ -653,7 +654,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
         ambush = spell [clause [damageBy [(ObjectRef.InSlot target, mountains)]]] [(target, TargetSlot.required Pool.Creatures Nothing)]
     Spec.assertEq s [[Text.pack "Spark deals damage to target creature equal to the number of Mountains you control.", Text.pack "Spark deals damage equal to the number of Mountains you control to target creature.", Text.pack "Spark deals X damage to target creature, where X is the number of Mountains you control."]] (Oracle.abilities ambush)
     let theirs = countOf (Filter.And [Filter.HasCardType CardType.Land, Filter.HeldByRecipient Holder.Controller]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
-    Spec.assertEq s (Just (Text.pack "Spark deals damage to each player equal to the number of lands they control.")) (Oracle.render (spell [clause [damageBy [(ObjectRef.EachPlayer, theirs)]]] []))
+    Spec.assertEq s (Just (Text.pack "Spark deals damage to each player equal to the number of lands they control.")) (Oracle.render (spell [clause [damageBy [(ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing), theirs)]]] []))
     let dealer = SlotName.MkSlotName (Text.pack "dealer")
         fire = Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot target) (powerOf dealer))) (Just dealer) Nothing Nothing Nothing Nothing)
         slots = [(dealer, TargetSlot.required Pool.Creatures (Just (Filter.HeldBy Holder.Controller PlayerRelation.You))), (target, TargetSlot.required Pool.AnyTarget Nothing)]

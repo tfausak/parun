@@ -1281,9 +1281,6 @@ rewriteObjectRef pairs ref = case ref of
   ObjectRef.EachSpell f -> ObjectRef.EachSpell (Filter.rewrite pairs f)
   ObjectRef.EachAbility f -> ObjectRef.EachAbility (Filter.rewrite pairs f)
   ObjectRef.EachOnStack f -> ObjectRef.EachOnStack (Filter.rewrite pairs f)
-  ObjectRef.EachPlayer -> ref
-  ObjectRef.EachOpponent -> ref
-  ObjectRef.ChosenPlayer -> ref
   -- Proved by the scenario
   -- cr-612-2-a-sleighted-disorder-burns-each-player-who-controls-a-green-creature.
   ObjectRef.Players p -> ObjectRef.Players p {PlayersWho.who = fmap (Filter.rewrite pairs) (PlayersWho.who p)}

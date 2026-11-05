@@ -42,6 +42,8 @@ import qualified Parun.Types.CostChoice as CostChoice
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CostModifier as CostModifier
 import qualified Parun.Types.Count as Count
+import qualified Parun.Types.DamagePart as DamagePart
+import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DestructionRewrite as DestructionRewrite
 import qualified Parun.Types.DiscardCards as DiscardCards
@@ -77,6 +79,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerScope as PlayerScope
 import qualified Parun.Types.PlayerStaticAbility as PlayerStaticAbility
+import qualified Parun.Types.PlayersWho as PlayersWho
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.PrintedReplacement as PrintedReplacement
 import qualified Parun.Types.Quantity as Quantity
@@ -255,6 +258,12 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
     Spec.assertEq s [Just (Quantity.Literal 2)] (fmap TargetSlot.divided slots)
     Spec.assertEq s [SlotCount.Printed (TargetCount.MkTargetCount 1 (Just 2))] (fmap TargetSlot.count slots)
 
+  -- CR 120.3a: "each opponent" is dealt damage as the players a relation
+  -- names.
+  Spec.it s "reads damage to each opponent as the opponents a PlayerRef names" $ do
+    Spec.assertEq s (Right ()) (accepts sizzle)
+    Spec.assertEq s [[ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.Opponent) Nothing)]] [fmap DamagePart.ref (Foldable.toList (DealDamage.parts d)) | Effect.DealDamage d <- spellEffects (translated sizzle)]
+
   -- CR 107.4e: a hybrid symbol, as Parun.Ingest reads MTGJSON's "{R/W}".
   Spec.it s "reads a hybrid mana symbol" $ do
     Spec.assertEq s (Right ()) (accepts borosRecruit)
@@ -369,6 +378,13 @@ shock :: (String, String)
 shock =
   ( "{\"_OracleCard\":\"Card\",\"Name\":\"Shock\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Instant\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostR\"}],\"Rules\":[{\"_Rule\":\"SpellActions\",\"args\":{\"_Actions\":\"Targeted\",\"args\":[[{\"_Target\":\"AnyTarget\"}],{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"SpellDealsDamage\",\"args\":[{\"_Spell\":\"ThisSpell\"},{\"_GameNumber\":\"Integer\",\"args\":2},{\"_DamageRecipient\":\"Ref_AnyTarget\"}]}]}]}}]}",
     "Shock deals 2 damage to any target."
+  )
+
+-- | Sizzle's AST, and its Oracle text.
+sizzle :: (String, String)
+sizzle =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Sizzle\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Sorcery\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":2},{\"_ManaSymbol\":\"ManaCostR\"}],\"Rules\":[{\"_Rule\":\"SpellActions\",\"args\":{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"SpellDealsDamage\",\"args\":[{\"_Spell\":\"ThisSpell\"},{\"_GameNumber\":\"Integer\",\"args\":3},{\"_DamageRecipient\":\"EachPlayer\",\"args\":{\"_Players\":\"Opponent\"}}]}]}}]}",
+    "Sizzle deals 3 damage to each opponent."
   )
 
 -- | Giant Growth's AST, and its Oracle text.

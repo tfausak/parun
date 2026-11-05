@@ -2319,9 +2319,6 @@ objectRefNames asking x = case x of
   ObjectRef.EachSpell filter_ -> filterNames asking filter_
   ObjectRef.EachAbility filter_ -> filterNames asking filter_
   ObjectRef.EachOnStack filter_ -> filterNames asking filter_
-  ObjectRef.EachPlayer -> mempty
-  ObjectRef.EachOpponent -> mempty
-  ObjectRef.ChosenPlayer -> mempty
   ObjectRef.Players (PlayersWho.MkPlayersWho playerRef who) -> playerRefNames asking playerRef <> foldMap (filterNames asking) who
   ObjectRef.TopOfLibrary topOfLibrary -> topOfLibraryNames asking topOfLibrary
   ObjectRef.TopOfLibraryUntil topOfLibraryUntil -> topOfLibraryUntilNames asking topOfLibraryUntil

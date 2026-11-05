@@ -82,6 +82,7 @@ import qualified Parun.Types.PlayerQuantity as PlayerQuantity
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerScope as PlayerScope
+import qualified Parun.Types.PlayersWho as PlayersWho
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
 import qualified Parun.Types.PutCounters as PutCounters
@@ -1106,8 +1107,8 @@ dealDamage context d
 each :: ObjectRef.ObjectRef -> Bool
 each ref = case ref of
   ObjectRef.EachMatching _ -> True
-  ObjectRef.EachPlayer -> True
-  ObjectRef.EachOpponent -> True
+  ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing) -> True
+  ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.Opponent) Nothing) -> True
   _ -> False
 
 -- | Damage parts sharing an amount: "2 damage to each creature and each

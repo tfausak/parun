@@ -1743,10 +1743,9 @@ scavengeTarget = SlotName.MkSlotName (Text.pack "scavenged onto")
 --
 -- THE EXILE and the sorcery-speed restriction are scavenge's, one rule over.
 --
--- THE LOOP is myriad's, over ObjectRef.EachOpponent rather than rule 702.116a's
+-- THE LOOP is myriad's, over PlayerRelation.Opponent rather than rule 702.116a's
 -- PlayerRef.EachOpponentExcept: rule 702.141a names every opponent outright,
--- where myriad's excludes the defending player its trigger bound -- so this is
--- the printed NOUN where myriad needs the indirection.
+-- where myriad's excludes the defending player its trigger bound.
 --
 -- THE COPY names Binding.triggerSource, graveyardTokenCopy's reason: the card the
 -- cost exiled is gone by resolution (CR 400.7), so CreateCopy reads CR 707.2's
@@ -1796,7 +1795,7 @@ encore cost =
       loop =
         Effect.ForEach
           ForEach.MkForEach
-            { ForEach.ref = ObjectRef.EachOpponent,
+            { ForEach.ref = ObjectRef.Players PlayersWho.MkPlayersWho {PlayersWho.players = PlayerRef.Relative PlayerRelation.Opponent, PlayersWho.who = Nothing},
               ForEach.members = LoopMembers.Every,
               ForEach.slot = encoreOpponentSlot,
               ForEach.body = Seq.fromList [copied, required],

@@ -59,7 +59,15 @@
                       ],
                       "individually": true,
                       "ref": {
-                        "type": "EachPlayer"
+                        "type": "Players",
+                        "value": {
+                          "players": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "AnyPlayer"
+                            }
+                          }
+                        }
                       },
                       "slot": "player"
                     }
