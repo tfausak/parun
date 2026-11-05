@@ -2857,6 +2857,14 @@ apply settle batch applied batchPrevented candidate event =
                 case Quantity.evaluate viewOf context (Projection.boardAsEntering gs2) oid (Quantity.substituteAnnouncedX announcedX quantity) of
                   Nothing -> pure () -- unevaluable quantity: no counters, the WithCounters arm's posture
                   Just n -> addCopyExceptionCounters oid kind (Integer.toNaturalSaturating n)
+            -- CR 107.3j over CR 107.3m: every ability the copy supplied defines
+            -- no X, so the announced X stops here, once the exception above has
+            -- read it (Altered Ego's ruling). A later copy effect's exception
+            -- reads 0 too, its ability copied. Only on THIS object: a copy onto
+            -- the host leaves the entering Aura's own abilities. data/scenarios/copy's
+            -- cr-107-3j pair proves it.
+            Monad.when (AsCopy.recipient asCopy == CopyRecipient.ThisObject) $
+              State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.announcedX = Nothing}) oid (GameState.objects g)})
             pure (Just event)
       -- CR 614.1c / 208.2b: Primal Plasma's choice of which printed
       -- power/toughness-and-keywords option to become. Written into the COPIABLE

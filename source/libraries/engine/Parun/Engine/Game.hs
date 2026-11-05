@@ -2002,7 +2002,8 @@ lastKnownOf oid gs = Monad.join (liveOrLastKnown (const Nothing) Just oid gs)
 -- and 0 for every object no such spell stands behind. Read off the OBJECT, not
 -- the projection: an announcement is not a characteristic, so no CR 613 layer
 -- can write it, and CR 707.2 copies the value of X only for an object on the
--- stack, so a Clone has none. A source already gone answers
+-- stack, so a Clone has none; an entry copy clears it (CR 107.3j,
+-- Parun.Engine.Event's AsCopy arm). A source already gone answers
 -- from its last known information (CR 113.7a), which is what a legend-rule
 -- casualty's own enters trigger reads; the
 -- cr-107-3m-a-gadwick-lost-to-the-legend-rule-still-draws-its-x scenario is the
