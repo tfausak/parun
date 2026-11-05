@@ -221,30 +221,30 @@ data Combat = MkCombat
     -- NOT written by putOntoBattlefieldBlocking, for CR 509.4's twin of the
     -- CR 508.4 reason above.
     declaredBlockers :: Set.Set ObjectId.ObjectId,
-    -- | CR 506.7b: has this combat phase's declare blockers step declared
+    -- | CR 506.8b: has this combat phase's declare blockers step declared
     -- blockers? The boundary "only during combat after blockers are declared"
     -- names, and the sole reader is
     -- Parun.Engine.Turn.afterBlockersDeclared (Curtain of Light on the casting
     -- side, Trap Runner on the activation side).
     --
-    -- CR 506.7b's own words are "after the declare blockers step begins", which
+    -- CR 506.8b's own words are "after the declare blockers step begins", which
     -- is a hair earlier than the CR 509.1 turn-based action this field is
     -- written by. Nothing can tell them apart: CR 509.2 gives the active player
     -- priority only once that action is finished, so no cast or activation ever
     -- sees the gap.
     --
     -- Written at the TOP of Parun.Engine.Combat.declareBlockers, ahead of its
-    -- own "nothing is attacking" short-circuit, because CR 506.7b opens the
+    -- own "nothing is attacking" short-circuit, because CR 506.8b opens the
     -- window "regardless of whether any blockers are actually declared" -- and a
     -- combat whose attackers were all removed after CR 508.8 asked its question
     -- still runs the step.
     --
-    -- Stored rather than derived, and no other field answers it. CR 506.7f asks
+    -- Stored rather than derived, and no other field answers it. CR 506.8f asks
     -- about a step that did NOT happen: a combat phase whose declare blockers
     -- step is skipped admits the spell nowhere in that phase, its end of combat
     -- step included, and the phase the game is IN cannot say that. This
     -- record's lifetime is what makes the answer exact -- CR 511.3's reset
-    -- re-arms it, which is what CR 506.7c's "any of them" wants from a CR 500.8
+    -- re-arms it, which is what CR 506.8c's "any of them" wants from a CR 500.8
     -- second combat phase.
     blockersDeclared :: Bool,
     -- | CR 506.4c: the attacking creatures that are "not attacking any player,

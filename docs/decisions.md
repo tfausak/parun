@@ -36,7 +36,7 @@ Entries are ordered by the first rule each cites.
 
 - **Question**: CR 103.5b ends "If the player performs the action, they then
   declare". May a player take another such action first?
-- **Rules**: CR 103.5, 103.5b; CR of 2026-08-07.
+- **Rules**: CR 103.5, 103.5b; CR of 2026-09-25.
 - **Decision**: Yes, until they decline. Each moment before the declaration is
   still "a time they would declare".
 - **Rejected**: One action per declaration: "then" orders the declaration after
@@ -54,7 +54,7 @@ Entries are ordered by the first rule each cites.
   (Well Rested moved off and back by Aura Graft). Is it a new ability, unspent?
   The rulings on Tyvar the Bellicose, Dionus and Cursed Wombat settle only a
   new granter's grant, and only for a triggered ability.
-- **Rules**: CR 113.2c, 400.7, 602.5b, 613.7e; CR of 2026-08-07.
+- **Rules**: CR 113.2c, 400.7, 602.5b, 613.7e; CR of 2026-09-25.
 - **Decision**: The same ability, still spent: a grant is named for its
   granter object (`Binding.acquiredFrom`), not for its timestamp. A new
   granter, including one that left and returned (CR 400.7), gives a new
@@ -75,7 +75,7 @@ Entries are ordered by the first rule each cites.
   holder concedes and priority moves on (CR 800.4a), do earlier passes still
   count?
 - **Rules**: CR 117.4, 104.3a, 117.1, 117.3d, 800.4a; the glossary's Pass in
-  Succession; CR of 2026-08-07.
+  Succession; CR of 2026-09-25.
 - **Decision**: No. The pass set empties and priority goes to the next seat
   still playing.
 - **Rejected**: Keeping the passes, which the glossary's "each player in the
@@ -92,7 +92,7 @@ Entries are ordered by the first rule each cites.
   that two damage events or one of 6? CR 615.10's per-event floor observes it.
 - **Rules**: CR 120.4, 608.2f, 614.5, 615.7, 615.10, 701.14c; adjacent,
   Dragonborn Champion's ruling of 2021-07-23 and Savage Alliance's of
-  2016-07-13; CR of 2026-08-07.
+  2016-07-13; CR of 2026-09-25.
 - **Decision**: One event per recipient, source and moment; the amounts sum,
   over an instruction's aims and over a whole batch's survivors, since a
   redirect can land two proposals of one source together. A counted redirect
@@ -126,7 +126,7 @@ Entries are ordered by the first rule each cites.
   observes it. And if alice has a second effect on her event, and so a choice,
   whose question comes first? Harm's Way moving damage onto the shielded
   recipient asks the same.
-- **Rules**: CR 101.4, 101.4b, 615.7, 616.1, 616.1f; CR of 2026-08-07.
+- **Rules**: CR 101.4, 101.4b, 615.7, 616.1, 616.1f; CR of 2026-09-25.
 - **Decision**: A row that adds or moves damage and is its event's only effect
   asks no one anything, so it applies first and the division spans what it
   adds or moves. A row beside another effect is its chooser's choice, which
@@ -152,7 +152,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: Magmaquake deals X damage "to each creature without flying
   and each planeswalker". A creature planeswalker without flying is in both
   sets: is it dealt X, or 2X as Char's caster is dealt both amounts?
-- **Rules**: CR 120.1, 120.3c, 120.3e, 120.4, 608.2f; CR of 2026-08-07.
+- **Rules**: CR 120.1, 120.3c, 120.3e, 120.4, 608.2f; CR of 2026-09-25.
 - **Decision**: X. One damage instruction over a union of descriptions
   ("each Y and each Z") deals its amount once to each object matching either
   or both; two instructions ("Deal X to each Y. Deal X to each Z.") deal it
@@ -183,7 +183,7 @@ Entries are ordered by the first rule each cites.
   Elderscale Wurm is dealt 5 and loses 2. How much does the damage take?
 - **Rules**: CR 119.3, 120.4c, 120.4d; Elderscale Wurm's ruling of 2012-07-01,
   "doesn't affect the loss or payment of life"; Worship's of 2004-10-04; CR of
-  2026-08-07.
+  2026-09-25.
 - **Decision**: The event's other results count first, as the example counts a
   gain, and the damage may take the total no lower than the floor. A total already
   below it takes nothing. Bob ends at 6.
@@ -200,7 +200,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: CR 120.3b and 702.164c each give poison counters for one source's
   damage to a player. Tainted Strike on a toxic creature gives both. Is that one
   placement of the sum, or two?
-- **Rules**: CR 120.3b, 120.3g, 702.164c, 616.1; CR of 2026-08-07.
+- **Rules**: CR 120.3b, 120.3g, 702.164c, 616.1; CR of 2026-09-25.
 - **Decision**: One placement of the sum.
 - **Rejected**: Two placements, a CR 616.1 loop each, which under an opponent's
   Vorinclex, Monstrous Raider halves 3 infect and 1 toxic to 1 rather than 2.
@@ -219,7 +219,7 @@ Entries are ordered by the first rule each cites.
 - **Rules**: CR 123.5, 727.1, 727.5; Karn Liberated's ruling, "No actions taken
   in the game that was restarted apply to the new game"; adjacent, Tug of War's
   ruling of 2022-10-07, "removes all stickers from it", on a commander going
-  into a subgame; CR of 2026-08-07.
+  into a subgame; CR of 2026-09-25.
 - **Decision**: It keeps them. It stays the same object, as its CR 727.4 "those
   cards" read needs. Every other card's stickers come off.
 - **Rejected**: it loses them under the ruling, whose example is an effect
@@ -236,7 +236,7 @@ Entries are ordered by the first rule each cites.
 - **Rules**: CR 123.6b, 123.6c, 612.7, 709.4; It Came from Planet Glurg's ruling
   of 2022-10-07, "it looks at all its names ... it has six words in its name";
   Solaflora's of 2022-10-07 is per position and does not settle this; CR of
-  2026-08-07.
+  2026-09-25.
 - **Decision**: One position, offered up to the longest name's word count, and
   the word goes into every name: after that many words, or at the end of a
   shorter name as CR 123.6c has it.
@@ -258,7 +258,7 @@ Entries are ordered by the first rule each cites.
 
 - **Question**: CR 406.3a turns a face-down exiled card up "just before" the
   announcement. Does CR 733.1 undo that when the cast is reversed?
-- **Rules**: CR 406.3a, 601.2, 733.1; CR of 2026-08-07.
+- **Rules**: CR 406.3a, 601.2, 733.1; CR of 2026-09-25.
 - **Decision**: No. The turn precedes the action reversed, so the card stays up,
   and Riftsweeper may now target it.
 - **Rejected**: Turning it back down, because CR 733.1's list of the irreversible
@@ -273,7 +273,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: CR 407.2 gives the ante to "the winner", but a team win (CR
   104.2c) makes several winners, and CR 805.2's primary player exists only
   under the shared team turns option.
-- **Rules**: CR 407.2, 104.2c, 805.2; CR of 2026-08-07.
+- **Rules**: CR 407.2, 104.2c, 805.2; CR of 2026-09-25.
 - **Decision**: The team chooses card by card, and its first seat still
   playing speaks for it. Not asked for a team of one.
 - **Rejected**: One winner taking all: CR 407.2's "the winner" has several (CR
@@ -288,7 +288,7 @@ Entries are ordered by the first rule each cites.
   False Peace leaves that turn no combat phase. The stated endpoint never comes.
   (With a combat phase, CR 500.5 and 500.5a end it at the first to end, and "your
   next turn" excludes an opponent's.)
-- **Rules**: CR 500.5, 500.5a, 500.8, 511.2, 611.2a, 800.4m; CR of 2026-08-07.
+- **Rules**: CR 500.5, 500.5a, 500.8, 511.2, 611.2a, 800.4m; CR of 2026-09-25.
 - **Decision**: That turn's cleanup.
 - **Rejected**: The point combat would have ended, before the postcombat main.
   Carrying it to a later turn of theirs. CR 800.4m's "neither expire immediately
@@ -307,7 +307,7 @@ Entries are ordered by the first rule each cites.
   took the drawer's CR 504.1 draw (dredge, a paid Zur's Weirding), is the next draw
   of that step the exempt one?
 - **Rules**: CR 504.1, 121.1, 614.6; Chains' rulings of 2004-10-04 and 2007-09-16;
-  CR of 2026-08-07.
+  CR of 2026-09-25.
 - **Decision**: No. The exempt draw is the drawer's own CR 504.1 draw, on every
   card with this wording, so a replaced normal draw still uses the exemption up.
 - **Rejected**: Counting the cards actually drawn, which the Oracle text, CR 614.6
@@ -332,7 +332,7 @@ Entries are ordered by the first rule each cites.
   bob's planeswalker with another, that one dies, alice takes the planeswalker:
   does it make two?
 - **Rules**: CR 506.4, 506.4c, 508.1b, 603.4, 608.2h; Mangara's ruling of
-  2020-06-23; CR of 2026-08-07.
+  2020-06-23; CR of 2026-09-25.
 - **Decision**: As it left. The attacker's last known information is what it
   was attacking under whom, so the first board draws and the second counts one.
 - **Rejected**: Now. CR 608.2h gives it a footing, current information of a
@@ -355,7 +355,7 @@ Entries are ordered by the first rule each cites.
   508.4 lets an effect say what a creature attacks, and CR 508.4a speaks of a
   player no longer in the game.
 - **Rules**: CR 506.2a, 508.4, 508.4a, 702.116a; Warchief Giant's rulings of
-  2015-11-04 are silent; CR of 2026-08-07.
+  2015-11-04 are silent; CR of 2026-09-25.
 - **Decision**: The token enters, not attacking, by analogy with CR 508.4a.
 - **Rejected**: Attacking that player as written: it makes an attack on a player
   CR 506.2a left out of combat.
@@ -370,7 +370,7 @@ Entries are ordered by the first rule each cites.
   combat, attacks nothing but "may be blocked". CR 802.4a lets a player block
   only creatures attacking them, their planeswalker or their battle. With
   several defending players, which may block it?
-- **Rules**: CR 506.4c, 509.1a, 802.2a, 802.4a, 802.4b; CR of 2026-08-07.
+- **Rules**: CR 506.4c, 509.1a, 802.2a, 802.4a, 802.4b; CR of 2026-09-25.
 - **Decision**: Only the player it attacked before the removal: the
   planeswalker's controller or the battle's protector, extending CR 802.2a's
   "before it was removed from combat" by analogy.
@@ -391,7 +391,7 @@ Entries are ordered by the first rule each cites.
   co-attacker attacks alone, exalted triggers, and "whenever you attack" fires,
   or not.
 - **Rules**: CR 506.5, 508.1a, 508.1k, 508.3a, 508.3d, 509.1g; CR of
-  2026-08-07.
+  2026-09-25.
 - **Decision**: No. A creature is declared as an attacker when the declaration
   makes it attacking at CR 508.1k, so it is left out of the count, the
   attack triggers and Combat.declaredAttackers. The blocking side reads CR
@@ -410,7 +410,7 @@ Entries are ordered by the first rule each cites.
   assign to once the planeswalker or battle it attacked has left combat? CR
   802.2a's sentences name no one for a creature still attacking but attacking
   nothing.
-- **Rules**: CR 506.4c, 508.5, 802.2a; CR of 2026-08-07.
+- **Rules**: CR 506.4c, 508.5, 802.2a; CR of 2026-09-25.
 - **Decision**: The player it attacked before the removal, as in "Who may block a
   creature attacking nothing".
 - **Rejected**: Its controller choosing among all of them, under CR 802.2a's last
@@ -423,7 +423,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: A creature with trample is blocked by a creature with banding. CR
   702.22j gives the defending player the division "among any creatures blocking
   it". May they also assign the excess to what the creature attacks?
-- **Rules**: CR 510.1c, 702.19b, 702.22j; CR of 2026-08-07.
+- **Rules**: CR 510.1c, 702.19b, 702.22j; CR of 2026-09-25.
 - **Decision**: Yes. The defending player makes the whole assignment under CR
   702.19b's thresholds.
 - **Rejected**: Blockers only, which is the rule's second sentence and the reminder
@@ -442,7 +442,7 @@ Entries are ordered by the first rule each cites.
   graveyard?
 - **Rules**: CR 603.6, 111.2, 400.6, 400.11, 400.11c, 603.6a, 603.6c, 616.1;
   no rule names conjure; Toralf's Disciple's rulings of 2024-11-08, which say how
-  to represent a conjured card and name no origin; CR of 2026-08-07.
+  to represent a conjured card and name no origin; CR of 2026-09-25.
 - **Decision**: It is not a zone change. The card is minted straight into the
   zone, the way a wish brings in a card from outside the game. An arrival on
   the battlefield is still an entry, by analogy with a token: it runs the CR
@@ -462,7 +462,7 @@ Entries are ordered by the first rule each cites.
   Tarmogoyf's power and toughness, still one on the merged permanent (layer
   7a), or a plain static ability (layer 7b, in timestamp order)?
 - **Rules**: CR 604.3a, 613.2a, 613.4a, 613.4b, 613.7a, 702.140e, 730.2a; CR
-  of 2026-08-07.
+  of 2026-09-25.
 - **Decision**: It stays characteristic-defining. CR 604.3a(2)'s copy-effect
   clause is read as reaching CR 730.2a's merge, which is a copiable effect
   applied beside copy effects in layer 1a (CR 613.2a); the ability is also
@@ -484,7 +484,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: Its 2005 ruling keeps a chosen Aura with nothing to enchant in
   exile, choosable again; its 2004 ruling forbids choosing one. May a player
   choose one?
-- **Rules**: CR 303.4f, 303.4g; CR of 2026-08-07.
+- **Rules**: CR 303.4f, 303.4g; CR of 2026-09-25.
 - **Decision**: Yes, on the later and more specific ruling. Choosing one passes
   that player's pick. The auction goes on while an exiled card could enter, so
   only such Auras are left exiled, as that ruling says.
@@ -501,7 +501,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: When an entry is contained in a CR 608.2f batch, does its CR
   616.1 loop collect from the board as it was before the batch, or from the
   live board?
-- **Rules**: CR 608.2f, 614.12, 616.1g; CR of 2026-08-07.
+- **Rules**: CR 608.2f, 614.12, 616.1g; CR of 2026-09-25.
 - **Decision**: The live board. The entering object is not on the pre-batch
   board, and a contained event keeps its own footing.
 - **Rejected**: The pre-batch board that the batch's other members are judged
@@ -517,7 +517,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: Celestial Dawn lets other mana be spent "only as though it were
   colorless"; a cast permission says "mana of any type can be spent". May red
   mana pay that spell's {B}?
-- **Rules**: CR 118.14, 609.4a, 609.4b, 101.2, 613.11; CR of 2026-08-07.
+- **Rules**: CR 118.14, 609.4a, 609.4b, 101.2, 613.11; CR of 2026-09-25.
 - **Decision**: Yes. Both permissions apply (CR 609.4a). An only-clause names
   what it permits rather than saying "can't", so CR 101.2 is not engaged.
 - **Rejected**: The only-clause overriding the rider under CR 101.2: it does not
@@ -537,7 +537,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: CR 400.7k follows a madness card that "wasn't cast and was moved
   to a public zone". Does that include a move by something else ahead of the
   madness trigger's resolution, Pull from Eternity's?
-- **Rules**: CR 400.7, 400.7k, 702.35a, 702.35c; CR of 2026-08-07.
+- **Rules**: CR 400.7, 400.7k, 702.35a, 702.35c; CR of 2026-09-25.
 - **Decision**: No, only the card the resolving trigger itself found in exile:
   the exception is to CR 400.7 and is worded around that resolution.
 - **Rejected**: Any earlier move, which fits "was moved" alone but makes an
@@ -553,7 +553,7 @@ Entries are ordered by the first rule each cites.
   "generated by the resolution of a spell or ability", and this one is a static
   ability's. Is an artifact entering after the Song has gone animated?
 - **Rules**: CR 604.2, 611.2c; the card's one ruling is on attacking; CR of
-  2026-08-07.
+  2026-09-25.
 - **Decision**: No. The set is fixed as the permanent leaves, by analogy with CR
   611.2c.
 - **Rejected**: Reading "each noncreature artifact" live until end of turn: the
@@ -569,7 +569,7 @@ Entries are ordered by the first rule each cites.
   controls" attack, a rules change that CR 611.2c keeps live over the turn,
   then destroys "each of those creatures that didn't attack this turn". Is
   that the set as the ability resolved, or the class as the end step reads it?
-- **Rules**: CR 611.2c, 508.1d, 603.7c, 805.9; CR of 2026-08-07.
+- **Rules**: CR 611.2c, 508.1d, 603.7c, 805.9; CR of 2026-09-25.
 - **Decision**: Both: every creature that was in the class as the ability
   resolved, together with every creature in it at the end step, that did not
   attack. A creature the requirement reached at either moment is one of
@@ -590,7 +590,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: "Gift a tapped Fish" prints a creature type a text change reaches.
   CR 702.174f and 702.174i define Fish and Octopus; no rule defines "Gift a tapped
   Elf". What does it do?
-- **Rules**: CR 612.2a, 702.174a, 702.174b, 702.174f, 702.174i; CR of 2026-08-07.
+- **Rules**: CR 612.2a, 702.174a, 702.174b, 702.174f, 702.174i; CR of 2026-09-25.
 - **Decision**: The defined effect with the word swapped: a tapped 1/1 blue Elf. CR
   612.2a treats a word that names a token as its type and name.
 - **Rejected**: No effect, since CR 702.174b defines the effect by the [something]
@@ -606,7 +606,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: CR 701.60c's menace and "can't block" come from the rules, so
   neither CR 613.7a nor 613.7b names their timestamp. It matters against an
   ability removal.
-- **Rules**: CR 613.7a, 613.1f, 613.7b, 701.60b, 701.60c; CR of 2026-08-07.
+- **Rules**: CR 613.7a, 613.1f, 613.7b, 701.60b, 701.60c; CR of 2026-09-25.
 - **Decision**: The permanent's own timestamp, for both halves.
 - **Rejected**: The moment it became suspected: CR 701.60c states the abilities
   as what a suspected permanent has, and no effect creates them, so CR 613.7b has
@@ -623,7 +623,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: One application of a shield stops damage from two sources at once.
   Divine Deflection's "deals that much damage" names no source. Does it throw one
   lot or one per source?
-- **Rules**: CR 615.5, 615.7, 615.13; CR of 2026-08-07.
+- **Rules**: CR 615.5, 615.7, 615.13; CR of 2026-09-25.
 - **Decision**: Once per source the application covered, with that source's share,
   for every rider. A shield spanning a 2 and a 1 throws a 2 and a 1, so an enrage
   target triggers twice. The CR 615.13 trigger still fires once for the
@@ -643,7 +643,7 @@ Entries are ordered by the first rule each cites.
   It is the resolving ability's own effect, as CR 614.15 describes, and it uses
   "prevent", as CR 615.1a describes. Does it apply first with no choice, or does
   its victim order it against Furnace of Rath or Reverse Damage?
-- **Rules**: CR 614.15, 608.2c, 615.1, 615.1a, 616.1a, 616.1e; CR of 2026-08-07.
+- **Rules**: CR 614.15, 608.2c, 615.1, 615.1a, 616.1a, 616.1e; CR of 2026-09-25.
   CR 614.15 opens "Some replacement effects", CR 615.1 makes a prevention effect
   continuous, and neither Power Leak nor Errant Minion has a ruling.
 - **Decision**: A self-replacement. It applies first, so Furnace of Rath doubles
@@ -660,7 +660,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: CR 800.4a or 800.4c exiles a phased-out permanent (CR
   702.26n). Does a leaves-the-battlefield or put-into-exile trigger see it go?
 - **Rules**: CR 702.26b, 702.26d, 702.26k, 702.26n, 800.4a, 800.4c; CR of
-  2026-08-07.
+  2026-09-25.
 - **Decision**: It is exiled, but nothing triggers. The exile records only an
   arrival no trigger reads, so CR 903.9a still offers a commander back.
 - **Rejected**: Recording the leave: CR 702.26b overrides rules that don't
@@ -674,7 +674,7 @@ Entries are ordered by the first rule each cites.
 
 - **Question**: A merged permanent with one double-faced component under a
   single-faced top: is it front or back face up for CR 702.145?
-- **Rules**: CR 702.145b/c/e/f, 730.2e, 730.2i, 701.27g; CR of 2026-08-07.
+- **Rules**: CR 702.145b/c/e/f, 730.2e, 730.2i, 701.27g; CR of 2026-09-25.
 - **Decision**: The topmost double-faced component decides. Every printed pile
   holds at most one double-faced component, since no mutate card is
   double-faced.
@@ -693,7 +693,7 @@ Entries are ordered by the first rule each cites.
   4". No rule caps speed, and none says what a speed above 4 is.
 - **Rules**: CR 702.179e, 702.178a, 702.179b, 702.179c, 702.179d, 702.179f; the
   reminder "Max speed is 4", Hazoret, Godseeker's rulings of 2025-02-07; CR of
-  2026-08-07.
+  2026-09-25.
 - **Decision**: An effect may push speed past 4, and a player at 4 or more has
   max speed. Every max speed gate is written as `AtLeast 4`. Gomif, Fast
   Racer, an un-set printing, says "Your speed can increase beyond 4. (You're
@@ -715,7 +715,7 @@ Entries are ordered by the first rule each cites.
   no rule defines "makes sense". With no die being rolled and no Die creature,
   can the Bookie be activated at priority, tapping it and rerolling nothing?
 - **Rules**: CR 117.1b, 207.2, 207.2a, 602.1b, 609.3; Pippa, Duchess of Dice's
-  rulings of 2020-02-29 settle a die that exists and not this; CR of 2026-08-07.
+  rulings of 2020-02-29 settle a die that exists and not this; CR of 2026-09-25.
 - **Decision**: No. The sentence is an activation instruction (CR 602.1b), and
   with nothing to reroll the ability is not offered.
 - **Rejected**: Reading the parenthetical as text with no game function (CR
@@ -731,7 +731,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: Under Pixie Guide, does a reroll modify a die before the lowest roll
   is ignored, or only a die that survived? CR 706.6's "no effects apply to that
   roll" points one way, its "results tied for the lowest" and CR 706.2 the other.
-- **Rules**: CR 706.2, 706.2b, 706.6; CR of 2026-08-07.
+- **Rules**: CR 706.2, 706.2b, 706.6; CR of 2026-09-25.
 - **Decision**: Rerolls first. Valiant Endeavor with Clam-I-Am on 3, 5, 5: the 3
   may be rerolled, and a 6 gives results 6 and 5.
 - **Rejected**: Ignoring first, so the 3 "never happened" and the results are 5 and
@@ -747,7 +747,7 @@ Entries are ordered by the first rule each cites.
   subgame's wish is offered a face-down main-game permanent, such as a
   manifested sorcery. Is it matched as its printed card or as its face-down
   2/2?
-- **Rules**: CR 110.5, 701.40a, 708.2, 708.2a, 729.1b, 729.4; CR of 2026-08-07.
+- **Rules**: CR 110.5, 701.40a, 708.2, 708.2a, 729.1b, 729.4; CR of 2026-09-25.
 - **Decision**: As the face-down 2/2 with no name. CR 701.40a's defining effect
   has no meaning here (CR 729.1b), but CR 708.2a itself gives a face-down
   permanent these values, and face down is a status (CR 110.5).
@@ -766,7 +766,7 @@ Entries are ordered by the first rule each cites.
   changes. When two cards meld into one permanent, or a melded permanent
   leaves, which object or objects does the effect follow?
 - **Rules**: CR 712.21c, 400.7, 611.2c, 701.42a, 712.21a, 712.21e; no rule
-  names perpetually; CR of 2026-08-07.
+  names perpetually; CR of 2026-09-25.
 - **Decision**: It follows every component in both directions. Each half's
   effect moves onto the melded permanent, and the melded permanent's effect
   moves onto both cards as it leaves. Following an object counts as finding
@@ -787,7 +787,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: The monarch leaves the game and the active player can't
   become the monarch (Jared Carthalion). CR 725.4's first sentence crowns the
   active player with no eligibility gate.
-- **Rules**: CR 725.4, 101.2, 726.4; CR of 2026-08-07. Jared Carthalion, True
+- **Rules**: CR 725.4, 101.2, 726.4; CR of 2026-09-25. Jared Carthalion, True
   Heir, 2020-11-10 ("exactly one monarch from that point forward").
 - **Decision**: The "can become the monarch" test covers the active player
   too, so an ineligible one is skipped and the crown goes to the next
@@ -807,7 +807,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: CR 725.4 and 726.4 give the crown or the initiative to "the
   active player" when the holder leaves. With shared team turns there are
   several, and CR 805.9 covers only abilities.
-- **Rules**: CR 725.4, 726.4, 805.2, 805.9; CR of 2026-08-07.
+- **Rules**: CR 725.4, 726.4, 805.2, 805.9; CR of 2026-09-25.
 - **Decision**: The active team decides; its primary player chooses among the
   eligible active players.
 - **Rejected**: Always the seat the turn began with.
@@ -821,7 +821,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: A mutating spell merges with a melded permanent. CR 701.42a
   gives the pair's two cards no order, and CR 730.2a needs one topmost
   component.
-- **Rules**: CR 730.2a, 701.42a, 712.8g, 730.2, 730.2c; CR of 2026-08-07.
+- **Rules**: CR 730.2a, 701.42a, 712.8g, 730.2, 730.2c; CR of 2026-09-25.
 - **Decision**: The melded pair is one component (`OfMeld`), showing the
   combined back face, expanded into its cards only on departure.
 - **Rejected**: One component per card: "topmost" gets two heads and no
@@ -836,7 +836,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: CR 732.3 names the players "involved in the loop", and has them
   "make a different game choice". Over what span is a player involved, and how
   fine is a choice?
-- **Rules**: CR 732.1, 732.3, 732.5; CR of 2026-08-07.
+- **Rules**: CR 732.1, 732.3, 732.5; CR of 2026-09-25.
 - **Decision**:
   - Involvement runs from when the state first occurred, not over the last lap.
   - An activation with something to announce or pay is refused as it was
@@ -859,7 +859,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: CR 732.3 turns on "the same game state" being reached again,
   which the CR doesn't define. A lap that moves a card makes a new object
   (CR 400.7). Is the state it returns to the same one?
-- **Rules**: CR 732.3, 400.7, 613.7; CR of 2026-08-07. No ruling.
+- **Rules**: CR 732.3, 400.7, 613.7; CR of 2026-09-25. No ruling.
 - **Decision**: The same, where it differs only in which objects and stamps
   stand for which, in an order-preserving renaming, and what the log says of
   each held object answers alike. No card or player can tell the two apart.
@@ -873,7 +873,7 @@ Entries are ordered by the first rule each cites.
 
 - **Question**: Inside a repeated process (Thieves' Auction), when does CR
   732.3's loop close, who is involved, and what is a different choice?
-- **Rules**: CR 732.3; CR of 2026-08-07.
+- **Rules**: CR 732.3; CR of 2026-09-25.
 - **Decision**: A run closes a loop when the next run begins in the state it
   began in. The involved players are those asked to pick in it; a pick with one
   option asks nobody. The first of them in APNAP order may not pick what they
@@ -892,7 +892,7 @@ Entries are ordered by the first rule each cites.
 - **Question**: CR 803.1a and 803.1b let a player attack only the opponent seated
   immediately beside them. After a seat empties, is that still measured over it on
   later turns?
-- **Rules**: CR 801.2c, 803.1a, 803.1b, 807.2, 807.4h; CR of 2026-08-07.
+- **Rules**: CR 801.2c, 803.1a, 803.1b, 807.2, 807.4h; CR of 2026-09-25.
 - **Decision**: Yes, for the rest of the game. A player whose neighbour left can't
   attack again.
 - **Rejected**: Closing up as the next turn begins, as range of influence does (CR
@@ -910,7 +910,7 @@ Entries are ordered by the first rule each cites.
   of any objects" when they leave. Does that reach a floating replacement
   making permanents enter under their control (Gather Specimens), for objects
   that do not exist yet?
-- **Rules**: CR 800.4a, 109.5, 616.1b, 800.4b; CR of 2026-08-07.
+- **Rules**: CR 800.4a, 109.5, 616.1b, 800.4b; CR of 2026-09-25.
 - **Decision**: Yes. The departing player's control-on-entry rows end; their
   other rows, such as shields, stay. CR 800.4b stays the backstop for other
   entries naming a departed player.
@@ -934,7 +934,7 @@ Entries are ordered by the first rule each cites.
   player who left before this turn holds no seat? (b) Does damage or a loss
   count when its source is outside the range and the player it happened to is
   inside?
-- **Rules**: CR 801.11, 801.2c, 801.7a, 800.4i, 801.18; CR of 2026-08-07.
+- **Rules**: CR 801.11, 801.2c, 801.7a, 800.4i, 801.18; CR of 2026-09-25.
   Rulings: Skewer the Critics (2024-01-12), Florian, Voldaren Scion
   (2021-09-24), Tymna the Weaver, Chandra's Incinerator. None speaks to a
   limited range.
@@ -960,7 +960,7 @@ Entries are ordered by the first rule each cites.
   battlefield is one zone change, which a "whenever a card leaves your
   graveyard" ability (Spirit Mascot, Kishla Skimmer) also watches. Does that
   ability trigger?
-- **Rules**: CR 603.6a, 603.6c, 603.10a, 613.11; CR of 2026-08-07. Rulings:
+- **Rules**: CR 603.6a, 603.6c, 603.10a, 613.11; CR of 2026-09-25. Rulings:
   Hushwing Gryff, Torpor Orb and Tocatli Honor Guard ("the trigger event
   doesn't have to specify 'creatures' entering"), Hushbringer 2019-10-04 (a
   "leaves the battlefield" trigger does not trigger on a creature dying).
@@ -989,7 +989,7 @@ Entries are ordered by the first rule each cites.
   that. Does a permanent entering "cause" it, so that Yarok, the Desecrated
   makes it trigger an additional time and Hushwing Gryff silences it?
 - **Rules**: CR 603.2c, 603.2d, 603.6a, 603.6d, 613.11, 122.6, 303.4f, 608.3c,
-  714.2b, 714.3a; CR of 2026-08-07. No ruling: none of Yarok, Panharmonicon, Elesh Norn, Mother of
+  714.2b, 714.3a; CR of 2026-09-25. No ruling: none of Yarok, Panharmonicon, Elesh Norn, Mother of
   Machines, Torpor Orb or any Saga has one on it.
 - **Decision**: No. Only abilities triggering on the zone change itself are
   multiplied or silenced. A counter put as the permanent enters is part of the
@@ -1013,7 +1013,7 @@ Entries are ordered by the first rule each cites.
   toughness; Cloak of Confusion's may has it assign none this turn. Neither
   changes a characteristic (CR 613.11). Does the newer win, does none hold
   whichever came first, or does its controller choose?
-- **Rules**: CR 510.1a, 613.11; CR of 2026-08-07. No ruling on either card.
+- **Rules**: CR 510.1a, 613.11; CR of 2026-09-25. No ruling on either card.
   Narod, the Beige Flower's, of 2024-11-08 (Mystery Booster 2 playtest): "If
   there are multiple effects that attempt to modify how a creature assigns
   combat damage, that creature's controller chooses which effect applies", its
@@ -1040,7 +1040,7 @@ Entries are ordered by the first rule each cites.
   giving its caster a chance to activate mana abilities (and Channel's life for
   mana) between choosing targets and paying? Observable: a mana ability that
   sacrifices a spell's target can be activated mid-cast only if it does.
-- **Rules**: CR 118.5, 601.2f, 601.2g, 602.2b, 605.3a; CR of 2026-08-07. No ruling.
+- **Rules**: CR 118.5, 601.2f, 601.2g, 602.2b, 605.3a; CR of 2026-09-25. No ruling.
   CR 601.2f calls a reduced mana component {0}, and CR 118.5 says such a cost
   "requires no resources" and is still paid by acknowledging it. A cast with no
   mana cost to pay at all (CR 118.9) has no mana payment, forced.
@@ -1066,7 +1066,7 @@ Entries are ordered by the first rule each cites.
   controllers before the caster's next upkeep. "That planeswalker's controller
   pays {U}": the player who controlled it as the spell resolved, or whoever
   controls it when they pay? The card's rulings speak only of a targeted player.
-- **Rules**: CR 116.2c, 608.2c (CR of 2026-08-07).
+- **Rules**: CR 116.2c, 608.2c (CR of 2026-09-25).
 - **Decision**: The controller as the spell resolves. The offer's seat is sampled
   once, as for every CR 116.2c offer.
 - **Rejected**: Whoever controls it at payment, under which the offer moves with
@@ -1081,7 +1081,7 @@ Entries are ordered by the first rule each cites.
   at once, one with lifelink. "For each 1 damage ... if it has a +1/+1 counter
   on it" names no order. Does each event see all 3, and if not, who says which
   damage the counters stop? The lifelink observes it.
-- **Rules**: CR 615.7, 615.10, 616.1 (CR of 2026-08-07). CR 615.7's division is
+- **Rules**: CR 615.7, 615.10, 616.1 (CR of 2026-09-25). CR 615.7's division is
   of a shield a resolution made, CR 615.10's static effect holds no count, and
   the card's rulings don't speak to it.
 - **Decision**: One supply, 1 counter for 1 damage, divided by the Hydra's

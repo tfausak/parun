@@ -1,5 +1,5 @@
 {
-  "description": "CR 506.7a Master Warcraft can't be cast once the declare attackers step has begun",
+  "description": "CR 506.8a Master Warcraft can't be cast once the declare attackers step has begun",
   "note": "The same mana that casts it at beginning of combat in the paired board; here bob offers it in the declare attackers step, after alice has attacked, and it is refused.",
   "board": {
     "active": "alice",

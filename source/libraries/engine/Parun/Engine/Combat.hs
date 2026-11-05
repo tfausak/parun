@@ -106,8 +106,8 @@ emptyCombat =
 
 -- CR 511.3: as the end of combat step ends, everything is removed from combat.
 -- Combat.defenders is reset alongside on CR 506.2's authority (the designation is
--- scoped to the combat phase) and Combat.blockersDeclared on CR 506.7c's (the
--- next combat phase asks CR 506.7b's question afresh).
+-- scoped to the combat phase) and Combat.blockersDeclared on CR 506.8c's (the
+-- next combat phase asks CR 506.8b's question afresh).
 --
 -- Engine.runStep calls this as the step ENDS, not from runTurnBasedActions: CR
 -- 511.1 gives this step no turn-based action. CR 724.1d and CR 724.2d ask for
@@ -3144,7 +3144,7 @@ enterBlocking controller oid attacker = do
 -- reads before calling this again.
 declareBlockers :: ManaAbilityPerformer.ManaAbilityPerformer -> Game ()
 declareBlockers perform = do
-  -- CR 506.7b's boundary, raised BEFORE the short-circuit below and before any
+  -- CR 506.8b's boundary, raised BEFORE the short-circuit below and before any
   -- prompt, the rule opening the window "regardless of whether any blockers are
   -- actually declared". Turn.afterBlockersDeclared is the reader.
   --
