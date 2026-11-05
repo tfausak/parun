@@ -448,6 +448,14 @@ combatReplaySpec s =
           Spec.assertEqWith s "nor is a turn-up attachment" (Replay.decode p (Response.ChoseTurnUpAttachment OptionalDecision.Exercises)) Nothing
           Spec.assertEqWith s "nor is a reversal of the mana window" (Replay.decode p (Response.ReversedManaAbilities OptionalDecision.Exercises)) Nothing
           Spec.assertEqWith s "nor is a printed may" (Replay.decode p (Response.ChoseOptional OptionalDecision.Exercises)) Nothing
+        -- CR 508.1e: a list of bands, which a transcript of the attack itself
+        -- must not answer.
+        Spec.it s "DeclareBands records and replays its bands, rejects an attack, and defaults to none" $ do
+          let p = Prompt.DeclareBands decider S.alice [oid, ObjectId.MkObjectId 8]
+              answer = [Set.fromList [oid, ObjectId.MkObjectId 8]]
+          Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p answer)) (Just answer)
+          Spec.assertEqWith s "an attack is not an answer to it" (Replay.decode p (Response.DeclaredAttackers [oid])) Nothing
+          Spec.assertEqWith s "no bands" (Replay.defaultAnswer p) []
         -- CR 508.1g: a transcript that runs short pays no optional cost, so the
         -- attacker keeps its next untap step.
         Spec.it s "defaultAnswer declines the exert" $

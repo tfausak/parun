@@ -102,6 +102,7 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.ChooseLegend {} -> "ChooseLegend"
   Prompt.DeclareAttackers {} -> "DeclareAttackers"
   Prompt.ChooseAttackTarget {} -> "ChooseAttackTarget"
+  Prompt.DeclareBands {} -> "DeclareBands"
   Prompt.ChooseExert {} -> "ChooseExert"
   Prompt.DeclareBlockers {} -> "DeclareBlockers"
   Prompt.AssignCombatDamage {} -> "AssignCombatDamage"
