@@ -1,0 +1,116 @@
+{
+  "board": {
+    "active": "alice",
+    "alternatingTeams": true,
+    "seats": [
+      {
+        "hand": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ],
+        "name": "alice",
+        "team": 1
+      },
+      {
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ],
+        "name": "bob",
+        "team": 2
+      },
+      {
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ],
+        "name": "carol",
+        "team": 1
+      },
+      {
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ],
+        "name": "dave",
+        "team": 2
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 811.5 a teammate reviews a hand once the seat between them closes",
+  "note": "Alternating Teams seated alice, bob, carol, dave: alice and carol are team 1, bob and dave team 2 (CR 811.3). Nobody sits next to a teammate, so alice's Grizzly Bears is seen by alice alone. bob concedes on alice's turn: his seat is still there that turn (CR 801.2c, as CR 811.4 reads it), so carol still can't review alice's hand; from carol's turn alice and carol sit next to each other and she can (CR 811.5).",
+  "timeline": [
+    {
+      "check": {
+        "View": {
+          "is": [
+            "alice"
+          ],
+          "object": "$bears",
+          "of": "Seers"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Concede",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "alice"
+          ],
+          "object": "$bears",
+          "of": "Seers"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "alice",
+            "carol"
+          ],
+          "object": "$bears",
+          "of": "Seers"
+        }
+      },
+      "player": "carol",
+      "step": "PrecombatMain",
+      "turn": 2
+    }
+  ]
+}

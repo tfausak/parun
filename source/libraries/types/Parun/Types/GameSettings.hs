@@ -59,9 +59,10 @@ data GameSettings = MkGameSettings
     --
     -- Not implemented: CR 808.2's seating is unchecked (#4497). CR 808.3a's
     -- attack multiple players option is the field above, which is on by
-    -- default, so a game with teams gets it without asking. CR 808.5 needs nothing: no
-    -- Team vs. Team resource is shared (sharedTeamLife is CR 810's and CR 904's),
-    -- and one player has never been able to touch another's cards.
+    -- default, so a game with teams gets it without asking. CR 808.5's resources
+    -- need nothing: none is shared (sharedTeamLife is CR 810's and CR 904's), and
+    -- one player has never been able to touch another's cards. Its review of a
+    -- teammate's hand is Parun.Engine.Visibility.reviewsHandOf.
     teams :: Teams.Teams,
     -- | CR 805.1: whether each team takes its turns together, every member of
     -- the active team being an active player (CR 805.4a, 805.9). Off by

@@ -904,6 +904,21 @@ Entries are ordered by the first rule each cites.
   a later one.
 - **Issue**: none.
 
+## Whether Alternating Teams teammates review hands across an emptied seat
+
+- **Question**: CR 811.5 lets teammates review each other's hands only while
+  "sitting next to each other". Once the seat between them empties, when are
+  they?
+- **Rules**: CR 801.2c, 811.4, 811.5; CR of 2026-09-25.
+- **Decision**: As the next turn begins, when CR 801.2c closes the seat. Until
+  then the departed player's seat still separates them.
+- **Rejected**: At once, as the player leaves: CR 811.4's "seated next to"
+  closes up a turn later (`Parun.Engine.Combat.attackableOpponents`), and the
+  variant should have one reading of its seating.
+- **Site**: `Parun.Engine.Visibility.reviewsHandOf`. The scenario
+  `cr-811-5-a-teammate-reviews-a-hand-once-the-seat-between-them-closes`.
+- **Issue**: #6171.
+
 ## Whether a player leaving ends a control-on-entry replacement
 
 - **Question**: CR 800.4a ends "any effects which give that player control
