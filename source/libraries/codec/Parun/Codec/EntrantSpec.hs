@@ -13,6 +13,6 @@ spec s = Spec.describe s "Parun.Codec.Entrant" $ do
   Spec.it s "works" $
     Common.assertCodec s Entrant.codec (Entrant.Type.MkEntrant (Label.MkLabel (Text.pack "alice")) [Text.pack "12 Grizzly Bears", Text.pack "8 Forest"] GraveyardOrder.Indifferent) "{\"name\":\"alice\",\"deck\":[\"12 Grizzly Bears\",\"8 Forest\"]}"
   Spec.it s "a graveyard order that matters" $
-    Common.assertCodec s Entrant.codec (Entrant.Type.MkEntrant (Label.MkLabel (Text.pack "alice")) [Text.pack "20 Forest"] GraveyardOrder.Matters) "{\"name\":\"alice\",\"deck\":[\"20 Forest\"],\"graveyardOrder\":\"Matters\"}"
+    Common.assertCodec s Entrant.codec (Entrant.Type.MkEntrant (Label.MkLabel (Text.pack "alice")) [Text.pack "20 Forest"] GraveyardOrder.Matters) "{\"name\":\"alice\",\"deck\":[\"20 Forest\"],\"graveyardOrder\":{\"type\":\"Matters\"}}"
   Spec.it s "has a schema" $
     Common.assertHasSchema s Entrant.codec

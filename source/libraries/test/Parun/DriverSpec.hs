@@ -61,7 +61,7 @@ spec s registry = Spec.describe s "Driver" $ do
   Spec.it s "drive returns a finished game rather than outrunning it" $ do
     matchup <- S.redRed (S.printingOf s registry)
     let finished = State.evalState (Driver.drive [] casting 100000 (const (pure False)) (started matchup)) ()
-        played = snd (Engine.runMatchPure S.castAnswer GameSettings.plain Map.empty matchup)
+        played = snd (Engine.runMatchPure S.castAnswer GameSettings.plain matchup)
     Spec.assertBool s (Maybe.isJust (GameState.result finished)) "finished"
     Spec.assertBool s (finished == played) "ended state"
   Spec.it s "a budget of 0 takes no step" $ do

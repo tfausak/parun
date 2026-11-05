@@ -1,13 +1,8 @@
 {
-  "description": "Nether Shadow under a Wrath of God: an owner arranging the cards put into their graveyard together (CR 404.3) puts it lowest, so the creatures above it return it.",
-  "note": "Alice's seat sets graveyardOrder to Matters, so Wrath of God's batch is asked of her. Unarranged, Nether Shadow lands on top with nothing above it.",
   "board": {
     "active": "alice",
-    "step": "PrecombatMain",
     "seats": [
       {
-        "name": "alice",
-        "graveyardOrder": "Matters",
         "battlefield": [
           {
             "card": "Grizzly Bears"
@@ -19,8 +14,7 @@
             "card": "Wall of Air"
           },
           {
-            "card": "Nether Shadow",
-            "label": "shadow"
+            "card": "Nether Shadow"
           },
           {
             "card": "Plains",
@@ -39,6 +33,9 @@
             "label": "p4"
           }
         ],
+        "graveyardOrder": {
+          "type": "Matters"
+        },
         "hand": [
           {
             "card": "Wrath of God",
@@ -70,10 +67,10 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "alice"
       },
       {
-        "name": "bob",
         "library": [
           {
             "card": "Island"
@@ -99,53 +96,110 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "bob"
       }
-    ]
+    ],
+    "step": "PrecombatMain"
   },
+  "description": "Nether Shadow under a Wrath of God: an owner arranging the cards put into their graveyard together (CR 404.3) puts it lowest, so the creatures above it return it.",
+  "final": [
+    {
+      "Count": {
+        "card": "Nether Shadow",
+        "count": 1,
+        "player": "alice",
+        "zone": "Battlefield"
+      }
+    }
+  ],
+  "note": "Alice's seat sets graveyardOrder, so Wrath of God's batch is asked of her, top first: Nether Shadow, Wall of Air, Hill Giant, Grizzly Bears, the order they moved in. She puts Nether Shadow lowest, so at her next upkeep three creature cards are above it.",
   "timeline": [
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Cast": {
-          "object": "$wr",
           "mana": [
             "$p1",
             "$p2",
             "$p3",
             "$p4"
+          ],
+          "object": "$wr"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ArrangeGraveyardArrivals",
+          "with": [
+            1,
+            2,
+            3,
+            0
           ]
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": "Pass"
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "ArrangeGraveyardArrivals": null
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "View": {
+          "is": [
+            "Nether Shadow",
+            "Grizzly Bears",
+            "Hill Giant",
+            "Wall of Air",
+            "Wrath of God"
+          ],
           "of": "Zone",
           "player": "alice",
-          "zone": "Graveyard",
-          "is": []
+          "zone": "Graveyard"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of Nether Shadow"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 3
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 3
+    },
+    {
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 3
     }
   ]
 }

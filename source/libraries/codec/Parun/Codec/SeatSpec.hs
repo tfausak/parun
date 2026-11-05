@@ -44,7 +44,7 @@ spec s = Spec.describe s "Parun.Codec.Seat" $ do
           Seat.Type.command = Seq.singleton (card "Shimatsu the Bloodcloaked"),
           Seat.Type.ante = Seq.singleton (card "Contract from Below")
         }
-      " {\"name\":\"alice\",\"life\":7,\"counters\":[{\"key\":{\"type\":\"Energy\"},\"value\":3}],\"team\":1,\"range\":2,\"emperor\":true,\"graveyardOrder\":\"Matters\",\"manaPool\":\"RC\",\"battlefield\":[{\"card\":\"Mountain\"}],\"hand\":[{\"card\":\"Lightning Bolt\"}],\"graveyard\":[{\"card\":\"Goblin Piker\"}],\"library\":[{\"card\":\"Island\"}],\"exile\":[{\"card\":\"Bad Moon\"}],\"command\":[{\"card\":\"Shimatsu the Bloodcloaked\"}],\"ante\":[{\"card\":\"Contract from Below\"}]} "
+      " {\"name\":\"alice\",\"life\":7,\"counters\":[{\"key\":{\"type\":\"Energy\"},\"value\":3}],\"team\":1,\"range\":2,\"emperor\":true,\"graveyardOrder\":{\"type\":\"Matters\"},\"manaPool\":\"RC\",\"battlefield\":[{\"card\":\"Mountain\"}],\"hand\":[{\"card\":\"Lightning Bolt\"}],\"graveyard\":[{\"card\":\"Goblin Piker\"}],\"library\":[{\"card\":\"Island\"}],\"exile\":[{\"card\":\"Bad Moon\"}],\"command\":[{\"card\":\"Shimatsu the Bloodcloaked\"}],\"ante\":[{\"card\":\"Contract from Below\"}]} "
   Spec.it s "an unknown mana symbol is refused" $
     Spec.assertBool
       s

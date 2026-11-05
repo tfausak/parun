@@ -10,6 +10,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Text as Text
+import qualified Data.Word as Word
 import qualified Parun.BotSpec as BotSpec
 import qualified Parun.ClientSpec as ClientSpec
 import qualified Parun.Codec.Scenario as Codec.Scenario
@@ -54,7 +55,7 @@ spec s registry = Spec.describe s "Record" $ do
   Spec.it s "a game cut short replays to where it stopped" $ do
     matchup <- BotSpec.bears s registry
     let seats = Map.fromList [(S.alice, Game.human (lifted (ClientSpec.screen 40 ClientSpec.plays)) (const (Right Nothing))), (S.bob, Bot.bot)]
-        (outcome, (timeline, cut)) = watched seats Map.empty matchup
+        (outcome, (timeline, cut)) = watched 1 seats Map.empty matchup
     replayed <- Scenario.run registry (saved matchup timeline)
     Spec.assertEqWith s "cut" (fmap fst outcome) (Left (Text.pack "end of input"))
     case replayed of
@@ -63,10 +64,11 @@ spec s registry = Spec.describe s "Record" $ do
 
   Spec.it s "CR 404.3: a seat arranging its graveyard is asked again on replay" $ do
     matchup <- BotSpec.bears s registry
-    let orders = Map.singleton S.alice GraveyardOrder.Matters
-        (outcome, (timeline, _)) = watched bots orders matchup
+    let orders = Map.fromList [(S.alice, GraveyardOrder.Matters), (S.bob, GraveyardOrder.Matters)]
+        -- Seed 5's game puts cards into a graveyard together twice.
+        (outcome, (timeline, _)) = watched 5 bots orders matchup
         arranged = Seq.filter ((== Just (Text.pack "ArrangeGraveyardArrivals")) . answered) timeline
-    Spec.assertBool s (not (Seq.null arranged)) "alice arranged a batch"
+    Spec.assertBool s (not (Seq.null arranged)) "a seat arranged a batch"
     replayed <- Scenario.run registry (savedWith orders matchup timeline)
     case (outcome, replayed) of
       (Right (result, _), Right final) -> Spec.assertEqWith s "same result" (GameState.result final) (Just result)
@@ -99,14 +101,15 @@ attacks timed = case Timed.entry timed of
 -- over the screen a person reads.
 type Base = State.StateT (Seq.Seq Timed.Timed, Maybe GameState.GameState) (State.State ClientSpec.Screen)
 
--- A seeded game between these seats, and every entry its answers recorded,
+-- A game seeded 1 between these seats, and every entry its answers recorded,
 -- however it ended.
 recorded :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Game.Play Base)) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), Seq.Seq Timed.Timed)
-recorded seats matchup = fmap fst (watched seats Map.empty matchup)
+recorded seats matchup = fmap fst (watched 1 seats Map.empty matchup)
 
-watched :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Game.Play Base)) -> Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), (Seq.Seq Timed.Timed, Maybe GameState.GameState))
-watched seats orders matchup =
-  let played = Game.run [Record.recording labels sink, lastAsked] seats Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) orders matchup
+-- recorded's game at a seed, each seat at its graveyard order in `orders`.
+watched :: Word.Word64 -> Map.Map PlayerId.PlayerId (Answerer.Answerer (Game.Play Base)) -> Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), (Seq.Seq Timed.Timed, Maybe GameState.GameState))
+watched seed seats orders matchup =
+  let played = Game.run [Record.recording labels sink, lastAsked] seats Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix seed) orders matchup
    in State.evalState (State.runStateT played (Seq.empty, Nothing)) ClientSpec.blank
 
 lastAsked :: Observer.Observer (Game.Play Base)

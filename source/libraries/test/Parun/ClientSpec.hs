@@ -541,7 +541,7 @@ spec s registry = Spec.describe s "Client" $ do
       s
       "listed"
       (takeWhile (Text.isPrefixOf (Text.pack "  ")) (drop 1 (dropWhile (not . Text.isPrefixOf (Text.pack "These cards go to your graveyard together.")) shown)))
-      [Text.pack "  1. Your Hill Giant, in a graveyard", Text.pack "  2. Your Grizzly Bears, in a graveyard"]
+      [Text.pack "  1. Your Hill Giant 3/3, in a graveyard", Text.pack "  2. Your Grizzly Bears 2/2, in a graveyard"]
     Spec.assertEqWith s "numbers rearrange" rearranged (Right (GraveyardArrangement.InOrder [1, 0]))
     Spec.assertEqWith s "Enter keeps" (fst (asking facing [""] gs prompt)) (Right GraveyardArrangement.AnyOrder)
     Spec.assertEqWith s "a repeat is refused" (fst (asking facing ["1 1"] gs prompt)) (Left (Text.pack "end of input"))
