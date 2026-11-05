@@ -27,6 +27,7 @@ import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Game as Game.Engine
 import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.PlayerView as PlayerView
+import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
@@ -228,6 +229,24 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "no face-down card" (filter (Text.isInfixOf (Text.pack "face-down")) shown) []
     Spec.assertEqWith s "CR 602.2 the activation names its player and source" (filter (Text.isInfixOf (Text.pack "activate")) shown) [Text.pack "Player 1 activates Mindslaver's ability."]
 
+  Spec.it s "CR 608.2d each hotseat bidder at Illicit Auction is shown the high bid as the least it may bid" $ do
+    gs <- started s registry
+    auction <- S.printingOf s registry "Illicit Auction"
+    giant <- S.printingOf s registry "Hill Giant"
+    mountains <- mapM (S.printingOf s registry) ["Mountain", "Mountain", "Mountain", "Mountain", "Mountain"]
+    let (giantId, withGiant) = S.addPermanent giant S.bob gs
+        board = snd (S.addHandCard auction S.alice (List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) withGiant mountains))
+        person = Game.human (screen 400 bids) (const (Right Nothing))
+        seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) Bot.bot
+        run = Driver.drive [] seats 400 (pure . (== Just S.alice) . Projection.controllerOf giantId) board
+        (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
+        shown = reverse (written sc)
+        heading = Text.isPrefixOf (Text.pack "Choose a number for Illicit Auction")
+    -- Player 2 tops 0 with 3; Player 1 is refused 2 and tops with 4, which
+    -- Player 2 lets stand.
+    Spec.assertEqWith s "each bid prompt, and the refusal" (filter (\line -> heading line || Text.isPrefixOf (Text.pack "Type a number") line) shown) (fmap Text.pack ["Choose a number for Illicit Auction, at least 0:", "Choose a number for Illicit Auction, at least 3:", "Type a number of at least 3.", "Choose a number for Illicit Auction, at least 4:"])
+    Spec.assertEqWith s "Player 1 wins the Hill Giant for 4 life" (fmap (S.lifeOf S.alice) outcome) (Right (Just 16))
+
   Spec.it s "CR 723.6 a seat controlled for its turn is still shown the rest of the turn before, and that turn, at its next question" $ do
     gs <- started s registry
     giant <- S.printingOf s registry "Hill Giant"
@@ -269,6 +288,9 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "optional" (answering gs "2" (Prompt.ChooseOptional alice S.alice o7 (ModeIndex.MkModeIndex 0) (ClauseIndex.MkClauseIndex 0) mempty)) (Right OptionalDecision.Declines)
     Spec.assertEqWith s "life for mana" (answering gs "1" (Prompt.PayLifeForMana alice S.alice 1 ManaType.Colorless)) (Right OptionalDecision.Exercises)
     Spec.assertEqWith s "x" (answering gs "3" (Prompt.ChooseX alice S.alice o7 Binding.variableX 1 5)) (Right 3)
+    Spec.assertEqWith s "number" (answering gs "2" (Prompt.ChooseNumber alice S.alice o7 1 (Just 2))) (Right 2)
+    Spec.assertEqWith s "a number past its bound is refused" (answering gs "3" (Prompt.ChooseNumber alice S.alice o7 1 (Just 2))) (Left (Text.pack "end of input"))
+    Spec.assertEqWith s "an unbounded number" (answering gs "99" (Prompt.ChooseNumber alice S.alice o7 3 Nothing)) (Right 99)
     Spec.assertEqWith s "combat damage" (answering gs "1 2" (Prompt.AssignCombatDamage alice S.alice o7 (Map.fromList [(Recipient.ToCreature o5, 0), (Recipient.ToCreature o9, 0)]) 3)) (Right (Map.fromList [(Recipient.ToCreature o5, 1), (Recipient.ToCreature o9, 2)]))
     Spec.assertEqWith s "division" (answering gs "3 1" (Prompt.ChooseDivision alice S.alice o7 (Dividing.Total 4) (Recipient.ToCreature o9 NonEmpty.:| [Recipient.ToPlayer S.bob]))) (Right (Map.fromList [(Recipient.ToCreature o9, 3), (Recipient.ToPlayer S.bob, 1)]))
     Spec.assertEqWith s "fixed parts" (answering gs "1 3" (Prompt.ChooseDivision alice S.alice o7 (Dividing.Parts (1 NonEmpty.:| [3])) (Recipient.ToCreature o9 NonEmpty.:| [Recipient.ToCreature o5]))) (Right (Map.fromList [(Recipient.ToCreature o9, 1), (Recipient.ToCreature o5, 3)]))
@@ -740,6 +762,23 @@ slavesBob sc
   where
     shown = pending sc
     numberOf wanted = Maybe.listToMaybe [n | line <- shown, (n, rest) <- [Text.breakOn (Text.pack ". ") (Text.strip line)], not (Text.null n), Text.all (`elem` ['0' .. '9']) n, rest == Text.pack wanted]
+
+-- Casts Illicit Auction for Hill Giant, paying with auto, and bids 3, then 2
+-- and 4 once refused, then 4; otherwise as discardsGiant.
+bids :: Screen -> Maybe Text.Text
+bids sc
+  | any (Text.isPrefixOf (Text.pack "Pass to ")) shown = Just Text.empty
+  | any (Text.isPrefixOf (Text.pack "Paying ")) shown = Just (Text.pack "auto")
+  | any (Text.isPrefixOf (Text.pack "Choose 1 target for Illicit Auction")) shown = numberOf (Text.isPrefixOf (Text.pack ". Hill Giant"))
+  | Text.pack "Type a number of at least 3." `elem` shown = Just (Text.pack "4")
+  | Text.pack "Choose a number for Illicit Auction, at least 0:" `elem` shown = Just (Text.pack "3")
+  | Text.pack "Choose a number for Illicit Auction, at least 3:" `elem` shown = Just (Text.pack "2")
+  | Text.pack "Choose a number for Illicit Auction, at least 4:" `elem` shown = Just (Text.pack "4")
+  | any menuHeading shown, Just n <- numberOf (== Text.pack ". Cast Illicit Auction") = Just n
+  | otherwise = discardsGiant sc
+  where
+    shown = pending sc
+    numberOf wanted = Maybe.listToMaybe [n | line <- shown, (n, rest) <- [Text.breakOn (Text.pack ". ") (Text.strip line)], not (Text.null n), Text.all (`elem` ['0' .. '9']) n, wanted rest]
 
 -- The lines shown while the screen faced the seat each such hand-off line
 -- passes it to.

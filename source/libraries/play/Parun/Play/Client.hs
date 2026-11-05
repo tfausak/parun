@@ -206,6 +206,18 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
           Just n | least <= n && n <= greatest -> Right (R.Number (toInteger n))
           _ -> Left (Text.pack ("Type a number from " <> show least <> " to " <> show greatest <> "."))
       )
+  -- With no greatest, any number from least up; a bid's least is the high bid.
+  "ChooseNumber" -> do
+    source <- field "source" offer
+    least <- field "least" offer >>= naturalOf
+    let greatest = field "greatest" offer >>= naturalOf
+        range = maybe ("at least " <> show least) (\most -> "from " <> show least <> " to " <> show most) greatest
+    pure
+      ( [Text.concat [Text.pack "Choose a number for ", objectName view source, Text.pack (", " <> range <> ":")]],
+        \typed -> case Read.readMaybe (Text.unpack (Text.strip typed)) of
+          Just n | least <= n && all (n <=) greatest -> Right (R.Number (toInteger n))
+          _ -> Left (Text.pack ("Type a number " <> maybe "of " (const "") greatest <> range <> "."))
+      )
   "ChooseOptional" -> do
     source <- field "source" offer
     pure
