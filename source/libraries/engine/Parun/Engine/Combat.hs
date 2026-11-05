@@ -1850,8 +1850,7 @@ switchBlockers first second gs =
           (Set.union (Set.intersection onFirst onSecond) fromSecond)
           (assign second (Set.union (Set.intersection onFirst onSecond) fromFirst) (Combat.blockers c))
       direct = fmap (\b -> (b, second)) (Set.toList fromFirst) <> fmap (\b -> (b, first)) (Set.toList fromSecond)
-      -- CR 702.22h, less a bandmate the blocker already blocks (CR 509.3b's
-      -- "only if it wasn't already blocking that attacking creature").
+      -- CR 702.22h, less a bandmate the blocker already blocks (CR 509.3b).
       spread =
         [ (b, mate)
         | (b, attacker) <- direct,
@@ -1864,7 +1863,7 @@ switchBlockers first second gs =
         || not (Map.member first (Combat.attackers c))
         || not (Map.member second (Combat.attackers c))
         || not allowed
-        || null direct
+        || null arrivals
         then gs
         else
           let switched = gs {GameState.combat = c {Combat.blockers = moved}}
