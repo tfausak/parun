@@ -2320,6 +2320,55 @@ applyReplacementsFully settle asOf batch allowances spent = loop settle asOf bat
 loop :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> ComponentSplit -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, ComponentSplit)
 loop settle asOf batch diverting allowances applied prevented exiledBy shuffling split event = do
   gs <- State.get
+  let fresh = freshCandidates asOf gs batch allowances applied prevented split event
+  case Replacement.highestBucket fresh of
+    -- CR 616.1c / 614.12: an entering object (`diverting`, the zone it leaves)
+    -- is offered to the battlefield-bound zone-change redirects once CR
+    -- 616.1a-d's entry rewrites have applied, so the redirect reads it as it
+    -- will enter, a copy and its controller included. Asked once, so a declined
+    -- "may" is not asked again. Proved by the scenarios
+    -- hallowed-moonlight-exiles-a-token-that-enters-as-a-copy-of-a-creature and
+    -- hallowed-moonlight-exiles-a-card-that-enters-as-a-copy-of-a-creature.
+    --
+    -- CR 616.1e: a redirect and the CR 616.1e entry rewrites still applicable are
+    -- one choice for the object's controller, and CR 616.1f re-collects after
+    -- each. Proved by the scenarios
+    -- hallowed-moonlight-exiles-a-wood-elemental-before-it-sacrifices and
+    -- hallowed-moonlight-exiles-a-wood-elemental-after-it-sacrifices.
+    bucket
+      | Just from <- diverting,
+        ProposedEvent.WouldEnter oid <- event,
+        all ((== ReplacementBucket.Other) . Replacement.bucketOf) bucket -> do
+          let redirects = freshCandidates Nothing gs (Set.insert oid batch) Map.empty Set.empty mempty Map.empty (enteringFrom from oid)
+              isRedirect candidate = any ((== ReplacementCandidate.identity candidate) . ReplacementCandidate.identity) redirects
+              continue redirected = case redirected of
+                Just (ProposedEvent.WouldChangeZone zc _ _ _)
+                  | ZoneChange.to zc == Zone.Battlefield -> loop settle asOf batch Nothing allowances applied prevented exiledBy shuffling split event
+                _ -> pure (redirected, [], prevented, exiledBy, shuffling, split)
+          if null bucket || null redirects || not (all ((== ReplacementBucket.Other) . Replacement.bucketOf) redirects)
+            then continue =<< divertEntry batch from oid
+            else do
+              picked <- Replacement.choose gs event (bucket <> redirects)
+              case picked of
+                Just candidate
+                  | isRedirect candidate -> do
+                      (redirected, _, _, _, _, _) <- applyChosen (pure ()) Nothing (Set.insert oid batch) Nothing Map.empty Set.empty mempty Nothing False Map.empty candidate (enteringFrom from oid)
+                      continue redirected
+                  | otherwise -> applyPicked settle asOf batch diverting allowances applied prevented exiledBy shuffling split gs event candidate
+                -- Unreachable: the offer is non-empty, so `choose` picks.
+                Nothing -> pure (Just event, [], prevented, exiledBy, shuffling, split)
+    -- CR 616.1f / 614.6: no candidate remains, so the surviving event happens.
+    [] -> pure (Just event, [], prevented, exiledBy, shuffling, split)
+    bucket -> do
+      first <- offerCommandZoneFirst gs event bucket split
+      case first of
+        Just (rewritten, split1) -> loop settle asOf batch diverting allowances applied prevented exiledBy shuffling split1 rewritten
+        Nothing -> chooseAndApply settle asOf batch diverting allowances applied prevented exiledBy shuffling split gs event bucket
+
+-- The candidates `loop` offers this event: every applicable row, minus CR 614.5's
+-- already-applied set and the exclusions below.
+freshCandidates :: Maybe GameState -> GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> ComponentSplit -> ProposedEvent -> [ReplacementCandidate]
+freshCandidates asOf gs batch allowances applied prevented split event =
   -- From scratch each iteration: collect against the CURRENT state (or, for a
   -- CR 608.2f batch, the state the batch began in), minus CR 614.5's
   -- already-applied set. Re-collecting is what makes CR 616.2 work.
@@ -2347,34 +2396,7 @@ loop settle asOf batch diverting allowances applied prevented exiledBy shuffling
       -- CR 730.3e: once every card component is split off, a row reaching only
       -- them has nothing left to move.
       cardsLeft candidate = Map.null split || not (all (`Map.member` split) (cardPrintings gs event) && Replacement.cardComponentsOnly asOf gs event candidate)
-      fresh = filter (\candidate -> unused candidate && notSibling candidate && cardsLeft candidate && not (Replacement.allocatedOut allowances candidate) && Replacement.ceilingLeft gs prevented candidate event /= Just 0) (Replacement.applicable asOf gs event)
-  case Replacement.highestBucket fresh of
-    -- CR 616.1c / 614.12: an entering object (`diverting`, the zone it leaves)
-    -- is offered to the battlefield-bound zone-change redirects once CR
-    -- 616.1a-d's entry rewrites have applied, so the redirect reads it as it
-    -- will enter, a copy and its controller included. Asked once, so a declined
-    -- "may" is not asked again. Proved by the scenarios
-    -- hallowed-moonlight-exiles-a-token-that-enters-as-a-copy-of-a-creature and
-    -- hallowed-moonlight-exiles-a-card-that-enters-as-a-copy-of-a-creature.
-    --
-    -- Not implemented: asking whether a CR 616.1e entry rewrite applies before
-    -- the redirect; the redirect always goes first (#5798).
-    bucket
-      | Just from <- diverting,
-        ProposedEvent.WouldEnter oid <- event,
-        all ((== ReplacementBucket.Other) . Replacement.bucketOf) bucket -> do
-          redirected <- divertEntry batch from oid
-          case redirected of
-            Just (ProposedEvent.WouldChangeZone zc _ _ _)
-              | ZoneChange.to zc == Zone.Battlefield -> loop settle asOf batch Nothing allowances applied prevented exiledBy shuffling split event
-            _ -> pure (redirected, [], prevented, exiledBy, shuffling, split)
-    -- CR 616.1f / 614.6: no candidate remains, so the surviving event happens.
-    [] -> pure (Just event, [], prevented, exiledBy, shuffling, split)
-    bucket -> do
-      first <- offerCommandZoneFirst gs event bucket split
-      case first of
-        Just (rewritten, split1) -> loop settle asOf batch diverting allowances applied prevented exiledBy shuffling split1 rewritten
-        Nothing -> chooseAndApply settle asOf batch diverting allowances applied prevented exiledBy shuffling split gs event bucket
+   in filter (\candidate -> unused candidate && notSibling candidate && cardsLeft candidate && not (Replacement.allocatedOut allowances candidate) && Replacement.ceilingLeft gs prevented candidate event /= Just 0) (Replacement.applicable asOf gs event)
 
 -- The CR 616.1 choice among the card-borne candidates of one bucket, and its
 -- application. Split out of `loop` so `offerCommandZoneFirst` can stand in front
@@ -2386,79 +2408,82 @@ chooseAndApply settle asOf batch diverting allowances applied prevented exiledBy
     -- Unreachable: highestBucket returns [] for an empty input, so `bucket`
     -- is non-empty and `choose` always picks. Total rather than partial.
     Nothing -> pure (Just event, [], prevented, exiledBy, shuffling, split)
-    -- CR 614.9 over a countdown (CR 615.7's shape, which that rule states
-    -- only for preventions; Harm's Way's rulings supply the redirect's):
-    -- the chosen effect covers only PART of this event (Harm's Way's
-    -- remaining 2 against a 5), so the event is split here and the
-    -- candidate applied to the covered half, while the residue -- "any
-    -- remaining damage is dealt normally" -- continues through the loop as
-    -- an event of its own. It carries the applied set INCLUDING this
-    -- candidate, which is CR 614.5: one effect applies to one event once,
-    -- and the residue is the rest of that same event rather than a new one
-    -- -- so a Furnace of Rath that already doubled it does not double the
-    -- residue again. The covered half's own thread runs first, the
-    -- residue's after it, both against whatever prompts they raise in that
-    -- order.
-    --
-    -- An effect the covered half's continuation applies is not recorded for the
-    -- residue, so it applies to each half. Right when the halves have different
-    -- recipients, each its own event (Pyromancer's Gauntlet's and Torbran's
-    -- rulings).
-    --
-    -- A cover that moved its half nowhere (Harm's Way aimed at the recipient
-    -- already being hit) is no split: the halves rejoin at once and continue as
-    -- the one event docs/decisions.md's "Whether one instruction naming a
-    -- recipient twice deals one damage event" makes them, so a flat bonus
-    -- applies once (CR 614.5). Proved by the scenarios
-    -- harms-way-back-onto-its-recipient-takes-pyromancers-gauntlet-once-*.
-    --
-    -- Halves that land together LATER, each moved there by its own row, are
-    -- joined by settleThreads before their next loop
-    -- (Replacement.oneThreadPerRecipient), rather than here, because a later
-    -- iteration can still move either half.
-    Just candidate
-      | Just covered <- Replacement.partialCoverage gs allowances candidate event,
-        Just (front, rest) <- Replacement.splitDamage covered event -> do
-          let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
-          stepped <- stepChosen settle batch applied prevented exiledBy shuffling split candidate front
-          case stepped of
-            Right (appliedFront, prevented1, exiledBy1, shuffling1, rewritten)
-              | Just whole <- rejoinUnmoved rewritten rest ->
-                  loop settle asOf batch diverting allowances appliedFront prevented1 exiledBy1 shuffling1 split whole
-            _ -> do
-              (survivor, residue1, prevented1, exiledBy1, shuffling1, split1) <- case stepped of
-                Left done -> pure done
-                Right (appliedFront, prevented1, exiledBy1, shuffling1, rewritten) -> loop settle asOf batch diverting allowances appliedFront prevented1 exiledBy1 shuffling1 split rewritten
-              (leftover, residue2, prevented2, exiledBy2, shuffling2, split2) <- loop settle asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 split1 rest
-              pure (survivor, residue1 <> fmap Right (Maybe.maybeToList leftover) <> residue2, prevented2, exiledBy2, shuffling2, split2)
-    -- CR 614.5: Eye for an Eye's two damages are one modified event, so each
-    -- thread carries what has applied so far, and what applies later may reach
-    -- both. CR 615.7: the batch gets both back, since a shield may be asked to
-    -- divide itself over them.
-    Just candidate
-      | ProposedEvent.WouldDealDamage de <- event,
-        Just also <- alsoDealt gs candidate de -> do
-          Replacement.consume (ReplacementCandidate.identity candidate)
-          let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
-          pure (Nothing, [Left (de, applied1), Left (also, applied1)], prevented, exiledBy, shuffling, split)
-    -- CR 730.3e: a row reaching a merged permanent that is a token only through
-    -- its card components moves those, and the rest of the event -- the
-    -- permanent and its token components, which is how it still dies (CR 700.4)
-    -- -- keeps its destination and goes on through the loop. The row's own
-    -- rewrite says where the cards go. Parun.MutateSpec's Cubwarden under a Cat
-    -- token with Leyline of the Void proves it.
-    Just candidate
-      | Replacement.cardComponentsOnly asOf gs event candidate -> do
-          stepped <- stepChosen settle batch applied prevented exiledBy shuffling split candidate event
-          case stepped of
+    Just candidate -> applyPicked settle asOf batch diverting allowances applied prevented exiledBy shuffling split gs event candidate
+
+-- The application of the candidate CR 616.1 picked, by the shape of what it
+-- covers.
+applyPicked :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> ComponentSplit -> GameState -> ProposedEvent -> ReplacementCandidate -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, ComponentSplit)
+applyPicked settle asOf batch diverting allowances applied prevented exiledBy shuffling split gs event candidate
+  -- CR 614.9 over a countdown (CR 615.7's shape, which that rule states
+  -- only for preventions; Harm's Way's rulings supply the redirect's):
+  -- the chosen effect covers only PART of this event (Harm's Way's
+  -- remaining 2 against a 5), so the event is split here and the
+  -- candidate applied to the covered half, while the residue -- "any
+  -- remaining damage is dealt normally" -- continues through the loop as
+  -- an event of its own. It carries the applied set INCLUDING this
+  -- candidate, which is CR 614.5: one effect applies to one event once,
+  -- and the residue is the rest of that same event rather than a new one
+  -- -- so a Furnace of Rath that already doubled it does not double the
+  -- residue again. The covered half's own thread runs first, the
+  -- residue's after it, both against whatever prompts they raise in that
+  -- order.
+  --
+  -- An effect the covered half's continuation applies is not recorded for the
+  -- residue, so it applies to each half. Right when the halves have different
+  -- recipients, each its own event (Pyromancer's Gauntlet's and Torbran's
+  -- rulings).
+  --
+  -- A cover that moved its half nowhere (Harm's Way aimed at the recipient
+  -- already being hit) is no split: the halves rejoin at once and continue as
+  -- the one event docs/decisions.md's "Whether one instruction naming a
+  -- recipient twice deals one damage event" makes them, so a flat bonus
+  -- applies once (CR 614.5). Proved by the scenarios
+  -- harms-way-back-onto-its-recipient-takes-pyromancers-gauntlet-once-*.
+  --
+  -- Halves that land together LATER, each moved there by its own row, are
+  -- joined by settleThreads before their next loop
+  -- (Replacement.oneThreadPerRecipient), rather than here, because a later
+  -- iteration can still move either half.
+  | Just covered <- Replacement.partialCoverage gs allowances candidate event,
+    Just (front, rest) <- Replacement.splitDamage covered event = do
+      let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
+      stepped <- stepChosen settle batch applied prevented exiledBy shuffling split candidate front
+      case stepped of
+        Right (appliedFront, prevented1, exiledBy1, shuffling1, rewritten)
+          | Just whole <- rejoinUnmoved rewritten rest ->
+              loop settle asOf batch diverting allowances appliedFront prevented1 exiledBy1 shuffling1 split whole
+        _ -> do
+          (survivor, residue1, prevented1, exiledBy1, shuffling1, split1) <- case stepped of
             Left done -> pure done
-            -- A declined "may" leaves the event as it was, and the cards with it.
-            Right (applied1, prevented1, exiledBy1, shuffling1, rewritten@(ProposedEvent.WouldChangeZone moved _ position _))
-              | rewritten /= event ->
-                  let cards = Map.fromList (fmap (\printing -> (printing, (ZoneChange.to moved, position))) (cardPrintings gs event))
-                   in loop settle asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 (Map.union split cards) event
-            Right (applied1, prevented1, exiledBy1, shuffling1, rewritten) -> loop settle asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 split rewritten
-    Just candidate -> applyChosen settle asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event
+            Right (appliedFront, prevented1, exiledBy1, shuffling1, rewritten) -> loop settle asOf batch diverting allowances appliedFront prevented1 exiledBy1 shuffling1 split rewritten
+          (leftover, residue2, prevented2, exiledBy2, shuffling2, split2) <- loop settle asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 split1 rest
+          pure (survivor, residue1 <> fmap Right (Maybe.maybeToList leftover) <> residue2, prevented2, exiledBy2, shuffling2, split2)
+  -- CR 614.5: Eye for an Eye's two damages are one modified event, so each
+  -- thread carries what has applied so far, and what applies later may reach
+  -- both. CR 615.7: the batch gets both back, since a shield may be asked to
+  -- divide itself over them.
+  | ProposedEvent.WouldDealDamage de <- event,
+    Just also <- alsoDealt gs candidate de = do
+      Replacement.consume (ReplacementCandidate.identity candidate)
+      let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
+      pure (Nothing, [Left (de, applied1), Left (also, applied1)], prevented, exiledBy, shuffling, split)
+  -- CR 730.3e: a row reaching a merged permanent that is a token only through
+  -- its card components moves those, and the rest of the event -- the
+  -- permanent and its token components, which is how it still dies (CR 700.4)
+  -- -- keeps its destination and goes on through the loop. The row's own
+  -- rewrite says where the cards go. Parun.MutateSpec's Cubwarden under a Cat
+  -- token with Leyline of the Void proves it.
+  | Replacement.cardComponentsOnly asOf gs event candidate = do
+      stepped <- stepChosen settle batch applied prevented exiledBy shuffling split candidate event
+      case stepped of
+        Left done -> pure done
+        -- A declined "may" leaves the event as it was, and the cards with it.
+        Right (applied1, prevented1, exiledBy1, shuffling1, rewritten@(ProposedEvent.WouldChangeZone moved _ position _))
+          | rewritten /= event ->
+              let cards = Map.fromList (fmap (\printing -> (printing, (ZoneChange.to moved, position))) (cardPrintings gs event))
+               in loop settle asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 (Map.union split cards) event
+        Right (applied1, prevented1, exiledBy1, shuffling1, rewritten) -> loop settle asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 split rewritten
+  | otherwise = applyChosen settle asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event
 
 -- CR 730.3e: the printings of the card components of the merged permanent a zone
 -- change moves, which a row reaching only cards splits off. Empty for any other
@@ -9885,7 +9910,12 @@ createTokens settle controller card copy n tapped entering attached marks = do
 -- rows (Containment Priest's ruling of 2021-03-19).
 divertEntry :: Set ObjectId -> Zone -> ObjectId -> Game (Maybe ProposedEvent)
 divertEntry batch from oid =
-  applyReplacementsIn (pure ()) Nothing (Set.insert oid batch) Set.empty (ProposedEvent.WouldChangeZone (ZoneChange.MkZoneChange oid oid from Zone.Battlefield) Nothing LibraryPosition.defaultValue False)
+  applyReplacementsIn (pure ()) Nothing (Set.insert oid batch) Set.empty (enteringFrom from oid)
+
+-- The zone change divertEntry asks the redirects about: the entering object, from
+-- the zone it leaves to the battlefield.
+enteringFrom :: Zone -> ObjectId -> ProposedEvent
+enteringFrom from oid = ProposedEvent.WouldChangeZone (ZoneChange.MkZoneChange oid oid from Zone.Battlefield) Nothing LibraryPosition.defaultValue False
 
 -- An entry a CR 614.6 redirect took, which runEntry has placed when minted.
 isDiverted :: EntryRefusal.EntryRefusal -> Bool
