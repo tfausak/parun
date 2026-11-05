@@ -11,11 +11,11 @@ import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Types.CounterTrigger as CounterTrigger
-import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardTrigger as DiscardTrigger
 import qualified Parun.Types.EntersTrigger as EntersTrigger
+import qualified Parun.Types.ExploitTrigger as ExploitTrigger
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
@@ -241,16 +241,12 @@ data TriggerCondition
     -- (Aegis of the Legion). Attachment-scoped, so vacuously False while
     -- attached to nothing or to a player (CR 303.4).
     AttachedCreatureMentors
-  | -- | CR 702.110b: the bearer exploited a creature (Qarsi Sadist). Self-scoped,
-    -- AttachedCreatureMentors' shape: rule 702.110b's "a creature" is a second
-    -- object, bound under Parun.Engine.Binding.exploitedCreature.
+  | -- | CR 702.110b: a creature exploited a creature (Qarsi Sadist, Skull Skaab).
+    --
     -- Parun.CardTriggerSpec's "CR 702.110b Profaner of the Dead bounces the
-    -- creatures under the exploited creature's toughness" is what proves that slot
-    -- is readable.
-    SelfExploits
-  | -- | CR 702.110b read by a bystander: a creature the first Filter admits
-    -- exploited one the second admits (Skull Skaab).
-    CreatureExploits CreatureExploits.CreatureExploits
+    -- creatures under the exploited creature's toughness" is what proves the
+    -- exploited creature's slot is readable.
+    Exploits ExploitTrigger.ExploitTrigger
   | -- | CR 702.122e: "whenever this Vehicle becomes crewed" (Mobilizer Mech),
     -- which that rule defines as a crew ability of the bearer RESOLVING.
     -- Self-scoped; the TriggerFrequency is Mighty Servant of Leuk-o's "for the

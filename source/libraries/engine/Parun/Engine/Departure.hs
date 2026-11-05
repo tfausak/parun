@@ -649,15 +649,14 @@ exileAll gs victims =
 
 -- CR 702.26n: a phased-out permanent exiled by CR 800.4a or CR 800.4c. CR
 -- 702.26b keeps it out of the zone-change funnel: no CR 616.1 replacement
--- applies to it and no event is recorded, so nothing sees it leave.
--- docs/decisions.md, "Whether a phased-out permanent a subgame takes leaves
--- visibly". Event.leaveTheGame files its CR 608.2h record and deletes it with
--- its phased-out row, and each card it represents (CR 712.21, CR 730.3) arrives
--- in its owner's exile as a new object (CR 400.7), its stickers on the one its
--- owner picks (CR 400.7m, CR 123.5c, CR 613.7k).
---
--- CR 903.9a's return to the command zone is not implemented for a commander
--- exiled this way (#6263).
+-- applies to it and nothing sees it leave: its only record is a
+-- GameEvent.ArrivedUnseen per arrival, which no trigger reads and CR 903.9a's
+-- state-based action does (Commander.returnable). docs/decisions.md, "Whether a
+-- phased-out permanent a subgame takes leaves visibly". Event.leaveTheGame
+-- files its CR 608.2h record and deletes it with its phased-out row, and each
+-- card it represents (CR 712.21, CR 730.3) arrives in its owner's exile as a
+-- new object (CR 400.7), its stickers on the one its owner picks (CR 400.7m,
+-- CR 123.5c, CR 613.7k).
 exilePhasedOut :: GameState -> ObjectId -> Game ()
 exilePhasedOut asOf oid = case Game.lookupObject oid asOf of
   Nothing -> pure ()
@@ -668,7 +667,7 @@ exilePhasedOut asOf oid = case Game.lookupObject oid asOf of
         arriving keeps ts = (Object.newIncarnation obj) {Object.zone = Zone.Exile, Object.timestamp = ts, Object.stickers = if keeps then stickers else Seq.empty}
         place mk = do
           newId <- Event.placeObject owner mk Zone.Exile LibraryPosition.defaultValue
-          State.modify' (Game.restampStickers newId)
+          State.modify' (Event.recordEvent (GameEvent.ArrivedUnseen newId) . Game.restampStickers newId)
         components = Foldable.toList (Game.componentsOf (Object.source obj))
     case components of
       [] -> place (arriving True)

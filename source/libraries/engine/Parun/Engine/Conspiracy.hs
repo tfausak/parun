@@ -17,6 +17,7 @@ import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
+import Numeric.Natural (Natural)
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Types.Card as Card
@@ -28,10 +29,13 @@ import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.Filter as Filter
 import Parun.Types.Game (Game)
 import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.Player as Player
 import Parun.Types.PlayerId (PlayerId)
+import Parun.Types.PrintingId (PrintingId)
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.TypeLine as TypeLine
 import qualified Parun.Types.Zone as Zone
@@ -47,6 +51,15 @@ isConspiracyFace face = Set.member CardType.Conspiracy (TypeLine.types (Face.typ
 -- command zone, where nothing can copy it or change its type.
 isConspiracy :: ObjectId -> GameState -> Bool
 isConspiracy oid gs = maybe False isConspiracyFace (Game.faceUpFaceOf oid gs)
+
+-- | CR 315.2: the conspiracy cards in this player's sideboard pool, with how
+-- many copies of each. Read off the printed face, Parun.Engine.Event.eligible's
+-- reason: a card outside the game has no object to project (CR 400.11).
+inSideboard :: PlayerId -> GameState -> Map.Map PrintingId Natural
+inSideboard pid gs =
+  let pool = maybe Map.empty Player.outsideTheGame (Map.lookup pid (GameState.players gs))
+      admits printingId = maybe False (isConspiracyFace . Game.resolveFaceFor Nothing) (Game.cardOfPrinting printingId gs)
+   in Map.filterWithKey (\printingId n -> n > 0 && admits printingId) pool
 
 -- | CR 315.5b / 315.7: is this a conspiracy card lying face down?
 isFaceDownConspiracy :: ObjectId -> GameState -> Bool

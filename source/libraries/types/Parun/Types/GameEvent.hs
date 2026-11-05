@@ -432,6 +432,9 @@ data GameEvent
     -- trigger on objects leaving a main-game ZONE. Parun.OutsideTheGameSpec's
     -- Spirit Mascot case proves the graveyard leg.
     LeftTheGame LeftTheGame.LeftTheGame
+  | -- | CR 702.26n: a phased-out permanent's card arrived in exile unseen (CR
+    -- 702.26b), read by CR 903.9a alone.
+    ArrivedUnseen ObjectId.ObjectId
   | -- | CR 104.3 / 603.9: a player lost the game, or left it other than by a
     -- draw. Recorded by Parun.Engine.Departure.leaveTogether.
     LostTheGame PlayerId.PlayerId

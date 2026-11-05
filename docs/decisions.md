@@ -127,9 +127,11 @@ Entries are ordered by the first rule each cites.
   deals her ONE event, of 6" and the scenario
   `harms-way-onto-another-recipient-of-its-source-is-one-event`; absorb's
   ceiling spans the event at `Parun.Engine.Replacement.ceilingLeft`, proved by
-  `lymph-sliver-absorbs-1-of-earthquake-once-though-pariah-adds-to-it`; the
-  redirect aimed back at its recipient at `Parun.Engine.Event.chooseAndApply`,
-  proved by the scenarios
+  `lymph-sliver-absorbs-1-of-earthquake-once-though-pariah-adds-to-it`;
+  CR 615.10's floor at `Parun.Engine.Replacement.floorLeft`, proved by
+  `temple-altisaur-lets-1-of-earthquake-through-once-though-pariah-adds-to-it`;
+  the redirect aimed back at its recipient at
+  `Parun.Engine.Event.chooseAndApply`, proved by the scenarios
   `harms-way-back-onto-its-recipient-takes-pyromancers-gauntlet-once-*`; the
   join before replacements at `Parun.Engine.Event.settleThreads`, proved by
   `harms-way-twice-onto-one-recipient-takes-pyromancers-gauntlet-once`.
@@ -678,8 +680,9 @@ Entries are ordered by the first rule each cites.
   when CR 800.4a or 800.4c exiles a phased-out permanent (CR 702.26n).
 - **Rules**: CR 702.26b, 702.26d, 702.26k, 702.26n, 729.1a, 729.4, 729.4a,
   800.4a, 800.4c; CR of 2026-08-07.
-- **Decision**: It crosses, or is exiled, but no event is recorded and nothing
-  triggers.
+- **Decision**: It crosses, or is exiled, but nothing triggers. The exile
+  records only an arrival no trigger reads, so CR 903.9a still offers a
+  commander back.
 - **Rejected**: Recording the leave: CR 702.26b overrides rules that don't
   name phasing. Leaving it unreachable: the wish belongs to a separate game
   (CR 729.1a), and CR 702.26n names the exiles.
@@ -688,7 +691,7 @@ Entries are ordered by the first rule each cites.
   triggers nothing"; `Parun.Engine.Departure.exilePhasedOut`, proved by
   `Parun.PhasingSpec`'s "CR 702.26n a phased-out permanent its departed
   controller doesn't own is exiled at once".
-- **Issue**: #2468, #6254.
+- **Issue**: #2468, #6254, #6263.
 
 ## Which component of a merged permanent answers for day and night
 

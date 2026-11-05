@@ -942,6 +942,8 @@ snapshotView viewOf gs shape event = case event of
     EventShape.MovedFrom zone | zone == from -> fmap (lastKnownView viewOf oid gs) (Map.lookup oid (GameState.lastKnown gs))
     _ -> Nothing
   GameEvent.PlayerActed _ -> Nothing
+  -- CR 702.26b: read by CR 903.9a alone.
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing
   GameEvent.LostTheGame _ -> Nothing
   GameEvent.ManifestedDread {} -> Nothing

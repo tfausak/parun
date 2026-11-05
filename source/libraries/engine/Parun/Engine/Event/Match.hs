@@ -70,7 +70,6 @@ import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Countering as Countering
 import qualified Parun.Types.CountersPlaced as CountersPlaced
-import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
@@ -90,6 +89,7 @@ import qualified Parun.Types.Drew as Drew
 import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.EventShape as EventShape
+import qualified Parun.Types.ExploitTrigger as ExploitTrigger
 import qualified Parun.Types.Exploited as Exploited
 import qualified Parun.Types.Filter as Filter.Type
 import Parun.Types.GameEvent (GameEvent)
@@ -820,6 +820,7 @@ anyTriggerReads event = case event of
   GameEvent.BecameAttached {} -> True
   GameEvent.BecameUnattached {} -> True
   GameEvent.LeftTheGame {} -> True
+  GameEvent.ArrivedUnseen {} -> False
   GameEvent.LostTheGame {} -> True
   GameEvent.LandPlayed {} -> True
   GameEvent.ManifestedDread {} -> True
@@ -1723,34 +1724,26 @@ armMatches bindings board gs bearer you cond event = case cond of
     GameEvent.Mentored (Mentored.MkMentored mentor _) ->
       (Recipient.objectOf =<< Object.attachedTo =<< Game.lookupObject bearer gs) == Just mentor
     _ -> False
-  -- CR 702.110b: the BEARER exploited a creature -- its controller sacrificed one
-  -- as rule 702.110a's ability resolved. PermanentActs' Self reading, line for
-  -- line and for its reasons: a bare id comparison on the exploiter, no view
-  -- and no Filter.
-  TriggerCondition.SelfExploits -> case event of
-    GameEvent.Exploited (Exploited.MkExploited exploiter _) -> exploiter == bearer
-    -- The event the RULE distinguishes this condition from: +1/+1 counters arriving
-    -- say nothing about what put them, which is why rule 702.149c needs a marker at
-    -- all.
-    GameEvent.CountersPut {} -> False
-    -- Nor the declaration rule 702.149a's own trigger reads: training FIRES on an
-    -- attack and this condition fires on that ability resolving, so an ability
-    -- removed before it resolves (CR 701.6a) trains nothing.
-    GameEvent.AttackerDeclared {} -> False
-    _ -> False
-  -- CR 702.110b read by a bystander (Skull Skaab): SelfExploits' event, with
-  -- each of its two ids put to a Filter rather than compared with the bearer.
+  -- CR 702.110b: a creature exploited a creature -- its controller sacrificed
+  -- one as rule 702.110a's ability resolved.
   --
-  -- Both are read through viewWithLastKnown, PermanentSacrificed's posture and
-  -- CR 603.10a's look-back: the exploit IS a sacrifice, so the exploited creature
-  -- is gone by the time this is asked -- a token has ceased to exist outright --
-  -- and the exploiter may be that same creature. Nothing is a creature that is
-  -- gone and filed no last known information, about which no Filter can answer.
-  TriggerCondition.CreatureExploits (CreatureExploits.MkCreatureExploits exploiterFilter exploitedFilter) -> case event of
+  -- A Self exploiter is PermanentActs' Self reading, line for line and for its
+  -- reasons: a bare id comparison, no view. A Matching one (Skull Skaab) puts
+  -- the event's id to a Filter instead.
+  --
+  -- Both Filters are read through viewWithLastKnown, PermanentSacrificed's
+  -- posture and CR 603.10a's look-back: the exploit IS a sacrifice, so the
+  -- exploited creature is gone by the time this is asked -- a token has ceased
+  -- to exist outright -- and the exploiter may be that same creature. Nothing
+  -- is a creature that is gone and filed no last known information, about which
+  -- no Filter can answer.
+  TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger exploiterSubject exploitedFilter) -> case event of
     GameEvent.Exploited (Exploited.MkExploited exploiter exploited) ->
-      let context = bearerContext
-          admits oid f = maybe False (\view -> Filter.matches context view f) (Projection.viewWithLastKnown oid gs oid)
-       in admits exploiter exploiterFilter && admits exploited exploitedFilter
+      let admits oid f = maybe False (\view -> Filter.matches bearerContext view f) (Projection.viewWithLastKnown oid gs oid)
+          exploiterAdmitted = case exploiterSubject of
+            ActingPermanent.Self -> exploiter == bearer
+            ActingPermanent.Matching f -> admits exploiter f
+       in exploiterAdmitted && admits exploited exploitedFilter
     _ -> False
   -- CR 702.122e: the BEARER became crewed, which that rule defines as a crew
   -- ability of the bearer RESOLVING. PermanentActs' Self reading, line for line

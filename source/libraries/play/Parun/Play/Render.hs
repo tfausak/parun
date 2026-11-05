@@ -17,6 +17,7 @@ import qualified Parun.Codec.Reply as Codec.Reply
 import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.Types.AbilityView as AbilityView
+import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
 import qualified Parun.Types.BecameBlocking as BecameBlocking
@@ -290,6 +291,7 @@ events view = concatMap sentences . List.groupBy (\a b -> Maybe.isJust (drawer a
 event :: PlayerView.PlayerView -> LoggedEvent.LoggedEvent -> Maybe Text.Text
 event view logged = case LoggedEvent.event logged of
   GameEvent.SpellCast c -> said [player (SpellWasCast.player c), Text.pack "casts", snapshotName (SpellWasCast.characteristics c)]
+  GameEvent.AbilityActivated a -> said [player (AbilityWasActivated.player a), Text.pack "activates", name (AbilityWasActivated.source a) <> Text.pack "'s ability"]
   GameEvent.LandPlayed l -> said [player (LandPlayed.player l), Text.pack "plays", name (LandPlayed.land l)]
   GameEvent.AttackerDeclared a -> said [name (AttackerDeclared.attacker a), Text.pack "attacks", attacked (AttackerDeclared.target a)]
   GameEvent.BecameBlocking b -> said [name (BecameBlocking.blocker b), Text.pack "blocks", name (BecameBlocking.attacker b)]

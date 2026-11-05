@@ -307,6 +307,7 @@ movedOf event = case event of
   GameEvent.BecameAttached {} -> Nothing
   GameEvent.BecameUnattached {} -> Nothing
   GameEvent.LeftTheGame _ -> Nothing
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.Milled {} -> Nothing
   GameEvent.PlayerActed _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing
@@ -464,6 +465,7 @@ participants event =
         GameEvent.BecameAttached a -> ([BecameAttached.attachment a], []) <> recipient (BecameAttached.host a)
         GameEvent.BecameUnattached a -> ([BecameUnattached.attachment a], []) <> recipient (BecameUnattached.host a)
         GameEvent.LeftTheGame l -> one (LeftTheGame.object l)
+        GameEvent.ArrivedUnseen oid -> one oid
         GameEvent.PlayerActed acted -> player (PlayerActed.player acted)
         GameEvent.LandPlayed l -> ([LandPlayed.land l], [LandPlayed.player l])
         GameEvent.LostTheGame pid -> player pid
@@ -642,8 +644,7 @@ looksBack condition = case condition of
   -- may be the bearer itself, which the Colonel Autumn ruling says still
   -- triggers. Proved by Parun.CardTriggerSpec's "CR 702.110b Skull Skaab
   -- exploiting itself still triggers".
-  TriggerCondition.SelfExploits -> True
-  TriggerCondition.CreatureExploits {} -> True
+  TriggerCondition.Exploits {} -> True
   -- Not on the list: rule 702.122e's Vehicle is on the battlefield when its own
   -- crew ability resolves, so there is no departure to look back past.
   TriggerCondition.SelfBecomesCrewed {} -> False
@@ -824,8 +825,7 @@ batchScoped condition = case condition of
   TriggerCondition.PermanentTransforms _ -> False
   TriggerCondition.PermanentBecomesDesignated {} -> False
   TriggerCondition.AttachedCreatureMentors -> False
-  TriggerCondition.SelfExploits -> False
-  TriggerCondition.CreatureExploits {} -> False
+  TriggerCondition.Exploits {} -> False
   TriggerCondition.SelfBecomesCrewed {} -> False
   TriggerCondition.SelfCrewsVehicle -> False
   -- CR 603.2c: OneOrMore is one occurrence for the whole entry event
@@ -1262,6 +1262,7 @@ eventTriggers events gs =
               Just lk -> Map.singleton oid (LastKnown.controller lk, battlefieldAbilitiesOf oid (LastKnown.characteristics lk))
           | otherwise -> Map.empty
         GameEvent.Milled {} -> Map.empty
+        GameEvent.ArrivedUnseen _ -> Map.empty
         GameEvent.PlayerActed _ -> Map.empty
         GameEvent.LandPlayed {} -> Map.empty
         GameEvent.LostTheGame _ -> Map.empty
@@ -1639,6 +1640,7 @@ eventTriggers events gs =
         GameEvent.BecameAttached {} -> Map.empty
         GameEvent.BecameUnattached {} -> Map.empty
         GameEvent.LeftTheGame _ -> Map.empty
+        GameEvent.ArrivedUnseen _ -> Map.empty
         GameEvent.Milled {} -> Map.empty
         GameEvent.PlayerActed _ -> Map.empty
         GameEvent.LandPlayed {} -> Map.empty
@@ -2033,6 +2035,7 @@ eventTriggers events gs =
         GameEvent.BecameAttached {} -> Map.empty
         GameEvent.BecameUnattached {} -> Map.empty
         GameEvent.LeftTheGame _ -> Map.empty
+        GameEvent.ArrivedUnseen _ -> Map.empty
         GameEvent.Milled {} -> Map.empty
         GameEvent.PlayerActed _ -> Map.empty
         GameEvent.LandPlayed {} -> Map.empty
@@ -2196,6 +2199,7 @@ eventTriggers events gs =
         GameEvent.BecameAttached {} -> Map.empty
         GameEvent.BecameUnattached {} -> Map.empty
         GameEvent.LeftTheGame _ -> Map.empty
+        GameEvent.ArrivedUnseen _ -> Map.empty
         GameEvent.Milled {} -> Map.empty
         GameEvent.PlayerActed _ -> Map.empty
         GameEvent.LandPlayed {} -> Map.empty
@@ -2846,10 +2850,9 @@ zonesTriggeredFrom cond =
         TriggerCondition.SelfManaAbilityResolves -> battlefield
         -- The same default from the exploiting creature's own side: rule 702.110a's
         -- ability fires on its bearer's entry, so the bearer is on the battlefield.
-        TriggerCondition.SelfExploits -> battlefield
-        -- The same default from a bystander's side: Skull Skaab watches from the
-        -- battlefield, and CR 113.6k's exception does not apply.
-        TriggerCondition.CreatureExploits {} -> battlefield
+        -- From a bystander's side too: Skull Skaab watches from the battlefield,
+        -- and CR 113.6k's exception does not apply.
+        TriggerCondition.Exploits {} -> battlefield
         -- The same default: CR 702.122a's ability is a Vehicle permanent's, so its
         -- bearer is on the battlefield and CR 113.6k's exception does not apply.
         TriggerCondition.SelfBecomesCrewed {} -> battlefield
@@ -3231,8 +3234,7 @@ stateTriggersOn gs
             -- CR 702.110b the same: it fires on a resolution, and a creature
             -- missing from the battlefield afterwards could have left for any
             -- reason, so the board says nothing about who exploited it.
-            TriggerCondition.SelfExploits -> False
-            TriggerCondition.CreatureExploits {} -> False
+            TriggerCondition.Exploits {} -> False
             -- CR 702.122e likewise fires on a resolution, and the board
             -- afterwards -- an animated Vehicle -- is CR 702.122a's effect
             -- rather than a record of the crewing.
@@ -3909,6 +3911,7 @@ resnapshot gs without event =
         GameEvent.BecameAttached {} -> Just event
         GameEvent.BecameUnattached {} -> Just event
         GameEvent.LeftTheGame {} -> Just event
+        GameEvent.ArrivedUnseen {} -> Just event
         GameEvent.PlayerActed {} -> Just event
         GameEvent.LandPlayed {} -> Just event
         GameEvent.LostTheGame {} -> Just event

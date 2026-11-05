@@ -30,7 +30,6 @@ import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterTrigger as CounterTrigger
-import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamageRecipient as DamageRecipient
 import qualified Parun.Types.DamageTrigger as DamageTrigger
@@ -42,6 +41,7 @@ import qualified Parun.Types.DiscardTrigger as DiscardTrigger
 import qualified Parun.Types.DiscardWay as DiscardWay
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.EntersTrigger as EntersTrigger
+import qualified Parun.Types.ExploitTrigger as ExploitTrigger
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
@@ -579,20 +579,13 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.AttachedCreatureMentors
       " {\"type\":\"AttachedCreatureMentors\"} "
-  -- CR 702.110b's marker, self-scoped, so nullary.
-  Spec.it s "SelfExploits" $
+  -- CR 702.110b; Parun.Codec.ExploitTriggerSpec has the fields.
+  Spec.it s "Exploits" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.SelfExploits
-      " {\"type\":\"SelfExploits\"} "
-  -- CR 702.110b's bystander reading, Skull Skaab's two Filters.
-  Spec.it s "CreatureExploits" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CreatureExploits (CreatureExploits.MkCreatureExploits (Filter.HasCardType CardType.Creature) (Filter.Not Filter.IsToken)))
-      " {\"type\":\"CreatureExploits\",\"value\":{\"exploiter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"exploited\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}}} "
+      (TriggerCondition.Exploits ExploitTrigger.defaultValue)
+      " {\"type\":\"Exploits\",\"value\":{}} "
   -- CR 702.122e's marker, self-scoped but carrying a frequency -- Mighty Servant of Leuk-o prints "for the first time each
   -- turn". Both, since either could round-trip alone.
   Spec.it s "SelfBecomesCrewed round-trips both frequencies" $ do
@@ -606,7 +599,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.SelfBecomesCrewed TriggerFrequency.FirstTimeEachTurn)
       " {\"type\":\"SelfBecomesCrewed\",\"value\":{\"type\":\"FirstTimeEachTurn\"}} "
-  -- CR 702.122b's crewer side, nullary for SelfExploits' reason above; the arm
+  -- CR 702.122b's crewer side, nullary: self-scoped; the arm
   -- before it is where a frequency would go if a card printed one.
   Spec.it s "SelfCrewsVehicle" $
     Common.assertCodec
