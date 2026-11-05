@@ -1626,9 +1626,12 @@ blockCeilingGiven board pid gs =
 -- none of them the only legal declaration is the empty one. couldAttack's
 -- twin.
 --
--- Not implemented: CR 509.1's preamble makes a declaration whose CR 509.1f
--- payment can't be made illegal, so a creature only in such declarations is
--- in no legal one; costs are ignored here (#6302).
+-- CR 509.1's preamble makes a declaration whose CR 509.1f payment can't be
+-- made illegal, and CR 509.1d charges a blocker at least its own share for
+-- any one attacker it blocks, so a pair whose share alone its controller
+-- can't pay (tollPayable) is in no legal declaration. Not implemented: a pair
+-- payable alone whose every legal declaration owes more than can be paid
+-- together is still offered (#6308).
 --
 -- A candidate blocking in the ceiling's declaration is in one. Otherwise each
 -- pair it may block is first added to that declaration, which obeys no fewer
@@ -1653,8 +1656,9 @@ declarableBlockers pid gs =
         let boosted = requirements {Requirement.pairs = Map.insertWith (+) (blocker, attacker) heavier (Requirement.pairs requirements)}
             witness = bestBlockDeclaration boosted limit most alone arity pcs able candidates attackers gs
          in requirementsMet boosted witness >= heavier + obeyed
+      affordable blocker attacker = tollPayable (Maybe.fromMaybe pid (Projection.controllerOf blocker gs)) (BlockCost.costsOn blocker (Set.singleton attacker) gs) gs
       declarable blocker =
-        let pairs = filter (able blocker) attackers
+        let pairs = filter (\attacker -> able blocker attacker && affordable blocker attacker) attackers
          in blocking blocker || any (added blocker) pairs || any (reached blocker) pairs
    in filter declarable candidates
 
@@ -2663,9 +2667,7 @@ payTolls perform handed before held charged = do
   gs <- State.get
   -- CR 118.3: only a payer who CAN pay the whole toll is asked; one who can't
   -- has nothing to decide, and the payment below fails for them.
-  let affords payer charges = case charges of
-        [] -> False
-        (source, first) : rest -> Cost.canPay PaymentSubject.ForNeither payer source (List.foldl' Cost.plus first (fmap snd rest)) gs
+  let affords payer charges = not (null charges) && tollPayable payer charges gs
   agreed <- consents [(payer, charge) | Just chooser <- [handed], (payer, charges) <- charged, payer /= chooser, affords payer charges, charge <- charges]
   if agreed then go [] charged else False <$ Cost.restoreKeepingLibraryActions before
   where
@@ -2680,6 +2682,13 @@ payTolls perform handed before held charged = do
       (payer, charges) : rest
         | null charges -> go earlier rest
         | otherwise -> Cost.payToll perform before (Set.fromList [oid | (p, oid) <- held, p == payer]) earlier payer charges >>= maybe (pure False) (`go` rest)
+
+-- CR 118.3: can this player pay these charges together, as Cost.payToll
+-- pools them? Nothing owed is always paid.
+tollPayable :: PlayerId -> [(ObjectId, Cost Keyword.Keyword)] -> GameState -> Bool
+tollPayable payer charges gs = case charges of
+  [] -> True
+  (source, first) : rest -> Cost.canPay PaymentSubject.ForNeither payer source (List.foldl' Cost.plus first (fmap snd rest)) gs
 
 -- CR 508.1a / 509.1a: who makes `pid`'s declaration -- the controller of the
 -- row handing it over (PlayerEffect.declarationRow), else `pid`.
