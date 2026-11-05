@@ -4478,7 +4478,7 @@ apply settle batch applied candidate event =
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
         let source = ReplacementCandidate.source candidate
-            revealed = Maybe.listToMaybe (Game.zoneMembers Zone.Library pid gs)
+            revealed = Maybe.listToMaybe (Game.cardsIn Zone.Library pid gs)
             cost = Cost.MkCost Nothing [CostComponent.PayLife (CostAmount.Fixed n)]
             ask earlier payer = do
               now <- State.get
@@ -4563,7 +4563,7 @@ apply settle batch applied candidate event =
                 wanted oid = case kind of
                   LandOrNonland.Land -> isLand oid
                   LandOrNonland.Nonland -> not (isLand oid)
-                (passed, rest) = List.break wanted (Game.zoneMembers Zone.Library pid gs)
+                (passed, rest) = List.break wanted (Game.cardsIn Zone.Library pid gs)
                 found = Maybe.listToMaybe rest
             Monad.mapM_ (reveal RevealCause.Ordinary pid) (passed <> Maybe.maybeToList found)
             Monad.forM_ found (\oid -> changeZone settle oid Zone.Hand)
@@ -4618,12 +4618,15 @@ apply settle batch applied candidate event =
       -- this call returns (CR 614.11a). The looker and the drawer are the seat the
       -- EVENT named, GainLife's reason. The kept card stays where it is, on top
       -- once the rest have gone, and CR 614.11 draws off an empty library too.
+      -- The look reads cards (CR 108.2), past a token waiting on CR 704.5d. The
+      -- inner draw is a new one: see docs/decisions.md, "Which draw is the first
+      -- one drawn in a draw step".
       DrawRewrite.KeepOneOfTopThenDraw quantity -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
         let source = ReplacementCandidate.source candidate
             count = maybe 0 Integer.toNaturalSaturating (Quantity.evaluate (Projection.fullView gs) (Replacement.candidateContext gs candidate) gs source quantity)
-            looked = List.genericTake count (Game.zoneMembers Zone.Library pid gs)
+            looked = List.genericTake count (Game.cardsIn Zone.Library pid gs)
         Monad.mapM_ (look pid) looked
         kept <- Game.chooseAmong (\decider who -> Prompt.ChooseCardFromAmong decider who source) pid looked
         let rest = filter ((/= kept) . Just) looked
@@ -6943,7 +6946,7 @@ millFromReturningTaken settle pid n
           -- caller's own gate (Cost.canPayComponent,
           -- Parun.Engine.Replacement.stocked) had already measured against the
           -- printed one.
-          let cards = List.genericTake settled (Game.zoneMembers Zone.Library miller gs)
+          let cards = List.genericTake settled (Game.cardsIn Zone.Library miller gs)
           -- ONE event (CR 608.2f), whose cards the owner may arrange (CR 404.3).
           arrived <- fmap (concatMap Foldable.toList) (changeZonesTogether settle (fmap (\card -> (card, Zone.Graveyard)) cards))
           pure (cards, arrived)
