@@ -550,7 +550,7 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.TargetPastHexproof e -> PlayerEffect.TargetPastHexproof e {HexproofExemption.permanents = Filter.rewrite pairs (HexproofExemption.permanents e)}
   PlayerEffect.CantCastMatching f -> PlayerEffect.CantCastMatching (Filter.rewrite pairs f)
   PlayerEffect.PutTappedAsYouCascade f -> PlayerEffect.PutTappedAsYouCascade (Filter.rewrite pairs f)
-  -- CR 305.1's play-side prohibition, narrowed by the same kind of Filter.
+  -- CR 101.2's play-side prohibition, narrowed by the same kind of Filter.
   PlayerEffect.CantPlayLands f -> PlayerEffect.CantPlayLands (Filter.rewrite pairs f)
   PlayerEffect.CastFrom grant -> PlayerEffect.CastFrom grant {CastFromZone.matching = Filter.rewrite pairs (CastFromZone.matching grant), CastFromZone.additionalCosts = fmap (Filter.rewriteComponent pairs) (CastFromZone.additionalCosts grant)}
   PlayerEffect.PlotFrom grant -> PlayerEffect.PlotFrom grant {PlotFromZone.matching = Filter.rewrite pairs (PlotFromZone.matching grant)}
@@ -756,8 +756,9 @@ rewriteEffect pairs effect = case effect of
   -- nothing.
   Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect ref sacrificer mSacrificed) -> Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect (rewriteObjectRef pairs ref) sacrificer mSacrificed)
   -- CR 612.1: the ref carries a Filter of printed card text, so a text-changer
-  -- reaches it exactly as Destroy's above. The listed characteristics hold no word
-  -- this rewrites: a type line is CR 205's, not CR 201.4a's changeable text.
+  -- reaches it exactly as Destroy's above. rewriteListing rewrites the listing's
+  -- quoted abilities and leaves its type line, which CR 612.1 and CR 612.2 reach too
+  -- (gap #6243).
   --
   -- A REGRESSION FENCE rather than a proven behaviour, the shape
   -- FromOutsideTheGame above records: the two filters this opcode carries in
@@ -865,8 +866,9 @@ rewriteEffect pairs effect = case effect of
   -- test a reader can re-run: scan data/cards/ for Effect.Replace and ask which
   -- rows hold a subtype in those two fields. On 2026-08-30 none did -- every
   -- duration was UntilEndOfTurn, which holds no word at all, and every printed
-  -- CR 614.1 gate was a Compares over a count of one CARD TYPE, which rule 612.2
-  -- does not swap -- so mutating either line away left the whole suite green. A
+  -- CR 614.1 gate was a Compares over a count of one CARD TYPE, which no text
+  -- changer's family names (Parun.Types.WordFamily) -- so mutating either line
+  -- away left the whole suite green. A
   -- card gating a shield on "if you control three or more Goblins" is what would
   -- prove them.
   Effect.Replace (Replace.MkReplace duration uses origin condition replacement) ->
@@ -986,9 +988,10 @@ rewriteEffect pairs effect = case effect of
   Effect.Transform ref -> Effect.Transform (rewriteObjectRef pairs ref)
   Effect.Convert ref -> Effect.Convert (rewriteObjectRef pairs ref)
   Effect.Flip ref -> Effect.Flip (rewriteObjectRef pairs ref)
-  -- CR 612.2a through the combined back face as well as the ref, Effect.Create's
-  -- reason one opcode over: the face is card data the ability carries, and its
-  -- words are the ability's words.
+  -- Through the combined back face as well as the ref, because the face is card
+  -- data the ability carries. That goes further than the rules: CR 612.2a covers
+  -- tokens, and CR 612.1 words printed on the object, which this face's are not
+  -- (gap #6250).
   Effect.Meld (Meld.MkMeld ref card) -> Effect.Meld (Meld.MkMeld (rewriteObjectRef pairs ref) (rewriteCard pairs card))
   Effect.PhaseOut ref -> Effect.PhaseOut (rewriteObjectRef pairs ref)
   Effect.AddPhases _ -> effect
@@ -1785,16 +1788,18 @@ rewriteDrawRewrite pairs rewrite = case rewrite of
 -- Wall of Stolen Identity's "a Wall" would need an Artificial Evolution aimed at
 -- it. The arms are the rule rather than a proven
 -- behaviour -- an "except it has islandwalk", or that Artificial Evolution, would
--- be what proves them. CR 707.9b's remaining arms name no word CR 612.2's
--- swap reaches: the pair is two literals, the type clause names CR
+-- be what proves them. CR 707.9b's remaining arms name no word a text
+-- changer's family holds (Parun.Types.WordFamily): the pair is two literals,
+-- the type clause names CR
 -- 205.2a's card types, the supertype clauses CR 205.4a's supertypes, and the name
 -- clause a name, which CR 612.2's last sentence puts out of reach outright.
 rewriteCopyException :: [(TextWord.TextWord, TextWord.TextWord)] -> CopyException.CopyException (GrantedAbility.GrantedAbility Card.Type.Card) -> CopyException.CopyException (GrantedAbility.GrantedAbility Card.Type.Card)
 rewriteCopyException pairs exception = case exception of
   CopyException.SetPowerToughness _ -> exception
   CopyException.GainKeywords keywords -> CopyException.GainKeywords (Set.map (Filter.rewriteKeyword pairs) keywords)
-  -- CR 707.9b's type clause names CARD types (CR 205.2a's list), and CR 612.2's
-  -- swap reaches only subtypes, so there is nothing here for a pair to change.
+  -- CR 707.9b's type clause names CARD types (CR 205.2a's list), and no text
+  -- changer's family holds one (Parun.Types.WordFamily), so there is nothing here
+  -- for a pair to change.
   CopyException.CardTypes {} -> exception
   -- CR 707.9b's subtype clause DOES name a word CR 612.2's swap reaches -- "a
   -- Wall in addition to its other types" is one of the "all instances of one
@@ -1805,8 +1810,8 @@ rewriteCopyException pairs exception = case exception of
   -- A REGRESSION FENCE: no test changes Dino DNA's text.
   CopyException.SetCreatureSubtypes subtypes -> CopyException.SetCreatureSubtypes (Set.map (TextWord.Engine.subtypeAfter pairs) subtypes)
   -- CR 205.4a's supertypes for the same reason CR 707.9b's card types are left
-  -- alone, whichever direction the clause runs: CR 612.2's swap reaches subtypes
-  -- alone.
+  -- alone, whichever direction the clause runs: no text changer's family holds a
+  -- supertype (Parun.Types.WordFamily).
   CopyException.AddSupertypes _ -> exception
   CopyException.RemoveSupertypes _ -> exception
   -- CR 201.1's name is the one CR 612.2 rules out in so many words: "an effect
@@ -1921,17 +1926,20 @@ rewriteEntryRewrite pairs rewrite = case rewrite of
           SacrificeAnyNumber.kind = fmap (Filter.rewriteCounterKind pairs) (SacrificeAnyNumber.kind s)
         }
   -- CR 614.1c's "exile a [matching] card from your graveyard": Living Lore's says
-  -- instant or sorcery, card types CR 612.1 reaches. Latent for OrTapped's
-  -- reason -- that EntryR matches Filter.IsSource, and CR 400.7 forbids carrying a
-  -- text change onto the permanent before it entered.
+  -- instant or sorcery, card types CR 612.1 reaches. That EntryR matches
+  -- Filter.IsSource, so a text change reaches this row only on a spell, carried
+  -- over by CR 400.7a before the entry loop (Parun.ReplacementSpec's Tidewalker
+  -- case).
   EntryRewrite.ExileFromGraveyard exile -> EntryRewrite.ExileFromGraveyard exile {ExileFromGraveyard.filter = Filter.rewrite pairs (ExileFromGraveyard.filter exile), ExileFromGraveyard.count = rewriteHowMany pairs (ExileFromGraveyard.count exile), ExileFromGraveyard.kinds = fmap (Filter.rewriteCounterKind pairs) (ExileFromGraveyard.kinds exile), ExileFromGraveyard.each = rewriteQuantity pairs (ExileFromGraveyard.each exile)}
   -- CR 614.1a's "sacrifice a Forest instead": Heart of Yavimaya's names a land
-  -- type CR 612.1 reaches. Latent for the arm above's reason.
+  -- type CR 612.1 reaches. Latent: that EntryR matches Filter.IsSource, and a
+  -- land is never a spell, so CR 400.7a carries no text change onto it before it
+  -- enters.
   EntryRewrite.SacrificeToEnter s -> EntryRewrite.SacrificeToEnter s {SacrificeToEnter.filter = Filter.rewrite pairs (SacrificeToEnter.filter s)}
   -- CR 614.1c's "a creature you control it could be attached to": Grifter's
-  -- Blade's names a card type CR 612.1 reaches. Latent for the arm above's
-  -- reason -- that EntryR matches Filter.IsSource, and CR 400.7 forbids carrying
-  -- a text change onto the permanent before it entered.
+  -- Blade's names a card type CR 612.1 reaches. That EntryR matches
+  -- Filter.IsSource, so a text change reaches this row only on a spell, carried
+  -- over by CR 400.7a, as with Living Lore above.
   EntryRewrite.EntersAttachedTo f -> EntryRewrite.EntersAttachedTo (Filter.rewrite pairs f)
   -- CR 702.38a carries no Filter and no subtype of its own, so there is nothing
   -- here for CR 612.1 to change. A text change to the entering object's own
@@ -1957,9 +1965,8 @@ rewriteEntryRewrite pairs rewrite = case rewrite of
   EntryRewrite.Tapped -> rewrite
   -- CR 614.1c's life price is a number. Its "reveal a [matching] card": Rustic
   -- Clachan's says Kithkin, a creature type word CR 612.2 licenses. Latent all
-  -- the same: that EntryR matches Filter.IsSource, so a text change would have
-  -- to be on the permanent before it entered, and CR 400.7 is what forbids
-  -- carrying one there.
+  -- the same: that EntryR matches Filter.IsSource, and a land is never a spell,
+  -- so CR 400.7a carries no text change onto it before it enters.
   EntryRewrite.OrTapped (EntryPrice.PayLife _) -> rewrite
   EntryRewrite.OrTapped (EntryPrice.Reveal f) -> EntryRewrite.OrTapped (EntryPrice.Reveal (Filter.rewrite pairs f))
   EntryRewrite.EntersTransformed -> rewrite
@@ -2095,7 +2102,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SpellCast (SpellCast.MkSpellCast f scope fromZone ordinal window copies) -> TriggerCondition.SpellCast (SpellCast.MkSpellCast (Filter.rewrite pairs f) scope fromZone ordinal window copies)
   TriggerCondition.StepBegins {} -> condition
   -- Positional, so a field the record gains stops the build here: a kind and a
-  -- card type name no subtype for CR 612.1's pairs to swap.
+  -- card type name no word for Parun.Types.ChangeText's pairs to swap.
   TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger actor kind recipients) -> TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger (acting actor) kind recipients)
   TriggerCondition.IsDealtDamage watched -> TriggerCondition.IsDealtDamage watched {PermanentIsDealtDamage.dealt = (PermanentIsDealtDamage.dealt watched) {DealtDamage.recipient = acting (DealtDamage.recipient (PermanentIsDealtDamage.dealt watched))}}
   TriggerCondition.PlayerIsDealtDamage _ -> condition
@@ -2145,9 +2152,9 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.AnyOf conditions -> TriggerCondition.AnyOf (fmap (rewriteTriggerCondition pairs) conditions)
   TriggerCondition.CausedBy narrowed -> TriggerCondition.CausedBy narrowed {CausedBy.condition = rewriteTriggerCondition pairs (CausedBy.condition narrowed)}
   TriggerCondition.SelfTurnedFaceUp -> condition
-  -- CR 612.1's text change swaps SUBTYPES here (Parun.Types.ChangeText's pairs);
-  -- CR 701.27e's payload is a face's NAME, which is not one, so nothing in this
-  -- condition is rewritten. SelfHalfUnlocked's answer for its own door.
+  -- CR 701.27e's payload is a face's NAME, which CR 612.2's second sentence keeps a
+  -- swap off, so nothing in this condition is rewritten. SelfHalfUnlocked's answer
+  -- for its own door.
   TriggerCondition.SelfTransformedInto _ -> condition
   TriggerCondition.PermanentTransforms f -> TriggerCondition.PermanentTransforms (Filter.rewrite pairs f)
   TriggerCondition.PermanentTurnedFaceUp f -> TriggerCondition.PermanentTurnedFaceUp (Filter.rewrite pairs f)

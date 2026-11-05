@@ -92,7 +92,8 @@ import qualified Parun.Types.ZonePair as ZonePair
 -- its own reminder text ("Activate only as an instant") records.
 --
 -- ACTIVATED abilities only, which is CR 605.1a's own scope; `isTriggeredManaAbility`
--- below is CR 605.1b's, and the two rules share no criterion but the no-target one.
+-- below is CR 605.1b's, and the two rules share only the no-target and
+-- could-add-mana criteria.
 --
 -- CR 605.1a's closing sentence -- do not take replacement effects other than
 -- self-replacement effects into account -- holds by construction rather than by
@@ -235,7 +236,7 @@ costMovesLibraryCard component = case component of
   -- CR 701.17a moves the cards out of the paying player's library. The one True
   -- arm in the vocabulary, and the whole reason this function exists.
   CostComponent.MillCards _ -> True
-  -- CR 701.20a shows the cards and leaves them in the library.
+  -- CR 701.20a shows the cards and CR 701.20b leaves them in the library.
   CostComponent.RevealTopOfLibrary _ -> False
   -- A hand, a graveyard, the battlefield and the stack -- CR 605.1a names a
   -- LIBRARY and none of these is one.
@@ -809,8 +810,9 @@ movesLibraryCard effect = case effect of
   -- CR 701.48a's middle sentence is a draw, which Effect.Draw's arm above
   -- already makes a library move; an ability that learns is no mana ability.
   Effect.Learn -> True
-  -- CR 701.58a takes the top card of a library and puts it onto the
-  -- battlefield, so an ability that cloaks is no mana ability.
+  -- Cloaking puts a card onto the battlefield (CR 701.58a), and the printing
+  -- takes it off the top of a library, so an ability that cloaks is no mana
+  -- ability.
   Effect.Cloak {} -> True
   -- CR 701.62a manifests a library card and bins the rest.
   Effect.ManifestDread {} -> True
@@ -919,8 +921,8 @@ movesLibraryCard effect = case effect of
   Effect.Convert _ -> False
   Effect.Flip _ -> False
   Effect.PhaseOut _ -> False
-  -- CR 500.1: the added phases bring their own turn-based actions, and a draw
-  -- step's draw is one of those rather than an effect of this ability. Same for
+  -- CR 500.8 / 504.1: the added phases bring their own turn-based actions, and a
+  -- draw step's draw is one of those rather than an effect of this ability. Same for
   -- the extra turn below.
   Effect.AddPhases _ -> False
   Effect.EndTurn -> False
@@ -968,9 +970,8 @@ movesLibraryCard effect = case effect of
   Effect.FlipCoin {} -> False
   Effect.Guess {} -> False
   -- The card is wherever the slot bound it, which the opcode itself never
-  -- states. Its one producer is CR 310.12b's exiled Siege, so no library is in
-  -- reach; a producer that offered the cast of a card in a library would want
-  -- True here.
+  -- states. Djinn of Wishes' is on a library, which CR 605.1a would count; no
+  -- ability in the pool both adds mana and makes that offer.
   Effect.OfferCast {} -> False
   -- Its copy is minted outside the game, never in a library.
   Effect.OfferNamedCopy {} -> False

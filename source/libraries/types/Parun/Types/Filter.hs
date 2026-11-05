@@ -101,7 +101,7 @@ data Filter keyword
   | -- | CR 108.3 / 108.4 / 110.2: the candidate's holder relates thus to the
     -- perspective; False where it has none (CR 108.4, 109.1).
     HeldBy Holder.Holder PlayerRelation.PlayerRelation
-  | -- | CR 108.3 / 110.2: the candidate's controller is its owner -- Ghostly
+  | -- | CR 108.3 / 112.2: the candidate's controller is its owner -- Ghostly
     -- Pilferer's "their hand" on a spell (Sen Triplets casts from another's).
     ControllerIsOwner
   | -- | CR 102.1 / 508.5: the candidate's controller holds this role -- an active
@@ -129,9 +129,9 @@ data Filter keyword
     -- of a fold over players it is that member, PlayerRef.Candidate's reading
     -- (Jace's Archivist's "a player discarded this way").
     HeldByRecipient Holder.Holder
-  | -- | The candidate IS the evaluation's source object. @Not IsSource@ is how CR
-    -- 601.2c's "another" and a continuous effect's own "each other" card text are
-    -- both written -- one relation, one spelling (#163).
+  | -- | The candidate IS the evaluation's source object. @Not IsSource@ is how
+    -- a printed "another" and a continuous effect's own "each other" card text
+    -- are both written -- one relation, one spelling (#163).
     IsSource
   | -- | The candidate IS this object, named outright rather than related to the
     -- evaluation's source. Runtime-only, HeldByPlayer's posture --
@@ -226,9 +226,9 @@ data Filter keyword
     -- off the source instead of written on the card, and vacuously False where the
     -- source has chosen none.
     HasChosenSubtype
-  | -- | CR 607.2a: the candidate is a card in exile in one of the source's
-    -- linked piles (Mimeoplasm, Revered One's "target creature card exiled
-    -- with it").
+  | -- | CR 607.2a / 607.2b: the candidate is a card in exile in one of the
+    -- source's linked piles (Mimeoplasm, Revered One's "target creature card
+    -- exiled with it").
     IsExiledWithSource ExiledPile.ExiledPile
   | -- | CR 607.2a: the candidate is the last card exiled with the source, as
     -- baked onto a mana unit at production (ManaUnit.sourceLastExiled; Ice
@@ -480,8 +480,8 @@ data Filter keyword
     -- rejects the atom in every Filter position but an attach's destination.
     HostOfSubjectHasCardType CardType.CardType
   | -- | CR 111.6: the candidate is a token; "nontoken" is @Not IsToken@ (#163).
-    -- Uncharacteristic and immutable, CR 111.3 making a token's effect-defined
-    -- values equivalent to printed ones, which is what lets
+    -- Not a characteristic (CR 109.3), so no CR 613 layer writes it, which is what
+    -- lets
     -- Parun.Engine.Projection.filterReads declare it as reading nothing.
     IsToken
   | -- | CR 903.3: the candidate is one of the cards its OWNER designated as a

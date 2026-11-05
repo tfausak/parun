@@ -1105,8 +1105,9 @@ defaultAnswer p = case p of
   -- care about the choice plays exactly as it did. Least-eventful would be one
   -- zone, and there is no principled way to say which.
   Prompt.ChooseSearchZones _ _ offered -> offered
-  -- CR 701.23b: failing to find is always legal, and the empty answer is that
-  -- outcome for a search of any size.
+  -- CR 701.23b: an empty answer is legal for a hidden zone stating a quality;
+  -- Parun.Engine.Resolve.Arms.Damage completes it where CR 701.23d or a public
+  -- zone forces a find.
   Prompt.Search {} -> []
   -- Declining the re-entrant cast is always legal.
   Prompt.CastWhileSearching {} -> Nothing
@@ -1134,7 +1135,7 @@ defaultAnswer p = case p of
      in if Modal.allowsRepeatsIn selection
           then maybe Seq.empty (Seq.replicate (Natural.toIntSaturating count)) (Set.lookupMin legal)
           else Seq.fromList (List.genericTake count (Set.toAscList legal))
-  -- CR 707.5: declining to copy is always legal.
+  -- Asked only under a printed "you may" (AsCopy.optional), so declining is legal.
   Prompt.ChooseCopyTarget {} -> Nothing
   -- CR 208.2b: asked only when the list has two or more shapes.
   Prompt.ChooseEntryOption {} -> 0
@@ -1253,9 +1254,9 @@ defaultAnswer p = case p of
   -- CR 613.7m: likewise, and it is the engine's own APNAP-then-ascending order --
   -- what parun stamped in before the intra-seat key became that seat's to choose.
   Prompt.OrderTimestamps _ _ batch -> zipWith const [0 ..] batch
-  -- CR 605.3a: likewise, and it is the engine's own APNAP-then-ascending sweep
-  -- order -- what parun activated in before the intra-seat key became that
-  -- seat's to choose.
+  -- CR 605.3, which fixes no order: likewise, and it is the engine's own
+  -- APNAP-then-ascending sweep order -- what parun activated in before the
+  -- intra-seat key became that seat's to choose.
   Prompt.OrderManaActivations _ _ batch -> zipWith const [0 ..] batch
   -- CR 616.1: the bucket is non-empty when this is asked, so index 0 is legal.
   Prompt.ChooseReplacement {} -> 0
@@ -1303,9 +1304,10 @@ defaultAnswer p = case p of
   Prompt.ChooseTurnUpAttachment {} -> OptionalDecision.Declines
   -- The first offered candidate is the PRINTED cost for a cast from hand
   -- (Cost.costsFor puts it first), so it sacrifices nothing. A cast from the
-  -- graveyard offers only CR 702.34a's flashback cost, so the head is the sole
-  -- candidate and this prompt is not raised at all. Cost.firstOffered keeps
-  -- this total for the empty list the engine never produces.
+  -- graveyard offers the costs Cost.costsFor lists there, which can be several
+  -- (CR 702.34a states no limit), and the head is the default.
+  -- Cost.firstOffered keeps this total for the empty list the engine never
+  -- produces.
   Prompt.ChooseCost _ _ _ candidates -> Cost.firstOffered candidates
   -- The head is the permission that spends no budget where one admits the play
   -- (Parun.Engine.PlayerEffect.permissionOptions orders them so).
@@ -1411,8 +1413,8 @@ defaultAnswer p = case p of
   -- is still asked once they have, wherever the event is still headed for a hand
   -- or a library.
   Prompt.ChooseCommandZoneOfferFirst {} -> OptionalDecision.Declines
-  -- CR 401.2: both ends are legal. The BOTTOM, which is
-  -- LibraryPosition.defaultValue and so the end every library arrival in the tree
+  -- CR 608.2d: the effect offers both ends, so either is legal. The BOTTOM,
+  -- which is LibraryPosition.defaultValue and so the end every library arrival in the tree
   -- took before an effect could name one.
   Prompt.ChooseLibraryEnd {} -> LibraryPosition.defaultValue
   -- CR 401.4: the canonical order is always a legal answer, as OrderTriggers'

@@ -135,7 +135,7 @@ soldierToken =
 -- rule 701.70a fixes -- the draw first, so the card just drawn is among the
 -- cards the discard may choose.
 --
--- Parun.Engine.Resolve.Effect.conniveOne's body one clause at a time, CR 701.50d
+-- Parun.Engine.Resolve.Common.conniveOne's body one clause at a time, CR 701.50d
 -- being the same two sentences with N of one and a counter where this has a
 -- token:
 --

@@ -130,7 +130,7 @@ attachmentWith equippable src destination gs
   | Maybe.maybe False (\oid -> AttachRestriction.refuses src oid gs) (Recipient.objectOf destination) = Nothing
   -- CR 702.16c's player half, which the object-shaped restriction above cannot
   -- carry: a player has no keywords for Parun.Engine.Keyword to mint a row from,
-  -- so the prohibition rides the CR 613.11 player axis instead
+  -- so the prohibition rides the CR 613.10 player axis instead
   -- (Parun.Types.PlayerEffect.HasProtectionFrom). Rule 702.16d states
   -- no player half, and rule 701.3b makes a permanent that is neither Aura,
   -- Equipment nor Fortification unattachable anyway, so this needs no
@@ -441,8 +441,8 @@ chooseHost controller subject =
 -- destinations hands them here and gets back the one destination the subject
 -- keeps.
 --
--- The whole content over chooseHost is WHOSE choice it is. CR 608.2d gives every
--- other resolution-time choice to the resolving controller, which is what
+-- The whole content over chooseHost is WHOSE choice it is. CR 608.2c gives a
+-- choice no card assigns elsewhere to the resolving controller, which is what
 -- chooseHost's own callers pass; these two rules take this one away from them and
 -- give it to the controller of the thing being attached. So the SUBJECT's
 -- controller is read here and nowhere else, and the caller keeps passing its own

@@ -820,7 +820,7 @@ effectObjectRefs effect = case effect of
   -- Absent where the shield's recipients are described rather than named.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ ref _ _ _ _ _) -> Maybe.maybeToList ref
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ ref _ _ _ _ _ _) -> Maybe.maybeToList ref
-  -- One ref, and never optional: CR 615.8's shield always names its recipient.
+  -- One ref, and never optional: this opcode has no described recipient side.
   Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ ref _ _ _) -> [ref]
   -- CR 614.9's two sides, the damage's old recipient -- absent where the card
   -- describes it instead -- and its new one.
@@ -1135,7 +1135,7 @@ effectPlayerRefs effect = case effect of
   Effect.ChoosePermanents choice -> ChosenPermanents.chooser (ChoosePermanents.permanents choice) : Foldable.toList (ChoosePermanents.pileChooser choice)
   Effect.ChooseSector {} -> []
   Effect.RollDie {} -> []
-  -- The seat that flips -- Mana Clash's target opponent (CR 705.1).
+  -- The seat that flips -- Mana Clash's target opponent (CR 705.2).
   Effect.FlipCoin flipCoin -> [FlipCoin.flipper flipCoin]
   Effect.ExileHandThenDraw -> []
   Effect.NoteManaSpent -> []
@@ -1162,7 +1162,7 @@ effectPlayerRefs effect = case effect of
   Effect.TimeTravel -> []
   Effect.Recruit -> []
   Effect.Learn -> []
-  -- CR 701.58a's own reference: whose library the top card comes off.
+  -- The printing's own reference: whose library the top card comes off.
   Effect.Cloak ref -> [ref]
   -- CR 701.62a's: whose library the two cards come off.
   Effect.ManifestDread ref -> [ref]
@@ -2828,7 +2828,8 @@ boundSlots effect = case effect of
     Discard.These (TheseDiscard.MkTheseDiscard _ mDiscarded) -> foldMap Set.singleton mDiscarded
     Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard _ _ mDiscarded) -> foldMap Set.singleton mDiscarded
   -- How much life was ACTUALLY lost, summed over the players the instruction
-  -- named, for rule 702.101a's "that much" (Parun.Types.LifeLoss.tally).
+  -- named, for rule 702.101a's "the total life lost this way"
+  -- (Parun.Types.LifeLoss.tally).
   Effect.LoseLife (LifeLoss.MkLifeLoss _ _ _ mTally) -> foldMap Set.singleton mTally
   Effect.GainLife {} -> Set.empty
   Effect.ExchangeLifeTotals _ -> Set.empty
@@ -3060,7 +3061,7 @@ attackedBy legal resolving controller source gs slot =
 -- text. EachCardInGraveyard is the same
 -- fold over CR 400.1's per-player graveyards (CR 109.2a).
 --
--- WHEN: at the moment the caller runs (CR 608.2c), and the list is then FIXED --
+-- WHEN: at the moment the caller runs (CR 608.2h), and the list is then FIXED --
 -- one half of CR 608.2f's simultaneous processing. The other half is the
 -- caller's: it hands the whole list to its funnel as one batch rather than
 -- calling it per element (Event.destroy's haddock).
@@ -3073,7 +3074,7 @@ attackedBy legal resolving controller source gs slot =
 --
 -- ORDER, for the arms folding over CR 400.1's per-player zones: APNAP (CR
 -- 608.2f), then ascending ObjectId. The arms over a SHARED zone keep that zone's
--- own order (CR 101.4). `forEachOrder` is where CR 608.2f's secondary sentence
+-- own order. `forEachOrder` is where CR 608.2f's secondary sentence
 -- and CR 701.44d's per-seat choice open, and both ask rather than reading this
 -- order.
 objectRefObjects :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> GameState -> ObjectRef -> [ObjectId]
@@ -3113,7 +3114,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
           AttackTarget.OfPlaneswalker oid -> Just oid
           AttackTarget.OfBattle oid -> Just oid
      in Maybe.mapMaybe attackedObject (attackedBy legal resolving controller source gs slot)
-  -- CR 400.7's link read back: each object the slot holds, followed through
+  -- CR 400.7j's finding, read back: each object the slot holds, followed through
   -- this turn's logged zone changes to the objects it is now -- and, given an
   -- `among`, kept only where that slot holds the incarnation too (CR 400.7j).
   -- The scenario ante-bronze-tablet-destroyed-in-response-trades-only-the-target
@@ -3234,7 +3235,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- not the battlefield. Game.isSpell keeps the abilities sharing the zone out
   -- (CR 112.1), a classification of the object's kind and not of its identity. In
   -- the STACK's own order, top first (CR 405.2), not APNAP: one shared zone has an
-  -- order the rules already read. Read LIVE (CR 608.2c).
+  -- order the rules already read. Read LIVE (CR 608.2h).
   ObjectRef.EachSpell filter_ ->
     let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         viewOf = Projection.viewsOf gs
@@ -3245,7 +3246,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- the arm above with Game.isAbility in place of Game.isSpell, the SIBLING
   -- classification and never its complement. A mana ability is never here to be
   -- swept (CR 605.3b), and a static ability never uses the stack at all (CR
-  -- 113.9). Same order, top first (CR 405.2), and read LIVE (CR 608.2c).
+  -- 113.9). Same order, top first (CR 405.2), and read LIVE (CR 608.2h).
   ObjectRef.EachAbility filter_ ->
     let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         viewOf = Projection.viewsOf gs
@@ -3254,7 +3255,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
           (GameState.stack gs)
   -- CR 405.1's whole zone: the two arms above without their classification, since
   -- a sentence naming spells AND abilities names everything the stack holds. Same
-  -- order, top first (CR 405.2), and read LIVE (CR 608.2c).
+  -- order, top first (CR 405.2), and read LIVE (CR 608.2h).
   ObjectRef.EachOnStack filter_ ->
     let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         viewOf = Projection.viewsOf gs
@@ -3271,12 +3272,12 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- (CR 609.3). Restricted to the players still in the turn order and delivered in
   -- it (CR 608.2f, CR 101.4), which also drops a player CR 800.4 removed.
   --
-  -- The depth is a Quantity evaluated HERE (CR 608.2c), off the announcement CR
+  -- The depth is a Quantity evaluated HERE (CR 608.2h), off the announcement CR
   -- 601.2b left on the resolving object -- which is why `resolving` rather than
   -- `source` is the announcedOn id -- and once PER LIBRARY, with that library's
   -- player as the recipient: Warp World's "each player ... reveals that many
   -- cards" is each player's own count. A depth that will not evaluate, or
-  -- evaluates negative, is ZERO cards (CR 107.1b): a REGRESSION FENCE, since
+  -- evaluates negative, is ZERO cards (CR 107.2, 107.1b): a REGRESSION FENCE, since
   -- making the fallback 5 leaves the suite green.
   --
   -- CARDS, so a token waiting in the library for CR 704.5d (CR 111.7) is passed
@@ -3301,7 +3302,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- which `walkDown` does by running out of cards; the rest of the instruction is
   -- then performed on all of it (CR 101.3). An empty library names nothing, for
   -- the same reason, and so does a count of zero -- an unevaluable or negative
-  -- one being clamped to zero here (CR 107.1b), the arm above's clamp.
+  -- one being clamped to zero here (CR 107.2, 107.1b), the arm above's clamp.
   --
   -- Per named library and in APNAP order, the arm above's fold, so "each
   -- player's" walks each pile separately rather than one across the table. The
@@ -3346,7 +3347,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- members are InSlot's own read of the slot -- the arm at the head of this
   -- case, so the sentence naming the matches and a later one naming the rest
   -- cannot see different groups -- narrowed by the ref's Filter against each
-  -- member's CR 613 projection, matched when the effect executes (CR 608.2c) in
+  -- member's CR 613 projection, matched when the effect executes (CR 608.2h) in
   -- this effect's own context (CR 109.5). The group's mint order survives, which
   -- CR 608.2f leaves standing.
   ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong slot filter_) ->
@@ -3534,10 +3535,10 @@ slotBindings = resolvingBindings
 -- exile; the scenario "CR 608.2h Swords to Plowshares gains its controller the
 -- exiled creature's power" in data/scenarios/resolve proves it.
 --
--- Binding.sacrificedPermanent is another -- CR 601.2h paid the cost before the
--- ability was on the stack at all, and CR 701.21a put the permanent in a
--- graveyard as a new object (CR 400.7) -- which is Jarad, Golgari Lich Lord's
--- "the sacrificed creature's power".
+-- Binding.sacrificedPermanent is another -- CR 601.2h paid the cost as the
+-- ability was activated, before it resolved, and CR 701.21a put the permanent
+-- in a graveyard as a new object (CR 400.7) -- which is Jarad, Golgari Lich
+-- Lord's "the sacrificed creature's power".
 --
 -- Binding.departedPermanent is a third, and CR 603.10a is why: what a
 -- leaves-the-battlefield trigger says "it" about is the permanent as it last

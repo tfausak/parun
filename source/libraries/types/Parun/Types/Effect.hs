@@ -120,7 +120,7 @@ import qualified Parun.Types.Vote as Vote
 -- rules core asks classifications, never identities.
 --
 -- ForEach and ForEachNumber iterate over a set or a number fixed before the
--- first pass (CR 608.2f), so their count is data an analysis can read off the
+-- first pass (CR 608.2h), so their count is data an analysis can read off the
 -- instruction. Repeat and RepeatIf are the loops whose count is not: each run
 -- ends in a question -- a player's choice (CR 608.2d) or a printed condition (CR
 -- 608.2c) -- and the body stays first-order either way.
@@ -244,7 +244,7 @@ data Effect card ability
     FromOutsideTheGame FromOutsideTheGame.FromOutsideTheGame
   | -- | CR 608.2n: this spell goes to exile as this instruction runs, rather
     -- than to its owner's graveyard at the end of its resolution (Burning Wish).
-    -- A spell only, an ability's resolving object being no card (CR 113.7a).
+    -- A spell only, an ability's resolving object being no card (CR 405.1).
     ExileThisSpell
   | -- | CR 701.20e: the cards the ObjectRef names are looked at -- shown to one
     -- player rather than all -- and bound into the slot, so a later clause of
@@ -519,7 +519,8 @@ data Effect card ability
     -- distinction Parun.Types.BlockProducer draws: this road records that event
     -- under BlockProducer.ByEffect, so CR 509.3b and CR 509.3d both fire off it.
     --
-    -- CR 509.1b's hypothetical legality test rides inside
+    -- General Jarkeld's hypothetical legality test over CR 509.1b's restrictions
+    -- rides inside
     -- Parun.Engine.Combat.switchBlockers rather than being a Condition here: the
     -- printed "if each of those creatures could be blocked by all creatures that
     -- the other is blocked by" asks a question about the reassignment this
@@ -716,8 +717,7 @@ data Effect card ability
   | -- | CR 701.66a: "earthbend N" -- the land the payload names becomes a 0\/0
     -- land creature with haste in addition to its other types, takes N +1\/+1
     -- counters, and a CR 603.7 delayed ability returns it tapped when it dies or
-    -- is exiled. Performed by Parun.Engine.Earthbend as one procedure. Targets,
-    -- unlike every other rule 701 arm here.
+    -- is exiled. Performed by Parun.Engine.Earthbend as one procedure. Targets.
     Earthbend Earthbend.Earthbend
   | -- | CR 701.65a: "airbend" -- the objects the ObjectRef names are exiled, and
     -- each CARD exiled this way may be cast by its OWNER for {2} rather than its
@@ -788,7 +788,7 @@ data Effect card ability
     Venture (Maybe Subtype.Subtype)
   | -- | CR 701.21a: the players the slot names each sacrifice this many
     -- permanents matching the Filter, each chosen by that player (Diabolic
-    -- Edict) in APNAP order (CR 101.4b) before anything leaves the battlefield.
+    -- Edict) in APNAP order (CR 101.4) before anything leaves the battlefield.
     PlayerSacrifices PlayerSacrifices.PlayerSacrifices
   | -- | CR 701.38a: each player, starting with the seat the payload names and
     -- proceeding in turn order, votes for one of the choices it lists;
@@ -883,7 +883,7 @@ data Effect card ability
     -- applies itself across the set, so reach for those first. Ordered APNAP,
     -- then by the resolving controller's choice.
     ForEach (ForEach.ForEach (Effect card ability))
-  | -- | CR 608.2f: run the body once for each number from 1 up to the payload's
+  | -- | CR 608.2c: run the body once for each number from 1 up to the payload's
     -- quantity, that number bound under the payload's slot.
     ForEachNumber (ForEachNumber.ForEachNumber (Effect card ability))
   | -- | CR 608.2d: run the body, then ask the payload's chooser whether to run

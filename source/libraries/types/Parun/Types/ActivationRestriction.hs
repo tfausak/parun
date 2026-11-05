@@ -15,8 +15,8 @@ import qualified Parun.Types.TurnScope as TurnScope
 -- CR 602.5 -- "A player can't begin to activate an ability that's prohibited from
 -- being activated" -- is what makes the list a conjunction: every clause printed
 -- must hold. The EMPTY list is the default, which leaves the ability whatever
--- window the rules already give it -- CR 602.2's priority for one on the stack,
--- CR 605.3a's two for a mana ability -- so it needs no arm of its own.
+-- window the rules already give it -- CR 117.1b's priority for one on the
+-- stack, CR 605.3a's two for a mana ability -- so it needs no arm of its own.
 --
 -- A list rather than one total description of the window because Kongming's
 -- Contraptions prints two clauses at once -- "Activate only during the declare
@@ -149,9 +149,9 @@ data ActivationRestriction
     -- The one arm whose answer depends on the ABILITY as well as the board, which
     -- is why Parun.Engine.ActivationRestriction.restrictionsOk takes one: every
     -- other clause reads a phase, a turn, a combat record or the board, and this
-    -- reads which ability of this object has already been spent. Rule 702.177a's
-    -- "each exhaust ability" is that grain -- Loot, the Pathfinder prints three,
-    -- and spending one leaves the others.
+    -- reads which ability of this object has already been spent. Exhaust's reminder
+    -- text, "Activate each exhaust ability only once", is that grain -- Loot, the
+    -- Pathfinder prints three, and spending one leaves the others.
     --
     -- Loot's first is a MANA ability, which CR 605.3b keeps off the stack, so CR
     -- 605.3a's two windows read this arm through Parun.Types.ManaOption rather

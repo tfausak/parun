@@ -184,8 +184,8 @@ data Combat = MkCombat
     --
     -- SEPARATE from `attackers` and monotone within the phase, for the reason
     -- `attacked` above is separate from it: CR 508.1k keeps a creature attacking
-    -- only until CR 506.4 removes it from combat, and CR 506.4a is explicit that
-    -- the removal leaves its having been declared standing. Keyed by the
+    -- only until CR 506.4 removes it from combat, and nothing in CR 506.4 undoes
+    -- its having been declared. Keyed by the
     -- CREATURE rather than by the target, which is what separates it from
     -- `declaredAttacked`: this field answers "which creature", that one answers
     -- "which player or permanent".

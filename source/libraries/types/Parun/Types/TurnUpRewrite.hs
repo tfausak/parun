@@ -7,7 +7,7 @@ import qualified Parun.Types.WithCounters as WithCounters
 
 -- | CR 614.1e: how an "As [this permanent] is turned face up . . ." replacement
 -- modifies the turning-over. EntryRewrite's twin one event class over, and a
--- separate type rather than a reuse of it: CR 614.1c's rewrites include entering
+-- separate type rather than a reuse of it: CR 614.1d's rewrites include entering
 -- under another player's control (CR 616.1b) and entering tapped (CR 110.5b),
 -- neither of which a permanent already on the battlefield can be made to do by
 -- turning over. Becoming a copy it can (CR 707.4), so that arm shares

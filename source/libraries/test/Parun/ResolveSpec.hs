@@ -414,7 +414,7 @@ targetSpec s registry = Spec.describe s "Target" $ do
         theSlot = TargetSlot.required Pool.Creatures Nothing
         expectedAllCreatures = Set.fromList [Recipient.ToCreature blackOid, Recipient.ToCreature plainOid]
     Spec.assertEqWith s "all creatures legal" (Target.legalRecipients StackObjectKind.Spell Nothing S.noSource theSlot gs) expectedAllCreatures
-  -- CR 601.2c "another" over a Creatures pool (#163). The pool tags its
+  -- A printed "another" over a Creatures pool (#163). The pool tags its
   -- candidates ToCreature (CR 115.1a); a Not IsSource conjunct drops the
   -- source whatever tag the pool gave it, which the retired Exclusion field
   -- did not -- it deleted a ToObject recipient a Creatures pool never emits,

@@ -109,8 +109,9 @@ crown pid gs =
           -- When the controller has LEFT the game, CR 800.4i freezes their
           -- opponent set at departure, and the same predicate computes it: CR
           -- 725.4 guarantees the crowned player is still in the game, so a
-          -- departed controller is never crowned, and CR 800.2's teams are
-          -- settled before the game begins. Nothing needs to be stored.
+          -- departed controller is never crowned, and CR 808.1's teams are
+          -- settled before the game begins (CR 808.3). Nothing needs to be
+          -- stored.
           mark watch = case ReturnWatch.ending watch of
             ReturnEnding.OpponentCrowned crowned
               | Game.areOpponents gs (MonarchWatch.controller crowned) pid && Maybe.isNothing (MonarchWatch.due crowned) ->

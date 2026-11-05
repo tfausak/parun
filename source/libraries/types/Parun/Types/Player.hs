@@ -65,9 +65,10 @@ data Player = MkPlayer
     -- makes a counter a MARKER an effect can add or remove, and rule 702.179
     -- never calls speed one -- proliferate (CR 701.34a) would find it if it were.
     --
-    -- Bounded above at 4 by the only rule that raises it: CR 702.179d increases
-    -- speed only "if your speed is less than 4", and CR 702.179e reads 4 as max
-    -- speed. Nothing in rule 702.179 lowers it.
+    -- Not bounded above: CR 702.179d's "if your speed is less than 4" caps only its
+    -- own climb, and an effect may pass 4 (docs/decisions.md, "Whether speed can
+    -- pass 4"). CR 702.179e reads 4 as max speed. Nothing in rule 702.179 lowers
+    -- it.
     speed :: Maybe Natural.Natural,
     -- | CR 702.131c \/ 702.195b: the rest-of-game marks this player has, empty
     -- for a player with none. Written only by Parun.Engine.PlayerDesignation and
@@ -173,8 +174,7 @@ data Player = MkPlayer
     -- CR 309.2d forbids anything else from bringing one in. One map would have
     -- Parun.Engine.Event.eligible offering dungeon cards to Burning Wish.
     --
-    -- Where the rest of what is outside the game will land: CR 727.2's restart
-    -- cards (#135). CR 707.13's copy created outside the game did NOT land here:
+    -- CR 707.13's copy created outside the game did NOT land here:
     -- CR 109.1 makes it no card, so no wish may reach it, and it is an object for
     -- the one resolution that offers its cast (GameState.outsideCopies). CR
     -- 729.4's other half -- the main game's cards, which a subgame sees as
@@ -185,7 +185,7 @@ data Player = MkPlayer
     -- cards (CR 123.2); they ride `stickerSheets` below.
     outsideTheGame :: Map.Map PrintingId.PrintingId Natural.Natural,
     -- | CR 123.2 / 123.2c: the sticker sheets this player brought, revealed.
-    -- Kept on the player for `dungeons`' reason: CR 727.2 and CR 729.2 rerun
+    -- Kept on the player for `dungeons`' reason: CR 727.1 and CR 729.2 rerun
     -- CR 103.2d's draw with no Deck in hand.
     stickerSheets :: Seq.Seq StickerSheet.StickerSheet,
     -- | CR 103.2d: the positions in `stickerSheets` drawn for this game. Only

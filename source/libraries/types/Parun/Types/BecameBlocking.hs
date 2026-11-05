@@ -51,7 +51,7 @@ data BecameBlocking = MkBecameBlocking
     -- Not derivable from Combat.blockers when the condition is scanned, and for
     -- a sharper reason than the flag above: several creatures can be put onto
     -- the battlefield blocking one attacker BEFORE any of them is scanned (CR
-    -- 509.2a, and CR 614.16 doubling one token-making effect is the pooled
+    -- 603.3, and CR 614.16 doubling one token-making effect is the pooled
     -- producer), so the entry read at the scan holds the whole batch and every
     -- arrival in it reads the same set. Subtracting this arrival from that set
     -- leaves the others in, which is what made a doubled arrival invisible to

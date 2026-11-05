@@ -56,8 +56,9 @@ data PreventAllDamage effect = MkPreventAllDamage
     -- | The PLAYER half of that same description -- Comeuppance's "dealt to you"
     -- -- as CR 109.5's relation, DISJOINED with @whatRecipient@ on the one row
     -- this installs, as Parun.Types.PreventNextDamage's field of the same name
-    -- is. One row rather than two because CR 615.5's rider runs per application
-    -- per source: one source hitting you and your planeswalker at once is one
+    -- is. One row rather than two because the rider runs per application per
+    -- source (Parun.Engine.Resolve.Effect.runPreventionRider): one source hitting
+    -- you and your planeswalker at once is one
     -- application of Comeuppance's shield, and Parun.DamageReplacementSpec's
     -- Comeuppance group proves the rider runs once for it. Read on the DealtTo
     -- side only, like @chosenSource@.

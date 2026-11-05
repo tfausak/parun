@@ -13,8 +13,9 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 -- one seat. The fields are named rather than positional for that type's reason.
 --
 -- The COUNT is Parun.Types.ChosenCardFromAmong's HowMany, per hand, of DISTINCT
--- cards (CR 608.2d), so Aquatic Subtlety's "two cards from your hand" is one
--- instruction over two cards (CR 608.2f) rather than two choices that may name
+-- cards (CR 608.2c's rules of English), so Aquatic Subtlety's "two cards from
+-- your hand" is one instruction over two cards (CR 608.2f) rather than two
+-- choices that may name
 -- the same card, and The Great Aurora's "any number of land cards" is UpTo
 -- Nothing. CR 609.3 covers the shortfall.
 data ChosenCardInHand = MkChosenCardInHand

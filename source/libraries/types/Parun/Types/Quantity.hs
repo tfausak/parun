@@ -199,9 +199,9 @@ data Quantity
     -- Filter.Context.sourceChosenColors, so 0 wherever
     -- Parun.Engine.SourceContext did not fill it.
     ChosenColorsItIs
-  | -- | CR 107.1c / 607.2d: the number last chosen for the source, undefined (CR 607.5a) being 0 (CR 107.2). Read off Filter.Context.sourceChosenNumber (Shapeshifter).
+  | -- | CR 607.2d: the number last chosen for the source, undefined (CR 607.5a) being 0 (CR 107.2). Read off Filter.Context.sourceChosenNumber (Shapeshifter).
     ChosenNumber
-  | -- | CR 202.1a \/ 702.191a: how many mana were spent to pay for the object this
+  | -- | CR 601.2h \/ 702.191a: how many mana were spent to pay for the object this
     -- quantity is evaluated against -- rule 702.191a's "the amount of mana spent
     -- to cast that spell".
     --
@@ -352,7 +352,7 @@ data Quantity
     -- the battlefield as a spell the payload's caster cast out of the payload's
     -- zone? The two references are independent; see Parun.Types.CastFrom.
     WasCastFrom CastFrom.CastFrom
-  | -- | CR 509.1h: how many creatures block the object this quantity is
+  | -- | CR 509.1g: how many creatures block the object this quantity is
     -- evaluated against, beyond the first N (CR 702.23a's rampage skips one, Gang
     -- of Elk none); unblocked reads 0.
     BlockersBeyond Natural.Natural

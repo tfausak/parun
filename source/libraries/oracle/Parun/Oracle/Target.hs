@@ -46,9 +46,9 @@ data Context = MkContext
     slots :: Map.Map SlotName.SlotName TargetSlot.TargetSlot,
     keyword :: Keyword.Keyword -> [Text.Text],
     -- | What may separate two sentences of one ability: a space, and for a
-    -- spell's instructions a paragraph break too, since all of them are one
-    -- spell ability (CR 113.3a). Anywhere else a paragraph break starts
-    -- another ability (CR 113.2c). Free in a spell: one paragraph (Dark
+    -- spell's instructions a paragraph break too, since this tool pairs them
+    -- as one unit. A paragraph break elsewhere starts another ability, as it
+    -- does in a spell too (CR 113.2c). Free in a spell: one paragraph (Dark
     -- Offering) or two (Bargain).
     breaks :: [Text.Text],
     -- | What the instruction calls the objects and players its trigger event
@@ -96,7 +96,7 @@ data Determiner
   deriving (Eq, Show)
 
 -- | The slot the engine binds the object an instruction is on to, which CR
--- 201.5 names "this" or the card's name; the slot names are
+-- 700.7 names "this" and CR 201.5 the card's name; the slot names are
 -- Parun.Engine.Binding's, which this library cannot import.
 selfSlot :: SlotName.SlotName
 selfSlot = SlotName.MkSlotName (Text.pack "self")

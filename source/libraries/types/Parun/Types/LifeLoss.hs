@@ -30,7 +30,8 @@ data LifeLoss = MkLifeLoss
     -- total life lost this way". Nothing for every other printing.
     --
     -- The SETTLED total and not the amount named: CR 614.1 lets a replacement
-    -- effect change or stop a loss, and rule 702.101a's "that much" is what the
+    -- effect change or stop a loss, and rule 702.101a's "the total life lost this
+    -- way" is what the
     -- opponents actually lost. Parun.Engine.Resolve.Common.bindAmountSlot writes
     -- it, the way a Mill's tally is written (Parun.Types.MillTally).
     tally :: Maybe SlotName.SlotName

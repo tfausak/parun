@@ -88,8 +88,8 @@ import qualified Parun.Types.Zone as Zone
 -- rule 902.4 modifies rule 103.4's twenty rather than replacing it, and the
 -- Vanguard variant combines with none of the three above -- no Brawl or Commander
 -- deck brings a vanguard card, so a nonzero modifier only ever meets the
--- `otherwise` branch. Written as an addend anyway, because that is what rule
--- 902.4 says of whatever the starting total is.
+-- `otherwise` branch. Written as an addend anyway, the shape rule 902.4 gives
+-- its twenty.
 startingLife :: (Foldable f) => GameSettings.GameSettings -> Int -> f a -> Integer -> Integer
 startingLife settings seats commander modifier =
   let base :: Integer
@@ -149,8 +149,9 @@ mirror deck = fmap (\pid -> (pid, deck))
 emptyGame :: NonEmpty.NonEmpty PlayerId -> GameState
 emptyGame = gameWith GameSettings.plain
 
--- CR 800.2: a game started with these options, which are settled before it
--- begins. Takes a NonEmpty so the active player is total (no partial head).
+-- CR 800.2 / 806.2: a game started with these options, which are settled
+-- before it begins. Takes a NonEmpty so the active player is total (no partial
+-- head).
 gameWith :: GameSettings.GameSettings -> NonEmpty.NonEmpty PlayerId -> GameState
 gameWith settings order =
   let order_ = NonEmpty.toList order
@@ -176,8 +177,9 @@ gameWith settings order =
               -- happened before the game began.
               Player.speed = Nothing,
               -- CR 702.131c / 702.195b: nobody has either mark in a game that has
-              -- not started. Both are granted by a static ability of a permanent
-              -- on the battlefield, and this function leaves none there.
+              -- not started. Both are granted by a permanent's static ability (CR
+              -- 702.131b, 702.195a) or, for ascend, a resolving spell (CR 702.131a),
+              -- and this function produces neither.
               Player.designations = Set.empty,
               Player.commander = Set.empty,
               Player.commanderCasts = Map.empty,
@@ -377,8 +379,8 @@ placeCard zone pid printingId gs =
    in (oid, Game.insertIntoZone zone LibraryPosition.Bottom pid oid withObject)
 
 -- Build each player's library from their deck's multiset, shuffle, draw.
--- CR 103.1: build this player's library from their deck -- and, for a Commander
--- deck, CR 903.6's "the commander begins the game in the command zone" and CR
+-- CR 103.3: build this player's library from their deck -- and, for a Commander
+-- deck, CR 903.6's "puts their commander ... into the command zone" and CR
 -- 903.7's forty life.
 --
 -- The commander is created exactly like any other card and then placed in a
@@ -535,7 +537,7 @@ newGame perform matchup = do
   -- 103.2's steps come first, and rule 702.139b's condition reads the deck rather
   -- than the library the draws are about to eat into.
   --
-  -- In TURN ORDER, which is the order rule 103.2's steps are taken in; nothing in
+  -- In TURN ORDER, CR 101.4's order for players acting at the same time; nothing in
   -- rule 103.2b makes one player's reveal depend on another's, so the order is not
   -- observable today.
   Monad.forM_ seated Companion.reveal
@@ -576,7 +578,7 @@ newGame perform matchup = do
 -- (CR 730.2d) is minted as the token it is, and its copy component (CR 730.2,
 -- CR 707.10) as the copy it is, which the funnel below then drops for CR
 -- 727.2's own reason: neither is a card. CR 712.21a's arrangement is not asked:
--- both callers shuffle what they build (CR 103.5, CR 729.5), so the order the
+-- both callers shuffle what they build (CR 103.3, CR 729.5), so the order the
 -- two cards are placed in is not observable.
 splitComponents :: ObjectId -> Map.Map ObjectId Object.Object -> (Map.Map ObjectId Object.Object, ObjectId)
 splitComponents next objects =
@@ -595,7 +597,7 @@ splitComponents next objects =
 -- draw opening hands (CR 103.5). Deliberately not newGame: it reuses the real
 -- objects (ownership preserved) instead of minting fresh ones from Deck
 -- definitions. Only Magic cards survive; an ability on the stack, a token, an
--- emblem or a trigger is not a card (CR 727.2 / 111.7), and a melded permanent
+-- emblem or a trigger is not a card (CR 727.2 / 111.6), and a melded permanent
 -- is two of them, which `splitComponents` makes so before the funnel runs (CR
 -- 712.21 / CR 108.2). Shared by restart (CR 727) and subgames (CR 729).
 --
@@ -621,9 +623,9 @@ startGameFromCards perform exemptions = do
   -- rather than in the `let` below, because `commanderIds` and `vanguardIds` ask
   -- Commander.isCommander and Vanguard.isVanguard of `gs` -- so a component
   -- minted outside it could not be recognised as CR 903.6's commander. With it
-  -- here, CR 903.9c's answer falls out of the existing funnel: the component
-  -- card that is the commander goes to the command zone and its partner to the
-  -- library.
+  -- here, CR 903.6 falls out of the existing funnel for a split commander (the
+  -- shape rule 903.9c's replacement also gives): the component card that is the
+  -- commander goes to the command zone and its partner to the library.
   State.modify' $ \g ->
     let (split, next) = splitComponents (GameState.nextObjectId g) (GameState.objects g)
      in g {GameState.objects = split, GameState.nextObjectId = next}
@@ -637,7 +639,7 @@ startGameFromCards perform exemptions = do
       -- Cards in exile, and nothing else: CR 727.2's "all Magic cards" is what
       -- survives a rebuild at all, so an exemption is filtered by the same
       -- `isCard` test the funnel below applies rather than being able to smuggle
-      -- a token or an emblem through it (CR 111.7).
+      -- a token or an emblem through it (CR 111.6, CR 114.5).
       exempt =
         Map.keysSet
           (Map.filter isCard (Map.restrictKeys (GameState.objects gs) (Set.intersection exemptions (GameState.exile gs))))
@@ -659,8 +661,11 @@ startGameFromCards perform exemptions = do
       rebuilt = Map.filter isCard (Map.withoutKeys (GameState.objects gs) exempt)
       -- CR 903.6: "each player puts their commander from their deck face up into
       -- the command zone". Both callers start a new game following rule 103 (CR
-      -- 727.1, CR 729.2), so rule 903.6 applies to each of them, and CR 729.2c
-      -- names the subgame case outright. Held back BEFORE the libraries are built,
+      -- 727.1, CR 729.2), so rule 903.6 applies to each of them, and CR 103.2c
+      -- is the rule 103 step that says so. CR 729.2c is the other road in, a
+      -- commander from the main-game command zone; one in the main-game library
+      -- arrives in the deck CR 729.2 builds, and leaves it here. Held back BEFORE the
+      -- libraries are built,
       -- because rule 903.6 shuffles "the remaining cards of their deck".
       --
       -- CR 727.5a -- an exempted commander does not begin the new game in the
@@ -674,10 +679,11 @@ startGameFromCards perform exemptions = do
       -- puts both into the command zone.
       commanderIds = Map.keysSet (Map.filterWithKey (\oid obj -> elem (Object.owner obj) owners && Commander.isCommander oid gs) rebuilt)
       -- CR 313.2: "if a vanguard card would leave the command zone, it remains in
-      -- the command zone", which is the exception CR 727.2's "all cards" and CR
-      -- 729.2's own funnel would otherwise sweep into a library. So a vanguard is
-      -- held back exactly as a commander is, and for a rule of its own rather than
-      -- for rule 903.6's. CR 729.2b is the same holding read forwards.
+      -- the command zone", which is the exception CR 727.2's "all cards" would
+      -- otherwise sweep into a library, and a subgame's pool holds a vanguard too,
+      -- by CR 729.2b. So a vanguard is held back exactly as a commander is, and for
+      -- a rule of its own rather than for rule 903.6's. CR 729.2b is the same
+      -- holding read forwards.
       --
       -- Every one of them, as `commanderIds` takes every commander: CR 902.1's
       -- one card per player is a deck-construction rule parun does not enforce
@@ -760,6 +766,9 @@ startGameFromCards perform exemptions = do
   -- down and asks a fresh name. Nothing done in the restarted game carries over:
   -- a conspiracy turned face up there goes back face down.
   -- Parun.ConspiracySpec's restart case proves it.
+  --
+  -- Not implemented: CR 315.2's choice of further conspiracies from the sideboard
+  -- in a rebuilt game (#6236).
   Monad.forM_ owners $ \pid ->
     Monad.forM_ (filter (\oid -> fmap Object.owner (Map.lookup oid rebuilt) == Just pid) (Set.toAscList conspiracyIds)) (Conspiracy.hideAgenda pid)
   Monad.forM_ owners Event.shuffleLibrary
@@ -824,7 +833,7 @@ drawStickerSheets seated = Monad.forM_ seated $ \pid -> do
   chosen <- if length slots <= 3 then pure (Set.fromList slots) else Set.fromList <$> Game.drawDistinct Prompt.RandomStickerSheet 3 slots
   State.modify' (\g -> g {GameState.players = Map.adjust (\p -> p {Player.chosenStickerSheets = chosen}) pid (GameState.players g)})
 
--- CR 500.7: the first turn is its takers' first turn of the game, counted
+-- CR 103.8: the first turn is its takers' first turn of the game, counted
 -- once the starting player and the options (Archenemy's shared team turns,
 -- CR 904.2) are final.
 countFirstTurn :: Game ()
@@ -957,7 +966,7 @@ resetPlayers settings seats lifeModifier players =
               -- CR 727.1 once more: a new game, so neither CR 702.131c's nor CR
               -- 702.195b's mark carries over, whatever the restarted one reached.
               Player.designations = Set.empty,
-              -- CR 903.8 counts casts "this game", and CR 727.1 makes the
+              -- CR 903.8 counts casts "that game", and CR 727.1 makes the
               -- restarted one a new game, so the tax starts over. Player.commander
               -- is deliberately NOT reset beside it: rule 903.3's designation is
               -- made from the deck before the game begins and the restart reuses
@@ -1348,8 +1357,8 @@ applyCrossings finalSub parent =
       -- shares, then the events. Read against `g` -- the running state, which is
       -- this game as it stands at the moment THIS card crosses: the cards which
       -- crossed EARLIER have already gone, so CR 608.2h's record and CR 604.2's
-      -- handover are what was true at this instant, and CR 611.2c then freezes
-      -- the handed-over set.
+      -- handover are what was true at this instant, and the handed-over set is then
+      -- frozen, by analogy with CR 611.2c.
       --
       -- The events LAST, so that Event.recordEvent's CR 603.10 sample is of the
       -- board immediately after this card left and before the next one does.
@@ -1648,8 +1657,9 @@ funnelBack finalSub parent =
                     (SideDeck.Scheme, Map.mapWithKey (\pid _ -> ownedIn schemesBack pid) (Game.sideDecksOf SideDeck.Scheme parent))
                   ]
               ),
-          -- CR 729.5c. The parent's other command-zone residents are untouched:
-          -- CR 729.2c moved only the commanders, so only they can come back.
+          -- CR 729.5b / 729.5c. The parent's other command-zone residents are
+          -- untouched: CR 729.2b and CR 729.2c moved only the vanguards and the
+          -- commanders, so only they can come back.
           GameState.command = Set.union (Set.difference (GameState.command parent) oldCmdIds) (Map.keysSet toCommand),
           GameState.nextObjectId = nextId,
           -- The subgame's cards come back as library objects above, and each

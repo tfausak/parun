@@ -133,7 +133,7 @@ startEngines pid gs =
 -- twice in one turn cannot raise speed past 4, and neither can a trigger that
 -- waited on the stack while something else did.
 --
--- Single mode, no targets, forced (CR 603.3's "you" is the ability's controller
+-- Single mode, no targets, forced (CR 109.5's "you" is the ability's controller
 -- and nothing is chosen), which is what lets Engine.placeSourceless put it on the
 -- stack unprompted.
 increaseAbility :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)

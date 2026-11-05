@@ -48,9 +48,9 @@ import qualified Parun.Types.Prompt as Prompt
 -- step: a split card's half and a double-faced card's back face are each keyed
 -- in Parun.Registry.index under their own name, and rule 201.4a is put to "only
 -- that half's" or "only the back face's" characteristics. The alternative names
--- CR 201.4c and CR 201.4f allow are judged the same way. Nothing here reaches CR
--- 709.4a's combined view, which is a name the card has without being any one
--- face's and so is not choosable at all (CR 201.4b's "but not both").
+-- CR 201.4c and CR 201.4f allow are judged the same way. Nothing here reaches the
+-- combined view's joined rendering, which is no name the card has (CR 709.4a) and
+-- so is not choosable at all (CR 201.4b's "but not both").
 --
 -- Matched through Parun.Engine.Projection.View.viewOfCard off the printed face,
 -- Parun.Engine.Companion.fulfilled's posture and for its reason: a card outside

@@ -197,7 +197,7 @@ import qualified Parun.Types.Zone as Zone
 unpayable :: Cost Keyword.Type.Keyword
 unpayable = Cost.MkCost {Cost.mana = Nothing, Cost.components = []}
 
--- CR 118.9a's alternative cost: the printed cost with the mana part replaced by
+-- CR 118.9's alternative cost: the printed cost with the mana part replaced by
 -- the amount the effect stated, and never Nothing, CR 118.6's unpayable cost. The
 -- additional costs ride along (CR 118.9d), and the face is the one being CAST (CR
 -- 709.3a / 712.11a).
@@ -211,7 +211,7 @@ insteadOfManaCost mana face =
       Cost.components = Face.additionalCosts face
     }
 
--- CR 118.9a: the alternative cost a CR 601.3 permission states, settled against
+-- CR 118.9: the alternative cost a CR 601.3 permission states, settled against
 -- the face being cast.
 --
 -- A waterbend {X} is that much generic mana plus CR 701.67b's licence scoped to
@@ -310,7 +310,7 @@ foretellCostFor face payload = case payload of
 -- CR 118.7: one object's mana cost with an amount taken off it, which is the
 -- whole of what "its mana cost reduced by {2}" names. Rule 118.7a-g's spill is
 -- `applyAdjustments`', a reduction arriving here being a reduction like any
--- other; an empty amount is {0} and takes nothing off (CR 118.5).
+-- other; an empty amount takes nothing off.
 --
 -- SHARED by the two provenances that describe a cost this way, so neither can
 -- drift from the other: CR 702.143d's foretell cost above, settled as the cast
@@ -525,8 +525,8 @@ candidateCostsGiven permitted pid name oid gs =
               -- flashback through the same rules, so its cost is wrapped the same.
               withAdditional alternative =
                 alternative {Cost.components = Cost.components alternative <> Face.additionalCosts face}
-              -- CR 604.2: an alternative cost whose "as long as" clause does not
-              -- hold is not offered at all.
+              -- CR 611.3a: an alternative cost whose "as long as" clause does
+              -- not hold is not offered at all.
               --
               -- CR 109.5's "you" is the CASTER, who a card in a hand or a graveyard
               -- has no controller to supply (CR 108.4). The two coincided while
@@ -1035,7 +1035,7 @@ candidateCostsGiven permitted pid name oid gs =
                       fmap
                         (untagged . withAdditional)
                         (Maybe.maybeToList (grantedForetellCost face obj) <> Maybe.mapMaybe (foretellCostFor face) (Keyword.foretellCosts (Face.keywordSet face)))
-                -- CR 118.9a: a CR 601.3 permission that states an alternative
+                -- CR 118.9b: a CR 601.3 permission that states an alternative
                 -- cost -- "without paying its mana cost" (Extract Power), rule
                 -- 701.65a's {2}, or a waterbend (Hama, the Bloodbender) --
                 -- REPLACES the printed cost for the plotted arm's reason: that
@@ -1125,8 +1125,9 @@ plusReductions amounts adjustments =
 -- generate (Parun.Engine.PlayerEffect, plus the spell's own text through
 -- selfReductions below) plus CR 903.8's commander tax and the increase an exile
 -- permission states (permissionIncrease). The tax joins the
--- INCREASES rather than the printed mana cost, rule 903.8 wording it "plus {2}
--- for each previous time", so a reduction still applies afterwards.
+-- INCREASES rather than the printed mana cost, rule 903.8 wording it "an
+-- additional {2} for each previous time", so a reduction still applies
+-- afterwards.
 --
 -- `aiming` is CR 601.2c's announcement, slot by slot, which the spell's own
 -- sentence may read (selfReductions), and so may another object's per-target
@@ -1858,7 +1859,7 @@ componentUnannounced = Monoid.getAny . Const.getConst . traverseAmount (Const.Co
       CostAmount.Announced _ -> True
       CostAmount.Fixed _ -> False
 
--- CR 601.2b: the greatest value of X this player could legally announce -- what
+-- CR 601.2h: the greatest value of X this player could actually pay for -- what
 -- Prompt.ChooseX carries -- found by ASCENDING SEARCH from 0 over the caller's
 -- own payability-at-X predicate, stopping at CR 101.1's card-stated ceiling if
 -- the face prints one. Advisory, and nothing here clamps the ANSWER. The
@@ -1914,9 +1915,9 @@ componentDemandGrowsWith slot component = case component of
   -- states no ceiling, so False here would make that printing an offender.
   CostComponent.PayEnergy amount -> amount == announced
   -- FALSE, and that is CR 701.68b rather than an omission: the rule refuses a
-  -- blight only where the player controls no creature, and names no number of
-  -- counters that is too many. So a Soul Immolation announcement is refused by
-  -- CR 101.1's sentence alone.
+  -- blight only where no creature the player controls can take the counters,
+  -- and names no number of counters that is too many. So a Soul Immolation
+  -- announcement is refused by CR 101.1's sentence alone.
   CostComponent.Blight _ -> False
   CostComponent.PayHalfLife _ -> False
   CostComponent.TapThis -> False
@@ -2072,7 +2073,8 @@ announce subject spending pid oid total_ printed = do
 --
 -- NOT FILTERED BY PAYABILITY, unlike `announce`: CR 118.7e attaches no condition
 -- to the choice, so a player may take the half that reduces nothing and strand a
--- payment the gate allowed on the strength of the other; CR 601.2h reverses it.
+-- payment the gate allowed on the strength of the other; CR 601.2h refuses it
+-- and CR 733.1 reverses the cast.
 --
 -- The INCREASES and the FLOOR ride through untouched: CR 118.7e's halves are a
 -- reduction's, and a floor is a limit rather than an amount of mana.
@@ -2089,8 +2091,8 @@ announce subject spending pid oid total_ printed = do
 -- so it is also the default a short transcript replays.
 --
 -- NOT FILTERED BY PAYABILITY, `chooseOne` above verbatim: the costlier order is a
--- legal choice CR 601.2f grants outright, and CR 601.2h reverses a payment it
--- strands.
+-- legal choice CR 601.2f grants outright, and CR 733.1 reverses a payment it
+-- strands (CR 601.2h).
 --
 -- Takes the ADJUSTMENTS the caller gathered, which is what makes the announced
 -- reduction the one that will be applied, and the ANNOUNCED COST, which must be
@@ -2196,9 +2198,10 @@ sicknessOkGiven pcs pid oid cost gs =
 -- present before any of the cost is paid.
 --
 -- ONE component whenever the cost had any, even at a net of zero, so that CR
--- 606.4's battlefield-and-control floor is still asked and `Loyalty.isLoyaltyCost` stays
--- true of the totalled cost. It takes the FIRST loyalty component's position, so
--- the printed order survives and CR 601.2h's prompt sees the list it saw before.
+-- 606.3/606.4's battlefield-and-control floor is still asked and
+-- `Loyalty.isLoyaltyCost` stays true of the totalled cost. It takes the FIRST
+-- loyalty component's position, so the printed order survives and CR 601.2h's
+-- prompt sees the list it saw before.
 --
 -- Only NUMBERED components combine: `plusComponents` runs after `substituteX`,
 -- so an unannounced [-X] never reaches here, and one that did is left alone for
@@ -2449,7 +2452,7 @@ beholdObjects paidFor slots pid oid n criterion = do
 -- CR 701.20a: reveal a card as part of a cost, kept revealed from the
 -- announcement until `paidFor`, the spell or ability object paid for, leaves the
 -- stack. Nothing where no stack object exists -- a combat toll, a mana ability
--- (CR 605.3a), a CR 116 special action (`payAction`) or CR 118.12's payment at
+-- (CR 605.3b), a CR 116 special action (`payAction`) or CR 118.12's payment at
 -- resolution -- and then the reveal is the log entry alone.
 --
 -- Also CR 406.4's reveal of a target drawn out of a face-down pile, made once
@@ -2743,7 +2746,7 @@ tapObject = Event.tap
 -- claims. Nothing for a component that spends no object.
 --
 -- TAPPING IS NOT A REMOVAL, a rules fact rather than a scope cut: a tapped
--- permanent is still on the battlefield (CR 601.2h, CR 118.11), so keying its
+-- permanent is still on the battlefield (CR 110.5, CR 701.26a), so keying its
 -- claim as a Removal from Zone.Battlefield would merge it with Sacrifice's pool
 -- and REFUSE costs the rules allow. What it spends is UNTAPPED-ness, CR 118.3's
 -- own example of scarcity, hence ClaimAxis.Tapping.
@@ -2806,7 +2809,7 @@ claimOf slots pid oid component gs =
           claim (ClaimAxis.Removal Zone.Hand) (Set.fromList (discardCandidates slots pid oid criterion gs)) n
         -- Nothing until CR 601.2b fixes the count, Sacrifice's posture.
         CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Announced _)) _ _) -> Nothing
-        -- Nothing: CR 701.9a's whole-hand discard is paid by whatever the hand
+        -- Nothing: a whole-hand discard is paid by whatever the hand
         -- holds, an empty one included, so it spends nothing another component
         -- could run short of. A FENCE: Slate of Ancestry states no other
         -- component drawing on the hand.
@@ -2855,7 +2858,7 @@ claimOf slots pid oid component gs =
         -- FENCE, no card in `data/cards/` milling twice in one cost.
         CostComponent.MillCards n ->
           claim (ClaimAxis.Removal Zone.Library) (Set.fromList (Game.zoneMembers Zone.Library pid gs)) n
-        -- CR 701.20a removes nothing: the cards stay where they were.
+        -- CR 701.20b removes nothing: the cards stay where they were.
         CostComponent.RevealTopOfLibrary _ -> Nothing
         -- CR 107.5: {T} spends exactly the untapped-ness the TapPermanents arm below
         -- claims, so it is the same axis, on a pool of one.
@@ -2935,7 +2938,7 @@ claimOf slots pid oid component gs =
         CostComponent.PutCountersOnThis _ -> Nothing
         -- Nothing, though this one DOES pick an object out of a pool: CR 701.68a takes
         -- nothing out of a zone. Two blights in one cost may choose the same creature,
-        -- which is right -- CR 122.6 stacks counters.
+        -- which is right -- no rule caps the counters a creature can bear.
         CostComponent.Blight _ -> Nothing
         -- Nothing, though this one DOES take objects out of a pool: CR 701.61a's two
         -- halves spend out of DIFFERENT pools on different axes -- three cards off a
@@ -2994,8 +2997,8 @@ claimsOf slots pid oid components gs = Maybe.mapMaybe (\component -> claimOf slo
 -- LIFE is measured across the two halves rather than within each, CR 107.4f's
 -- Phyrexian symbol being the only MANA symbol that spends life: measured
 -- separately, {G/P} plus "pay 2 life" reads as payable at 3. OBJECTS go the same
--- way, through `jointlyPayable` -- and CR 118.10 is NOT that rule, governing two
--- DIFFERENT spells each paying its own cost. Both are handed ACROSS the halves,
+-- way, through `jointlyPayable`. Within one cost that is CR 118.3; a Phyrexian
+-- Tower's cost beside Village Rites' is CR 118.10. Both are handed ACROSS the halves,
 -- since a Phyrexian Tower tapped for {B} has already eaten the creature Village
 -- Rites' additional cost then wants.
 --
@@ -3027,8 +3030,8 @@ canPayReading slots subject pid oid cost gs = case Cost.mana cost of
     -- entry's residual mana beside the union of the components.
     let payableWith (residual, extra) =
           let components = Cost.components cost <> substituteComponents extra
-           in -- CR 118.14's permission is a CAST's, and no caller of this one is
-              -- casting -- what reaches here is a special action's cost and CR
+           in -- No printed CR 118.14 clause reaches a caller of this one -- what
+              -- reaches here is a special action's cost and CR
               -- 118.12's resolution-time payment -- so the mana is spent as it
               -- is. Which CR 106.6-restricted mana is a supply is the subject's
               -- question.
@@ -3500,8 +3503,9 @@ lifeTotalOf pid gs = case Map.lookup pid (GameState.players gs) of
 -- of them: a cost this gate refuses has to be one NO half could have paid (#595).
 --
 -- `substitute` is CR 702.51b's, CR 702.66b's, CR 702.126b's and CR 701.67a's
--- offer, applied AFTER `total_` because every one of those rules places it after
--- the total cost is determined: it answers one residual cost per set of symbols a
+-- offer, applied AFTER `total_` because the three keyword rules place it after
+-- the total cost is determined and CR 701.67a's taps stand in for mana the same
+-- way: it answers one residual cost per set of symbols a
 -- substitute could pay for, each with the components that spends
 -- (`manaSubstitutions`), and this asks `any` of those too. A CAST passes
 -- `manaSubstitutions` and an ACTIVATION `waterbendSubstitutions`, which is
@@ -3943,9 +3947,10 @@ canPayComponent slots pid oid component gs = case component of
     Set.member oid (GameState.battlefield gs)
       && Projection.controllerOf oid gs == Just pid
       && not (SacrificeRestriction.prohibited oid gs)
-  -- CR 118.1 as a cost: only a permanent, and only one this player controls --
-  -- SacrificeThis' two conjuncts above, read here rather than left to the funnel
-  -- for that arm's reason.
+  -- CR 118.1 as a cost: only a permanent, and only one this player controls, no
+  -- rule's doing (`returnCandidates`) but because no printing lets another player
+  -- pay it -- SacrificeThis' two conjuncts above, read here rather than left to
+  -- the funnel for that arm's reason.
   --
   -- WITHOUT CR 101.2's prohibition, deliberately: an effect saying a permanent
   -- can't be sacrificed says nothing about returning it to its owner's hand, and
@@ -3957,8 +3962,9 @@ canPayComponent slots pid oid component gs = case component of
   CostComponent.ReturnThis ->
     Set.member oid (GameState.battlefield gs)
       && Projection.controllerOf oid gs == Just pid
-  -- CR 406.2 as a cost: only a permanent, and only one this player controls --
-  -- ReturnThis' two conjuncts above, and WITHOUT CR 101.2's prohibition for that
+  -- CR 118.3, a CR 406.2 exile as a cost: only a permanent, and only one this
+  -- player controls -- ReturnThis' two conjuncts above, and WITHOUT CR 101.2's
+  -- prohibition for that
   -- arm's reason, an effect forbidding a sacrifice saying nothing about an exile.
   CostComponent.ExileThis ->
     Set.member oid (GameState.battlefield gs)
@@ -4014,7 +4020,7 @@ canPayComponent slots pid oid component gs = case component of
   -- CR 118.3 for the exile, the arm above's reading over the same pool.
   CostComponent.ExilePermanents (ExilePermanents.MkExilePermanents n criterion) ->
     Natural.length (returnCandidates slots pid oid criterion gs) >= n
-  -- CR 601.2f: payable only if the hand holds at least that many cards the
+  -- CR 118.3: payable only if the hand holds at least that many cards the
   -- criterion admits -- Magmatic Insight is uncastable out of a landless hand
   -- however many cards it holds.
   --
@@ -4069,7 +4075,7 @@ canPayComponent slots pid oid component gs = case component of
   CostComponent.DiscardThis _ -> case Game.lookupObject oid gs of
     Nothing -> False
     Just obj -> Object.zone obj == Zone.Hand && Object.owner obj == pid
-  -- CR 406.2: payable only while the card is in the paying player's graveyard,
+  -- CR 118.3: payable only while the card is in the paying player's graveyard,
   -- DiscardThis' shape. This is CR 113.6m's whole enforcement for the COST, so
   -- the zone gate Activate applies to the OFFER is not the only thing between a
   -- Loxodon Surveyor on the battlefield and a free draw.
@@ -4107,10 +4113,11 @@ canPayComponent slots pid oid component gs = case component of
   -- energy counters.
   CostComponent.PayEnergy amount -> payableAnnounced amount (Game.energyOf pid gs >=)
   -- CR 606.4: always payable, CR 606.6 gating only the removing half -- but the
-  -- permanent must still be one this player controls on the battlefield, rule
-  -- 606.4 putting the counters on "that permanent". CR 614.17b with CR 101.2: a
-  -- prohibition on loyalty counters going on it makes a nonzero one unpayable,
-  -- PutCountersOnThis below's gate; CR 107.7's [0] puts none and stays payable.
+  -- permanent must still be one this player controls (CR 606.3) on the
+  -- battlefield, rule 606.4 putting the counters on "that permanent". CR
+  -- 614.17b with CR 101.2: a prohibition on loyalty counters going on it makes
+  -- a nonzero one unpayable, PutCountersOnThis below's gate; CR 107.7's [0]
+  -- puts none and stays payable.
   CostComponent.AddLoyaltyToThis n ->
     Set.member oid (GameState.battlefield gs)
       && Projection.controllerOf oid gs == Just pid
@@ -4166,9 +4173,8 @@ canPayComponent slots pid oid component gs = case component of
   -- Bard on itself, so what can make this unpayable is the permanent no longer
   -- being there, or CR 118.3 with CR 101.2: an effect saying counters of that
   -- kind can't be put on it (Suncleanser's ruling). Deliberately NOT gated on
-  -- control, unlike the loyalty arms above: rule 701.63a fixes the payer as the
-  -- controller when the ability TRIGGERS, and CR 122.6 lets the counters go on
-  -- whoever controls it when it resolves.
+  -- control, unlike the loyalty arms above: CR 122.6 asks nothing of who controls
+  -- the permanent, and who pays is the card's `payer` (gap #6208).
   CostComponent.PutCountersOnThis placement ->
     Set.member oid (GameState.battlefield gs)
       && not (CounterRestriction.prohibited oid (CountersOnThis.kind placement) gs)
@@ -4178,7 +4184,7 @@ canPayComponent slots pid oid component gs = case component of
   -- PutCountersOnThis above; the two share only the CR 118.3 counter gate,
   -- here inside Blight.payable.
   CostComponent.Blight amount -> payableAnnounced amount (const (Blight.canBlight pid gs))
-  -- CR 608.2d: a player who can neither exile three cards from their graveyard
+  -- CR 118.3: a player who can neither exile three cards from their graveyard
   -- nor sacrifice a Food can't choose either half, which is how a forage COST is
   -- unpayable rather than a no-op -- CR 601.2h's "unpayable costs can't be paid",
   -- reaching an activation through CR 602.2b, so the ability is never offered.
@@ -4202,7 +4208,7 @@ canPayComponent slots pid oid component gs = case component of
   -- CR 701.17b's last sentence, stated of costs in as many words: "the player
   -- can't pay a cost that includes milling a number of cards greater than the
   -- number of cards in their library". Not the general "as many as possible" of
-  -- rule 701.17b's second sentence, which is about an INSTRUCTION to mill.
+  -- rule 701.17b's third sentence, which is about an INSTRUCTION to mill.
   --
   -- This component ALONE, Sacrifice's caveat: two mills in one cost can each see
   -- the same cards here, and `jointlyPayable` asks them together.
@@ -4222,7 +4228,7 @@ payableAnnounced amount payable = case amount of
   CostAmount.Announced _ -> False
 
 -- `payableAnnounced`'s payment half: Unpaid rather than a guessed 0, which CR
--- 601.2h turns into the reversal of the whole casting.
+-- 733.1 turns into the reversal of the whole casting (CR 601.2h refusing it).
 paidAnnounced :: CostAmount.CostAmount -> (Natural -> Game Payment.Payment) -> Game Payment.Payment
 paidAnnounced amount pay' = case amount of
   CostAmount.Fixed n -> pay' n
@@ -4756,8 +4762,9 @@ restoreKeepingLibraryActions before = do
 
 -- CR 702.51b / 702.66b / 702.126b / 701.67a: the payer picks which of
 -- `substituting`'s entries this cast or activation takes -- after CR 601.2f
--- locked the total cost in, which is where every one of those rules says the
--- substitution applies, and before CR 601.2h's payment. WHICH offer is the
+-- locked the total cost in, which is where the three keyword rules say the
+-- substitution applies and CR 701.67a's taps stand in the same way, and before
+-- CR 601.2h's payment. WHICH offer is the
 -- caller's: a cast passes `manaSubstitutions` and every other payment
 -- `waterbendSubstitutions`.
 --
@@ -4804,7 +4811,7 @@ announceSubstitutionsReading slots substituting pid oid cost = case Cost.mana co
       -- own component needed and left even the substitute-nothing entry
       -- unpayable. Answered with the cost unchanged rather than with an error,
       -- because the offer is not the place that reports an unpayable cost -- CR
-      -- 601.2h's payment is, and it reverses the cast.
+      -- 601.2h's payment is, and CR 733.1 reverses the cast.
       [] -> pure (cost, [])
       [only] -> pure only
       first : rest -> do
@@ -5122,8 +5129,8 @@ paySubstitutingReadingThen refuses slots perform began earlier moment subject an
 -- orders the two taxing permanents: Hollow Warrior before Exalted Dragon" is the
 -- proof.
 --
--- The pooled MANA is paid before the order is asked, which is CR 508.1i and CR
--- 509.1e sitting ahead of the payment rule rather than a choice parun made, and
+-- The mana window (CR 508.1i, 509.1e) precedes payment, and the pooled MANA is
+-- paid first by parun's choice, since CR 508.1j and 509.1f take any order, and
 -- `pay` above takes the same posture for CR 601.2g.
 payToll :: ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> [ManaWindow.ManaWindow] -> PlayerId -> [(ObjectId, Cost Keyword.Type.Keyword)] -> Game (Maybe [ManaWindow.ManaWindow])
 payToll perform began earlier pid charges =
@@ -5298,8 +5305,8 @@ payTagged perform pid charges = case charges of
     -- CR 508.1j / 509.1f: a toll is paid during the declaration, which is a
     -- turn-based action and not a resolution (PaymentMoment's own reason).
     --
-    -- No slots: a declaration announces no targets (CR 508.1h, CR 509.1d), so
-    -- there is nothing for a toll's criterion to be bound to.
+    -- No slots: a declaration announces no targets (CR 508.1, CR 509.1 list no
+    -- such step), so there is nothing for a toll's criterion to be bound to.
     let payKeeping stretches parts = case parts of
           [] -> pure (bindsNothing, reverse stretches)
           component : others -> do
@@ -5430,7 +5437,7 @@ paidInSecondPass component = case component of
   -- CR 701.17a moves cards from a library to a graveyard, and CR 400.2 makes the
   -- one hidden and the other public.
   CostComponent.MillCards _ -> True
-  -- CR 701.20a shows the cards and moves none, so the first pass holds it.
+  -- CR 701.20a shows the cards and CR 701.20b moves none, so the first pass holds it.
   CostComponent.RevealTopOfLibrary _ -> False
   -- CR 601.2h's RANDOM half reaches a discard only at random; Parun.CostSpec's
   -- "a random discard is paid after a chosen one" proves it.
@@ -5472,8 +5479,8 @@ paidInSecondPass component = case component of
   -- battlefield to a graveyard, and neither is a library, so the first pass holds
   -- it -- the header's reading.
   CostComponent.Forage -> False
-  -- CR 601.2h's RANDOM half: a coin flip is the rule's own example of a cost
-  -- involving a random element, so it is paid after every part that does not.
+  -- CR 601.2h's RANDOM half: a coin flip (CR 705.1) is a cost involving a
+  -- random element, so it is paid after every part that does not.
   CostComponent.FlipCoin -> True
   -- CR 702.174a's choice moves no object and involves no random element, so
   -- neither half of rule 601.2h's first criterion reaches it.
@@ -5629,7 +5636,7 @@ orderSensitive component = case component of
   -- combat-cost/cr-508-1j-milling-first-feeds-the-exile-a-tithe-of-ashes-attacks
   -- is the proof.
   CostComponent.MillCards _ -> True
-  -- CR 701.20a leaves the cards where they were, so no other part's pool changes.
+  -- CR 701.20b leaves the cards where they were, so no other part's pool changes.
   CostComponent.RevealTopOfLibrary _ -> False
   CostComponent.PayLife _ -> False
   CostComponent.PayHalfLife _ -> False
@@ -6446,10 +6453,12 @@ payActivation perform inFlight pid oid cost = do
   before <- State.get
   (paid, windows) <- case Cost.mana cost of
     Just (ManaCost.MkManaCost []) -> pure (True, [])
-    -- CR 118.14's permission is granted to CAST a spell and never to activate an
-    -- ability, so an activation cost is paid with the mana it is. CR 106.6 is a
-    -- different sentence and answers differently: this is CR 602.2b's payment,
-    -- so mana restricted to activations may pay it -- Omen Hawker's {C} into
+    -- Not implemented: CR 118.14's permission said of an activation (Sharkey,
+    -- Tyrant of the Shire), so an activation cost is paid with the mana it is
+    -- (#6197).
+    --
+    -- CR 106.6 is a different sentence and answers differently: this is CR 602.2b's
+    -- payment, so mana restricted to activations may pay it -- Omen Hawker's {C} into
     -- Chromatic Star's {1} -- and mana restricted to casts may not. `oid` is the
     -- ability's SOURCE, which is what "abilities of artifacts" reads.
     Just manaCost -> do
@@ -6885,7 +6894,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- and asked through Game.chooseAmong.
   --
   -- Through Event.changeZone, CR 400.7's funnel, so the exile is a zone change
-  -- like any other and a CR 603.6a leaves-the-hand watcher sees it.
+  -- like any other and a CR 603.6 leaves-the-hand watcher sees it.
   --
   -- One card is asked as Prompt.ChooseCardInHand, the arm above's prompt; more
   -- are asked at once as Prompt.ChooseExiles, ExilePermanents' elision and
@@ -7147,7 +7156,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
     -- resolution, and a cost is paid before there is one.
     pure (if Maybe.isJust blighted then bindsNothing else Payment.Unpaid)
   -- CR 701.61a's whole procedure, which Parun.Engine.Forage owns -- the Blight arm
-  -- above's shape. Unpaid on the board CR 608.2d refuses, which canPayComponent
+  -- above's shape. Unpaid on the board CR 118.3 refuses, which canPayComponent
   -- has already checked, so reaching it means the graveyard or the Food went away
   -- between the check and the payment.
   --
@@ -7162,7 +7171,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   --
   -- CR 705.2's win/lose kind rather than the face-only kind: the cost names no
   -- face and prints no consequence of its own, so the flip has a caller and the
-  -- outcome is the one rule 705.2's second sentence describes.
+  -- outcome is the one rule 705.2's fourth and fifth sentences describe.
   --
   -- ALWAYS PAID. The outcome is not a payment condition -- `canPayComponent`
   -- above says why -- and the flip BINDS NOTHING: rule 705.1 names nothing the
@@ -7328,7 +7337,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
     if Set.isSubsetOf chosen (Set.fromList candidates) && collected >= toInteger n
       then do
         Monad.void (Event.changeZonesTogether (ManaAbilityPerformer.settle perform) (fmap (\c -> (c, Zone.Exile)) (Set.toAscList chosen)))
-        -- CR 701.59a's "whenever you collect evidence" reads this.
+        -- Evidence Examiner's "Whenever you collect evidence" reads this.
         State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.CollectEvidence pid)))
         pure (Payment.Paid (Binding.paidObjects Binding.collectedEvidence (Set.map Recipient.ToObject chosen)))
       else pure Payment.Unpaid

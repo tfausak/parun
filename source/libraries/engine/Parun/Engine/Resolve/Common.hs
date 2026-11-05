@@ -553,9 +553,11 @@ decidersOf :: Map.Map SlotName (Set Recipient) -> ObjectId -> ObjectId -> Player
 decidersOf legal resolving source controller gs ref =
   Maybe.fromMaybe [] (Players.named (resolutionReads legal resolving source controller gs) {Players.reaches = const True} gs ref)
 
--- decidersOf in CR 101.4's APNAP order, apnapPlayersOf's ordering. Proved by
--- Parun.RangeOfInfluenceSpec's "CR 801.10 a payer outside the controller's
--- range is still offered the payment" (Cut the Tethers).
+-- decidersOf in CR 101.4's APNAP order, apnapPlayersOf's ordering. CR 801.5c: a
+-- named decider outside the range is still the one asked.
+-- Parun.RangeOfInfluenceSpec's "CR 801.10 a payer outside the controller's range is
+-- still offered the payment" (Cut the Tethers) drives this road, but its payer has
+-- no mana, so it asserts no offer.
 apnapDecidersOf :: PlayerRef -> Map.Map SlotName (Set Recipient) -> ObjectId -> ObjectId -> PlayerId -> GameState -> [PlayerId]
 apnapDecidersOf ref legal resolving source controller gs =
   let named = decidersOf legal resolving source controller gs ref
@@ -732,7 +734,8 @@ askingObjects ::
   Game [ObjectId]
 askingObjects resolving source controller legal chosen ref = case ref of
   -- Fall of the Thran's "two land cards from their graveyard": the count per
-  -- chooser, DISTINCT cards (CR 608.2d), asked in APNAP order (CR 101.4).
+  -- chooser, DISTINCT cards (CR 608.2c's rules of English), asked in APNAP order
+  -- (CR 101.4).
   ObjectRef.ChosenCardInGraveyard fromGraveyard -> chosenCardsInGraveyard legal resolving controller source fromGraveyard
   -- The arm above over CR 400.2's hidden zone, CR 402.3 deciding who may be
   -- asked.
@@ -1032,10 +1035,10 @@ handChoosers legal resolving source controller gs player =
   let named = playerRefPlayers legal resolving source controller gs player
    in filter (`elem` named) (Game.apnapOrder gs)
 
--- CR 401.2 and CR 401.4: turn the effect's LibraryPlacement into the END each
+-- CR 608.2d and CR 401.4: turn the effect's LibraryPlacement into the END each
 -- moving object arrives at, and hand back the batch in the order the moves must
 -- then be PERFORMED in. Both questions are asked before anything moves (CR
--- 608.2f): CR 401.2 once per object, asked of the OWNER in the sweep's APNAP
+-- 608.2f): CR 608.2d once per object, asked of the OWNER in the sweep's APNAP
 -- order (CR 101.4); CR 401.4 once per (owner, end) group of two or more, whose
 -- decider is the owner rather than CR 608.2f's resolving controller -- except
 -- where the effect states a RANDOM order, which takes that arrangement back from
@@ -1156,7 +1159,7 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   -- which for Deflecting Palm's HolderOfBound is CR 108.4's controller of the
   -- object a slot holds, read through CR 608.2h's last known information. The
   -- player Filter narrows them as the sweep beside it is read, as the effect
-  -- executes (CR 608.2c): Disorder's "each player who controls a white
+  -- executes (CR 608.2h): Disorder's "each player who controls a white
   -- creature", proved by the scenario
   -- cr-608-2c-disorder-deals-damage-to-each-player-who-controls-a-white-creature.
   ObjectRef.Players (PlayersWho.MkPlayersWho playerRef who) ->
@@ -1471,7 +1474,7 @@ preventionRider chosen controller source riderEffects =
 --
 -- The source half carries both halves of CR 615.9 -- the printed properties and
 -- the id -- so a row cannot be given an id without the recheck that goes with
--- it. That recheck is CR 609.7a's, and a TARGETED source has no properties to
+-- it. That recheck is CR 609.7b's, and a TARGETED source has no properties to
 -- recheck (CR 601.2c declared the object itself), so it passes the trivial
 -- predicate rather than being exempted from the pairing.
 --
@@ -1481,10 +1484,9 @@ preventionRider chosen controller source riderEffects =
 -- above, so a caller writing both gets their conjunction; `And []` on either
 -- side drops out rather than nesting. No card in data/cards/ writes both.
 -- Effect.PreventAllDamage and Effect.RedirectDamage (Kjeldoran Royal Guard's
--- "by unblocked creatures") pass a non-trivial one; no printing pairs CR
--- 609.7b's properties with CR 615.7's countdown or CR 615.8's single instance
--- -- Scryfall `o:"prevent the next" o:"sources"`, 2026-08-27, no hit -- so
--- those two opcodes carry no such field.
+-- "by unblocked creatures") pass a non-trivial one; no card in data/cards/
+-- pairs CR 609.7b's properties with CR 615.7's countdown or CR 615.8's single
+-- instance (Circle of Solace would), so those two opcodes carry no such field.
 --
 -- `resolving` is the object resolving, which picks the acquisition the duration
 -- reads its source's choices under (Expiry.arm, Game.readingAcquisition).
@@ -1620,7 +1622,7 @@ storedClass legal resolving controller source gs =
     related pids relation = Set.fromList [q | q <- Game.stillPlaying gs, any (\p -> PlayerRelation.holds (Game.teams gs) relation p q) pids]
 
 -- CR 601.2c / 615.12: the same bake one carrier over. A stored CR 615.12 or CR
--- 614.9 prohibition narrows the damage event by a DamagePattern too, and a card
+-- 614.17 prohibition narrows the damage event by a DamagePattern too, and a card
 -- that aims its sentence at the recipient its own resolution chose
 -- (Whippoorwill's "that creature") writes the SLOT in
 -- DamagePattern.boundRecipient; this reads the slot and writes the recipient it
@@ -1880,7 +1882,7 @@ referentsOfBindings bindings =
    in foldMap Set.toList (Binding.slotObjects named)
 
 -- CR 608.2h for an entry rider's counts: the card writes a Quantity per counter
--- kind (CR 122.6, CR 107.3c -- Printlifter Ooze's "X +1/+1 counters on it, where
+-- kind (CR 122.6, CR 107.3 -- Printlifter Ooze's "X +1/+1 counters on it, where
 -- X is the number of other creatures you control"), and the funnel takes settled
 -- numbers. This is the ONE bridge between the two, so the answer is determined
 -- once, when the effect is applied, and nothing downstream can re-read the board.
@@ -2114,10 +2116,10 @@ chooseCardsInHand resolving source controller legal (ChosenCardInHand.MkChosenCa
 -- 101.3), CR 801.5c hands the choice to the nearest opponent where none is in
 -- range, and CR 800.4g hands it on where the seat it names has left the game.
 --
--- HOW MANY is the ref's count, read HERE (CR 608.2c) off the announcement CR
+-- HOW MANY is the ref's count, read HERE (CR 608.2h) off the announcement CR
 -- 601.2b left on the resolving object -- TopOfLibrary's reading, and its clamp: a
 -- count that will not evaluate, or evaluates negative, is zero cards (CR
--- 107.1b). pickCounted asks it.
+-- 107.2, 107.1b). pickCounted asks it.
 chooseCardFromAmong ::
   ObjectId ->
   ObjectId ->
@@ -2506,7 +2508,7 @@ targetsOnStack oid gs =
 --
 -- A card-backed object reads its face (targetSlotsOf over Projection.spellFaceOf,
 -- whose spell text is the copiable one, CR 707.2). An ability has no
--- card behind it -- CR 113.7a makes it an object in its own right, and
+-- card behind it -- CR 113.1c makes it an object in its own right, and
 -- Game.cardOf answers Nothing for one -- so its slots come off the modal its
 -- Source carries, which is where Parun.Engine.Activate announced them against and
 -- where Parun.Engine.Stack's two ability arms read its modes at resolution.
@@ -2609,11 +2611,11 @@ lastKnownOriginal original gs = case (Game.lookupObject original gs, Map.lookup 
 -- Elturel Exile is its producer (#4563), and Ivy, Gleeful Spellthief names an
 -- object.
 --
--- A ref naming anything but exactly ONE object also answers the empty list: rule
--- 707.10e specifies "a new target", singular, so a ref that swept several has
--- not said which, and a ref that named none has said nothing. Ivy, Gleeful
--- Spellthief's ref is the effect's own source, so a departed source is what
--- reaches the second case.
+-- A ref naming none also answers the empty list: it has said nothing. Ivy, Gleeful
+-- Spellthief's ref is the effect's own source, so a departed source reaches it. A
+-- ref naming several (Frontline Heroism with Anointed Procession) answers the empty
+-- list too, where rule 707.10e has the copy's controller choose one (gap #6256); no
+-- pool card's ref does.
 --
 -- No prompt of any kind: rule 707.10d's order is a choice among several copies,
 -- and there is only ever one here.
@@ -2765,9 +2767,9 @@ chooseNewTargetsFor unannounced source chooser controller copyId = do
         -- not targets and are not CR 707.10c's to change.
         current = targetsOnStack copyId gs
         -- `unannounced`: the object became a copy of a card and so announced
-        -- nothing (CR 707.2, "it stops having any targets"). Each slot whose
-        -- text fixes its count is offered that many (Target.fixedCount), and
-        -- leaving it empty is leaving it unchanged. Never for a copy CR 707.10
+        -- nothing (Transcantation's ruling, "it stops having any targets"). Each
+        -- slot whose text fixes its count is offered that many (Target.fixedCount),
+        -- and leaving it empty is leaving it unchanged. Never for a copy CR 707.10
         -- made, whose empty slot is a count its original announced.
         blank = if unannounced then Map.withoutKeys (Map.mapMaybe Target.fixedCount slots) (Map.keysSet current) else Map.empty
         -- CR 608.2b's own derivation, made against the CURRENT board: this is
@@ -3420,7 +3422,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   -- CR 701.48a is two "you may"s, and declining both is an outcome the rule
   -- states rather than an impossibility, so nothing here refuses the offer.
   Effect.Learn -> False
-  -- CR 701.58a names the top card of a library, and a player whose library is
+  -- The printing names the top card of a library, and a player whose library is
   -- empty simply has none: CR 609.3 leaves the rest of the effect to do as much
   -- as it can rather than CR 608.2d refusing the instruction.
   Effect.Cloak {} -> False
@@ -3695,7 +3697,9 @@ bindEarthbentLand resolving land gs =
 --
 -- Read off the COPIABLE characteristics (CR 707.2), never the printed face: CR
 -- 702.165b grants what a permanent that entered as a copy of a card with backup
--- copied, and CR 702.165c keeps out every ability a later effect gave it.
+-- copied, and CR 702.165c keeps out every ability an effect gave it, though a CR
+-- 707.9 exception's abilities are in these copiable values and so are granted
+-- (gap #6253).
 --
 -- And read as they were when the ability was put on the stack, which is CR
 -- 702.165d: Parun.Engine.Engine.placeBorne stamped them on the resolving object
@@ -3937,7 +3941,7 @@ distributes total offered answer =
 carrying :: GameState -> CounterKind.CounterKind Keyword.Type.Keyword -> [ObjectId] -> Map.Map ObjectId Natural
 carrying gs kind candidates = Map.filter (> 0) (Map.fromList [(candidate, Cost.countersOn kind candidate gs) | candidate <- candidates])
 
--- A loop's per-run scope (CR 608.2c): the slots its body defines put back to
+-- A loop's per-run scope: the slots its body defines put back to
 -- what the resolving object held before the first run, so a run that binds
 -- nothing does not read what the previous run bound. Takes the pre-loop state
 -- and answers the reset to apply before each run.
@@ -4657,7 +4661,7 @@ installControl legal resolving controller source recipient duration ref gs =
           -- control never changed.
           Nothing -> gs
           Just expiry ->
-            -- CR 613.1b / 611.2c: the new controller is baked in now. CR 302.6
+            -- CR 613.1b / 608.2h: the new controller is baked in now. CR 302.6
             -- re-Sicks it, unless control does not actually move, which is why
             -- the question is asked PER OBJECT and against the PROJECTED
             -- controller rather than against Object.owner.
@@ -4823,7 +4827,7 @@ foldPaid resolving bound gs
 -- that value at 0 for every object but a spell on the stack, and a basis names
 -- a PERMANENT on every printing of this family.
 --
--- Through the PROJECTION (`effectViewOf`), never the printed card: CR 706.2
+-- Through the PROJECTION (`effectViewOf`), never the printed card: CR 707.2
 -- makes a mana cost a copiable value, so a permanent that is a copy of another
 -- card owes the copied cost, and a permanent whose mana cost a CR 613 effect
 -- changed owes the changed one.

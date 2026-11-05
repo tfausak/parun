@@ -148,7 +148,7 @@ data PlayerEffect
     -- resolution chose, which Parun.PreventionSpec's Whippoorwill case proves is
     -- narrower than the board.
     DamageCantBePrevented DamagePattern.DamagePattern
-  | -- | CR 614.9 / 613.11 / Lava Burst: damage matching the pattern can't be dealt
+  | -- | CR 614.17 / 613.11 / Lava Burst: damage matching the pattern can't be dealt
     -- instead to another permanent or player -- the redirection twin of the arm
     -- above.
     DamageCantBeRedirected DamagePattern.DamagePattern

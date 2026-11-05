@@ -20,8 +20,8 @@ import qualified Parun.Types.TurnRole as TurnRole
 -- PlayerScope is resolved against a perspective and nothing else; this can also
 -- name a binding slot, which PlayerEffect's evaluator has no way to resolve. A
 -- target pool needs BOTH readings and neither type whole, which is what
--- Parun.Types.ZoneScope is: this type's Relative arm cannot say CR 806.1's
--- "each opponent" as one value, and PlayerScope has no slot.
+-- Parun.Types.ZoneScope is: this type's Relative arm cannot say
+-- "each opponent" (CR 102.3) as one value, and PlayerScope has no slot.
 data PlayerRef
   = -- | Every player minus the players a slot names -- Shahrazad's "each player who
     -- doesn't win the subgame", where the slot holds the subgame's winner, or

@@ -110,7 +110,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       ObjectRef.codec
       ObjectRef.EachPlayer
       " {\"type\":\"EachPlayer\"} "
-  -- Nullary like EachPlayer above, and for CR 102.1 rather than an economy: the
+  -- Nullary like EachPlayer above, and for CR 109.5 rather than an economy: the
   -- perspective an opponent is relative to is CR 109.5's "you", which the
   -- resolution supplies, so the arm has no player to carry.
   Spec.it s "EachOpponent" $
@@ -437,7 +437,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
   -- CR 508.1b: the attacker's slot, a bare string.
   Spec.it s "AttackedBy" $
     Common.assertCodec s ObjectRef.codec (ObjectRef.AttackedBy (SlotName.MkSlotName (Text.pack "self"))) " {\"type\":\"AttackedBy\",\"value\":\"self\"} "
-  -- CR 400.7: the slot whose object is followed, a bare string.
+  -- CR 400.7j: the slot whose object is followed, a bare string.
   Spec.it s "FromAnywhere" $
     Common.assertCodec s ObjectRef.codec (ObjectRef.FromAnywhere (FromAnywhere.MkFromAnywhere {FromAnywhere.slot = SlotName.MkSlotName (Text.pack "self"), FromAnywhere.among = Nothing})) " {\"type\":\"FromAnywhere\",\"value\":{\"slot\":\"self\"}} "
   -- CR 608.2f: the refs moved as one action, an array of refs under its own tag.

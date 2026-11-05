@@ -108,7 +108,7 @@ import qualified Parun.Types.Zone as Zone
 viewOfCard :: Face.Face Card.Type.Card -> Filter.View
 viewOfCard = viewOfCardLapsed Set.empty
 
--- viewOfCard less the activated abilities whose CR 604.2 "as long as" clause
+-- viewOfCard less the activated abilities whose "as long as" clause (CR 611.3a)
 -- is in `lapsed`, Count.snapshotRoster's reading: for a token lot's given text,
 -- all of whose clauses Parun.Engine.Replacement.matchesTokenLot withholds.
 viewOfCardLapsed :: Set Condition.Type.Condition -> Face.Face Card.Type.Card -> Filter.View
@@ -154,8 +154,8 @@ viewOfCardLapsed lapsed face =
           -- viewOfCharacteristics is the view that holds an id and answers, in
           -- whatever zone the object sits.
           Filter.owner = Nothing,
-          -- CR 400.1 / 109.1: a printed card being matched by a search is not an
-          -- object, so there is no zone for IsInZone to read either.
+          -- A printed FACE names no object in the game, so there is no zone for
+          -- IsInZone to read either.
           Filter.zone = Nothing,
           -- CR 601.2a: a printed FACE was never cast, so WasCastFrom is vacuously
           -- False against it -- `zone` above's reason.
@@ -344,7 +344,8 @@ referenceAdmits teams amount predicate card =
     predicate
 
 -- CR 208.1's PRINTED power box, for a card off the battlefield. Nothing for a
--- face with no power box, since CR 208.1 gives power only to creature cards.
+-- face with no power box, since CR 208.3 gives a noncreature object off the
+-- battlefield power only if it has one printed.
 --
 -- CR 208.2b's zero is the STAR's answer here, and only here. Deliberately NOT
 -- Quantity.evaluate's Star arm, which stays Nothing: there a star that survived
@@ -398,7 +399,8 @@ lastZoned gs oid view = case Game.lastKnownOf oid gs of
 -- list holds neither: only the caller knows whether it reads a live object or CR
 -- 608.2h's record of one, and only the caller knows how deep the fold it stands
 -- in has got. `peers` must be a bounded reader -- a full projection taken here
--- re-enters gather, whose CR 604.2 gate is object-independent, and loops.
+-- re-enters gather, whose "as long as" gate (CR 611.3a) is object-independent,
+-- and loops.
 --
 -- A FENCE the compiler cannot keep: filterReadsPeers enumerates the fields filled
 -- through `peers` below, so filling a new one -- or repointing an existing one at
@@ -700,7 +702,8 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- builder's result rather than passed in, so a search pays for it only when
       -- its filter names the atom.
       Filter.canAttachToSubject = False,
-      -- CR 111.6: fixed for the life of the object (CR 400.7). False for an id
+      -- CR 111.6 / 730.2d: read live off Object.source, since a merge can change
+      -- the answer. False for an id
       -- naming nothing, which CR 608.2b wants of a gone TARGET;
       -- Count.lastKnownView gives CR 608.2h's answer over it for the
       -- readers owed one, exactly as `owner` above has it.
@@ -811,10 +814,10 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- CR 607.5: the results stored for the abilities layer 1a leaves it, so a
       -- copy's reading ability sees none its printed pair stored.
       Filter.storedResults = foldMap (Game.storedResultsUnder (Game.acquisitionOf oid gs)) (Game.lookupObject oid gs),
-      -- CR 716.2b: a designation too, so `designations`' posture again -- and
-      -- Nothing for an id naming no object leaves CR 716.2d to answer level 1 at
-      -- the read, which is what a CR 608.2h asker gets for a permanent that is
-      -- gone.
+      -- CR 716.2b: a designation too, so `designations`' posture again. Nothing for an
+      -- id naming no object reads as level 1 at the read. LastKnown files no level, so
+      -- a CR 608.2h asker would get 1 and not the level it left with; no printed card
+      -- reads a departed permanent's level.
       Filter.classLevel = Game.lookupObject oid gs >>= Object.classLevel,
       -- CR 601.2b: read live off the object. For one that has left its zone,
       -- Count.lastKnownView overrides this with LastKnown.paidCosts, so the CR 608.2h
@@ -833,7 +836,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- values are something else's, face down (CR 708.2) or a copy (CR 707.2).
       Filter.prototyped = PC.prototyped pc || any Object.prototyped (Game.lookupObject oid gs),
       -- CR 400.7d / CR 107.4h: read live off the object like `castUsing`, and
-      -- keyed by tag with CR 202.2's colours beside it, which is the whole of what
+      -- keyed by tag with CR 106.1a's colours beside it, which is the whole of what
       -- the vocabulary asks (see the field's own comment in Parun.Engine.Filter).
       -- The object may be a CR 602.2a ability on the stack as well as a spell or
       -- the permanent one became; every one of them carries the field.
@@ -848,7 +851,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
           | object <- Maybe.maybeToList (Game.lookupObject oid gs),
             unit <- Mana.unwrap (Object.manaSpent object)
           ],
-      -- CR 202.1a off the same record one field over: how many units were spent,
+      -- CR 601.2h off the same record one field over: how many units were spent,
       -- for rule 702.191a's increment.
       Filter.manaSpentAmount = maybe 0 (Natural.length . Mana.unwrap . Object.manaSpent) (Game.lookupObject oid gs),
       -- CR 107.3 / 601.2h off the record the payment wrote beside it.
@@ -1590,13 +1593,13 @@ copiableSpecialActionsOf carrier gs =
         -- The printed read reaches a copied Room too, for staticAbilitiesOf's reason.
         Nothing -> foldMap Face.specialActions (Game.faceOf oid gs)
 
--- CR 613.11: the twelve rule-affecting ability families this object's copiable
+-- CR 613.11: the fifteen rule-affecting ability families this object's copiable
 -- rules text gives it -- its copy snapshot's when it has one, its printed face's
 -- otherwise. copiableSpecialActionsOf above in every respect, and split out for
 -- the same two structural reasons.
 --
--- THE reader for all twelve gatherer modules (Parun.Engine.CombatRestriction and
--- its eleven siblings), through Parun.Engine.Projection.ruleAbilitiesOf, which
+-- THE reader for all fifteen gatherer modules (Parun.Engine.CombatRestriction and
+-- its fourteen siblings), through Parun.Engine.Projection.ruleAbilitiesOf, which
 -- is what makes the two rules it settles settle once:
 -- CR 707.2a, so a permanent that became a copy of Silent Arbiter limits attackers
 -- and its own printed face is never consulted, and CR 702.140e with CR 730.2a, so
@@ -1703,7 +1706,7 @@ noCharacteristics =
       PC.delayedAbilities = Map.empty,
       PC.enchant = [],
       PC.castingPermissions = [],
-      -- CR 613.11: no characteristics, so none of the twelve families either.
+      -- CR 613.11: no characteristics, so none of the fifteen families either.
       PC.ruleAbilities = mempty,
       PC.lostAllAbilities = False,
       PC.hasFullText = False,
@@ -1765,7 +1768,7 @@ baseCharacteristics oid gs = case Game.faceOf oid gs of
   -- CR 406.3a: a card exiled face down has no characteristics, so the seed CR
   -- 613.1 starts the layers from holds none either -- the card behind it is
   -- read only by the readers the rules entitle, Parun.Engine.Cast's offer of a
-  -- play the exiling effect permitted (CR 406.3b) and Projection.projectShown's
+  -- play the exiling effect permitted (CR 406.3a) and Projection.projectShown's
   -- look (CR 406.3), and never this projection. CR 110.5d keeps this apart from
   -- Object.facing, which is CR 708's face-down PERMANENT and reaches the
   -- projection through Game.faceOf.
@@ -1877,7 +1880,7 @@ baseCharacteristics oid gs = case Game.faceOf oid gs of
               -- CR 601.3: the printed permissions, in the seed for enchant's
               -- reason, so a granted one is not copiable.
               PC.castingPermissions = Face.castingPermissions face,
-              -- CR 613.11: the twelve families CR 613.11 applies after the layer
+              -- CR 613.11: the fifteen families CR 613.11 applies after the layer
               -- system, off `face` for enchant's reason -- and copiable for
               -- enchant's reason too, which is what carries them to a copy and,
               -- through withMergedAbilities below, to a merged permanent's other
@@ -2014,8 +2017,8 @@ withPrototype oid gs face pc = case (maybe False Object.prototyped (Game.lookupO
 -- what makes an EARLIER copy effect on the target lose to the merge instead of
 -- silently replacing it. A LATER copy effect still wins, by re-stamping.
 --
--- The permanent's TIMESTAMP is untouched: CR 730.2b keeps it the same object and
--- CR 730.2c keeps every continuous effect that applied to it applying, so a
+-- The permanent's TIMESTAMP is untouched: CR 730.2c keeps it the same object and
+-- keeps every continuous effect that applied to it applying, so a
 -- merge that minted a new one would reorder every layer already on it.
 --
 -- The ability fields and no other, beside the record of the graft (PC.mergedDonors).
@@ -2044,7 +2047,8 @@ withMergedAbilities donor base =
       PC.mergedDonors = PC.mergedDonors base <> [donor],
       -- CR 702.1: a keyword IS an ability, and the map counts instances, so a
       -- component carrying a keyword the topmost one also has contributes a
-      -- second instance (CR 702.1b's redundancy is then the layer fold's).
+      -- second instance (each keyword rule's own redundancy clause, such as CR
+      -- 702.2f, is then the layer fold's).
       PC.keywords = Map.unionWith (+) (PC.keywords base) (PC.keywords donor),
       PC.staticAbilities = PC.staticAbilities base <> PC.staticAbilities donor,
       PC.playerAbilities = PC.playerAbilities base <> PC.playerAbilities donor,
@@ -2056,7 +2060,7 @@ withMergedAbilities donor base =
       PC.delayedAbilities = Map.union (PC.delayedAbilities base) (PC.delayedAbilities donor),
       PC.enchant = PC.enchant base <> PC.enchant donor,
       PC.castingPermissions = PC.castingPermissions base <> PC.castingPermissions donor,
-      -- CR 613.11's twelve families, whose Semigroup is the same concatenation
+      -- CR 613.11's fifteen families, whose Semigroup is the same concatenation
       -- the eight fields above are written out with; Parun.Types.RuleAbilities
       -- carries it so a new family cannot be added and left out here.
       PC.ruleAbilities = PC.ruleAbilities base <> PC.ruleAbilities donor,
@@ -2118,9 +2122,9 @@ manaCostColors mc = case mc of
 -- with itself.
 --
 -- anyConditional deliberately does NOT narrow by it: a superset costs a second
--- walk where a subset would leave a CR 604.2 clause wired open. Nor does
--- Parun.Engine.Replacement.replacementsAffecting, whose siblings Event.loop
--- already drops by SOURCE (channel 2 of applyReplacementsIn's note).
+-- walk where a subset would leave an "as long as" clause (CR 611.3a) wired
+-- open. Nor does Parun.Engine.Replacement.replacementsAffecting, whose siblings
+-- Event.loop already drops by SOURCE (channel 2 of applyReplacementsIn's note).
 abilitySources :: GameState -> [ObjectId]
 abilitySources gs = Set.toList (Set.difference (GameState.battlefield gs) (GameState.enteringBeside gs))
 
@@ -2141,9 +2145,9 @@ abilitySources gs = Set.toList (Set.difference (GameState.battlefield gs) (GameS
 -- classification rather than a bare zone. The hand and library walks ask
 -- `statesZone` below instead, having no default at all to fall back on.
 --
--- Structural, and deliberately not a Condition: CR 604.2's clause is asked of an
--- ability some walk has already kept, so it could narrow a gather but never
--- widen one.
+-- Structural, and deliberately not a Condition: the "as long as" clause (CR
+-- 611.3a) is asked of an ability some walk has already kept, so it could narrow
+-- a gather but never widen one.
 functionsFromZone :: Zone.Zone -> StaticAbility.StaticAbility card -> Bool
 functionsFromZone zone sa =
   let zones = StaticAbility.functionsFrom sa
@@ -2164,7 +2168,7 @@ abilitiesFromCharacteristics peers pc oid gs =
       granted ability = functions ability && maybe True (grantHolds peers oid gs) (ActivatedAbility.condition ability)
    in filter granted (ungatedAbilitiesOf pc oid gs)
 
--- CR 604.2 / 608.2h: the "as long as" clauses among the roster above that do
+-- CR 611.3a / 608.2h: the "as long as" clauses among the roster above that do
 -- not hold -- what Parun.Engine.Event files in an object's LastKnown record as it
 -- ceases, since no board is left afterwards to ask them against
 -- (Count.lastKnownView). Keyed by the clause: the gate reads only the clause, the
@@ -2184,7 +2188,7 @@ lapsedGrantsOf peers pc oid gs =
 ungatedAbilitiesOf :: ProjectedCharacteristics -> ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
 ungatedAbilitiesOf pc oid gs = Count.abilitiesOf (Deploy.grants (maybe False (Count.deployIn gs) (lastZoneOf oid gs)) pc) pc
 
--- CR 604.2: does a granted ability's "as long as" clause hold, with the
+-- CR 611.3a: does a granted ability's "as long as" clause hold, with the
 -- object's controller as CR 109.5's "you".
 grantHolds :: Count.ViewOf -> ObjectId -> GameState -> Condition.Type.Condition -> Bool
 grantHolds peers oid gs = Condition.holds peers (SourceContext.sourceContext gs (controllerOf oid gs) oid) gs oid
@@ -2284,7 +2288,7 @@ viewOfRecipient peers gs r = case Recipient.playerOf r of
   Nothing -> Recipient.objectOf r >>= peers
 
 -- One control-granting static ability, flattened: the source, the timestamp
--- its effect takes (CR 613.7a), and its CR 604.2 "as long as" clause, which
+-- its effect takes (CR 613.7a), and its "as long as" clause (CR 611.3a), which
 -- layerTwo asks against its running table.
 data ControlGrant = MkControlGrant
   { cgSource :: ObjectId,
@@ -2311,8 +2315,8 @@ data ControlGrant = MkControlGrant
 -- Goblin Dominion, the one that is not an Aura. A regression fence, kept because
 -- the three walks over abilitySources must agree on which list they read.
 --
--- CR 604.2's "as long as" clause is carried rather than asked: it is judged
--- inside layerTwo, where the controllers it reads are the fold's own.
+-- The "as long as" clause (CR 611.3a) is carried rather than asked: it is
+-- judged inside layerTwo, where the controllers it reads are the fold's own.
 controlGrants :: GameState -> [ControlGrant]
 controlGrants gs =
   let grantsOf permId = case Game.lookupObject permId gs of
@@ -2343,8 +2347,8 @@ controlGrants gs =
 enchantedPlayerOf :: ObjectId -> GameState -> Maybe PlayerId.PlayerId
 enchantedPlayerOf oid gs = Game.lookupObject oid gs >>= Object.attachedTo >>= Recipient.playerOf
 
--- CR 108.4 / 613.1b: an object's controller is its owner, overridden by layer-2
--- control effects applied in CR 613.7/613.8 order. A lean fold rather than the
+-- CR 110.2 / 108.4a / 613.1b: an object's default controller, or its owner where
+-- it has none, overridden by layer-2 control effects applied in CR 613.7/613.8 order. A lean fold rather than the
 -- full projection: control precedes P/T.
 controllerOf :: ObjectId -> GameState -> Maybe PlayerId.PlayerId
 controllerOf oid gs = controllerOfGiven (controlGrants gs) oid gs
@@ -2398,14 +2402,14 @@ layerTwo grants gs =
       controllerIn table o = case Map.lookup o table of
         Just pid -> Just pid
         Nothing -> fmap defaultControllerOf (Game.lookupObject o gs)
-      -- CR 604.2: a grant whose "as long as" clause is false names nothing. The
-      -- clause is judged at CR 613.6's decision point, its own layer, so the
-      -- view is copiable values and the table's controllers, as conditionHolds
-      -- bounds any other clause; CR 109.5's "you" is the source's controller
-      -- there. Asked through the table, a steal that flips the clause is one
-      -- this effect waits on (CR 613.8a). Parun.AuraSpec's "CR 604.2/613.8a a
-      -- control grant applies only while its as-long-as clause holds" proves
-      -- both.
+      -- CR 611.3a: a grant whose "as long as" clause is false names nothing.
+      -- The clause is judged at CR 613.6's decision point, its own layer, so
+      -- the view is copiable values and the table's controllers, as
+      -- conditionHolds bounds any other clause; CR 109.5's "you" is the
+      -- source's controller there. Asked through the table, a steal that flips
+      -- the clause is one this effect waits on (CR 613.8a). Parun.AuraSpec's
+      -- "CR 604.2/613.8a a control grant applies only while its as-long-as
+      -- clause holds" proves both.
       holdsIn ctrl e = case ceCondition e of
         Nothing -> True
         Just cond ->

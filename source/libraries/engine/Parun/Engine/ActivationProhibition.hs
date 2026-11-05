@@ -1,4 +1,4 @@
--- CR 602.2 / 101.2 / 613.11: the continuous effects that FORBID an activation,
+-- CR 602.5 / 101.2 / 613.11: the continuous effects that FORBID an activation,
 -- printed at an OBJECT. One of the modules on the axis CR 613.11 reaches past
 -- the layer system (alongside Parun.Engine.PlayerEffect,
 -- Parun.Engine.CombatRestriction, Parun.Engine.SacrificeRestriction and its
@@ -11,7 +11,7 @@
 --
 -- TWO places ask, and both are needed, exactly as Parun.Engine.Detain's header
 -- lays out for rule 701.35a's third clause: parun has no single "may this
--- permanent act" funnel, so CR 602.2's window is Parun.Engine.Activate's
+-- permanent act" funnel, so CR 117.1b's window is Parun.Engine.Activate's
 -- activatableGiven and CR 605.3a's two mana windows are Parun.Engine.Cost's
 -- manaActivations. Gating only the first would leave every mana ability in the
 -- pool going through, which is what Arrest's sentence forbids and
@@ -97,7 +97,7 @@ gathered gs =
                 else []
    in concatMap (\source -> fromPermanent source <> fromGrant source) (Set.toList (GameState.battlefield gs))
 
--- CR 602.2 with CR 101.2: which of `candidates` an effect in force right now
+-- CR 602.5 with CR 101.2: which of `candidates` an effect in force right now
 -- says can't have an activated ability of this CR 605.1a kind and this cost
 -- activated. Arrest,
 -- Realmbreaker's Grasp and Volrath's Curse are the pool's printed rows; Deadlock
@@ -145,7 +145,7 @@ cantActivate asked cost candidates gs =
       storedSubjects = RestrictedCreatures.prohibited Prohibition.Activate candidates gs
    in Set.fromList (concatMap fromProhibition (gathered gs)) <> storedSubjects
 
--- CR 116.2d's WHO on this carrier: the permanents that `source`'s ability named
+-- The printed WHO on this carrier: the permanents that `source`'s ability named
 -- `name` forbids activations on right now. Unioned with
 -- Parun.Engine.CombatRestriction.namedSubjects by Parun.Engine.Ignore, whose offer
 -- is about the ABILITY -- Volrath's Curse states both carriers in one sentence

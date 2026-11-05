@@ -9,13 +9,13 @@ module Parun.Types.AttackOption where
 -- absence of an option is the absence of a value (@Nothing@ in
 -- Parun.Types.GameSettings.attackOption), the posture Parun.Types.Daytime takes
 -- toward a game that is neither day nor night. CR 800.2 makes these options a
--- MULTIPLAYER game adds, so a game without one is CR 506.2's two-player game,
--- playing by CR 507.1's free choice of one opponent.
+-- MULTIPLAYER game adds, so a game without one plays by CR 506.2a and CR
+-- 507.1's free choice of one opponent (at two seats, CR 506.2's only opponent).
 --
 -- Leftward and Rightward rather than Left and Right so that no use site has to
 -- disambiguate them from Prelude's Either.
 data AttackOption
-  = -- | CR 802.1: every one of the attacking player's opponents is a defending
+  = -- | CR 802.2: every one of the attacking player's opponents is a defending
     -- player, so CR 507.1 chooses nobody.
     MultiplePlayers
   | -- | CR 803.1a: only the opponent seated immediately to the attacking

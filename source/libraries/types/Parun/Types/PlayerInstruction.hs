@@ -19,8 +19,9 @@ data PlayerInstruction
     DrawCards
   | -- | CR 701.17a: mill this many cards. Raised by Parun.Engine.Event.millFrom,
     -- the one funnel every mill goes through, for a positive count only. One
-    -- event for the whole instruction, since rule 701.17a moves the cards at
-    -- once; CR 701.17b's "as many as possible" is read off the settled count when
+    -- event for the whole instruction, the cards being milled at once
+    -- (Contaminated Drink's ruling); CR 701.17b's "as many as possible" is read
+    -- off the settled count when
     -- the cards are taken.
     MillCards
   | -- | CR 705.1: flip a coin. The one instruction no WouldPerform carries: an

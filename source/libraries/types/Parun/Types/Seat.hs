@@ -28,7 +28,7 @@ data Seat = MkSeat
     battlefield :: Seq.Seq Placement.Placement,
     hand :: Seq.Seq Placement.Placement,
     graveyard :: Seq.Seq Placement.Placement,
-    -- | Top card first (CR 401.1).
+    -- | Top card first (CR 401.2, CR 121.1).
     library :: Seq.Seq Placement.Placement,
     -- | Face up (CR 406.3), owned by this seat.
     exile :: Seq.Seq Placement.Placement,

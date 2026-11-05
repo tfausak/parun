@@ -429,13 +429,13 @@ fallsOff pools gs oid = case Map.lookup oid pcs of
             -- CR 702.16c's second sentence again, for a PLAYER host. The clause
             -- above cannot carry it: a player has no keywords for
             -- Parun.Engine.Keyword to mint an AttachRestriction row from, so the
-            -- prohibition rides the CR 613.11 player axis instead
+            -- prohibition rides the CR 613.10 player axis instead
             -- (Parun.Types.PlayerEffect.HasProtectionFrom). Rule
             -- 702.16d has no player half, so becomesUnattached above needs no
             -- twin of this.
             --
             -- No `pcs` to read it off: Parun.Engine.PlayerEffect.applying gathers
-            -- the CR 613.11 axis from the board rather than from the layer
+            -- the CR 613.10 axis from the board rather than from the layer
             -- machine, so the pre-pass map holds nothing this asks for. Paid
             -- only by an Aura attached to a player, which is no Aura at all on
             -- almost every board.
@@ -887,12 +887,12 @@ checkOnce instead boards = do
         Monad.guard (Battle.needsProtector (Game.teams gs) pc controller (Game.stillPlaying gs) (Battle.isBeingAttacked oid gs) (Object.protector =<< Game.lookupObject oid gs))
         pure (oid, pc, controller)
       undefended = Maybe.mapMaybe undefendedOne onBattlefield
-  -- CR 704.5j: the legend rule is one of the two state-based actions that ASK --
-  -- CR 310.11's protector re-choice below is the other -- and both ask BEFORE
-  -- anything below moves, so every choice is made against the state this pass
-  -- began in (CR 704.3's simultaneity).
+  -- CR 704.5j: the legend rule is one of the state-based actions that ASK --
+  -- CR 310.11's protector re-choice, CR 704.5u's sectors and CR 903.9a's offer
+  -- below are the others -- and all ask BEFORE anything below moves, so every
+  -- choice is made against the state this pass began in (CR 704.3's simultaneity).
   legendVictims <- fmap concat (Monad.mapM chooseLegendVictims legendsToResolve)
-  -- CR 704.5x / 704.5y: the other state-based action that ASKS, in the same window
+  -- CR 704.5x / 704.5y: another state-based action that ASKS, in the same window
   -- and for the same reason as the legend rule above. A battle for which no player
   -- can be chosen joins the put-into-graveyard batch below, which is what the
   -- second sentence of each of those rules, and of CR 310.11, says.
@@ -914,8 +914,8 @@ checkOnce instead boards = do
   -- space sculptor is on the battlefield, is given one by its controller. Lives
   -- in Parun.Engine.SpaceSculptor with the rest of rule 702.158.
   sectored <- SpaceSculptor.assign Event.recordEvent pcs gs
-  -- CR 903.9a: the THIRD state-based action that asks, in the same window and for
-  -- the same reason as the two above -- a commander that reached a graveyard or
+  -- CR 903.9a: another state-based action that asks, in the same window and for
+  -- the same reason as those above -- a commander that reached a graveyard or
   -- exile since the last check, offered to its owner for the command zone.
   --
   -- Asked before anything below moves, so the offer is made against the board this

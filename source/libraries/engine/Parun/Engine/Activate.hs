@@ -266,9 +266,9 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
           -- CR 202.3 computed bound reads it (Blighted Nightmare's "creature card
           -- with mana value X or less"), and `unannounced` is False because the
           -- value exists by now. Cast.castProposed's shape exactly, and
-          -- Binding.fromChoices is the same writer CR 601.2i stamps the ability
-          -- object with below, so the offer and the record cannot spell one X two
-          -- ways.
+          -- Binding.fromChoices is the same writer CR 601.2c's record stamps
+          -- the ability object with below, so the offer and the record cannot
+          -- spell one X two ways.
           --
           -- The SAME seed reaches Target.selectionLegal's joint check below, so a
           -- slot offered against the announced X is not re-judged against no X.

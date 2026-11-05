@@ -125,9 +125,8 @@ takeInitiative pid gs = Event.recordEvent (GameEvent.TookInitiative pid) gs {Gam
 -- states no "can't take the initiative" effect for one to read, and
 -- Parun.Types.PlayerEffect has no such arm to consult.
 --
--- Nothing left to take it is unreachable rather than a rule: CR 104.2a ends the
--- game as soon as one player is left, so no departure empties the seats. Answered
--- Nothing rather than left naming the departed holder, because a designation held
+-- Nothing left to take it is CR 104.4a's draw, every seat leaving at once, and no
+-- rule names a taker. Answered Nothing rather than left naming the departed holder, because a designation held
 -- by a player who has left the game is a state no rule describes.
 reassignOnDeparture :: PlayerId -> Game ()
 reassignOnDeparture leaving = do

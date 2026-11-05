@@ -34,7 +34,7 @@ import qualified Parun.Types.SuspendCounters as SuspendCounters
 import qualified Parun.Types.Ward as Ward
 
 -- | A face's keywords, each instance with its wordings (a keyword printed
--- twice is two instances, CR 702.1), except that protections share one line
+-- twice is two instances, CR 113.2c), except that protections share one line
 -- and so one entry. Entries come out in no particular order: the face keeps
 -- no printed order to follow, and Parun.Oracle matches them as a multiset.
 abilities :: Text.Text -> Map.Map Keyword.Keyword Natural.Natural -> [[Text.Text]]

@@ -19,7 +19,7 @@ import qualified Parun.Types.Quantity as Quantity
 -- 609.3).
 --
 -- The count is a Quantity for TopOfLibrary's reason: Open the Way's is CR
--- 601.2b's announced X, read when the effect executes (CR 608.2c), and an
+-- 601.2b's announced X, read when the effect executes (CR 608.2h), and an
 -- unevaluable or negative one is clamped to zero there.
 --
 -- The fields are named rather than positional, the shape every other

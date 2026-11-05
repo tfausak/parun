@@ -19,7 +19,7 @@ data AttackerBlocked = MkAttackerBlocked
     --
     -- Carried rather than read off Combat.blockers when the condition is
     -- scanned, which is a STALE read on the arrival road: arrivals that came
-    -- after this one are already in the entry by then (CR 509.2a), so the
+    -- after this one are already in the entry by then (CR 603.3), so the
     -- becoming would be measured against a later board. The set rather than a
     -- count because a filtered CR 509.3e trigger asks about each blocker.
     blockers :: Set.Set ObjectId.ObjectId

@@ -4,7 +4,7 @@ import qualified Data.Sequence as Seq
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SlotName as SlotName
 
--- | CR 608.2f's loop over NUMBERS rather than objects: the body run once for
+-- | A loop over NUMBERS rather than objects (CR 608.2c): the body run once for
 -- each number from 1 up to the quantity, with that number bound under the
 -- slot -- Ornate Imitations' "for each number between 1 and X, conjure a
 -- duplicate of a random creature card with that mana value".

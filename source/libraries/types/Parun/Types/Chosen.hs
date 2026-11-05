@@ -23,5 +23,5 @@ data Chosen a where
   Names :: Chosen (Map.Map PlayerId.PlayerId CardName.CardName)
   -- | CR 614.1c / 702.174a: the chosen players, by choice (Object.chosenPlayers).
   Players :: Chosen (Map.Map PlayerChoice.PlayerChoice PlayerId.PlayerId)
-  -- | CR 107.1c: the last chosen number (Object.chosenNumber).
+  -- | CR 607.2d: the last chosen number (Object.chosenNumber).
   Number :: Chosen Natural.Natural

@@ -3,7 +3,7 @@ module Parun.Types.Morph where
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.MorphVariant as MorphVariant
 
--- | The payload of Parun.Types.Keyword's Morph arm (#1305): CR 702.37a's cost to
+-- | The payload of Parun.Types.Keyword's Morph arm (#1305): CR 702.37e's cost to
 -- turn the permanent face up, and which of rule 702.37's two spellings the
 -- ability is written in.
 --

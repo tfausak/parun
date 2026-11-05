@@ -2328,7 +2328,7 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
       Spec.assertBool s (Filter.matches self (blackCreature {Filter.token = True}) Filter.Type.IsToken) "token"
 
     -- Ashaya's "nontoken creatures you control" is spelled `Not IsToken`, the
-    -- way CR 601.2c's "another" is spelled `Not IsSource` (#163).
+    -- way a printed "another" is spelled `Not IsSource` (#163).
     Spec.it s "Not IsToken is how 'nontoken' is written" $ do
       Spec.assertBool s (Filter.matches self blackCreature (Filter.Type.Not Filter.Type.IsToken)) "a card permanent is nontoken"
       Spec.assertBool s (not (Filter.matches self (blackCreature {Filter.token = True}) (Filter.Type.Not Filter.Type.IsToken))) "a token is not"

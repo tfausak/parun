@@ -60,10 +60,10 @@ spec s = Spec.describe s "Parun.Codec.StaticAbility" $ do
           (Modification.LoseAllAbilities NonEmpty.:| [Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness (Just (Quantity.Literal 1)) (Just (Quantity.Literal 1)))])
       )
       " {\"affected\":{\"type\":\"Attached\"},\"modifications\":[{\"type\":\"LoseAllAbilities\"},{\"type\":\"SetBasePowerToughness\",\"value\":{\"power\":{\"type\":\"Literal\",\"value\":1},\"toughness\":{\"type\":\"Literal\",\"value\":1}}}]} "
-  -- CR 604.2's "as long as" gate, Kird Ape's shape: the same ability plus a
-  -- condition, so the key is present exactly when the clause is. The two cases
-  -- above pin the absent half -- an encoder that always emitted the key would
-  -- rewrite every card already committed.
+  -- The "as long as" gate (CR 611.3a), Kird Ape's shape: the same ability plus
+  -- a condition, so the key is present exactly when the clause is. The two
+  -- cases above pin the absent half -- an encoder that always emitted the key
+  -- would rewrite every card already committed.
   Spec.it s "an as-long-as condition" $
     Common.assertCodec
       s

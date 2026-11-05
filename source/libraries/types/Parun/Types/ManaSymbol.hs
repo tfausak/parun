@@ -25,9 +25,10 @@ data ManaSymbol
   | -- | CR 107.4e: {2/B}, payable with either one mana of the stated type or two
     -- mana of any type.
     --
-    -- The {2/X} shape ONLY, and the generic half is always two -- CR 107.4 prints
-    -- exactly {2/W}, {2/U}, {2/B}, {2/R} and {2/G}, so the number is fixed here
-    -- rather than carried, and a {3/B} that no card prints stays unsayable.
+    -- The {2/X} shape ONLY, and the generic half is always two -- CR 107.4's
+    -- numeric monocolored hybrids are exactly {2/W}, {2/U}, {2/B}, {2/R} and {2/G},
+    -- so the number is fixed here rather than carried, and a {3/B} that no card
+    -- prints stays unsayable.
     --
     -- NARROWER THAN THE RULE'S NAME: CR 107.4's monocolored hybrid list also
     -- holds {C/W}..{C/G}, which one mana pays either way and which no card in the

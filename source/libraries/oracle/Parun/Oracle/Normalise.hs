@@ -32,7 +32,7 @@ normalise name =
 -- the part of a legendary name before the comma or, for a one-word name
 -- before " the ", that word (CR 201.5c: "Arcanis" for Arcanis the
 -- Omnipotent), and "this creature" and its siblings, which Oracle text uses
--- for the same thing on newer cards (CR 201.5).
+-- for the same thing on newer cards (CR 700.7).
 selfReferences :: CardName.CardName -> Text.Text -> Text.Text
 selfReferences name text =
   let full = Text.toLower (CardName.unwrap name)

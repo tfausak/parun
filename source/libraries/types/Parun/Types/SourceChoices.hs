@@ -18,7 +18,7 @@ data SourceChoices = MkSourceChoices
     colors :: Set.Set Color.Color,
     -- | CR 205.3: the chosen subtype.
     subtype :: Maybe Subtype.Subtype,
-    -- | CR 107.1c: the last chosen number.
+    -- | CR 607.2d: the last chosen number.
     number :: Maybe Natural.Natural,
     -- | CR 607.5: the acquisition of the source's abilities these belong to,
     -- under which Parun.Engine.SourceContext.framedWith reads its entrants too.

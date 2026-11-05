@@ -13,7 +13,7 @@ import qualified Parun.Types.ZoneScope as ZoneScope
 -- SpellsAndAbilities, PlayersAndPlaneswalkers and CreaturesAndCardsInGraveyard
 -- are those.
 data Pool
-  = Creatures -- CR 115.1a: creatures on the battlefield (ToCreature).
+  = Creatures -- CR 115.2: creatures on the battlefield (ToCreature).
   | Players -- CR 115: players still in the game (ToPlayer).
   | -- | CR 115.4: "target creature, player, planeswalker, or battle" -- all four,
     -- and nothing else. "Other game objects, such as noncreature artifacts or

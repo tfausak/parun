@@ -86,9 +86,8 @@ says card name text =
 -- | The text's pieces left over once each ability has taken the pieces of one
 -- of its wordings, one list per way they can. The face keeps no printed
 -- order, so abilities pair with the text as a multiset, as
--- 'Normalise.normalise' sorts lines; a spell's instructions are one ability
--- even across paragraphs (CR 113.3a), so its wording takes pieces from
--- several lines.
+-- 'Normalise.normalise' sorts lines; a spell's wording is treated as one
+-- unit across paragraphs, so it takes pieces from several lines.
 leftovers :: CardName.CardName -> Text.Text -> [[Text.Text]] -> [[Text.Text]]
 leftovers name text = Monad.foldM taken (Normalise.normalise name text)
   where

@@ -34,8 +34,8 @@ spec s = Spec.describe s "Parun.Codec.AttackRequirement" $ do
       (AttackRequirement.MkAttackRequirement (Affected.AttachedPlayerControls (Filter.HasCardType CardType.Creature)) Nothing Nothing RequirementArity.EachSubject)
       " {\"subject\":{\"type\":\"AttachedPlayerControls\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   -- Otarian Juggernaut's shape: CR 508.1d's second reading, "or that it attacks
-  -- if some condition is met", written as CR 604.2's "as long as" clause over
-  -- the cards in the controller's graveyard.
+  -- if some condition is met", written as an "as long as" clause (CR 611.3a)
+  -- over the cards in the controller's graveyard.
   Spec.it s "a gated requirement" $
     Common.assertCodec
       s

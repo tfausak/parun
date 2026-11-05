@@ -8,7 +8,7 @@ import Parun.Types.Claim (Claim)
 -- Parun.Engine.Cost.manaActivations is the answer; Parun.Engine.Mana's supply
 -- model is the reader.
 --
--- CR 118.3's "fully" is why the resources ride along rather than the count going
+-- CR 118.3 and CR 118.10 are why the resources ride along rather than the count going
 -- alone. A count is a fact about one source asked by itself, and the supply model
 -- has to add several of them up: two sources whose costs each sacrifice a
 -- creature both answer 1 beside one creature, and two whose costs each pay 3 life

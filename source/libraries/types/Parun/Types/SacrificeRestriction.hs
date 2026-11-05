@@ -20,8 +20,8 @@ import qualified Parun.Types.Affected as Affected
 -- rules distinction rather than a filing convenience: every arm of that type is
 -- a CHARACTERISTIC change computed inside CR 613's layers, where CR 613.11 puts
 -- this in the class of continuous effects that "affect game rules rather than
--- objects", and CR 101.2a says outright that such an effect is not an ability
--- being added or removed. no layer of Parun.Engine.Projection rewrites them.
+-- objects", and CR 101.2a holds rule 101.2 clear of adding abilities to objects and
+-- removing them. no layer of Parun.Engine.Projection rewrites them.
 --
 -- CR 101.2 is what gives the prohibition its force: "if a rule or effect allows
 -- or directs something to happen, and another effect states that it can't
@@ -51,10 +51,9 @@ import qualified Parun.Types.Affected as Affected
 -- answers a set of ids.
 newtype SacrificeRestriction = MkSacrificeRestriction
   { -- | Which permanents can't be sacrificed. An Affected, not a bare ObjectId,
-    -- so the set is re-derived every time it is asked -- CR 613.11 lets a
-    -- rule-modifying continuous effect reach objects that were not affected
-    -- when it began, which is exactly what Garland's set does as control of a
-    -- creature changes. The field name Parun.Types.CombatRestriction's arms
+    -- so the set is re-derived every time it is asked -- CR 611.3a's static
+    -- effect is not locked in, which is exactly what Garland's set shows as
+    -- control of a creature changes. The field name Parun.Types.CombatRestriction's arms
     -- spell "affected", and for its reason: this names the restricted
     -- permanents, never an object they act on.
     affected :: Affected.Affected

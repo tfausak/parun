@@ -124,7 +124,7 @@ data Search = MkSearch
     -- so a search whose filter asked after one object and whose destination
     -- attached to another would be a card nobody printed.
     --
-    -- A Maybe rather than a PlayerRef-shaped ref type: CR 701.3a's host is one
+    -- A Maybe rather than a PlayerRef-shaped ref type: the host here is one
     -- OBJECT, and the two things a printed search can mean by it are its own
     -- source (CR 113.7) and a slot its trigger or an earlier clause bound (CR
     -- 608.2c). A slot naming no object, or more than one, leaves the question

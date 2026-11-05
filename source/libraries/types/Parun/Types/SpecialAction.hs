@@ -6,8 +6,8 @@ import qualified Parun.Types.Keyword as Keyword
 
 -- | CR 116.2: a special action a face's printed text grants -- something a
 -- player may do with priority that does not use the stack. WHICH player is the
--- constructor's own question: CR 116.2e's is the card's holder, CR 116.2d's is
--- whoever the ignored ability is affecting.
+-- constructor's own question: CR 116.2e's is the card's holder; an ignore's is
+-- whoever its printed sentence names, CR 116.2d saying only "a player".
 --
 -- Named for the OPERATION and never for the card. CR 116.2e is one card by name,
 -- but the engine must not learn that name: Parun.Engine.Action reads this
@@ -50,8 +50,8 @@ data SpecialAction
     -- 116.2d states only "for a duration" rather than fixing one, so a card that
     -- printed another would want a Parun.Types.Duration here.
     --
-    -- WHO may take it is not carried either, and needs no payload: the rule's own
-    -- answer is the players the ability is AFFECTING. On the player axis that is
+    -- WHO may take it is not carried either, and needs no payload: the printed
+    -- sentences' answer is the players the ability is AFFECTING. On the player axis that is
     -- the carrier's PlayerScope -- Leonin Arbiter's "any player" is its
     -- AnyPlayer scope and Damping Engine's "that player" is its narrower one.
     -- On the OBJECT axis the ability names no player, so it is the controller of

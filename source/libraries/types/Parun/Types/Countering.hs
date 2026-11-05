@@ -23,7 +23,7 @@ data Countering = MkCountering
     -- stack. The id is already dead by the time any reader sees this: a
     -- countered spell leaves the stack through Parun.Engine.Event.changeZone and
     -- CR 400.7 mints a fresh incarnation in the graveyard, and a countered
-    -- ability ceases to exist outright (CR 608.2n). Carried anyway, because it
+    -- ability just leaves the stack (CR 701.6a). Carried anyway, because it
     -- is WHAT HAPPENED -- the event otherwise says only that somebody countered
     -- something, and two counters in one batch would be indistinguishable
     -- entries.

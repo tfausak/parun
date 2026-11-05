@@ -19,7 +19,7 @@ import qualified Parun.Types.PlayerId as PlayerId
 -- nothing about a proposed placement says where it came from -- the object, the
 -- kind and the count are identical either way. Every constructor names the putter:
 -- CR 122.6a states who that is for the as-it-enters case ("if the effect doesn't
--- specify a player, the object's controller puts those counters on it"), CR 609.1
+-- specify a player, the object's controller puts those counters on it"), CR 608.2c
 -- settles the rest as the resolution's controller, and CR 714.3c names one
 -- outright. An effect's controller and the receiving permanent's controller are
 -- different players whenever one player puts a counter on another's permanent, so

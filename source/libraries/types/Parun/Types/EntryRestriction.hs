@@ -19,16 +19,16 @@ import qualified Parun.Types.Zone as Zone
 --
 -- Parun.Types.SacrificeRestriction's shape and its filing, one game action over:
 -- CR 613.11 puts a continuous effect that "affects game rules rather than
--- objects" outside the layer system, CR 101.2a says such an effect is not an
--- ability being added or removed, and no layer of Parun.Engine.Projection rewrites them.
+-- objects" outside the layer system, CR 101.2a holds rule 101.2 clear of adding
+-- abilities to objects and removing them, and no layer of Parun.Engine.Projection rewrites them.
 -- Every step of that type's argument for why it cannot be a
 -- Parun.Types.Modification holds here unchanged.
 --
 -- NOT a Parun.Types.ReplacementEffect, and that is the distinction this type
 -- exists to draw. CR 614.1b's "skip" is a replacement with nothing, but the
 -- printed cards do not say "instead" or "skip" -- they say "can't", which is CR
--- 101.2's word, and CR 613.11 files the resulting continuous effect outside rule
--- 614 entirely. Widening Parun.Types.ReplacementEffect's ZoneChangeR arm with a
+-- 101.2's word, and CR 614.17 says such an effect is not a replacement effect.
+-- Widening Parun.Types.ReplacementEffect's ZoneChangeR arm with a
 -- "no destination" destination would be observably wrong rather than merely
 -- misfiled: a redirect is a zone change, so CR 400.7 mints a fresh object with no
 -- memory of its previous existence, where a refusal leaves the card in its
@@ -48,7 +48,7 @@ import qualified Parun.Types.Zone as Zone
 --
 -- Gathered LIVE from the battlefield on every entry and never captured, the
 -- posture every sibling carrier takes: a Grafdigger's Cage that left the
--- battlefield lifts its prohibition with nothing to unwind, and CR 613.11 lets it
+-- battlefield lifts its prohibition with nothing to unwind, and CR 611.3a lets it
 -- reach cards that were not in a graveyard when it began.
 --
 -- Open-half card data, classified rather than identified:

@@ -161,8 +161,9 @@ runGamePure :: (forall r. Prompt r -> r) -> GameState -> Game a -> (a, GameState
 runGamePure answer = runGameAskedPure (answer . Asked.prompt)
 
 -- One entry point from matchup to played game: the player list is DERIVED from it,
--- so a matchup player without a Player record is unrepresentable. CR 800.2: the
--- options are settled before the game begins, so they are an argument here.
+-- so a matchup player without a Player record is unrepresentable. CR 800.2 /
+-- 806.2: the options are settled before the game begins, so they are an
+-- argument here.
 -- Parun.Engine.Driver.match is the same, for an answerer that runs in a monad.
 runMatchPure :: (forall r. Prompt r -> r) -> GameSettings.GameSettings -> NonEmpty.NonEmpty (PlayerId, Deck.Deck) -> (Result, GameState)
 runMatchPure answer settings matchup =
@@ -296,7 +297,7 @@ untapAll actives = do
   --
   -- The GameEvent.BecameUntapped records ride inside CR 502.3's own
   -- simultaneity: one Event.simultaneously bracket, so a card watching an untap
-  -- sees the whole step as ONE event (CR 608.2f) rather than as one event per
+  -- sees the whole step as ONE event (CR 502.3) rather than as one event per
   -- permanent. Only the SURVIVORS are recorded, so rule 701.26b's guard gates the
   -- event as well as the write -- which is what CR 603.2e's "don't ... retrigger
   -- if it persists" asks of a permanent that was already upright.
@@ -366,7 +367,8 @@ determineUntap pid = do
   pure (untapping, held)
 
 -- CR 302.6: permanents the active player has controlled since their turn began
--- are no longer summoning sick, and the untap step is where that becomes true.
+-- are no longer summoning sick. Written in the untap step alone, so a skipped one
+-- (CR 500.11) writes nothing (gap #6241).
 -- The record names `pid`, so it answers CR 302.6 only for `pid`, and it iterates
 -- `Projection.controls`, so it settles for whoever CURRENTLY controls the
 -- permanent: Control Magic grants control indefinitely, so the creature can still
@@ -876,8 +878,8 @@ triggeredSince pending gs = maybe (GameState.nextEventGroup gs) (EventGroup.next
 -- demands, then CR 603.3d's targets. ModalSpec's "M4h trigger modal" proves a
 -- real choice is really asked. CR 603.3c/700.2b: if no mode is chosen, the
 -- ability is removed from the stack -- the trigger-only half of the rule, a SPELL
--- that can't choose a mode never being offered for casting (CR 601.2c). The guard
--- precedes the mode prompt.
+-- that can't choose a mode never being offered for casting (CR 700.2a). The
+-- guard precedes the mode prompt.
 placeBorne :: ObjectId.ObjectId -> PendingTrigger.PendingTrigger -> Game ()
 placeBorne srcId pending = do
   gs <- State.get
@@ -1012,12 +1014,13 @@ placeBorne srcId pending = do
       let slots = Target.announcedSlots controller srcId gs (Modal.modesTargetSlots chosenModes modal)
           sets = Target.legalSets StackObjectKind.TriggeredAbility Nothing (Just controller) False bound srcId slots gs
           -- CR 603.3d's "identical to the process ... listed in rules 601.2c-d",
-          -- and 601.2c's "all at once": an answer whose slots read each other is
-          -- judged WHOLE, exactly as a cast's is (Target.selectionLegal's third
-          -- conjunct) and a copy's re-target is (Resolve.chooseNewTargetsFor).
-          -- Itzquinth's victim slot excludes whatever its dealer slot names, and
-          -- the offer is the union over the dealer's candidates, so membership in
-          -- `sets` alone would admit one Dinosaur in both slots.
+          -- and 601.2c's single announcement: an answer whose slots read each
+          -- other is judged WHOLE, exactly as a cast's is
+          -- (Target.selectionLegal's third conjunct) and a copy's re-target is
+          -- (Resolve.chooseNewTargetsFor). Itzquinth's victim slot excludes
+          -- whatever its dealer slot names, and the offer is the union over the
+          -- dealer's candidates, so membership in `sets` alone would admit one
+          -- Dinosaur in both slots.
           --
           -- RE-ASKED rather than reversed. CR 603.3d imports rules 601.2c-d and
           -- stops there, so 601.2e's return-to-before-the-proposal is not the
@@ -1147,7 +1150,7 @@ orderFor gs pending team = do
 -- CR 603.3b: is every permutation of this batch the same game, so that the prompt
 -- is a question with one answer? The entries must be EQUAL -- one ability of one
 -- source, the discriminator Parun.Types.TriggerEntry carries -- but equality alone
--- is NOT enough, and that is the trap: CR 603.6a fires one trigger per entrant,
+-- is NOT enough, and that is the trap: CR 603.2c fires one trigger per entrant,
 -- so Aether Flash watching two creatures enter contributes two EQUAL entries
 -- whose bindings name different creatures, and CR 117.3b hands priority back
 -- between the two resolutions. So the ability must also be order-inert: nothing
@@ -1271,8 +1274,9 @@ settlePasses passes boards = do
   -- that has gone.
   orphaned <- Departure.exileOrphanedByEndedControl
   -- CR 702.145c/d/f/g, checked here for CR 704.3's reason and not because they are
-  -- state-based actions -- both rules say they are not. Before the SBA pass, since
-  -- turning a permanent over changes its power and toughness.
+  -- state-based actions -- CR 702.145c and CR 702.145f say they are not, and CR
+  -- 704.5 lists neither of the others. Before the SBA pass, since turning a
+  -- permanent over changes its power and toughness.
   dayNight <- Daytime.settle Event.recordTransformed
   -- CR 702.131b / 702.195a, checked here for CR 704.3's reason and not because
   -- they are state-based actions -- rule 704.5 lists neither. Before the SBA pass,
@@ -1714,7 +1718,7 @@ takeNextTurn gs = case GameState.extraTurns gs of
 -- every seat has departed. The fallback returns the state without beginning a
 -- turn, keeping the sweeps already applied. Written as an explicit bounded
 -- recursion rather than `cycle`/`head` so it is total; unreachable while the game
--- is running, a game with no survivors already having a Result (CR 104.2a).
+-- is running, a game with no survivors already having a Result (CR 104.4a).
 --
 -- CR 805.4: a seat whose player shares the turn the walk starts from has just
 -- taken it, so it is passed with no sweep -- that player's next turn is still to
@@ -1995,17 +1999,16 @@ skipWholePhase phase = do
 -- Shared by the cleanup step that normally runs it and by CR 500.11's skip of the
 -- whole ending phase, which is the road that removes that step: CR 611.2a states
 -- the duration as the TURN, and the turn is over whether or not its cleanup step
--- ran. CR 724.1d and CR 724.2d are the CR making that same call -- an ended turn
--- is routed THROUGH the cleanup step rather than past it, and an ended combat
--- phase expires its "until end of combat" effects though its last step is
--- skipped (Resolve's EndCombatPhase arm).
+-- ran. CR 724.2d is the nearer analogy: an ended combat phase expires its "until
+-- end of combat" effects though its last step is skipped (Resolve's EndCombatPhase
+-- arm). CR 724.1d skips nothing here, routing an ended turn THROUGH the cleanup step.
 --
--- Running only PART of it is what must not happen, whichever way CR 614.10a is
--- read. A 5/4 with 3 marked damage whose pump ends alone reverts to a 2/1 that
--- CR 704.5g then destroys -- a board neither "the phase never happened" nor "the
--- turn ended" produces, and CR 514.2's "simultaneously" is there to forbid it.
--- Parun.ExpirySpec's "CR 514.2 a pumped creature with damage marked on it neither
--- dies to its own shrinking nor keeps the pump" is what proves that.
+-- Run whole here by reading: CR 611.2a ends the durations with the turn, and CR
+-- 614.10a alone would leave the damage, so a 5/4 with 3 marked damage whose pump
+-- ended alone would revert to a 2/1 that CR 704.5g destroys. Only Synthetic Curfew
+-- Bell reaches this. Scenario
+-- cr-514-2-a-pumped-creature-with-damage-marked-on-it-neither-dies-to-its-own-shrinking
+-- pins the reading.
 --
 -- CR 514.1's discard to hand size is NOT here. It is the cleanup step's FIRST
 -- turn-based action, scheduled separately from this one, so CR 614.10a takes it
@@ -2015,8 +2018,8 @@ skipWholePhase phase = do
 -- action (CR 703.4q) at the end of a step that did not happen. The mana
 -- Mana.endManaRetention hands back is ordinary, so the next step or phase that
 -- does end takes it; no player receives priority in between, CR 502.4 giving the
--- untap step none. Parun.ExpirySpec's "CR 514.2 retained mana is not spendable
--- once the skipped turn is over" is what proves that.
+-- untap step none. Scenario
+-- cr-514-2-retained-mana-is-not-spendable-once-the-skipped-turn-is-over proves that.
 cleanupSecondAction :: Game ()
 cleanupSecondAction = do
   State.modify' Damage.removeAllDamage
@@ -2065,8 +2068,8 @@ skipStep phase = do
 -- action for a step-and-phase that end together, so on the ordinary road this
 -- runs it and runStepThatBegan runs it only for a step whose phase does not end.
 -- Emptying twice around Combat.clearCombat would not be idempotent --
--- Mana.emptyManaPools reads Parun.Engine.PlayerEffect.keepsUnspentMana, whose CR
--- 604.2 "as long as" gate is a live read of the board.
+-- Mana.emptyManaPools reads Parun.Engine.PlayerEffect.keepsUnspentMana, whose
+-- "as long as" gate (CR 611.3a) is a live read of the board.
 --
 -- Phase-generic rather than combat-shaped, deliberately: Turn.phaseEndingAt is
 -- CR 500.5's own grain and answers on every stepped phase -- Turn.lastStepOf

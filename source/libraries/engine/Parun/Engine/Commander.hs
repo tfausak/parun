@@ -1,7 +1,8 @@
 -- | CR 903, the Commander variant, as far as a commander in the command zone
 -- reaches it: CR 903.3's designation, CR 903.6's starting zone, CR 903.8's cost
--- increase, CR 903.9's replacement sending a commander back to the command zone
--- instead of anywhere else, and CR 903.10a's twenty-one-damage loss.
+-- increase, CR 903.9's return to the command zone (rule 903.9a's state-based
+-- action from a graveyard or exile, rule 903.9b's replacement from a hand or
+-- library), and CR 903.10a's twenty-one-damage loss.
 --
 -- A FORMAT and not a card, which is what makes this module the right home for
 -- all five. No card's printed text says "cast this from the command zone" or
@@ -470,8 +471,8 @@ canCastFromCommandZone :: PlayerId -> ObjectId -> GameState -> Bool
 canCastFromCommandZone pid oid gs =
   isCommander oid gs && fmap Object.owner (Game.lookupObject oid gs) == Just pid
 
--- | CR 903.8's "each previous time they cast IT from the command zone this
--- game", asked of one designation: CR 702.124d has a partner deck's other
+-- | CR 903.8's "each previous time the player casting it has cast IT from the
+-- command zone that game", asked of one designation: CR 702.124d has a partner deck's other
 -- commander ignore this one's casts.
 castCount :: PlayerId -> CardIdentity.CardIdentity -> GameState -> Natural
 castCount pid identity gs =

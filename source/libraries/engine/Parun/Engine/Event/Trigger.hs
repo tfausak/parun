@@ -280,7 +280,7 @@ movedOf event = case event of
   -- The Moved event `counter` records alongside this one is rule 701.6a's zone
   -- change; this one only says the move WAS a countering. The Discarded case.
   GameEvent.SpellCountered _ -> Nothing
-  -- And the sibling is not a zone change at all: CR 608.2n's ceasing ability
+  -- And the sibling is not a zone change at all: CR 701.6a's removed ability
   -- leaves no zone for a Moved event to name.
   GameEvent.AbilityCountered _ -> Nothing
   GameEvent.HalfUnlocked {} -> Nothing
@@ -527,7 +527,7 @@ looksBack condition = case condition of
   TriggerCondition.SelfBecomesPlotted -> False
   -- Not on CR 603.10a's list, and no zone change: a permanent acts where it
   -- stands -- CR 701.43c can only exert one ON the battlefield, CR 702.100b's
-  -- and CR 702.149a's counters go on a permanent there, and CR 730.2b keeps a
+  -- and CR 702.149a's counters go on a permanent there, and CR 730.2c keeps a
   -- mutated permanent the same object. An explore or connive moves cards, but
   -- its event says the keyword action COMPLETED, not that anything left a zone.
   -- Phasing out is CR 603.10b's own entry; phasing in is not on the list.
@@ -683,6 +683,8 @@ looksBack condition = case condition of
   TriggerCondition.Leaves t -> case LeavesTrigger.permanent t of
     LeavingPermanent.Bound _ -> False
     _ -> True
+  -- CR 603.10e names this one, and False is unobservable: CR 701.6a moves no
+  -- permanent, so no bearer leaves in the counter's own group.
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
   TriggerCondition.DamageToPlayerPrevented _ -> False
@@ -714,9 +716,10 @@ looksBack condition = case condition of
   -- CR 725.1's crowning names no zone change either -- it moves a DESIGNATION,
   -- not an object -- so none of CR 603.10a's four families reaches it.
   TriggerCondition.PlayerBecomesMonarch _ -> False
-  -- CR 603.10a's look-back is for a bearer that left; this condition's subject is a
-  -- permanent still on the battlefield, Event.sampleControl sampling nowhere else,
-  -- and its bearer is a CR 603.7 delayed entry the store keeps rather than the log.
+  -- CR 603.10d names this condition too, but its subject is a
+  -- permanent still on the battlefield, Event.sampleControl sampling nowhere
+  -- else, and its bearer is a CR 603.7 delayed entry the store keeps rather
+  -- than the log.
   TriggerCondition.LoseControlOfBound _ -> False
   -- CR 603.10d: the bearer stays, but under the controller it had before.
   TriggerCondition.LoseControlOfSelf -> True
@@ -1012,9 +1015,9 @@ counterOccurrences matches cond event = case cond of
   TriggerCondition.CausedBy narrowed -> counterOccurrences matches (CausedBy.condition narrowed) event
   _ -> Nothing
 
--- CR 603.6a: every event is checked against every permanent currently on the
--- battlefield, not only the object the event names -- a step trigger belongs to a
--- permanent with nothing to do with the event.
+-- CR 603.2 / 603.10: every event is checked against every permanent currently
+-- on the battlefield, not only the object the event names -- a step trigger
+-- belongs to a permanent with nothing to do with the event.
 --
 -- "Currently" is the word CR 603.10's first sentence corrects, and the battlefield
 -- reading here is per EVENT GROUP for that reason: each group's permanents, their
@@ -1100,14 +1103,15 @@ eventTriggers events gs =
       -- from its keywords. Derived from POST-LAYER counts, so Humility takes them
       -- away and a layer-6 grant adds them without special-casing. Shared by both
       -- candidate sources, so a live and a last-known permanent read alike.
-      -- CR 310.12b's Siege ability is minted the same way and for the same reason,
-      -- off the same finished projection: rule 310 gives it, no card prints it, and
-      -- the scan below never learns which rule produced any of these.
+      -- CR 310.12b's Siege ability is minted off the same finished projection, rule
+      -- 310 giving it and no card printing it, though Humility leaves it
+      -- (Battle.triggeredAbilitiesOf reads no removal) (gap #6242), and the scan
+      -- below never learns which rule produced any of these.
       --
-      -- Through Projection.mintedTriggeredAbilitiesOf rather than
-      -- Keyword.triggeredAbilitiesOf directly, so CR 612.2a's text change reaches
-      -- the words rule 702 writes -- the Spirit an afterlife trigger creates. Rule
-      -- 310.12b's Siege ability names no subtype word, so it needs no such wrapper.
+      -- Through Projection.mintedTriggeredAbilitiesOf, which applies no CR 612 text
+      -- change to the words rule 702 writes (docs/decisions.md, "What a text change
+      -- reaches inside a keyword"). Rule 310.12b's Siege ability is minted without
+      -- that function too.
       abilitiesOf pc = PC.triggeredAbilities pc <> Projection.mintedTriggeredAbilitiesOf pc <> Battle.triggeredAbilitiesOf pc
       -- CR 113.6m's "functions ONLY in that zone", asked of a permanent read AS
       -- BEING ON THE BATTLEFIELD: a Squee, Goblin Nabob standing there does not
@@ -1424,7 +1428,7 @@ eventTriggers events gs =
       -- incarnation when it leaves, so the two coincide on exactly the permanent
       -- this narrowing is about. `leftGraveyard`'s argument one zone over.
       --
-      -- CR 111.3's token and CR 400.11c's conjured card come through too:
+      -- CR 111.3's token and a conjured card, which no rule covers, come through too:
       -- recordMintedEntry writes from == to == Battlefield, which fails every
       -- departure test and passes this arrival one -- so a token created partway
       -- through a batch and buried by CR 704.5f before the boundary is withheld
@@ -2559,7 +2563,7 @@ selfNamingSlots condition =
 --
 -- The rule's "if the object is an Aura" is asked SEPARATELY, by the caller
 -- above: this reads the condition alone, and `zonesFunctionedIn` conjoins the
--- bearer's projected subtypes (CR 205.3) with it. CR 303.4m is why the split is
+-- bearer's projected subtypes (CR 205.3) with it. CR 301.5f is why the split is
 -- not a distinction without a difference -- an Equipment's "equipped creature"
 -- is the same attachment link and the same TriggerCondition, and the exception
 -- still does not reach it. Parun.ZoneTriggerSpec's Synthetic Widowed Blade pair
@@ -3020,7 +3024,7 @@ zonesTriggeredFrom cond =
 -- CR 603.8: state triggers. For every battlefield permanent, each StateIs ability
 -- it bears whose condition is currently TRUE and which has no instance of ITSELF
 -- already on the stack -- counted, so an object carrying the same state-triggered
--- ability twice arms both (CR 603.2 makes each of them an ability in its own
+-- ability twice arms both (CR 113.2c makes each of them an ability in its own
 -- right).
 --
 -- Armedness is DERIVED, never stored: CR 603.8's three outcomes are all "no longer
@@ -3070,16 +3074,16 @@ stateTriggersOn gs
     -- suppress independently -- one instance per source, not one for the whole
     -- board.
     --
-    -- A count rather than an "is there one?" because CR 603.2 makes each ability
-    -- its own ability: one object may carry two identical state-triggered
-    -- abilities, and CR 603.8 holds each back only until THAT ability's own
-    -- instance leaves the stack. Object.source cannot tell those two instances
-    -- apart -- they are equal values -- but it does not have to. Which of N
-    -- identical abilities a given instance came from is unobservable, so N live
-    -- copies minus K instances already on the stack is the exact answer: it
-    -- reproduces the single-ability behavior at N = 1, and lets one of a twin
-    -- pair re-arm while the other's instance still sits there
-    -- (TriggerSpec, "one instance leaving re-arms ITS ability").
+    -- A count rather than an "is there one?" because CR 113.2c makes each
+    -- instance function independently: one object may carry two identical
+    -- state-triggered abilities, and CR 603.8 holds each back only until THAT
+    -- ability's own instance leaves the stack. Object.source cannot tell those
+    -- two instances apart -- they are equal values -- but it does not have to.
+    -- Which of N identical abilities a given instance came from is
+    -- unobservable, so N live copies minus K instances already on the stack is
+    -- the exact answer: it reproduces the single-ability behavior at N = 1, and
+    -- lets one of a twin pair re-arm while the other's instance still sits
+    -- there (TriggerSpec, "one instance leaving re-arms ITS ability").
     instancesOnStack srcId ab =
       let isInstance sid = case fmap Object.source (Game.lookupObject sid gs) of
             -- The SOURCE and the ABILITY, rather than the whole record: CR
@@ -3181,7 +3185,8 @@ stateTriggersOn gs
             -- thereafter, so a state read would fire it again every time the
             -- board settles.
             TriggerCondition.SelfHalfUnlocked _ -> False
-            -- CR 708.7 is an EVENT trigger for the same reason: it fires on the
+            -- A turned-face-up trigger (CR 603.2) is an EVENT trigger for the same
+            -- reason: it fires on the
             -- permanent BEING turned face up, and CR 708.8 leaves it face up
             -- thereafter -- so a state read would fire it again every settle,
             -- for as long as the permanent stayed on the battlefield.
@@ -3319,8 +3324,9 @@ delayedArmed gs entry = case DelayedTrigger.window entry of
   -- in the turn that armed the ability, which is why the onset exists.
   TurnWindow.NextTurnOf _ -> False
   TurnWindow.OnExtraTurn _ -> False
-  -- EQUALITY, not a floor: CR 603.7a is a claim about ONE named turn, so the
-  -- window has an upper end and not merely a lower one.
+  -- EQUALITY, not a floor: the printed onset names ONE turn, and once that turn
+  -- is over its event is impossible (CR 603.7a), so the window has an upper end
+  -- and not merely a lower one.
   TurnWindow.OnTurn n -> n == GameState.turnNumber gs
 
 -- CR 603.12: is this delayed entry REFLEXIVE? The exception to delayedPending's
@@ -3843,7 +3849,7 @@ resnapshot gs without event =
          in if not (Map.member oid (GameState.objects gs)) || before == after
               then Just pc
               else if before == pc then Just after else Nothing
-      -- CR 604.2: a snapshot that carries its "as long as" clauses' answers is
+      -- CR 611.3a: a snapshot that carries its "as long as" clauses' answers is
       -- re-read with them, since `without` can flip a clause while leaving the
       -- characteristics, which hold each granted ability unasked, the same.
       sampled oid g =

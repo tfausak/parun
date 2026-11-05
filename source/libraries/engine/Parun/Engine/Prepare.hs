@@ -143,10 +143,10 @@ mintOnPhasedIn oid gs =
 -- taking the prepare face WHOLE, rather than folding the permanent's projection
 -- into it, already does.
 --
--- Its OWNER is the permanent's controller, whom the rule names as the creator; CR
--- 108.4 gives an object created outside a card's ownership no other candidate. Who
--- may CAST it is asked live off the permanent instead (Parun.Engine.Cast), because
--- CR 109.4 lets control change while the copy sits there.
+-- Its OWNER is the permanent's controller, whom the rule names as the creator; no
+-- rule states this copy's owner. Who may CAST it is asked live off the permanent
+-- instead (Parun.Engine.Cast), because CR 613.1b can move control while the copy
+-- sits there.
 --
 -- No zone-change event is recorded: the copy is CREATED in exile rather than moved
 -- there, so nothing was exiled and no "whenever a card is exiled" trigger has an

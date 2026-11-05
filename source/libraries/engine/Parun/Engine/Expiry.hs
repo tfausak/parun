@@ -104,7 +104,7 @@ import qualified Parun.Types.While as While
 -- something else still reads the choice its own pair made (CR 607.2d). Proved by
 -- data/scenarios/copy/cr-607-5-a-grudgekeeper-ability-still-times-its-window-by-the-chosen-player-after-mirrorweave.json.
 --
--- CR 611.2b's second sentence is vacuous here: this runs once, at the point the
+-- CR 611.2b's third sentence is vacuous here: this runs once, at the point the
 -- effect would be stored, and no opcode both ends and restarts a condition
 -- mid-resolution.
 arm :: ObjectId -> Map.Map SlotName (Set.Set Recipient) -> PlayerId -> ObjectId -> Duration -> GameState -> Maybe Expiry

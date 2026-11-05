@@ -19,8 +19,9 @@ data NextDamageInstance effect = MkNextDamageInstance
     -- Honorable Passage's "to any target" -- one CR 615.8 shield each.
     --
     -- Required, where the two shields beside this one make it optional: CR 615.8
-    -- describes an effect that watches ONE source, and every printing of it names
-    -- the protected recipient outright. A card describing its recipients by
+    -- describes an effect that watches ONE source, and every card in data/cards/ of
+    -- that shape names the protected recipient outright (Pilgrim of Justice names
+    -- none). A card describing its recipients by
     -- characteristic instead would want Parun.Types.PreventNextDamage's
     -- @whatRecipient@ and @whoRecipient@ pair here too.
     ref :: ObjectRef.ObjectRef,

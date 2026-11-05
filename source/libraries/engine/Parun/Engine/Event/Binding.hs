@@ -207,8 +207,9 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
         player = if players then Recipient.playerOf target else Nothing
         permanent = if permanents then Recipient.objectOf target else Nothing
      in maybe id Binding.setTriggerPlayer player (maybe id Binding.setBecame permanent (Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)))
-  -- CR 603.2's "that many" and CR 400.7e's "that creature": how many counters
-  -- moved, read off the event's own before/after pair, and on what. Chandra,
+  -- CR 603.2's "that many" and the "that creature" Binding.became holds, no zone
+  -- change: how many counters moved, read off the event's own before/after pair,
+  -- and on what. Chandra,
   -- Fire Artisan's "she deals that much damage" counts the loyalty that came off,
   -- not the damage that caused it (CR 306.8's removal saturates), and one CR
   -- 510.2 batch is one record. Auntie Ool, Cursewretch reads the creature.
@@ -276,8 +277,8 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
     | bindsArrival t -> Binding.setBecame (ZoneChange.object zc) Map.empty
   -- CR 603.6a: entersSlots' slots, off the entry matched.
   (TriggerCondition.Enters t, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)) -> entersBindings gs t zc
-  -- CR 708.7's "that creature": the permanent that was turned face up, which Pine
-  -- Walker untaps. The bearer is a bystander here -- CR 113.7a's source slot names
+  -- Pine Walker's "that creature" (CR 603.2): the permanent that was turned face
+  -- up, which it untaps. The bearer is a bystander here -- CR 113.7a's source slot names
   -- the WATCHER, and on Pine Walker's own board the two are different permanents --
   -- so the subject needs a name of its own.
   --
@@ -713,11 +714,12 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
           Just arrived -> Binding.setBecame arrived Map.empty
      in Binding.setDepartedPermanent (PermanentWasSacrificed.permanent ev) $
           Binding.setTriggerPlayer (PermanentWasSacrificed.player ev) arrival
-  -- CR 603.3b's "that Saga" and "that player": GameEvent.AbilityTriggered names
-  -- the object the chapter ability hangs on (CR 113.7) and the player who
-  -- controls it (CR 603.3a), and the watcher is neither of them.
-  -- data/cards/synthetic-chronicle-warden.json reads both, and its Opponent
-  -- relation is what makes the seat something CR 109.5's "you" is not.
+  -- CR 603.3b's second class, read for that Saga and that player:
+  -- GameEvent.AbilityTriggered names the object the chapter ability hangs on
+  -- (CR 113.7) and the player who controls it (CR 603.3a), and the watcher is
+  -- neither of them. data/cards/synthetic-chronicle-warden.json reads both, and
+  -- its Opponent relation is what makes the seat something CR 109.5's "you" is
+  -- not.
   --
   -- The Saga under CR 400.7e's slot rather than one of its own, which is
   -- PermanentTurnedFaceUp's case above and settled there: one permanent, one id,
@@ -739,7 +741,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- player". The same reserved slot CR 615.13's prevention and CR 119.9's life
   -- gain stamp (see Binding.eventAmount), and the same reading -- the AMOUNT the
   -- event recorded, never the damager's power or the bearer's: CR 702.19b lets a
-  -- trampler split its power across a blocker and a player, and CR 120.3 admits
+  -- trampler split its power across a blocker and a player, and CR 120.2b admits
   -- noncombat damage whose amount its source's power never named at all.
   --
   -- ONE event's amount, which batchBindings sums under Batching.OneOrMore: two
@@ -749,7 +751,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   --
   -- Unconditional given a match, which is what eventBindingSlots' per-condition
   -- promise needs: every GameEvent.DamageDealt carries a DamageEvent.amount,
-  -- whichever of CR 120.3's damage kinds it is.
+  -- whichever of CR 120.2's damage kinds it is.
   --
   -- Under Batching.EachOccurrence the DAMAGER takes Binding.combatDamager
   -- beside it, which is CR 120.1's "an object that deals damage is the source
@@ -1371,7 +1373,7 @@ eventBindingSlots cond = case cond of
   -- CR 120.3's amount for enrage, which Coalhauler Swine's "it deals that much
   -- damage to each player" reads: the same slot CR 615.13's prevention and CR
   -- 119.9's life gain stamp, and guaranteed given a match -- every DamageDealt
-  -- event carries an amount, whichever of CR 120.3's two damage kinds this
+  -- event carries an amount, whichever of CR 120.2's two damage kinds this
   -- condition admitted.
   --
   -- Plus, per source, CR 120.1's source, which Belltower Sphinx's "that
@@ -1437,8 +1439,9 @@ eventBindingSlots cond = case cond of
   -- "exile it instead" is the one that must bind `became` here.
   TriggerCondition.SpellOrAbilityCounters _ -> Set.empty
   -- Empty by the RULE rather than by decision, one step further than the arm
-  -- above: CR 608.2n leaves a countered ability no card and no zone, so there is
-  -- no `became` for CR 400.7e to withhold or grant. The countered ability's CR
+  -- above: CR 701.6a removes a countered ability from the stack and CR 405.1
+  -- gives it no card, so there is no `became` for CR 400.7e to withhold or grant.
+  -- The countered ability's CR
   -- 113.7 source permanent is a slot that could be bound, and nothing reads it:
   -- the printings that want it -- Green Slime, Teferi's Response, Trickbind --
   -- take it off their own resolution's Counter slot, not off a trigger.

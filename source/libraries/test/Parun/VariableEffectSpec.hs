@@ -1024,7 +1024,7 @@ sweptCountersSpec s registry =
 -- decides. Two cards, one for each of the two moments a cost is paid:
 --
 --   * Dawnhand Dissident {B} 1/2 Creature -- Elf Warlock
---     (data/cards/dawnhand-dissident.json): "{T}, Blight 1: Surveil 1." CR 602.1b
+--     (data/cards/dawnhand-dissident.json): "{T}, Blight 1: Surveil 1." CR 602.1a
 --     and CR 601.2h -- paid as the ability is ACTIVATED, which is what the first
 --     case reads off a board whose stack has not resolved yet. Its third
 --     ability is Parun.CastPermissionSpec's DawnhandDissident group.

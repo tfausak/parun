@@ -24,7 +24,7 @@ data VoteChoices
     -- amount under the slot of that name, and the clause connected to it reads
     -- the tally as Parun.Types.Quantity's InSlot.
     --
-    -- That spelling is what makes CR 701.38a's tie-break ordinary arithmetic
+    -- That spelling is what makes a printed tie-break ordinary arithmetic
     -- rather than an outcome of its own: Plea for Power's "if knowledge gets
     -- more votes or the vote is tied" is one Condition comparing the two tallies,
     -- and no card has to name a tie.

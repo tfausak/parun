@@ -46,8 +46,9 @@ waivers candidates gs =
             && not (removed source)
             then concatMap (fromPermission source (Projection.readerTextChanges source gs)) permissions
             else []
-      -- CR 604.2's "as long as", BlockPermission's `granted`: asked once per
-      -- permission, against the source, since CR 109.5 fixes the "you" inside it.
+      -- The "as long as" (CR 611.3a), BlockPermission's `granted`: asked once
+      -- per permission, against the source, since CR 109.5 fixes the "you"
+      -- inside it.
       granted source changes permission = case AttackPermission.while permission of
         Nothing -> True
         Just condition ->

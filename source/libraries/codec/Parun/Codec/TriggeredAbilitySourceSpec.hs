@@ -44,7 +44,7 @@ ability =
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.TriggeredAbilitySource" $ do
   -- CR 603.3: the source permanent's id travels with the ability, which is why
-  -- the ability resolves after the source has left (CR 603.3d). The key is
+  -- the ability resolves after the source has left (CR 113.7a). The key is
   -- `source`, and Parun.Codec.InherentTriggerSource's is `controller`: the two
   -- records carry the same ability under different first fields.
   Spec.it s "a triggered ability and the id of what it came from" $

@@ -16,7 +16,7 @@ data RowSource = MkRowSource
     object :: Maybe ObjectId.ObjectId,
     -- | CR 608.2h: a stored row's choices, baked as it began
     -- (Parun.Types.ActivePlayerEffect.choices). Nothing for a printed row,
-    -- whose choices CR 604.2 reads off the permanent live.
+    -- whose choices CR 611.3a reads off the permanent live.
     choices :: Maybe SourceChoices.SourceChoices,
     -- | CR 607.5: the name of the ability a stored row came from
     -- (Parun.Types.ActivePlayerEffect.ability), which pairs its references to

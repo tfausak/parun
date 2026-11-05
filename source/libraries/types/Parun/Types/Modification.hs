@@ -153,7 +153,8 @@ data Modification ability
     -- 702.165c together: a permanent that entered as a COPY of a card with
     -- backup grants what it copied, and an ability a layer-6 effect afterwards
     -- gave the creature with backup is not granted. Parun.KeywordTriggerSpec's Backup group
-    -- proves the first half.
+    -- proves the first half. Not implemented: leaving out a copy exception's abilities
+    -- (#6253).
     GainAbilitiesOfSource (Set.Set Keyword.Keyword)
   | -- | layer 6, CR 613.1f: this object has each activated ability of each
     -- card the payload names, in exile (Locus of Enlightenment, Mairsil, the
@@ -376,7 +377,7 @@ data Modification ability
     -- have two timestamps to order.
     --
     -- Layer 3 and not layer 1: CR 612.5 replaces the RULES TEXT alone, where a
-    -- copy effect (CR 706/707) would take the name, types and P/T with it. So a
+    -- copy effect (CR 707) would take the name, types and P/T with it. So a
     -- 5/5 Dragon given a 1/1 Bird's text box stays a 5/5 Dragon, and CR 707.2
     -- leaves the copiable values untouched, so a Clone of either creature copies
     -- the PRINTED text.
@@ -399,7 +400,7 @@ data Modification ability
     -- authors it.
     InsertNameWords NameInsertion.NameInsertion
   | -- | layer 2, CR 613.1b: set this object's controller. The PlayerId is BAKED at
-    -- effect creation (CR 611.2c) by Resolve.applyEffect, never chosen: the
+    -- effect creation (CR 608.2h) by Resolve.applyEffect, never chosen: the
     -- effect's source's controller for GainControl, the OTHER permanent's
     -- controller for CR 701.12b's ExchangeControl. Applied only by
     -- Projection.controllerOf.
@@ -412,7 +413,7 @@ data Modification ability
   | -- | layer 2, CR 613.1b: this object's controller becomes the controller of
     -- THIS effect's SOURCE (Control Magic). Payload-free because the player is
     -- DERIVED at projection time, the contrast with SetController above, whose
-    -- PlayerId CR 611.2c fixes at resolution. A static ability's modification is
+    -- PlayerId CR 608.2h fixes at resolution. A static ability's modification is
     -- CARD DATA and cannot name a PlayerId, so this is the only shape in which a
     -- printed card can grant control.
     --

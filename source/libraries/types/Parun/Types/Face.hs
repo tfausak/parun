@@ -207,12 +207,12 @@ data Face card = MkFace
     -- 113.6 leaves each functioning in -- the battlefield unless the row states
     -- otherwise (PrintedReplacement.functionsFrom). A battlefield row is read
     -- through Parun.Engine.Projection.replacementsOf (never directly) so layer 6
-    -- LoseAllAbilities strips them uniformly, and so CR 604.2's "as long as"
-    -- clause on each is asked against the board of the moment -- the live one,
-    -- less whatever an entry loop has materialized but not entered
-    -- (Parun.Engine.Projection.boardAsEntering). A row functioning from one of the
-    -- four other zones is read off this list directly, as every off-battlefield
-    -- ability walk in that module reads a printed face.
+    -- LoseAllAbilities strips them uniformly, and so the "as long as"
+    -- clause on each (CR 611.3a) is asked against the board of the moment --
+    -- the live one, less whatever an entry loop has materialized but not
+    -- entered (Parun.Engine.Projection.boardAsEntering). A row functioning from
+    -- one of the four other zones is read off this list directly, as every
+    -- off-battlefield ability walk in that module reads a printed face.
     replacementEffects :: [PrintedReplacement.PrintedReplacement card (GrantedAbility.GrantedAbility card) (Effect.Effect card (GrantedAbility.GrantedAbility card))],
     -- | CR 603: this face's triggered abilities, read through
     -- Parun.Engine.Projection.triggeredAbilitiesOf.
@@ -227,7 +227,7 @@ data Face card = MkFace
     --
     -- Read through the projection's copiable values (PC.delayedAbilities), so a
     -- copy arms the text it copied (CR 707.2) -- but never stripped by layer
-    -- 6: a delayed ability is not ON the source object (CR 603.7d).
+    -- 6: a delayed ability is not ON the source object (CR 603.7, 603.2d).
     delayedAbilities :: Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility card (GrantedAbility.GrantedAbility card)),
     -- | CR 309.4: this face's rooms, topmost first -- the room graph of a dungeon
     -- card, and empty for every card that is not a dungeon. The CardSpec lint
@@ -447,7 +447,7 @@ data Face card = MkFace
     -- none once a layer-6 wipe is in force on the card where it lies (CR
     -- 613.1f).
     --
-    -- CONDITIONED only where the card states a condition (CR 604.2), which is
+    -- CONDITIONED only where the card states a condition (CR 611.3a), which is
     -- Parun.Types.AlternativeCost's own field. Rule 702.34a's flashback cost is
     -- still deliberately NOT one of these: its gate is a ZONE rather than a
     -- condition over game state, so it rides its keyword and
@@ -593,7 +593,7 @@ data Face card = MkFace
     -- counters" is scoped to a player and reaches a disjoint kind domain, so it
     -- is a playerAbilities row carrying PlayerEffect.CantGetCounters.
     counterRestrictions :: [CounterRestriction.CounterRestriction],
-    -- | CR 604.1\/604.2 \/ 602.2 \/ 101.2: this face's printed ACTIVATION
+    -- | CR 604.1\/604.2 \/ 602.5 \/ 101.2: this face's printed ACTIVATION
     -- PROHIBITIONS -- "its activated abilities can't be activated" (Arrest);
     -- read by Parun.Engine.ActivationProhibition, rewritten by no layer, for
     -- blockRequirements' CR 613.11 reason.
@@ -601,7 +601,7 @@ data Face card = MkFace
     -- Its own field rather than an arm of counterRestrictions above, for the
     -- reason that field gives: the two forbid unrelated game actions, and this
     -- one is read at the two windows an activated ability is offered through
-    -- (CR 602.2 and CR 605.3a).
+    -- (CR 117.1b and CR 605.3a).
     --
     -- The PLAYER half of the same sentence is not here. Sen Triplets' "your
     -- opponents can't ... activate abilities" is scoped to a player, so it is a

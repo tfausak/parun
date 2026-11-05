@@ -174,7 +174,7 @@ instances able candidates attackers gs =
                 -- blocking either.
                 RequirementArity.AnySubject -> ([], fmap (Set.fromList . blockersOf) wanted)
       -- CR 509.1c's second shape -- "or that it must block if some condition is
-      -- met" -- read as CR 604.2's "as long as" clause and asked exactly as
+      -- met" -- read as an "as long as" clause (CR 611.3a) and asked exactly as
       -- AttackRequirement.instances and BlockPermission.instances ask their own
       -- `while`: a gate that does not hold mints nothing. The opposite polarity
       -- to CombatRestriction.inForce's "unless", where a gate that holds lifts

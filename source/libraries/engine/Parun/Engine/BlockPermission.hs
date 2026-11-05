@@ -61,10 +61,11 @@ additionalBlocks candidates gs =
       -- 109.5's "you" and Filter.IsSource both mean the permanent printing the
       -- sentence, so both ask through the same Context.
       contextOf source = Projection.sourceContext gs (Projection.controllerOf source gs) source
-      -- CR 604.2's "as long as", read exactly as CombatRestriction.inForce reads
-      -- its "unless" and with the opposite polarity: a permission whose gate does
-      -- NOT hold grants nothing. Asked once per permission and not per candidate,
-      -- because CR 109.5 fixes the "you" inside it as the SOURCE's controller.
+      -- The "as long as" (CR 611.3a), read exactly as CombatRestriction.inForce
+      -- reads its "unless" and with the opposite polarity: a permission whose
+      -- gate does NOT hold grants nothing. Asked once per permission and not
+      -- per candidate, because CR 109.5 fixes the "you" inside it as the
+      -- SOURCE's controller.
       granted source changes permission = case BlockPermission.while permission of
         Nothing -> True
         Just condition ->

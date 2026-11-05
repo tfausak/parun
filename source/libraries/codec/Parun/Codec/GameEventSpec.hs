@@ -541,7 +541,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       GameEvent.codec
       (GameEvent.LostTheGame (PlayerId.MkPlayerId 2))
       " {\"type\":\"LostTheGame\",\"value\":2} "
-  -- CR 701.17a. Two cards in one entry, that rule milling them at once.
+  -- CR 701.17a. Two cards in one entry, milled at once (Contaminated Drink's ruling).
   Spec.it s "Milled" $
     Common.assertCodec
       s

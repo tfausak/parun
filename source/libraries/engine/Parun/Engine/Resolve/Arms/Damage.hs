@@ -165,7 +165,9 @@ dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source
           -- "each creature without flying and each player" -- reaches
           -- applyDamage as a single CR 608.2f batch rather than one per clause.
           --
-          -- And one EVENT per recipient within that batch (CR 120.4), which is
+          -- And one EVENT per recipient within that batch (docs/decisions.md,
+          -- "Whether one instruction naming a recipient twice deals one damage
+          -- event"), which is
           -- Replacement.oneEventPerRecipient's business: two clauses can name the
           -- same recipient -- Char aimed at its own caster -- and one source
           -- dealing damage to one recipient at one moment deals one event.
@@ -211,7 +213,7 @@ dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source
   Monad.forM_ mExcessTally $ \slot -> State.modify' (Common.bindAmountSlot resolving source slot excessDealt)
   -- Incinerate's "a creature dealt damage this way" and Chandra, Roaring
   -- Flame's "each player dealt damage this way": the recipients the settled
-  -- events reached (CR 120.3), so one whose damage was all prevented (CR
+  -- events reached (CR 120.4b), so one whose damage was all prevented (CR
   -- 615.6) is not among them. The objects bound onto `resolving` as a group,
   -- Destroy's `permanents` shape, and the players beside them as recipients,
   -- PlayerRef.EachInSlot's read; nothing is bound when nothing was damaged.
@@ -1413,8 +1415,8 @@ rerollStoredResults throwDice runSubgame resolving source controller legal slot 
 -- documents does not arise there. A triggered ability that flipped would land
 -- on that arm's reasoning instead, which says either holder answers.
 --
--- ONE INSTRUCTION, however many coins (CR 705.1, CR 705.2): neither rule scopes
--- itself to a single coin, and Flock of Rabid Sheep's "flip X coins" is one
+-- ONE INSTRUCTION, however many coins: CR 705.1 and CR 705.2 speak only of one
+-- coin's flip, and Flock of Rabid Sheep's "flip X coins" is one
 -- instruction. The slot binds a TALLY over them -- how many flips the flipper
 -- won, or how many coins came up heads, per Parun.Types.CoinReading -- which on
 -- the one-coin instruction Winter Sky prints is the 1 or 0 it always was.
@@ -1502,8 +1504,7 @@ flipCoinArm throwForCoin runSubgame resolving source controller legal flipCoin =
             (face, _) <- Event.flipOneCoin (Just (throwForCoin runSubgame)) (Just flipper) Nothing statements
             pure (face == Just CoinFace.Heads)
         pure (if hit then acc + 1 else acc)
-  -- Bound AFTER every coin, since CR 705.2 asks how many of the flips matched
-  -- and one instruction's flips are all of them.
+  -- Bound AFTER every coin, since the slot tallies all of one instruction's flips.
   tally <- sum <$> traverse flipsOf flippers
   State.modify' (Common.bindAmountSlot resolving source (FlipCoin.slot flipCoin) tally)
   -- The flips that did NOT match, off the same coins. WHICH sentence of CR
@@ -1676,7 +1677,7 @@ turnFaceDown resolving source controller legal (TurnFaceDown.MkTurnFaceDown ref 
   -- CR 708.2: ONE assignment to Object.facing per victim is the whole effect.
   -- What each permanent becomes is the list the effect carries (CR 708.2a's
   -- 2/2 when it lists nothing); the rule calls those copiable values, so this
-  -- is a copiable swap rather than a CR 613 layer, performed by Game.faceOf.
+  -- is CR 613.2b's layer 1b, a copiable swap performed by Game.faceOf.
   -- FaceDownReason.TurnedFaceDown is CR 708.6's other half: it closes CR
   -- 701.40b's turn-face-up procedure and leaves CR 702.37e's open. No CR 400.7
   -- incarnation is minted, so the object id, marked damage, counters,
@@ -1768,7 +1769,8 @@ becomesBlocked legal slot =
       _ -> gs
 
 -- CR 509.3b's third producer, through Combat.switchBlockers, which owns the
--- whole reassignment: CR 509.1b's hypothetical legality test, CR 509.1h's
+-- whole reassignment: General Jarkeld's hypothetical legality test over CR
+-- 509.1b's restrictions, CR 509.1h's
 -- keeping of the departed attacker's blocked status, and the events.
 -- Unprompted and undirected -- General Jarkeld's sentence names every creature
 -- that moves and which attacker it moves to, leaving nothing to ask.

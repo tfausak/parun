@@ -17,8 +17,8 @@
 -- FOUR PROCEDURES, because CR 708.7's permission belongs to whatever allowed
 -- the permanent to be face down and four rules write one: CR 702.37e's, at the
 -- morph cost; CR 702.168d's, at the disguise cost; CR 701.40b's, at the card's
--- mana cost; and CR 701.58b's, at the card's mana cost too. CR 701.40c and CR
--- 701.58d are the cases where two are open at once, and the engine offers both
+-- mana cost; and CR 701.58b's, at the card's mana cost too. CR 701.40c-d and CR
+-- 701.58c-d are the cases where two are open at once, and the engine offers both
 -- rather than picking.
 --
 -- A FURTHER ROAD UP that is not a procedure at all: an Effect.TurnFaceUp
@@ -112,7 +112,7 @@ faceUpKeywords oid gs =
 --
 -- Both guards are about "the CARD representing that permanent", so they read
 -- Event.representingCardOf and never the permanent, which CR 708.2a has left
--- with no card type and no mana cost at all.
+-- a 2/2 creature with no mana cost, whatever the card is.
 creatureCardCostOf :: ObjectId -> GameState -> Maybe (Cost Keyword)
 creatureCardCostOf oid gs = do
   (face, types) <- Event.representingCardOf oid gs
@@ -175,7 +175,7 @@ canTurnFaceUp pid procedure oid gs =
         -- DISGUISE ABILITY", rule 702.37e's shape exactly, so this one asks about
         -- the card and not about the allower either. A permanent cloaked or
         -- manifested off a disguise card is turnable this way, which is CR
-        -- 701.58d in as many words.
+        -- 701.40d and CR 701.58d in as many words.
         TurnUpProcedure.Disguise -> True
         TurnUpProcedure.Manifest ->
           fmap (Facing.reasonOf . Object.facing) (Game.lookupObject oid gs)
@@ -202,7 +202,7 @@ payable pid oid gs cost = Cost.actionPayableAt (PaymentSubject.TurningFaceUp oid
 -- order -- what Action.TurnFaceUp is built from.
 --
 -- ONE ENTRY PER PROCEDURE, so a manifested morph card appears twice. That is CR
--- 701.40c (and CR 701.58d for disguise) in the shape Parun.Engine.Room.unlockable
+-- 701.40c-d (and CR 701.58c-d for cloak) in the shape Parun.Engine.Room.unlockable
 -- takes for CR 709.5e's doors:
 -- "its controller MAY turn that card face up using EITHER ... OR", two prices,
 -- and offering both as legal actions is how the engine declines to choose
@@ -232,8 +232,8 @@ turnableFaceUp pid gs =
 -- that correct rather than merely tidy -- the cost is paid BEFORE the permanent
 -- turns over, so a failed payment has turned nothing over to undo.
 --
--- The UNPAID branch is quiet, and for a reason of its own: CR 702.37e's
--- reject-not-repair restores the state the attempt began with, log and all, and
+-- The UNPAID branch is quiet, and for a reason of its own: CR 733.1's
+-- reversal restores the state the attempt began with, log and all, and
 -- CR 708.2 leaves the still-face-down permanent with no ability watching a
 -- payment anyway -- disguise's listed ward (CR 702.168b) watches CR 702.21a's
 -- targeting and nothing else.

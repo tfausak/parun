@@ -385,9 +385,9 @@ stillAttackedBattle oid gs =
 -- where CR 506.4e does not: a Siege that is a planeswalker, attacked as one,
 -- stays attacked on losing the battle type though its protector does not control
 -- it, and leaves combat on losing the planeswalker type if its protector is no
--- defending player. A regression fence too: no card makes a Siege a planeswalker
--- (Scryfall t:battle t:planeswalker finds only Invasion of New Phyrexia, whose
--- planeswalker is its back face, 2026-09-29).
+-- defending player. It takes a Siege made a planeswalker (Planeswalkerificate, with
+-- Mycosynth Lattice and March of the Machines; the Aura and the Lattice are not in
+-- the pool), at three seats or Two-Headed Giant (gap #6244).
 --
 -- Parun.PlaneswalkerCombatSpec's PlaneswalkerBattleInCombat proves the other
 -- disjuncts.
@@ -2084,7 +2084,8 @@ announceAttackTarget pid oid options =
 
 -- CR 508.1: the active player chooses which creatures attack (CR 508.1a), the
 -- declaration is judged against CR 508.1c's restrictions and CR 508.1d's
--- requirements, and then they become tapped and attacking (CR 508.1f). The steps
+-- requirements, and then they become tapped (CR 508.1f) and attacking (CR
+-- 508.1k). The steps
 -- run here are CR 508.1a-d and 508.1f-k, in the rule's own order, plus the event
 -- CR 508.1m's triggers watch.
 --
@@ -2366,8 +2367,9 @@ attemptAttackDeclaration perform pid asked forced rejected = do
         -- seat's untap step and CR 701.43b expires. NOT Effect.DoesNotUntapNext,
         -- which is a resolving effect; exerting is a cost payment. The PLAYER is
         -- recorded because rule 701.43a names one. The step sits after `before`, so
-        -- CR 508.1's preamble undoes an exert along with the declaration, and
-        -- nothing is added to CR 508.1h's total -- exert's cost is not mana.
+        -- CR 508.1's preamble undoes an exert along with the declaration. Paid
+        -- here, at the choice, rather than joining CR 508.1h's total at CR 508.1j,
+        -- which only the corner of a CR 508.1i sacrifice can observe (gap #6247).
         --
         Monad.forM_ attacking $ \oid -> do
           gsExert <- State.get
@@ -2404,12 +2406,13 @@ attemptAttackDeclaration perform pid asked forced rejected = do
         --
         -- The tap is Event.tap, Cost.tapObject's route, so a card watching for a
         -- creature becoming tapped (CR 701.26a) sees it. Inside `before`'s span,
-        -- so CR 508.1's preamble undoes an enlist along with the declaration, and
-        -- nothing joins CR 508.1h's total -- enlist's cost is not mana.
+        -- so CR 508.1's preamble undoes an enlist along with the declaration. Paid
+        -- here, at the choice, rather than joining CR 508.1h's total at CR 508.1j,
+        -- which only the corner of a CR 508.1i sacrifice can observe (gap #6247).
         --
         -- CR 702.154b's linked triggered ability is armed HERE and only where the
-        -- tap happened, which is CR 603.12's reflexive form: the entry's
-        -- existence is that rule's affirmative answer, and it fires at the next
+        -- tap happened (CR 607.2h): the entry's
+        -- existence is the affirmative answer, and it fires at the next
         -- gather (CR 603.3). Binding.tappedPermanent carries "the tapped
         -- creature" into it (CR 603.7c).
         Monad.forM_ attacking $ \oid -> do
@@ -2666,7 +2669,8 @@ putOntoBattlefieldAttacking choice oid = do
       -- CR 508.4 candidates above rather than the board: a planeswalker no
       -- defending player controls is not among them to begin with, and a battle
       -- that seat protects is not "a planeswalker they control". An empty
-      -- narrowing is CR 508.4a's no-op below, the creature entering unattacking.
+      -- narrowing takes CR 508.4a's no-op below, by analogy, the creature entering
+      -- unattacking.
       narrowed = case choice of
         Any -> targets
         Specified _ -> targets
@@ -2768,8 +2772,8 @@ data BlockChoice
 --     at all, and that producer is what keeps rule 509.3b off it;
 --   * no CR 509.1b restriction and no CR 509.1c requirement is checked, and
 --     canBlock is never asked, per CR 509.4b in as many words -- so a Saproling
---     put onto the battlefield blocking a flier really does block it (CR
---     702.9b);
+--     put onto the battlefield blocking a flier really does block it,
+--     CR 702.9b's restriction being one of those;
 --   * nothing is tapped and nothing is required to be untapped, CR 509.1a's
 --     condition belonging to the declaration CR 509.4b exempts this creature
 --     from.

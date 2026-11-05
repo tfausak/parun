@@ -46,8 +46,8 @@ data CopyStackObject ability = MkCopyStackObject
     -- producer in data\/cards names exactly one, and the elided default names the
     -- resolving controller alone.
     --
-    -- The copy's controller is also CR 707.10c's chooser ("that player ... may
-    -- choose new targets for that copy"), which is the half a board can see:
+    -- The copy's controller is also CR 707.10c's chooser (Meletis Charlatan's "That
+    -- player may choose new targets for the copy"), which is the half a board can see:
     -- Parun.CopySpec's "CR 707.10 the Charlatan's copy is bob's, and bob chooses
     -- its new target" proves it.
     copier :: PlayerRef.PlayerRef,
@@ -61,7 +61,7 @@ data CopyStackObject ability = MkCopyStackObject
     --
     -- A copy of an ABILITY takes none of them, and that is not an omission:
     -- every arm of CopyException writes a characteristic, and an ability on the
-    -- stack has no card behind it to write one onto (CR 113.7a) -- which is why
+    -- stack has no card behind it to write one onto (CR 405.1) -- which is why
     -- the executor stamps an ability copy no snapshot at all either.
     exceptions :: [CopyException.CopyException ability]
   }

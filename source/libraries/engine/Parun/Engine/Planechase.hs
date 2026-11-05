@@ -190,9 +190,8 @@ spentPhenomena waiting gs =
    in filter (\oid -> not (onStack oid) && not (pending oid)) phenomena
 
 -- CR 701.31b's second half: move the top card off the planar deck and turn it
--- face up, which is joining GameState.command. A fresh timestamp, since its
--- static abilities' effects begin now (CR 613.7a); CR 613.7f states the same of
--- a permanent turned face up.
+-- face up, which is joining GameState.command. A fresh timestamp (CR
+-- 613.7h), which its static abilities' effects share (CR 613.7a).
 turnUpTop :: PlayerId -> Game (Maybe ObjectId)
 turnUpTop pid = do
   gs <- State.get

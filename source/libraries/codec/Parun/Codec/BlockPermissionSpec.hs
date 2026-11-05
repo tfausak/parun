@@ -22,7 +22,7 @@ import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.BlockPermission" $ do
-  -- Echo Circlet's shape (CR 303.4m): the equipped creature is the one that may
+  -- Echo Circlet's shape (CR 301.5f): the equipped creature is the one that may
   -- block one creature more than CR 509.1a allows.
   Spec.it s "MkBlockPermission" $
     Common.assertCodec
@@ -38,7 +38,7 @@ spec s = Spec.describe s "Parun.Codec.BlockPermission" $ do
       BlockPermission.codec
       (BlockPermission.MkBlockPermission (Affected.Matching Filter.IsSource) Nothing Nothing)
       " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"additional\":null} "
-  -- Entourage of Trest's: CR 604.2's "as long as you're the monarch" (CR 725.1).
+  -- Entourage of Trest's: "as long as you're the monarch" (CR 611.3a, 725.1).
   Spec.it s "a gated permission" $
     Common.assertCodec
       s

@@ -32,7 +32,7 @@ codec cardCodec abilityCodec = Fields.object $ do
   definedX <- Fields.defaulted "definedX" Nothing (Common.maybe Quantity.codec) ActivatedAbility.definedX
   modal <- Fields.required "modal" (Modal.codec cardCodec abilityCodec) ActivatedAbility.modal
   -- CR 602.5: emitted only for a restricted ability, so the absence of the key
-  -- is CR 602.2's default -- no "activate only ..." rider at all.
+  -- is CR 117.1b's default -- no "activate only ..." rider at all.
   restrictions <- Fields.defaulted "restrictions" [] (Common.list ActivationRestriction.codec) ActivatedAbility.restrictions
   -- CR 602.1b: emitted only for an ability that names its activators, so the
   -- absence of the key is CR 602.2's default -- the controller alone.

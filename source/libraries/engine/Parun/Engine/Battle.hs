@@ -328,10 +328,9 @@ siegeDefeat =
 --
 -- Off the PROJECTION rather than off the printed type line, so a permanent that
 -- became a Siege has the ability and a Siege that stopped being one does not (CR
--- 613.1d, CR 613.1f). That differs from CR 310.4b's intrinsic replacement, which
--- Projection mints after the layer fold and so puts out of LoseAllAbilities' reach:
--- rule 310.4b hangs off the CARD TYPE, where 310.12b hangs off an ability the rules
--- grant, and layer 6 removes abilities.
+-- 613.1d). Both CR 310.4b and CR 310.12b are intrinsic abilities, which layer 6
+-- could remove (CR 613.1f), but neither this nor Projection's mint of CR 310.4b
+-- reads PC.lostAllAbilities, so LoseAllAbilities leaves both (gap #6242).
 triggeredAbilitiesOf :: PC.ProjectedCharacteristics -> [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
 triggeredAbilitiesOf pc = if Set.member Subtype.Siege (battleTypes pc) then [siegeDefeat] else []
 

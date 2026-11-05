@@ -20,7 +20,7 @@ import qualified Parun.Types.ZoneScope as ZoneScope
 
 -- Filter's own coverage lives in Parun.Codec.FilterSpec, so these cases exercise
 -- it only in its embedded position: a bare pool (Nothing filter, omitted key),
--- a filtered pool, and the Not IsSource conjunct carrying CR 601.2c's "another"
+-- a filtered pool, and the Not IsSource conjunct carrying the printed "another"
 -- (#163). The count key is omitted for every one-target slot, which is what
 -- keeps the corpus unrewritten.
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()

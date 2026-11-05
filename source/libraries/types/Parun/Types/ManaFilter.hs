@@ -7,8 +7,8 @@ import qualified Parun.Types.ManaType as ManaType
 -- types CR 106.7's "could produce" admits (Parun.Types.CouldProduce).
 --
 -- A SEPARATE, tiny type rather than a use of Parun.Types.Filter. Every Filter atom
--- is a characteristic of an object (CR 109.3) or an identity of a player, and a
--- Parun.Types.ManaUnit has neither. This type exists to avoid widening Filter with
+-- asks about an object (CR 109.1) or a player, and a Parun.Types.ManaUnit is
+-- neither. This type exists to avoid widening Filter with
 -- atoms meaningless for every other candidate it serves.
 --
 -- Arms rather than one Set of the six CR 106.1b types: Upwelling prints "unspent

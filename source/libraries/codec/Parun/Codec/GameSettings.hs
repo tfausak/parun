@@ -18,7 +18,7 @@ import qualified Parun.Types.GameSettings as GameSettings
 -- 'Fields.required' rather than a default, for Parun.Codec.Player's reason: a
 -- document that does not say which options are in play is one whose reader
 -- would have to guess, and CR 800.2's options are settled before the game
--- begins.
+-- begins (CR 806.2).
 codec :: Codec.Codec GameSettings.GameSettings
 codec = Fields.object $ do
   brawl <- Fields.required "brawl" Common.boolean GameSettings.brawl

@@ -60,7 +60,7 @@ import qualified Parun.Types.TapState as TapState
 -- (Parun.Types.CastOffer.spending) by Parun.Engine.Cast.spendingWith -- and
 -- Parun.Engine.Mana.relax is what acts on the value it hands back.
 --
--- `alternativeCost` is CR 118.9a's alternative cost said of the cards this
+-- `alternativeCost` is CR 118.9's alternative cost said of the cards this
 -- permission covers, printed in the same sentence as the permission itself
 -- (Parun.Types.PermissionCost has the arms). Nothing means the permission states
 -- no cost and the card is cast for its printed one.
@@ -117,7 +117,7 @@ data ExilePlayPermission = MkExilePlayPermission
 
 -- | CR 601.3: the permission `player` holds from `source` that states nothing
 -- but the play -- no duration (CR 611.2a), no rider (CR 118.14), no cost (CR
--- 118.9a), no condition, increase, entry or budget. Each grant writes over it
+-- 118.9), no condition, increase, entry or budget. Each grant writes over it
 -- what its own rule says.
 defaultValue :: PlayerId.PlayerId -> ObjectId.ObjectId -> ExilePlayPermission
 defaultValue p s =

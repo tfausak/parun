@@ -221,7 +221,7 @@ overSlots f quantity =
         -- and CR 601.2a's cast zone alike -- the latter carrying two of them.
         Quantity.EnteredFrom _ -> pure quantity
         Quantity.WasCastFrom _ -> pure quantity
-        -- And an arm naming no slot at all: CR 509.1h's declaration is read
+        -- And an arm naming no slot at all: CR 509.1g's declaration is read
         -- against the object the evaluation is aimed at, as ObjectCounters is.
         Quantity.BlockersBeyond _ -> pure quantity
         -- And a nullary arm: CR 702.184c's substitution reads no slot of its own,

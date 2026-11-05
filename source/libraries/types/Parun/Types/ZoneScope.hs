@@ -15,7 +15,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- directly: that type is shared with two Parun.Types.PlayerEffect carriers whose
 -- evaluator has no slots to resolve, so an InSlot arm there would be an arm those
 -- carriers could not answer. And not Parun.Types.PlayerRef, whose Relative arm
--- cannot say CR 806.1's "each opponent" as one value. Neither of those types
+-- cannot say "each opponent" (CR 102.3) as one value. Neither of those types
 -- subsumes this one; these are the readings a TARGET POOL, a
 -- resolution-time SWEEP and a resolution-time CHOICE all need, and all three
 -- resolve it through Parun.Engine.Target.zoneScopePlayers.
@@ -25,12 +25,13 @@ data ZoneScope
     Scoped PlayerScope.PlayerScope
   | -- | Dwell on the Past's "their graveyard" and Angel of Finality's "target
     -- player's graveyard": the graveyards of the players another target slot
-    -- names. CR 601.2c announces every target AT ONCE, so at the moment a target
-    -- pool is read the named slot holds not one player but the players it could
-    -- still be answered with -- and at CR 608.2b's re-check, the one it was. A
-    -- SWEEP has only the second moment, since it is read as the effect executes
-    -- (CR 608.2c). All of them are the same lookup against whatever bindings the
-    -- caller has; see Parun.Engine.Target.zoneScopePlayers.
+    -- names. CR 601.2c's one announcement states no order among targets, so at
+    -- the moment a target pool is read the named slot holds not one player but
+    -- the players it could still be answered with -- and at CR 608.2b's
+    -- re-check, the one it was. A SWEEP has only the second moment, since it is
+    -- read as the effect executes (CR 608.2h). All of them are the same lookup
+    -- against whatever bindings the caller has; see
+    -- Parun.Engine.Target.zoneScopePlayers.
     --
     -- The PRINTED slot name, which a REPEATED mode's later occurrences rename
     -- alongside the slot keys (Parun.Engine.Modal.instanceTargetSlots), so the

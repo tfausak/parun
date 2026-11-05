@@ -20,9 +20,10 @@ data AttackPermission = MkAttackPermission
   { -- | Which creatures it lets attack: Prison Barricade's own text is
     -- Affected.Matching Filter.IsSource.
     affected :: Affected.Affected,
-    -- | CR 604.2's "as long as" (Drowsing Tyrannodon), BlockPermission.while's
-    -- gate: re-read on every look against the full projection, the "you" inside
-    -- it the source's controller. Nothing grants unconditionally.
+    -- | An "as long as" (CR 611.3a; Drowsing Tyrannodon),
+    -- BlockPermission.while's gate: re-read on every look against the full
+    -- projection, the "you" inside it the source's controller. Nothing grants
+    -- unconditionally.
     while :: Maybe Condition.Condition,
     -- | The attacking rule it lifts.
     waives :: AttackWaiver.AttackWaiver

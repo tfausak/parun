@@ -4,7 +4,7 @@
 -- an ignorable ability asks about those rows, so a carrier cannot read them a
 -- second way and drift.
 --
--- Two questions, because CR 116.2d's "that player" reaches a carrier two ways. A
+-- Two questions, because the printed "that player" reaches a carrier two ways. A
 -- PLAYER-aimed ability suppresses for the player it names, which
 -- Parun.Engine.PlayerEffect.applying has in hand. An OBJECT-aimed one names no
 -- player at all, so the seat is derived from the restricted object: Volrath's
@@ -39,8 +39,8 @@ ignoredBy pid source name gs =
           && Just (IgnoredAbility.ability ignored) == name
    in any matches (GameState.ignoredAbilities gs)
 
--- The same question about an OBJECT-aimed row, whose seat is CR 116.2d's "that
--- creature's controller" -- the one Volrath's Curse offers the action to, read
+-- The same question about an OBJECT-aimed row, whose seat is Volrath's Curse's "that
+-- creature's controller" -- the one it offers the action to, read
 -- LIVE off the projection rather than off the row, so a creature that changed
 -- hands since the payment answers for whoever controls it now.
 --

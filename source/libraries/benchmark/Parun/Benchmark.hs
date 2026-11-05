@@ -129,14 +129,14 @@ loadRedDeck registry = do
 -- randomness at all. The opening hand is the library's first 7 cards -- all 3
 -- Control Magic and all 4 Darksteel Myr, i.e. the entire non-land half of the
 -- deck -- and every card kept in a hand at the maximum size stays there until
--- something makes room, per discardNewest above (CR 514.1 discards the newest
--- cards first, keeping this same original 7). Nothing else ever gets a turn at
--- being kept: every OTHER card this deck draws arrives during a mana-less
--- stretch with nothing to spend it on, so it is discarded again by the next
--- cleanup step -- which is why this deck carries not one spare copy of either
--- spell. Darksteel Myr (colourless, {3}) is castable off the Islands alone, so
--- once enough of the 53 Islands have entered play as one-a-turn land drops
--- (CR 305.2), all 4 Myr resolve as legal Cast targets for Control Magic
+-- something makes room, per discardNewest above (it answers CR 514.1's discard
+-- with the newest cards first, keeping this same original 7). Nothing else ever
+-- gets a turn at being kept: every OTHER card this deck draws arrives during a
+-- mana-less stretch with nothing to spend it on, so it is discarded again by
+-- the next cleanup step -- which is why this deck carries not one spare copy of
+-- either spell. Darksteel Myr (colourless, {3}) is castable off the Islands
+-- alone, so once enough of the 53 Islands have entered play as one-a-turn land
+-- drops (CR 305.2), all 4 Myr resolve as legal Cast targets for Control Magic
 -- ({2}{U}{U}, also Island-payable) to enchant, in turn making all 6 Control
 -- Magic across the mirror match legal casts. Observed (via 'cabal repl',
 -- reading 'GameState.turnNumber' after 'Engine.runMatchPure'): this deck

@@ -52,7 +52,7 @@ data DamageEvent = MkDamageEvent
     -- board the CR 616.1 replacement loop has already moved. CR 702.15f's
     -- redundancy clause is why there is no count here.
     --
-    -- Read for EVERY damage event and not just combat ones (CR 702.15d).
+    -- Read for EVERY damage event and not just combat ones (CR 120.3f).
     dealtByLifelink :: Maybe PlayerId.PlayerId,
     -- | CR 702.76a / 702.173a: WHO controlled the source when this damage was
     -- dealt, or Nothing when nobody did. Both rules ask about a source that "at

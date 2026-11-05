@@ -31,7 +31,7 @@ import qualified Parun.Types.UntapRestriction as UntapRestriction
 -- Face keeps the fifteen apart because a card's JSON names each one; nothing
 -- here needs that, since every reader asks for one field by name.
 data RuleAbilities = MkRuleAbilities
-  { -- | CR 602.2: "its activated abilities can't be activated" (Arrest).
+  { -- | CR 602.5: "its activated abilities can't be activated" (Arrest).
     activationProhibitions :: [ActivationProhibition.ActivationProhibition],
     -- | CR 303.4 / 301.5: "this creature can't be equipped" (Goblin Brawler).
     attachRestrictions :: [AttachRestriction.AttachRestriction],
@@ -57,8 +57,8 @@ data RuleAbilities = MkRuleAbilities
     -- | CR 702.122d: "enchanted creature can't ... crew Vehicles" (Revoke
     -- Privileges).
     crewRestrictions :: [CrewRestriction.CrewRestriction],
-    -- | CR 400.4a: "creature cards in graveyards and libraries can't enter the
-    -- battlefield" (Grafdigger's Cage).
+    -- | CR 101.2 / CR 400.4a (see Parun.Types.EntryRestriction): "creature cards
+    -- in graveyards and libraries can't enter the battlefield" (Grafdigger's Cage).
     entryRestrictions :: [EntryRestriction.EntryRestriction],
     -- | CR 701.21a: "creatures you control but don't own ... can't be sacrificed"
     -- (Garland, Royal Kidnapper).

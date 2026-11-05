@@ -57,7 +57,7 @@ fromJson = Codec.decode codec
 
 -- One constructor, so eight cases: a populated clause, CR 603.5's `optionality`
 -- flag when present, CR 118.12's `payGate` when present, CR 701.46a's
--- `condition` gate when present, CR 608.2c's `ifTaken` naming one clause and
+-- `condition` gate when present, CR 118.12's `ifTaken` naming one clause and
 -- naming two, CR 608.2d's `orElse` branch when present, and every field
 -- defaulted at once.
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -78,7 +78,7 @@ spec s = Spec.describe s "Parun.Codec.Clause" $ do
       fromJson
       (Clause.MkClause Nothing Nothing Nothing (Optionality.Optional (PlayerRef.Relative PlayerRelation.You)) Nothing Seq.empty)
       " {\"optionality\":{\"type\":\"Optional\"}} "
-  -- CR 608.2c: Tweeze's "If you do" names the ordinal of the clause it hangs
+  -- CR 118.12: Tweeze's "If you do" names the ordinal of the clause it hangs
   -- off, and the key is emitted only when there is one.
   Spec.it s "a clause hanging off an earlier one writes the ifTaken key" $
     Common.assertJsonCodec
@@ -87,7 +87,7 @@ spec s = Spec.describe s "Parun.Codec.Clause" $ do
       fromJson
       (Clause.MkClause (Just (IfTaken.AnyTaken (pure (ClauseIndex.MkClauseIndex 1)))) Nothing Nothing Optionality.Mandatory Nothing Seq.empty)
       " {\"ifTaken\":{\"type\":\"AnyTaken\",\"value\":[1]}} "
-  -- CR 608.2d / 608.2c: Worms of the Earth's "if a player does either" hangs one
+  -- CR 608.2d / 118.12: Worms of the Earth's "if a player does either" hangs one
   -- clause off both halves of an either-or pair, so the key holds every ordinal
   -- it names.
   Spec.it s "a clause hanging off either of two writes both ordinals" $

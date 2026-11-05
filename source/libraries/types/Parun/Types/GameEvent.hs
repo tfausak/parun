@@ -99,7 +99,7 @@ data GameEvent
     StepBegan StepBegan.StepBegan
   | -- | CR 601.2i: a player cast a spell -- the caster, and the spell's STACK
     -- incarnation (CR 601.2a), beside a strict snapshot of that object as the
-    -- spell became cast (CR 608.2h) for a CR 608.2i look-back reader. The cast is
+    -- spell became cast for a CR 608.2i look-back reader. The cast is
     -- the event, so a countered spell still counts, and it is not derivable from
     -- the Moved event the same cast records: CR 707.10's copy reaches the stack
     -- without being cast.
@@ -187,7 +187,7 @@ data GameEvent
     --
     -- Carries how many blockers there were at this becoming (CR 509.3e) rather
     -- than the blockers themselves, and carries it on the event rather than
-    -- reading Combat.blockers when the condition is scanned, which CR 509.2a
+    -- reading Combat.blockers when the condition is scanned, which CR 603.3
     -- would make a stale read. The PlayerId is CR 508.5's defending player for
     -- this attacker, stamped for AttackerDeclared's reason; CR 702.130a's afflict
     -- reads it.
@@ -250,8 +250,8 @@ data GameEvent
     SpellCountered Countering.Countering
   | -- | CR 701.6a's other subject: an ABILITY was countered. Emitted by the same
     -- funnel and carrying the same Countering, and a sibling arm rather than a
-    -- widening of the one above: rule 608.2n makes a countered ability cease to
-    -- exist rather than move, so there is no Moved event beside this one, and
+    -- widening of the one above: rule 701.6a removes a countered ability from the
+    -- stack rather than moving it, so there is no Moved event beside this one, and
     -- Baral, Chief of Compliance's "counters A SPELL" must not see it.
     AbilityCountered Countering.Countering
   | -- | CR 119.3: a player LOST LIFE, and how much -- greater than 0, every

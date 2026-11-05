@@ -76,10 +76,10 @@ data ActivatedAbility card ability = MkActivatedAbility
     -- is not indistinguishable from anything -- CR 113.7 moves the source and
     -- CR 303.4e the player who may activate it.
     --
-    -- The SAME shape as Parun.Types.StaticAbility.condition, which spells CR
-    -- 604.2's "as long as" for a continuous effect, and the same rule about what
-    -- it is not: not a Parun.Types.Duration, because CR 611.2c's "for as long as"
-    -- ends a stored effect once, while this is re-asked on every read
+    -- The SAME shape as Parun.Types.StaticAbility.condition, which spells an
+    -- "as long as" (CR 611.3a) for a continuous effect, and the same rule about
+    -- what it is not: not a Parun.Types.Duration, because CR 611.2b's "for as
+    -- long as" ends a stored effect once, while this is re-asked on every read
     -- (Parun.Engine.Projection.abilitiesGiven) and so takes the ability away and
     -- gives it back as the board moves, with no resolution in between.
     --

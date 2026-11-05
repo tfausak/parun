@@ -156,9 +156,9 @@ fizzleSpec s registry = Spec.describe s "Fizzle" $ do
     Spec.assertEqWith s "stack empty" (length (GameState.stack after)) 0
 
 -- M4h task 1: Aether Channeler's "another nonland permanent" slot as data --
--- Pool.Permanents narrowed by Not (HasCardType Land), with CR 601.2c's "another"
--- as the Not IsSource conjunct (#163). This proves the target slot and the exclusion in
--- isolation; the wiring to a consumer is a later M4h task.
+-- Pool.Permanents narrowed by Not (HasCardType Land), with the printed
+-- "another" as the Not IsSource conjunct (#163). This proves the target slot
+-- and the exclusion in isolation; the wiring to a consumer is a later M4h task.
 nonlandPermanentTargetSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 nonlandPermanentTargetSpec s registry = Spec.describe s "M4h NonlandPermanentTarget" $ do
   Spec.it s "NonlandPermanentTarget excludes lands (CR 109.2/110.4)" $ do

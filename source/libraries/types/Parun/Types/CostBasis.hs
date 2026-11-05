@@ -19,8 +19,9 @@ import qualified Parun.Types.SlotName as SlotName
 -- SlotArity.One.
 --
 -- Parun.Types.MakeForetold.manaCostReducedBy is the same derivation from the
--- other provenance -- CR 702.143d's "its foretell cost is its mana cost reduced
--- by {2}" -- and Parun.Engine.Cost.reducedManaCost is the one procedure both
+-- other provenance -- CR 702.143d's cost as Ethereal Valkyrie states it, "its
+-- foretell cost is its mana cost reduced by {2}" -- and
+-- Parun.Engine.Cost.reducedManaCost is the one procedure both
 -- reach. What that one settles when the card is exiled, this one settles as the
 -- gate is offered, there being no earlier moment: CR 118.12 puts the payment at
 -- resolution.
@@ -29,7 +30,7 @@ data CostBasis = MkCostBasis
     -- it at (CR 400.7j) -- Flash's "it" is the creature its first clause put
     -- onto the battlefield.
     --
-    -- Read through the projection (CR 613, CR 706.2), so a permanent that is a
+    -- Read through the projection (CR 613, CR 707.2), so a permanent that is a
     -- copy of another card owes the COPIED mana cost: Parun.CostSpec's "CR 706.2
     -- a Clone put by Flash is bought at the copied mana cost" is what proves
     -- it.

@@ -25,8 +25,9 @@ import qualified Parun.Types.PlayerId as PlayerId
 -- may grant the permission on one of two unrelated abilities -- and the name
 -- alone would not either, since two permanents may print the same name.
 data IgnoredAbility = MkIgnoredAbility
-  { -- | Who ignores it. CR 116.2d's "that player" -- always the player who took
-    -- the action, since the action is the payment.
+  { -- | Who ignores it. The printed sentence's "that player" (CR 116.2d's "a
+    -- player") -- always the player who took the action, since the action is the
+    -- payment.
     player :: PlayerId.PlayerId,
     -- | The permanent whose static ability is ignored.
     source :: ObjectId.ObjectId,

@@ -10,7 +10,7 @@ import qualified Parun.Types.Zone as Zone
 -- | One object as it stood at a recorded moment: its id, its projected
 -- characteristics, who controlled it, who owned it and where it was. What
 -- Parun.Types.PastActivation keeps of an ability's source and targets, so a later
--- Filter is asked of the object as it WAS (CR 608.2h's posture) rather than of
+-- Filter is asked of the object as it WAS (CR 608.2i's posture) rather than of
 -- whatever it has since become.
 --
 -- The id is kept, unlike a look-back event snapshot's, because the record lives
@@ -28,7 +28,7 @@ data ObjectSnapshot = MkObjectSnapshot
     -- | CR 113.6 / 113.6p: where its abilities that state no zone functioned
     -- (Parun.Engine.Vanguard.homeZoneOf).
     home :: Zone.Zone,
-    -- | CR 604.2: the "as long as" clauses of its granted activated abilities
+    -- | CR 611.3a: the "as long as" clauses of its granted activated abilities
     -- that did not hold in that zone, which `characteristics` carries
     -- unasked (Parun.Engine.Projection.View.lapsedGrantsOf).
     lapsedGrants :: Set.Set Condition.Condition

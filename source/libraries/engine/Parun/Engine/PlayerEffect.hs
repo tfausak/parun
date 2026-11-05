@@ -287,7 +287,7 @@ printedRows gs =
       -- granted one (CR 612.3).
       rowsOf changes oid controller stamped =
         let readAs = if null changes then id else Projection.rewritePlayerEffect changes
-            -- CR 604.2's "as long as" clause, the same gate
+            -- The "as long as" clause (CR 611.3a), the same gate
             -- Projection.gatherStatic applies to the object-facing
             -- carrier, and asked here for the player-facing one.
             --
@@ -385,7 +385,7 @@ printedRows gs =
                     -- permanent on the battlefield.
                     rowsOf (Projection.readerTextChanges oid gs) oid controller (fmap ((,) (Projection.staticTimestampOf oid object gs)) kept)
                   else []
-      -- CR 613.1f / 613.10: the player abilities layer 6 GRANTED a permanent
+      -- CR 613.1f / 613.10 / 613.11: the player abilities layer 6 GRANTED a permanent
       -- (Nerd Rage's "You have no maximum hand size"), read off the finished
       -- projection because only the fold knows who a static ability's grant
       -- reaches. The ability is the RECEIVER's (CR 113.7), so its "you" is the
@@ -413,12 +413,11 @@ printedRows gs =
    in concatMap fromPermanent (onBattlefield <> inCommand)
         <> (if Projection.grantsPlayerAbilityAnywhere gs then concatMap grantedFrom onBattlefield else [])
 
--- CR 116.2d's WHO: is `pid` a player whose game the permanent `oid` is changing
--- right now? That is the rule's own reading of who may take the special action
--- to ignore it -- every printed producer offers it to exactly the players its
--- static ability affects, whether that is "any player" over an AnyPlayer scope
--- (Leonin Arbiter) or the one player a narrower scope reaches (Damping Engine's
--- "that player").
+-- The printed WHO: is `pid` a player whose game the permanent `oid` is changing
+-- right now? CR 116.2d says only "a player"; every printed producer offers the
+-- action to exactly the players its static ability affects, whether that is
+-- "any player" over an AnyPlayer scope (Leonin Arbiter) or the one player a
+-- narrower scope reaches (Damping Engine's "that player").
 --
 -- Asked over printedRows and NOT over `applying`, and the difference is the whole
 -- reason that walk is shared: `applying` has already dropped the rows this
@@ -543,7 +542,7 @@ applying pid gs =
       printedOne (timestamp, source, name, reaches, effect) = (timestamp, liveSource source, name, reaches, effect)
    in fmap effectOf (List.sortOn stampOf (filter applyingScope (filter notIgnored (fmap printedOne printed) <> stored)))
 
--- A printed row's source: its choices are read off the object live (CR 604.2).
+-- A printed row's source: its choices are read off the object live (CR 611.3a).
 liveSource :: Maybe ObjectId -> RowSource
 liveSource source = RowSource.MkRowSource source Nothing Nothing Map.empty
 
@@ -635,7 +634,7 @@ prohibitsCasting pid oid variable gs =
         PlayerEffect.SpendManaAsThough _ -> False
         -- CR 702.18a / 702.11c restrict TARGETING, not casting: a player with
         -- shroud may cast anything, and Parun.Engine.Target.targetable is where
-        -- the restriction lands (CR 115.4, CR 601.2c).
+        -- the restriction lands (CR 601.2c).
         PlayerEffect.CantBeTargetedBy {} -> False
         -- CR 601.3b ALLOWS, and this is the prohibit half: a permission is not a
         -- prohibition, and CR 101.2 would let a prohibition outvote it anyway.
@@ -732,9 +731,9 @@ prohibitsCasting pid oid variable gs =
 -- CR 602.5 / 101.2 / Sen Triplets: does an effect stop this player activating
 -- an ability under this rule-702 stamp (Parun.Types.ActivatedAbility.keyword)?
 -- The activation-side twin of prohibitsCasting above, and its own question
--- rather than a widening of that one: CR 602.1 makes an activated ability
--- neither a spell nor a special action, so nothing on the cast axis reaches it
--- and Silence stops no activation.
+-- rather than a widening of that one: CR 602.2a makes an activated ability
+-- neither a spell (CR 112.1) nor a special action (CR 116.1), so nothing on the
+-- cast axis reaches it and Silence stops no activation.
 --
 -- A row naming no designator refuses every ability (Sen Triplets); one naming
 -- a designator refuses only the abilities it designates, Kang the Conqueror's
@@ -785,7 +784,7 @@ prohibitsPlayingLand pid oid gs =
         -- but Action.legalActions is what asks that of a land play, and an
         -- effect that moved it would have to say so.
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
-        -- CR 305.1's quality-bearing prohibition, the play-side twin of
+        -- CR 101.2's quality-bearing prohibition, the play-side twin of
         -- CantCastMatching below: City in a Bottle's list of names, and Damping
         -- Engine's `And []`, which every land matches.
         --
@@ -1120,7 +1119,7 @@ prohibitsBecomingMonarch pid gs =
         -- CR 725.1's effect need not target to crown them (Palace Jailer's "you
         -- become the monarch" names nobody), so shroud is not an eligibility
         -- restriction; where a card does target (Jared's own first clause), CR
-        -- 115.1's own check turns it away before this one is asked.
+        -- 601.2c's own check turns it away before this one is asked.
         PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
@@ -1460,7 +1459,7 @@ prohibitsAttackingWithCreatures pid gs =
 -- (Parun.Engine.SourceContext) that finds none.
 --
 -- The source's HOST comes off the board here rather than riding in the row:
--- reading it live is what CR 611.2c asks for, so an Aura moved to another
+-- reading it live is what CR 611.3a asks for, so an Aura moved to another
 -- creature taxes the new one from that moment.
 matchesObjectFrom :: RowSource -> Filter Keyword -> ObjectId -> GameState -> Bool
 matchesObjectFrom src filter_ oid gs =
@@ -1531,8 +1530,8 @@ contextFor you row gs =
 -- (Cast.proposedFor). A colour and a supertype are fixed by the half and the
 -- facing and move at no step of the announcement.
 --
--- The other proposal choices reach nothing: CR 601.2b's modes, CR 601.2b's
--- targets and CR 601.2f's cost payments change no characteristic of the spell
+-- The other proposal choices reach nothing: CR 601.2b's modes, CR 601.2c's
+-- targets and CR 601.2h's cost payments change no characteristic of the spell
 -- this criterion can read.
 --
 -- Over the PRINTED MANA COST's variables, which is exactly where CR 202.3 reads
@@ -2996,7 +2995,7 @@ protectedFromGiven rows aimer view gs =
 -- The QUALITY as the row wrote it, never the set of things it currently matches:
 -- for Runed Halo that quality is Filter.HasChosenName, which the shield's
 -- Context answers off the carrier, so CR 201.4's names stay a LIVE read
--- at the damage event (CR 609.7b's recheck) rather than a set frozen when the row
+-- at the damage event (CR 702.16e) rather than a set frozen when the row
 -- was gathered. A STORED row hands over the choices it baked as it began (CR
 -- 608.2h) for that Context to use instead; the Synthetic Name Ward scenario
 -- under data/scenarios/cast-prohibition proves it. A card-stated quality needs
@@ -4449,15 +4448,15 @@ unpreventable gs =
         PlayerEffect.MayTapForMana _ -> Nothing
    in concatMap (\pid -> Maybe.mapMaybe says (applying pid gs)) (Game.stillPlaying gs)
 
--- CR 614.9: the patterns of every "that damage can't be ... dealt instead to
+-- CR 614.17: the patterns of every "that damage can't be ... dealt instead to
 -- another permanent or player" applying right now (Lava Burst), each paired with
 -- the SOURCE of the effect that says it. The redirection twin of `unpreventable`
 -- above, and a separate gather for the reason its own carrier is a separate arm:
 -- the two sentences are separable, so a board carrying one must not answer the
 -- other's question.
 --
--- Hands back the PATTERNS, `unpreventable`'s posture and for its reason: CR
--- 614.9's sentence is about a damage EVENT and the printed narrowing names its
+-- Hands back the PATTERNS, `unpreventable`'s posture and for its reason:
+-- Lava Burst's sentence is about a damage EVENT and the printed narrowing names its
 -- qualities -- Lava Burst's names both its own source and a recipient -- which
 -- Parun.Engine.Replacement.matchesDamagePattern already knows how to read.
 --
@@ -4822,7 +4821,7 @@ mapPlayerRefs :: (PlayerRef.PlayerRef -> PlayerRef.PlayerRef) -> PlayerEffect ->
 mapPlayerRefs f = Functor.runIdentity . overPlayerRefs (Functor.Identity . f)
 
 -- Every Parun.Types.DamagePattern this effect holds, traversed rather than read:
--- CR 615.12's prohibition and its CR 614.9 twin each carry one, and CR 601.2c's
+-- CR 615.12's prohibition and its CR 614.17 twin each carry one, and CR 601.2c's
 -- recipient inside it is baked as the effect is stored (Parun.Engine.Resolve's
 -- AffectPlayers arm), exactly as overPlayerRefs above bakes a zone reference.
 --

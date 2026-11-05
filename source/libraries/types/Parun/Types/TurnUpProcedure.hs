@@ -1,6 +1,6 @@
 module Parun.Types.TurnUpProcedure where
 
--- | WHICH of CR 708.7's turn-face-up procedures a player is taking. Two rules
+-- | WHICH of CR 708.7's turn-face-up procedures a player is taking. Four rules
 -- write one, and CR 701.40c is why the choice has to be sayable at all: "if a
 -- card with morph is manifested, its controller may turn that card face up using
 -- EITHER the procedure described in rule 702.37e ... OR the procedure described

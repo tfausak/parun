@@ -21,8 +21,8 @@ import qualified Parun.Types.UntapHold as UntapHold
 --
 -- Parun.Types.SacrificeRestriction's shape and its filing, one turn-based action
 -- over: CR 613.11 puts a continuous effect that "affects game rules rather than
--- objects" outside the layer system, CR 101.2a says such an effect is not an
--- ability being added or removed, and no layer of Parun.Engine.Projection rewrites them.
+-- objects" outside the layer system, CR 101.2a holds rule 101.2 clear of adding
+-- abilities to objects and removing them, and no layer of Parun.Engine.Projection rewrites them.
 -- Every step of that type's argument for why it cannot be a
 -- Parun.Types.Modification holds here unchanged.
 --
@@ -58,9 +58,8 @@ import qualified Parun.Types.UntapHold as UntapHold
 -- answers a set of ids.
 data UntapRestriction = MkUntapRestriction
   { -- | Which permanents it holds back, or counts under a cap. An Affected, not
-    -- a bare ObjectId, so the set is re-derived every untap step -- CR 613.11
-    -- lets a rule-modifying continuous effect reach objects that were not
-    -- affected when it began, which is what Tsabo's Web's set does as lands
+    -- a bare ObjectId, so the set is re-derived every untap step -- CR 611.3a's
+    -- static effect is not locked in, which is what Tsabo's Web's set shows as lands
     -- enter and leave.
     affected :: Affected.Affected,
     -- | Whether an effect forbids the untap, caps it, or leaves it to the

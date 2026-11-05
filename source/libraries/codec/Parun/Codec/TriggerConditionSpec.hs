@@ -477,8 +477,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PermanentTransforms (Filter.Not (Filter.HasSubtype Subtype.Human)))
       " {\"type\":\"PermanentTransforms\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Human\"}}}} "
-  -- CR 709.5i. The payload is a PlayerRelation, read against the controller of the
-  -- permanent that became fully unlocked. BOTH relations, since the two are what
+  -- CR 709.5i. The payload is a PlayerRelation, read against the player who
+  -- unlocked the permanent. BOTH relations, since the two are what
   -- separate "you fully unlock" from an opponent doing it.
   Spec.it s "RoomFullyUnlocked round-trips its relation" $
     Common.assertCodec
@@ -511,15 +511,16 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.AnyOf [TriggerCondition.Enters (EntersTrigger.matching (Filter.HasCardType CardType.Enchantment)), TriggerCondition.RoomFullyUnlocked PlayerRelation.You])
       " {\"type\":\"AnyOf\",\"value\":[{\"type\":\"Enters\",\"value\":{\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Enchantment\"}}}}},{\"type\":\"RoomFullyUnlocked\",\"value\":{\"type\":\"You\"}}]} "
-  -- CR 708.7. Nullary: the bearer is CR 113.7a's source and the rule leaves
-  -- nothing else for the condition to name.
+  -- CR 708.7 through CR 603.2. Nullary: the bearer is CR 113.7a's source and the
+  -- rule leaves nothing else for the condition to name.
   Spec.it s "SelfTurnedFaceUp" $
     Common.assertCodec
       s
       TriggerCondition.codec
       TriggerCondition.SelfTurnedFaceUp
       " {\"type\":\"SelfTurnedFaceUp\"} "
-  -- CR 708.7's other written form. Aven Farseer says only "a permanent", which is
+  -- CR 708.7 through CR 603.2, the other written form. Aven Farseer says only
+  -- "a permanent", which is
   -- Filter's trivial `And []` -- so the encoded value carries an EMPTY filter
   -- rather than no filter at all, which is what keeps the narrowed printings
   -- below spellable in the same constructor.

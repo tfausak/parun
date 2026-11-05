@@ -751,7 +751,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       (Codec.encode Keyword.codec (Keyword.Modular Nothing) /= Codec.encode Keyword.codec (Keyword.Modular (Just 0)))
       "modular--sunburst is not modular 0"
   -- CR 702.44a's sunburst is nullary: rule 702.44a fixes both counter kinds, and
-  -- CR 702.44b's count is the entering object's mana record rather than a printed
+  -- its count is the entering object's mana record rather than a printed
   -- number.
   Spec.it s "Sunburst" $
     Common.assertCodec
@@ -830,7 +830,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       (Codec.encode Keyword.codec (Keyword.Frenzy 2) /= Codec.encode Keyword.codec (Keyword.Bushido 2))
       "frenzy 2 is not bushido 2"
   -- CR 702.58a's N is a COUNT OF COUNTERS the permanent enters with, where rule
-  -- 702.68a's is an amount of damage; the wire cannot tell those apart, so the
+  -- 702.68a's is a power bonus; the wire cannot tell those apart, so the
   -- tag is what keeps graft 2 off frenzy's form.
   Spec.it s "Graft carries its N" $ do
     Common.assertCodec
@@ -842,8 +842,8 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       (Codec.encode Keyword.codec (Keyword.Graft 2) /= Codec.encode Keyword.codec (Keyword.Frenzy 2))
       "graft 2 is not frenzy 2"
-  -- CR 702.64a's N is an amount of damage PREVENTED, the opposite direction from
-  -- frenzy's dealt one, and the tag is again the whole of the difference.
+  -- CR 702.64a's N is an amount of damage PREVENTED, where frenzy's is a power
+  -- bonus, and the tag is again the whole of the difference.
   Spec.it s "Absorb carries its N" $ do
     Common.assertCodec
       s

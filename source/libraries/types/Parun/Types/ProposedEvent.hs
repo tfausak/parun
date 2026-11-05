@@ -61,7 +61,7 @@ import qualified Parun.Types.ZoneChange as ZoneChange
 -- beside the megamorph one. Nothing on the object records which road it came
 -- by or what it paid, so the event has to.
 --
--- MAYBE the procedure, because CR 708.7's two procedures are CR 116.2b special
+-- MAYBE the procedure, because CR 708.7's four procedures are CR 116.2b special
 -- actions and an Effect.TurnFaceUp is neither: it takes no procedure, shows
 -- nothing and pays nothing. Nothing is what a reader gating on a paid cost -- CR
 -- 702.37b's megamorph counter, the only such reader -- correctly declines.
@@ -216,8 +216,8 @@ data ProposedEvent
     -- event once.
     --
     -- An instruction that rolls NO dice raises nothing, having rolled none --
-    -- rule 706.1's "one or more" is not met, so there is no event for a row to
-    -- replace.
+    -- Pixie Guide's "if you would roll one or more dice" is not met, so there is
+    -- no event for a row to replace.
     WouldThrow Throw.Throw
   | -- | CR 104.3 / 614.1a: this player would lose the game, for every reason
     -- at once. Raised by Parun.Engine.Departure.leaveTogether, the one funnel

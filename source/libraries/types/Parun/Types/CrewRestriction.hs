@@ -8,8 +8,8 @@ import qualified Parun.Types.Affected as Affected
 --
 -- Parun.Types.SacrificeRestriction's shape and its filing, one game action over:
 -- CR 613.11 puts a continuous effect that "affects game rules rather than
--- objects" outside the layer system, CR 101.2a says such an effect is not an
--- ability being added or removed, and no layer of Parun.Engine.Projection
+-- objects" outside the layer system, CR 101.2a holds rule 101.2 clear of adding
+-- abilities to objects and removing them, and no layer of Parun.Engine.Projection
 -- rewrites them. Every step of that type's argument for why it cannot be a
 -- Parun.Types.Modification holds here unchanged.
 --
@@ -39,9 +39,9 @@ import qualified Parun.Types.Affected as Affected
 -- answers a set of ids.
 newtype CrewRestriction = MkCrewRestriction
   { -- | Which creatures can't crew Vehicles. An Affected, not a bare ObjectId,
-    -- so the set is re-derived every time it is asked -- CR 613.11 lets a
-    -- rule-modifying continuous effect reach objects that were not affected when
-    -- it began, which is what Revoke Privileges' set does as the Aura moves.
+    -- so the set is re-derived every time it is asked -- CR 611.3a's static
+    -- effect is not locked in, which is what Revoke Privileges' set shows as the
+    -- Aura moves.
     affected :: Affected.Affected
   }
   deriving (Eq, Ord, Show)

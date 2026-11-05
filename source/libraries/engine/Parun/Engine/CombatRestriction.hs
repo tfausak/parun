@@ -435,7 +435,7 @@ boundsOf comparison n = case comparison of
   Comparison.LessThan -> MkBounds 0 (Just (if n == 0 then 0 else n - 1))
   Comparison.GreaterThan -> MkBounds (n + 1) Nothing
 
--- Whether `count` blockers obey the bounds: none always do (CR 509.1b).
+-- Whether `count` blockers obey the bounds: none always do (CR 509.1c's Example).
 admits :: Bounds -> Int -> Bool
 admits (MkBounds low high) count =
   count == 0 || (toInteger count >= toInteger low && maybe True (\n -> toInteger count <= toInteger n) high)
@@ -879,7 +879,7 @@ gathered gs =
 -- ("can't attack unless there is a Mountain on the battlefield") counts Islands.
 -- The clause is words printed on the source's card, which is what CR 612.1
 -- reaches, and rewriteCondition is the same descent gatherStatic applies to a
--- static ability's CR 604.2 "as long as" gate.
+-- static ability's "as long as" gate (CR 611.3a).
 --
 -- CR 508.5: the gate may name the DEFENDING PLAYER rather than the source's
 -- controller (Armored Galleon, "can't attack unless defending player controls an
@@ -1009,7 +1009,7 @@ companionsIn rows select subjects pool gs =
            in fmap (\creature -> (creature, [company creature])) (Set.toList (restrictedIn [row] (fmap AloneUnless.affected . select) subjects gs))
    in Map.fromListWith (flip (<>)) (concatMap fromRow rows)
 
--- CR 116.2d's WHO on the object axis: the permanents that `source`'s ability
+-- The printed WHO on the object axis: the permanents that `source`'s ability
 -- named `name` restricts right now. Parun.Engine.Ignore turns that into the offer,
 -- by asking who CONTROLS them -- "that creature's controller" (Volrath's Curse,
 -- Lost in Thought), which is the object-axis reading of the same "the players

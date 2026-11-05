@@ -29,7 +29,7 @@ import qualified Parun.Types.ZoneScope as ZoneScope
 -- the whole of it, which is Amnesia's first instruction -- has no other spelling.
 --
 -- Not a target and never one (CR 115.10a), so CR 608.2b has nothing to fizzle,
--- and swept when the effect executes (CR 608.2c) -- the two properties every
+-- and swept when the effect executes (CR 608.2h) -- the two properties every
 -- sweeping arm has.
 data EachCardInHand = MkEachCardInHand
   { hands :: ZoneScope.ZoneScope,

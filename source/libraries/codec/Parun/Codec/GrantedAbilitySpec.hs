@@ -131,7 +131,7 @@ spec s = Spec.describe s "Parun.Codec.GrantedAbility" $ do
             }
       )
       " {\"type\":\"Rules\",\"value\":{\"combatRestrictions\":[{\"type\":\"CantBeBlockedBy\",\"value\":{\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"blockers\":{\"type\":\"Measures\",\"value\":{\"measure\":{\"type\":\"Power\"},\"comparison\":{\"type\":\"AtMost\"},\"operand\":{\"type\":\"Literal\",\"value\":2}}}}}]}} "
-  -- CR 613.10: Nerd Rage's "You have no maximum hand size".
+  -- CR 613.11: Nerd Rage's "You have no maximum hand size".
   Spec.it s "Player" $
     Common.assertCodec
       s

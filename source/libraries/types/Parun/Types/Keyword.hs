@@ -117,7 +117,7 @@ data Keyword
     Shroud
   | Trample -- 702.19
   | -- | 702.19c: trample over planeswalkers, a second tier to CR 702.19b's gate;
-    -- a sibling of Trample, CR 702.19d naming the two side by side (CR 702.19e).
+    -- a sibling of Trample, CR 702.19d naming the two side by side.
     TrampleOverPlaneswalkers
   | Vigilance -- 702.20
   | -- | 702.21a: ward [cost], a triggered ability countering the targeting spell
@@ -216,7 +216,7 @@ data Keyword
     -- a creature ignoring type-changing effects, and a charge counter for each
     -- otherwise; each instance works separately (CR 702.44d).
     --
-    -- Nullary: rule 702.44a fixes both halves, and CR 702.44b's count is the
+    -- Nullary: rule 702.44a fixes both halves, and its count is the
     -- entering object's own CR 400.7d mana record rather than anything a card
     -- prints. CR 702.44c's use of the word to set another ability's number is
     -- that ability's payload (Modular Nothing), not this keyword.
@@ -629,10 +629,6 @@ data Keyword
     JumpStart
   | -- | 702.134a: whenever this creature attacks, put a +1/+1 counter on target
     -- attacking creature with power less than this creature's power.
-    --
-    -- Not implemented: CR 702.134c's "an ability that triggers whenever a
-    -- creature mentors another creature", a trigger condition no card in parun's
-    -- pool prints (#1159).
     Mentor
   | -- | 702.135a: afterlife N -- when this permanent dies, create N 1/1 white and
     -- black Spirit creature tokens with flying; each instance triggers separately
@@ -680,7 +676,7 @@ data Keyword
     -- night themselves are on the game (CR 731.1).
     Daybound
   | -- | 702.145e: nightbound, daybound's back-face mirror and two static
-    -- abilities rather than three (CR 702.145d, CR 702.145g).
+    -- abilities rather than three (CR 702.145a, CR 702.145b).
     Nightbound
   | -- | 702.147a: "This creature can't block" and "When this creature attacks,
     -- sacrifice it at end of combat", the second arming a CR 603.7 delayed
@@ -846,8 +842,8 @@ data Keyword
     -- the tapped creature's power." Rule 508.1g's other optional cost to attack,
     -- offered by Parun.Engine.Combat.declareAttackers beside Exert's; rule
     -- 702.154b's linked triggered ability is
-    -- Parun.Engine.Keyword.enlistReflexive, armed as CR 603.12's reflexive entry
-    -- only where the tap happened.
+    -- Parun.Engine.Keyword.enlistReflexive, armed as a
+    -- TriggerCondition.Reflexive entry only where the tap happened (CR 607.2h).
     Enlist
   | -- | 702.103a: "As you cast this spell, you may choose to cast it bestowed. If
     -- you do, you pay [cost] rather than its mana cost." CR 702.103b's rewrite

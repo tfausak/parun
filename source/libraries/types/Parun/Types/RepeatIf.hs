@@ -3,7 +3,7 @@ module Parun.Types.RepeatIf where
 import qualified Data.Sequence as Seq
 import qualified Parun.Types.Condition as Condition
 
--- | CR 608.2c's "if [condition], [instructions] and repeat this process":
+-- | The printed "if [condition], [instructions] and repeat this process":
 -- Grist, the Hunger Tide's +1. No player chooses whether to go again, which is
 -- what separates it from Parun.Types.Effect's Repeat.
 --

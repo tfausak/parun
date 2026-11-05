@@ -9,7 +9,7 @@
 -- CostComponent.Blight arm both call in without saying which they are.
 --
 -- ONE module and not two procedures, because rule 701.68a is one rule however the
--- card demands it: CR 601.2f\/602.1b make it a cost, CR 118.12 makes it a cost
+-- card demands it: CR 601.2f\/602.1a make it a cost, CR 118.12 makes it a cost
 -- paid on resolution, and an effect asks for it outright. All three put the same
 -- counters on a creature chosen the same way, so all three come here.
 module Parun.Engine.Blight where
@@ -80,8 +80,8 @@ instructed pid gs = case payable pid gs of
 -- Control and not existence -- an opponent's creatures are not candidates -- and
 -- nothing here reads N. Rule 701.68b's "unable to put N counters" has two
 -- causes: no creature, the one the rule names, and an effect saying -1\/-1
--- counters can't be put on it (`payable`). CR 122.6 puts any number of counters
--- on any other creature, so a 1\/1 takes blight 5 as readily as blight 1.
+-- counters can't be put on it (`payable`). No rule caps the counters a creature
+-- can bear, so a 1\/1 takes blight 5 as readily as blight 1.
 canBlight :: PlayerId -> GameState.GameState -> Bool
 canBlight pid gs = not (null (payable pid gs))
 
@@ -113,8 +113,8 @@ canBlight pid gs = not (null (payable pid gs))
 -- exists, so a payment lost to a bad answer would be a refusal the rules do not
 -- offer.
 --
--- N of zero still chooses, and CR 122.6 is why the choice is made anyway: rule
--- 701.68a's process is "put N -1\/-1 counters on a creature you control", so the
+-- N of zero still chooses, and CR 701.68a is why the choice is made anyway: its
+-- process is "put N -1\/-1 counters on a creature you control", so the
 -- creature is chosen whatever N is, and CR 701.68c's "blighted creature" is that
 -- creature.
 blight :: (PlayerId -> GameState.GameState -> [ObjectId]) -> CounterCause.CounterCause -> ObjectId -> Natural -> Game (Maybe ObjectId)

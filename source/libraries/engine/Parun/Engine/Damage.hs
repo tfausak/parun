@@ -453,10 +453,9 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
               -- excess -- unless CR 702.22j inverts it.
               Just pid -> do
                 -- CR 702.22j: with a banding creature among the blockers, the
-                -- DEFENDING player divides the attacking creature's damage. The
-                -- rule is stated as an exception to CR 510.1c alone, so it moves
-                -- WHO is asked and nothing else -- the thresholds and CR
-                -- 510.1e's legality check are untouched.
+                -- DEFENDING player divides the attacking creature's damage. Trample's
+                -- thresholds and CR 510.1e's check are untouched, and the division
+                -- may pass the blockers.
                 --
                 -- CR 702.22k is the mirror, moving the division of a BLOCKING
                 -- creature's damage to the active player. Its site is
@@ -472,7 +471,8 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
                 -- reads that same record (CR 506.4c / 506.2), so the chooser is
                 -- CR 702.22j's defending player there too. What is left for the
                 -- fallback is a battle still on the battlefield designating
-                -- nobody, which CR 310.11's repair does not leave standing.
+                -- nobody: its protector left mid-combat, and CR 704.5x withholds
+                -- the repair while it is being attacked.
                 let banded = any (\b -> Projection.hasKeyword Keyword.Banding b gs) blockers
                     chooser = if banded then Maybe.fromMaybe pid defending else pid
                     thresholdOf b = if trample then lethalFrom gs attacker b else 0
@@ -548,8 +548,9 @@ blockerAssignment gs (blocker, attackers) = case Projection.combatDamageAmountOf
               blocked -> case Projection.controllerOf blocker gs of
                 Nothing -> pure (Nothing, Right [], Map.empty)
                 -- Every threshold is 0: CR 510.1d's division is unconstrained,
-                -- where CR 510.1c's has to clear lethal damage first. Trample is
-                -- an attacker's keyword (CR 702.19b) and reaches nothing here.
+                -- as CR 510.1c's is without trample, where CR 702.19b's has to
+                -- clear lethal damage first. Trample is an attacker's keyword and
+                -- reaches nothing here.
                 -- tiersCleared over an all-zero map is vacuous, so a blocking
                 -- creature's division has no gate for the step's other
                 -- assignments to clear, and gatherCombatDamage leaves it out.
@@ -864,8 +865,9 @@ damageRecipient gs recipient = case recipient of
 -- One entry per CR 120.1a card type the recipient HAS, read off Projection.damagedCardTypes
 -- so this and CR 120.3's results agree about what the permanent is:
 --
---   * a creature's bar is CR 120.6's lethal damage, "taking into account damage
---     already marked", or 1 from a source with deathtouch (lethalFrom).
+--   * a creature's bar is CR 120.6's lethal damage, CR 120.4a's "taking into
+--     account damage already marked", or 1 from a source with deathtouch
+--     (lethalFrom).
 --   * a planeswalker's is its loyalty, which is its loyalty counters (CR 306.5c).
 --   * a battle's is its defense, which is its defense counters (CR 310.4c).
 --
@@ -1057,8 +1059,8 @@ processDamage settle events = do
       -- battle that many DEFENSE counters. One function, because the two rules
       -- differ in nothing but the counter kind and read the same three ways:
       -- removed directly rather than through a "would remove counters"
-      -- sub-replacement, there being no such thing -- CR 614.16 scales counters an
-      -- effect PUTS on, and nothing in CR 614 replaces a removal -- floored at 0
+      -- sub-replacement, no ReplacementEffect class pairing with a removal
+      -- (gap #6258) -- CR 614.16 scales counters an effect PUTS on -- floored at 0
       -- rather than wrapped, because Object.counters is Natural while CR 306.5c
       -- makes loyalty and CR 122.1g defense the COUNT of those counters, and
       -- destroying nothing (CR 120.5): CR 704.5i and CR 704.5v are what read the 0.
@@ -1266,8 +1268,8 @@ processDamage settle events = do
               -- gives the sum. Toxic is scoped to COMBAT damage, so a noncombat
               -- event's captured value is ignored.
               --
-              -- ONE placement and not two, because CR 122.6 knows only how many
-              -- counters of a kind are being put: two calls would run two CR 616.1
+              -- ONE placement and not two, a reading neither CR 120.3b nor CR
+              -- 702.164c forces: two calls would run two CR 616.1
               -- loops over one player's poison and let a one-shot replacement be
               -- spent twice. No printing has both keywords anyway (DamageSpec
               -- hand-builds the event).
@@ -1435,7 +1437,7 @@ processDamage settle events = do
             -- which is the same reasoning the prevention/damage order above
             -- follows: both land inside one CR 117.5 boundary, so the triggers
             -- are gathered together either way, and this fixes only the
-            -- canonical order. Simultaneous with the damage under CR 119.2, and
+            -- canonical order. Processed from the damage under CR 120.4c, and
             -- logged after it because a cause reads before its consequence.
             --
             -- CR 120.3f's gain is NOT here: recordLifelinkGains lands it after

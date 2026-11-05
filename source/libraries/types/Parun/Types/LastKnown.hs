@@ -204,8 +204,8 @@ data LastKnown = MkLastKnown
     --
     -- Not a characteristic either (CR 109.3's list has no protector), and not
     -- recoverable from anything above: CR 506.4 removes a departed battle from
-    -- combat while CR 506.4c keeps its attacker attacking it, and CR 508.5's
-    -- second sentence then asks for "the protector of the battle that creature
+    -- combat while CR 506.4c keeps its attacker an attacking creature, and CR
+    -- 508.5's second sentence then asks for "the protector of the battle that creature
     -- was attacking before it was removed from combat" -- a question with no live
     -- object left to read, and one the declaration already asks of a battle
     -- sacrificed during CR 508.1i's mana window.
@@ -250,7 +250,7 @@ data LastKnown = MkLastKnown
     -- | CR 400.1: whose library, hand or graveyard held it as it ceased --
     -- Nothing off those zones. LeavesZoneTrigger's `whose` reads it.
     pile :: !(Maybe PlayerId.PlayerId),
-    -- | CR 604.2 / 608.2h: the "as long as" clauses of its granted activated
+    -- | CR 611.3a / 608.2h: the "as long as" clauses of its granted activated
     -- abilities that did not hold as it left (Parun.Types.ActivatedAbility's
     -- `condition`), so Count.lastKnownView leaves those abilities out. Not
     -- recoverable from `characteristics`, which carries each ability with its

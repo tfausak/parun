@@ -56,8 +56,8 @@ data Layout
     --
     -- Its own arm rather than a reading of Transforming for a second reason the
     -- rules state outright. CR 710.1c: "a flip card's color and mana cost don't
-    -- change if the permanent is flipped", where CR 712.8f gives a turned-over
-    -- permanent "only the characteristics of the face that's up". So the flipped
+    -- change if the permanent is flipped", where CR 712.8e gives a turned-over
+    -- permanent "only the characteristics of its back face". So the flipped
     -- read is PER-CHARACTERISTIC and not a face swap, which is
     -- Parun.Engine.Card.flippedFace.
     --

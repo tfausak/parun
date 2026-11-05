@@ -20,7 +20,7 @@ import qualified Parun.Types.TargetCount as TargetCount
 import qualified Parun.Types.TargetSlot as TargetSlot
 
 -- | The filter key is omitted when Nothing, mirroring how optional fields are
--- encoded elsewhere. CR 601.2c's "another" is a Not IsSource conjunct inside
+-- encoded elsewhere. The printed "another" is a Not IsSource conjunct inside
 -- that filter, not a key of its own (#163).
 --
 -- The count key is omitted when the slot takes exactly one, so an ordinary

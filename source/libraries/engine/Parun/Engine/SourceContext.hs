@@ -2,7 +2,7 @@
 -- with every answer the board gives about that source filled in one place --
 -- its host (CR 303.4b), its owner (CR 108.3), what it put onto the battlefield
 -- (CR 400.7), what it exiled (CR 607.2a) and every choice it made as it entered (CR 614.1c) or while
--- resolving (CR 608.2c) -- so no position can fill one and forget another.
+-- resolving (CR 608.2d) -- so no position can fill one and forget another.
 --
 -- Not the source's power, toughness, mana value, colours or names: those are
 -- projected characteristics, and this module sits below Parun.Engine.Projection,
@@ -77,7 +77,7 @@ choicesOf acquisition source gs =
     }
 
 -- | `context` with these choices as the source's: CR 105.2's colours, CR
--- 205.3's subtype, CR 201.4's names and CR 107.1c's number, and the
+-- 205.3's subtype, CR 201.4's names and CR 607.2d's number, and the
 -- acquisition they belong to (CR 607.5).
 withChoices :: SourceChoices.SourceChoices -> Filter.Context -> Filter.Context
 withChoices choices context =

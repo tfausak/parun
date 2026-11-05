@@ -43,7 +43,7 @@ spec s = Spec.describe s "Parun.Codec.ForEach" $ do
             ForEach.members = LoopMembers.Every,
             ForEach.slot = SlotName.MkSlotName (Text.pack "victim"),
             ForEach.body = Seq.fromList [Text.pack "first", Text.pack "second"],
-            -- CR 608.2f's second sentence, which that rule's Soulfire Eruption
+            -- CR 608.2f's third sentence, which that rule's Soulfire Eruption
             -- example states outright.
             ForEach.individually = True,
             ForEach.payGate = Nothing,

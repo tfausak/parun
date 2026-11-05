@@ -220,16 +220,16 @@ asZoneChange event = case event of
 --      installer prepends as it creates the row. Always the LIVE store, never a
 --      frozen one: CR 614.3 spends a one-shot as it is applied, and `consume`
 --      writes that back here.
---   3. The CR 613.11 PLAYER axis (PlayerEffect.protectionCarriers), by seat: rule
+--   3. The CR 613.10 PLAYER axis (PlayerEffect.protectionCarriers), by seat: rule
 --      702.16e's "or player", which no permanent's ability list holds because a
 --      player has no keywords and no characteristics. Re-derived from the board
 --      like segment 1 and spent like it -- nothing to consume.
 --
 -- Segments 1 and 2 drop a row whose printed clause is false right now, which is
--- CR 614.1's "they aren't locked in ahead of time": the permanent segment's CR
--- 604.2 clause in Projection.replacementsOf, the floating one's in `lives` below.
--- Segment 3's twin of that is PlayerEffect.applying, whose own CR 604.2 gate
--- drops a carrier that has stopped applying.
+-- CR 614.1's "they aren't locked in ahead of time": the permanent segment's
+-- clause (CR 611.3a) in Projection.replacementsOf, the floating one's in
+-- `lives` below. Segment 3's twin of that is PlayerEffect.applying, whose own
+-- CR 604.2 gate drops a carrier that has stopped applying.
 --
 -- The first two segments take separate arguments -- rather than one GameState
 -- apiece, which would be two interchangeable parameters of the same type -- so
@@ -276,7 +276,8 @@ collect sources floating =
             -- have bound: a printed static ability is re-derived from the board,
             -- and Filter.IsBound is vacuously False in it.
             ReplacementCandidate.slots = Map.empty,
-            -- A static ability's row reads its source's choices live (CR 604.2).
+            -- A static ability's row reads its source's choices live (CR
+            -- 611.3a).
             ReplacementCandidate.choices = Nothing
           }
       fromFloating active =
@@ -317,7 +318,7 @@ collect sources floating =
       -- have the stated quality to a permanent or player with protection is
       -- prevented." The permanent half is a row rule 702.16 mints onto the
       -- permanent (Parun.Engine.Keyword.mintedReplacementsOf); a player has no
-      -- keywords, so its half rides the CR 613.11 axis and is minted here, where
+      -- keywords, so its half rides the CR 613.10 axis and is minted here, where
       -- the rows PlayerEffect.protectionCarriers gathers can be read.
       --
       -- CandidateId.OfPermanent with a MINTED provenance rather than a third arm
@@ -386,7 +387,7 @@ collect sources floating =
       --
       -- That atom answers here because candidateContext fills
       -- Filter.sourceChosenNames off the carrier; it is what makes the read LIVE
-      -- at the damage event (CR 609.7b) rather than frozen when this row was
+      -- at the damage event (CR 702.16e) rather than frozen when this row was
       -- gathered.
       --
       -- `whichRecipient` and not `whoRecipient`, though both name a player: the
@@ -418,7 +419,7 @@ collect sources floating =
       -- installation -- the row stays in GameState.replacements and is asked
       -- again next time. The permanent segment's twin is
       -- Projection.replacementsOf, which drops its own clause the same way --
-      -- CR 604.2's there, since a permanent's is a static ability's, and CR
+      -- CR 611.3a's there, since a permanent's is a static ability's, and CR
       -- 614.3's here, since a resolution installed this row.
       --
       -- The BOARD is Projection.boardAsEntering's, as replacementsOf's is, and
@@ -620,7 +621,7 @@ admits regenerability cause rewrite = case rewrite of
 -- CR 614.1: which permanent's destruction each rewrite watches for when its row
 -- prints no subject of its own.
 --
--- CR 201.5 / 201.5c / 701.19a: "regenerate THIS creature" names the ability's own
+-- CR 700.7 / 701.19a: "regenerate THIS creature" names the ability's own
 -- source, so a regeneration is self-only. CR 122.1c's "this permanent" is the
 -- same self-scope reached from the other direction: the effect is minted onto the
 -- permanent holding the counters. CR 702.89a is the one that is not self-scoped
@@ -635,7 +636,7 @@ scopes gs rewrite src oid = case rewrite of
   DestructionRewrite.Regenerate -> src == oid
   DestructionRewrite.RemoveShieldCounter -> src == oid
   -- CR 702.89a's "enchanted permanent": what the AURA is attached to, read off
-  -- Object.attachedTo. A row whose source is attached to a player (CR 303.4a's
+  -- Object.attachedTo. A row whose source is attached to a player (CR 303.4b's
   -- other Aura shape) matches nothing, which is right -- rule 702.89a's subject
   -- is a permanent.
   DestructionRewrite.UmbraArmor ->
@@ -836,7 +837,7 @@ matchesPrinted viewOf gs event candidate =
         -- plus the one fact about the ROW rather than the event -- a shield
         -- spent to nothing is no longer a prevention effect.
         --
-        -- CR 614.9's prohibition is asked HERE and not in an inert application,
+        -- CR 614.17's prohibition is asked HERE and not in an inert application,
         -- which is the asymmetry `redirectable` below derives: a redirection a
         -- card forbids is not applicable, so it never reaches CR 616.1's choice.
         (ReplacementEffect.DamageR (DamageR.MkDamageR pat rewrite _), ProposedEvent.WouldDealDamage de) ->
@@ -1137,8 +1138,8 @@ matchesPrinted viewOf gs event candidate =
 -- has no controller: an ability whose "you" names nobody states no condition it
 -- can meet.
 --
--- An arm may read the PROPOSED AMOUNT here rather than in the printed CR 604.2
--- condition a Parun.Types.PrintedReplacement carries, because no
+-- An arm may read the PROPOSED AMOUNT here rather than in the printed
+-- condition (CR 611.3a) a Parun.Types.PrintedReplacement carries, because no
 -- Parun.Types.Condition can see it: a condition is asked of the BOARD, and "at
 -- least that many" is asked of the event.
 -- CR 702.52a / 702.52b: does this draw rewrite's own condition hold? Dredge is
@@ -1232,11 +1233,11 @@ resizes rewrite n = case rewrite of
 -- ONLY A RULE'S CONDITION, and every arm below is one. A CARD's condition on its
 -- own entry clause -- Dust Animus's "if you control five or more untapped lands",
 -- Monstrous War-Leech's "if it was kicked" -- is written where every other
--- card-authored gate on a replacement ability goes, CR 604.2's clause on
--- Parun.Types.PrintedReplacement, which Parun.Engine.Projection.replacementsOf has
--- already asked against the entering permanent (CR 614.12) before a row reaches
--- here. One condition mechanism, not two: no arm below reads a card-authored
--- condition, only a rule's.
+-- card-authored gate on a replacement ability goes, the clause (CR 611.3a) on
+-- Parun.Types.PrintedReplacement, which Parun.Engine.Projection.replacementsOf
+-- has already asked against the entering permanent (CR 614.12) before a row
+-- reaches here. One condition mechanism, not two: no arm below reads a
+-- card-authored condition, only a rule's.
 --
 -- One arm per constructor, no wildcard, so a new rewrite with a condition breaks
 -- the build here as well as in bucketOfEffect, readsApplier and Event.apply. A
@@ -1258,9 +1259,9 @@ admitsEntry gs oid rewrite = case rewrite of
   EntryRewrite.WithCounters {} -> True
   -- CR 614.1c states no condition of its own: "it enters with flying" is
   -- unconditional, and Faerie Squadron's "if this creature was kicked" is the
-  -- CARD's clause, which rides CR 604.2 on Parun.Types.PrintedReplacement and has
-  -- already been asked before this row was collected -- RunEffects' answer below,
-  -- and for its reason.
+  -- CARD's clause, which rides Parun.Types.PrintedReplacement (CR 611.3a) and
+  -- has already been asked before this row was collected -- RunEffects' answer
+  -- below, and for its reason.
   EntryRewrite.EntersWith _ -> True
   EntryRewrite.UnderControlOf _ -> True
   EntryRewrite.SacrificeAnyNumber {} -> True
@@ -1373,7 +1374,7 @@ admitsEntry gs oid rewrite = case rewrite of
   -- CR 614.1c's "as [this permanent] enters, [do something]". No condition here
   -- and Bloodthirst above is the contrast: rule 702.54a's condition is a RULE's,
   -- so it has nowhere else to live, while Monstrous War-Leech's "if it was
-  -- kicked" is the CARD's and rides CR 604.2's clause on
+  -- kicked" is the CARD's and rides the clause (CR 611.3a) on
   -- Parun.Types.PrintedReplacement, which Parun.Engine.Projection.replacementsOf
   -- has already asked before this row was ever collected.
   EntryRewrite.RunEffects _ -> True
@@ -1386,8 +1387,9 @@ admitsEntry gs oid rewrite = case rewrite of
   -- bucket, and CR 616.1's highest-non-empty rule would hand it the entry ahead
   -- of a rewrite that had something to do.
   --
-  -- The layout half is Card.backFace, which is Nothing for exactly the cards CR
-  -- 712.1 does not count as double-faced -- the same question CR 712.14a asks one
+  -- The layout half is Card.backFace, which is Nothing for the cards CR
+  -- 712.1 does not count as double-faced and for a meld card, which CR 712.4c says
+  -- cannot be transformed -- the same question CR 712.14a asks one
   -- rule over (Parun.Engine.Event.changeZoneEntering). It is asked at all because
   -- daybound can be GRANTED: nothing stops a static ability from putting it on a
   -- permanent with no second face, and the rule's condition is what says nothing
@@ -1537,7 +1539,7 @@ matchesController gs candidate rel oid = relationHolds gs candidate rel (Project
 -- Two readings ride one Filter. CR 609.7b's characteristic shield (Luminesce's
 -- "black sources and red sources") is a predicate over that view, rechecked here
 -- at the event exactly as the rule says rather than locked in when the shield was
--- created; CR 614.15's "this way" is `Filter.IsSource`, which compares the
+-- created; CR 614.15's "own effect(s)" is `Filter.IsSource`, which compares the
 -- candidate's identity to the Context's source and so keys Galvanic Blast's
 -- metalcraft clause to the damage its own resolution deals. `And []` admits
 -- everything and never forces the view, which is what keeps CR 615.10's "if a
@@ -1619,7 +1621,7 @@ matchesDamagePattern viewOf gs context pat de =
 -- Divine Deflection's "you and/or permanents you control" is one CR 615.7 shield
 -- over both kinds of recipient, so the two halves are joined by `or` and not by
 -- the `and` every other conjunct of matchesDamagePattern uses. Reading them as a
--- conjunction would admit nothing at all: CR 120.3a's two kinds of recipient are
+-- conjunction would admit nothing at all: CR 120.3's two kinds of recipient are
 -- disjoint, so no damage event satisfies an object filter and a player relation
 -- at once.
 --
@@ -1638,7 +1640,7 @@ matchesPrintedRecipient viewOf context de pat = case (DamagePattern.whatRecipien
 -- clause names -- Divine Deflection's "dealt to you"?
 --
 -- False for an OBJECT recipient, matchesDamageRecipient's answer with the kinds
--- swapped: the two halves each admit one of CR 120.3a's two kinds and neither
+-- swapped: the two halves each admit one of CR 120.3's two kinds and neither
 -- guesses about the other.
 --
 -- "You" is the CONTEXT's perspective, which for a floating row is the controller
@@ -2097,43 +2099,43 @@ bucketOfEffect re = case re of
   ReplacementEffect.DestructionR _ -> ReplacementBucket.Other
   ReplacementEffect.CounterR {} -> ReplacementBucket.Other
   ReplacementEffect.TokenR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entering the battlefield; turning face up is not,
+  -- CR 616.1b-d are all about entering the battlefield; turning face up is not,
   -- so CR 616.1e -- for the copy rewrite too, since CR 616.1c's copy is one made
   -- "as it enters the battlefield".
   ReplacementEffect.TurnUpR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entering the battlefield; becoming attached is
+  -- CR 616.1b-d are all about entering the battlefield; becoming attached is
   -- not, so CR 616.1e -- for the copy rewrite too, TurnUpR's reason.
   ReplacementEffect.AttachR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entering the battlefield and copying; becoming
+  -- CR 616.1b-d are all about entering the battlefield and copying; becoming
   -- untapped is neither, so CR 616.1e.
   ReplacementEffect.UntapR _ -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entering the battlefield and copying; a life total
+  -- CR 616.1b-d are all about entering the battlefield and copying; a life total
   -- is neither, so CR 616.1e.
   ReplacementEffect.LifeLossR {} -> ReplacementBucket.Other
   ReplacementEffect.LifeGainR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entering the battlefield and copying; drawing a
+  -- CR 616.1b-d are all about entering the battlefield and copying; drawing a
   -- card is neither, so CR 616.1e.
   ReplacementEffect.DrawR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entering the battlefield and copying; an instruction
+  -- CR 616.1b-d are all about entering the battlefield and copying; an instruction
   -- to draw cards is neither, so CR 616.1e.
   ReplacementEffect.DrawCountR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entering the battlefield and copying; a player's
+  -- CR 616.1b-d are all about entering the battlefield and copying; a player's
   -- instruction to mill, flip, proliferate, scry or face a choice is neither, so
   -- CR 616.1e.
   ReplacementEffect.InstructionR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entries and copies; rolling dice is none of them, so
+  -- CR 616.1b-d are all about entries and copies; rolling dice is none of them, so
   -- CR 616.1e. InstructionR's answer one rule over.
   ReplacementEffect.DieRollR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entries and copies; assembling is none of them, so
+  -- CR 616.1b-d are all about entries and copies; assembling is none of them, so
   -- CR 616.1e.
   ReplacementEffect.AssembleR {} -> ReplacementBucket.Other
   -- CR 616.1e: producing mana is neither an entry nor a copy.
   ReplacementEffect.ManaR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entering the battlefield and copying; losing
+  -- CR 616.1b-d are all about entering the battlefield and copying; losing
   -- the game is neither, so CR 616.1e.
   ReplacementEffect.GameLossR {} -> ReplacementBucket.Other
   ReplacementEffect.PlaneswalkR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entries and copies; a skip is none of those, so it
+  -- CR 616.1b-d are all about entries and copies; a skip is none of those, so it
   -- falls to CR 616.1e.
   ReplacementEffect.PhaseR _ -> ReplacementBucket.Other
 
@@ -2852,7 +2854,7 @@ affectedChooserOf gs event = case event of
   -- controller is the "you" of its own "as this becomes attached" ability.
   ProposedEvent.WouldBecomeAttached oid -> Projection.controllerOf oid gs
   -- CR 616.1's affected object is the permanent that would become untapped, and
-  -- CR 122.1d gives its controller the choice among applicable rows even at CR
+  -- CR 616.1 gives its controller the choice among applicable rows even at CR
   -- 502.3's turn-based action, where that controller is the active player.
   ProposedEvent.WouldUntap oid -> Projection.controllerOf oid gs
   -- CR 616.1's affected player is the one the event happens to, which for a life
@@ -3229,7 +3231,7 @@ splitDamage covered event = case event of
           )
   _ -> Nothing
 
--- CR 120.4's damage EVENT, whose granularity is one source, one recipient, one
+-- Parun's damage event, whose granularity is one source, one recipient, one
 -- moment: the events of one moment that name the same recipient are summed into
 -- one. Char's "4 damage to any target and 2 damage to you", aimed at its own
 -- caster, deals that caster one event of 6; Harm's Way pointed AT the permanent
@@ -3473,9 +3475,8 @@ liveDestination gs oid
 -- Pariah's "is dealt to enchanted creature instead".
 --
 -- The battlefield's UNIQUE match, read live at the damage event rather than
--- swept when the ability began, for the CR 611.2c reason DamagePattern's
--- printed recipient halves give: a static ability's destination is a
--- description, so an Aura that changes what it enchants redirects somewhere
+-- swept when the ability began, by CR 611.3a: a static ability's destination is
+-- a description, so an Aura that changes what it enchants redirects somewhere
 -- else from then on.
 --
 -- None is CR 614.9's "the effect does nothing", which Parun.Engine.Event.apply
@@ -3568,7 +3569,7 @@ redirects rewrite = case rewrite of
   DamageRewrite.SetAmount _ -> False
   DamageRewrite.Scale _ -> False
   -- The effects run in the damage's place, so nothing is dealt to anybody: no
-  -- recipient moves and CR 614.9's prohibition has nothing to stop.
+  -- recipient moves and CR 614.17's prohibition has nothing to stop.
   DamageRewrite.RunEffects _ -> False
   -- The damage reaches the recipient it was proposed for.
   DamageRewrite.TurnFaceUp -> False

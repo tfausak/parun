@@ -14,11 +14,11 @@ import qualified Parun.Types.PlayerStaticAbility as PlayerStaticAbility
 -- | The wire format is unchanged by the conversion to a bundle; what it adds is
 -- the schema.
 --
--- The CR 604.2 "as long as" gate is OPTIONAL, and absent means unconditional --
--- Parun.Codec.StaticAbility's posture for the same field on the object-facing
--- carrier, so a card that states no clause writes no key. CR 116.2d's name is
--- optional for the same reason read the other way: only a face whose own text
--- refers to the ability writes one.
+-- The "as long as" gate (CR 611.3a) is OPTIONAL, and absent means
+-- unconditional -- Parun.Codec.StaticAbility's posture for the same field on
+-- the object-facing carrier, so a card that states no clause writes no key. CR
+-- 116.2d's name is optional for the same reason read the other way: only a face
+-- whose own text refers to the ability writes one.
 codec :: Codec.Codec PlayerStaticAbility.PlayerStaticAbility
 codec = Fields.object $ do
   scope <- Fields.required "scope" PlayerScope.codec PlayerStaticAbility.scope

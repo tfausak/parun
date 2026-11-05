@@ -58,13 +58,13 @@ data BlockPermission = MkBlockPermission
     -- Deliberately not a huge literal, which would be a number the card does not
     -- print and would still refuse the board that exceeded it.
     additional :: Maybe Quantity.Quantity,
-    -- | CR 604.2's "as long as" clause -- Entourage of Trest's "as long as
+    -- | An "as long as" clause (CR 611.3a) -- Entourage of Trest's "as long as
     -- you're the monarch". Nothing is the ungated permission (Foriysian
     -- Brigade).
     --
     -- The OPPOSITE polarity to Parun.Types.CombatRestriction's gate, which is an
     -- "unless": there a gate that HOLDS lifts the restriction, here one that
-    -- holds is what grants the permission. Same type, same CR 604.2 re-reading
+    -- holds is what grants the permission. Same type, same CR 611.3a re-reading
     -- on every look, and the "you" inside it is CR 109.5's -- the controller of
     -- the permanent printing the sentence.
     while :: Maybe Condition.Condition

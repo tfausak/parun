@@ -8,7 +8,7 @@ import qualified Parun.Types.Threshold as Threshold
 
 -- | What one payment SPENDS out of a pool of objects: which resource it draws on
 -- (Parun.Types.ClaimAxis), which objects are in that pool for it, and how many of
--- them it takes. CR 118.3's "fully" is the rule that makes this worth naming --
+-- them it takes. CR 118.3's "fully" and CR 118.10 make this worth naming --
 -- two payments cannot both have the one object, whether they are two components
 -- of one cost (Parun.Engine.Cost.jointlyPayable) or the costs of two mana
 -- abilities the same payment activates (Parun.Engine.Mana.payableResolutionsGiven).

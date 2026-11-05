@@ -211,7 +211,7 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
       codec
       (CostComponent.PutCountersOnThis (CountersOnThis.MkCountersOnThis (CounterKind.Named (CounterName.UnsafeMkCounterName (Text.pack "verse"))) 1))
       " {\"type\":\"PutCountersOnThis\",\"value\":{\"count\":1,\"kind\":{\"type\":\"Named\",\"value\":\"verse\"}}} "
-  -- CR 701.68a as a cost, CR 601.2f/602.1b/118.12's three positions for it.
+  -- CR 701.68a as a cost, CR 601.2f/602.1a/118.12's three positions for it.
   Spec.it s "Blight" $
     Common.assertCodec
       s

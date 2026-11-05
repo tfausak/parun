@@ -444,7 +444,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.AtMost (AtMost.MkAtMost (Quantity.InSlot (SlotName.MkSlotName (Text.pack "dealt"))) (Quantity.Literal 3 NonEmpty.:| [])))
       " {\"type\":\"AtMost\",\"value\":{\"quantity\":{\"type\":\"InSlot\",\"value\":\"dealt\"},\"limits\":[{\"type\":\"Literal\",\"value\":3}]}} "
-  -- CR 202.1a's amount.
+  -- CR 702.191a's amount.
   Spec.it s "ManaSpent" $
     Common.assertCodec
       s
@@ -815,7 +815,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.WasCastFrom (CastFrom.MkCastFrom (PlayerRef.Relative PlayerRelation.You) (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You))))
       " {\"type\":\"WasCastFrom\",\"value\":{\"from\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"zone\":{\"type\":\"Graveyard\"}}}} "
-  -- CR 509.1h with only the skip on the wire: the object is the one the
+  -- CR 509.1g with only the skip on the wire: the object is the one the
   -- quantity is evaluated against.
   Spec.it s "BlockersBeyond carries how many blockers it skips" $
     Common.assertCodec

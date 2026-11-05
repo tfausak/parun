@@ -23,7 +23,8 @@ import qualified Parun.Types.PlayerId as PlayerId
 -- apart -- library to graveyard is all it records.
 --
 -- ONE entry per mill instruction per player, holding every card that player
--- milled: CR 701.17a mills them all at once, which is what an ability
+-- milled: they go all at once (Contaminated Drink's ruling), which is what an
+-- ability
 -- triggering on "one or more cards are milled" reads as a single event.
 data Milled = MkMilled
   { player :: PlayerId.PlayerId,

@@ -823,7 +823,7 @@ galvanicBlastSpec s registry =
       -- CR 614.3's "until they're used up": the row applied, so Uses.Once spent
       -- it. Nothing is left to replace a later damage event this turn.
       Spec.assertEqWith s "and the one-shot was consumed" (GameState.replacements after) []
-    -- CR 614.15's "this way": the clause replaces the damage ITS OWN SOURCE is
+    -- CR 614.15's "own effect(s)": the clause replaces the damage ITS OWN SOURCE is
     -- dealing and nothing else.
     --
     -- The row is seeded rather than cast, and its use count is widened to

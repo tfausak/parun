@@ -25,8 +25,8 @@ import qualified Parun.Types.WhenSpent as WhenSpent
 -- whole point here.
 --
 -- The COUNT is how many units this one instruction adds, and it is a field
--- rather than that many AddMana effects because CR 105.4's choice is made ONCE
--- per instruction: Stadium Vendors' "two mana of any one color they choose" adds
+-- rather than that many AddMana effects because "any one color" is one CR 105.4
+-- choice for the instruction: Stadium Vendors' "two mana of any one color they choose" adds
 -- two, both of the colour the recipient names, where two AddMana effects would
 -- ask twice and let the answers differ. A card whose type is already settled may
 -- be written either way -- Shizuko, Caller of Autumn spells {G}{G}{G} as three

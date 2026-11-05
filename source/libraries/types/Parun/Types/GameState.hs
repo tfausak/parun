@@ -204,7 +204,8 @@ data GameState = MkGameState
     -- own copy of this field is empty.
     heldBoards :: [GameState],
     -- | How far the state-based action check has consumed the event log --
-    -- CR 704.5h's and CR 903.9a's "since the last state-based action check".
+    -- CR 704.5h's and CR 903.9a's "since the last time state-based actions were
+    -- checked".
     damageScannedThrough :: Natural.Natural,
     -- | CR 603.7: delayed triggered abilities awaiting their event, in creation
     -- order; not cleared at turn handoff.
@@ -410,12 +411,12 @@ data GameState = MkGameState
     -- | CR 305.1 / 601.2a: each card played this game, keyed by the id it had
     -- where it was played from and by the one the play gave it (CR 400.7h,
     -- 400.7i), naming who played it. Never cleared: a delayed trigger may ask on
-    -- a later turn (CR 724.1e), and CR 400.7 never reuses an id.
+    -- a later turn (CR 603.7), and CR 400.7 never reuses an id.
     cardsPlayed :: Map.Map ObjectId.ObjectId PlayerId.PlayerId,
     -- | CR 121.1: the cards each player has drawn this turn, in order, each as the
     -- incarnation that reached the hand; its length is the ordinal stamped onto
     -- GameEvent.Drew. Cleared for every player at turn handoff, and after CR
-    -- 103.3's opening hands.
+    -- 103.5's opening hands.
     drawsThisTurn :: Map.Map PlayerId.PlayerId (Seq.Seq ObjectId.ObjectId),
     -- | CR 121.8: Nothing unless a spell is being cast or an ability activated
     -- (Parun.Engine.Event.announcing); then the cards drawn since it began, each

@@ -350,9 +350,10 @@ doorSpec s registry =
       Spec.assertEqWith s "one energy left" (S.playerCounterOf PlayerCounterKind.Energy S.alice after) 1
     -- CR 118.12's counter-placing cost (CR 701.63a's endure). The gate is the
     -- permanent still being on the battlefield to take the counters, and NOT
-    -- control -- Parun.ResolveSpec's Fortress Kin-Guard cases prove the two
+    -- control -- Parun.CounterspellSpec's Fortress Kin-Guard cases prove the two
     -- branches at gameplay level, and this is where the control reading is ruled
-    -- out, since on that card the payer is the controller either way.
+    -- out, since those cases never separate the payer from the permanent's controller
+    -- (gap #6208).
     Spec.it s "CR 118.12 PutCountersOnThis needs the permanent on the battlefield, whoever controls it" $ do
       piker <- S.printingOf s registry "Goblin Piker"
       let (onField, gs0) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
@@ -2559,7 +2560,7 @@ payAnswers = filter (\r -> case r of Response.ChoseToPay _ -> True; _ -> False)
 --     is not.
 --
 -- The COPY leg is the projection: a Clone put onto the battlefield enters as a
--- copy of Tarmogoyf {1}{G} (CR 706.2), whose mana cost reduced by {2} is {G} --
+-- copy of Tarmogoyf {1}{G} (CR 707.2), whose mana cost reduced by {2} is {G} --
 -- payable off the one Forest alice holds, where the printed Clone's {3}{U}
 -- reduced to {1}{U} is not payable there at all.
 flashSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -2611,7 +2612,7 @@ flashSpec s registry = Spec.describe s "Flash" $ do
     Spec.assertEqWith s "the Hill Giant was sacrificed" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Hill Giant")) S.alice after) 0
     Spec.assertEqWith s "it and Flash are in alice's graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 2
     Spec.assertEqWith s "and her Forests are untouched" (S.tappedCount S.alice after) 2
-  -- CR 706.2: the mana cost read is the permanent's, which for a Clone is the
+  -- CR 707.2: the mana cost read is the permanent's, which for a Clone is the
   -- one it copied. The printed Clone's {3}{U} reduced by {2} is {1}{U}, which
   -- this board cannot pay -- so a read through the printed card sacrifices the
   -- Clone where the copiable {1}{G} reduced to {G} keeps it.
