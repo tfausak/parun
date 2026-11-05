@@ -2245,10 +2245,10 @@ applyReplacementsIn settle asOf batch spent event = do
 -- Every other class comes out as at most one, which applyReplacementsIn reads
 -- off the first component alone.
 --
--- `earlier` is what the batch has already prevented, and the answer extends it:
--- CR 702.64b's ceiling spans one source's damage to one recipient across the
--- batch (Replacement.ceilingLeft).
-applyReplacementsReporting :: Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> ProposedEvent -> Game ([ProposedEvent], [Replacement.DamageThread], [Prevention])
+-- `earlier` is what the batch has already prevented and let through, and the
+-- answer extends it: CR 702.64b's ceiling and CR 615.10's floor span one
+-- source's damage to one recipient across the batch (Replacement.Tally).
+applyReplacementsReporting :: Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> ProposedEvent -> Game ([ProposedEvent], [Replacement.DamageThread], Replacement.Tally)
 applyReplacementsReporting asOf batch allowances spent earlier event = do
   (outcome, residue, prevented, _, _, _) <- loop (pure ()) asOf batch Nothing allowances spent earlier Nothing False Nothing event
   let (added, dealt) = Either.partitionEithers residue
@@ -2271,13 +2271,13 @@ applyReplacementsReporting asOf batch allowances spent earlier event = do
 -- carried in per event: it caps what a countdown covers here, and a share of 0
 -- keeps its row out of CR 616.1's offer entirely. Empty for every caller but
 -- the batch, which is every caller but resolveDamage.
-applyReplacementsFully :: Game () -> Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
-applyReplacementsFully settle asOf batch allowances spent = loop settle asOf batch Nothing allowances spent [] Nothing False Nothing
+applyReplacementsFully :: Game () -> Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+applyReplacementsFully settle asOf batch allowances spent = loop settle asOf batch Nothing allowances spent mempty Nothing False Nothing
 
 -- The last accumulator is CR 903.9c's split, taken when the owner accepted CR
 -- 903.9b's offer for a melded or merged commander inside the loop -- see
 -- `offerCommandZoneFirst`.
-loop :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+loop :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
 loop settle asOf batch diverting allowances applied prevented exiledBy shuffling split event = do
   gs <- State.get
   -- From scratch each iteration: collect against the CURRENT state (or, for a
@@ -2336,7 +2336,7 @@ loop settle asOf batch diverting allowances applied prevented exiledBy shuffling
 -- The CR 616.1 choice among the card-borne candidates of one bucket, and its
 -- application. Split out of `loop` so `offerCommandZoneFirst` can stand in front
 -- of it.
-chooseAndApply :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> GameState -> ProposedEvent -> [ReplacementCandidate] -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+chooseAndApply :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> GameState -> ProposedEvent -> [ReplacementCandidate] -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
 chooseAndApply settle asOf batch diverting allowances applied prevented exiledBy shuffling split gs event bucket = do
   picked <- Replacement.choose gs event bucket
   case picked of
@@ -2429,7 +2429,7 @@ rejoinUnmoved covered rest = case (covered, rest) of
 -- One iteration of `loop`: apply the chosen candidate to the event and continue
 -- with what comes back. Split out so the partial-cover branch above and the
 -- ordinary one apply a candidate the same way.
-applyChosen :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+applyChosen :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
 applyChosen settle asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event = do
   stepped <- stepChosen settle batch applied prevented exiledBy shuffling split candidate event
   case stepped of
@@ -2439,7 +2439,7 @@ applyChosen settle asOf batch diverting allowances applied prevented exiledBy sh
 -- The application itself, short of continuing the loop: Left for an outcome that
 -- ends this thread, Right for the rewritten event and the accumulators the loop
 -- continues it with.
-stepChosen :: Game () -> Set ObjectId -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Either (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId) (Set CandidateId, [Prevention], Maybe ObjectId, Bool, ProposedEvent))
+stepChosen :: Game () -> Set ObjectId -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Either (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId) (Set CandidateId, Replacement.Tally, Maybe ObjectId, Bool, ProposedEvent))
 stepChosen settle batch applied prevented exiledBy shuffling split candidate event = do
   gs <- State.get
   -- CR 615.12: the chosen effect is a prevention effect and this damage
@@ -2479,7 +2479,10 @@ stepChosen settle batch applied prevented exiledBy shuffling split candidate eve
   -- What makes it exact rather than a guess is Replacement.prevents: only a
   -- PREVENTION rewrite's shrinkage is prevention, where CR 614.1a's
   -- SetAmount and Scale shrink an event without preventing a point of it.
-  let prevented1 = prevented <> Maybe.maybeToList (Replacement.preventionBy inert candidate event outcome)
+  --
+  -- CR 615.10's floor is read off the same pair: what the row let through
+  -- counts against it for the rest of the batch (Replacement.floorLeft).
+  let prevented1 = prevented <> (Maybe.maybeToList (Replacement.preventionBy inert candidate event outcome), Maybe.maybeToList (Replacement.passageBy candidate event outcome))
   let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
   pure $ case outcome of
     Nothing -> Left (Nothing, [], prevented1, exiledBy, shuffling, split)
@@ -2664,8 +2667,8 @@ dealing de = if DamageEvent.amount de == 0 then Nothing else Just (ProposedEvent
 -- `applied` is CR 614.5's set of rows already applied to this event, which a
 -- rewrite performing NEW events of the same class in its place hands on to
 -- them, together with the candidate itself. `batchPrevented` is the damage
--- batch's preventions so far, which CR 702.64b's ceiling reads.
-apply :: Game () -> Set ObjectId -> Set CandidateId -> [Prevention] -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent)
+-- batch's tally so far, which CR 702.64b's ceiling and CR 615.10's floor read.
+apply :: Game () -> Set ObjectId -> Set CandidateId -> Replacement.Tally -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent)
 apply settle batch applied batchPrevented candidate event =
   case (ReplacementCandidate.effect candidate, event) of
     (ReplacementEffect.ZoneChangeR (ZoneChangeR.MkZoneChangeR _ toDest revealing _ toPosition optional), ProposedEvent.WouldChangeZone zc discarded position resolving) -> do
@@ -4022,10 +4025,14 @@ apply settle batch applied batchPrevented candidate event =
       -- prevention of it, which is CR 615.13's own condition.
       --
       -- No `setShield` and no arithmetic written back: CR 615.10's shields are
-      -- deliberately not reduced, applying separately to each event.
+      -- deliberately not reduced, applying separately to each event. What the
+      -- row already let through of this source's damage to this recipient in
+      -- the batch comes off the floor instead (Replacement.floorLeft), proved by
+      -- the scenario
+      -- temple-altisaur-lets-1-of-earthquake-through-once-though-pariah-adds-to-it.
       DamageRewrite.PreventAllBut surviving -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        let left = min surviving (DamageEvent.amount de)
+        let left = min (Maybe.fromMaybe surviving (Replacement.floorLeft batchPrevented candidate event)) (DamageEvent.amount de)
         if left == 0
           then pure Nothing
           else pure (Just (ProposedEvent.WouldDealDamage de {DamageEvent.amount = left}))
@@ -5530,7 +5537,7 @@ runEntry settle diverting origin given oid = do
   -- below for the reason `before` is.
   beforeSubjects <- State.gets GameState.enteringSubjects
   State.modify' (\gs -> gs {GameState.enteringBeside = batch, GameState.enteringSubjects = Map.insert oid origin beforeSubjects})
-  (outcome, _, _, _, _, _) <- loop settle Nothing batch diverting Map.empty Set.empty [] Nothing False Nothing (ProposedEvent.WouldEnter oid)
+  (outcome, _, _, _, _, _) <- loop settle Nothing batch diverting Map.empty Set.empty mempty Nothing False Nothing (ProposedEvent.WouldEnter oid)
   case outcome of
     Just (ProposedEvent.WouldChangeZone zc _ position _) -> do
       Monad.void (takeEnteringCounters oid)
@@ -5813,10 +5820,9 @@ fullyUnlockedAfter halves card = case card of
 -- CR 615: settle one proposed damage event. Empty means it does not happen; two
 -- or more is CR 614.9's counted redirection having moved part of it (Harm's
 -- Way). The second answer is what comes back unsettled (`DamageThread`), and the
--- third CR 615.13's: `earlier`, the batch's preventions so far, extended by one
--- entry per prevention effect that applied to THIS event and prevented some of
--- it.
-resolveDamage :: Map CandidateId Natural -> Set CandidateId -> [Prevention] -> DamageEvent.DamageEvent -> Game ([DamageEvent.DamageEvent], [Replacement.DamageThread], [Prevention])
+-- third `earlier`, the batch's tally so far (Replacement.Tally), extended by
+-- what each prevention effect applying to THIS event prevented or let through.
+resolveDamage :: Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> DamageEvent.DamageEvent -> Game ([DamageEvent.DamageEvent], [Replacement.DamageThread], Replacement.Tally)
 resolveDamage allowances spent earlier de = do
   (outcome, added, prevented) <- applyReplacementsReporting Nothing Set.empty allowances spent earlier (ProposedEvent.WouldDealDamage de)
   pure (Maybe.mapMaybe Replacement.asDamageEvent outcome, added, prevented)
@@ -5852,7 +5858,7 @@ resolveDamage allowances spent earlier de = do
 --     the total rather than three.
 resolveDamageBatch :: [DamageEvent.DamageEvent] -> Game ([DamageEvent.DamageEvent], [Prevention])
 resolveDamageBatch events = do
-  (dealt, prevented) <- settleThreads [] (fmap (\de -> (de, Set.empty)) events)
+  (dealt, (prevented, _)) <- settleThreads mempty (fmap (\de -> (de, Set.empty)) events)
   pure (Replacement.oneEventPerRecipient dealt, Replacement.groupPreventions prevented)
 
 -- CR 615.7: a row owes its division over damage an Eye for an Eye adds as much
@@ -5860,9 +5866,9 @@ resolveDamageBatch events = do
 -- settles what `settlesFirst` admits, asking only what touches it, and the rest
 -- wait for what that adds.
 --
--- `earlier` is every prevention the batch has made so far, threaded through
--- each thread in turn and answered extended (applyReplacementsReporting).
-settleThreads :: [Prevention] -> [Replacement.DamageThread] -> Game ([DamageEvent.DamageEvent], [Prevention])
+-- `earlier` is the batch's tally so far, threaded through each thread in turn
+-- and answered extended (applyReplacementsReporting).
+settleThreads :: Replacement.Tally -> [Replacement.DamageThread] -> Game ([DamageEvent.DamageEvent], Replacement.Tally)
 settleThreads earlier threads = do
   gs <- State.get
   let first = settlesFirst gs threads

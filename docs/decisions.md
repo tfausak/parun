@@ -125,9 +125,11 @@ Entries are ordered by the first rule each cites.
   deals her ONE event, of 6" and the scenario
   `harms-way-onto-another-recipient-of-its-source-is-one-event`; absorb's
   ceiling spans the event at `Parun.Engine.Replacement.ceilingLeft`, proved by
-  `lymph-sliver-absorbs-1-of-earthquake-once-though-pariah-adds-to-it`; the
-  redirect aimed back at its recipient at `Parun.Engine.Event.chooseAndApply`,
-  proved by the scenarios
+  `lymph-sliver-absorbs-1-of-earthquake-once-though-pariah-adds-to-it`;
+  CR 615.10's floor at `Parun.Engine.Replacement.floorLeft`, proved by
+  `temple-altisaur-lets-1-of-earthquake-through-once-though-pariah-adds-to-it`;
+  the redirect aimed back at its recipient at
+  `Parun.Engine.Event.chooseAndApply`, proved by the scenarios
   `harms-way-back-onto-its-recipient-takes-pyromancers-gauntlet-once-*`.
 - **Issue**: #2586, #6251.
 
