@@ -9,6 +9,7 @@ import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.ClassLevel as ClassLevel
+import qualified Parun.Types.CoinFlipTrigger as CoinFlipTrigger
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Types.CounterTrigger as CounterTrigger
@@ -295,20 +296,13 @@ data TriggerCondition
   | -- | CR 702.159a: Visit -- its controller rolled to visit their Attractions
     -- and the result is lit up on this one.
     Visit
-  | -- | CR 705.2: "whenever you win a coin flip" (Tavern Scoundrel), reading the
-    -- event's win where PlayerAction.RollDice ignores what the die showed.
+  | -- | CR 705.2: a player won or lost a coin flip (Tavern Scoundrel, Karplusan
+    -- Minotaur).
     --
-    -- No third, outcome-blind arm: Scryfall o:"whenever you flip a coin" with
-    -- include_extras, 2026-09-16, returns nothing, so no printing watches the flip
-    -- without reading rule 705.2's outcome.
-    PlayerWinsCoinFlip PlayerRelation.PlayerRelation
-  | -- | CR 705.2: "whenever you lose a coin flip" (Karplusan Minotaur), the
-    -- mirror of PlayerWinsCoinFlip over the same event.
-    --
-    -- The two are not exhaustive. CR 705.2's first sentence describes a flip
-    -- nobody wins or loses, which both answer False to -- proved by
+    -- The two outcomes are not exhaustive: CR 705.2's first sentence describes a
+    -- flip nobody wins or loses, which neither matches -- proved by
     -- Parun.ReplacementSpec's "CR 705.2 nobody loses Molten Sentry's flip either".
-    PlayerLosesCoinFlip PlayerRelation.PlayerRelation
+    FlipsCoin CoinFlipTrigger.CoinFlipTrigger
   | -- | CR 702.170a / 702.170c: "when this card becomes plotted" (Aloe
     -- Alchemist). Self-scoped, and watched for from exile.
     SelfBecomesPlotted

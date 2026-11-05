@@ -71,6 +71,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.ClassLevelChange as ClassLevelChange
+import qualified Parun.Types.CoinFlipTrigger as CoinFlipTrigger
 import qualified Parun.Types.CoinFlipped as CoinFlipped
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Compares as Compares
@@ -114,6 +115,7 @@ import qualified Parun.Types.ExploitTrigger as ExploitTrigger
 import qualified Parun.Types.Exploited as Exploited
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter.Type
+import qualified Parun.Types.FlipOutcome as FlipOutcome
 import qualified Parun.Types.FloatingCandidate as FloatingCandidate
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
@@ -2230,15 +2232,12 @@ representativeEvents cond =
         -- CR 701.31d's own event, naming the bearer among the planes walked
         -- away from, and the only one this condition admits.
         TriggerCondition.SelfPlaneswalkedAwayFrom -> one (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Planar S.bob arrived (Set.singleton departed)))
-        -- CR 705.2's own event, and the only one this condition admits. A WON
-        -- flip, since neither a lost one nor rule 705.2's winnerless one matches
-        -- at all -- and bob rather than the perspective player, on the
-        -- PlayerActs arm's reasoning.
-        TriggerCondition.PlayerWinsCoinFlip _ -> one (GameEvent.CoinFlipped CoinFlipped.MkCoinFlipped {CoinFlipped.flipper = S.bob, CoinFlipped.won = Just True})
-        -- The mirror, and the only representative event its arm admits: a flip
-        -- bob called and missed. Just False rather than Nothing, which CR 705.2's
-        -- first sentence leaves unmatched by either condition.
-        TriggerCondition.PlayerLosesCoinFlip _ -> one (GameEvent.CoinFlipped CoinFlipped.MkCoinFlipped {CoinFlipped.flipper = S.bob, CoinFlipped.won = Just False})
+        -- CR 705.2's own event, and the only one each outcome admits: a WON flip
+        -- for Won and a flip bob called and missed (Just False rather than
+        -- Nothing, which CR 705.2's first sentence leaves unmatched) for Lost --
+        -- and bob rather than the perspective player, on the PlayerActs arm's
+        -- reasoning.
+        TriggerCondition.FlipsCoin t -> one (GameEvent.CoinFlipped CoinFlipped.MkCoinFlipped {CoinFlipped.flipper = S.bob, CoinFlipped.won = Just (CoinFlipTrigger.outcome t == FlipOutcome.Won)})
         -- CR 702.170a's own event, and the only one this condition admits. On
         -- `departed`, which is not the bearer on the board below -- so the pair
         -- does not match, which pins the floor for a matching pair too, this
@@ -2532,10 +2531,10 @@ everyTriggerCondition =
     TriggerCondition.PlayerRollsPlaneswalker PlayerRelation.Opponent,
     TriggerCondition.SelfTurnedUpOffDeck,
     TriggerCondition.SelfPlaneswalkedAwayFrom,
-    TriggerCondition.PlayerWinsCoinFlip PlayerRelation.You,
-    TriggerCondition.PlayerWinsCoinFlip PlayerRelation.Opponent,
-    TriggerCondition.PlayerLosesCoinFlip PlayerRelation.You,
-    TriggerCondition.PlayerLosesCoinFlip PlayerRelation.Opponent,
+    TriggerCondition.FlipsCoin (CoinFlipTrigger.MkCoinFlipTrigger PlayerRelation.You FlipOutcome.Won),
+    TriggerCondition.FlipsCoin (CoinFlipTrigger.MkCoinFlipTrigger PlayerRelation.Opponent FlipOutcome.Won),
+    TriggerCondition.FlipsCoin (CoinFlipTrigger.MkCoinFlipTrigger PlayerRelation.You FlipOutcome.Lost),
+    TriggerCondition.FlipsCoin (CoinFlipTrigger.MkCoinFlipTrigger PlayerRelation.Opponent FlipOutcome.Lost),
     TriggerCondition.SelfBecomesPlotted,
     TriggerCondition.SelfBecomesAttachedBy (Filter.Type.And []),
     TriggerCondition.SelfBecomesAttachedTo (Filter.Type.And []),

@@ -9,6 +9,7 @@ import qualified Parun.Codec.BlockTrigger as BlockTrigger
 import qualified Parun.Codec.CardName as CardName
 import qualified Parun.Codec.CausedBy as CausedBy
 import qualified Parun.Codec.ClassLevel as ClassLevel
+import qualified Parun.Codec.CoinFlipTrigger as CoinFlipTrigger
 import qualified Parun.Codec.Condition as Condition
 import qualified Parun.Codec.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Codec.CounterTrigger as CounterTrigger
@@ -125,8 +126,7 @@ codec =
           Arm.payload "PlayerRollsPlaneswalker" PlayerRelation.codec TriggerCondition.PlayerRollsPlaneswalker (\x -> case x of TriggerCondition.PlayerRollsPlaneswalker y -> Just y; _ -> Nothing),
           Arm.nullary "SelfTurnedUpOffDeck" TriggerCondition.SelfTurnedUpOffDeck,
           Arm.nullary "SelfPlaneswalkedAwayFrom" TriggerCondition.SelfPlaneswalkedAwayFrom,
-          Arm.payload "PlayerWinsCoinFlip" PlayerRelation.codec TriggerCondition.PlayerWinsCoinFlip (\x -> case x of TriggerCondition.PlayerWinsCoinFlip y -> Just y; _ -> Nothing),
-          Arm.payload "PlayerLosesCoinFlip" PlayerRelation.codec TriggerCondition.PlayerLosesCoinFlip (\x -> case x of TriggerCondition.PlayerLosesCoinFlip y -> Just y; _ -> Nothing),
+          Arm.payload "FlipsCoin" CoinFlipTrigger.codec TriggerCondition.FlipsCoin (\x -> case x of TriggerCondition.FlipsCoin y -> Just y; _ -> Nothing),
           Arm.nullary "SelfBecomesPlotted" TriggerCondition.SelfBecomesPlotted,
           Arm.nullary "Reflexive" TriggerCondition.Reflexive,
           Arm.payload "SelfBecomesAttachedBy" filterCodec TriggerCondition.SelfBecomesAttachedBy (\x -> case x of TriggerCondition.SelfBecomesAttachedBy y -> Just y; _ -> Nothing),
@@ -204,8 +204,7 @@ tagOf x = case x of
   TriggerCondition.PlayerRollsPlaneswalker {} -> "PlayerRollsPlaneswalker"
   TriggerCondition.SelfTurnedUpOffDeck {} -> "SelfTurnedUpOffDeck"
   TriggerCondition.SelfPlaneswalkedAwayFrom {} -> "SelfPlaneswalkedAwayFrom"
-  TriggerCondition.PlayerWinsCoinFlip {} -> "PlayerWinsCoinFlip"
-  TriggerCondition.PlayerLosesCoinFlip {} -> "PlayerLosesCoinFlip"
+  TriggerCondition.FlipsCoin {} -> "FlipsCoin"
   TriggerCondition.SelfBecomesPlotted {} -> "SelfBecomesPlotted"
   TriggerCondition.Reflexive {} -> "Reflexive"
   TriggerCondition.SelfBecomesAttachedBy {} -> "SelfBecomesAttachedBy"

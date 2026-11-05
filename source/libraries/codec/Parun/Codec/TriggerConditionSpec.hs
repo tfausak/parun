@@ -21,6 +21,7 @@ import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.ClassLevel as ClassLevel
+import qualified Parun.Types.CoinFlipTrigger as CoinFlipTrigger
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
@@ -44,6 +45,7 @@ import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.ExploitTrigger as ExploitTrigger
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.FlipOutcome as FlipOutcome
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
 import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
@@ -747,32 +749,20 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PlayerRollsPlaneswalker PlayerRelation.You)
       " {\"type\":\"PlayerRollsPlaneswalker\",\"value\":{\"type\":\"You\"}} "
-  -- CR 705.2. Both relations, PlayerBecomesMonarch's shape: Tavern Scoundrel is the
-  -- You form.
-  Spec.it s "PlayerWinsCoinFlip round-trips both relations" $ do
+  -- CR 705.2: Tavern Scoundrel's "you win", then the other relation and the
+  -- other outcome together. Parun.Codec.CoinFlipTriggerSpec has the fields.
+  Spec.it s "FlipsCoin round-trips your won flip" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerWinsCoinFlip PlayerRelation.You)
-      " {\"type\":\"PlayerWinsCoinFlip\",\"value\":{\"type\":\"You\"}} "
+      (TriggerCondition.FlipsCoin (CoinFlipTrigger.MkCoinFlipTrigger PlayerRelation.You FlipOutcome.Won))
+      " {\"type\":\"FlipsCoin\",\"value\":{\"player\":{\"type\":\"You\"},\"outcome\":{\"type\":\"Won\"}}} "
+  Spec.it s "FlipsCoin round-trips an opponent's lost flip" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerWinsCoinFlip PlayerRelation.Opponent)
-      " {\"type\":\"PlayerWinsCoinFlip\",\"value\":{\"type\":\"Opponent\"}} "
-  -- CR 705.2's other outcome, the arm above's shape: Karplusan Minotaur is the
-  -- You form.
-  Spec.it s "PlayerLosesCoinFlip round-trips both relations" $ do
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerLosesCoinFlip PlayerRelation.You)
-      " {\"type\":\"PlayerLosesCoinFlip\",\"value\":{\"type\":\"You\"}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerLosesCoinFlip PlayerRelation.Opponent)
-      " {\"type\":\"PlayerLosesCoinFlip\",\"value\":{\"type\":\"Opponent\"}} "
+      (TriggerCondition.FlipsCoin (CoinFlipTrigger.MkCoinFlipTrigger PlayerRelation.Opponent FlipOutcome.Lost))
+      " {\"type\":\"FlipsCoin\",\"value\":{\"player\":{\"type\":\"Opponent\"},\"outcome\":{\"type\":\"Lost\"}}} "
   -- CR 702.170a. Nullary, SelfRevealedForMiracle's shape: the ability is
   -- printed on the card that becomes plotted, so there is nothing to select
   -- among.

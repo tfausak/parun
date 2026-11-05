@@ -404,6 +404,8 @@ library codec
     Parun.Codec.CoinFaceSpec
     Parun.Codec.CoinFlipped
     Parun.Codec.CoinFlippedSpec
+    Parun.Codec.CoinFlipTrigger
+    Parun.Codec.CoinFlipTriggerSpec
     Parun.Codec.CoinReading
     Parun.Codec.CoinReadingSpec
     Parun.Codec.Color
@@ -820,6 +822,8 @@ library codec
     Parun.Codec.FilterSpec
     Parun.Codec.FlipCoin
     Parun.Codec.FlipCoinSpec
+    Parun.Codec.FlipOutcome
+    Parun.Codec.FlipOutcomeSpec
     Parun.Codec.FloatingCandidate
     Parun.Codec.FloatingCandidateSpec
     Parun.Codec.ForbidAttack
@@ -2577,6 +2581,7 @@ library types
     Parun.Types.ClauseIndex
     Parun.Types.CoinFace
     Parun.Types.CoinFlipped
+    Parun.Types.CoinFlipTrigger
     Parun.Types.CoinReading
     Parun.Types.Color
     Parun.Types.ColorSpread
@@ -2804,6 +2809,7 @@ library types
     Parun.Types.Fight
     Parun.Types.Filter
     Parun.Types.FlipCoin
+    Parun.Types.FlipOutcome
     Parun.Types.FloatingCandidate
     Parun.Types.ForageMode
     Parun.Types.ForbidAttack

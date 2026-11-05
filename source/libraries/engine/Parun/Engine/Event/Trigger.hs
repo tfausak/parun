@@ -547,8 +547,7 @@ looksBack condition = case condition of
   -- CR 603.10g: on the rule's list of exceptions, though no zone change of a
   -- permanent. eventTriggers' `walkedAwayFrom` is the source it decides for.
   TriggerCondition.SelfPlaneswalkedAwayFrom -> True
-  TriggerCondition.PlayerWinsCoinFlip _ -> False
-  TriggerCondition.PlayerLosesCoinFlip _ -> False
+  TriggerCondition.FlipsCoin _ -> False
   -- CR 603.10a's list does not reach an attachment either. CR 701.3a moves a
   -- permanent ONTO another one without changing its zone, and the one route that
   -- is a zone change -- CR 608.3c's Aura spell arriving attached -- leaves both
@@ -772,8 +771,7 @@ batchScoped condition = case condition of
   TriggerCondition.PlayerRollsPlaneswalker _ -> False
   TriggerCondition.SelfTurnedUpOffDeck -> False
   TriggerCondition.SelfPlaneswalkedAwayFrom -> False
-  TriggerCondition.PlayerWinsCoinFlip _ -> False
-  TriggerCondition.PlayerLosesCoinFlip _ -> False
+  TriggerCondition.FlipsCoin _ -> False
   TriggerCondition.SelfBecomesAttachedBy _ -> False
   TriggerCondition.SelfBecomesAttachedTo _ -> False
   -- Per-occurrence too: CR 701.3d's routes each unattach one permanent from one
@@ -2755,8 +2753,7 @@ zonesTriggeredFrom cond =
         -- it stood face up, read back in time (CR 603.10g).
         TriggerCondition.SelfPlaneswalkedAwayFrom -> Set.singleton Zone.Command
         TriggerCondition.Visit -> battlefield
-        TriggerCondition.PlayerWinsCoinFlip _ -> battlefield
-        TriggerCondition.PlayerLosesCoinFlip _ -> battlefield
+        TriggerCondition.FlipsCoin _ -> battlefield
         -- CR 113.6's default, and CR 701.3a makes it the only possible answer, for
         -- the exert's reason in PermanentActs' arm: the host of an attachment is a
         -- permanent, so the bearer is on the battlefield whenever this can match.
@@ -3121,8 +3118,7 @@ stateTriggersOn gs
             TriggerCondition.PlayerRollsPlaneswalker _ -> False
             TriggerCondition.SelfTurnedUpOffDeck -> False
             TriggerCondition.SelfPlaneswalkedAwayFrom -> False
-            TriggerCondition.PlayerWinsCoinFlip _ -> False
-            TriggerCondition.PlayerLosesCoinFlip _ -> False
+            TriggerCondition.FlipsCoin _ -> False
             -- CR 603.2 once more: becoming attached is something that HAPPENS,
             -- with its own log entry. Standing attached is a state, but no
             -- condition here asks about it.

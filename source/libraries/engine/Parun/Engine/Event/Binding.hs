@@ -804,7 +804,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- names. eventBindingSlots claims nothing for any of them; see that function's
   -- arms.
   --
-  -- CR 705.2's PlayerWinsCoinFlip and PlayerLosesCoinFlip reach it too, on the
+  -- CR 705.2's FlipsCoin reaches it too, under either outcome, on the
   -- same reasoning: the winner or loser is CR 109.5's "you", whom Binding.setYou
   -- already names, and Tavern Scoundrel's "create two Treasure tokens" and
   -- Karplusan Minotaur's targeted damage read nothing else off the flip.
@@ -1385,8 +1385,7 @@ eventBindingSlots cond = case cond of
   TriggerCondition.PlayerRollsPlaneswalker _ -> Set.empty
   TriggerCondition.SelfTurnedUpOffDeck -> Set.empty
   TriggerCondition.SelfPlaneswalkedAwayFrom -> Set.empty
-  TriggerCondition.PlayerWinsCoinFlip _ -> Set.empty
-  TriggerCondition.PlayerLosesCoinFlip _ -> Set.empty
+  TriggerCondition.FlipsCoin _ -> Set.empty
   -- Empty DELIBERATELY. CR 701.3a's event names two objects, and the bearer is
   -- one of them -- CR 113.7a's source slot already names the host. The other,
   -- the attachment, has no printed reader: Bramble Elemental says "create two

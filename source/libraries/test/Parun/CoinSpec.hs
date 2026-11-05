@@ -9,8 +9,8 @@
 -- externalised through. The transcript legs live in
 -- Parun.ReplaySpec with the other randomness prompts.
 --
--- NOT the flip's GameEvent, which Parun.EventTriggerSpec's PlayerWinsCoinFlip
--- group proves with Tavern Scoundrel: what a trigger sees is a rule 603 question
+-- NOT the flip's GameEvent, which Parun.CardTriggerSpec's FlipsCoin group
+-- proves with Karplusan Minotaur: what a trigger sees is a rule 603 question
 -- rather than a rule 705 one, and Winter Sky watches nothing.
 --
 -- NOT rule 705.2's first sentence as an ENTRY REPLACEMENT (Molten Sentry), which

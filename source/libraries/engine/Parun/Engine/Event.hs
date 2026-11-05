@@ -2830,9 +2830,8 @@ apply settle batch applied batchPrevented candidate event =
       -- Parun.Types.EntryFlip's two required faces keep separate anyway).
       --
       -- `flipOneCoin` records the flip as a CR 705.1 event with no outcome, which
-      -- is what keeps CR 705.2's first sentence honest against TriggerCondition's
-      -- PlayerWinsCoinFlip and PlayerLosesCoinFlip alike, neither of which
-      -- matches it -- see Parun.Types.CoinFlipped. CR
+      -- is what keeps CR 705.2's first sentence honest against
+      -- TriggerCondition.FlipsCoin, which matches it under neither outcome -- see Parun.Types.CoinFlipped. CR
       -- 705.3's second clause is the exception the rule itself names: an effect
       -- may state that a player WINS this flip, and Edgar, King of Figaro's
       -- ruling says such an ability reaches even a flip that would ordinarily
@@ -6591,7 +6590,7 @@ proposeDiceRoll pid sides named = do
 -- player wins or loses -- Parun.Engine.Resolve's Effect.FlipCoin arm takes it
 -- under CoinReading.Wins, and Parun.Engine.Cost's CostComponent.FlipCoin arm takes
 -- it for the flip a COST names (Karplusan Minotaur). Both record the same event,
--- so TriggerCondition.PlayerWinsCoinFlip and PlayerLosesCoinFlip watch a cost's
+-- so TriggerCondition.FlipsCoin watches a cost's
 -- flip and an effect's flip alike.
 --
 -- TWO questions, in rule 705.2's own order. The CALL comes first and through
@@ -11079,8 +11078,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.PlayerRollsPlaneswalker _ -> False
   TriggerCondition.SelfTurnedUpOffDeck -> False
   TriggerCondition.SelfPlaneswalkedAwayFrom -> False
-  TriggerCondition.PlayerWinsCoinFlip _ -> False
-  TriggerCondition.PlayerLosesCoinFlip _ -> False
+  TriggerCondition.FlipsCoin _ -> False
   -- CR 701.3a names no turn: an Aura can be cast, and an Equipment equipped, on
   -- any turn its controller has priority for.
   TriggerCondition.SelfBecomesAttachedBy _ -> False

@@ -1213,8 +1213,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PlayerRollsPlaneswalker _ -> []
   TriggerCondition.SelfTurnedUpOffDeck -> []
   TriggerCondition.SelfPlaneswalkedAwayFrom -> []
-  TriggerCondition.PlayerWinsCoinFlip _ -> []
-  TriggerCondition.PlayerLosesCoinFlip _ -> []
+  TriggerCondition.FlipsCoin _ -> []
   -- CR 702.170a carries nothing at all, so holds no Count.
   TriggerCondition.SelfBecomesPlotted -> []
   TriggerCondition.PlacesSticker _ -> []
@@ -4699,8 +4698,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.PlayerRollsPlaneswalker _ -> []
   TriggerCondition.SelfTurnedUpOffDeck -> []
   TriggerCondition.SelfPlaneswalkedAwayFrom -> []
-  TriggerCondition.PlayerWinsCoinFlip _ -> []
-  TriggerCondition.PlayerLosesCoinFlip _ -> []
+  TriggerCondition.FlipsCoin _ -> []
   TriggerCondition.SelfBecomesPlotted -> []
   TriggerCondition.PlacesSticker placesSticker -> unframed [PlacesSticker.object placesSticker]
   -- CR 701.3a's carries one over the ATTACHMENT -- Bramble Elemental's "an
@@ -4841,8 +4839,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.PlayerRollsPlaneswalker _ -> []
   TriggerCondition.SelfTurnedUpOffDeck -> []
   TriggerCondition.SelfPlaneswalkedAwayFrom -> []
-  TriggerCondition.PlayerWinsCoinFlip _ -> []
-  TriggerCondition.PlayerLosesCoinFlip _ -> []
+  TriggerCondition.FlipsCoin _ -> []
   TriggerCondition.SelfBecomesPlotted -> []
   TriggerCondition.SelfBecomesAttachedBy _ -> []
   -- Neither attachment-scoped condition names a slot OUTRIGHT either: each binds

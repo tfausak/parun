@@ -179,6 +179,7 @@ import qualified Parun.Codec.ClassLevelSpec
 import qualified Parun.Codec.ClauseIndexSpec
 import qualified Parun.Codec.ClauseSpec
 import qualified Parun.Codec.CoinFaceSpec
+import qualified Parun.Codec.CoinFlipTriggerSpec
 import qualified Parun.Codec.CoinFlippedSpec
 import qualified Parun.Codec.CoinReadingSpec
 import qualified Parun.Codec.ColorSpec
@@ -384,6 +385,7 @@ import qualified Parun.Codec.FacingSpec
 import qualified Parun.Codec.FightSpec
 import qualified Parun.Codec.FilterSpec
 import qualified Parun.Codec.FlipCoinSpec
+import qualified Parun.Codec.FlipOutcomeSpec
 import qualified Parun.Codec.FloatingCandidateSpec
 import qualified Parun.Codec.ForEachNumberSpec
 import qualified Parun.Codec.ForEachSpec
@@ -1245,6 +1247,8 @@ spec s registry corpus = do
   Parun.Codec.CreateEmblemSpec.spec s
   Parun.Codec.CreateSpec.spec s
   Parun.Codec.ExploitTriggerSpec.spec s
+  Parun.Codec.CoinFlipTriggerSpec.spec s
+  Parun.Codec.FlipOutcomeSpec.spec s
   Parun.Codec.TransformTriggerSpec.spec s
   Parun.Codec.CrewingSpec.spec s
   Parun.Codec.CrewRestrictionSpec.spec s
