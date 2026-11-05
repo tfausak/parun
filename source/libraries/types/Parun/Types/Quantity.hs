@@ -32,6 +32,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.ProductionTag as ProductionTag
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellTally as SpellTally
+import qualified Parun.Types.TurnTally as TurnTally
 import qualified Parun.Types.VotesReceived as VotesReceived
 
 -- | A number that may not be a literal number.
@@ -267,16 +268,8 @@ data Quantity
     -- own most recent turn, a departed one included until their next turn
     -- would have begun.
     AttackersInTheirLastTurn PlayerRef.PlayerRef
-  | -- | CR 701.9a / 608.2i: how many cards that player discarded this turn,
-    -- folded from the turn-scoped GameEvent.Discarded log.
-    CardsDiscardedThisTurn PlayerRef.PlayerRef
-  | -- | CR 121.1 / 608.2i: how many cards that player drew this turn, read off
-    -- GameState.drawsThisTurn -- Deem Inferior's "each card you've drawn this turn".
-    CardsDrawnThisTurn PlayerRef.PlayerRef
-  | -- | CR 603.1b / 608.2i: how many of the four bending verbs (CR 701.65b,
-    -- 701.66b, 701.67c, 702.189b) that player has done this turn -- Avatar
-    -- Aang's "if you've done all four this turn".
-    BendingsThisTurn PlayerRef.PlayerRef
+  | -- | CR 608.2i: how many times that player did what the tally names this turn.
+    TalliedThisTurn TurnTally.TurnTally PlayerRef.PlayerRef
   | -- | CR 119.3 / 608.2i: how much life that player gained or lost during the
     -- turn the tally names, summed from that turn's GameEvent.LifeGained or
     -- LifeLost log.

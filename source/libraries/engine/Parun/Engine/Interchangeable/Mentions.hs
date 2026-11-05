@@ -450,6 +450,7 @@ import qualified Parun.Types.TriggerLimit as TriggerLimit
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnFaceDown as TurnFaceDown
 import qualified Parun.Types.TurnScope as TurnScope
+import qualified Parun.Types.TurnTally as TurnTally
 import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.UntapR as UntapR
@@ -2686,9 +2687,14 @@ quantityNames asking x = case x of
   Quantity.AttackersDeclaredThisCombat -> mempty
   Quantity.AttackedInLastTurnOf playerRef -> playerRefNames asking playerRef
   Quantity.AttackersInTheirLastTurn playerRef -> history asking HistoryRead.Attacks <> playerRefNames asking playerRef
-  Quantity.CardsDiscardedThisTurn playerRef -> history asking HistoryRead.Discards <> playerRefNames asking playerRef
-  Quantity.CardsDrawnThisTurn playerRef -> playerRefNames asking playerRef
-  Quantity.BendingsThisTurn playerRef -> history asking HistoryRead.Bendings <> playerRefNames asking playerRef
+  -- Draws and land plays read player-keyed tallies naming no object
+  -- (GameState.drawsThisTurn, GameState.landsPlayed), so no history.
+  Quantity.TalliedThisTurn tally playerRef ->
+    playerRefNames asking playerRef <> case tally of
+      TurnTally.CardsDiscarded -> history asking HistoryRead.Discards
+      TurnTally.CardsDrawn -> mempty
+      TurnTally.Bendings -> history asking HistoryRead.Bendings
+      TurnTally.LandsPlayed -> mempty
   Quantity.LifeChanged tally -> turnHistory asking (LifeTally.turn tally) (case LifeTally.direction tally of LifeDirection.Gained -> HistoryRead.LifeGains; LifeDirection.Lost -> HistoryRead.LifeLosses) <> playerRefNames asking (LifeTally.player tally)
   Quantity.PlayersDealtDamageThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.recipient tally)
   Quantity.DamageDealtToPlayersThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.recipient tally)

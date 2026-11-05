@@ -4650,9 +4650,7 @@ quantityReads q = case q of
   Quantity.Type.AttackersDeclaredThisCombat -> Set.empty
   Quantity.Type.AttackedInLastTurnOf _ -> Set.empty
   Quantity.Type.AttackersInTheirLastTurn _ -> Set.empty
-  Quantity.Type.CardsDiscardedThisTurn _ -> Set.empty
-  Quantity.Type.CardsDrawnThisTurn _ -> Set.empty
-  Quantity.Type.BendingsThisTurn _ -> Set.empty
+  Quantity.Type.TalliedThisTurn _ _ -> Set.empty
   Quantity.Type.LifeChanged _ -> Set.empty
   Quantity.Type.PlayersDealtDamageThisTurn _ -> Set.empty
   Quantity.Type.DamageDealtToPlayersThisTurn _ -> Set.empty

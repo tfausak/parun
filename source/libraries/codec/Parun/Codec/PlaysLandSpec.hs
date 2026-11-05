@@ -13,15 +13,22 @@ import qualified Parun.Types.Zone as Zone
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.PlaysLand" $ do
   -- Urianger Augurelt's "whenever you play a land from exile".
-  Spec.it s "MkPlaysLand, both keys" $
+  Spec.it s "MkPlaysLand, every key" $
     Common.assertCodec
       s
       PlaysLand.codec
       ( PlaysLand.MkPlaysLand
           { PlaysLand.player = PlayerRelation.You,
-            PlaysLand.from = Zone.Exile,
+            PlaysLand.from = Just Zone.Exile,
             PlaysLand.filter = Filter.IsBound (SlotName.MkSlotName (Text.pack "exiled"))
           }
       )
       " {\"player\":{\"type\":\"You\"},\"from\":{\"type\":\"Exile\"},\"filter\":{\"type\":\"IsBound\",\"value\":\"exiled\"}} "
+  -- Fastbond's "whenever you play a land": no zone, so no key.
+  Spec.it s "MkPlaysLand, from any zone" $
+    Common.assertCodec
+      s
+      PlaysLand.codec
+      (PlaysLand.MkPlaysLand {PlaysLand.player = PlayerRelation.You, PlaysLand.from = Nothing, PlaysLand.filter = Filter.And []})
+      " {\"player\":{\"type\":\"You\"},\"filter\":{\"type\":\"And\",\"value\":[]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlaysLand.codec

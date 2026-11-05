@@ -58,6 +58,7 @@ import qualified Parun.Types.Scope as Scope
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellTally as SpellTally
 import qualified Parun.Types.Times as Times
+import qualified Parun.Types.TurnTally as TurnTally
 import qualified Parun.Types.VotesReceived as VotesReceived
 import qualified Parun.Types.WhichTurn as WhichTurn
 import qualified Parun.Types.Zone as Zone
@@ -626,18 +627,18 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.CardsDiscardedThisTurn (PlayerRef.Relative PlayerRelation.You))
+      (Quantity.TalliedThisTurn TurnTally.CardsDiscarded (PlayerRef.Relative PlayerRelation.You))
       " {\"type\":\"CardsDiscardedThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.CardsDiscardedThisTurn (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
+      (Quantity.TalliedThisTurn TurnTally.CardsDiscarded (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
       " {\"type\":\"CardsDiscardedThisTurn\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
   Spec.it s "CardsDrawnThisTurn" $
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.CardsDrawnThisTurn (PlayerRef.Relative PlayerRelation.You))
+      (Quantity.TalliedThisTurn TurnTally.CardsDrawn (PlayerRef.Relative PlayerRelation.You))
       " {\"type\":\"CardsDrawnThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
   -- CR 603.1b, on CardsDiscardedThisTurn's terms. Avatar Aang's is the Relative
   -- arm.
@@ -645,8 +646,15 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.BendingsThisTurn (PlayerRef.Relative PlayerRelation.You))
+      (Quantity.TalliedThisTurn TurnTally.Bendings (PlayerRef.Relative PlayerRelation.You))
       " {\"type\":\"BendingsThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+  -- CR 305.2a, on CardsDiscardedThisTurn's terms. Fastbond's is the Relative arm.
+  Spec.it s "LandsPlayedThisTurn" $
+    Common.assertCodec
+      s
+      Quantity.codec
+      (Quantity.TalliedThisTurn TurnTally.LandsPlayed (PlayerRef.Relative PlayerRelation.You))
+      " {\"type\":\"LandsPlayedThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
   -- CR 119.3: the tally's record, whose own spec covers its fields. Fortifying
   -- Draught's is this turn's gain; First Response's last turn's loss.
   Spec.it s "LifeChanged" $ do

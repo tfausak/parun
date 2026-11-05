@@ -253,8 +253,8 @@ data TriggerCondition
   | -- | CR 603.9: "whenever a player loses the game" (Withengar Unbound),
     -- against GameEvent.LostTheGame.
     PlayerLosesGame PlayerRelation.PlayerRelation
-  | -- | CR 305.1: "whenever you play a land from exile" (Urianger Augurelt),
-    -- against GameEvent.LandPlayed.
+  | -- | CR 305.1: "whenever you play a land" (Fastbond), from a zone or not
+    -- (Urianger Augurelt's "from exile"), against GameEvent.LandPlayed.
     PlayerPlaysLand PlaysLand.PlaysLand
   | -- | CR 701.62b: "whenever you manifest dread" (Paranormal Analyst), against
     -- GameEvent.ManifestedDread.

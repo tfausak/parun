@@ -3292,6 +3292,7 @@ library types
     Parun.Types.TurnFaceDown
     Parun.Types.TurnRole
     Parun.Types.TurnScope
+    Parun.Types.TurnTally
     Parun.Types.TurnUpEvent
     Parun.Types.TurnUpProcedure
     Parun.Types.TurnUpR

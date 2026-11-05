@@ -87,6 +87,7 @@ import qualified Parun.Types.StoredResult as StoredResult
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Teams as Teams
 import qualified Parun.Types.Times as Times
+import qualified Parun.Types.TurnTally as TurnTally
 import qualified Parun.Types.VotesReceived as VotesReceived
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChange as ZoneChange
@@ -783,7 +784,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
           _ -> Nothing
         -- CR 508.1a / 608.2i: how many creatures that player has declared as attackers
         -- this turn -- rule 207.2c's raid, compared against 1. OpponentsAttacked's arm
-        -- in arity, and CardsDiscardedThisTurn's in footing: Nothing for a reference
+        -- in arity, and TalliedThisTurn's in footing: Nothing for a reference
         -- naming anything but exactly one player, since "whose attack?" has no sum, and
         -- a fold over GameState.events, whose extent Engine.beginTurnOf's clearing
         -- makes "this turn".
@@ -793,7 +794,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- is checked, would read an empty record. Game.attackersDeclaredThisTurn is the
         -- fold, so a second reader cannot drift from this one.
         --
-        -- An EMPTY log answers 0 rather than Nothing, as CardsDiscardedThisTurn's does.
+        -- An EMPTY log answers 0 rather than Nothing, as TalliedThisTurn's does.
         -- What is unanswered is only the reference.
         Quantity.AttackersDeclaredThisTurn ref -> case playersOf ref of
           Just [pid] -> Just (toInteger (Game.attackersDeclaredThisTurn gs pid))
@@ -813,36 +814,14 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         Quantity.AttackersInTheirLastTurn ref -> case playersOf ref of
           Just [pid] -> Just (toInteger (Game.attackersInTheirLastTurn gs pid))
           _ -> Nothing
-        -- CR 701.9a / 608.2i: how many cards that player has discarded this turn.
+        -- CR 608.2i: how many times that player did what the tally names this turn.
         -- OpponentsAttacked's arm in shape -- live, one player only, resolved through the
         -- same playersOf, and Nothing for a reference naming anything but exactly
-        -- one player, since "whose discards?" has no sum.
-        --
-        -- A fold over GameState.events, which is cleared at turn handoff
-        -- (Engine.beginTurnOf) -- so the log's extent IS "this turn" and nothing here
-        -- names a window. Game.discardOf and not the Moved event the same discard also
-        -- files; see that function for why the zone change is the wrong record.
-        --
-        -- BOTH DiscardCause values count, CR 702.29a making a cycled card a discarded
-        -- one.
-        --
-        -- An EMPTY log answers 0 rather than Nothing, as OpponentsAttacked's empty
-        -- record does: nobody having discarded is an answered question. What is
-        -- unanswered is only the reference.
-        Quantity.CardsDiscardedThisTurn ref -> case playersOf ref of
-          Just [pid] -> Just (toInteger (length (filter ((== Just pid) . Game.discardOf . LoggedEvent.event) (Foldable.toList (GameState.events gs)))))
-          _ -> Nothing
-        -- CR 121.1 / 608.2i: how many cards that player has drawn this turn.
-        -- CardsDiscardedThisTurn's arm in footing and in arity, read off the
-        -- turn-scoped tally Event keeps per draw rather than a fold.
-        Quantity.CardsDrawnThisTurn ref -> case playersOf ref of
-          Just [pid] -> Just (toInteger (Seq.length (Map.findWithDefault Seq.empty pid (GameState.drawsThisTurn gs))))
-          _ -> Nothing
-        -- CR 603.1b: how many of the four bending verbs that player has done this
-        -- turn. CardsDiscardedThisTurn's arm in footing and in arity; Game.bendingsThisTurn
-        -- is the fold.
-        Quantity.BendingsThisTurn ref -> case playersOf ref of
-          Just [pid] -> Just (toInteger (Game.bendingsThisTurn gs pid))
+        -- one player, since "whose discards?" has no sum. An EMPTY record answers 0
+        -- rather than Nothing, as OpponentsAttacked's does: nobody having discarded
+        -- is an answered question. What is unanswered is only the reference.
+        Quantity.TalliedThisTurn tally ref -> case playersOf ref of
+          Just [pid] -> Just (talliedThisTurn tally pid gs)
           _ -> Nothing
         -- CR 119.3 / 608.2i: how much life the players the tally names gained or lost
         -- during the turn it names, SUMMED -- a live fold over that turn's log
@@ -861,13 +840,13 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- Voldaren Scion's, 2021-09-24). Game.lifeChangedAmong is the fold spectacle
         -- shares.
         --
-        -- An EMPTY log answers 0 rather than Nothing, as CardsDiscardedThisTurn's does.
+        -- An EMPTY log answers 0 rather than Nothing, as TalliedThisTurn's does.
         -- What is unanswered is only the reference.
         Quantity.LifeChanged tally -> case historyPlayersOf (LifeTally.player tally) of
           Just pids -> Just (toInteger (Game.lifeChangedAmong (LifeTally.direction tally) (Game.turnLog (LifeTally.turn tally) gs) (`elem` pids)))
           Nothing -> Nothing
         -- CR 120.1 / 608.2i: how many of the players this reference names were dealt
-        -- damage this turn. CardsDiscardedThisTurn's arm in footing -- a live fold over
+        -- damage this turn. TalliedThisTurn's arm in footing -- a live fold over
         -- GameState.events, whose extent Engine.beginTurnOf makes "this turn" -- and
         -- IsMonarch's in arity: the question is asked of each named player separately, so
         -- a reference naming several is answered by counting them rather than by asking
@@ -881,7 +860,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- The history roster, LifeChanged's: an opponent dealt damage who has since
         -- left the game still counts (CR 800.4i; Tymna the Weaver's ruling).
         --
-        -- An EMPTY log answers 0 rather than Nothing, as CardsDiscardedThisTurn's does.
+        -- An EMPTY log answers 0 rather than Nothing, as TalliedThisTurn's does.
         -- What is unanswered is only the reference.
         --
         -- The kind narrows the log to CR 510.2's combat damage where a card says
@@ -918,7 +897,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- more spells this turn" the same maximum compared to 2. Summing the seats
         -- would answer those wrongly when two players cast one spell each.
         --
-        -- An ABSENT entry answers 0 rather than Nothing, as CardsDiscardedThisTurn's
+        -- An ABSENT entry answers 0 rather than Nothing, as TalliedThisTurn's
         -- empty log does: nobody having cast is an answered question. What is
         -- unanswered is only the reference.
         --
@@ -1066,7 +1045,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         --
         -- BlockersBeyond's arm in shape -- read LIVE off game state rather than
         -- through the injected view, an entry being an event and not a characteristic --
-        -- and CardsDiscardedThisTurn's in extent: Engine.beginTurnOf clears the log at
+        -- and TalliedThisTurn's in extent: Engine.beginTurnOf clears the log at
         -- the turn handoff, so "this turn" is the log's own reach and nothing here names
         -- a window. LIVE matters for CR 611.3a -- Projection.conditionHolds
         -- re-asks this every time the projection is taken, so the hexproof goes
@@ -1444,9 +1423,7 @@ objectSlots quantity = case quantity of
   Quantity.AttackersDeclaredThisCombat -> Set.empty
   Quantity.AttackedInLastTurnOf _ -> Set.empty
   Quantity.AttackersInTheirLastTurn _ -> Set.empty
-  Quantity.CardsDiscardedThisTurn _ -> Set.empty
-  Quantity.CardsDrawnThisTurn _ -> Set.empty
-  Quantity.BendingsThisTurn _ -> Set.empty
+  Quantity.TalliedThisTurn _ _ -> Set.empty
   Quantity.LifeChanged _ -> Set.empty
   Quantity.PlayersDealtDamageThisTurn _ -> Set.empty
   Quantity.DamageDealtToPlayersThisTurn _ -> Set.empty
@@ -1727,9 +1704,7 @@ readsX quantity = case quantity of
   Quantity.AttackersDeclaredThisCombat -> False
   Quantity.AttackedInLastTurnOf _ -> False
   Quantity.AttackersInTheirLastTurn _ -> False
-  Quantity.CardsDiscardedThisTurn _ -> False
-  Quantity.CardsDrawnThisTurn _ -> False
-  Quantity.BendingsThisTurn _ -> False
+  Quantity.TalliedThisTurn _ _ -> False
   Quantity.LifeChanged _ -> False
   Quantity.PlayersDealtDamageThisTurn _ -> False
   Quantity.DamageDealtToPlayersThisTurn _ -> False
@@ -1825,9 +1800,7 @@ talliesWhatHappened quantity = case quantity of
   Quantity.AttackersDeclaredThisCombat -> False
   Quantity.AttackedInLastTurnOf _ -> False
   Quantity.AttackersInTheirLastTurn _ -> False
-  Quantity.CardsDiscardedThisTurn _ -> False
-  Quantity.CardsDrawnThisTurn _ -> False
-  Quantity.BendingsThisTurn _ -> False
+  Quantity.TalliedThisTurn _ _ -> False
   Quantity.LifeChanged _ -> True
   Quantity.PlayersDealtDamageThisTurn _ -> True
   Quantity.DamageDealtToPlayersThisTurn _ -> True
@@ -1994,6 +1967,27 @@ controlGainedThisTurn gs pid oid current =
   let changes = [change | GameEvent.ControlChanged change <- fmap LoggedEvent.event (Foldable.toList (GameState.events gs)), ControlChanged.object change == oid]
       enteredUnder = maybe current (Just . ControlChanged.before) (Maybe.listToMaybe changes)
    in any ((== pid) . ControlChanged.after) changes || (Game.enteredThisTurn oid gs && enteredUnder == Just pid)
+
+-- | CR 608.2i: how many times this player did what the tally names this turn.
+-- Discards fold GameState.events, which the turn handoff clears
+-- (Engine.beginTurnOf), so the log's extent IS "this turn"; Game.discardOf
+-- rather than the Moved event the same discard files, and a cycled card counts
+-- (CR 702.29a). Draws read the turn-scoped tally Event keeps per draw; bendings
+-- Game.bendingsThisTurn's fold.
+--
+-- Land plays read CR 305.2a's own tally, GameState.landsPlayed, which only an
+-- active player's turn clears (Engine.openTurn): for anyone else it holds their
+-- last turn's plays, and CR 305.3 makes this turn's 0. Kept because the CR
+-- states it: no pool card reads another player's land plays (Fastbond reads its
+-- controller's, on their turn), so dropping the gate leaves the suite green.
+talliedThisTurn :: TurnTally.TurnTally -> PlayerId.PlayerId -> GameState -> Integer
+talliedThisTurn tally pid gs = case tally of
+  TurnTally.CardsDiscarded -> toInteger (length (filter ((== Just pid) . Game.discardOf . LoggedEvent.event) (Foldable.toList (GameState.events gs))))
+  TurnTally.CardsDrawn -> toInteger (Seq.length (Map.findWithDefault Seq.empty pid (GameState.drawsThisTurn gs)))
+  TurnTally.Bendings -> toInteger (Game.bendingsThisTurn gs pid)
+  TurnTally.LandsPlayed
+    | Turn.isActive gs pid -> toInteger (Map.findWithDefault 0 pid (GameState.landsPlayed gs))
+    | otherwise -> 0
 
 controlClockOf :: GameState -> ObjectId -> Map.Map PlayerId.PlayerId ControlClock.ControlClock
 controlClockOf gs oid = Maybe.fromMaybe Map.empty (Game.liveOrLastKnown Object.controlClock LastKnown.controlClock oid gs)

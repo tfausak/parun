@@ -11,7 +11,4 @@ Every expressible Revised Edition card has been added to `data/cards/`.
 
 ## Needs a capability
 
-Each card is tracked by its issue and is added when that issue lands. Hardest
-first.
-
-- #5067: Fastbond. Nothing reads how many lands a player has played this turn.
+Nothing: every Revised Edition card is in the pool.

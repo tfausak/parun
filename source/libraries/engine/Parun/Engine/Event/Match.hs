@@ -1961,11 +1961,12 @@ armMatches bindings board gs bearer you cond event = case cond of
     _ -> False
   -- CR 305.1: "whenever you play a land from exile" (Urianger Augurelt). The
   -- player is the one who played it, which CR 305.1 makes the special
-  -- action's taker; the zone is the one it was played from.
+  -- action's taker; the zone is the one it was played from, any for Nothing
+  -- (Fastbond's "whenever you play a land").
   TriggerCondition.PlayerPlaysLand p -> case event of
     GameEvent.LandPlayed played ->
       PlayerRelation.holds (Game.teams gs) (PlaysLand.player p) you (LandPlayed.player played)
-        && LandPlayed.from played == PlaysLand.from p
+        && all (== LandPlayed.from played) (PlaysLand.from p)
         -- The land as it arrived (CR 400.7i), read the way a Matching Enters
         -- reads an entrant, so Fires of Mount Doom's Filter.IsBound names the
         -- permanent Cast.playLand's follow moved the binding onto.
