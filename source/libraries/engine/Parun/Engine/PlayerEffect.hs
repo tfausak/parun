@@ -999,8 +999,8 @@ exilersWhileSearching pid gs =
 -- Outcast's first.
 --
 -- The PLAYER twin of Parun.Engine.CounterRestriction.prohibited, and asked at the
--- same point in the same story: Parun.Engine.Event.putPlayerCounters, after CR
--- 616.1's loop has settled the placement, about the SETTLED player and kind.
+-- same point in the same story: Parun.Engine.Event.putPlayerCounters, ahead of
+-- CR 616.1's loop (CR 614.17c).
 --
 -- A DISJUNCTION for CR 101.2's reason: one effect saying it can't happen beats
 -- every rule and effect that allows or directs it, so a second row permitting

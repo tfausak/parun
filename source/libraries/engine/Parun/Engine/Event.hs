@@ -5973,12 +5973,19 @@ putCounters :: CounterCause.CounterCause -> ObjectId -> CounterKind.CounterKind 
 putCounters = putCountersWithin Nothing
 
 -- The funnel itself, with a limit on the total of the settled kind the settled
--- object may reach: PutCounters.totalAtMost's reading, asked after CR 616.1's loop,
--- which settles the count it limits (CR 101.2), and landing what fits (CR 609.3).
+-- object may reach: PutCounters.totalAtMost's reading, asked after CR 616.1's loop
+-- because the loop settles the count it limits, and landing what fits (CR 609.3).
 -- A permanent already past the limit takes none and loses none.
+--
+-- CR 101.2 with CR 122.6: a permanent an effect in force says can't have counters
+-- of the kind put on it takes none (Solemnity, Melira, Sylvok Outcast), asked
+-- AHEAD of the loop: a placement that can't happen admits only a
+-- self-replacement (CR 614.17c), and no CounterR is one, so the loop is skipped
+-- whole and Hardened Scales and Doubling Season are never ordered.
 putCountersWithin :: Maybe Natural -> CounterCause.CounterCause -> ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> Game Natural
 putCountersWithin totalAtMost cause oid kind n = do
-  resolved <- resolveCounters cause oid kind n
+  prohibited <- State.gets (CounterRestriction.prohibited oid kind)
+  resolved <- if prohibited then pure Nothing else resolveCounters cause oid kind n
   case resolved of
     Nothing -> pure 0
     Just (target, settledKind, settledCount) -> do
@@ -6005,17 +6012,11 @@ settleCounters putter target settledKind settledCount
       -- the object exists, and how many counters of the kind it already had.
       case Game.lookupObject target gs of
         Nothing -> pure 0
-        -- CR 101.2 with CR 122.6: a permanent an effect in force says can't have
-        -- counters put on it takes none, whatever allowed or directed the
-        -- placement (Solemnity, Melira Sylvok Outcast). Asked HERE, on the settled
-        -- object and the settled kind, after resolveCounters rather than ahead of
-        -- it (gap #6235). No row of CR 616.1's loop moves a placement to another
-        -- object or kind: `apply`'s CounterR arm rewrites only the count.
-        --
-        -- Both of CR 122.6's roads reach this door -- a placement onto a permanent
-        -- already on the battlefield, and the counters an object is given as it
-        -- enters, which flushEnteringCounters places through here -- so one gate
-        -- answers the whole rule.
+        -- CR 101.2 with CR 122.6: a FENCE behind the two gates ahead of CR
+        -- 616.1's loops -- putCountersWithin's, and Replacement's
+        -- matchingEnteringCounters for the counters an object enters with, where
+        -- a later entry row (a copy rewrite) may still change what the permanent
+        -- is after a counter row was matched.
         --
         -- NOT a CR 614.16 replacement: that rule scales a placement that was
         -- possible, and these cards say "can't". See
@@ -6232,32 +6233,27 @@ resolveCounters cause oid kind n = do
 -- the event together; this is where it is recorded.
 putPlayerCounters :: CounterCause.CounterCause -> PlayerId -> PlayerCounterKind.PlayerCounterKind -> Natural -> Game Natural
 putPlayerCounters cause pid kind n = do
-  resolved <- resolvePlayerCounters cause pid kind n
+  -- CR 101.2 with CR 122.1: a player an effect in force says can't get counters
+  -- gets none (Solemnity, Melira, Sylvok Outcast). putCountersWithin's gate on
+  -- the player axis, ahead of CR 616.1's loop for CR 614.17c's reason.
+  prohibited <- State.gets (PlayerEffect.prohibitsCounters pid kind)
+  resolved <- if prohibited then pure Nothing else resolvePlayerCounters cause pid kind n
   case resolved of
     Nothing -> pure 0
     Just (target, settledKind, settledCount)
       | settledCount == 0 -> pure 0
       | otherwise -> do
-          live <- State.get
-          -- CR 101.2 with CR 122.1: a player an effect in force says can't get
-          -- counters gets none, whatever allowed or directed the placement
-          -- (Solemnity, Melira Sylvok Outcast). settleCounters' gate on the player
-          -- axis, read the same way and at the same point -- after CR 616.1's
-          -- loop, about the SETTLED player and the settled kind.
-          if PlayerEffect.prohibitsCounters target settledKind live
-            then pure 0
-            else do
-              -- Zero is the guard putCounters puts on its own write, and the two
-              -- shrinking scalings are what make it reachable here: half of one
-              -- counter, rounded down, and one counter minus one, are replacements
-              -- that remove the event.
-              --
-              -- CR 810.10: the counters happen to the player and land on their
-              -- team's shared count, which every sharer holds (Game.counterSharers).
-              State.modify' $ \gs ->
-                let bump p = p {Player.counters = Map.insertWith (+) settledKind settledCount (Player.counters p)}
-                 in gs {GameState.players = List.foldl' (flip (Map.adjust bump)) (GameState.players gs) (Game.counterSharers settledKind target gs)}
-              pure settledCount
+          -- Zero is the guard putCounters puts on its own write, and the two
+          -- shrinking scalings are what make it reachable here: half of one
+          -- counter, rounded down, and one counter minus one, are replacements
+          -- that remove the event.
+          --
+          -- CR 810.10: the counters happen to the player and land on their
+          -- team's shared count, which every sharer holds (Game.counterSharers).
+          State.modify' $ \gs ->
+            let bump p = p {Player.counters = Map.insertWith (+) settledKind settledCount (Player.counters p)}
+             in gs {GameState.players = List.foldl' (flip (Map.adjust bump)) (GameState.players gs) (Game.counterSharers settledKind target gs)}
+          pure settledCount
 
 -- CR 122.1: resolveCounters for a player recipient, and read the same way -- the
 -- cause rides the event and the rows decide which causes they reach.
