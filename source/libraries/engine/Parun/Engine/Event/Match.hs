@@ -623,6 +623,10 @@ leavesZone board gs bearer you admitsTurn t event = case event of
 -- last step of its own resolution (CR 608.2n), which a countered spell (CR
 -- 701.6a) and a fizzled one (CR 608.2b) escape.
 --
+-- Every logged move into the zone is an arrival: reordering a library puts no
+-- card into one (Wan Shi Tong, All-Knowing's ruling) and logs nothing
+-- (Event.alreadyIn), while a card exiled from exile is a new object (CR 400.8).
+--
 -- Matched on ZoneChange.object, the ARRIVING card. TWO EVENTS, which is CR
 -- 712.21's own Example: the Moved event names the first card a melded
 -- permanent's departure puts into the zone and a CardArrived event names each

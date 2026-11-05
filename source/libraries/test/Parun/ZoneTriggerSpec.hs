@@ -307,6 +307,16 @@ graveyardTriggerSpec s registry =
               died = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) creature Zone.Graveyard)
           Spec.assertEqWith s "nothing triggered" (fmap PendingTrigger.source (gathered died)) []
           Spec.assertBool s (Set.member narcomoebaName (namesIn Zone.Graveyard S.alice died)) "it is in the graveyard"
+        -- "This card": a Narcomoeba already in the graveyard does not see another
+        -- card milled into it, which matches its zones exactly.
+        Spec.it s "CR 113.6k Narcomoeba in the graveyard does not see ANOTHER card milled" $ do
+          narcomoeba <- S.printingOf s registry "Narcomoeba"
+          island <- S.printingOf s registry "Island"
+          let (_, gs0) = S.addGraveyardCard narcomoeba S.alice (Setup.emptyGame S.bothPlayers)
+              (islandCard, gs) = S.addLibraryCard island S.alice gs0
+              milled = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) islandCard Zone.Graveyard)
+          Spec.assertEqWith s "nothing triggered" (fmap PendingTrigger.source (gathered milled)) []
+          Spec.assertEqWith s "both cards are in the graveyard" (Set.size (namesIn Zone.Graveyard S.alice milled)) 2
         -- The zone half, isolated from the mill: a graveyard card whose only
         -- trigger functions on the battlefield (CR 113.6's default) is not
         -- scanned into firing by an event it would have seen from play.
