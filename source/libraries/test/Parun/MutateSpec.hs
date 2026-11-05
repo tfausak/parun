@@ -118,6 +118,7 @@ import qualified Parun.Types.RevealCause as RevealCause
 import qualified Parun.Types.Revealed as Revealed
 import qualified Parun.Types.RoomHalf as RoomHalf
 import qualified Parun.Types.ShownComponent as ShownComponent
+import qualified Parun.Types.Sickness as Sickness
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapState as TapState
@@ -1323,6 +1324,37 @@ spec s registry = Spec.describe s "Mutate" $ do
     -- so neither block question was asked of an empty combat.
     Spec.assertEqWith s "setup: the merged permanent attacked" (S.attackerDeclarationsOf after) [host]
     Spec.assertEqWith s "setup: and so did the control's" (S.attackerDeclarationsOf control) [cHost]
+  -- CR 702.140f on Generator Servant ({1}{R} 2/1 Creature -- Elemental, "{T},
+  -- Sacrifice this creature: Add {C}{C}. If any of that mana is spent on a
+  -- creature spell, it gains haste until end of turn."): its haste names the
+  -- mutating Cubwarden spell, and so the permanent it merges with, a Falcon
+  -- Abomination that arrived this turn. The control pays the same {2}{W}{W}
+  -- from Plains alone.
+  Spec.it s "CR 702.140f haste Generator Servant's mana gave a mutating spell lets the merged permanent attack" $ do
+    plains <- S.printingOf s registry "Plains"
+    cubwarden <- S.printingOf s registry "Cubwarden"
+    falcon <- S.printingOf s registry "Falcon Abomination"
+    servant <- S.printingOf s registry "Generator Servant"
+    let attacking side withServant =
+          let (h, b, sp) = mutateBoard plains falcon cubwarden
+              (servantId, b1) = S.addPermanent servant S.alice b
+              board = if withServant then b1 else b
+              sick = board {GameState.objects = Map.adjust (\o -> o {Object.sickness = Sickness.Sick}) h (GameState.objects board)}
+              servantFirst :: Prompt.Prompt r -> r
+              servantFirst p = case p of
+                Prompt.ChooseManaSource _ _ _ candidates | elem servantId candidates -> Just servantId
+                _ -> mutatingAt side h p
+              merged = mergingWith servantFirst sick sp
+           in (h, merged, S.runPure S.aggressiveAnswer (intoCombat merged) (Combat.declareAttackers S.manaPerformer S.alice))
+    Monad.forM_ [MutateSide.Over, MutateSide.Under] $ \side -> do
+      let (host, merged, after) = attacking side True
+          (cHost, cMerged, control) = attacking side False
+      Spec.assertEqWith s ("CR 702.140f/702.10 the merged permanent attacks the turn its host arrived, " <> show side) (S.attackerDeclarationsOf after) [host]
+      Spec.assertEqWith s ("CR 302.6 paid from Plains alone, it may not, " <> show side) (S.attackerDeclarationsOf control) []
+      -- The proxies, after the behaviours.
+      Spec.assertEqWith s "setup: the Servant was sacrificed for its mana" (S.countOnBattlefieldByName (S.printingName servant) S.alice merged) 0
+      Spec.assertEqWith s "setup: the spell merged with the host" (length (componentNames host merged)) 2
+      Spec.assertEqWith s "setup: and the control's did too" (length (componentNames cHost cMerged)) 2
   -- Exalted Dragon ({5}{W} Creature -- Dragon 5/5, "This creature can't attack
   -- unless you sacrifice a land"), through CR 508.1h's payment during the
   -- declaration itself.
@@ -1590,14 +1622,18 @@ faceDownOn gs =
 -- stack: the spell first, then CR 702.140d's trigger, which CR 603.3 puts on the
 -- stack at the next time a player would receive priority.
 merging :: MutateSide.MutateSide -> ObjectId.ObjectId -> GameState.GameState -> ObjectId.ObjectId -> GameState.GameState
-merging side host board spellId =
-  let cast = S.runPure (mutatingAt side host) board (S.cast S.alice spellId)
+merging side host = mergingWith (mutatingAt side host)
+
+-- `merging` under this answerer.
+mergingWith :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> ObjectId.ObjectId -> GameState.GameState
+mergingWith answer board spellId =
+  let cast = S.runPure answer board (S.cast S.alice spellId)
    in -- SIX passes over a stack of two, so every assertion reads a DRAINED
       -- stack: capping the resolutions at the expected count would let a
       -- trigger a wrong implementation added sit there unresolved, and the
       -- assertion that its effect did not happen would pass for that reason.
       -- Stack.resolveTop over an empty stack is a no-op.
-      S.runPure (mutatingAt side host) cast (Monad.replicateM_ 6 (Engine.settleForPriority >> Stack.resolveTop) >> Engine.settleForPriority)
+      S.runPure answer cast (Monad.replicateM_ 6 (Engine.settleForPriority >> Stack.resolveTop) >> Engine.settleForPriority)
 
 -- CR 601.2b's announcement answered by NAMING the mutate cost rather than an
 -- index, and CR 601.2c's target by FILTERING the offered set rather than
