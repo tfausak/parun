@@ -152,7 +152,7 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertBool s (Text.pack "Player 1 passes in their precombat main phase (no other actions)." `elem` unanswered) "passed for, in its main phase"
     Spec.assertEqWith s "into the next turn" (fmap ((> turn) . GameState.turnNumber) outcome) (Right True)
 
-  Spec.it s "news read at a pass made for a seat the screen does not face waits for its next question, past the turn's end" $ do
+  Spec.it s "a seat the screen does not face is handed it at a priority offering only passing, and shown its news there" $ do
     gs <- started s registry
     hand <- maybe (Spec.assertFailure s "no card in hand") pure (Maybe.listToMaybe (Game.Engine.zoneMembers Zone.Hand S.alice gs))
     let revealed = GameEvent.Revealed (Revealed.MkRevealed S.bob (ObjectId.MkObjectId 7) RevealCause.LeavingFaceDown S.emptyCharacteristics)
@@ -161,14 +161,14 @@ spec s registry = Spec.describe s "Client" $ do
         nextTurn = gs {GameState.events = Seq.empty, GameState.turnNumber = GameState.turnNumber gs + 1}
         passing = Answerer.unwrap human (Asked.MkAsked [] witnessing (Prompt.ChooseAction decider S.alice [Action.Pass]))
         acting = Answerer.unwrap human (Asked.MkAsked [] nextTurn (Prompt.ChooseAction decider S.alice [Action.Play hand Nothing, Action.Pass]))
-        -- Enter at the hand-off, then Pass.
-        human = Game.human (screen 2 (\sc -> Just (Text.pack (if typed sc == 0 then "" else "2")))) (const (Right Nothing))
+        -- Enter at the hand-off and to pass, then Pass.
+        human = Game.human (screen 3 (\sc -> Just (Text.pack (if typed sc < 2 then "" else "2")))) (const (Right Nothing))
         shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT (passing >> acting) (SplitMix.MkSplitMix 0)) Hotseat.fresh {Hotseat.facing = Just S.bob})) blank))
         (facingBob, facingAlice) = break (Text.isPrefixOf (Text.pack "Pass to Player 1")) shown
         news = filter (Text.isPrefixOf (Text.pack "Since you last looked: "))
-    Spec.assertEqWith s "not shown while the screen faces Player 2" (news facingBob) []
-    Spec.assertEqWith s "shown at its next question, a turn later" (news facingAlice) [Text.pack "Since you last looked: Player 2 reveals a face-down card."]
-    Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Player 1 passes in ")) facingBob) "passed for"
+    Spec.assertEqWith s "nothing said while the screen faces Player 2" facingBob [Text.pack "<clear>"]
+    Spec.assertEqWith s "shown once, at the hand-off" (news facingAlice) [Text.pack "Since you last looked: Player 2 reveals a face-down card."]
+    Spec.assertEqWith s "asked twice" (filter menuHeading facingAlice) [Text.pack "Choose an action, or press Enter to pass:", Text.pack "Choose an action, or press Enter to pass:"]
 
   Spec.it s "CR 514.1 a discard to hand size at cleanup is shown the other seat at its next question, a turn later" $ do
     gs <- started s registry
@@ -202,8 +202,9 @@ spec s registry = Spec.describe s "Client" $ do
         shown = reverse (written sc)
         -- Player 1's last look at the subgame, in its turn 4, then its first
         -- screen in the resumed main game, up to the hand.
-        lastLook = Text.pack "Player 1 passes in Player 2's upkeep (no other actions)."
-        resumed = takeWhile (not . Text.isPrefixOf (Text.pack "Your hand")) (reverse (takeWhile (/= lastLook) (reverse shown)))
+        lastLook = Text.pack "Turn 4, Player 2's upkeep. Priority: Player 1."
+        since = reverse (takeWhile (/= lastLook) (reverse shown))
+        resumed = takeWhile (not . Text.isPrefixOf (Text.pack "Your hand")) (drop 1 (dropWhile (not . Text.isPrefixOf (Text.pack "> ")) since))
         summary line = any (`Text.isPrefixOf` line) [Text.pack "Turn ", Text.pack "Player 1 (you)", Text.pack "Player 2: ", Text.pack "  "] || Text.null line
     Spec.assertBool s (elem lastLook shown) "the subgame reached its turn 4"
     Spec.assertEqWith s "exactly the main game's entries not yet shown, once" (filter (not . summary) resumed) [Text.pack "Player 2 loses 10 life.", Text.pack "Shahrazad is put into a graveyard from the stack."]
@@ -340,7 +341,7 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "the first is the first alike" (fst (asking facing ["1"] gs playing)) (Right (Action.Play a Nothing))
     Spec.assertEqWith s "the third passes" (fst (asking facing ["3"] gs playing)) (Right Action.Pass)
 
-  Spec.it s "a priority offering only passing and mana abilities is passed without asking or handing off" $ do
+  Spec.it s "a priority offering only passing and mana abilities is passed without asking for the seat the screen faces" $ do
     (forest, gs) <- withForest s registry
     hand <- maybe (Spec.assertFailure s "no card in hand") pure (Maybe.listToMaybe (Game.Engine.zoneMembers Zone.Hand S.alice gs))
     let decider = Decider.MkDecider S.alice
@@ -348,8 +349,10 @@ spec s registry = Spec.describe s "Client" $ do
         facingBob = Hotseat.fresh {Hotseat.facing = Just S.bob}
         facingAlice = Hotseat.fresh {Hotseat.facing = Just S.alice}
         upkeep = gs {GameState.phase = Phase.Beginning BeginningStep.Upkeep, GameState.activePlayer = S.bob}
-    Spec.assertEqWith s "passed for, in the other seat's upkeep" (asking facingBob [] upkeep manaOnly) (Right Action.Pass, [Text.pack "Player 1 passes in Player 2's upkeep (no other actions)."])
+    Spec.assertEqWith s "passed for, in the other seat's upkeep" (asking facingAlice [] upkeep manaOnly) (Right Action.Pass, [Text.pack "Player 1 draws 7 cards.", Text.pack "Player 2 draws 7 cards.", Text.pack "Player 1 passes in Player 2's upkeep (no other actions)."])
     let menu (outcome, shown) = (outcome, any menuHeading shown)
+        handedOff (outcome, shown) = (outcome, take 2 shown)
+    Spec.assertEqWith s "handed off and asked, facing another seat" (handedOff (asking facingBob ["", ""] upkeep manaOnly)) (Right Action.Pass, [Text.pack "<clear>", Text.pack "Pass to Player 1, then press Enter."])
     Spec.assertEqWith s "asked when turned off" (menu (asking facingAlice {Hotseat.autoPass = False} [] gs manaOnly)) (Left (Text.pack "end of input"), True)
     Spec.assertEqWith s "asked with a land to play" (menu (asking facingAlice [] gs (Prompt.ChooseAction decider S.alice [Action.Play hand Nothing, Action.Pass]))) (Left (Text.pack "end of input"), True)
 

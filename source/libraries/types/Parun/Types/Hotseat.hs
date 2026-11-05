@@ -25,7 +25,7 @@ data Hotseat = MkHotseat
     -- | The seats the client has asked a question.
     greeted :: Set.Set PlayerId.PlayerId,
     -- | Whether a priority offering only passing and mana abilities is passed
-    -- without asking.
+    -- without asking, for the seat the screen faces.
     autoPass :: Bool,
     -- | Each seat that chose auto during the payment now under way, beside
     -- the colors the source auto last tapped is for.

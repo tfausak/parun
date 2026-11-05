@@ -343,7 +343,9 @@ recipientObject reply = case reply of
 -- if any: passing a priority that offers nothing but passing and
 -- mana abilities, and the rest of a payment the seat chose auto at. A
 -- payment's other prompts and a refused answer end "auto", and a refused
--- answer is always asked.
+-- answer is always asked. A priority is passed for only the seat the screen
+-- faces: another seat is handed the screen and asked, whatever it holds, so
+-- neither a hand-off nor a line tells the table it had nothing else to do.
 unasked :: (Monad m) => PlayerView.PlayerView -> Request.Request -> Client m ([Text.Text], Maybe R.Reply)
 unasked view request = do
   let question = Request.question request
@@ -358,6 +360,7 @@ unasked view request = do
     _ | refused -> pure ([], Nothing)
     "ChooseAction"
       | Hotseat.autoPass hotseat,
+        Hotseat.facing hotseat == Just seat,
         Just pass <- onlyPass offer ->
           let active = PlayerView.active view
               whose = if active == seat then Text.pack "their " else Render.player active <> Text.pack "'s "
