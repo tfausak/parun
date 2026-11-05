@@ -2107,9 +2107,10 @@ matches context view predicate = case predicate of
   -- CR 115.1's player target, judged against the perspective the way HeldBy Controller
   -- judges a controller. ONLY a ToPlayer counts: CR 115.10a says an object is a
   -- target only where the word names it, and a spell aimed at a creature names
-  -- the creature and not its controller.
+  -- the creature and not its controller. A player with no entry in
+  -- targetViews has left the game, which CR 115.9b ignores.
   Filter.TargetsPlayer relation -> case perspective context of
-    Just p -> any (\r -> case r of Recipient.ToPlayer q -> PlayerRelation.holds (teams context) relation p q; _ -> False) (targets view)
+    Just p -> any (\r -> case r of Recipient.ToPlayer q -> Map.member r (targetViews view) && PlayerRelation.holds (teams context) relation p q; _ -> False) (targets view)
     Nothing -> False
   -- IsSource one field over: the id the RESOLUTION bound rather than the id the
   -- evaluation is sourced at. Vacuously False for a slot naming nothing, which
