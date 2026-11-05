@@ -68,7 +68,6 @@ import qualified Parun.Types.CoinFlipTrigger as CoinFlipTrigger
 import qualified Parun.Types.CoinFlipped as CoinFlipped
 import qualified Parun.Types.Combat as Combat
 import qualified Parun.Types.ControlChanged as ControlChanged
-import qualified Parun.Types.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterMotion as CounterMotion
@@ -163,6 +162,7 @@ import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TappedForMana as TappedForMana
 import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
 import qualified Parun.Types.TappedPermanent as TappedPermanent
+import qualified Parun.Types.TargetedSubject as TargetedSubject
 import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.Transformed as Transformed
 import Parun.Types.TriggerCondition (TriggerCondition)
@@ -1452,32 +1452,9 @@ armMatches bindings board gs bearer you cond event = case cond of
       Maybe.isJust (Game.lookupObject (AbilityWasActivated.ability activated) gs)
         && Filter.matches bearerContext (Projection.viewOfSpell (AbilityWasActivated.player activated) (AbilityWasActivated.ability activated) gs) f
     _ -> False
-  -- CR 601.2c from the PLAYER's side, BecomesTargeted's Self subject one
-  -- recipient over: Dormant Gomazoa's "whenever you become the target of a
-  -- spell" and Amulet of Safekeeping's "whenever you become the target of a spell or ability an
-  -- opponent controls". The recipient is compared with CR 109.5's "you" -- CR
-  -- 603.3a's controller of the bearer as the ability triggered -- rather than
-  -- with the bearer, which is the whole of what separates this from ward.
-  --
-  -- The KIND conjunct is the arm's rules content, and it is a Maybe: CR 112.1
-  -- makes a spell a card on the stack, while CR 602.2b and CR 603.3d route an
-  -- activated and a triggered ability through the same rule 601.2c. Gomazoa names
-  -- Spell and Ravenous Rats' targeted discard must not untap it; Amulet names
-  -- neither limb and takes both.
-  --
-  -- The RELATION is ward's, read off the same BecameTarget.controller field --
-  -- CR 405.4's controller of the targeting object, which is who Amulet offers the
-  -- {1} to. Gomazoa's AnyPlayer fires on its own spells as readily as on an
-  -- opponent's.
-  TriggerCondition.ControllerBecomesTarget c -> case event of
-    GameEvent.BecameTarget t ->
-      Recipient.playerOf (BecameTarget.targeted t) == Just you
-        && maybe True (== BecameTarget.kind t) (ControllerBecomesTarget.kind c)
-        && PlayerRelation.holds (Game.teams gs) (ControllerBecomesTarget.relation c) you (BecameTarget.controller t)
-    _ -> False
-  -- CR 601.2c / 603.2c: a permanent became the target of a spell or ability. A
-  -- Self subject is the bearer, a bare comparison of ids in a Self SpellCast's
-  -- shape and for its reason -- nothing about the targeting spell is read, so
+  -- CR 601.2c / 603.2c: a permanent or a player became the target of a spell or
+  -- ability. A Self subject is the bearer, a bare comparison of ids in a Self
+  -- SpellCast's shape and for its reason -- nothing about the targeting spell is read, so
   -- no projection can come up empty.
   --
   -- The RELATION is read off the event's own controller field rather than off the
@@ -1488,18 +1465,20 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- Rule 702.21a's own relation is Opponent; You is admitted because the
   -- condition is stated over a PlayerRelation, and a card printing the other half
   -- would read the same field. The kind and the relation are read the same way
-  -- under either subject.
+  -- under every subject.
   --
   -- A Matching subject is the same rule from a BYSTANDER's side: Professor Hojo
   -- asks nothing of the targeting object's controller and everything of the
   -- permanents it named, and Diffusion Sliver asks both; the relation is read
   -- off the event's controller field for the Self subject's CR 405.4 reason.
   --
-  -- The KIND conjunct is ControllerBecomesTarget's one limb narrower. "An
-  -- ACTIVATED ability" is CR 113.3b alone, where CR 603.3d brings CR 113.3c's to
-  -- the same rule 601.2c step, so a condition that did not ask would draw off a
-  -- triggered ability too. Parun.LeavesTriggerSpec's activated-against-triggered pair is
-  -- what proves it.
+  -- The KIND conjunct: CR 112.1 makes a spell a card on the stack, while CR
+  -- 602.2b and CR 603.3d route an activated and a triggered ability through the
+  -- same rule 601.2c, so Dormant Gomazoa's "a spell" must not untap on Ravenous
+  -- Rats' targeted discard. "An ACTIVATED ability" is CR 113.3b alone, so a
+  -- condition that did not ask would draw off a triggered ability too.
+  -- Parun.LeavesTriggerSpec's activated-against-triggered pair is what proves
+  -- it.
   --
   -- CR 109.2 scopes the Filter to the BATTLEFIELD, which is the arm's other
   -- rules content and belongs here rather than in each card's Filter: a target
@@ -1517,19 +1496,22 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- matchesTriggerGiven sees one event at a time and answers the same for both
   -- batchings, which is its contract.
   --
-  -- With includesYou, CR 109.5's "you" named as a target is a member too, the
-  -- ControllerBecomesTarget arm's test: Leyline of Combustion's "you and/or at
-  -- least one permanent you control".
+  -- A subject including CR 109.5's "you" -- CR 603.3a's controller of the bearer
+  -- as the ability triggered, not the bearer -- admits that player named as a
+  -- target: Dormant Gomazoa's "whenever you become the target of a spell" alone,
+  -- and Leyline of Combustion's "you and/or at least one permanent you control"
+  -- beside a permanent.
   TriggerCondition.BecomesTargeted c -> case event of
     GameEvent.BecameTarget t ->
       maybe True (== BecameTarget.kind t) (BecomesTargetedTrigger.kind c)
         && PlayerRelation.holds (Game.teams gs) (BecomesTargetedTrigger.relation c) you (BecameTarget.controller t)
         && case (Recipient.playerOf (BecameTarget.targeted t), Recipient.objectOf (BecameTarget.targeted t)) of
-          (Just player, _) -> BecomesTargetedTrigger.includesYou c && player == you
+          (Just player, _) -> TargetedSubject.includesYou (BecomesTargetedTrigger.subject c) && player == you
           (Nothing, Nothing) -> False
-          (Nothing, Just oid) -> case BecomesTargetedTrigger.permanent c of
-            ActingPermanent.Self -> oid == bearer
-            ActingPermanent.Matching f -> case Map.lookup oid board of
+          (Nothing, Just oid) -> case TargetedSubject.permanentOf (BecomesTargetedTrigger.subject c) of
+            Nothing -> False
+            Just ActingPermanent.Self -> oid == bearer
+            Just (ActingPermanent.Matching f) -> case Map.lookup oid board of
               Nothing -> False
               Just candidate -> Filter.matches bearerContext (Projection.sampledView board oid candidate gs) f
     _ -> False

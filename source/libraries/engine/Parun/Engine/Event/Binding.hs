@@ -108,6 +108,7 @@ import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TappedForMana as TappedForMana
 import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
 import qualified Parun.Types.TappedPermanent as TappedPermanent
+import qualified Parun.Types.TargetedSubject as TargetedSubject
 import Parun.Types.TriggerCondition (TriggerCondition)
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerSource as TriggerSource
@@ -478,17 +479,6 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- CR 601.2c / 603.2c: becomesTargetedSlots' slots, off the announcement
   -- matched.
   (TriggerCondition.BecomesTargeted c, GameEvent.BecameTarget t) -> becomesTargetedBindings c t
-  -- The same slot off the same field, one recipient over: Amulet of Safekeeping's
-  -- "counter THAT SPELL OR ABILITY unless its controller pays {1}" names the
-  -- object that did the targeting, and here the targeted party is a player rather
-  -- than the bearer, so nothing else on the ability reaches it.
-  --
-  -- Unconditional in the same sense as a Self BecomesTargeted's
-  -- (becomesTargetedSlots), and its controller likewise takes no slot of its
-  -- own: Resolve.payerOf reads this slot as "whoever controls that object",
-  -- which is CR 405.4's answer to "its controller".
-  (TriggerCondition.ControllerBecomesTarget {}, GameEvent.BecameTarget t) ->
-    Binding.setTargetingObject (BecameTarget.source t) Map.empty
   -- CR 509.3a / 509.3e on the blocking side: Super-Soldier Serum's "it" is the
   -- blocker. The attackers ride the event but go unbound: no printing names them.
   --
@@ -1131,9 +1121,15 @@ entersBindings gs t zc = case EntersTrigger.permanent t of
 --
 -- A Matching subject per permanent adds CR 601.2c's "that creature" read by a
 -- bystander: the permanent that became the target, which Cowardice returns to
--- its owner's hand, and only sometimes when includesYou may admit the player
--- instead (Unsettled Mariner). The targeting object beside it is Diffusion
+-- its owner's hand, and only sometimes when a subject including "you" may admit
+-- the player instead (Unsettled Mariner). The targeting object beside it is Diffusion
 -- Sliver's "counter that spell or ability unless its controller pays {2}".
+--
+-- A You subject per occurrence binds only the targeting object, as a Self one
+-- does: Amulet of Safekeeping's "counter that spell or ability unless its
+-- controller pays {1}". With a PLAYER targeted there is no bearer-shaped slot
+-- that would already name it. Dormant Gomazoa's "untap this creature" reads the
+-- bearer and never this slot; a slot promised but unread is harmless.
 --
 -- A OneOrMore batch adds the targeting object's controller, Leyline of
 -- Combustion's "that player", and nothing else: CR 603.2c makes the whole
@@ -1143,20 +1139,24 @@ entersBindings gs t zc = case EntersTrigger.permanent t of
 -- Leyline scenario's Aethersnatch proves it. The targeting object is what
 -- batchPartition splits a group by.
 becomesTargetedSlots :: BecomesTargetedTrigger.BecomesTargetedTrigger -> (Set.Set SlotName.SlotName, Set.Set SlotName.SlotName)
-becomesTargetedSlots c = case (BecomesTargetedTrigger.batching c, BecomesTargetedTrigger.permanent c) of
+becomesTargetedSlots c = case (BecomesTargetedTrigger.batching c, TargetedSubject.permanentOf subject) of
   (Batching.OneOrMore, _) -> (Set.fromList [Binding.targetingObject, Binding.triggerPlayer], Set.empty)
-  (Batching.EachOccurrence, ActingPermanent.Self) -> (Set.singleton Binding.targetingObject, Set.empty)
-  (Batching.EachOccurrence, ActingPermanent.Matching _)
-    | BecomesTargetedTrigger.includesYou c -> (Set.singleton Binding.targetingObject, Set.singleton Binding.became)
+  (Batching.EachOccurrence, Nothing) -> (Set.singleton Binding.targetingObject, Set.empty)
+  (Batching.EachOccurrence, Just ActingPermanent.Self) -> (Set.singleton Binding.targetingObject, Set.empty)
+  (Batching.EachOccurrence, Just (ActingPermanent.Matching _))
+    | TargetedSubject.includesYou subject -> (Set.singleton Binding.targetingObject, Set.singleton Binding.became)
     | otherwise -> (Set.fromList [Binding.became, Binding.targetingObject], Set.empty)
+  where
+    subject = BecomesTargetedTrigger.subject c
 
 -- CR 601.2c / 603.2c: becomesTargetedSlots, stamped off the announcement
 -- eventBindings was reached past.
 becomesTargetedBindings :: BecomesTargetedTrigger.BecomesTargetedTrigger -> BecameTarget.BecameTarget -> Map.Map SlotName.SlotName Binding
-becomesTargetedBindings c t = Binding.setTargetingObject (BecameTarget.source t) $ case (BecomesTargetedTrigger.batching c, BecomesTargetedTrigger.permanent c) of
+becomesTargetedBindings c t = Binding.setTargetingObject (BecameTarget.source t) $ case (BecomesTargetedTrigger.batching c, TargetedSubject.permanentOf (BecomesTargetedTrigger.subject c)) of
   (Batching.OneOrMore, _) -> Binding.setTriggerPlayer (BecameTarget.controller t) Map.empty
-  (Batching.EachOccurrence, ActingPermanent.Self) -> Map.empty
-  (Batching.EachOccurrence, ActingPermanent.Matching _) -> maybe Map.empty (`Binding.setBecame` Map.empty) (Recipient.objectOf (BecameTarget.targeted t))
+  (Batching.EachOccurrence, Nothing) -> Map.empty
+  (Batching.EachOccurrence, Just ActingPermanent.Self) -> Map.empty
+  (Batching.EachOccurrence, Just (ActingPermanent.Matching _)) -> maybe Map.empty (`Binding.setBecame` Map.empty) (Recipient.objectOf (BecameTarget.targeted t))
 
 -- CR 708.7 through CR 603.2: which slots a turned-face-up trigger binds on
 -- every match (eventBindingSlots' floor) and which only sometimes.
@@ -1655,17 +1655,6 @@ eventBindingSlots cond = case cond of
   -- admits.
   TriggerCondition.AbilityActivated _ -> Set.fromList [Binding.activatedAbility, Binding.triggerPlayer]
   TriggerCondition.BecomesTargeted c -> fst (becomesTargetedSlots c)
-  -- CR 601.2c's targeting object again, a Self BecomesTargeted's one recipient
-  -- over: Amulet of Safekeeping's "counter that spell or ability" reads it, and
-  -- with a PLAYER targeted there is no bearer-shaped slot that would already
-  -- name it. Guaranteed for the sibling's reason -- every GameEvent.BecameTarget
-  -- carries a source.
-  --
-  -- Claimed for the condition rather than for the printing, which is what a
-  -- per-CONDITION set means: Dormant Gomazoa's "you may untap this creature"
-  -- reads the bearer and never this slot, and a slot promised but unread is
-  -- harmless where the reverse is the failure this lint exists to catch.
-  TriggerCondition.ControllerBecomesTarget {} -> Set.singleton Binding.targetingObject
   -- CR 603.3b's second class names two things and binds both: CR 113.7's Saga,
   -- which the chapter ability hangs on, under CR 400.7e's slot for the reason
   -- eventBindings' arm gives, and CR 603.3a's controller of that chapter ability

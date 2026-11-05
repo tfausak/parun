@@ -40,33 +40,36 @@
           "condition": {
             "type": "BecomesTargeted",
             "value": {
-              "permanent": {
-                "type": "Matching",
-                "value": {
-                  "type": "And",
-                  "value": [
-                    {
-                      "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
-                    },
-                    {
-                      "type": "HeldBy",
-                      "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "Opponent"
-                        }
-                      }
-                    }
-                  ]
-                }
-              },
               "relation": {
                 "type": "You"
+              },
+              "subject": {
+                "type": "Permanent",
+                "value": {
+                  "type": "Matching",
+                  "value": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Creature"
+                        }
+                      },
+                      {
+                        "type": "HeldBy",
+                        "value": {
+                          "holder": {
+                            "type": "Controller"
+                          },
+                          "relation": {
+                            "type": "Opponent"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
               }
             }
           },

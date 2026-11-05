@@ -11,6 +11,7 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.StackObjectKind as StackObjectKind
+import qualified Parun.Types.TargetedSubject as TargetedSubject
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.BecomesTargetedTrigger" $ do
@@ -23,18 +24,18 @@ spec s = Spec.describe s "Parun.Codec.BecomesTargetedTrigger" $ do
       BecomesTargetedTrigger.codec
       BecomesTargetedTrigger.defaultValue {BecomesTargetedTrigger.relation = PlayerRelation.Opponent}
       " {\"relation\":{\"type\":\"Opponent\"}} "
-  -- Professor Hojo's: creatures you control, an activated ability, one batch.
+  -- Leyline of Combustion's "you and/or" over Professor Hojo's creatures you
+  -- control, an activated ability, one batch.
   Spec.it s "round-trips every field" $
     Common.assertCodec
       s
       BecomesTargetedTrigger.codec
       ( BecomesTargetedTrigger.MkBecomesTargetedTrigger
-          { BecomesTargetedTrigger.permanent = ActingPermanent.Matching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You]),
+          { BecomesTargetedTrigger.subject = TargetedSubject.YouOrPermanent (ActingPermanent.Matching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You])),
             BecomesTargetedTrigger.relation = PlayerRelation.Opponent,
             BecomesTargetedTrigger.kind = Just StackObjectKind.ActivatedAbility,
-            BecomesTargetedTrigger.includesYou = True,
             BecomesTargetedTrigger.batching = Batching.OneOrMore
           }
       )
-      " {\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]}},\"relation\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"ActivatedAbility\"},\"includesYou\":true,\"batching\":{\"type\":\"OneOrMore\"}} "
+      " {\"subject\":{\"type\":\"YouOrPermanent\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]}}},\"relation\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"ActivatedAbility\"},\"batching\":{\"type\":\"OneOrMore\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s BecomesTargetedTrigger.codec

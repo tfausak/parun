@@ -210,7 +210,6 @@ import qualified Parun.Codec.ControlMarginSpec
 import qualified Parun.Codec.ControlPlayerSpec
 import qualified Parun.Codec.ControlSidesSpec
 import qualified Parun.Codec.ControlSlotsSpec
-import qualified Parun.Codec.ControllerBecomesTargetSpec
 import qualified Parun.Codec.ControllerRelationSpec
 import qualified Parun.Codec.ConvokingSpec
 import qualified Parun.Codec.CopyClauseSpec
@@ -742,6 +741,7 @@ import qualified Parun.Codec.TappedPermanentSpec
 import qualified Parun.Codec.TargetCountSpec
 import qualified Parun.Codec.TargetRestrictionSpec
 import qualified Parun.Codec.TargetSlotSpec
+import qualified Parun.Codec.TargetedSubjectSpec
 import qualified Parun.Codec.TeamIdSpec
 import qualified Parun.Codec.TeamsSpec
 import qualified Parun.Codec.TextWordSpec
@@ -1201,7 +1201,7 @@ spec s registry corpus = do
   Parun.Codec.ControlClockSpec.spec s
   Parun.Codec.ControlDurationSpec.spec s
   Parun.Codec.ControlMarginSpec.spec s
-  Parun.Codec.ControllerBecomesTargetSpec.spec s
+  Parun.Codec.TargetedSubjectSpec.spec s
   Parun.Codec.ControllerRelationSpec.spec s
   Parun.Codec.ControlPlayerSpec.spec s
   Parun.Codec.ControlSidesSpec.spec s

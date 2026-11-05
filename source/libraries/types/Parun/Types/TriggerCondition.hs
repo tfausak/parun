@@ -12,7 +12,6 @@ import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.CoinFlipTrigger as CoinFlipTrigger
 import qualified Parun.Types.Condition as Condition
-import qualified Parun.Types.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.CounteringTrigger as CounteringTrigger
 import qualified Parun.Types.CrewRole as CrewRole
@@ -173,12 +172,9 @@ data TriggerCondition
     -- (Kurkesh, Onakke Ancient), the Filter read against the ability on the
     -- stack, as SpellCast's is against the spell.
     AbilityActivated (Filter.Filter Keyword.Keyword)
-  | -- | CR 601.2c / 603.2c: a permanent became the target of a spell or ability
-    -- (CR 702.21a's ward, Venerated Rotpriest, Professor Hojo).
+  | -- | CR 601.2c / 603.2c: a permanent or a player became the target of a spell
+    -- or ability (CR 702.21a's ward, Professor Hojo, Dormant Gomazoa).
     BecomesTargeted BecomesTargetedTrigger.BecomesTargetedTrigger
-  | -- | CR 601.2c from the player's side: "whenever you become the target of a
-    -- spell or ability" (Dormant Gomazoa).
-    ControllerBecomesTarget ControllerBecomesTarget.ControllerBecomesTarget
   | -- | CR 709.5h: "when you unlock this door", however the named half was
     -- unlocked. Self-scoped plus the half, which is what separates a Room's two
     -- doors.

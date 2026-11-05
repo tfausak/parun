@@ -36,29 +36,32 @@
               "kind": {
                 "type": "Spell"
               },
-              "permanent": {
-                "type": "Matching",
+              "subject": {
+                "type": "Permanent",
                 "value": {
-                  "type": "And",
-                  "value": [
-                    {
-                      "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
-                    },
-                    {
-                      "type": "HeldBy",
-                      "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
+                  "type": "Matching",
+                  "value": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Creature"
+                        }
+                      },
+                      {
+                        "type": "HeldBy",
+                        "value": {
+                          "holder": {
+                            "type": "Controller"
+                          },
+                          "relation": {
+                            "type": "You"
+                          }
                         }
                       }
-                    }
-                  ]
+                    ]
+                  }
                 }
               }
             }

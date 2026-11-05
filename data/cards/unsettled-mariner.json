@@ -41,23 +41,25 @@
           "condition": {
             "type": "BecomesTargeted",
             "value": {
-              "includesYou": true,
-              "permanent": {
-                "type": "Matching",
+              "relation": {
+                "type": "Opponent"
+              },
+              "subject": {
+                "type": "YouOrPermanent",
                 "value": {
-                  "type": "HeldBy",
+                  "type": "Matching",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
+                    "type": "HeldBy",
+                    "value": {
+                      "holder": {
+                        "type": "Controller"
+                      },
+                      "relation": {
+                        "type": "You"
+                      }
                     }
                   }
                 }
-              },
-              "relation": {
-                "type": "Opponent"
               }
             }
           },

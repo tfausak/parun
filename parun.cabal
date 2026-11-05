@@ -458,8 +458,6 @@ library codec
     Parun.Codec.ControlClockSpec
     Parun.Codec.ControlDuration
     Parun.Codec.ControlDurationSpec
-    Parun.Codec.ControllerBecomesTarget
-    Parun.Codec.ControllerBecomesTargetSpec
     Parun.Codec.ControllerRelation
     Parun.Codec.ControllerRelationSpec
     Parun.Codec.ControlMargin
@@ -1558,6 +1556,8 @@ library codec
     Parun.Codec.TapStateSpec
     Parun.Codec.TargetCount
     Parun.Codec.TargetCountSpec
+    Parun.Codec.TargetedSubject
+    Parun.Codec.TargetedSubjectSpec
     Parun.Codec.TargetRestriction
     Parun.Codec.TargetRestrictionSpec
     Parun.Codec.TargetSlot
@@ -2636,7 +2636,6 @@ library types
     Parun.Types.ControlChanged
     Parun.Types.ControlClock
     Parun.Types.ControlDuration
-    Parun.Types.ControllerBecomesTarget
     Parun.Types.ControllerRelation
     Parun.Types.ControlMargin
     Parun.Types.ControlPlayer
@@ -3266,6 +3265,7 @@ library types
     Parun.Types.TapPermanents
     Parun.Types.TapState
     Parun.Types.TargetCount
+    Parun.Types.TargetedSubject
     Parun.Types.TargetRestriction
     Parun.Types.TargetSlot
     Parun.Types.TeamId
