@@ -114,6 +114,7 @@ animate-wall
 animists-awakening
 ankh-of-mishra
 annex
+anointed-procession
 aphotic-wisps
 apocalypse-chime
 approach-of-the-second-sun
@@ -2963,6 +2964,7 @@ tsabos-web
 turn-the-tables
 turn-to-frog
 turn-to-slag
+turntimber-ranger
 turret-ogre
 tusk-and-whiskers
 twinblade-assassins

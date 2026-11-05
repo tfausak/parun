@@ -14,6 +14,10 @@ data TokenLot = MkTokenLot
     -- are what the token has from the instant it exists. Nothing for a token
     -- whose text is given.
     copy :: Maybe ProjectedCharacteristics.ProjectedCharacteristics,
-    count :: Natural.Natural
+    count :: Natural.Natural,
+    -- | CR 614.16: an effect makes this lot -- a resolving spell's or
+    -- ability's, or another replacement effect's. False for CR 118.12's cost
+    -- (docs/decisions.md, "What a spell or ability causes").
+    byEffect :: Bool
   }
   deriving (Eq, Ord, Show)

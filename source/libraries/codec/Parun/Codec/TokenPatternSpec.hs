@@ -15,14 +15,14 @@ spec s = Spec.describe s "Parun.Codec.TokenPattern" $ do
     Common.assertCodec
       s
       TokenPattern.codec
-      TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.And []}
+      TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.And [], TokenPattern.effectsOnly = False}
       " {\"whose\":{\"type\":\"You\"}} "
   -- CR 111.1: Queen Allenal of Ruadach's "creature tokens".
   Spec.it s "a pattern naming what the token is" $
     Common.assertCodec
       s
       TokenPattern.codec
-      TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.HasCardType CardType.Creature}
+      TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.HasCardType CardType.Creature, TokenPattern.effectsOnly = False}
       " {\"whose\":{\"type\":\"You\"},\"whatToken\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
   -- CR 109.5: Related AnyPlayer is what a pattern that says nothing about the
   -- controller means, so the sole field's key is omitted.
@@ -30,6 +30,13 @@ spec s = Spec.describe s "Parun.Codec.TokenPattern" $ do
     Common.assertCodec
       s
       TokenPattern.codec
-      TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.AnyPlayer, TokenPattern.whatToken = Filter.And []}
+      TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.AnyPlayer, TokenPattern.whatToken = Filter.And [], TokenPattern.effectsOnly = False}
       " {} "
+  -- CR 614.16: Doubling Season's "if an effect would create".
+  Spec.it s "a pattern reaching effects only" $
+    Common.assertCodec
+      s
+      TokenPattern.codec
+      TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.And [], TokenPattern.effectsOnly = True}
+      " {\"whose\":{\"type\":\"You\"},\"effectsOnly\":true} "
   Spec.it s "has a schema" $ Common.assertHasSchema s TokenPattern.codec

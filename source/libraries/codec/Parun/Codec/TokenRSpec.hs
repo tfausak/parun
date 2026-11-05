@@ -33,7 +33,7 @@ spec s = Spec.describe s "Parun.Codec.TokenR" $ do
       s
       codec
       ( TokenR.MkTokenR
-          { TokenR.matching = TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.And []},
+          { TokenR.matching = TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.And [], TokenPattern.effectsOnly = False},
             TokenR.scaling = Just (Scaling.Multiply 2),
             TokenR.plus = Nothing
           }
@@ -45,7 +45,7 @@ spec s = Spec.describe s "Parun.Codec.TokenR" $ do
       s
       codec
       ( TokenR.MkTokenR
-          { TokenR.matching = TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.HasCardType CardType.Creature},
+          { TokenR.matching = TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.HasCardType CardType.Creature, TokenPattern.effectsOnly = False},
             TokenR.scaling = Nothing,
             TokenR.plus = Just (TokenPlus.One soldier)
           }
@@ -57,7 +57,7 @@ spec s = Spec.describe s "Parun.Codec.TokenR" $ do
       s
       codec
       ( TokenR.MkTokenR
-          { TokenR.matching = TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.And []},
+          { TokenR.matching = TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.And [], TokenPattern.effectsOnly = False},
             TokenR.scaling = Nothing,
             TokenR.plus = Just (TokenPlus.ThatMany soldier)
           }

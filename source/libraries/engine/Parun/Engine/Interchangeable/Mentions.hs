@@ -2993,7 +2993,7 @@ timesNames _asking onQuantity x = case x of
 
 tokenPatternNames :: (Monoid r) => Asking r -> TokenPattern.TokenPattern -> r
 tokenPatternNames asking x = case x of
-  TokenPattern.MkTokenPattern whose whatToken -> controllerRelationNames asking whose <> filterNames asking whatToken
+  TokenPattern.MkTokenPattern whose whatToken _ -> controllerRelationNames asking whose <> filterNames asking whatToken
 
 tokenPlusNames :: Asking r -> (card -> r) -> TokenPlus.TokenPlus card -> r
 tokenPlusNames _asking onCard x = case x of
