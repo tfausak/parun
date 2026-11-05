@@ -1,0 +1,277 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "p1",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "p2",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Reverse Polarity",
+            "label": "polarity"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Illusionary Mask",
+            "label": "mask"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          },
+          {
+            "card": "Swamp",
+            "label": "s1"
+          },
+          {
+            "card": "Swamp",
+            "label": "s2"
+          },
+          {
+            "card": "Swamp",
+            "label": "s3"
+          },
+          {
+            "card": "Swamp",
+            "label": "s4"
+          },
+          {
+            "card": "Swamp",
+            "label": "s5"
+          },
+          {
+            "card": "Swamp",
+            "label": "s6"
+          },
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Mountain",
+            "label": "m3"
+          },
+          {
+            "card": "Mountain",
+            "label": "m4"
+          },
+          {
+            "card": "Mountain",
+            "label": "m5"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Triskelion",
+            "label": "trisk"
+          },
+          {
+            "card": "Chandra's Ignition",
+            "label": "ignition"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "Illusionary Mask turns the Triskelion up as Chandra's Ignition's first event would be dealt, so it is an artifact as it deals all of them (CR 120.4b, 614.6)",
+  "note": "The Ignition reads the face-down 2/2's power: 2 to the Hill Giant, then 2 to alice. Both are dealt by a face-up artifact, the second with no row left to turn it up. Twice 2 is 4, from 18.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "mana": [
+            "$s1",
+            "$s2",
+            "$s3",
+            "$s4",
+            "$s5",
+            "$s6",
+            null
+          ],
+          "object": "$mask",
+          "x": 6
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "OfferedCast",
+          "with": {
+            "type": "Exercises"
+          }
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$m1",
+            "$m2",
+            "$m3",
+            "$m4",
+            "$m5"
+          ],
+          "object": "$ignition",
+          "targets": [
+            "Triskelion"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 18,
+          "player": "alice"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Damage": {
+          "damage": 2,
+          "object": "$giant"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Names": {
+          "names": [
+            "Triskelion"
+          ],
+          "object": "Triskelion"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "BeginningOfCombat",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$p1",
+            "$p2"
+          ],
+          "object": "$polarity"
+        }
+      },
+      "player": "alice",
+      "step": "BeginningOfCombat",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "BeginningOfCombat",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "BeginningOfCombat",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 22,
+          "player": "alice"
+        }
+      },
+      "player": "bob",
+      "step": "BeginningOfCombat",
+      "turn": 1
+    }
+  ]
+}

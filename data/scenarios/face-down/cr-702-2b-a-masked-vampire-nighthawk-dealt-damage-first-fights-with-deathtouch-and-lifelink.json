@@ -1,0 +1,190 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Craw Wurm",
+            "label": "wurm"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Illusionary Mask",
+            "label": "mask"
+          },
+          {
+            "card": "Swamp",
+            "label": "s1"
+          },
+          {
+            "card": "Swamp",
+            "label": "s2"
+          },
+          {
+            "card": "Swamp",
+            "label": "s3"
+          },
+          {
+            "card": "Forest",
+            "label": "f1"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Vampire Nighthawk",
+            "label": "hawk"
+          },
+          {
+            "card": "Prey Upon",
+            "label": "prey"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 702.2b, 702.15b a masked Vampire Nighthawk turned up by the damage dealt to it fights with deathtouch and lifelink",
+  "note": "bob's is the active seat (CR 101.4), so the blow at his Nighthawk settles first and turns it up as its recipient, with no row left for its own blow. That 2 destroys the 6/4 and gains bob 2.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "mana": [
+            "$s1",
+            "$s2",
+            "$s3",
+            null
+          ],
+          "object": "$mask",
+          "x": 3
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "OfferedCast",
+          "with": {
+            "type": "Exercises"
+          }
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$f1"
+          ],
+          "object": "$prey",
+          "targetsBySlot": {
+            "mine": [
+              "Vampire Nighthawk"
+            ],
+            "theirs": [
+              "$wurm"
+            ]
+          }
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Craw Wurm",
+          "count": 0,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Vampire Nighthawk",
+          "count": 0,
+          "player": "bob",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 22,
+          "player": "bob"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

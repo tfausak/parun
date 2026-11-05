@@ -1093,22 +1093,3 @@ Entries are ordered by the first rule each cites.
   rock-hydra-divides-its-counters-away-from-the-lifelink and
   rock-hydra-divides-its-counters-onto-the-other-blocker.
 - **Issue**: #6276.
-
-## Whether a source's card type is read as it dealt the damage
-
-- **Question**: A Prodigal Sorcerer pings a player, then Liquimetal Coating makes
-  it an artifact. Reverse Polarity says "the damage dealt to you so far this turn
-  by artifacts". Is that ping counted?
-- **Rules**: CR 120.1, 608.2h (CR of 2026-09-25). CR 608.2h gives an effect the
-  current information of a specific object, but the sentence asks about a past
-  deal, and the card has no ruling. CR 702.76a says "at the time it dealt that
-  damage" outright; this card does not.
-- **Decision**: No. The source counts if it was an artifact as it dealt the
-  damage, last known information for one already gone.
-- **Rejected**: What the source is now, under CR 608.2h: a coating would rewrite
-  damage already dealt, and a source's later zone would decide which record is
-  asked.
-- **Site**: `Parun.Types.DamageEvent`'s `dealtByCardTypes`, filled by
-  `Parun.Engine.Event.damageEvent`. The scenario
-  reverse-polarity-reads-a-source-as-it-dealt-the-damage.
-- **Issue**: #6278.

@@ -51,7 +51,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "docs/decisions.md: a source is an artifact for Reverse Polarity only if it was one as it dealt the damage",
+  "description": "a source is an artifact for Reverse Polarity only if it was one as it dealt the damage (CR 120.1; Admiral Beckett Brass's ruling)",
   "note": "Both Sorcerers end the turn artifacts. The first pinged alice before its coating and the second after. Twice the second's 1 is 2, from 18. Reading either as it now is gains 4.",
   "timeline": [
     {

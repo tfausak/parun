@@ -1,0 +1,207 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Craw Wurm",
+            "label": "w1"
+          },
+          {
+            "card": "Craw Wurm",
+            "label": "w2"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Illusionary Mask",
+            "label": "mask"
+          },
+          {
+            "card": "Swamp",
+            "label": "s1"
+          },
+          {
+            "card": "Swamp",
+            "label": "s2"
+          },
+          {
+            "card": "Swamp",
+            "label": "s3"
+          },
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Mountain",
+            "label": "m3"
+          },
+          {
+            "card": "Mountain",
+            "label": "m4"
+          },
+          {
+            "card": "Mountain",
+            "label": "m5"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Vampire Nighthawk",
+            "label": "hawk"
+          },
+          {
+            "card": "Chandra's Ignition",
+            "label": "ignition"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 702.2b, 702.15b every event of Chandra's Ignition is dealt by the face-up Vampire Nighthawk Illusionary Mask turned up for the first",
+  "note": "Each of its three events reads 2 off the face-down 2/2. Deathtouch destroys both 6/4s, which 2 would not, and lifelink gains bob 6.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "mana": [
+            "$s1",
+            "$s2",
+            "$s3",
+            null
+          ],
+          "object": "$mask",
+          "x": 3
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "OfferedCast",
+          "with": {
+            "type": "Exercises"
+          }
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$m1",
+            "$m2",
+            "$m3",
+            "$m4",
+            "$m5"
+          ],
+          "object": "$ignition",
+          "targets": [
+            "Vampire Nighthawk"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Craw Wurm",
+          "count": 0,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 26,
+          "player": "bob"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 18,
+          "player": "alice"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

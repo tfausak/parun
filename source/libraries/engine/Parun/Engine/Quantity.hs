@@ -901,8 +901,8 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- Same log, same CR 120.3a recipient, same roster (Chandra's Incinerator's
         -- ruling) and the same empty-log answer of 0; only the reference is ever
         -- unanswered. `by` asks what each source was as it dealt the damage
-        -- (Reverse Polarity's scenarios; docs/decisions.md, "Whether a source's card
-        -- type is read as it dealt the damage").
+        -- (Reverse Polarity's scenarios; Admiral Beckett Brass's ruling, "checks what
+        -- happened earlier in the turn").
         Quantity.DamageDealtToPlayersThisTurn tally -> case historyPlayersOf (DealtDamage.recipient tally) of
           Nothing -> Nothing
           Just pids -> Just (toInteger (sum (fmap (Game.damageDealtToPlayerThisTurn (DealtDamage.kind tally) (DealtDamage.by tally) gs) pids)))

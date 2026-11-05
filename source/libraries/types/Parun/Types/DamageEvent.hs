@@ -80,9 +80,9 @@ data DamageEvent = MkDamageEvent
     -- names nothing, which would silently drop a commander that died in combat.
     dealtByCommander :: Bool,
     -- | CR 120.1: the source's CARD TYPES when this damage was dealt, read by
-    -- Parun.Types.DealtDamage's `by`; docs/decisions.md, "Whether a source's card
-    -- type is read as it dealt the damage". CR 608.2h's last known information for
-    -- a source already gone.
+    -- Parun.Types.DealtDamage's `by`: such a sentence "checks what happened earlier
+    -- in the turn" (Admiral Beckett Brass's ruling, 2017-09-29). CR 608.2h's last
+    -- known information for a source already gone.
     dealtByCardTypes :: Set.Set CardType.CardType,
     -- | CR 510 vs CR 608: combat damage or not. Set at deal time -- Damage tags
     -- Combat, Resolve's DealDamage tags Noncombat. Read by Replacement.applies's
