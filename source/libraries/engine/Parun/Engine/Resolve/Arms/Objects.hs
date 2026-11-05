@@ -672,7 +672,7 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
           -- alone, a regression fence: every pool copier re-aims one target,
           -- which asks nothing. data/scenarios/divide's Precursor Golem case
           -- proves the part carried.
-          rebound <- Common.reaimDivisions copier original (Object.bindings obj) retarget
+          rebound <- Common.reaimDivisions copier original Map.empty (Object.bindings obj) retarget
           gsNow <- State.get
           let (copyId, gs1) = Game.freshObjectId gsNow
               (ts, gs2) = Game.freshTimestamp gs1
