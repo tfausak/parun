@@ -1,0 +1,368 @@
+1 Abomination
+1 Air Elemental
+1 Alabaster Potion
+1 Aladdin's Lamp
+1 Aladdin's Ring
+1 Ali Baba
+1 Amrou Kithkin
+1 Amulet of Kroog
+1 Angry Mob
+1 Animate Artifact
+1 Animate Dead
+1 Animate Wall
+1 Ankh of Mishra
+1 Apprentice Wizard
+1 Armageddon
+1 Armageddon Clock
+1 Ashes to Ashes
+1 Ashnod's Battle Gear
+1 Aspect of Wolf
+1 Backfire
+1 Bad Moon
+1 Balance
+1 Ball Lightning
+1 Battering Ram
+1 Benalish Hero
+1 Bird Maiden
+1 Birds of Paradise
+1 Black Knight
+1 Black Mana Battery
+1 Black Vise
+1 Black Ward
+1 Blessing
+1 Blight
+1 Blood Lust
+1 Blue Elemental Blast
+1 Blue Mana Battery
+1 Blue Ward
+1 Bog Imp
+1 Bog Wraith
+1 Bottle of Suleiman
+1 Brainwash
+1 Brass Man
+1 Bronze Tablet
+1 Brothers of Fire
+1 Burrowing
+1 Carnivorous Plant
+1 Carrion Ants
+1 Castle
+1 Cave People
+1 Celestial Prism
+1 Channel
+1 Chaoslace
+1 Circle of Protection: Artifacts
+1 Circle of Protection: Black
+1 Circle of Protection: Blue
+1 Circle of Protection: Green
+1 Circle of Protection: Red
+1 Circle of Protection: White
+1 Clay Statue
+1 Clockwork Avian
+1 Clockwork Beast
+1 Cockatrice
+1 Colossus of Sardia
+1 Conservator
+1 Control Magic
+1 Conversion
+1 Coral Helm
+1 Cosmic Horror
+1 Counterspell
+1 Craw Wurm
+1 Creature Bond
+1 Crimson Manticore
+1 Crumble
+1 Crusade
+1 Crystal Rod
+1 Cursed Land
+1 Cursed Rack
+1 Cyclopean Mummy
+1 Dancing Scimitar
+1 Dark Ritual
+1 Death Ward
+1 Deathgrip
+1 Deathlace
+1 Desert Twister
+1 Detonate
+1 Diabolic Machine
+1 Dingus Egg
+1 Disenchant
+1 Disintegrate
+1 Disrupting Scepter
+1 Divine Transformation
+1 Dragon Engine
+1 Dragon Whelp
+1 Drain Life
+1 Drain Power
+1 Drudge Skeletons
+1 Durkwood Boars
+1 Dwarven Warriors
+1 Earth Elemental
+1 Earthquake
+1 Ebony Horse
+1 El-Hajjâj
+1 Elder Land Wurm
+1 Elven Riders
+1 Elvish Archers
+1 Energy Flux
+1 Energy Tap
+1 Erg Raiders
+1 Erosion
+1 Eternal Warrior
+1 Evil Presence
+1 Eye for an Eye
+1 Fear
+1 Feedback
+1 Fellwar Stone
+1 Fire Elemental
+1 Fireball
+1 Firebreathing
+1 Fissure
+1 Flashfires
+1 Flight
+1 Flood
+1 Flying Carpet
+1 Fog
+1 Force of Nature
+1 Forest
+1 Fortified Area
+1 Frozen Shade
+1 Fungusaur
+1 Gaea's Liege
+1 Gaseous Form
+1 Ghost Ship
+1 Giant Growth
+1 Giant Spider
+1 Giant Strength
+1 Giant Tortoise
+1 Glasses of Urza
+1 Gloom
+1 Goblin Balloon Brigade
+1 Goblin King
+1 Goblin Rock Sled
+1 Grapeshot Catapult
+1 Gray Ogre
+1 Greed
+1 Green Mana Battery
+1 Green Ward
+1 Grizzly Bears
+1 Healing Salve
+1 Helm of Chatzuk
+1 Hill Giant
+1 Holy Armor
+1 Holy Strength
+1 Howl from Beyond
+1 Howling Mine
+1 Hurkyl's Recall
+1 Hurloon Minotaur
+1 Hurr Jackal
+1 Hurricane
+1 Hypnotic Specter
+1 Immolation
+1 Inferno
+1 Instill Energy
+1 Iron Star
+1 Ironclaw Orcs
+1 Ironroot Treefolk
+1 Island
+1 Island Fish Jasconius
+1 Island Sanctuary
+1 Ivory Cup
+1 Ivory Tower
+1 Jade Monolith
+1 Jandor's Saddlebags
+1 Jayemdae Tome
+1 Jump
+1 Junún Efreet
+1 Karma
+1 Keldon Warlord
+1 Killer Bees
+1 Kismet
+1 Kormus Bell
+1 Land Leeches
+1 Land Tax
+1 Leviathan
+1 Ley Druid
+1 Library of Leng
+1 Lifeforce
+1 Lifelace
+1 Lifetap
+1 Lightning Bolt
+1 Living Artifact
+1 Living Lands
+1 Llanowar Elves
+1 Lord of Atlantis
+1 Lord of the Pit
+1 Lost Soul
+1 Lure
+1 Magical Hack
+1 Magnetic Mountain
+1 Mahamoti Djinn
+1 Mana Clash
+1 Mana Flare
+1 Mana Short
+1 Mana Vault
+1 Manabarbs
+1 Marsh Gas
+1 Marsh Viper
+1 Meekstone
+1 Merfolk of the Pearl Trident
+1 Mesa Pegasus
+1 Millstone
+1 Mind Bomb
+1 Mind Twist
+1 Mishra's Factory
+1 Mishra's War Machine
+1 Mons's Goblin Raiders
+1 Morale
+1 Mountain
+1 Murk Dwellers
+1 Nafs Asp
+1 Nether Shadow
+1 Nevinyrral's Disk
+1 Nightmare
+1 Northern Paladin
+1 Oasis
+1 Obsianus Golem
+1 Onulet
+1 Orcish Artillery
+1 Orcish Oriflamme
+1 Ornithopter
+1 Osai Vultures
+1 Paralyze
+1 Pearled Unicorn
+1 Personal Incarnation
+1 Pestilence
+1 Phantasmal Forces
+1 Phantasmal Terrain
+1 Phantom Monster
+1 Piety
+1 Pikemen
+1 Pirate Ship
+1 Pit Scorpion
+1 Plague Rats
+1 Plains
+1 Power Leak
+1 Power Sink
+1 Power Surge
+1 Pradesh Gypsies
+1 Primal Clay
+1 Prodigal Sorcerer
+1 Psionic Entity
+1 Psychic Venom
+1 Purelace
+1 Pyrotechnics
+1 Radjan Spirit
+1 Rag Man
+1 Raise Dead
+1 Rebirth
+1 Red Elemental Blast
+1 Red Mana Battery
+1 Red Ward
+1 Regeneration
+1 Relic Bind
+1 Reverse Damage
+1 Righteousness
+1 Rod of Ruin
+1 Royal Assassin
+1 Samite Healer
+1 Sandstorm
+1 Savannah Lions
+1 Scathe Zombies
+1 Scavenging Ghoul
+1 Scryb Sprites
+1 Sea Serpent
+1 Seeker
+1 Segovian Leviathan
+1 Sengir Vampire
+1 Serra Angel
+1 Shanodin Dryads
+1 Shapeshifter
+1 Shatter
+1 Shivan Dragon
+1 Simulacrum
+1 Sindbad
+1 Siren's Call
+1 Sisters of the Flame
+1 Sleight of Mind
+1 Smoke
+1 Sorceress Queen
+1 Soul Net
+1 Spell Blast
+1 Spirit Link
+1 Spirit Shackle
+1 Stasis
+1 Steal Artifact
+1 Stone Giant
+1 Stone Rain
+1 Stream of Life
+1 Strip Mine
+1 Sunglasses of Urza
+1 Sunken City
+1 Swamp
+1 Swords to Plowshares
+1 Sylvan Library
+1 Tawnos's Wand
+1 Tawnos's Weaponry
+1 Tempest Efreet
+1 Terror
+1 Tetravus
+1 The Brute
+1 The Hive
+1 The Rack
+1 Thicket Basilisk
+1 Thoughtlace
+1 Throne of Bone
+1 Timber Wolves
+1 Time Elemental
+1 Titania's Song
+1 Tranquility
+1 Triskelion
+1 Tsunami
+1 Tundra Wolves
+1 Tunnel
+1 Twiddle
+1 Uncle Istvan
+1 Unholy Strength
+1 Unstable Mutation
+1 Unsummon
+1 Untamed Wilds
+1 Urza's Avenger
+1 Uthden Troll
+1 Vampire Bats
+1 Venom
+1 Verduran Enchantress
+1 Visions
+1 Volcanic Eruption
+1 Wall of Air
+1 Wall of Bone
+1 Wall of Brambles
+1 Wall of Dust
+1 Wall of Fire
+1 Wall of Ice
+1 Wall of Spears
+1 Wall of Stone
+1 Wall of Swords
+1 Wall of Water
+1 Wall of Wood
+1 Wanderlust
+1 War Mammoth
+1 Warp Artifact
+1 Water Elemental
+1 Weakness
+1 Web
+1 Whirling Dervish
+1 White Knight
+1 White Mana Battery
+1 White Ward
+1 Wild Growth
+1 Will-o'-the-Wisp
+1 Winds of Change
+1 Winter Blast
+1 Winter Orb
+1 Wooden Sphere
+1 Word of Binding
+1 Wrath of God
+1 Xenic Poltergeist
+1 Yotian Soldier
+1 Zephyr Falcon
+1 Zombie Master
