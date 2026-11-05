@@ -1241,8 +1241,6 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- holds no Count, exactly as CR 603.6a's does above. Its ordinal is a bare
   -- Natural, as CR 714.2b's is.
   TriggerCondition.SpellCast {} -> []
-  -- The same rule read off the spell itself carries nothing at all.
-  TriggerCondition.SelfCast -> []
   -- CR 602.2b's activation carries a Filter, which holds no Count.
   TriggerCondition.AbilityActivated _ -> []
   -- CR 601.2c's carries a subject, a PlayerRelation, a StackObjectKind and a
@@ -4728,10 +4726,9 @@ triggerConditionFilters triggerCondition = case triggerCondition of
       CounterHolder.Permanent f -> unframed [f]
   TriggerCondition.SelfBecomesClassLevel _ -> []
   -- CR 601.2i's "whenever you cast a [type] spell" carries one directly, over
-  -- the spell rather than over a permanent.
-  TriggerCondition.SpellCast (SpellCast.MkSpellCast f _ _ _ _ _) -> unframed [f]
-  -- "This spell" names the bearer and needs no Filter to say so.
-  TriggerCondition.SelfCast -> []
+  -- the spell rather than over a permanent; "this spell" names the bearer and
+  -- needs no Filter to say so.
+  TriggerCondition.SpellCast c -> actingFilters (SpellCast.spell c)
   TriggerCondition.AbilityActivated f -> unframed [f]
   -- Rule 702.21a's Self subject names the bearer and carries no Filter; a
   -- Matching one's is card text like any other: Professor Hojo's "creatures you
@@ -4800,7 +4797,6 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.CountersChange _ -> []
   TriggerCondition.SelfBecomesClassLevel _ -> []
   TriggerCondition.SpellCast _ -> []
-  TriggerCondition.SelfCast -> []
   TriggerCondition.AbilityActivated _ -> []
   TriggerCondition.BecomesTargeted _ -> []
   TriggerCondition.ControllerBecomesTarget _ -> []

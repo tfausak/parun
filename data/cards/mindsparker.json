@@ -45,58 +45,61 @@
           "condition": {
             "type": "SpellCast",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "Or",
-                    "value": [
-                      {
-                        "type": "HasColor",
-                        "value": {
-                          "type": "White"
-                        }
-                      },
-                      {
-                        "type": "HasColor",
-                        "value": {
-                          "type": "Blue"
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "type": "Or",
-                    "value": [
-                      {
-                        "type": "HasCardType",
-                        "value": {
-                          "type": "Instant"
-                        }
-                      },
-                      {
-                        "type": "HasCardType",
-                        "value": {
-                          "type": "Sorcery"
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "Opponent"
-                      }
-                    }
-                  }
-                ]
-              },
               "scope": {
                 "type": "EachTurn"
+              },
+              "spell": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "White"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Blue"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Instant"
+                          }
+                        },
+                        {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Sorcery"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "Opponent"
+                        }
+                      }
+                    }
+                  ]
+                }
               }
             }
           },

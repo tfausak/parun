@@ -17,30 +17,33 @@
               {
                 "type": "SpellCast",
                 "value": {
-                  "filter": {
-                    "type": "And",
-                    "value": [
-                      {
-                        "type": "HasColor",
-                        "value": {
-                          "type": "White"
-                        }
-                      },
-                      {
-                        "type": "HeldBy",
-                        "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
-                        }
-                      }
-                    ]
-                  },
                   "scope": {
                     "type": "EachTurn"
+                  },
+                  "spell": {
+                    "type": "Matching",
+                    "value": {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "White"
+                          }
+                        },
+                        {
+                          "type": "HeldBy",
+                          "value": {
+                            "holder": {
+                              "type": "Controller"
+                            },
+                            "relation": {
+                              "type": "You"
+                            }
+                          }
+                        }
+                      ]
+                    }
                   }
                 }
               },

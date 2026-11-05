@@ -70,6 +70,7 @@ import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.Response as Response
+import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TextWord as TextWord
 import qualified Parun.Types.TriggerCondition as TriggerCondition
@@ -1213,7 +1214,7 @@ cascadeSpec s registry = Spec.describe s "Cascade" $ do
   Spec.it s "CR 702.85a cascade is minted for a spell on the stack and nowhere else" $ do
     Spec.assertEqWith s "the stack roster mints it" (Keyword.stackTriggeredAbilitiesOf (Map.singleton Keyword.Type.Cascade 1)) [Keyword.cascade]
     Spec.assertEqWith s "and the battlefield roster does not" (Keyword.triggeredAbilitiesOf (Map.singleton Keyword.Type.Cascade 1)) []
-    Spec.assertEqWith s "rule 702.85a's condition is the cast" (TriggeredAbility.condition Keyword.cascade) TriggerCondition.SelfCast
+    Spec.assertEqWith s "rule 702.85a's condition is the cast" (TriggeredAbility.condition Keyword.cascade) (TriggerCondition.SpellCast SpellCast.self)
 
   -- CR 613.1f reaching a spell on the stack: Imoti, Celebrant of Bounty
   -- {3}{G}{U} Legendary Creature -- Snake Druid 3/1 -- "Cascade / Spells you
@@ -1309,7 +1310,7 @@ rippleSpec s registry =
           Spec.assertEqWith s "the stack roster mints it" (Keyword.stackTriggeredAbilitiesOf (Map.singleton (Keyword.Type.Ripple 4) 1)) [Keyword.ripple 4]
           Spec.assertEqWith s "and the battlefield roster does not" (Keyword.triggeredAbilitiesOf (Map.singleton (Keyword.Type.Ripple 4) 1)) []
           Spec.assertEqWith s "CR 702.60b two printed instances are two abilities" (Keyword.stackTriggeredAbilitiesOf (Map.singleton (Keyword.Type.Ripple 4) 2)) [Keyword.ripple 4, Keyword.ripple 4]
-          Spec.assertEqWith s "rule 702.60a's condition is the cast" (TriggeredAbility.condition (Keyword.ripple 4)) TriggerCondition.SelfCast
+          Spec.assertEqWith s "rule 702.60a's condition is the cast" (TriggeredAbility.condition (Keyword.ripple 4)) (TriggerCondition.SpellCast SpellCast.self)
 
         -- THE PROVING TEST.
         Spec.it s "CR 702.60a the reveal casts BOTH same-named cards free and bottoms the rest" $ do

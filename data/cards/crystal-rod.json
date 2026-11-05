@@ -14,14 +14,17 @@
           "condition": {
             "type": "SpellCast",
             "value": {
-              "filter": {
-                "type": "HasColor",
-                "value": {
-                  "type": "Blue"
-                }
-              },
               "scope": {
                 "type": "EachTurn"
+              },
+              "spell": {
+                "type": "Matching",
+                "value": {
+                  "type": "HasColor",
+                  "value": {
+                    "type": "Blue"
+                  }
+                }
               }
             }
           },

@@ -95,6 +95,7 @@ import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Revealed as Revealed
 import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Parun.Types.SpellWasCopied as SpellWasCopied
 import qualified Parun.Types.StepBegan as StepBegan
@@ -451,11 +452,14 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Filter in hand, so a slot it names has to hold for every cast the condition
   -- can match. Both do: GameEvent.SpellCast carries an ObjectId and a PlayerId
   -- unconditionally, so no shape of the event withholds either.
-  (TriggerCondition.SpellCast {}, GameEvent.SpellCast (SpellWasCast.MkSpellWasCast caster spell _ _ _ _)) ->
+  --
+  -- A Self subject binds nothing (eventBindingSlots' arm says why), so it falls
+  -- to the fallthrough.
+  (TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching _) _ _ _ _ _), GameEvent.SpellCast (SpellWasCast.MkSpellWasCast caster spell _ _ _ _)) ->
     Binding.setTriggerPlayer caster (Binding.setCastSpell spell Map.empty)
   -- Magecraft's "or copy" binds the same pair off its own event (CR 707.10):
   -- the copy, and the player who copied it.
-  (TriggerCondition.SpellCast {}, GameEvent.SpellCopied (SpellWasCopied.MkSpellWasCopied copier copy)) ->
+  (TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching _) _ _ _ _ _), GameEvent.SpellCopied (SpellWasCopied.MkSpellWasCopied copier copy)) ->
     Binding.setTriggerPlayer copier (Binding.setCastSpell copy Map.empty)
   -- CR 602.2b's "that ability" and "that player": the ability on the stack and
   -- its activator (CR 602.2a). Unconditional given a match.
@@ -1629,16 +1633,18 @@ eventBindingSlots cond = case cond of
   -- Guaranteed for the reason the spell is -- GameEvent.SpellCast carries a
   -- PlayerId unconditionally -- so the promise holds for every cast the Filter
   -- can admit.
-  TriggerCondition.SpellCast {} -> Set.fromList [Binding.castSpell, Binding.triggerPlayer]
+  --
+  -- A Self subject's is a deliberate empty rather than a default: the spell the
+  -- event names is the BEARER, which every ability already reaches as its own
+  -- source, and the caster is CR 109.5's "you", whom Binding.setYou already
+  -- names. A slot would be a second name for each. eventBindings has no arm for
+  -- that subject and its fallthrough answers the same.
+  TriggerCondition.SpellCast c -> case SpellCast.spell c of
+    ActingPermanent.Self -> Set.empty
+    ActingPermanent.Matching _ -> Set.fromList [Binding.castSpell, Binding.triggerPlayer]
   -- The activated ability and its activator, both on every event the condition
   -- admits.
   TriggerCondition.AbilityActivated _ -> Set.fromList [Binding.activatedAbility, Binding.triggerPlayer]
-  -- Nothing, a deliberate empty rather than a default: the spell the event names
-  -- is the BEARER, which every ability already reaches as its own source, and the
-  -- caster is CR 109.5's "you", whom Binding.setYou already names. A slot would
-  -- be a second name for each. eventBindings has no arm for this condition and
-  -- its fallthrough answers the same.
-  TriggerCondition.SelfCast -> Set.empty
   TriggerCondition.BecomesTargeted c -> fst (becomesTargetedSlots c)
   -- CR 601.2c's targeting object again, a Self BecomesTargeted's one recipient
   -- over: Amulet of Safekeeping's "counter that spell or ability" reads it, and

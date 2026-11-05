@@ -1397,16 +1397,32 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- cast happened in -- so the active player standing now is the one the cast
   -- happened under. Read against `you`, CR 109.5's controller of the ability (CR
   -- 603.3a), exactly as the StepBegins arm above reads its own.
-  TriggerCondition.SpellCast (SpellCast.MkSpellCast f scope fromZone ordinal window copies) ->
+  --
+  -- A Self subject is "when you cast this spell" (Desolation Twin): the spell
+  -- that became cast IS the bearer, a bare comparison of ids and no Filter at
+  -- all, so nothing about the spell is read and no CR 608.2h fallback is
+  -- reachable. The bearer is the STACK object, which is the same id
+  -- GameEvent.SpellCast carries: CR 601.2a puts the card on the stack as it is
+  -- cast and leaves it there, so eventTriggers' `spellCast` source offers
+  -- exactly that incarnation. Its scope is EachTurn (CR 601.2i says nothing
+  -- about whose turn it is, and no printing narrows its own cast by one), and a
+  -- spell's own cast is the first of its kind, so its ordinal is one.
+  TriggerCondition.SpellCast (SpellCast.MkSpellCast subject scope fromZone ordinal window copies) ->
     let -- What a cast and a copy are both asked: whose turn, which phase, and
-        -- the Filter over the spell as its controller sees it.
+        -- which spell -- the bearer, or one the Filter admits as its
+        -- controller sees it.
         admits controller spell =
           Turn.turnScopeAdmits scopeNamed gs scope (GameState.activePlayer gs) you
             -- "During combat" off the GAME STATE, the TurnScope's reason: the
             -- event happened in this same settle, so the phase standing now is
             -- its phase.
             && maybe True (`Turn.inWindow` GameState.phase gs) window
-            && Filter.matches bearerContext (Projection.viewOfSpell controller spell gs) f
+            && case subject of
+              ActingPermanent.Self -> spell == bearer
+              ActingPermanent.Matching f -> Filter.matches bearerContext (Projection.viewOfSpell controller spell gs) f
+        ordinalOf caster spell = case subject of
+          ActingPermanent.Self -> Just 1
+          ActingPermanent.Matching f -> castOrdinal bearerContext f fromZone caster spell gs
      in case event of
           GameEvent.SpellCast (SpellWasCast.MkSpellWasCast caster spell _ castFrom _ _) -> case Game.lookupObject spell gs of
             Nothing -> False
@@ -1420,7 +1436,7 @@ armMatches bindings board gs bearer you cond event = case cond of
                 -- Clarion Spirit's "your SECOND spell each turn", asked LAST so the
                 -- log walk happens only for a cast the rest of the condition
                 -- already admits.
-                && maybe True ((castOrdinal bearerContext f fromZone caster spell gs ==) . Just) ordinal
+                && maybe True ((ordinalOf caster spell ==) . Just) ordinal
           -- Magecraft's "or copy" (CR 707.10): the player who copied the spell,
           -- the copy's controller, is the one whose "you copy" this is -- not
           -- the copied spell's. data/scenarios/copy's
@@ -1433,22 +1449,6 @@ armMatches bindings board gs bearer you cond event = case cond of
               && Maybe.isJust (Game.lookupObject copy gs)
               && admits copier copy
           _ -> False
-  -- CR 601.2i, self-scoped: the spell that became cast IS the bearer. A bare
-  -- comparison of ids and no Filter at all, which is what separates this arm
-  -- from SpellCast's above -- nothing about the spell is read, so no projection
-  -- can come up empty and no CR 608.2h fallback is reachable.
-  --
-  -- No TurnScope either, so no turnScopeAdmits: CR 601.2i says nothing about
-  -- whose turn it is, and no printing narrows its own cast by one.
-  --
-  -- The bearer is the STACK object, which is the same id GameEvent.SpellCast
-  -- carries: CR 601.2a puts the card on the stack as it is cast and leaves it
-  -- there, so eventTriggers' `spellCast` source offers exactly that incarnation.
-  TriggerCondition.SelfCast -> case event of
-    GameEvent.SpellCast (SpellWasCast.MkSpellWasCast _ spell _ _ _ _) -> spell == bearer
-    -- CR 707.10: a copy is not cast.
-    GameEvent.SpellCopied _ -> False
-    _ -> False
   -- CR 602.2b / 601.2i: the Filter over the ability on the stack, its
   -- controller the activator (CR 602.2a), read live for SpellCast's reason --
   -- the activation is the last thing Activate.activateAbilityWith does, so the
@@ -1484,9 +1484,9 @@ armMatches bindings board gs bearer you cond event = case cond of
         && PlayerRelation.holds (Game.teams gs) (ControllerBecomesTarget.relation c) you (BecameTarget.controller t)
     _ -> False
   -- CR 601.2c / 603.2c: a permanent became the target of a spell or ability. A
-  -- Self subject is the bearer, a bare comparison of ids in SelfCast's shape and
-  -- for its reason -- nothing about the targeting spell is read, so no
-  -- projection can come up empty.
+  -- Self subject is the bearer, a bare comparison of ids in a Self SpellCast's
+  -- shape and for its reason -- nothing about the targeting spell is read, so
+  -- no projection can come up empty.
   --
   -- The RELATION is read off the event's own controller field rather than off the
   -- board, which is what CR 405.4 asks for: the answer wanted is who controlled

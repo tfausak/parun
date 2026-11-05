@@ -23,25 +23,28 @@
           "condition": {
             "type": "SpellCast",
             "value": {
-              "filter": {
-                "type": "Or",
-                "value": [
-                  {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Instant"
-                    }
-                  },
-                  {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Sorcery"
-                    }
-                  }
-                ]
-              },
               "scope": {
                 "type": "EachTurn"
+              },
+              "spell": {
+                "type": "Matching",
+                "value": {
+                  "type": "Or",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Instant"
+                      }
+                    },
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Sorcery"
+                      }
+                    }
+                  ]
+                }
               }
             }
           },

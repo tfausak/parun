@@ -129,6 +129,7 @@ import Parun.Types.Result (Result)
 import qualified Parun.Types.RevealWindow as RevealWindow
 import qualified Parun.Types.Sickness as Sickness
 import qualified Parun.Types.Source as Source
+import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.Subtype as Subtype
@@ -953,7 +954,7 @@ placeBorne srcId pending = do
       inheritedX = case TriggeredAbility.condition ability of
         TriggerCondition.Enters (EntersTrigger.MkEntersTrigger ActingPermanent.Self _) -> Game.announcedXOf srcId gs
         TriggerCondition.TurnedFaceUp ActingPermanent.Self -> Maybe.fromMaybe 0 (Binding.amountOf Binding.variableX bound)
-        TriggerCondition.SelfCast -> Maybe.fromMaybe 0 (Game.lookupObject srcId gs >>= Binding.amountOf Binding.variableX . Object.bindings)
+        TriggerCondition.SpellCast (SpellCast.MkSpellCast ActingPermanent.Self _ _ _ _ _) -> Maybe.fromMaybe 0 (Game.lookupObject srcId gs >>= Binding.amountOf Binding.variableX . Object.bindings)
         _ -> 0
       -- CR 107.3m: an enters-the-battlefield triggered ability's effects read
       -- the X announced for the spell that became its source, as its target
@@ -964,7 +965,7 @@ placeBorne srcId pending = do
       -- trigger's.
       enteredX = case TriggeredAbility.condition ability of
         TriggerCondition.Enters (EntersTrigger.MkEntersTrigger ActingPermanent.Self _) -> Just inheritedX
-        TriggerCondition.SelfCast -> Just inheritedX
+        TriggerCondition.SpellCast (SpellCast.MkSpellCast ActingPermanent.Self _ _ _ _ _) -> Just inheritedX
         _ -> Nothing
       -- CR 700.2b: a mode an earlier choice bars "can't be chosen", like an
       -- unfillable one, so CR 603.3c removes an ability left with none. A

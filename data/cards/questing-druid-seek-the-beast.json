@@ -31,53 +31,56 @@
           "condition": {
             "type": "SpellCast",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
-                    }
-                  },
-                  {
-                    "type": "Or",
-                    "value": [
-                      {
-                        "type": "HasColor",
-                        "value": {
-                          "type": "White"
-                        }
-                      },
-                      {
-                        "type": "HasColor",
-                        "value": {
-                          "type": "Blue"
-                        }
-                      },
-                      {
-                        "type": "HasColor",
-                        "value": {
-                          "type": "Black"
-                        }
-                      },
-                      {
-                        "type": "HasColor",
-                        "value": {
-                          "type": "Red"
-                        }
-                      }
-                    ]
-                  }
-                ]
-              },
               "scope": {
                 "type": "EachTurn"
+              },
+              "spell": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
+                    },
+                    {
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "White"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Blue"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Black"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Red"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
               }
             }
           },

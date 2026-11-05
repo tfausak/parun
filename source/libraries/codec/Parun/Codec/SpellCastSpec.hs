@@ -3,6 +3,7 @@ module Parun.Codec.SpellCastSpec where
 import qualified Parun.Codec.SpellCast as SpellCast
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.PhaseSelector as PhaseSelector
@@ -19,7 +20,7 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
       s
       SpellCast.codec
       ( SpellCast.MkSpellCast
-          { SpellCast.filter = Filter.HeldBy Holder.Controller PlayerRelation.You,
+          { SpellCast.spell = ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You),
             SpellCast.scope = TurnScope.EachTurn,
             SpellCast.zone = Nothing,
             SpellCast.ordinal = Nothing,
@@ -27,7 +28,7 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
             SpellCast.copies = False
           }
       )
-      " {\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"scope\":{\"type\":\"EachTurn\"}} "
+      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"EachTurn\"}} "
   -- Brineborn Cutthroat's "during an opponent's turn". The scope is REQUIRED,
   -- for the reason Parun.Codec.StepBegins gives.
   Spec.it s "MkSpellCast, an opponent's-turn window" $
@@ -35,7 +36,7 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
       s
       SpellCast.codec
       ( SpellCast.MkSpellCast
-          { SpellCast.filter = Filter.HeldBy Holder.Controller PlayerRelation.You,
+          { SpellCast.spell = ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You),
             SpellCast.scope = TurnScope.OpponentsTurn,
             SpellCast.zone = Nothing,
             SpellCast.ordinal = Nothing,
@@ -43,7 +44,7 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
             SpellCast.copies = False
           }
       )
-      " {\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"scope\":{\"type\":\"OpponentsTurn\"}} "
+      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"OpponentsTurn\"}} "
   -- Harness the Storm's "from your hand". The zone is ELIDED when absent, which
   -- the two cases above pin; here it is written, which is what pins the key.
   Spec.it s "MkSpellCast, a window naming the zone the cast came from" $
@@ -51,7 +52,7 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
       s
       SpellCast.codec
       ( SpellCast.MkSpellCast
-          { SpellCast.filter = Filter.HeldBy Holder.Controller PlayerRelation.You,
+          { SpellCast.spell = ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You),
             SpellCast.scope = TurnScope.EachTurn,
             SpellCast.zone = Just Zone.Hand,
             SpellCast.ordinal = Nothing,
@@ -59,7 +60,7 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
             SpellCast.copies = False
           }
       )
-      " {\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"scope\":{\"type\":\"EachTurn\"},\"zone\":{\"type\":\"Hand\"}} "
+      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"EachTurn\"},\"zone\":{\"type\":\"Hand\"}} "
   -- Clarion Spirit's "your second spell each turn". The ordinal is ELIDED when
   -- absent, which the three cases above pin; here it is written.
   Spec.it s "MkSpellCast, a window naming which cast of the turn" $
@@ -67,7 +68,7 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
       s
       SpellCast.codec
       ( SpellCast.MkSpellCast
-          { SpellCast.filter = Filter.HeldBy Holder.Controller PlayerRelation.You,
+          { SpellCast.spell = ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You),
             SpellCast.scope = TurnScope.EachTurn,
             SpellCast.zone = Nothing,
             SpellCast.ordinal = Just 2,
@@ -75,7 +76,7 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
             SpellCast.copies = False
           }
       )
-      " {\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"scope\":{\"type\":\"EachTurn\"},\"ordinal\":2} "
+      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"EachTurn\"},\"ordinal\":2} "
   -- Zuko, Firebending Master's "during combat", elided when absent like the
   -- ordinal.
   Spec.it s "MkSpellCast, a window naming the phase" $
@@ -83,7 +84,7 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
       s
       SpellCast.codec
       ( SpellCast.MkSpellCast
-          { SpellCast.filter = Filter.HeldBy Holder.Controller PlayerRelation.You,
+          { SpellCast.spell = ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You),
             SpellCast.scope = TurnScope.EachTurn,
             SpellCast.zone = Nothing,
             SpellCast.ordinal = Nothing,
@@ -91,14 +92,14 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
             SpellCast.copies = False
           }
       )
-      " {\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"scope\":{\"type\":\"EachTurn\"},\"phase\":{\"type\":\"CombatPhase\"}} "
+      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"EachTurn\"},\"phase\":{\"type\":\"CombatPhase\"}} "
   -- Magecraft's "or copy", elided when absent like the phase.
   Spec.it s "MkSpellCast, a window that copies fire too" $
     Common.assertCodec
       s
       SpellCast.codec
       ( SpellCast.MkSpellCast
-          { SpellCast.filter = Filter.HeldBy Holder.Controller PlayerRelation.You,
+          { SpellCast.spell = ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You),
             SpellCast.scope = TurnScope.EachTurn,
             SpellCast.zone = Nothing,
             SpellCast.ordinal = Nothing,
@@ -106,5 +107,5 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
             SpellCast.copies = True
           }
       )
-      " {\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"scope\":{\"type\":\"EachTurn\"},\"copies\":true} "
+      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"EachTurn\"},\"copies\":true} "
   Spec.it s "has a schema" $ Common.assertHasSchema s SpellCast.codec

@@ -92,7 +92,6 @@ codec =
           Arm.payload "CountersChange" CounterTrigger.codec TriggerCondition.CountersChange (\x -> case x of TriggerCondition.CountersChange y -> Just y; _ -> Nothing),
           Arm.payload "SelfBecomesClassLevel" ClassLevel.codec TriggerCondition.SelfBecomesClassLevel (\x -> case x of TriggerCondition.SelfBecomesClassLevel y -> Just y; _ -> Nothing),
           Arm.payload "SpellCast" SpellCast.codec TriggerCondition.SpellCast (\x -> case x of TriggerCondition.SpellCast y -> Just y; _ -> Nothing),
-          Arm.nullary "SelfCast" TriggerCondition.SelfCast,
           Arm.payload "AbilityActivated" filterCodec TriggerCondition.AbilityActivated (\x -> case x of TriggerCondition.AbilityActivated y -> Just y; _ -> Nothing),
           Arm.payload "BecomesTargeted" BecomesTargetedTrigger.codec TriggerCondition.BecomesTargeted (\x -> case x of TriggerCondition.BecomesTargeted y -> Just y; _ -> Nothing),
           Arm.payload "ControllerBecomesTarget" ControllerBecomesTarget.codec TriggerCondition.ControllerBecomesTarget (\x -> case x of TriggerCondition.ControllerBecomesTarget y -> Just y; _ -> Nothing),
@@ -173,7 +172,6 @@ tagOf x = case x of
   TriggerCondition.CountersChange {} -> "CountersChange"
   TriggerCondition.SelfBecomesClassLevel {} -> "SelfBecomesClassLevel"
   TriggerCondition.SpellCast {} -> "SpellCast"
-  TriggerCondition.SelfCast {} -> "SelfCast"
   TriggerCondition.AbilityActivated {} -> "AbilityActivated"
   TriggerCondition.BecomesTargeted {} -> "BecomesTargeted"
   TriggerCondition.ControllerBecomesTarget {} -> "ControllerBecomesTarget"

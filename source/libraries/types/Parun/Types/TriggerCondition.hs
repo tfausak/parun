@@ -174,13 +174,9 @@ data TriggerCondition
   | -- | CR 716.2a: "when this Class becomes level N" (Stormchaser's Talent), a
     -- crossing rather than an equality.
     SelfBecomesClassLevel ClassLevel.ClassLevel
-  | -- | CR 601.2i: "whenever you cast a [type] spell" (Young Pyromancer), the
-    -- Filter read against the spell as it is on the stack.
+  | -- | CR 601.2i: a spell became cast, the bearer itself (Desolation Twin) or one
+    -- a Filter admits (Young Pyromancer).
     SpellCast SpellCast.SpellCast
-  | -- | CR 601.2i read off the spell being cast -- "when you cast this spell"
-    -- (Desolation Twin). Self-scoped, which is what lets
-    -- Parun.Engine.Event.Trigger.zonesTriggeredFrom answer CR 113.6k totally.
-    SelfCast
   | -- | CR 602.2b / 601.2i: "whenever you activate an ability [of a ...]"
     -- (Kurkesh, Onakke Ancient), the Filter read against the ability on the
     -- stack, as SpellCast's is against the spell.

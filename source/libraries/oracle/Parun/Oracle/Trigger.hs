@@ -143,7 +143,7 @@ event context creature c = case c of
     [other ("At the beginning of " <> when) [(thatPlayer, "that player")]]
   -- CR 601.2i: who casts the spell is its controller (CR 112.2), which the
   -- filter names among the spell's other qualities.
-  TriggerCondition.SpellCast (SpellCast.MkSpellCast f TurnScope.EachTurn Nothing Nothing Nothing False) -> do
+  TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching f) TurnScope.EachTurn Nothing Nothing Nothing False) -> do
     let caster g = case g of
           Filter.Type.HeldBy Holder.Controller _ -> True
           _ -> False

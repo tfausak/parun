@@ -1,19 +1,21 @@
 module Parun.Types.SpellCast where
 
 import qualified Numeric.Natural as Natural
+import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.Zone as Zone
 
--- | CR 603.2 over CR 601's cast: which spells fire the ability, whose turns
--- count, which zone the cast came out of, and which occurrence within the turn
+-- | CR 603.2 over CR 601's cast: which spell fires the ability (the bearer
+-- itself, Desolation Twin's "when you cast this spell", or one a Filter admits),
+-- whose turns count, which zone the cast came out of, and which occurrence within the turn
 -- -- Monastery Swiftspear's prowess against Kess's once-per-turn window against
 -- Harness the Storm's "from your hand" against Clarion Spirit's "your second
 -- spell each turn".
 data SpellCast = MkSpellCast
-  { filter :: Filter.Filter Keyword.Keyword,
+  { spell :: ActingPermanent.ActingPermanent,
     scope :: TurnScope.TurnScope,
     -- | CR 601.2a's "moves it from where it is to the stack": which zone that
     -- was. Nothing for the overwhelming majority of cast triggers, which watch
@@ -78,3 +80,21 @@ data SpellCast = MkSpellCast
     copies :: Bool
   }
   deriving (Eq, Ord, Show)
+
+-- | "When you cast this spell" (CR 601.2i): the bearer, any turn, from any
+-- zone, every cast, never a copy (CR 707.10).
+self :: SpellCast
+self =
+  MkSpellCast
+    { spell = ActingPermanent.Self,
+      scope = TurnScope.EachTurn,
+      zone = Nothing,
+      ordinal = Nothing,
+      phase = Nothing,
+      copies = False
+    }
+
+-- | "Whenever ... casts a spell": a spell the Filter admits, otherwise as
+-- 'self'.
+matching :: Filter.Filter Keyword.Keyword -> SpellCast
+matching f = self {spell = ActingPermanent.Matching f}

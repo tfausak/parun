@@ -49,52 +49,55 @@
           "condition": {
             "type": "SpellCast",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
-                    }
-                  },
-                  {
-                    "type": "Or",
-                    "value": [
-                      {
-                        "type": "HasSubtype",
-                        "value": {
-                          "type": "Doctor"
-                        }
-                      },
-                      {
-                        "type": "And",
-                        "value": [
-                          {
-                            "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
-                          },
-                          {
-                            "type": "HasKeyword",
-                            "value": {
-                              "type": "DoctorsCompanion"
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              },
               "scope": {
                 "type": "EachTurn"
+              },
+              "spell": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
+                    },
+                    {
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Doctor"
+                          }
+                        },
+                        {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Creature"
+                              }
+                            },
+                            {
+                              "type": "HasKeyword",
+                              "value": {
+                                "type": "DoctorsCompanion"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
               }
             }
           },

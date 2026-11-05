@@ -390,16 +390,16 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SpellCast (SpellCast.MkSpellCast (Filter.And [Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery]]) TurnScope.EachTurn Nothing Nothing Nothing False))
-      " {\"type\":\"SpellCast\",\"value\":{\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Sorcery\"}}]}]},\"scope\":{\"type\":\"EachTurn\"}}} "
+      (TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching (Filter.And [Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery]])) TurnScope.EachTurn Nothing Nothing Nothing False))
+      " {\"type\":\"SpellCast\",\"value\":{\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Sorcery\"}}]}]}},\"scope\":{\"type\":\"EachTurn\"}}} "
   -- The other half moved on its own, over the plainest Filter there is: Brineborn
   -- Cutthroat's "during an opponent's turn", which no Filter could have said.
   Spec.it s "SpellCast round-trips an opponent's-turn scope" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SpellCast (SpellCast.MkSpellCast (Filter.HeldBy Holder.Controller PlayerRelation.You) TurnScope.OpponentsTurn Nothing Nothing Nothing False))
-      " {\"type\":\"SpellCast\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"scope\":{\"type\":\"OpponentsTurn\"}}} "
+      (TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You)) TurnScope.OpponentsTurn Nothing Nothing Nothing False))
+      " {\"type\":\"SpellCast\",\"value\":{\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"OpponentsTurn\"}}} "
   -- CR 702.21a's ward: a Self subject, the relation on the TARGETING side.
   -- Parun.Codec.BecomesTargetedTriggerSpec has the fields.
   Spec.it s "BecomesTargeted round-trips ward's opponent relation" $
@@ -440,13 +440,13 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       (TriggerCondition.BecomesTargeted (BecomesTargetedTrigger.matching (Filter.HeldBy Holder.Controller PlayerRelation.You)) {BecomesTargetedTrigger.relation = PlayerRelation.Opponent, BecomesTargetedTrigger.kind = Just StackObjectKind.Spell})
       " {\"type\":\"BecomesTargeted\",\"value\":{\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"relation\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Spell\"}}} "
   -- CR 601.2i read off the spell itself, Desolation Twin's "when you cast this
-  -- spell": nullary, since "this spell" needs neither Filter nor TurnScope.
-  Spec.it s "SelfCast" $
+  -- spell": a Self subject, every other field at SpellCast.self's value.
+  Spec.it s "SpellCast round-trips a Self subject" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.SelfCast
-      " {\"type\":\"SelfCast\"} "
+      (TriggerCondition.SpellCast SpellCast.self)
+      " {\"type\":\"SpellCast\",\"value\":{\"spell\":{\"type\":\"Self\"},\"scope\":{\"type\":\"EachTurn\"}}} "
   Spec.it s "AbilityActivated round-trips its Filter" $
     Common.assertCodec
       s

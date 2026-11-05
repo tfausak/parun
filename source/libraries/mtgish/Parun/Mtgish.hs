@@ -763,7 +763,7 @@ trigger n = case Node.tag n of
     relation <- players who
     f <- spells what
     let caster = [Filter.HeldBy Holder.Controller relation | relation /= PlayerRelation.AnyPlayer]
-        spellCast = SpellCast.MkSpellCast {SpellCast.filter = conjoined (foldMap conjuncts f <> caster), SpellCast.scope = TurnScope.EachTurn, SpellCast.zone = Nothing, SpellCast.ordinal = Nothing, SpellCast.phase = Nothing, SpellCast.copies = False}
+        spellCast = SpellCast.matching (conjoined (foldMap conjuncts f <> caster))
     Right (TriggerCondition.SpellCast spellCast, bound [("Trigger_ThatPlayer", Oracle.Trigger.thatPlayer), ("Trigger_ThatSpell", Oracle.Trigger.castSpell)])
   "AtTheBeginningOfTheEndStep" -> Right (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.EachTurn), outermost)
   _ -> Node.untranslated n

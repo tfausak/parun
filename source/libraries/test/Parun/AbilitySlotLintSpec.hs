@@ -145,6 +145,7 @@ import qualified Parun.Types.SlotArity as SlotArity
 import qualified Parun.Types.SlotCount as SlotCount
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpecialAction as SpecialAction
+import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.Tap as Tap
@@ -928,7 +929,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- whose spell cost declares X may read it there (Pin Collection);
         -- CR 107.3i's cast trigger likewise (Genesis Hydra).
         enteredX face ability =
-          if TriggeredAbility.condition ability `elem` [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.SelfCast] && any declaresVariable (spellCostsOf face)
+          if TriggeredAbility.condition ability `elem` [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.SpellCast SpellCast.self] && any declaresVariable (spellCostsOf face)
             then Set.singleton Binding.variableX
             else Set.empty
         -- Per face over withMinted, so a minted face inherits only what its OWN

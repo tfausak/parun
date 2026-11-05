@@ -41,28 +41,31 @@
           "condition": {
             "type": "SpellCast",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "TargetsOnlyOne",
-                    "value": {
-                      "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
-                    }
-                  },
-                  {
-                    "type": "Not",
-                    "value": {
-                      "type": "TargetsSource"
-                    }
-                  }
-                ]
-              },
               "scope": {
                 "type": "EachTurn"
+              },
+              "spell": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "TargetsOnlyOne",
+                      "value": {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Creature"
+                        }
+                      }
+                    },
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "TargetsSource"
+                      }
+                    }
+                  ]
+                }
               }
             }
           },

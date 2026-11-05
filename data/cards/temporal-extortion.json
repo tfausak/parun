@@ -68,7 +68,15 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfCast"
+            "type": "SpellCast",
+            "value": {
+              "scope": {
+                "type": "EachTurn"
+              },
+              "spell": {
+                "type": "Self"
+              }
+            }
           },
           "modal": {
             "modes": [

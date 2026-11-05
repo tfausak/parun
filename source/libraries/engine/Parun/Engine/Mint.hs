@@ -108,16 +108,12 @@ yourUpkeep = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginni
 -- which: from any zone, on every occurrence rather than one counted one, and
 -- never for a copy.
 spellCast :: Filter Keyword -> TriggerCondition
-spellCast filter_ =
-  TriggerCondition.SpellCast
-    SpellCast.MkSpellCast
-      { SpellCast.filter = filter_,
-        SpellCast.scope = TurnScope.EachTurn,
-        SpellCast.zone = Nothing,
-        SpellCast.ordinal = Nothing,
-        SpellCast.phase = Nothing,
-        SpellCast.copies = False
-      }
+spellCast = TriggerCondition.SpellCast . SpellCast.matching
+
+-- | "When you cast this spell" (CR 601.2i): cascade, storm and the other
+-- keywords whose trigger is the bearer's own cast.
+selfCast :: TriggerCondition
+selfCast = TriggerCondition.SpellCast SpellCast.self
 
 -- | "Whenever this creature deals combat damage to a player". A PLAYER and not
 -- an opponent: rules 702.70a, 702.99a, 702.112a and 702.115a all word it so,

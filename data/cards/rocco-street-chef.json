@@ -159,12 +159,15 @@
               {
                 "type": "SpellCast",
                 "value": {
-                  "filter": {
-                    "type": "And",
-                    "value": []
-                  },
                   "scope": {
                     "type": "EachTurn"
+                  },
+                  "spell": {
+                    "type": "Matching",
+                    "value": {
+                      "type": "And",
+                      "value": []
+                    }
                   },
                   "zone": {
                     "type": "Exile"
