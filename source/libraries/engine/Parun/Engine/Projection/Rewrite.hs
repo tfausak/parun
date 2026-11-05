@@ -243,9 +243,8 @@ import qualified Parun.Types.PutCountersFrom as PutCountersFrom
 import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity.Type
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
-import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
 import qualified Parun.Types.RedirectDamage as RedirectDamage
 import qualified Parun.Types.RemovalCount as RemovalCount
 import qualified Parun.Types.RemoveCounters as RemoveCounters
@@ -1264,8 +1263,7 @@ rewriteRestricted pairs restricted = case restricted of
 -- and the player-naming arms hold no subtype word; only the Filters and the
 -- Quantities can carry one -- the Filter that says what ends a walk of a library
 -- included, and ChosenCardInGraveyard's, ChosenCardFromAmong's,
--- RandomCardInHand's, RandomCardInGraveyard's and RandomCardInLibrary's counts
--- beside the two library walks'.
+-- RandomCard's and RandomCardInGraveyard's counts beside the two library walks'.
 rewriteObjectRef :: [(TextWord.TextWord, TextWord.TextWord)] -> ObjectRef.ObjectRef -> ObjectRef.ObjectRef
 rewriteObjectRef pairs ref = case ref of
   ObjectRef.InSlot _ -> ref
@@ -1302,13 +1300,10 @@ rewriteObjectRef pairs ref = case ref of
   -- A REGRESSION FENCE rather than proven behaviour, EachCardInYourLibrary's
   -- reason: no card in the pool narrows a random pick by a land type, and no
   -- printing changes the text of the ones that write this ref.
-  ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand p f c) -> ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand p (Filter.rewrite pairs f) (rewriteQuantity pairs c))
+  ObjectRef.RandomCard (RandomCard.MkRandomCard z p f c) -> ObjectRef.RandomCard (RandomCard.MkRandomCard z p (Filter.rewrite pairs f) (rewriteQuantity pairs c))
   -- The arm above's regression fence, for its reason: Ghoulraiser's Zombie is a
   -- creature type and no printing changes this trigger's text.
   ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard s f c) -> ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard s (Filter.rewrite pairs f) (rewriteQuantity pairs c))
-  -- The arm above's regression fence, for its reason: the Gates' "nonland" is a
-  -- card type and no printing changes their text.
-  ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary p f c) -> ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary p (Filter.rewrite pairs f) (rewriteQuantity pairs c))
   ObjectRef.ChosenPermanents choice -> ObjectRef.ChosenPermanents (rewriteChosenPermanents pairs choice)
   ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot f) -> ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot (Filter.rewrite pairs f))
   ObjectRef.AttackedBy _ -> ref

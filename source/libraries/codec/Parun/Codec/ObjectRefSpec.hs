@@ -23,6 +23,7 @@ import qualified Parun.Types.EachCardInHand as EachCardInHand
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.FromAnywhere as FromAnywhere
+import qualified Parun.Types.HiddenZone as HiddenZone
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.HowMany as HowMany
@@ -32,9 +33,8 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerScope as PlayerScope
 import qualified Parun.Types.PlayersWho as PlayersWho
 import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
-import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TopOfLibrary as TopOfLibrary
@@ -342,20 +342,20 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
   -- Merfolk Spy's "that player reveals a card at random from their hand": the
   -- unnarrowed singular, so the defaulted filter and count write no key and the
   -- slot is the one the trigger bound to the damaged player.
-  Spec.it s "RandomCardInHand" $
+  Spec.it s "RandomCard over a hand" $
     Common.assertCodec
       s
       ObjectRef.codec
-      (ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))) (Filter.And []) (Quantity.Literal 1)))
-      " {\"type\":\"RandomCardInHand\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"}}} "
+      (ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Hand (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))) (Filter.And []) (Quantity.Literal 1)))
+      " {\"type\":\"RandomCard\",\"value\":{\"zone\":{\"type\":\"Hand\"},\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"}}} "
   -- Both narrowings at once: Fall's count beside Lumbering Lightshield's filter,
   -- which is the pair no single printing writes.
-  Spec.it s "RandomCardInHand narrowed and counted" $
+  Spec.it s "RandomCard narrowed and counted" $
     Common.assertCodec
       s
       ObjectRef.codec
-      (ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))) (Filter.Not (Filter.HasCardType CardType.Land)) (Quantity.Literal 2)))
-      " {\"type\":\"RandomCardInHand\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}},\"count\":{\"type\":\"Literal\",\"value\":2}}} "
+      (ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Hand (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))) (Filter.Not (Filter.HasCardType CardType.Land)) (Quantity.Literal 2)))
+      " {\"type\":\"RandomCard\",\"value\":{\"zone\":{\"type\":\"Hand\"},\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}},\"count\":{\"type\":\"Literal\",\"value\":2}}} "
   -- Ghoulraiser's "return a Zombie card at random from your graveyard to your
   -- hand": the filter narrows and the defaulted count writes no key.
   Spec.it s "RandomCardInGraveyard" $
@@ -374,18 +374,18 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       " {\"type\":\"RandomCardInGraveyard\",\"value\":{\"players\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"count\":{\"type\":\"Literal\",\"value\":2}}} "
   -- Gate to Seatower's "seek a nonland card": the filter narrows and the
   -- defaulted count writes no key.
-  Spec.it s "RandomCardInLibrary" $
+  Spec.it s "RandomCard over a library" $
     Common.assertCodec
       s
       ObjectRef.codec
-      (ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (PlayerRef.Relative PlayerRelation.You) (Filter.Not (Filter.HasCardType CardType.Land)) (Quantity.Literal 1)))
-      " {\"type\":\"RandomCardInLibrary\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}}} "
+      (ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Library (PlayerRef.Relative PlayerRelation.You) (Filter.Not (Filter.HasCardType CardType.Land)) (Quantity.Literal 1)))
+      " {\"type\":\"RandomCard\",\"value\":{\"zone\":{\"type\":\"Library\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}}} "
   -- The bare PlayerRef this arm used to take is not a whole payload any more,
   -- ChosenCardFromAmong's slot-name case above and for its reason.
-  Spec.it s "RandomCardInHand rejects a bare player reference" $
+  Spec.it s "RandomCard rejects a bare player reference" $
     Spec.assertBool
       s
-      (Either.isLeft (Common.parse (Text.pack " {\"type\":\"RandomCardInHand\",\"value\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"}} ") >>= Codec.decode ObjectRef.codec))
+      (Either.isLeft (Common.parse (Text.pack " {\"type\":\"RandomCard\",\"value\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"}} ") >>= Codec.decode ObjectRef.codec))
       "a bare player reference is rejected"
   -- The one Arm.tagged risk this file exists for -- a tag its tag function names
   -- with no arm beside it: a MISSING codec arm would compile and only these
@@ -492,9 +492,9 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
                 Codec.encode ObjectRef.codec (ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.HasCardType CardType.Creature) HowMany.one)),
                 Codec.encode ObjectRef.codec (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Creature) HowMany.one (PlayerRef.Relative PlayerRelation.You) Nothing False)),
                 Codec.encode ObjectRef.codec (ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Land))),
-                Codec.encode ObjectRef.codec (ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.And []) (Quantity.Literal 1))),
+                Codec.encode ObjectRef.codec (ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Hand (PlayerRef.Relative PlayerRelation.You) (Filter.And []) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) (Filter.And []) (Quantity.Literal 1))),
-                Codec.encode ObjectRef.codec (ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (PlayerRef.Relative PlayerRelation.You) (Filter.And []) (Quantity.Literal 1))),
+                Codec.encode ObjectRef.codec (ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Library (PlayerRef.Relative PlayerRelation.You) (Filter.And []) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) HowMany.one Zone.Battlefield)),
                 Codec.encode ObjectRef.codec (ObjectRef.AllOf (ObjectRef.EachPlayer NonEmpty.:| [])),
                 Codec.encode ObjectRef.codec (ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound (SlotName.MkSlotName (Text.pack "target")) (Filter.HasCardType CardType.Creature)))

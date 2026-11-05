@@ -73,11 +73,11 @@ data Response
   | -- | CR 729.2: the player randomness picked to go first in a subgame.
     DeterminedFirstPlayer PlayerId.PlayerId
   | -- | The object randomness named for a
-    -- Parun.Types.ObjectRef.RandomCardInHand -- Merfolk Spy's "a card at random
-    -- from their hand" -- or for a Parun.Types.ObjectRef.RandomCardInGraveyard,
-    -- Ghoulraiser's "a Zombie card at random from your graveyard", or for a
-    -- Parun.Types.ObjectRef.RandomCardInLibrary, Gate to Seatower's seek, or for a
-    -- Parun.Types.ObjectRef.AtRandom, Capricious Efreet's "one of them".
+    -- Parun.Types.ObjectRef.RandomCard -- Merfolk Spy's "a card at random from
+    -- their hand", Gate to Seatower's seek -- or for a
+    -- Parun.Types.ObjectRef.RandomCardInGraveyard, Ghoulraiser's "a Zombie card
+    -- at random from your graveyard", or for a Parun.Types.ObjectRef.AtRandom,
+    -- Capricious Efreet's "one of them".
     --
     -- Its own constructor rather than ChoseCardInHand reused, though both may
     -- name one card in one hand: this type's rule at the top, and here the

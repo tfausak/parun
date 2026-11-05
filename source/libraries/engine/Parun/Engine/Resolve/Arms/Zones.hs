@@ -1303,7 +1303,7 @@ mill settle resolving source controller legal (Mill.MkMill ref quantity mTally m
 -- they are, so the GameEvent.Revealed the funnel appends IS the whole effect.
 --
 -- The SHOWER is the player CARRYING OUT the instruction (CR 701.20a): for
--- RandomCardInHand that is the seat whose hand it is, not the controller.
+-- RandomCard that is the seat whose zone it is, not the controller.
 -- RevealCause.Ordinary, since rule 702.94a's "this way" is the miracle window's
 -- alone. One reveal per named card, which is all GameEvent.Revealed's single
 -- ObjectId allows and all rule 701.20a asks for.

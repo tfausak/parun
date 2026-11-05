@@ -872,6 +872,8 @@ library codec
     Parun.Codec.HandActionSpec
     Parun.Codec.HexproofExemption
     Parun.Codec.HexproofExemptionSpec
+    Parun.Codec.HiddenZone
+    Parun.Codec.HiddenZoneSpec
     Parun.Codec.Holder
     Parun.Codec.HolderSpec
     Parun.Codec.Hop
@@ -1317,9 +1319,8 @@ library codec
     Parun.Codec.QuestionSpec
     Parun.Codec.Quotient
     Parun.Codec.QuotientSpec
+    Parun.Codec.RandomCard
     Parun.Codec.RandomCardInGraveyard
-    Parun.Codec.RandomCardInHand
-    Parun.Codec.RandomCardInLibrary
     Parun.Codec.RangeOfInfluence
     Parun.Codec.RangeOfInfluenceSpec
     Parun.Codec.Readiness
@@ -2848,6 +2849,7 @@ library types
     Parun.Types.HandActionPerformer
     Parun.Types.HandWindowCap
     Parun.Types.HexproofExemption
+    Parun.Types.HiddenZone
     Parun.Types.HistoryRead
     Parun.Types.Holder
     Parun.Types.Hop
@@ -3107,9 +3109,8 @@ library types
     Parun.Types.Quantity
     Parun.Types.Question
     Parun.Types.Quotient
+    Parun.Types.RandomCard
     Parun.Types.RandomCardInGraveyard
-    Parun.Types.RandomCardInHand
-    Parun.Types.RandomCardInLibrary
     Parun.Types.RangeOfInfluence
     Parun.Types.Readiness
     Parun.Types.Recipient

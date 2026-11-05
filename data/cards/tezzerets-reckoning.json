@@ -28,7 +28,7 @@
                     "type": "MoveToZone",
                     "value": {
                       "ref": {
-                        "type": "RandomCardInLibrary",
+                        "type": "RandomCard",
                         "value": {
                           "count": {
                             "type": "Literal",
@@ -39,6 +39,9 @@
                             "value": {
                               "type": "You"
                             }
+                          },
+                          "zone": {
+                            "type": "Library"
                           }
                         }
                       },

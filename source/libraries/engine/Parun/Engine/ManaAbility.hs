@@ -50,6 +50,7 @@ import qualified Parun.Types.ForEachNumber as ForEachNumber
 import qualified Parun.Types.GainControl as GainControl
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.HiddenZone as HiddenZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.ManaAdded as ManaAdded
 import qualified Parun.Types.ManaAddedCause as ManaAddedCause
@@ -57,6 +58,7 @@ import qualified Parun.Types.ManaAddition as ManaAddition
 import qualified Parun.Types.Meld as Meld
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.ObjectRef as ObjectRef
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.Repeat as Repeat
 import qualified Parun.Types.RepeatIf as RepeatIf
 import qualified Parun.Types.SetClassLevel as SetClassLevel
@@ -1041,14 +1043,16 @@ refReachesLibrary ref = case ref of
   -- instead of one: the group a look or a reveal bound is still in the
   -- library it was shown from (CR 701.20b).
   ObjectRef.EachCardFromAmong {} -> True
-  ObjectRef.RandomCardInHand _ -> False
-  -- FALSE for the arm above's reason and for ChosenCardInGraveyard's: the
-  -- position is in a GRAVEYARD, so the ref itself reaches no library.
-  ObjectRef.RandomCardInGraveyard _ -> False
-  -- TRUE, TopOfLibrary's answer: seek names cards IN a library. A regression
+  -- FALSE over a hand, ChosenCardInHand's answer; TRUE over a library,
+  -- TopOfLibrary's: seek names cards IN a library. The second is a regression
   -- fence: no seek in the pool could add mana, so CR 605.1a's second clause
   -- already answers for it.
-  ObjectRef.RandomCardInLibrary _ -> True
+  ObjectRef.RandomCard random -> case RandomCard.zone random of
+    HiddenZone.Hand -> False
+    HiddenZone.Library -> True
+  -- FALSE for ChosenCardInGraveyard's reason: the position is in a GRAVEYARD, so
+  -- the ref itself reaches no library.
+  ObjectRef.RandomCardInGraveyard _ -> False
   -- Whatever the pool it draws from reaches.
   ObjectRef.AtRandom inner -> refReachesLibrary inner
   -- The battlefield, the arm this one offers a subset of: EachMatching's

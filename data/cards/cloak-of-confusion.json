@@ -87,11 +87,14 @@
                           "type": "These",
                           "value": {
                             "cards": {
-                              "type": "RandomCardInHand",
+                              "type": "RandomCard",
                               "value": {
                                 "player": {
                                   "type": "InSlot",
                                   "value": "thatPlayer"
+                                },
+                                "zone": {
+                                  "type": "Hand"
                                 }
                               }
                             }

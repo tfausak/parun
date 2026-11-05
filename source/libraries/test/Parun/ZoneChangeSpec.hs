@@ -2044,7 +2044,7 @@ copyTheOnlyTarget p = case p of
 --
 -- The pool's only card moving a card at random OUT of a hand (Scryfall
 -- o:/(exiles?|puts?|returns?|shuffles?) .{0,20}cards? at random from (your|their|his or her|that player.s|target player.s|each player.s) hand/,
--- 2026-09-11, one hit), so Effect.MoveToZone's gather asking randomCardsInHand
+-- 2026-09-11, one hit), so Effect.MoveToZone's gather asking randomCards
 -- is what this card is here to exercise.
 --
 -- TWO SEATS, and ALICE controls the enchantment while BOB takes the upkeep:

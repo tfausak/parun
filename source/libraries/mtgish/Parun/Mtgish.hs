@@ -97,6 +97,7 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ForEach as ForEach
 import qualified Parun.Types.ForbidBeingBlocked as ForbidBeingBlocked
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.HiddenZone as HiddenZone
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.InZone as InZone
@@ -144,7 +145,7 @@ import qualified Parun.Types.PrintedReplacement as PrintedReplacement
 import qualified Parun.Types.Protection as Protection
 import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.Quantity as Quantity
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.Replace as Replace
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
@@ -1252,7 +1253,7 @@ playerEffects context who n = case Node.tag n of
   "DiscardACard" -> discard (Quantity.Literal 1)
   "DiscardNumberCardsAtRandom" -> do
     q <- Node.argument n >>= quantity context
-    pure [Effect.Discard (Discard.These TheseDiscard.MkTheseDiscard {TheseDiscard.cards = ObjectRef.RandomCardInHand RandomCardInHand.MkRandomCardInHand {RandomCardInHand.player = who, RandomCardInHand.filter = Filter.And [], RandomCardInHand.count = q}, TheseDiscard.discarded = Nothing})]
+    pure [Effect.Discard (Discard.These TheseDiscard.MkTheseDiscard {TheseDiscard.cards = ObjectRef.RandomCard RandomCard.MkRandomCard {RandomCard.zone = HiddenZone.Hand, RandomCard.player = who, RandomCard.filter = Filter.And [], RandomCard.count = q}, TheseDiscard.discarded = Nothing})]
   "GainLifeForEach" -> do
     q <- forEach
     pure [Effect.GainLife (PlayerQuantity.MkPlayerQuantity who q)]

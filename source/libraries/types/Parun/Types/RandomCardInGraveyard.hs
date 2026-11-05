@@ -12,7 +12,7 @@ import qualified Parun.Types.ZoneScope as ZoneScope
 -- the whole difference between them: randomness stands where that type's chooser
 -- stands, so there is no seat to name and CR 608.2d has nobody to ask.
 --
--- The ZoneScope survives that deletion where Parun.Types.RandomCardInHand's single
+-- The ZoneScope survives that deletion where Parun.Types.RandomCard's single
 -- PlayerRef does not, because CR 400.2 makes the graveyard a public zone: nothing
 -- collapses the pile's owner onto the seat carrying the instruction, so a scope
 -- naming somebody else's graveyard is as sayable as Ghoulraiser's "your".

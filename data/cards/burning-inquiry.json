@@ -41,7 +41,7 @@
                       "type": "These",
                       "value": {
                         "cards": {
-                          "type": "RandomCardInHand",
+                          "type": "RandomCard",
                           "value": {
                             "count": {
                               "type": "Literal",
@@ -52,6 +52,9 @@
                               "value": {
                                 "type": "AnyPlayer"
                               }
+                            },
+                            "zone": {
+                              "type": "Hand"
                             }
                           }
                         }

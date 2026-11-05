@@ -114,11 +114,14 @@
                         "type": "MoveToZone",
                         "value": {
                           "ref": {
-                            "type": "RandomCardInHand",
+                            "type": "RandomCard",
                             "value": {
                               "player": {
                                 "type": "InSlot",
                                 "value": "thatPlayer"
+                              },
+                              "zone": {
+                                "type": "Hand"
                               }
                             }
                           },

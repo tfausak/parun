@@ -30,11 +30,14 @@
                       "type": "These",
                       "value": {
                         "cards": {
-                          "type": "RandomCardInHand",
+                          "type": "RandomCard",
                           "value": {
                             "player": {
                               "type": "InSlot",
                               "value": "target"
+                            },
+                            "zone": {
+                              "type": "Hand"
                             }
                           }
                         }

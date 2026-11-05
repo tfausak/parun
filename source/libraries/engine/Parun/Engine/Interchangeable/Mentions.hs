@@ -376,9 +376,8 @@ import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Quotient as Quotient
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
-import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.RedirectDamage as RedirectDamage
 import qualified Parun.Types.Reinforce as Reinforce
@@ -2331,9 +2330,8 @@ objectRefNames asking x = case x of
   ObjectRef.ChosenCardInHand chosenCardInHand -> chosenCardInHandNames asking chosenCardInHand
   ObjectRef.ChosenCardFromAmong chosenCardFromAmong -> chosenCardFromAmongNames asking chosenCardFromAmong
   ObjectRef.EachCardFromAmong eachCardFromAmong -> eachCardFromAmongNames asking eachCardFromAmong
-  ObjectRef.RandomCardInHand randomCardInHand -> randomCardInHandNames asking randomCardInHand
+  ObjectRef.RandomCard randomCard -> randomCardNames asking randomCard
   ObjectRef.RandomCardInGraveyard randomCardInGraveyard -> randomCardInGraveyardNames asking randomCardInGraveyard
-  ObjectRef.RandomCardInLibrary randomCardInLibrary -> randomCardInLibraryNames asking randomCardInLibrary
   ObjectRef.AtRandom inner -> objectRefNames asking inner
   ObjectRef.ChosenPermanents chosenPermanents -> chosenPermanentsNames asking chosenPermanents
   ObjectRef.AttachedToBound attachedToBound -> attachedToBoundNames asking attachedToBound
@@ -2721,13 +2719,9 @@ randomCardInGraveyardNames :: (Monoid r) => Asking r -> RandomCardInGraveyard.Ra
 randomCardInGraveyardNames asking x = case x of
   RandomCardInGraveyard.MkRandomCardInGraveyard players filter_ count -> zoneScopeNames asking players <> filterNames asking filter_ <> quantityNames asking count
 
-randomCardInHandNames :: (Monoid r) => Asking r -> RandomCardInHand.RandomCardInHand -> r
-randomCardInHandNames asking x = case x of
-  RandomCardInHand.MkRandomCardInHand player filter_ count -> playerRefNames asking player <> filterNames asking filter_ <> quantityNames asking count
-
-randomCardInLibraryNames :: (Monoid r) => Asking r -> RandomCardInLibrary.RandomCardInLibrary -> r
-randomCardInLibraryNames asking x = case x of
-  RandomCardInLibrary.MkRandomCardInLibrary player filter_ count -> playerRefNames asking player <> filterNames asking filter_ <> quantityNames asking count
+randomCardNames :: (Monoid r) => Asking r -> RandomCard.RandomCard -> r
+randomCardNames asking x = case x of
+  RandomCard.MkRandomCard _ player filter_ count -> playerRefNames asking player <> filterNames asking filter_ <> quantityNames asking count
 
 recipientNames :: (Monoid r) => Asking r -> Recipient.Recipient -> r
 recipientNames asking x = case x of
