@@ -1005,6 +1005,33 @@ Entries are ordered by the first rule each cites.
   and `furious-spinesplitter-counts-damage-from-a-source-outside-range`.
 - **Issue**: #5878.
 
+## Which active player a targeting ability names under shared team turns
+
+- **Question**: Arcum's Whistle, Nettling Imp and Norritt target "creature the
+  active player has controlled continuously since the beginning of the turn".
+  Under shared team turns CR 805.9 has the ability's controller choose which
+  active player that is as the effect is applied, after CR 608.2b's recheck.
+  Is the target judged against one named player, and may the controller name
+  an active player other than the target's controller, so that on the Whistle
+  "that player" who may pay is someone else?
+- **Rules**: CR 805.9, 805.4a, 601.2c, 608.2b, 608.2c; CR of 2026-09-25. The
+  cards' rulings (Arcum's Whistle 2013-09-20, Nettling Imp 2004-10-04) are on
+  combat, not teams.
+- **Decision**: The target names the player. Both checks admit a creature of
+  any active player, and as the effect applies the only active player the text
+  can refer to is the one who has controlled the target since the turn began,
+  its controller; the controller is not asked. On the Whistle that player pays.
+- **Rejected**: Naming one player at CR 608.2b's recheck and judging the target
+  against them: CR 805.9 places the choice when the effect is applied, after the
+  recheck, and it would let a controller turn their own ability into a no-op.
+  Naming any active player as the effect applies: it makes "that player" one
+  the text's own description of the target does not fit.
+- **Site**: `Parun.Engine.Filter.matches`'s `ControlledByRole` arm and
+  `data/cards/arcums-whistle.json`'s `HolderOfBound` payer, proved by the
+  scenario "CR 805.9 Arcum's Whistle asks the target's controller to pay, the
+  active player its target names".
+- **Issue**: #5458.
+
 ## A silenced entry silences its departure
 
 - **Question**: Hushwing Gryff's "creatures entering don't cause abilities to
