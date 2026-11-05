@@ -17,6 +17,7 @@ import qualified Parun.Codec.Filter as Codec.Filter
 import qualified Parun.Codec.Keyword as Codec.Keyword
 import qualified Parun.Codec.Reply as Codec.Reply
 import qualified Parun.Codec.Request as Codec.Request
+import qualified Parun.Engine.Combat as Combat
 import qualified Parun.Engine.Driver as Driver
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Game as Game
@@ -37,6 +38,7 @@ import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.ClauseIndex as ClauseIndex
+import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Deck as Deck
@@ -167,6 +169,47 @@ spec s registry = Spec.describe s "Protocol" $ do
         Spec.assertEqWith s "first" first Nothing
         Spec.assertBool s (Maybe.isJust second) "second"
       _ -> Spec.assertFailure s "fewer than two discard lines"
+
+  Spec.it s "CR 509.1b an illegal block is refused naming the attacker, and asked again however often it is repeated" $ do
+    drake <- S.printingOf s registry "Wind Drake"
+    barbarians <- S.printingOf s registry "Balduvian Barbarians"
+    case S.combatBoardOf [drake] [barbarians] of
+      (gs, [flier], [blocker]) -> do
+        let blocks = Protocol.encodeAnswer (Prompt.DeclareBlockers (Decider.MkDecider S.bob) S.bob [blocker] [flier])
+            illegal = blocks (Map.singleton blocker (Set.singleton flier))
+            replies = [Protocol.encodeAnswer (Prompt.DeclareAttackers (Decider.MkDecider S.alice) S.alice [flier]) [flier], illegal, illegal, blocks Map.empty]
+            (sent, after) = declaring replies gs
+            refused = Just (Text.pack "the declaration of blockers is illegal: Balduvian Barbarians can't block Wind Drake")
+        Spec.assertEqWith s "problems" (problemsOf "DeclareBlockers" sent) [Nothing, refused, refused]
+        Spec.assertEqWith s "the drake attacks" (Map.keys (Combat.Type.attackers (GameState.combat after))) [flier]
+        Spec.assertEqWith s "and is unblocked" (Combat.Type.blockers (GameState.combat after)) Map.empty
+      _ -> Spec.assertFailure s "fixture should have one creature a side"
+
+  Spec.it s "CR 508.1c an illegal attack is refused, and asked again however often it is repeated" $ do
+    bondedConstruct <- S.printingOf s registry "Bonded Construct"
+    case S.combatBoardOf [bondedConstruct] [] of
+      (gs, [construct], []) -> do
+        let attacks = Protocol.encodeAnswer (Prompt.DeclareAttackers (Decider.MkDecider S.alice) S.alice [construct])
+            (sent, after) = declaring [attacks [construct], attacks [construct], attacks []] gs
+            refused = Just (Text.pack "the declaration of attackers is illegal")
+        Spec.assertEqWith s "problems" (problemsOf "DeclareAttackers" sent) [Nothing, refused, refused]
+        Spec.assertEqWith s "nothing attacks" (Combat.Type.attackers (GameState.combat after)) Map.empty
+      _ -> Spec.assertFailure s "fixture should have one creature"
+
+-- Declares attackers then blockers over the line, answering each line sent
+-- with the next of `replies`; the lines sent and the state after.
+declaring :: [R.Reply] -> GameState.GameState -> ([String], GameState.GameState)
+declaring replies gs =
+  let send line = State.state $ \(out, rest) -> case rest of
+        reply : more -> (Common.render (Codec.Reply.toValue reply), (out <> [Text.unpack line], more))
+        [] -> error ("no reply left for " <> Text.unpack line)
+      fallback = Answerer.MkAnswerer (pure . Replay.defaultAnswer . Asked.prompt)
+      ((_, after), (sent, _)) = State.runState (Engine.runGameAsked (Answerer.unwrap (Protocol.over send fallback)) gs (Combat.declareAttackers S.manaPerformer S.alice >> Combat.declareBlockers S.manaPerformer)) ([], replies)
+   in (sent, after)
+
+-- The problem each line of this kind was sent with.
+problemsOf :: String -> [String] -> [Maybe Text.Text]
+problemsOf kind sent = [Request.problem request | Just request <- fmap requestOf sent, Question.kind (Request.question request) == Text.pack kind]
 
 -- Every prompt's state before its answer, and every line sent, in order.
 type Log = [Either GameState.GameState String]
