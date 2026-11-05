@@ -2430,7 +2430,7 @@ applyChosen settle asOf batch diverting allowances applied prevented exiledBy sh
 -- The application itself, short of continuing the loop: Left for an outcome that
 -- ends this thread, Right for the rewritten event and the accumulators the loop
 -- continues it with.
-stepChosen :: Game () -> Set ObjectId -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Either (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId) (Set CandidateId, [Prevention], Maybe ObjectId, Bool, ProposedEvent))
+stepChosen :: Game () -> Set ObjectId -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Either (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId) (Set CandidateId, Replacement.Tally, Maybe ObjectId, Bool, ProposedEvent))
 stepChosen settle batch applied prevented exiledBy shuffling split candidate event = do
   gs <- State.get
   -- CR 615.12: the chosen effect is a prevention effect and this damage
