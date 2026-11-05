@@ -1032,6 +1032,16 @@ blockOfferSpec s registry = Spec.describe s "BlockOffer" $ do
     Spec.assertEqWith s "no mana for the Archangel's {1}: no prompt" (blockOffers broke) []
     case attacking [archangel, bears] [piker] of
       (gs, _, pikers) -> Spec.assertEqWith s "with a Forest the Piker is offered" (take 1 (blockOffers (withPermanents S.bob [forest] gs))) [pikers]
+  -- Boggart Brute's menace needs both Bears, each owing the Archangel's {1}
+  -- (CR 509.1d): every legal declaration holding a Bears owes {2} together.
+  Spec.it s "CR 509.1d a creature whose every declaration costs more together than its controller can pay is not offered" $ do
+    archangel <- S.printingOf s registry "Archangel of Tithes"
+    brute <- S.printingOf s registry "Boggart Brute"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    forest <- S.printingOf s registry "Forest"
+    let (gs, _, both) = attacking [archangel, brute] [bears, bears]
+    Spec.assertEqWith s "one Forest pays one Bears' {1}, not both: no prompt" (blockOffers (withPermanents S.bob [forest] gs)) []
+    Spec.assertEqWith s "two Forests pay both: both offered" (take 1 (blockOffers (withPermanents S.bob [forest, forest] gs))) [both]
 
 -- Every Prompt.DeclareAttackers a declare attackers step raises on this board,
 -- as the candidates it offered, each answered by attacking with every candidate
