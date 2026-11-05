@@ -515,6 +515,40 @@ spec s registry = Spec.describe s "Meld" $ do
         Spec.assertEqWith s "control: choosing the real Garrison melds the Township" (S.countOnBattlefieldByName townshipName S.alice control) 1
       _ -> Spec.assertFailure s "expected three activated abilities on Hanweir Battlements"
 
+  -- CR 712.4c / 712.14: a meld card told to enter "transformed" ignores the
+  -- instruction and enters front face up, since it IS double-faced (CR 712.1)
+  -- and CR 712.14a's refusal is for a card that isn't. Mirrorweave makes the
+  -- Garrison a copy of Biolume Egg; sacrificed, the Egg's trigger returns the
+  -- Garrison card transformed at the next end step.
+  Spec.it s "CR 712.4c a meld card returned transformed enters front face up" $ do
+    garrison <- S.printingOf s registry "Hanweir Garrison"
+    egg <- S.printingOf s registry "Biolume Egg"
+    mirrorweave <- S.printingOf s registry "Mirrorweave"
+    island <- S.printingOf s registry "Island"
+    let (eggId, g1) = S.addPermanent egg S.alice (S.landsInPlay island 4)
+        (gId, g2) = S.addPermanent garrison S.alice g1
+        (staged, weaveId) = S.handOne mirrorweave g2
+        ready = staged {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+        woven = S.runPure (aimedAt eggId) ready (S.cast S.alice weaveId >> Stack.resolveTop >> Engine.settleForPriority)
+        sacrificed = S.runPure S.identityAnswer woven (Event.sacrifice (pure ()) S.alice gId >> Engine.settleForPriority)
+        placed = S.runPure S.identityAnswer sacrificed (Stack.resolveTop >> Engine.settleForPriority)
+        endStep = Phase.Ending EndingStep.EndStep
+        atEnd = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan endStep S.alice)) (placed {GameState.phase = endStep})
+        after = S.runPure S.identityAnswer atEnd (Engine.settleForPriority >> Engine.priorityLoop)
+        garrisonName = S.nameOf (Printing.card garrison)
+        eggName = S.nameOf (Printing.card egg)
+        returned = filter (\oid -> fmap S.nameOf (Game.cardOf oid after) == Just garrisonName) (Game.zoneMembers Zone.Battlefield S.alice after)
+    case returned of
+      [rId] -> do
+        Spec.assertEqWith s "CR 712.14 it shows its front face" (Projection.namesOf rId after) (Set.singleton garrisonName)
+        Spec.assertEqWith s "with no face turned over" (fmap Object.face (Game.lookupObject rId after)) (Just Nothing)
+        Spec.assertEqWith s "under its owner" (Projection.controllerOf rId after) (Just S.alice)
+      other -> Spec.assertFailure s ("expected the Garrison back on the battlefield, got " <> show (length other))
+    -- The preconditions, AFTER the assertion so none absorbs a mutation.
+    Spec.assertEqWith s "setup: Mirrorweave made the Garrison a Biolume Egg" (Projection.namesOf gId woven) (Set.singleton eggName)
+    Spec.assertEqWith s "setup: the sacrifice trigger reached the stack" (length (GameState.stack sacrificed)) 1
+    Spec.assertEqWith s "setup: the delayed entry fired and was spent" (Seq.length (GameState.delayedTriggers after)) 0
+
   -- The Graf Rats pair end to end: "At the beginning of combat on your turn, if
   -- you both own and control this creature and a creature named Midnight
   -- Scavengers, exile them, then meld them into Chittering Host." CR 603.4's
