@@ -23,7 +23,7 @@ spec s = Spec.describe s "Parun.Codec.IfTaken" $ do
       IfTaken.codec
       (IfTaken.NoneTaken (NonEmpty.singleton (ClauseIndex.MkClauseIndex 2)))
       " {\"type\":\"NoneTaken\",\"value\":[2]} "
-  -- CR 118.12 / 609.3: Lich's "If you can't".
+  -- CR 118.12: Lich's "If you can't".
   Spec.it s "Couldnt" $
     Common.assertCodec
       s

@@ -1,0 +1,90 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Lich",
+            "label": "lich",
+            "token": true
+          },
+          {
+            "card": "Swamp",
+            "label": "s1"
+          },
+          {
+            "card": "Swamp",
+            "label": "s2"
+          }
+        ],
+        "life": 0,
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "mountain"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 118.3 Lich short of permanents sacrifices none and loses alice the game",
+  "final": [
+    {
+      "View": {
+        "is": {
+          "won": "bob"
+        },
+        "of": "Result"
+      }
+    },
+    {
+      "View": {
+        "is": [
+          "$lich",
+          "$s1",
+          "$s2"
+        ],
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Battlefield"
+      }
+    }
+  ],
+  "note": "Alice controls a token Lich at 0 life -- not a nontoken permanent, so neither sacrificed nor able to lose her the game by dying -- and two Swamps. Bob's Lightning Bolt deals her 3: sacrificing three is a cost (CR 118.12) she cannot pay in full, so she starts none of it (CR 118.3; Egon, God of Death's 2021-02-05 ruling), keeps both Swamps, and loses. The paired scenario with a third Swamp keeps her in.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$mountain"
+          ],
+          "object": "$bolt",
+          "targets": [
+            "$alice"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
