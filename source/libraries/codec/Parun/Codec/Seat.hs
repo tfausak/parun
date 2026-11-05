@@ -6,6 +6,7 @@ import qualified Control.Monad as Monad
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Text as Text
+import qualified Parun.Codec.GraveyardOrder as GraveyardOrder
 import qualified Parun.Codec.Label as Label
 import qualified Parun.Codec.Placement as Placement
 import qualified Parun.Codec.PlayerCounterKind as PlayerCounterKind
@@ -15,10 +16,12 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.JsonSchema.Schema as Schema
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.GraveyardOrder as GraveyardOrder.Type
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Seat as Seat
 
--- | Life defaults to CR 119.1's twenty, and the mana pool to empty.
+-- | Life defaults to CR 119.1's twenty, the mana pool to empty, and the
+-- graveyard order to Indifferent.
 codec :: Codec.Codec Seat.Seat
 codec = Fields.object $ do
   name <- Fields.required "name" Label.codec Seat.name
@@ -27,6 +30,7 @@ codec = Fields.object $ do
   team <- Fields.defaulted "team" Nothing (Common.maybe TeamId.codec) Seat.team
   range <- Fields.defaulted "range" Nothing (Common.maybe Common.natural) Seat.range
   emperor <- Fields.defaulted "emperor" False Common.boolean Seat.emperor
+  graveyardOrder <- Fields.defaulted "graveyardOrder" GraveyardOrder.Type.Indifferent GraveyardOrder.codec Seat.graveyardOrder
   manaPool <- Fields.defaulted "manaPool" [] symbols Seat.manaPool
   battlefield <- Fields.defaulted "battlefield" Seq.empty (Common.seq Placement.codec) Seat.battlefield
   hand <- Fields.defaulted "hand" Seq.empty (Common.seq Placement.codec) Seat.hand
@@ -43,6 +47,7 @@ codec = Fields.object $ do
         Seat.team = team,
         Seat.range = range,
         Seat.emperor = emperor,
+        Seat.graveyardOrder = graveyardOrder,
         Seat.manaPool = manaPool,
         Seat.battlefield = battlefield,
         Seat.hand = hand,

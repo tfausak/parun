@@ -93,6 +93,7 @@ import qualified Parun.Types.Game as Game.Type
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GraveyardOrder as GraveyardOrder
 import qualified Parun.Types.HandActionPerformer as HandActionPerformer
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InZone as InZone
@@ -217,6 +218,7 @@ playerSetup pid =
       Seat.team = Nothing,
       Seat.range = Nothing,
       Seat.emperor = False,
+      Seat.graveyardOrder = GraveyardOrder.Indifferent,
       Seat.manaPool = [],
       Seat.battlefield = Seq.empty,
       Seat.hand = Seq.empty,

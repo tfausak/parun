@@ -154,6 +154,8 @@ offerOf gs prompt = case prompt of
     fields [("taken", natural (MulliganOffer.taken offer)), ("bottom", natural (MulliganOffer.bottomCount offer))]
   Prompt.Bottom _ _ from count -> fields [("from", objects from), ("count", natural count)]
   Prompt.ChooseDiscard _ _ from count -> fields [("from", objects from), ("count", natural count)]
+  -- CR 404.3: the batch, from the top down as it would land.
+  Prompt.ArrangeGraveyardArrivals _ _ batch -> fields [("from", objects batch)]
   Prompt.DeclareAttackers _ _ attackers -> objects attackers
   Prompt.DeclareBlockers _ _ blockers attackers -> fields [("blockers", objects blockers), ("attackers", objects attackers)]
   Prompt.ChooseTargets _ _ source slots ->

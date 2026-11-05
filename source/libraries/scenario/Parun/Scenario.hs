@@ -250,8 +250,9 @@ run registry scenario = do
       (_, set) <- Engine.runGameAsked answerPrompt gs (Setup.newGame (Resolve.performHandAction Engine.playSubgame) matchup)
       Driver.drive [] scripted replayBudget finished set
 
--- | CR 103: each entrant seated in turn order, its deck list read, nothing yet
--- created; Setup.newGame builds the libraries.
+-- | CR 103: each entrant seated in turn order, its deck list read and its
+-- graveyard order set (CR 404.3), nothing yet created; Setup.newGame builds the
+-- libraries.
 enter :: (Monad m) => Registry.Registry m -> NonEmpty.NonEmpty Entrant.Entrant -> m (Either Failure.ScenarioFailure (Staged.Staged, NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck)))
 enter registry entrants = do
   let seated = NonEmpty.zip entrants (fmap PlayerId.MkPlayerId (0 NonEmpty.:| [1 ..]))
@@ -261,7 +262,9 @@ enter registry entrants = do
     Just (label : _) -> Left (Failure.MkDuplicateLabel label)
     _ -> do
       matchup <- sequence decks
-      pure (Staged.MkStaged (Setup.gameWith GameSettings.plain (fmap fst matchup)) ids Map.empty, matchup)
+      let base = Setup.gameWith GameSettings.plain (fmap fst matchup)
+          ordered = foldr (\(entrant, pid) -> Game.setGraveyardOrder pid (Entrant.graveyardOrder entrant)) base seated
+      pure (Staged.MkStaged ordered ids Map.empty, matchup)
 
 -- | How many steps a replayed game may run: a whole game's worth.
 replayBudget :: Natural
@@ -368,6 +371,7 @@ stage registry board =
               base = Setup.gameWith settings (fmap snd seated)
               lives = Map.fromList (fmap (\(seat, pid) -> (pid, Seat.life seat)) (NonEmpty.toList seated))
               counters = Map.fromList (fmap (\(seat, pid) -> (pid, Seat.counters seat)) (NonEmpty.toList seated))
+              orders = Map.fromList (fmap (\(seat, pid) -> (pid, Seat.graveyardOrder seat)) (NonEmpty.toList seated))
               positioned =
                 base
                   { GameState.activePlayer = active,
@@ -376,7 +380,7 @@ stage registry board =
                     GameState.manaPool = Map.fromList [(pid, Mana.Type.MkMana (fmap plainUnit (Seat.manaPool seat))) | (seat, pid) <- NonEmpty.toList seated, not (null (Seat.manaPool seat))],
                     GameState.phase = Board.phase board,
                     GameState.remaining = Seq.drop 1 (Seq.dropWhileL (/= Board.phase board) (Seq.fromList Turn.allPhases)),
-                    GameState.players = Map.mapWithKey (\pid p -> p {Player.life = Map.findWithDefault (Player.life p) pid lives, Player.counters = Map.findWithDefault (Player.counters p) pid counters}) (GameState.players base),
+                    GameState.players = Map.mapWithKey (\pid p -> p {Player.life = Map.findWithDefault (Player.life p) pid lives, Player.counters = Map.findWithDefault (Player.counters p) pid counters, Player.graveyardOrder = Map.findWithDefault (Player.graveyardOrder p) pid orders}) (GameState.players base),
                     GameState.monarch = monarch
                   }
           placed <- placeSeats registry (NonEmpty.toList seated) (Staged.MkStaged positioned ids Map.empty)

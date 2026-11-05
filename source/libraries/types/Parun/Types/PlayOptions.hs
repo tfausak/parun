@@ -14,10 +14,13 @@ data PlayOptions = MkPlayOptions
     save :: Maybe FilePath,
     -- | Whether a person is passed for when passing and mana abilities are all
     -- they could do.
-    autoPass :: Bool
+    autoPass :: Bool,
+    -- | CR 404.3: the seats that arrange cards put into their graveyard at the
+    -- same time.
+    arrangesGraveyard :: Set.Set Natural.Natural
   }
   deriving (Eq, Show)
 
 -- | A seeded-from-the-clock game between two people, the first asked for.
 none :: PlayOptions
-none = MkPlayOptions {seed = Nothing, first = Nothing, bots = Set.empty, json = False, save = Nothing, autoPass = True}
+none = MkPlayOptions {seed = Nothing, first = Nothing, bots = Set.empty, json = False, save = Nothing, autoPass = True, arrangesGraveyard = Set.empty}

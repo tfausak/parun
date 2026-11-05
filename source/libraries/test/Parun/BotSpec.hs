@@ -150,7 +150,7 @@ played :: Word.Word64 -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> ((R
 played seed matchup =
   let seats :: Map.Map PlayerId.PlayerId (Answerer.Answerer (State.StateT SplitMix.SplitMix (State.State [Answered])))
       seats = Map.fromList [(S.alice, Bot.bot), (S.bob, Bot.bot)]
-   in State.runState (State.evalStateT (Driver.match [watching] (Driver.bySeat seats Chance.chance) GameSettings.plain matchup) (SplitMix.MkSplitMix seed)) []
+   in State.runState (State.evalStateT (Driver.match [watching] (Driver.bySeat seats Chance.chance) GameSettings.plain Map.empty matchup) (SplitMix.MkSplitMix seed)) []
 
 watching :: Observer.Observer (State.StateT SplitMix.SplitMix (State.State [Answered]))
 watching =

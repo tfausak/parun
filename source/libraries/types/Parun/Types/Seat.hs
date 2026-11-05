@@ -3,6 +3,7 @@ module Parun.Types.Seat where
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import Numeric.Natural (Natural)
+import qualified Parun.Types.GraveyardOrder as GraveyardOrder
 import qualified Parun.Types.Label as Label
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Placement as Placement
@@ -22,6 +23,9 @@ data Seat = MkSeat
     range :: Maybe Natural,
     -- | CR 809.2: whether the player is their team's emperor.
     emperor :: Bool,
+    -- | CR 404.3: whether the player arranges cards put into their graveyard
+    -- at the same time.
+    graveyardOrder :: GraveyardOrder.GraveyardOrder,
     -- | CR 106.4: the unrestricted mana already in the player's pool, one type
     -- per unit.
     manaPool :: [ManaType.ManaType],

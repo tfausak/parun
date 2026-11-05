@@ -28,7 +28,7 @@ spec s registry = Spec.describe s "Driver" $ do
   Spec.it s "each seat's prompts reach that seat's answerer, and chance reaches the fallback" $ do
     matchup <- S.redRed (S.printingOf s registry)
     let answerer = Driver.bySeat (Map.fromList [(S.alice, tagged "alice"), (S.bob, tagged "bob")]) (tagged "chance")
-        seen = State.execState (Driver.match [] answerer GameSettings.plain matchup) []
+        seen = State.execState (Driver.match [] answerer GameSettings.plain Map.empty matchup) []
         by tag = [seat | (t, seat) <- seen, t == tag]
     Spec.assertBool s (not (null (by "alice"))) "alice answered"
     Spec.assertBool s (not (null (by "bob"))) "bob answered"
@@ -39,7 +39,7 @@ spec s registry = Spec.describe s "Driver" $ do
   Spec.it s "a seat with no answerer of its own reaches the fallback" $ do
     matchup <- S.redRed (S.printingOf s registry)
     let answerer = Driver.bySeat (Map.singleton S.alice (tagged "alice")) (tagged "rest")
-        seen = State.execState (Driver.match [] answerer GameSettings.plain matchup) []
+        seen = State.execState (Driver.match [] answerer GameSettings.plain Map.empty matchup) []
     Spec.assertBool s (elem ("rest", Just S.bob) seen) "bob to rest"
   Spec.it s "observers see each prompt before its answer and each answer after, in the order a recording does" $ do
     matchup <- S.redRed (S.printingOf s registry)
@@ -49,7 +49,7 @@ spec s registry = Spec.describe s "Driver" $ do
             { Observer.before = \_ -> State.modify' (<> [Nothing]),
               Observer.after = \asked answer -> State.modify' (<> [Just (Replay.encode (Asked.prompt asked) answer)])
             }
-        seen = State.execState (Driver.match [observer] casting GameSettings.plain matchup) []
+        seen = State.execState (Driver.match [observer] casting GameSettings.plain Map.empty matchup) []
         recorded = snd (Replay.record S.castAnswer (start0 matchup) (Engine.playFrom matchup))
     Spec.assertBool s (alternates seen) "alternates"
     Spec.assertEqWith s "transcript" (Maybe.catMaybes seen) recorded
