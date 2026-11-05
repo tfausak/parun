@@ -7190,7 +7190,7 @@ stayPut oid obj requestedDest position shuffling = case Object.zone obj of
     let owner = Object.owner obj
     State.modify' (Game.insertIntoZone Zone.Library position owner oid . Game.removeFromZones oid)
     placed <- State.state (forgetShown oid)
-    Monad.when shuffling (shuffleLibrary owner)
+    Monad.when shuffling (shuffleAroundArrivals owner)
     Monad.when (requestedDest /= Zone.Library && not shuffling) $
       State.modify' (noteArrival owner (ArrivalEnd.IntoLibrary position) (Seq.singleton placed))
     pure (Seq.singleton placed)
@@ -8243,7 +8243,10 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               --
               -- The OWNER's library, CR 400.3: every zone this funnel places into
               -- is keyed by owner, and `pid` is the id placeObject was handed.
-              Monad.when shuffling (shuffleLibrary pid)
+              --
+              -- CR 701.24g: around the cards this scope already put at an end of
+              -- that library (shuffleAroundArrivals).
+              Monad.when shuffling (shuffleAroundArrivals pid)
               -- CR 401.4: a redirect INTO a library at a stated end, for the
               -- scope's owner to arrange (arrangeArrivals). A move headed for
               -- a library already had its order settled by its instruction
@@ -10915,6 +10918,25 @@ madnessChoice pid oid payloads = do
 -- 701.20d a revealed card shuffled into its library" case is the proof.
 shuffleLibrary :: PlayerId -> Game ()
 shuffleLibrary = shuffleLibraryExcept Set.empty
+
+-- CR 701.24g: a redirect's shuffle of `pid`'s library, leaving out the cards
+-- the open arrivingTogether scope already put at an end of it (noteArrival),
+-- which then go back to that end in the order they held. A card put there LATER
+-- in the scope lands on the shuffled library and needs nothing. Still one
+-- Prompt.Shuffle and one Shuffle event (CR 701.24f). data/scenarios/zone-change's
+-- CR 701.24g Wrath of God scenarios, in both id orders, are the proof.
+shuffleAroundArrivals :: PlayerId -> Game ()
+shuffleAroundArrivals pid = do
+  pending <- State.gets (foldMap Foldable.toList . GameState.arrivals)
+  let placedAt position = Set.fromList [oid | arrival <- pending, Arrival.owner arrival == pid, Arrival.end arrival == ArrivalEnd.IntoLibrary position, oid <- Foldable.toList (Arrival.cards arrival)]
+      tops = placedAt LibraryPosition.Top
+      bottoms = placedAt LibraryPosition.Bottom
+      regroup pile =
+        let (top, rest) = Seq.partition (`Set.member` tops) pile
+            (bottom, middle) = Seq.partition (`Set.member` bottoms) rest
+         in top <> middle <> bottom
+  shuffleLibraryExcept (tops <> bottoms) pid
+  State.modify' (\g -> g {GameState.library = Map.adjust regroup pid (GameState.library g)})
 
 -- shuffleLibrary leaving `leftOut` out: CR 701.24b's found cards, which "aren't
 -- included in the shuffle, even though they remain in the library". They keep
