@@ -2041,6 +2041,7 @@ renderDiscrepancy discrepancy = case discrepancy of
   Discrepancy.MkTapState oid expected actual -> Text.pack ("object " <> show (ObjectId.unwrap oid) <> " is " <> show actual <> ", the log says " <> show expected)
   Discrepancy.MkLife pid expected actual -> Text.pack ("player " <> show (PlayerId.unwrap pid) <> " has " <> show actual <> " life, the log says " <> show expected)
   Discrepancy.MkCounters oid kind expected actual -> Text.pack ("object " <> show (ObjectId.unwrap oid) <> " has " <> show actual <> " " <> show kind <> " counters, the log says " <> show expected)
+  Discrepancy.MkAttachment oid expected actual -> Text.pack ("object " <> show (ObjectId.unwrap oid) <> " is attached to " <> show actual <> ", the log says " <> show expected)
 
 renderWhen :: When.When -> Text.Text
 renderWhen key = renderLocation (When.turn key) (When.phase key) (Just (When.player key))
