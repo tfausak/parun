@@ -35,6 +35,8 @@ import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterTrigger as CounterTrigger
+import qualified Parun.Types.CounteredKind as CounteredKind
+import qualified Parun.Types.CounteringTrigger as CounteringTrigger
 import qualified Parun.Types.CrewRole as CrewRole
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamageRecipient as DamageRecipient
@@ -307,26 +309,14 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.AbilityAddsMana (AbilityAddsMana.MkAbilityAddsMana PlayerRelation.You (Filter.HasCardType CardType.Land) ManaSpecification.ChosenColor))
       " {\"type\":\"AbilityAddsMana\",\"value\":{\"player\":{\"type\":\"You\"},\"source\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"mana\":{\"type\":\"ChosenColor\"}}} "
-  -- CR 701.6a's countering. Both relations: each is content.
-  Spec.it s "SpellOrAbilityCounters round-trips both relations" $ do
+  -- CR 701.6a's countering, Baral, Chief of Compliance's fields.
+  -- Parun.Codec.CounteringTriggerSpec has the payload.
+  Spec.it s "Countered" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SpellOrAbilityCounters PlayerRelation.You)
-      " {\"type\":\"SpellOrAbilityCounters\",\"value\":{\"type\":\"You\"}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SpellOrAbilityCounters PlayerRelation.Opponent)
-      " {\"type\":\"SpellOrAbilityCounters\",\"value\":{\"type\":\"Opponent\"}} "
-  -- The same rule read from the victim's side, and nullary: the printed sentence
-  -- names no player, so there is no relation to round-trip.
-  Spec.it s "AbilityIsCountered" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.AbilityIsCountered
-      " {\"type\":\"AbilityIsCountered\"} "
+      (TriggerCondition.Countered (CounteringTrigger.MkCounteringTrigger CounteredKind.Spell PlayerRelation.You))
+      " {\"type\":\"Countered\",\"value\":{\"counterer\":{\"type\":\"You\"}}} "
   -- CR 615.13's prevention trigger. Both relations, for the same reason.
   Spec.it s "DamageToPlayerPrevented round-trips both relations" $ do
     Common.assertCodec

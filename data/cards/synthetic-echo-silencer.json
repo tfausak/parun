@@ -20,7 +20,12 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "AbilityIsCountered"
+            "type": "Countered",
+            "value": {
+              "countered": {
+                "type": "Ability"
+              }
+            }
           },
           "modal": {
             "modes": [

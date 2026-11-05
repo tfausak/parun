@@ -1219,10 +1219,9 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.AttachmentChanges _ -> []
   -- CR 603.12's carries nothing at all, so no Count.
   TriggerCondition.Reflexive -> []
-  -- CR 701.6a's countering condition is a PlayerRelation, which holds no Count,
-  -- exactly as the discard condition above.
-  TriggerCondition.SpellOrAbilityCounters _ -> []
-  TriggerCondition.AbilityIsCountered -> []
+  -- CR 701.6a's countering condition is a kind and a PlayerRelation, which
+  -- hold no Count, exactly as the discard condition above.
+  TriggerCondition.Countered _ -> []
   -- CR 615.13's prevention condition is a PlayerRelation too.
   TriggerCondition.DamageToPlayerPrevented _ -> []
   -- Rule 615.13's other reading carries a Filter, which holds no Count either.
@@ -4690,8 +4689,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.AttachmentChanges t -> unframed [AttachmentTrigger.other t]
   -- CR 603.12's carries nothing, so no Filter either.
   TriggerCondition.Reflexive -> []
-  TriggerCondition.SpellOrAbilityCounters _ -> []
-  TriggerCondition.AbilityIsCountered -> []
+  TriggerCondition.Countered _ -> []
   TriggerCondition.DamageToPlayerPrevented _ -> []
   -- Rule 615.13's other reading DOES carry one, a predicate over the damage's
   -- source -- Samite Ministration's "black or red" -- which this sweep must see
@@ -4770,8 +4768,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.TappedForMana _ -> []
   TriggerCondition.AbilityAddsMana {} -> []
   TriggerCondition.SelfManaAbilityResolves -> []
-  TriggerCondition.SpellOrAbilityCounters _ -> []
-  TriggerCondition.AbilityIsCountered -> []
+  TriggerCondition.Countered _ -> []
   TriggerCondition.DamageToPlayerPrevented _ -> []
   TriggerCondition.SelfPreventsDamage _ -> []
   TriggerCondition.LifeChanges _ -> []
