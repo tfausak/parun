@@ -2368,20 +2368,22 @@ attemptAttackDeclaration perform pid asked forced rejected = do
         -- which is a resolving effect; exerting is a cost payment. The PLAYER is
         -- recorded because rule 701.43a names one. The step sits after `before`, so
         -- CR 508.1's preamble undoes an exert along with the declaration. Paid
-        -- here, at the choice, rather than joining CR 508.1h's total at CR 508.1j,
-        -- which only the corner of a CR 508.1i sacrifice can observe (gap #6247).
-        --
-        Monad.forM_ attacking $ \oid -> do
+        -- here, at the choice, ahead of CR 508.1i's window rather than among CR
+        -- 508.1j's payments; the creature is `held`, so a window that removes it
+        -- refuses the toll (Cost.payToll), as paying it at CR 508.1j would.
+        exerted <- fmap concat . Monad.forM attacking $ \oid -> do
           gsExert <- State.get
-          Monad.when (Projection.hasKeyword Keyword.Exert oid gsExert) $ do
-            let you = attackerOf oid
-                exertDecider = Decide.deciderFor you gsExert
-                exert g =
-                  Event.recordEvent
-                    (GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.Exert oid))
-                    g {GameState.objects = Map.adjust (\o -> o {Object.exertedBy = Set.insert you (Object.exertedBy o)}) oid (GameState.objects g)}
-            answer <- Game.choose (Prompt.ChooseExert exertDecider you oid)
-            Monad.when (answer == OptionalDecision.Exercises) (State.modify' exert)
+          if not (Projection.hasKeyword Keyword.Exert oid gsExert)
+            then pure []
+            else do
+              let you = attackerOf oid
+                  exertDecider = Decide.deciderFor you gsExert
+                  exert g =
+                    Event.recordEvent
+                      (GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.Exert oid))
+                      g {GameState.objects = Map.adjust (\o -> o {Object.exertedBy = Set.insert you (Object.exertedBy o)}) oid (GameState.objects g)}
+              answer <- Game.choose (Prompt.ChooseExert exertDecider you oid)
+              if answer == OptionalDecision.Exercises then [(you, oid)] <$ State.modify' exert else pure []
         -- CR 702.154a's optional cost to attack, rule 508.1g's other one, asked
         -- after exert's and of `attacking` for the same reason. Rule 702.154d:
         -- ONE offer per instance of the keyword, each independent, so the roster
@@ -2407,18 +2409,17 @@ attemptAttackDeclaration perform pid asked forced rejected = do
         -- The tap is Event.tap, Cost.tapObject's route, so a card watching for a
         -- creature becoming tapped (CR 701.26a) sees it. Inside `before`'s span,
         -- so CR 508.1's preamble undoes an enlist along with the declaration. Paid
-        -- here, at the choice, rather than joining CR 508.1h's total at CR 508.1j,
-        -- which only the corner of a CR 508.1i sacrifice can observe (gap #6247).
+        -- here, at the choice, and `held` like exert's.
         --
         -- CR 702.154b's linked triggered ability is armed HERE and only where the
         -- tap happened (CR 607.2h): the entry's
         -- existence is the affirmative answer, and it fires at the next
         -- gather (CR 603.3). Binding.tappedPermanent carries "the tapped
         -- creature" into it (CR 603.7c).
-        Monad.forM_ attacking $ \oid -> do
+        enlisted <- fmap concat . Monad.forM attacking $ \oid -> do
           gsEnlist <- State.get
           let instances = Map.findWithDefault 0 Keyword.Enlist (Projection.keywordsOf oid gsEnlist)
-          Monad.forM_ (List.genericReplicate instances ()) $ \() -> do
+          fmap Maybe.catMaybes . Monad.forM (List.genericReplicate instances ()) $ \() -> do
             g <- State.get
             let you = attackerOf oid
                 grants = Projection.controlGrants g
@@ -2433,9 +2434,10 @@ attemptAttackDeclaration perform pid asked forced rejected = do
             -- Reject-not-repair, Parun.Engine.Cost's posture: an answer outside
             -- the offer taps nobody and arms nothing.
             answer <- Game.mayChooseAmong (\enlistDecider who -> Prompt.ChooseEnlist enlistDecider who oid) you enlistCandidates
-            Monad.forM_ answer $ \enlisted -> do
-              Event.tap enlisted
-              State.modify' (Event.armDelayed Keyword.Engine.enlistReflexive oid you (Map.singleton Binding.tappedPermanent (Binding.toObject enlisted)) (Just TurnWindow.AnyTurn) Nothing)
+            Monad.forM_ answer $ \tapped -> do
+              Event.tap tapped
+              State.modify' (Event.armDelayed Keyword.Engine.enlistReflexive oid you (Map.singleton Binding.tappedPermanent (Binding.toObject tapped)) (Just TurnWindow.AnyTurn) Nothing)
+            pure (fmap ((,) you) answer)
         gs1 <- State.get
         -- CR 508.1h: the total cost to attack is determined once and then LOCKED
         -- IN -- this `let`. Asking AttackCost.totalCost a second time is what the
@@ -2452,7 +2454,7 @@ attemptAttackDeclaration perform pid asked forced rejected = do
         -- creatures are chosen, and CR 508.1d's excuse from paying is exercised
         -- one step earlier, by NOT DECLARING the creature. A payer who did not
         -- choose is asked (payTolls).
-        paid <- payTolls perform (handedTo chooser pid) before owed
+        paid <- payTolls perform (handedTo chooser pid) before (exerted <> enlisted) owed
         if not paid
           then do
             -- CR 508.1's preamble: the declaration is illegal and CR 733.1
@@ -2567,8 +2569,14 @@ attemptAttackDeclaration perform pid asked forced rejected = do
 -- unpayable toll: the Odric ruling "its controller can choose to pay that cost
 -- or not", the chooser then proposing again. Asked before anyone pays, so a
 -- refusal undoes no payment.
-payTolls :: ManaAbilityPerformer.ManaAbilityPerformer -> Maybe PlayerId -> GameState -> [(PlayerId, [(ObjectId, Cost Keyword.Keyword)])] -> Game Bool
-payTolls perform handed before charged = do
+--
+-- `held` is Cost.payToll's, each permanent beside the player whose CR 508.1g
+-- cost it paid: the permanents those costs were paid with at the choice. Each
+-- payer's window answers for their own only, so an earlier payer's toll
+-- sacrificing theirs (CR 508.1j, any order) refuses no later one. A block's is
+-- empty, CR 509.1 having no optional costs.
+payTolls :: ManaAbilityPerformer.ManaAbilityPerformer -> Maybe PlayerId -> GameState -> [(PlayerId, ObjectId)] -> [(PlayerId, [(ObjectId, Cost Keyword.Keyword)])] -> Game Bool
+payTolls perform handed before held charged = do
   gs <- State.get
   -- CR 118.3: only a payer who CAN pay the whole toll is asked; one who can't
   -- has nothing to decide, and the payment below fails for them.
@@ -2588,7 +2596,7 @@ payTolls perform handed before charged = do
       [] -> pure True
       (payer, charges) : rest
         | null charges -> go earlier rest
-        | otherwise -> Cost.payToll perform before earlier payer charges >>= maybe (pure False) (`go` rest)
+        | otherwise -> Cost.payToll perform before (Set.fromList [oid | (p, oid) <- held, p == payer]) earlier payer charges >>= maybe (pure False) (`go` rest)
 
 -- CR 508.1a / 509.1a: who makes `pid`'s declaration -- the controller of the
 -- row handing it over (PlayerEffect.declarationRow), else `pid`.
@@ -3065,7 +3073,7 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
         -- blocking only after CR 509.1f's payment. Combat.declaredBlockers above
         -- is the one thing written earlier, and CR 509.1a rather than CR 509.1g is
         -- why it may be.
-        paid <- payTolls perform (handedTo chooser pid) before owed
+        paid <- payTolls perform (handedTo chooser pid) before [] owed
         -- CR 509.1's preamble: a declaration the defending player cannot pay for
         -- is illegal and CR 733.1 reverses it, which Cost.payToll has done back
         -- to `before`, less what CR 733.1 keeps. The blocks themselves are recorded below, so the only
