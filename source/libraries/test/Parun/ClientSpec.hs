@@ -264,7 +264,8 @@ spec s registry = Spec.describe s "Client" $ do
         let blocking = board {GameState.phase = Phase.Combat CombatStep.DeclareBlockers, GameState.combat = (GameState.combat board) {Combat.Type.attackers = Map.singleton attacker (AttackTarget.OfPlayer S.bob)}}
         Spec.assertEqWith s "blockers" (answering blocking "2:1" (Prompt.DeclareBlockers bob S.bob [first, second] [attacker])) (Right (Map.singleton second (Set.singleton attacker)))
       _ -> Spec.assertFailure s "fixture should have one attacker and two blockers"
-    Spec.assertEqWith s "targets" (answering gs "1" (Prompt.ChooseTargets alice S.alice o7 (Map.singleton slot (1, Set.fromList [Recipient.ToPlayer S.bob, Recipient.ToCreature o9])))) (Right (Map.singleton slot (Set.singleton (Recipient.ToCreature o9))))
+    -- Player 2 first: the view shows no seat for o9, so it is listed last.
+    Spec.assertEqWith s "targets" (answering gs "2" (Prompt.ChooseTargets alice S.alice o7 (Map.singleton slot (1, Set.fromList [Recipient.ToPlayer S.bob, Recipient.ToCreature o9])))) (Right (Map.singleton slot (Set.singleton (Recipient.ToCreature o9))))
     Spec.assertEqWith s "optional" (answering gs "2" (Prompt.ChooseOptional alice S.alice o7 (ModeIndex.MkModeIndex 0) (ClauseIndex.MkClauseIndex 0) mempty)) (Right OptionalDecision.Declines)
     Spec.assertEqWith s "life for mana" (answering gs "1" (Prompt.PayLifeForMana alice S.alice 1 ManaType.Colorless)) (Right OptionalDecision.Exercises)
     Spec.assertEqWith s "x" (answering gs "3" (Prompt.ChooseX alice S.alice o7 Binding.variableX 1 5)) (Right 3)
@@ -502,6 +503,30 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "alice sees a nameless 2/2" (seenBy S.alice) [Text.pack "a face-down card 2/2", Text.pack "Creature", Text.pack "2/2"]
     Spec.assertBool s (any (Text.isInfixOf (Text.pack "Ainok Tracker")) (seenBy S.bob) && all (`elem` seenBy S.bob) (Text.lines text)) ("bob looks at it: " <> show (seenBy S.bob))
     Spec.assertEqWith s "alice cannot name it" (cardLines (readout lookUp gs ["card Ainok Tracker", "1"] (targeting S.alice))) [Text.pack "No card you can see is named Ainok Tracker."]
+
+  Spec.it s "a target prompt tells same-named permanents apart by controller and status, the deciding seat's first" $ do
+    island <- S.printingOf s registry "Island"
+    demolish <- S.printingOf s registry "Demolish"
+    let (bobTapped, g1) = S.addPermanent island S.bob (Setup.emptyGame S.bothPlayers)
+        (alices, g2) = S.addPermanent island S.alice g1
+        (bobs, g3) = S.addPermanent island S.bob g2
+        (buried, g4) = S.addObjectIn Zone.Graveyard island S.bob g3
+        (spell, g5) = S.addHandCard demolish S.alice g4
+        gs = g5 {GameState.objects = Map.adjust (\o -> o {Object.tapped = TapState.Tapped}) bobTapped (GameState.objects g5)}
+        slot = SlotName.MkSlotName (Text.pack "target")
+        legal = Set.fromList (fmap Recipient.ToObject [bobTapped, alices, bobs, buried])
+        prompt = Prompt.ChooseTargets (Decider.MkDecider S.alice) S.alice spell (Map.singleton slot (1, legal))
+        (picked, shown) = asking Hotseat.fresh {Hotseat.facing = Just S.alice} ["2"] gs prompt
+    Spec.assertEqWith
+      s
+      "listed"
+      (takeWhile (Text.isPrefixOf (Text.pack "  ")) (drop 1 (dropWhile (not . Text.isPrefixOf (Text.pack "Choose 1 target for Demolish")) shown)))
+      [ Text.pack "  1. Your Island",
+        Text.pack "  2. Player 2's Island (tapped)",
+        Text.pack "  3. Player 2's Island",
+        Text.pack "  4. Player 2's Island, in a graveyard"
+      ]
+    Spec.assertEqWith s "the number picks the one shown" picked (Right (Map.singleton slot (Set.singleton (Recipient.ToObject bobTapped))))
 
   -- `parun play`'s answer to card data it cannot read: play stops, saying why,
   -- rather than showing the card as one with no text.
