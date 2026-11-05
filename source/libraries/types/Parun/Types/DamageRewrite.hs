@@ -116,11 +116,11 @@ data DamageRewrite effect
     -- Parun.Engine.Replacement.contestedResource gives it no supply. A countdown
     -- of N would be spent by the first event and let the second through whole.
     --
-    -- PER EVENT, where rule 702.64b says "from any one source at any one time".
-    -- CR 510.4's two combat damage steps are the different TIMES rule 702.64b's own
-    -- second sentence lets the ceiling renew at. A redirect (Pariah) can land two
-    -- events from one source on one recipient at one time, and each takes the
-    -- ceiling (gap #6255).
+    -- Per source, per recipient and per batch, which is rule 702.64b's "from any
+    -- one source at any one time": CR 510.4's two combat damage steps are the
+    -- different TIMES its second sentence renews the ceiling at, and a redirect
+    -- (Pariah) landing a second event of one source on one recipient shares it
+    -- (Parun.Engine.Replacement.ceilingLeft).
     --
     -- Power Leak's "prevent X of that damage" is this ceiling on a CR 614.15
     -- self-replacement with Uses.Once, its X settled as the row is installed.
