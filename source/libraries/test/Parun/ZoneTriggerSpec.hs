@@ -2089,27 +2089,26 @@ representativeEvents cond =
         -- The narrowed condition's own events: the cause narrows which of them
         -- match, never what a matched one binds.
         TriggerCondition.CausedBy narrowed -> representativeEvents (CausedBy.condition narrowed)
-        -- CR 708.7's own event, and the only one this condition admits, on the
-        -- BEARER -- so the pair really matches. Twice: with CR 107.3d's X chosen
-        -- for the cost and without, the one key eventBindings stamps only
-        -- sometimes.
-        TriggerCondition.SelfTurnedFaceUp ->
-          noTable (GameEvent.TurnedFaceUp TurnedFaceUp.MkTurnedFaceUp {TurnedFaceUp.object = departed, TurnedFaceUp.announcedX = Just 3})
-            NonEmpty.:| [noTable (GameEvent.TurnedFaceUp TurnedFaceUp.MkTurnedFaceUp {TurnedFaceUp.object = departed, TurnedFaceUp.announcedX = Nothing})]
+        -- CR 708.7's own event, and the only one this condition admits, on
+        -- `departed`, the BEARER -- so the pair really matches under either
+        -- subject, the Matching one's Filter below being the trivial one, which
+        -- admits whatever the id resolves to. A Self subject's twice: with CR
+        -- 107.3d's X chosen for the cost and without, the one key eventBindings
+        -- stamps only sometimes.
+        TriggerCondition.TurnedFaceUp subject -> case subject of
+          ActingPermanent.Self ->
+            noTable (GameEvent.TurnedFaceUp TurnedFaceUp.MkTurnedFaceUp {TurnedFaceUp.object = departed, TurnedFaceUp.announcedX = Just 3})
+              NonEmpty.:| [noTable (GameEvent.TurnedFaceUp TurnedFaceUp.MkTurnedFaceUp {TurnedFaceUp.object = departed, TurnedFaceUp.announcedX = Nothing})]
+          ActingPermanent.Matching _ -> one (GameEvent.TurnedFaceUp TurnedFaceUp.MkTurnedFaceUp {TurnedFaceUp.object = departed, TurnedFaceUp.announcedX = Just 3})
         -- CR 701.27a's own event, and the only one this condition admits, on the
         -- BEARER and naming the same face the condition does -- so the pair
         -- really matches; the face below is the one everyTriggerCondition names.
         TriggerCondition.SelfTransformedInto name -> one (GameEvent.Transformed Transformed.MkTransformed {Transformed.object = departed, Transformed.characteristics = S.emptyCharacteristics {PC.names = Set.singleton name}, Transformed.controller = Nothing, Transformed.attachments = Set.empty, Transformed.lapsedGrants = Set.empty})
         -- CR 701.27e's event for the bystander form, on `departed` for the reason
-        -- the PermanentTurnedFaceUp arm below gives: the Filter this condition is
+        -- the TurnedFaceUp arm above gives: the Filter this condition is
         -- instantiated with is the trivial one, which the sampled characteristics
         -- satisfy however empty they are.
         TriggerCondition.PermanentTransforms _ -> one (GameEvent.Transformed Transformed.MkTransformed {Transformed.object = departed, Transformed.characteristics = S.emptyCharacteristics, Transformed.controller = Nothing, Transformed.attachments = Set.empty, Transformed.lapsedGrants = Set.empty})
-        -- The same event for the watcher-scoped form, and the only one it admits.
-        -- `departed` again, so the pair really matches: the Filter this condition
-        -- is instantiated with below is the trivial one, which admits whatever the
-        -- id resolves to.
-        TriggerCondition.PermanentTurnedFaceUp _ -> one (GameEvent.TurnedFaceUp TurnedFaceUp.MkTurnedFaceUp {TurnedFaceUp.object = departed, TurnedFaceUp.announcedX = Just 3})
         -- CR 603.2's own event, carrying the watched action, on `departed`: under
         -- the trivial Filter the pair really matches, and under Self it does not,
         -- which pins the floor for a matching pair too, this arm binding nothing
@@ -2462,13 +2461,13 @@ everyTriggerCondition =
     -- both branches bind `became`, so the intersection is NON-EMPTY and the pin
     -- below is what says eventBindings fills it for each branch's event in turn.
     -- The empty pair alone would leave the AnyOf arm free to stamp nothing.
-    TriggerCondition.AnyOf [TriggerCondition.Enters (EntersTrigger.matching (Filter.Type.And [])), TriggerCondition.PermanentTurnedFaceUp (Filter.Type.And [])],
+    TriggerCondition.AnyOf [TriggerCondition.Enters (EntersTrigger.matching (Filter.Type.And [])), TriggerCondition.TurnedFaceUp (ActingPermanent.Matching (Filter.Type.And []))],
     -- Sacred Ground's narrowing, over the condition whose bindings it keeps.
     TriggerCondition.CausedBy CausedBy.MkCausedBy {CausedBy.controller = PlayerRelation.Opponent, CausedBy.condition = TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching (Filter.Type.And [])))},
-    TriggerCondition.SelfTurnedFaceUp,
+    TriggerCondition.TurnedFaceUp ActingPermanent.Self,
     TriggerCondition.SelfTransformedInto (CardName.MkCardName (Text.pack "Blightsower Thallid")),
     TriggerCondition.PermanentTransforms (Filter.Type.And []),
-    TriggerCondition.PermanentTurnedFaceUp (Filter.Type.And []),
+    TriggerCondition.TurnedFaceUp (ActingPermanent.Matching (Filter.Type.And [])),
     TriggerCondition.FaceDownPermanentLeavesRevealed,
     TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated Designation.Renowned (Filter.Type.And [])),
     TriggerCondition.AttachedCreatureMentors,

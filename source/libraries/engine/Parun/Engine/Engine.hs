@@ -942,7 +942,7 @@ placeBorne srcId pending = do
       -- spell is still on the stack as the ability triggers.
       inheritedX = case TriggeredAbility.condition ability of
         TriggerCondition.Enters (EntersTrigger.MkEntersTrigger ActingPermanent.Self _) -> Game.announcedXOf srcId gs
-        TriggerCondition.SelfTurnedFaceUp -> Maybe.fromMaybe 0 (Binding.amountOf Binding.variableX bound)
+        TriggerCondition.TurnedFaceUp ActingPermanent.Self -> Maybe.fromMaybe 0 (Binding.amountOf Binding.variableX bound)
         TriggerCondition.SelfCast -> Maybe.fromMaybe 0 (Game.lookupObject srcId gs >>= Binding.amountOf Binding.variableX . Object.bindings)
         _ -> 0
       -- CR 107.3m: an enters-the-battlefield triggered ability's effects read

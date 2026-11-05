@@ -277,9 +277,10 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
     | bindsArrival t -> Binding.setBecame (ZoneChange.object zc) Map.empty
   -- CR 603.6a: entersSlots' slots, off the entry matched.
   (TriggerCondition.Enters t, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)) -> entersBindings gs t zc
-  -- Pine Walker's "that creature" (CR 603.2): the permanent that was turned face
-  -- up, which it untaps. The bearer is a bystander here -- CR 113.7a's source slot names
-  -- the WATCHER, and on Pine Walker's own board the two are different permanents --
+  -- CR 708.7 through CR 603.2. A Matching subject binds Pine Walker's "that
+  -- creature" (CR 603.2): the permanent that was turned face up, which it
+  -- untaps. The bearer is a bystander here -- CR 113.7a's source slot names the
+  -- WATCHER, and on Pine Walker's own board the two are different permanents --
   -- so the subject needs a name of its own.
   --
   -- THE SAME SLOT the zone-change arms above stamp, deliberately widened rather
@@ -297,25 +298,25 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   --
   -- Unconditional given a match, which is what eventBindingSlots' per-condition
   -- promise needs: every GameEvent.TurnedFaceUp carries exactly one permanent.
-  -- Bound whatever the Filter admitted,
-  -- for entersSlots' reason.
+  -- Bound whatever the Filter admitted, for entersSlots' reason.
   --
-  -- SelfTurnedFaceUp gets no such arm: there the subject IS the bearer, whom CR
+  -- A Self subject gets no such slot: there the subject IS the bearer, whom CR
   -- 113.7a's source slot already names.
   --
-  -- Nor does the X chosen for the cost ride here: CR 702.37f and CR 702.168e
-  -- give it to "other abilities of THAT PERMANENT", and a watcher is another
-  -- permanent.
-  (TriggerCondition.PermanentTurnedFaceUp _, GameEvent.TurnedFaceUp t) ->
-    Binding.setBecame (TurnedFaceUp.object t) Map.empty
-  -- CR 702.37f / 702.168e: "the value of X in those abilities is equal to the
-  -- value of X chosen as the [morph / disguise] special action was taken", bound
-  -- where the X a spell announced is bound, so the trigger's target count
-  -- (Parun.Engine.Engine.placeBorne) and its effects read it alike. Off the
-  -- event and never off the permanent, which state-based actions may already
-  -- have taken away (Parun.Types.TurnedFaceUp). Nothing when no X was chosen.
-  (TriggerCondition.SelfTurnedFaceUp, GameEvent.TurnedFaceUp t) ->
-    maybe Map.empty (\x -> Binding.fromChoices Map.empty (Just x) Seq.empty) (TurnedFaceUp.announcedX t)
+  -- Nor does the X chosen for the cost ride on a Matching subject: CR 702.37f
+  -- and CR 702.168e give it to "other abilities of THAT PERMANENT", and a
+  -- watcher is another permanent.
+  --
+  -- A Self subject binds CR 702.37f / 702.168e's X instead: "the value of X in
+  -- those abilities is equal to the value of X chosen as the [morph / disguise]
+  -- special action was taken", bound where the X a spell announced is bound, so
+  -- the trigger's target count (Parun.Engine.Engine.placeBorne) and its effects
+  -- read it alike. Off the event and never off the permanent, which state-based
+  -- actions may already have taken away (Parun.Types.TurnedFaceUp). Nothing when
+  -- no X was chosen.
+  (TriggerCondition.TurnedFaceUp subject, GameEvent.TurnedFaceUp t) -> case subject of
+    ActingPermanent.Self -> maybe Map.empty (\x -> Binding.fromChoices Map.empty (Just x) Seq.empty) (TurnedFaceUp.announcedX t)
+    ActingPermanent.Matching _ -> Binding.setBecame (TurnedFaceUp.object t) Map.empty
   -- CR 123.3's "that creature": the object the sticker went on, which the event
   -- carries (Tusk and Whiskers). No zone change, so CR 400.7e's slot is the
   -- printed word, CountersChange's reason.
@@ -721,9 +722,9 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- its Opponent relation is what makes the seat something CR 109.5's "you" is
   -- not.
   --
-  -- The Saga under CR 400.7e's slot rather than one of its own, which is
-  -- PermanentTurnedFaceUp's case above and settled there: one permanent, one id,
-  -- two unrelated objects, and Parun.Engine.Resolve never learns which condition
+  -- The Saga under CR 400.7e's slot rather than one of its own, which is a
+  -- Matching TurnedFaceUp's case above and settled there: one permanent, one
+  -- id, two unrelated objects, and Parun.Engine.Resolve never learns which condition
   -- placed the ability whose slot it is reading, so a second slot would have to
   -- be kept apart by every reader for a distinction no rule draws.
   --
@@ -1129,6 +1130,32 @@ entersBindings gs t zc = case EntersTrigger.permanent t of
   where
     entrant = ZoneChange.object zc
 
+-- CR 708.7 through CR 603.2: which slots a turned-face-up trigger binds on
+-- every match (eventBindingSlots' floor) and which only sometimes.
+--
+-- A Self subject's floor is a DELIBERATE empty rather than an arm nobody wrote:
+-- the event names the permanent, and CR 113.7a's source slot already names it.
+-- eventBindings' fallthrough would answer the same for a condition that had been
+-- forgotten, which is exactly why it is spelled out here: Parun.TriggerSpec pins
+-- the two against each other. Its CR 702.37f / 702.168e X is bound only when the
+-- cost that turned the permanent up had an X in it (Warbreak Trumpeter's morph
+-- {X}{X}{R}), and never down an effect's road up, which chose none.
+--
+-- A Matching subject is the same event read by a bystander, and here the floor
+-- is NOT empty. CR 113.7a's source slot names the WATCHER rather than the
+-- permanent that turned over, so the subject needs a slot of its own, and Pine Walker's "untap that
+-- creature" is the printing that reads it. The zone-change slot, widened; see
+-- eventBindings' arm for why it is that slot and not a new one.
+--
+-- ALWAYS bound and never sometimes, which is what Binding.became's own contract
+-- demands: GameEvent.TurnedFaceUp carries one ObjectId unconditionally, so
+-- unlike CR 400.7e's hidden-destination case (eventBindingSlotsSometimes)
+-- there is no shape of this event that withholds it.
+turnedFaceUpSlots :: ActingPermanent.ActingPermanent -> (Set.Set SlotName.SlotName, Set.Set SlotName.SlotName)
+turnedFaceUpSlots subject = case subject of
+  ActingPermanent.Self -> (Set.empty, Set.singleton Binding.variableX)
+  ActingPermanent.Matching _ -> (Set.singleton Binding.became, Set.empty)
+
 -- CR 603.6c: which slots a leaves-the-battlefield trigger is GUARANTEED to bind
 -- given a match (eventBindingSlots' floor), and which only for some of its
 -- departures (eventBindingSlotsSometimes), by subject and destination.
@@ -1323,7 +1350,7 @@ eventBindingSlots cond = case cond of
   -- Ollenbock's "this creature", and Glory-Bound Initiate's linked "it" (CR
   -- 701.43d), read as Filter.IsSource. Under a Filter, Wildgrowth Walker grows
   -- itself and Synthetic Veiled Witness draws. A card printing "that creature"
-  -- would earn CR 400.7e's slot, as PermanentTurnedFaceUp does.
+  -- would earn CR 400.7e's slot, as a Matching TurnedFaceUp does.
   TriggerCondition.PermanentActs _ -> Set.empty
   -- Empty as a floor: CR 701.62b fires on a manifest dread that put nothing into
   -- the graveyard, which binds nothing. The `became` it binds otherwise is
@@ -1503,40 +1530,24 @@ eventBindingSlots cond = case cond of
     [] -> Set.empty
     slots : rest -> List.foldl' Set.intersection slots rest
   TriggerCondition.CausedBy narrowed -> eventBindingSlots (CausedBy.condition narrowed)
-  -- CR 708.7's event names the permanent, and CR 113.7a's source slot already
-  -- names it; the X it may carry is bound only sometimes
-  -- (eventBindingSlotsSometimes) -- so this is a DELIBERATE empty rather than an
-  -- arm nobody wrote. eventBindings' fallthrough would answer the same for a
-  -- condition that had been forgotten, which is exactly why it is spelled out
-  -- here: Parun.TriggerSpec pins the two against each other.
-  TriggerCondition.SelfTurnedFaceUp -> Set.empty
-  -- The same deliberate empty, and for the same reason one step further on: CR
-  -- 701.27e's event names the permanent that transformed, which CR 113.7a's
-  -- source slot already names, and the face it turned into is a NAME rather than
-  -- an object for a slot to hold.
+  TriggerCondition.TurnedFaceUp subject -> fst (turnedFaceUpSlots subject)
+  -- A deliberate empty, and for a Self TurnedFaceUp's reason one step further
+  -- on: CR 701.27e's event names the permanent that transformed, which CR
+  -- 113.7a's source slot already names, and the face it turned into is a NAME
+  -- rather than an object for a slot to hold.
   TriggerCondition.SelfTransformedInto _ -> Set.empty
-  -- A deliberate empty too, and the arm below is where the difference would
-  -- show if a card asked for one: Cult of the Waxing Moon's payload names the
-  -- permanent that turned over nowhere, so there is no subject to claim a slot
-  -- for. Norn's Inquisitor's "put a +1/+1 counter on it" is what would take CR
-  -- 400.7e's slot, exactly as Pine Walker does below.
+  -- A deliberate empty too, and a Matching TurnedFaceUp (turnedFaceUpSlots) is
+  -- where the difference would show if a card asked for one: Cult of the Waxing
+  -- Moon's payload names the permanent that turned over nowhere, so there is no
+  -- subject to claim a slot for. Norn's Inquisitor's "put a +1/+1 counter on
+  -- it" is what would take CR 400.7e's slot, exactly as Pine Walker does there.
   TriggerCondition.PermanentTransforms _ -> Set.empty
-  -- The SAME event read by a bystander, and here the answer is NOT empty. CR
-  -- 113.7a's source slot names the WATCHER rather than the permanent that turned
-  -- over, so the subject needs a slot of its own, and Pine Walker's "untap that
-  -- creature" is the printing that reads it. The zone-change slot, widened; see
-  -- eventBindings' arm for why it is that slot and not a new one.
-  --
-  -- ALWAYS bound and never sometimes, which is what Binding.became's own contract
-  -- demands: GameEvent.TurnedFaceUp carries one ObjectId unconditionally, so
-  -- unlike CR 400.7e's hidden-destination case (eventBindingSlotsSometimes)
-  -- there is no shape of this event that withholds it.
-  TriggerCondition.PermanentTurnedFaceUp _ -> Set.singleton Binding.became
   TriggerCondition.FaceDownPermanentLeavesRevealed -> Set.empty
   -- A deliberate empty: Valeron Wardens draws a card and names no "it", so there
-  -- is no subject to claim a slot for. The arm above is the worked example of what
-  -- a card reading the designated permanent would take -- CR 400.7e's slot, since
-  -- the event names one object and CR 113.7a's source names the watcher.
+  -- is no subject to claim a slot for. A Matching TurnedFaceUp
+  -- (turnedFaceUpSlots) is the worked example of what a card reading the
+  -- designated permanent would take -- CR 400.7e's slot, since the event names
+  -- one object and CR 113.7a's source names the watcher.
   TriggerCondition.PermanentBecomesDesignated {} -> Set.empty
   -- NOT empty, unlike PermanentActs above, and the pair CR 702.134c names is why:
   -- neither the mentor nor the mentored creature is the bearer, so Aegis of the
@@ -1693,8 +1704,8 @@ eventBindingSlots cond = case cond of
 -- table may not carry it -- see that arm. CR 603.1b's AnyOf is where what parts
 -- the ceiling from the floor is the BRANCHES disagreeing rather than any one
 -- event's shape. LeavesZone with no destination has a Binding.handArrival
--- that turns on the event's `to`. SelfTurnedFaceUp's X only a cost carrying one
--- binds, and PlayerManifestsDread's cards CR 701.62b fires without. The
+-- that turns on the event's `to`. A Self TurnedFaceUp's X only a cost carrying
+-- one binds, and PlayerManifestsDread's cards CR 701.62b fires without. The
 -- conditional slots that turn on GAME STATE instead -- an Attached Leaves with a
 -- destination on CR 400.7f's arrival, a bystander Leaves' owner on CR 608.2h's
 -- record -- the floor claims outright, for the reasons leavesSlots gives.
@@ -1753,10 +1764,7 @@ eventBindingSlotsSometimes cond = case cond of
       (Set.unions (fmap (\c -> Set.union (eventBindingSlots c) (eventBindingSlotsSometimes c)) conditions))
       (eventBindingSlots cond)
   TriggerCondition.CausedBy narrowed -> eventBindingSlotsSometimes (CausedBy.condition narrowed)
-  -- CR 702.37f / 702.168e's X, bound only when the cost that turned the
-  -- permanent up had an X in it (Warbreak Trumpeter's morph {X}{X}{R}), and never
-  -- down an effect's road up, which chose none.
-  TriggerCondition.SelfTurnedFaceUp -> Set.singleton Binding.variableX
+  TriggerCondition.TurnedFaceUp subject -> snd (turnedFaceUpSlots subject)
   -- CR 701.62a's cards put into the graveyard, which an empty or one-card
   -- library, or a replacement sending the card elsewhere, leaves without any.
   -- data/cards/paranormal-analyst.json is the reader, and finding nothing there

@@ -102,10 +102,9 @@ codec =
           Arm.payload "RoomFullyUnlocked" PlayerRelation.codec TriggerCondition.RoomFullyUnlocked (\x -> case x of TriggerCondition.RoomFullyUnlocked y -> Just y; _ -> Nothing),
           Arm.payload "AnyOf" (Common.list codec) TriggerCondition.AnyOf (\x -> case x of TriggerCondition.AnyOf y -> Just y; _ -> Nothing),
           Arm.payload "CausedBy" (CausedBy.codec codec) TriggerCondition.CausedBy (\x -> case x of TriggerCondition.CausedBy y -> Just y; _ -> Nothing),
-          Arm.nullary "SelfTurnedFaceUp" TriggerCondition.SelfTurnedFaceUp,
+          Arm.payload "TurnedFaceUp" ActingPermanent.codec TriggerCondition.TurnedFaceUp (\x -> case x of TriggerCondition.TurnedFaceUp y -> Just y; _ -> Nothing),
           Arm.payload "SelfTransformedInto" CardName.codec TriggerCondition.SelfTransformedInto (\x -> case x of TriggerCondition.SelfTransformedInto y -> Just y; _ -> Nothing),
           Arm.payload "PermanentTransforms" filterCodec TriggerCondition.PermanentTransforms (\x -> case x of TriggerCondition.PermanentTransforms y -> Just y; _ -> Nothing),
-          Arm.payload "PermanentTurnedFaceUp" filterCodec TriggerCondition.PermanentTurnedFaceUp (\x -> case x of TriggerCondition.PermanentTurnedFaceUp y -> Just y; _ -> Nothing),
           Arm.payload "PermanentActs" (PermanentActed.codec ActingPermanent.codec) TriggerCondition.PermanentActs (\x -> case x of TriggerCondition.PermanentActs y -> Just y; _ -> Nothing),
           Arm.nullary "FaceDownPermanentLeavesRevealed" TriggerCondition.FaceDownPermanentLeavesRevealed,
           Arm.payload "PermanentBecomesDesignated" PermanentBecomesDesignated.codec TriggerCondition.PermanentBecomesDesignated (\x -> case x of TriggerCondition.PermanentBecomesDesignated y -> Just y; _ -> Nothing),
@@ -187,10 +186,9 @@ tagOf x = case x of
   TriggerCondition.RoomFullyUnlocked {} -> "RoomFullyUnlocked"
   TriggerCondition.AnyOf {} -> "AnyOf"
   TriggerCondition.CausedBy {} -> "CausedBy"
-  TriggerCondition.SelfTurnedFaceUp {} -> "SelfTurnedFaceUp"
+  TriggerCondition.TurnedFaceUp {} -> "TurnedFaceUp"
   TriggerCondition.SelfTransformedInto {} -> "SelfTransformedInto"
   TriggerCondition.PermanentTransforms {} -> "PermanentTransforms"
-  TriggerCondition.PermanentTurnedFaceUp {} -> "PermanentTurnedFaceUp"
   TriggerCondition.PermanentActs {} -> "PermanentActs"
   TriggerCondition.FaceDownPermanentLeavesRevealed {} -> "FaceDownPermanentLeavesRevealed"
   TriggerCondition.PermanentBecomesDesignated {} -> "PermanentBecomesDesignated"

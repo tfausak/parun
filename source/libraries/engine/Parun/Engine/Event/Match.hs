@@ -1555,7 +1555,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   TriggerCondition.SelfHalfUnlocked half -> case event of
     GameEvent.HalfUnlocked (HalfUnlocked.MkHalfUnlocked oid _ name _) -> oid == bearer && name == half
     _ -> False
-  -- CR 708.7 through CR 603.2: the bearer is the permanent that turned over.
+  -- CR 708.7 through CR 603.2: a Self subject is the permanent that turned over.
   -- A Self Enters' shape -- a bare comparison of ids, with nothing about the
   -- permanent's characteristics read, so no CR 608.2h fallback is reachable.
   --
@@ -1568,14 +1568,47 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- Event.performTurnFaceUp is the sole writer of this event -- CR 708.3's
   -- face-down ENTRY writes a Moved event and never this one, which is what makes
   -- CR 708.8's last sentence fall out rather than needing a clause.
-  TriggerCondition.SelfTurnedFaceUp -> case event of
-    GameEvent.TurnedFaceUp t -> TurnedFaceUp.object t == bearer
+  --
+  -- A Matching subject is the other written form, read by a bystander:
+  -- "whenever a permanent is turned face up". Matching Enters' shape against
+  -- Self Enters', and for its reason -- the bearer frames the match rather than
+  -- being it. The bearer is the Filter.Context's source (so `Not IsSource` would
+  -- be an "another"), and its controller is the perspective CR 109.5 gives "you"
+  -- in Deathmist Raptor's "a permanent YOU CONTROL is turned face up".
+  --
+  -- NO comparison against the bearer at all, which is the whole difference from
+  -- the Self subject: Aven Farseer bears no morph ability and so can never be the
+  -- permanent that turned over, and a bearer check here would make its ability
+  -- dead text. Parun.FaceDownSpec's "a permanent turning face up puts Aven
+  -- Farseer's counter on the FARSEER" is what proves the scope, asserting the
+  -- counter's landing place by object id on a board where the watcher and the
+  -- subject are two permanents.
+  --
+  -- Read LIVE off the game as it stands, like a Matching Enters and unlike
+  -- Leaves: CR 708.8 leaves the permanent on the battlefield with its
+  -- normal copiable values restored, so there is nothing for CR 603.10a's
+  -- look-back to recover and the live read is what CR 603.10's first sentence
+  -- asks for. It is also the only read that can answer a narrowed form correctly
+  -- -- CR 708.2 gives a face-down permanent only the characteristics its listing
+  -- names and never the card's, so a Filter applied to the pre-turning object
+  -- would decline every "a Dragon is turned face up" there is.
+  --
+  -- viewWithLastKnown rather than viewOfObject: a permanent turned face up and
+  -- gone again before the CR 117.5 boundary is still read as it was on the
+  -- battlefield (CR 608.2h) instead of vanishing from the match. Nothing is a permanent that is gone AND filed no last known
+  -- information, about which no Filter can honestly answer.
+  TriggerCondition.TurnedFaceUp subject -> case event of
+    GameEvent.TurnedFaceUp t -> case subject of
+      ActingPermanent.Self -> TurnedFaceUp.object t == bearer
+      ActingPermanent.Matching f -> case Projection.viewWithLastKnown (TurnedFaceUp.object t) gs (TurnedFaceUp.object t) of
+        Nothing -> False
+        Just view -> Filter.matches bearerContext view f
     _ -> False
   -- CR 701.27e through CR 603.2: the bearer is the permanent that transformed,
-  -- and the names the event carries are what it turned INTO. SelfTurnedFaceUp
-  -- above is the neighbouring shape, plus the name -- and CR 701.27b is why
-  -- they are two conditions rather than one, turning over and turning face up
-  -- being different game actions.
+  -- and the names the event carries are what it turned INTO. TurnedFaceUp's
+  -- Self subject above is the neighbouring shape, plus the name -- and CR
+  -- 701.27b is why they are two conditions rather than one, turning over and
+  -- turning face up being different game actions.
   --
   -- Both halves are read off the EVENT, neither off the board. The board at the
   -- CR 117.5 scan is not the board CR 701.27e asks about: a permanent that
@@ -1591,7 +1624,7 @@ armMatches bindings board gs bearer you cond event = case cond of
     _ -> False
   -- CR 701.27e's OTHER written form, read by a bystander: "whenever a permanent
   -- you control transforms into a non-Human creature" (Cult of the Waxing Moon).
-  -- PermanentTurnedFaceUp's shape against SelfTurnedFaceUp's, one rule along --
+  -- TurnedFaceUp's Matching shape against its Self one, one rule along --
   -- the bearer frames the match rather than being it, contributing CR 109.5's
   -- perspective and the Filter.Context's source and nothing else.
   --
@@ -1622,7 +1655,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- event" needs for a HasAttached, and viewWithLastKnownAnywhere so an attacher
   -- that has since left is still read (CR 608.2h).
   --
-  -- viewWithLastKnown rather than viewOfObject, PermanentTurnedFaceUp's reason:
+  -- viewWithLastKnown rather than viewOfObject, a Matching TurnedFaceUp's reason:
   -- a permanent that turned over and left before the CR 117.5 boundary is still
   -- read as it was on the battlefield (CR 608.2h).
   TriggerCondition.PermanentTransforms f -> case event of
@@ -1641,41 +1674,6 @@ armMatches bindings board gs bearer you cond event = case cond of
                     bearerContext
                     sampled {Filter.attachedViews = Maybe.mapMaybe (Projection.viewWithLastKnownAnywhere gs) (Set.toAscList (Transformed.attachments transformed))}
                     f
-    _ -> False
-  -- CR 708.7 through CR 603.2, the OTHER written form, read by a bystander:
-  -- "whenever a permanent is
-  -- turned face up". Matching Enters' shape against Self Enters', and for its
-  -- reason -- the bearer frames the match rather than being it. The bearer is the
-  -- Filter.Context's source (so `Not IsSource` would be an "another"), and its
-  -- controller is the perspective CR 109.5 gives "you" in Deathmist Raptor's "a
-  -- permanent YOU CONTROL is turned face up".
-  --
-  -- NO comparison against the bearer at all, which is the whole difference from
-  -- the arm above: Aven Farseer bears no morph ability and so can never be the
-  -- permanent that turned over, and a bearer check here would make its ability
-  -- dead text. Parun.FaceDownSpec's "a permanent turning face up puts Aven
-  -- Farseer's counter on the FARSEER" is what proves the scope, asserting the
-  -- counter's landing place by object id on a board where the watcher and the
-  -- subject are two permanents.
-  --
-  -- Read LIVE off the game as it stands, like a Matching Enters and unlike
-  -- Leaves: CR 708.8 leaves the permanent on the battlefield with its
-  -- normal copiable values restored, so there is nothing for CR 603.10a's
-  -- look-back to recover and the live read is what CR 603.10's first sentence
-  -- asks for. It is also the only read that can answer a narrowed form correctly
-  -- -- CR 708.2 gives a face-down permanent only the characteristics its listing
-  -- names and never the card's, so a Filter applied to the pre-turning object
-  -- would decline every "a Dragon is turned face up" there is.
-  --
-  -- viewWithLastKnown rather than viewOfObject: a
-  -- permanent turned face up and gone again before the CR 117.5 boundary is still
-  -- read as it was on the battlefield (CR 608.2h) instead of vanishing from the
-  -- match. Nothing is a permanent that is gone AND filed no last known
-  -- information, about which no Filter can honestly answer.
-  TriggerCondition.PermanentTurnedFaceUp f -> case event of
-    GameEvent.TurnedFaceUp t -> case Projection.viewWithLastKnown (TurnedFaceUp.object t) gs (TurnedFaceUp.object t) of
-      Nothing -> False
-      Just view -> Filter.matches bearerContext view f
     _ -> False
   -- CR 603.2: a permanent performed the watched action. The EVENT and nothing
   -- else -- each action's own rule places the moment it is recorded
@@ -1717,10 +1715,10 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- destination: an Equipment attached to nothing, or an Aura enchanting a player,
   -- has no host id to compare and answers False.
   --
-  -- A LIVE read, PermanentTurnedFaceUp's posture: nothing here is a zone change, so
-  -- CR 603.10a's look-back does not reach this condition, and the attachment as it
-  -- stands when the trigger is gathered is CR 603.2's own reading of "equipped
-  -- creature".
+  -- A LIVE read, a Matching TurnedFaceUp's posture: nothing here is a zone
+  -- change, so CR 603.10a's look-back does not reach this condition, and the
+  -- attachment as it stands when the trigger is gathered is CR 603.2's own
+  -- reading of "equipped creature".
   TriggerCondition.AttachedCreatureMentors -> case event of
     GameEvent.Mentored (Mentored.MkMentored mentor _) ->
       (Recipient.objectOf =<< Object.attachedTo =<< Game.lookupObject bearer gs) == Just mentor
@@ -1781,7 +1779,7 @@ armMatches bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed ev -> Set.member bearer (Crewing.crewedBy ev)
     _ -> False
   -- CR 702.112b: a permanent the Filter admits was given the renowned designation.
-  -- PermanentTurnedFaceUp's arm above, line for line, and for its reasons: the
+  -- A Matching TurnedFaceUp's arm above, line for line, and for its reasons: the
   -- permanent is read as it stands (viewWithLastKnown for CR 608.2h, a designation
   -- being no zone change), and the bearer contributes only CR 109.5's perspective
   -- and the Filter.Context's source -- which is what makes Filter.IsSource the
@@ -2064,7 +2062,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- CR 701.3a read from the HOST: something became attached to the BEARER, and
   -- the Filter narrows WHAT. Two questions, and the split is the condition's
   -- shape -- a bare id comparison for the host (a Self Enters) and a Filter
-  -- read for the attachment (PermanentTurnedFaceUp's arm), which is why the
+  -- read for the attachment (a Matching TurnedFaceUp's arm), which is why the
   -- constructor carries one payload and matches on two objects.
   --
   -- Recipient.objectOf and not equality on the whole Recipient: CR 701.3a's
@@ -2074,7 +2072,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- named the same way twice. A ToPlayer host has no object and declines here,
   -- which is right: the bearer of this condition is a permanent.
   --
-  -- viewWithLastKnown for PermanentTurnedFaceUp's reason -- an attachment that
+  -- viewWithLastKnown for a Matching TurnedFaceUp's reason -- an attachment that
   -- is gone by the CR 117.5 boundary is still read as it was (CR 608.2h)
   -- instead of vanishing from the match.
   TriggerCondition.SelfBecomesAttachedBy f -> case event of

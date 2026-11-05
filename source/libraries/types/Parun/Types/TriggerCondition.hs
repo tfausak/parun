@@ -217,24 +217,20 @@ data TriggerCondition
     -- effect caused (Sacred Ground, Spiritual Focus). Read off Moved and
     -- Discarded, the events that record a cause.
     CausedBy (CausedBy.CausedBy TriggerCondition)
-  | -- | CR 708.7 through CR 603.2: "when this creature is turned face up" (Skirk
-    -- Marauder). Self-scoped.
-    SelfTurnedFaceUp
+  | -- | CR 708.7 through CR 603.2: a face-down permanent is turned face up, the
+    -- bearer itself (Skirk Marauder) or one the Filter admits (Aven Farseer).
+    TurnedFaceUp ActingPermanent.ActingPermanent
   | -- | CR 701.27e: "when this creature transforms into [face]", matched against
     -- the names the event carries. Self-scoped plus the name, which is what
     -- tells the turn to a face from the turn away from it.
     --
-    -- PermanentTransforms below is the same event read by a bystander -- the
-    -- pair SelfTurnedFaceUp and PermanentTurnedFaceUp make one rule over.
+    -- PermanentTransforms below is the same event read by a bystander, as
+    -- TurnedFaceUp's Matching subject is.
     SelfTransformedInto CardName.CardName
   | -- | CR 701.27e read by a bystander: a permanent the Filter admits turned over
     -- (Cult of the Waxing Moon), matched against what the event SAMPLED rather
     -- than against the board the CR 117.5 scan reads.
     PermanentTransforms (Filter.Filter Keyword.Keyword)
-  | -- | CR 708.7 through CR 603.2: the other written form, read by a bystander
-    -- (Aven Farseer), filtered and read live after CR 708.8 restores the copiable
-    -- values.
-    PermanentTurnedFaceUp (Filter.Filter Keyword.Keyword)
   | -- | CR 708.9: "whenever a face-down permanent is revealed as it leaves the
     -- battlefield" (Synthetic Unmasking Witness).
     FaceDownPermanentLeavesRevealed

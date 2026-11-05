@@ -2177,13 +2177,12 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.RoomFullyUnlocked _ -> condition
   TriggerCondition.AnyOf conditions -> TriggerCondition.AnyOf (fmap (rewriteTriggerCondition pairs) conditions)
   TriggerCondition.CausedBy narrowed -> TriggerCondition.CausedBy narrowed {CausedBy.condition = rewriteTriggerCondition pairs (CausedBy.condition narrowed)}
-  TriggerCondition.SelfTurnedFaceUp -> condition
+  TriggerCondition.TurnedFaceUp permanent -> TriggerCondition.TurnedFaceUp (acting permanent)
   -- CR 701.27e's payload is a face's NAME, which CR 612.2's second sentence keeps a
   -- swap off, so nothing in this condition is rewritten. SelfHalfUnlocked's answer
   -- for its own door.
   TriggerCondition.SelfTransformedInto _ -> condition
   TriggerCondition.PermanentTransforms f -> TriggerCondition.PermanentTransforms (Filter.rewrite pairs f)
-  TriggerCondition.PermanentTurnedFaceUp f -> TriggerCondition.PermanentTurnedFaceUp (Filter.rewrite pairs f)
   TriggerCondition.FaceDownPermanentLeavesRevealed -> condition
   TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated d f) -> TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated d (Filter.rewrite pairs f))
   TriggerCondition.PermanentActs acts ->
