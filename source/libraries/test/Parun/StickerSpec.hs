@@ -604,7 +604,10 @@ spec s registry = Spec.describe s "Sticker" $ do
     Spec.assertEqWith s "on alice's card, it is used up" (fmap (`List.elem` Sticker.available S.alice art stickered) placed) [False]
     Spec.assertEqWith s "the Piker keeps it" (stickerKindsOn pikerId changed) [StickerKind.Art]
     Spec.assertEqWith s "CR 123.3 on bob's card, alice may choose it again" (fmap (`List.elem` Sticker.available S.alice art changed) placed) [True]
-  Spec.it s "CR 123.5/729.2c a commander keeps its stickers into a subgame and back, but not through a restart" $ do
+  -- Tug of War's rulings (2022-10-07) over CR 123.5: its owner "removes all
+  -- stickers from it" going in, and "No counters, stickers, or other effects
+  -- from the subgame move back into the main game".
+  Spec.it s "CR 729.2c/729.5c a commander loses its stickers into a subgame and brings none back, nor through a restart" $ do
     sheets <- committedSheets
     mountain <- S.printingOf s registry "Mountain"
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
@@ -616,16 +619,44 @@ spec s registry = Spec.describe s "Sticker" $ do
             stickered = stickerOn commander parent
             placed = foldMap (Foldable.toList . fmap StickerPlacement.sticker . Object.stickers) (Game.lookupObject commander stickered)
             sub = S.runPure S.identityAnswer (Setup.subgameStateFrom S.alice stickered) (Setup.startGameFromCards S.performer Set.empty)
-            secondInSub = stickerOn commander sub
-            back = Setup.funnelBack secondInSub stickered
+            stickeredInSub = stickerOn commander sub
+            back = Setup.funnelBack stickeredInSub stickered
             restarted = S.runPure S.identityAnswer stickered (Setup.restartGame S.performer Set.empty S.alice)
         Spec.assertEqWith s "the commander took a sticker in the main game" (stickerKindsOn commander stickered) [StickerKind.Art]
         Spec.assertEqWith s "CR 729.2c it is in the subgame's command zone" (Set.toList (GameState.command sub)) [commander]
-        Spec.assertEqWith s "CR 123.5 with the sticker" (stickerKindsOn commander sub) [StickerKind.Art]
-        Spec.assertEqWith s "CR 123.3 which is not free to use again there" (fmap (`List.elem` Sticker.available S.alice art sub) placed) [False]
-        Spec.assertEqWith s "CR 123.5/729.5c back in the main game with the subgame's sticker too" (stickerKindsOn commander back) [StickerKind.Art, StickerKind.Art]
+        Spec.assertEqWith s "with no sticker" (stickerKindsOn commander sub) []
+        Spec.assertEqWith s "CR 123.3 which is free to use again there" (fmap (`List.elem` Sticker.available S.alice art sub) placed) [True]
+        Spec.assertEqWith s "it took a sticker in the subgame" (stickerKindsOn commander stickeredInSub) [StickerKind.Art]
+        Spec.assertEqWith s "CR 729.5c it is back in the main game's command zone" (Set.toList (GameState.command back)) [commander]
+        Spec.assertEqWith s "with neither game's sticker" (stickerKindsOn commander back) []
         Spec.assertEqWith s "a restart puts it back in the command zone" (Set.toList (GameState.command restarted)) [commander]
         Spec.assertEqWith s "Karn Liberated's ruling: with no sticker" (stickerKindsOn commander restarted) []
+      other -> Spec.assertEqWith s "one commander in the command zone" other []
+  -- The same rulings at gameplay level: alice's 0/0 Shimatsu carries Night
+  -- Brushwagg Ringmaster's 2/3 sticker (CR 123.8) in the command zone, and she
+  -- casts Shahrazad. bob's library is empty, so he loses the subgame at its first
+  -- upkeep (CR 729.3).
+  Spec.it s "CR 729.5c gameplay: after a Shahrazad subgame, a commander has its printed power and toughness, its sticker free" $ do
+    sheets <- committedSheets
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    shahrazad <- S.printingOf s registry "Shahrazad"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let deck = (withSheetsDeck (take 3 sheets) (Deck.fromCards (Map.singleton mountain 8))) {Deck.commander = Set.singleton shimatsu}
+        dealt = withSheets (take 3 sheets) (S.runPure S.identityAnswer (S.landsInPlay plains 2) (Setup.createDeck S.alice deck))
+        (shahrazadId, board) = S.addHandCard shahrazad S.alice dealt
+        pt :: ObjectId.ObjectId -> GameState.GameState -> (Maybe Integer, Maybe Integer)
+        pt oid gs = (Projection.powerOf oid gs, Projection.toughnessOf oid gs)
+        ptKind = Set.singleton StickerKind.PowerToughness
+    case Set.toList (GameState.command board) of
+      [commander] -> do
+        let stickered = (Sticker.put S.alice commander nightTwoThree Nothing board) {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
+            after = S.runPure S.identityAnswer stickered (S.cast S.alice shahrazadId >> Stack.resolveTopWith Engine.playSubgame)
+        Spec.assertEqWith s "CR 123.8 the stickered commander is a 2/3 in the command zone" (pt commander stickered) (Just 2, Just 3)
+        Spec.assertEqWith s "Shahrazad resolved: bob lost the subgame and half his life" (GameState.stack after, S.lifeOf S.bob after) ([], Just 10)
+        Spec.assertEqWith s "CR 729.5c the commander is back in the command zone" (Set.toList (GameState.command after)) [commander]
+        Spec.assertEqWith s "a 0/0, with no sticker" (pt commander after, stickerKindsOn commander after) ((Just 0, Just 0), [])
+        Spec.assertEqWith s "CR 123.3 and its sticker is free to use" (List.elem nightTwoThree (Sticker.available S.alice ptKind after)) True
       other -> Spec.assertEqWith s "one commander in the command zone" other []
   -- Sheet 0 is drawn out by sheetDraws' answers and sheet 2 drawn back in, so one
   -- board shows both halves of the decision.
