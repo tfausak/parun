@@ -93,39 +93,37 @@
                           },
                           "targets": {
                             "type": "ForEach",
-                            "value": [
-                              {
-                                "type": "EachMatching",
-                                "value": {
-                                  "type": "And",
-                                  "value": [
-                                    {
-                                      "type": "HasCardType",
-                                      "value": {
-                                        "type": "Creature"
-                                      }
-                                    },
-                                    {
-                                      "type": "HeldBy",
-                                      "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
-                                        "relation": {
-                                          "type": "You"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "type": "Not",
-                                      "value": {
-                                        "type": "IsSource"
+                            "value": {
+                              "type": "EachMatching",
+                              "value": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Creature"
+                                    }
+                                  },
+                                  {
+                                    "type": "HeldBy",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "relation": {
+                                        "type": "You"
                                       }
                                     }
-                                  ]
-                                }
+                                  },
+                                  {
+                                    "type": "Not",
+                                    "value": {
+                                      "type": "IsSource"
+                                    }
+                                  }
+                                ]
                               }
-                            ]
+                            }
                           }
                         }
                       }
