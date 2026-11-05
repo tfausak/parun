@@ -451,6 +451,26 @@ spec s registry = Spec.describe s "Client" $ do
     let gs = List.foldl' (\g p -> snd (S.addObjectIn Zone.Hand p S.alice g)) (Setup.emptyGame S.bothPlayers) printings
     Spec.assertEqWith s "ordered" (Render.hand (PlayerView.viewFor S.alice gs)) [Text.pack "Your hand: Forest, Mountain, Blaze, Raging Goblin 1/1, Volcanic Hammer, Hill Giant 3/3"]
 
+  Spec.it s "CR 400.2 the board shows the cards of another hand or a library the seat may see" $ do
+    printings <- mapM (S.printingOf s registry) ["Telepathy", "Future Sight", "Hill Giant", "Forest", "Craw Wurm", "Island"]
+    case printings of
+      [telepathy, futureSight, giant, forest, wurm, island] -> do
+        let gs =
+              List.foldl'
+                (\g (zone, p, pid) -> snd (S.addObjectIn zone p pid g))
+                (Setup.emptyGame S.bothPlayers)
+                [ (Zone.Battlefield, telepathy, S.alice),
+                  (Zone.Battlefield, futureSight, S.bob),
+                  (Zone.Hand, giant, S.bob),
+                  (Zone.Hand, forest, S.bob),
+                  (Zone.Library, wurm, S.bob),
+                  (Zone.Library, island, S.bob)
+                ]
+            seen pid = filter (Text.isPrefixOf (Text.pack "  Seen")) (Render.board (PlayerView.viewFor pid gs))
+        Spec.assertEqWith s "Telepathy and Future Sight, to alice" (seen S.alice) [Text.pack "  Seen in hand: Forest, Hill Giant 3/3", Text.pack "  Seen in library, top first: Craw Wurm 6/4"]
+        Spec.assertEqWith s "bob's own hand stays under Your hand" (seen S.bob) [Text.pack "  Seen in library, top first: Craw Wurm 6/4"]
+      _ -> Spec.assertFailure s "six printings"
+
   Spec.it s "card shows a visible card as it is now, with its printed Oracle text" $ do
     goblin <- S.printingOf s registry "Raging Goblin"
     giant <- S.printingOf s registry "Hill Giant"
