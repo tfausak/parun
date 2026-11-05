@@ -203,6 +203,7 @@ declaring replies gs =
   let send line = State.state $ \(out, rest) -> case rest of
         reply : more -> (Common.render (Codec.Reply.toValue reply), (out <> [Text.unpack line], more))
         [] -> error ("no reply left for " <> Text.unpack line)
+      fallback :: Answerer.Answerer (State.State ([String], [R.Reply]))
       fallback = Answerer.MkAnswerer (pure . Replay.defaultAnswer . Asked.prompt)
       ((_, after), (sent, _)) = State.runState (Engine.runGameAsked (Answerer.unwrap (Protocol.over send fallback)) gs (Combat.declareAttackers S.manaPerformer S.alice >> Combat.declareBlockers S.manaPerformer)) ([], replies)
    in (sent, after)
