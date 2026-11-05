@@ -1579,18 +1579,18 @@ turnOrderSpec s registry = Spec.describe s "TurnOrder (CR 800.4)" $ do
     Spec.assertBool s (not (Set.member S.alice (GameState.drewFromEmpty after))) "a departed active player never attempts the draw"
     Spec.assertBool s (Set.member S.alice (GameState.drewFromEmpty control)) "but a playing one does -- the guard is what did it"
 
-  Spec.it s "CR 800.4j/703.4c a departed active player's untap step does nothing" $ do
-    -- landsPlayed is the observable part of the untap step that needs no
-    -- permanents: it is cleared for the active player each untap.
+  Spec.it s "CR 800.4j/305.2 a departed active player's turn opens with nothing reset" $ do
+    -- landsPlayed is the observable part of the turn's opening that needs no
+    -- permanents: it is cleared for the active player as each turn begins.
     let base =
           S.threePlayerGame
             { GameState.phase = Phase.Beginning BeginningStep.Untap,
               GameState.landsPlayed = Map.singleton S.alice 1
             }
         gone = S.departs Departure.Type.Conceded S.alice base
-        after = S.runPure S.identityAnswer gone (Engine.runTurnBasedActions (Phase.Beginning BeginningStep.Untap))
-        control = S.runPure S.identityAnswer base (Engine.runTurnBasedActions (Phase.Beginning BeginningStep.Untap))
-    Spec.assertEqWith s "no untap-step action happened" (GameState.landsPlayed after) (Map.singleton S.alice 1)
+        after = S.runPure S.identityAnswer gone Engine.openTurn
+        control = S.runPure S.identityAnswer base Engine.openTurn
+    Spec.assertEqWith s "nothing was reset" (GameState.landsPlayed after) (Map.singleton S.alice 1)
     Spec.assertEqWith s "a playing active player's land play IS cleared" (GameState.landsPlayed control) Map.empty
 
   Spec.it s "CR 800.4j/703.4i the declare-attackers guard is load-bearing at two seats, where the game loop cannot reach this state" $ do
