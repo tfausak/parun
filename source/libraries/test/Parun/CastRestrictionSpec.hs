@@ -1022,6 +1022,7 @@ offeredPlays pid gs =
         A.RollPlanarDie -> False
         A.Ignore _ _ -> False
         A.EndEffect {} -> False
+        A.MakeLaterPayment {} -> False
         A.PayLifeForMana _ _ -> False
         A.ActivateManaAbility _ -> False
    in filter isPlay (Action.legalActions pid gs)
@@ -2047,6 +2048,7 @@ manaActivationOffer action = case action of
   A.PutCompanionIntoHand -> False
   A.RollPlanarDie -> False
   A.EndEffect {} -> False
+  A.MakeLaterPayment {} -> False
   A.PayLifeForMana _ _ -> False
 
 -- Take ONE named action and pass at every other prompt. Pinned to the action

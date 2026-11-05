@@ -12,6 +12,7 @@ import qualified Parun.Types.ActiveAttackRequirement as ActiveAttackRequirement
 import qualified Parun.Types.ActiveBlockRequirement as ActiveBlockRequirement
 import qualified Parun.Types.ActiveCopy as ActiveCopy
 import qualified Parun.Types.ActiveEvasion as ActiveEvasion
+import qualified Parun.Types.ActiveLaterPayment as ActiveLaterPayment
 import qualified Parun.Types.ActiveObjectProhibition as ActiveObjectProhibition
 import qualified Parun.Types.ActivePlayerEffect as ActivePlayerEffect
 import qualified Parun.Types.ActiveReplacement as ActiveReplacement
@@ -222,6 +223,9 @@ data GameState = MkGameState
     -- with an expiry and a use count; static replacement abilities are
     -- re-derived live instead.
     replacements :: [ActiveReplacement.ActiveReplacement],
+    -- | CR 116.2c: what a resolution left a player to pay for later, each row
+    -- offered until its expiry.
+    laterPayments :: [ActiveLaterPayment.ActiveLaterPayment],
     -- | CR 615.5: prevention applications whose additional effect has not run
     -- yet, drained by Resolve.runPreventionRiders before the next state-based
     -- action check (CR 704.3). Empty at every priority window.

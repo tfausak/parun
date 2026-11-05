@@ -2052,8 +2052,8 @@ playerSacrifices settle resolving source controller legal (PlayerSacrifices.MkPl
                 let wanted = min count (Natural.length candidates)
                     valid = filter (\oid -> Set.member oid picked) candidates
                     filler = filter (\oid -> List.notElem oid valid) candidates
-                -- CR 603.12 / 609.3: too few to sacrifice is an instruction
-                -- that fell short, which Lich's "if you can't" reads.
+                -- CR 603.12: too few to sacrifice is an instruction not done,
+                -- the Draw arm's shortfall (Common.instructionDone).
                 Monad.when (wanted < count) Common.fallShort
                 pure (victim, List.genericTake wanted (valid <> filler))
           _ -> pure (victim, [])

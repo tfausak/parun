@@ -136,6 +136,8 @@ library codec
     Parun.Codec.ActiveCopySpec
     Parun.Codec.ActiveEvasion
     Parun.Codec.ActiveEvasionSpec
+    Parun.Codec.ActiveLaterPayment
+    Parun.Codec.ActiveLaterPaymentSpec
     Parun.Codec.ActiveObjectProhibition
     Parun.Codec.ActiveObjectProhibitionSpec
     Parun.Codec.ActivePlayerEffect
@@ -913,6 +915,8 @@ library codec
     Parun.Codec.LandPlayedSpec
     Parun.Codec.LastKnown
     Parun.Codec.LastKnownSpec
+    Parun.Codec.LaterPayment
+    Parun.Codec.LaterPaymentSpec
     Parun.Codec.Layout
     Parun.Codec.LayoutSpec
     Parun.Codec.LeavesTrigger
@@ -1754,6 +1758,7 @@ library engine
     Parun.Engine.Interchangeable
     Parun.Engine.Interchangeable.Mentions
     Parun.Engine.Keyword
+    Parun.Engine.LaterPayment
     Parun.Engine.Learn
     Parun.Engine.Loyalty
     Parun.Engine.Mana
@@ -2416,6 +2421,7 @@ library types
     Parun.Types.ActiveBlockRequirement
     Parun.Types.ActiveCopy
     Parun.Types.ActiveEvasion
+    Parun.Types.ActiveLaterPayment
     Parun.Types.ActiveObjectProhibition
     Parun.Types.ActivePlayerEffect
     Parun.Types.ActiveReplacement
@@ -2858,6 +2864,7 @@ library types
     Parun.Types.LandOrNonland
     Parun.Types.LandPlayed
     Parun.Types.LastKnown
+    Parun.Types.LaterPayment
     Parun.Types.Layer
     Parun.Types.Layout
     Parun.Types.LearnMode

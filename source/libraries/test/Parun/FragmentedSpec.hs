@@ -13,7 +13,8 @@
 -- Paradise, one through a keyword-family removal is Shadowspear's, and one
 -- through an all-abilities removal is Synthetic Hushing Adept's ("{T}: Target
 -- creature loses all abilities until end of turn"), and one logging damage is
--- Prodigal Sorcerer's wearing Basilisk Collar. No printing reaches the Adept's
+-- Prodigal Sorcerer's wearing Basilisk Collar, and one moving a card (CR
+-- 400.7) is Blinking Spirit's under Omniscience. No printing reaches the Adept's
 -- loop: MTGJSON AtomicCards, 2026-10-16, Oracle text matching `loses? all
 -- abilities` on a line with {T} in its cost, answers Immovable Rod, whose
 -- effect ends when it untaps, and Soul Sculptor, whose second activation
@@ -30,9 +31,11 @@ import qualified Data.Bifunctor as Bifunctor
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
+import qualified Data.Text as Text
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Mana as Mana
@@ -45,6 +48,7 @@ import qualified Parun.Types.Action as Action
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.Asked as Asked
+import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.CounterKind as CounterKind
@@ -60,6 +64,7 @@ import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifyTarget as ModifyTarget
+import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.Phase as Phase
@@ -67,6 +72,7 @@ import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.Sickness as Sickness
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
@@ -214,6 +220,16 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- the log the loop writes, though the card spells only the keyword. So
     -- the answerer's budget is what stops alice.
     Spec.assertEqWith s "CR 732.3 Bloodrage Vampire keeps every attempt" (pingAttempts sorcerer collar rouser vampire) (replicate budget True)
+
+  Spec.it s "a loop that moves a card recurs under the card's new identity" $ do
+    spirit <- S.printingOf s registry "Blinking Spirit"
+    omniscience <- S.printingOf s registry "Omniscience"
+    -- alice casts her Blinking Spirit free under Omniscience and bounces it
+    -- with its {0} ability, and so on. Each zone change makes the Spirit a new
+    -- object (CR 400.7), which no card can tell from the old one, so the
+    -- second lap returns to the state the first began in, and casting it so
+    -- again is refused.
+    Spec.assertEqWith s "CR 732.3 alice's repeated cast is refused" (blinkCasts spirit omniscience) [True, False]
 
 -- How many times the answerer has the tapper activate before it passes
 -- instead, since without CR 732.3 the loop never ends.
@@ -674,3 +690,57 @@ losesFrom spearId action = case action of
   Action.Activate source ability ->
     source == spearId && not (null [() | mode <- Foldable.toList (Modal.modes (ActivatedAbility.modal ability)), Effect.ModifyTarget _ <- Foldable.toList (Mode.allEffects mode)])
   _ -> False
+
+-- alice, active in her precombat main phase with no mana, controls
+-- Omniscience and holds Blinking Spirit, summoning sick as a card a bounce
+-- returns is, and has had a Blinking Spirit resolve this game (CR 702.192a's
+-- record, which the first resolution would otherwise write); bob passes
+-- throughout. alice opens each lap casting the Spirit, up to `budget` times,
+-- and bounces it once it has resolved. Answers her casts, each as whether it
+-- went on the stack.
+blinkCasts :: Printing.Printing -> Printing.Printing -> [Bool]
+blinkCasts spirit omniscience =
+  let (_, gs1) = S.addPermanent omniscience S.alice (Setup.emptyGame S.bothPlayers)
+      (spiritId, gs2) = S.addHandCard spirit S.alice gs1
+      board =
+        gs2
+          { GameState.objects = Map.adjust (\obj -> obj {Object.sickness = Sickness.Sick}) spiritId (GameState.objects gs2),
+            GameState.resolvedNames = Map.singleton S.alice (Set.singleton (CardName.MkCardName (Text.pack "Blinking Spirit")))
+          }
+      ((_, _), (_, _, made)) = State.runState (Engine.runGameAsked blinking (inMain board) Engine.priorityLoop) (budget, False, [])
+   in made
+
+-- The casts alice has left, whether she has just attempted one, and her
+-- attempts so far.
+type Blinking = (Int, Bool, [Bool])
+
+blinking :: Asked.Asked r -> State.State Blinking r
+blinking asked = case Asked.prompt asked of
+  Prompt.ChooseAction _ pid actions | pid == S.alice -> do
+    (left, attempted, made) <- State.get
+    let stacked = not (null (GameState.stack (Asked.game asked)))
+        cast = List.find casts actions
+        bounce = List.find bounces actions
+        recorded = if attempted then made <> [stacked] else made
+    case (cast, bounce) of
+      _ | stacked -> do
+        State.put (left, False, recorded)
+        pure Action.Pass
+      (Just action, _) | left > 0 && not attempted -> do
+        State.put (left - 1, True, recorded)
+        pure action
+      (_, Just action) | not attempted -> do
+        State.put (left, False, recorded)
+        pure action
+      _ -> do
+        State.put (0, False, recorded)
+        pure Action.Pass
+  Prompt.ChooseAction {} -> pure Action.Pass
+  prompt -> pure (S.identityAnswer prompt)
+  where
+    casts action = case action of
+      Action.Cast {} -> True
+      _ -> False
+    bounces action = case action of
+      Action.Activate {} -> True
+      _ -> False

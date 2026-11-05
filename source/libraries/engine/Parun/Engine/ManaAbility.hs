@@ -409,6 +409,7 @@ manaProduced effect = case effect of
   -- prevention adds no mana. A rider that did would be a mana clause nothing in
   -- the pool prints, and CR 605.1a would then want it seen here.
   Effect.PreventNextDamage {} -> Nothing
+  Effect.LaterPayment {} -> Nothing
   Effect.PreventAllDamage {} -> Nothing
   Effect.NextDamageInstance {} -> Nothing
   Effect.RedirectDamage {} -> Nothing
@@ -607,6 +608,7 @@ playerChoice effect = case effect of
   Effect.Replace {} -> Nothing
   Effect.SkipPhase {} -> Nothing
   Effect.PreventNextDamage {} -> Nothing
+  Effect.LaterPayment {} -> Nothing
   Effect.PreventAllDamage {} -> Nothing
   Effect.NextDamageInstance {} -> Nothing
   Effect.RedirectDamage {} -> Nothing
@@ -890,6 +892,7 @@ movesLibraryCard effect = case effect of
   -- the rider against the effect's own source, later, rather than as part of
   -- this ability.
   Effect.PreventNextDamage {} -> False
+  Effect.LaterPayment {} -> False
   Effect.PreventAllDamage {} -> False
   Effect.NextDamageInstance {} -> False
   Effect.RedirectDamage {} -> False

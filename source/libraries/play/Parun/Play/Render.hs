@@ -69,8 +69,10 @@ import qualified Parun.Types.ZoneChange as ZoneChange
 player :: PlayerId.PlayerId -> Text.Text
 player pid = Text.pack ("Player " <> show (PlayerId.unwrap pid + 1))
 
--- | The board summary: whose turn and step, then each seat's totals and
--- permanents, the deciding seat first, then the stack.
+-- | The board summary: whose turn and step, then each seat's totals,
+-- permanents and public zones, and the cards of another seat's hand or any
+-- seat's library the deciding seat may see (CR 400.2), the deciding seat
+-- first, then the stack.
 board :: PlayerView.PlayerView -> [Text.Text]
 board view =
   [ Text.concat
@@ -103,14 +105,21 @@ board view =
             <> listed view "  Other permanents: " (ordered view others)
             <> listed view "  Graveyard: " (SeatView.graveyard s)
             <> listed view "  Exile: " (SeatView.exile s)
+            <> (if pid == PlayerView.viewer view then [] else listed view "  Seen in hand: " (handOrder view (SeatView.hand s)))
+            <> listed view "  Seen in library, top first: " (SeatView.library s)
     stack = listed view "Stack, top first: " (PlayerView.stack view)
 
 -- | The deciding seat's hand.
 hand :: PlayerView.PlayerView -> [Text.Text]
 hand view =
   let held = concatMap SeatView.hand (filter ((== PlayerView.viewer view) . SeatView.player) (PlayerView.seats view))
-      (lands, spells) = List.partition (isA CardType.Land) held
-   in [Text.pack "Your hand: " <> if null held then Text.pack "empty" else Text.intercalate (Text.pack ", ") (fmap (describe view) (ordered view lands <> ordered view spells))]
+   in [Text.pack "Your hand: " <> if null held then Text.pack "empty" else Text.intercalate (Text.pack ", ") (fmap (describe view) (handOrder view held))]
+
+-- | A hand's cards, lands first, then spells, each by `ordered`.
+handOrder :: PlayerView.PlayerView -> [ObjectView.ObjectView] -> [ObjectView.ObjectView]
+handOrder view held =
+  let (lands, spells) = List.partition (isA CardType.Land) held
+   in ordered view lands <> ordered view spells
 
 -- | Whether the seat sees the object as having a card type.
 isA :: CardType.CardType -> ObjectView.ObjectView -> Bool
@@ -245,6 +254,42 @@ objects view =
 -- move of it showed it, so one that has since left still has a name.
 named :: PlayerView.PlayerView -> ObjectId.ObjectId -> Text.Text
 named view oid = Maybe.fromMaybe (Text.pack ("object " <> show (ObjectId.unwrap oid))) (knownName view oid)
+
+-- | An object as a prompt lists it, told apart from others of its name: on
+-- the battlefield or the stack, by its controller and its status (CR 108.4);
+-- in a graveyard or exile, by its owner and that zone; elsewhere by name.
+choosable :: PlayerView.PlayerView -> ObjectId.ObjectId -> Text.Text
+choosable view oid = case located view oid of
+  Just (Zone.Battlefield, o) -> whose (ObjectView.controller o) <> describe view o
+  Just (Zone.Stack, o) -> whose (ObjectView.controller o) <> describe view o <> Text.pack ", on the stack"
+  Just (Zone.Graveyard, o) -> whose (Just (ObjectView.owner o)) <> describe view o <> Text.pack ", in a graveyard"
+  Just (Zone.Exile, o) -> whose (Just (ObjectView.owner o)) <> describe view o <> Text.pack ", in exile"
+  _ -> named view oid
+  where
+    whose = maybe Text.empty (\pid -> if pid == PlayerView.viewer view then Text.pack "Your " else player pid <> Text.pack "'s ")
+
+-- | The seat an object is listed under: its controller on the battlefield or
+-- the stack, else its owner (CR 108.4a).
+seatOf :: PlayerView.PlayerView -> ObjectId.ObjectId -> Maybe PlayerId.PlayerId
+seatOf view oid = case located view oid of
+  Just (z, o) | z `elem` [Zone.Battlefield, Zone.Stack] -> ObjectView.controller o
+  Just (_, o) -> Just (ObjectView.owner o)
+  Nothing -> Nothing
+
+-- | The zone the view shows an object in, and the object.
+located :: PlayerView.PlayerView -> ObjectId.ObjectId -> Maybe (Zone.Zone, ObjectView.ObjectView)
+located view oid =
+  List.find ((== oid) . ObjectView.object . snd) $
+    fmap ((,) Zone.Battlefield) (PlayerView.battlefield view)
+      <> fmap ((,) Zone.Stack) (PlayerView.stack view)
+      <> concatMap
+        ( \s ->
+            fmap ((,) Zone.Hand) (SeatView.hand s)
+              <> fmap ((,) Zone.Library) (SeatView.library s)
+              <> fmap ((,) Zone.Graveyard) (SeatView.graveyard s)
+              <> fmap ((,) Zone.Exile) (SeatView.exile s)
+        )
+        (PlayerView.seats view)
 
 -- | An object's name, if the view shows it or a witnessed move of it.
 knownName :: PlayerView.PlayerView -> ObjectId.ObjectId -> Maybe Text.Text

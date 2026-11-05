@@ -1024,6 +1024,38 @@ blockOfferSpec s registry = Spec.describe s "BlockOffer" $ do
       (gs, _, [crowId, _]) -> Spec.assertEqWith s "only the Crow is offered" (take 1 (blockOffers gs)) [[crowId]]
       _ -> Spec.assertFailure s "fixture should give bob two creatures"
 
+-- Every Prompt.DeclareAttackers a declare attackers step raises on this board,
+-- as the candidates it offered, each answered by attacking with every candidate
+-- (an illegal answer is asked again once, then degrades).
+attackOffers :: GameState.GameState -> [[ObjectId.ObjectId]]
+attackOffers gs =
+  let asking :: Prompt.Prompt r -> State.State [[ObjectId.ObjectId]] r
+      asking p = case p of
+        Prompt.DeclareAttackers _ _ candidates -> do
+          State.modify' (<> [candidates])
+          pure candidates
+        _ -> pure (S.identityAnswer p)
+   in State.execState (Engine.runGame asking gs (Combat.declareAttackers S.manaPerformer S.alice)) []
+
+-- CR 508.1a-d: the declare attackers prompt offers only creatures some legal
+-- declaration contains, and is not raised when none is (Combat.couldAttack).
+attackOfferSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+attackOfferSpec s registry = Spec.describe s "AttackOffer" $ do
+  Spec.it s "CR 506.5 Mogg Flunkies is not asked to attack alone" $ do
+    flunkies <- S.printingOf s registry "Mogg Flunkies"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (lone, _, _) = S.combatBoardOf [flunkies] []
+    Spec.assertEqWith s "Flunkies alone: no prompt" (attackOffers lone) []
+    let (paired, ours, _) = S.combatBoardOf [flunkies, piker] []
+    Spec.assertEqWith s "beside a Piker: both offered" (attackOffers paired) [ours]
+  Spec.it s "CR 508.1c under Silent Arbiter Mogg Flunkies is not offered beside a Piker" $ do
+    flunkies <- S.printingOf s registry "Mogg Flunkies"
+    piker <- S.printingOf s registry "Goblin Piker"
+    arbiter <- S.printingOf s registry "Silent Arbiter"
+    case S.combatBoardOf [flunkies, piker] [arbiter] of
+      (gs, [_, pikerId], _) -> Spec.assertEqWith s "only the Piker is offered" (attackOffers gs) [[pikerId]]
+      _ -> Spec.assertFailure s "fixture should give alice two creatures"
+
 -- Declare attackers with everything, then put a Lure on the first attacker.
 -- Attaching directly is S.attach's state-fixture posture -- Parun.Engine.Cast can cast
 -- the Aura, but a combat fixture cannot reach a sorcery-speed cast mid-step --
@@ -3014,6 +3046,7 @@ spec s registry = Spec.describe s "Parun.Engine.Combat" $ do
   textChangedLandwalkSpec s registry
   menaceSpec s registry
   blockOfferSpec s registry
+  attackOfferSpec s registry
   blockPermissionSpec s registry
   blockRequirementSpec s registry
   attackRequirementSpec s registry

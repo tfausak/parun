@@ -268,6 +268,7 @@ blankGame settings order active =
       GameState.continuousEffects = [],
       GameState.copyEffects = [],
       GameState.replacements = [],
+      GameState.laterPayments = [],
       GameState.pendingPreventionRiders = Seq.empty,
       GameState.pendingReplacementEffects = Seq.empty,
       GameState.contested = Map.empty,
@@ -1242,9 +1243,15 @@ subgameStateFrom starter parent =
       -- CR 407.3: the nine ante cards are the only ones that remove a card from
       -- the ante, and a subgame's road out of the main game is not one of them,
       -- so a main-game ante card is not offered as outside the subgame.
+      --
+      -- CR 702.26b: a phased-out permanent is treated as though it does not
+      -- exist, and neither CR 729.4 nor a wish mentions one, so it is not
+      -- offered and stays to phase in (Living Wish's ruling of 2007-09-16).
+      -- Parun.OutsideTheGameSpec's "CR 702.26b/729.4 gameplay: a subgame's
+      -- Living Wish is not offered a phased-out Breezekeeper" proves it.
       outside =
         Map.union
-          (Map.mapMaybe asOutside (Map.withoutKeys (GameState.objects parent) (Set.unions [libIds, cmdIds, suppIds, GameState.ante parent])))
+          (Map.mapMaybe asOutside (Map.withoutKeys (GameState.objects parent) (Set.unions [libIds, cmdIds, suppIds, GameState.ante parent, Map.keysSet (GameState.phasedOut parent)])))
           (GameState.outsideObjects parent)
       -- CR 110.5's face-up/face-down status rides along with the printing, and
       -- is the one thing about the parent's object that does. It is not an
@@ -1394,24 +1401,9 @@ applyCrossings finalSub parent =
       -- took out of a graveyard is Spirit Mascot's trigger event.
       --
       -- Battlefield MEMBERSHIP rather than Object.zone, the way
-      -- Departure.objectsLeaveWith reads the same question, since
-      -- Parun.Engine.Phasing takes a phased-out permanent out of that set and
-      -- leaves its Object.zone alone (CR 702.26d).
-      --
-      -- So a PHASED-OUT permanent crosses without an event and hands nothing
-      -- over, and that is CR 702.26b rather than an omission: excepting rules
-      -- that specifically mention phased-out permanents, such a permanent "is
-      -- treated as though it does not exist" and "can't affect or be affected by
-      -- anything else in the game". CR 729.4a mentions none, so the main-game abilities it speaks of
-      -- cannot see one leave -- the answer CR 702.26k spells out for the other
-      -- road out of the game.
-      --
-      -- Not implemented: refusing the crossing. CR 702.26b's first sentence has no
-      -- limit to one game, and neither CR 729.4 nor a wish mentions a phased-out
-      -- permanent, so it should not be offered (Living Wish's ruling of
-      -- 2007-09-16); it is, and Parun.SetupSpec's "CR 702.26b a phased-out
-      -- permanent a subgame takes leaves the main game and triggers nothing" pins
-      -- that (#6183).
+      -- Departure.objectsLeaveWith reads the same question. The two differ only
+      -- for a phased-out permanent (CR 702.26d), which subgameStateFrom never
+      -- offers, so none crosses.
       --
       -- CR 708.9's first sentence: a face-down permanent moving from the
       -- battlefield to any other zone is revealed by its owner, and a subgame's
@@ -1427,8 +1419,6 @@ applyCrossings finalSub parent =
          in if Set.member oid (GameState.battlefield g)
               then recordLeft Zone.Battlefield (Event.fileBoardBefore g gone)
               else case fmap Object.zone (Map.lookup oid (GameState.objects g)) of
-                -- Phased out, CR 702.26b above.
-                Just Zone.Battlefield -> gone
                 Just zone -> recordLeft zone gone
                 -- Unreachable: `mine` holds only ids GameState.objects answered
                 -- for, and no id crosses twice -- Event.bringInFrom drops the

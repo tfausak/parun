@@ -652,11 +652,11 @@ exileAll gs victims =
 -- applies to it and nothing sees it leave: its only record is a
 -- GameEvent.ArrivedUnseen per arrival, which no trigger reads and CR 903.9a's
 -- state-based action does (Commander.returnable). docs/decisions.md, "Whether a
--- phased-out permanent a subgame takes leaves visibly". Event.leaveTheGame
--- files its CR 608.2h record and deletes it with its phased-out row, and each
--- card it represents (CR 712.21, CR 730.3) arrives in its owner's exile as a
--- new object (CR 400.7), its stickers on the one its owner picks (CR 400.7m,
--- CR 123.5c, CR 613.7k).
+-- phased-out permanent exiled with its departed controller leaves visibly".
+-- Event.leaveTheGame files its CR 608.2h record and deletes it with its
+-- phased-out row, and each card it represents (CR 712.21, CR 730.3) arrives in
+-- its owner's exile as a new object (CR 400.7), its stickers on the one its
+-- owner picks (CR 400.7m, CR 123.5c, CR 613.7k).
 exilePhasedOut :: GameState -> ObjectId -> Game ()
 exilePhasedOut asOf oid = case Game.lookupObject oid asOf of
   Nothing -> pure ()

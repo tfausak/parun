@@ -1291,6 +1291,7 @@ isManaActivation action = case action of
   Action.Type.RollPlanarDie -> False
   Action.Type.Ignore _ _ -> False
   Action.Type.EndEffect {} -> False
+  Action.Type.MakeLaterPayment {} -> False
   Action.Type.PayLifeForMana _ _ -> False
   Action.Type.Pass -> False
 

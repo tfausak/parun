@@ -189,14 +189,17 @@ spec s registry = Spec.describe s "Protocol" $ do
 
   Spec.it s "CR 508.1c an illegal attack is refused, and asked again however often it is repeated" $ do
     bondedConstruct <- S.printingOf s registry "Bonded Construct"
-    case S.combatBoardOf [bondedConstruct] [] of
-      (gs, [construct], []) -> do
-        let attacks = Protocol.encodeAnswer (Prompt.DeclareAttackers (Decider.MkDecider S.alice) S.alice [construct])
+    bears <- S.printingOf s registry "Grizzly Bears"
+    -- The Bears give the Construct company in some legal declaration, so alice
+    -- is asked at all.
+    case S.combatBoardOf [bondedConstruct, bears] [] of
+      (gs, [construct, bear], []) -> do
+        let attacks = Protocol.encodeAnswer (Prompt.DeclareAttackers (Decider.MkDecider S.alice) S.alice [construct, bear])
             (sent, after) = declaring [attacks [construct], attacks [construct], attacks []] gs
             refused = Just (Text.pack "the declaration of attackers is illegal")
         Spec.assertEqWith s "problems" (problemsOf "DeclareAttackers" sent) [Nothing, refused, refused]
         Spec.assertEqWith s "nothing attacks" (Combat.Type.attackers (GameState.combat after)) Map.empty
-      _ -> Spec.assertFailure s "fixture should have one creature"
+      _ -> Spec.assertFailure s "fixture should have two creatures"
 
 -- Declares attackers then blockers over the line, answering each line sent
 -- with the next of `replies`; the lines sent and the state after.

@@ -14,6 +14,7 @@ import qualified Parun.Engine.FaceDown as FaceDown
 import qualified Parun.Engine.Foretell as Foretell
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Ignore as Ignore
+import qualified Parun.Engine.LaterPayment as LaterPayment
 import qualified Parun.Engine.Planechase as Planechase
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Plot as Plot
@@ -248,6 +249,8 @@ legalActions pid gs =
       -- is one action over its four stored effects, and each of Nafs Asp's hits on
       -- one player is an action of its own.
       endings = fmap (uncurry Action.EndEffect) (EndEffect.endable pid gs)
+      -- CR 116.2c again: one action per stored offer, repeatable.
+      laterPayments = fmap (uncurry Action.MakeLaterPayment) (LaterPayment.payable pid gs)
       -- CR 116.2c again, with the timing restriction that rule leaves room for:
       -- Channel's "any time you could activate a mana ability" is CR 605.3a's
       -- windows, this one and Cost.payManaWindowThen's. A TIMING restriction, so
@@ -376,4 +379,4 @@ legalActions pid gs =
       -- Parun.ManaSpec's "the menu carries one activation per untapped source" is
       -- the proof.
       manaAbilityActivations = fmap Action.ActivateManaAbility manaSources
-   in Action.Pass : lands <> spells <> turnUps <> unlocks <> discards <> ignores <> endings <> lifeForMana <> plots <> foretells <> suspends <> companions <> planarRolls <> conspiracies <> activations <> manaAbilityActivations
+   in Action.Pass : lands <> spells <> turnUps <> unlocks <> discards <> ignores <> endings <> laterPayments <> lifeForMana <> plots <> foretells <> suspends <> companions <> planarRolls <> conspiracies <> activations <> manaAbilityActivations

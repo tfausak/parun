@@ -11,6 +11,7 @@ import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.TurnUpProcedure as TurnUpProcedure
 
 -- | What a player with priority may do. The SPECIAL actions CR 116.2 lists that
@@ -225,6 +226,10 @@ data Action
     -- spell's controller -- answered by Parun.Engine.EndEffect.canEnd off the
     -- seat baked into the stored effect.
     EndEffect ObjectId.ObjectId ObjectId.ObjectId
+  | -- | CR 116.2c: pay what a Parun.Types.LaterPayment asks, running its effects
+    -- without the stack. Carries the row's source and the row's identity. Not
+    -- EndEffect: nothing ends, so the offer stays for another payment.
+    MakeLaterPayment ObjectId.ObjectId Timestamp.Timestamp
   | -- | CR 116.2c / 605.3a / Channel: pay this much life to add one mana of this
     -- type, at priority; Prompt.PayLifeForMana is the same action inside a payment.
     PayLifeForMana Natural.Natural ManaType.ManaType

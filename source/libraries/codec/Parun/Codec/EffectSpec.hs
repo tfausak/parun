@@ -63,6 +63,7 @@ import qualified Parun.Types.ControlSides as ControlSides
 import qualified Parun.Types.CopyOriginal as CopyOriginal
 import qualified Parun.Types.CopyStackObject as CopyStackObject
 import qualified Parun.Types.CopyTargets as CopyTargets
+import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.CountedDiscard as CountedDiscard
 import qualified Parun.Types.Counter as Counter
@@ -125,6 +126,7 @@ import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.InitiativeTarget as InitiativeTarget
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.LaterPayment as LaterPayment
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeLoss as LifeLoss
@@ -1034,6 +1036,14 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       fromJson
       (Effect.SkipPhase (SkipPhase.MkSkipPhase (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) PhaseSelector.CombatPhase Uses.Once Duration.Indefinite))
       " {\"type\":\"SkipPhase\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"selector\":{\"type\":\"CombatPhase\"}}} "
+  -- CR 116.2c.
+  Spec.it s "LaterPayment" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (Effect.LaterPayment (LaterPayment.MkLaterPayment Duration.UntilEndOfTurn (Cost.MkCost Nothing []) (Seq.singleton Effect.Proliferate)))
+      " {\"type\":\"LaterPayment\",\"value\":{\"duration\":{\"type\":\"UntilEndOfTurn\"},\"cost\":{\"mana\":null},\"effects\":[{\"type\":\"Proliferate\"}]}} "
   -- CR 615.7.
   Spec.it s "PreventNextDamage" $
     Common.assertJsonCodec

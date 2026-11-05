@@ -11,6 +11,6 @@ data IfTaken
     AnyTaken (NonEmpty.NonEmpty ClauseIndex.ClauseIndex)
   | -- | "If no one does": none of them ran -- Browbeat, Development (CR 608.2c, 118.12a).
     NoneTaken (NonEmpty.NonEmpty ClauseIndex.ClauseIndex)
-  | -- | "If you can't": any of them did less than it named -- Lich (CR 608.2c, 609.3).
+  | -- | "If you can't": any of them could not be paid in full, so did not run -- Lich (CR 118.12, 118.3).
     Couldnt (NonEmpty.NonEmpty ClauseIndex.ClauseIndex)
   deriving (Eq, Ord, Show)

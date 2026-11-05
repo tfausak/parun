@@ -1,0 +1,101 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Lich",
+            "label": "lich"
+          },
+          {
+            "card": "Platinum Angel",
+            "label": "angel"
+          }
+        ],
+        "life": 0,
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "mountain"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 118.3 Lich short of permanents under Platinum Angel sacrifices none and plays on",
+  "final": [
+    {
+      "View": {
+        "is": null,
+        "of": "Result"
+      }
+    },
+    {
+      "View": {
+        "is": [
+          "$lich",
+          "$angel"
+        ],
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Battlefield"
+      }
+    }
+  ],
+  "note": "Alice controls Lich and Platinum Angel, her only nontoken permanents, at 0 life. Bob's Lightning Bolt deals her 3: sacrificing three is a cost (CR 118.12) she cannot pay in full, so she sacrifices nothing (CR 118.3; Egon, God of Death's 2021-02-05 ruling), and the Angel stops \"you lose the game\" (CR 104.3e). Both stay and the game goes on; sacrificing what she could would take the Angel with them and lose her the game.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$mountain"
+          ],
+          "object": "$bolt",
+          "targets": [
+            "$alice"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $lich"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

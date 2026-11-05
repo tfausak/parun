@@ -88,6 +88,7 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   as the `Offered` view renders it, with a cast's choices such as `mana`:
   `{ "action": "TurnFaceUp $piker Manifest", "mana": ["$mountain"] }`.
   A second CR 116.2c offer from one source to one seat renders as `EndEffect $asp #2`.
+  A paid later offer (CR 116.2c, Guardian Angel) is `MakeLaterPayment spell of $angel`.
   `OrderTriggers` lists one player's simultaneous triggers by source, `null`
   for a sourceless one such as the monarch's draw, in the order they go on the
   stack, so the last named resolves first (CR 603.3b).

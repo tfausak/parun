@@ -361,7 +361,7 @@ resolveSpellWith runSubgame oid = do
                               legalHere = instanceView (Map.mapWithKey legalSlot (Binding.targetsOf gateBindings))
                               boundHere = Map.keysSet (instanceView (Set.empty <$ gateBindings))
                           gated <- gateHolds effectController oid oid (instanceView (Binding.targetsOf gateBindings)) gateBindings limb
-                          taken <- if gated then exercises oid oid effectController idx limbIdx boundHere legalHere (Just facing) Set.empty limb else pure False
+                          taken <- if gated then exercises (namedByCouldnt indexedClauses limbIdx) oid oid effectController idx limbIdx boundHere legalHere (Just facing) Set.empty limb else pure False
                           before <- State.get
                           (admitted, answers2) <-
                             if taken
@@ -419,7 +419,7 @@ resolveSpellWith runSubgame oid = do
                           _ -> do
                             (announced, committed, picked2) <- if gated then chosenBranch oid oid effectController idx cIdx legalNowForMay eligible (`lookup` indexedClauses) picked clause else pure (Just Set.empty, Set.empty, picked)
                             let branch = maybe True (not . Set.null) announced
-                            taken <- if branch then exercises oid oid effectController idx cIdx boundNowForMay legalNowForMay announced committed clause else pure False
+                            taken <- if branch then exercises (namedByCouldnt indexedClauses cIdx) oid oid effectController idx cIdx boundNowForMay legalNowForMay announced committed clause else pure False
                             -- CR 118.12: then the cost paid on resolution, against the
                             -- START-of-resolution targets to match CR 608.2b's single
                             -- re-validation. Both maps are projected into THIS
@@ -447,7 +447,7 @@ resolveSpellWith runSubgame oid = do
                             after <- State.get
                             pure (answers2, picked2, recordTaken clause admitted before after cIdx ran)
                     )
-                    (Map.empty, Map.empty, Map.empty)
+                    (Map.empty, Map.empty, Set.empty)
                     indexedClauses
                 firstOfName <- noteResolved oid effectController
                 applyEpic oid effectController
@@ -850,7 +850,7 @@ resolveModesWith runSubgame stackId srcId modes = do
                       let legalHere = instanceView (Map.mapWithKey legalSlot (Binding.targetsOf gateBindings))
                           boundHere = Map.keysSet (instanceView (Set.empty <$ gateBindings))
                       gated <- gateHolds effectController stackId srcId (instanceView (Binding.targetsOf gateBindings)) gateBindings limb
-                      taken <- if gated then exercises stackId srcId effectController idx limbIdx boundHere legalHere (Just facing) Set.empty limb else pure False
+                      taken <- if gated then exercises (namedByCouldnt indexedClauses limbIdx) stackId srcId effectController idx limbIdx boundHere legalHere (Just facing) Set.empty limb else pure False
                       before <- State.get
                       (admitted, answers2) <- if taken then payGateAdmits runSubgame stackId srcId effectController idx limbIdx (instanceView legal) (Just facing) Set.empty answers limb else pure (False, answers)
                       Monad.when admitted (asCostWhenNamed indexedClauses limbIdx (Common.applyClauseEffects stackId srcId applyOne (Foldable.toList (Clause.effects limb))))
@@ -910,7 +910,7 @@ resolveModesWith runSubgame stackId srcId modes = do
                           _ -> do
                             (announced, committed, picked2) <- if gated then chosenBranch stackId srcId effectController idx cIdx legalNowForMay eligible (`lookup` indexedClauses) picked clause else pure (Just Set.empty, Set.empty, picked)
                             let branch = maybe True (not . Set.null) announced
-                            taken <- if branch then exercises stackId srcId effectController idx cIdx boundNowForMay legalNowForMay announced committed clause else pure False
+                            taken <- if branch then exercises (namedByCouldnt indexedClauses cIdx) stackId srcId effectController idx cIdx boundNowForMay legalNowForMay announced committed clause else pure False
                             -- CR 118.12: then the cost paid on resolution, against the
                             -- START-of-resolution slots.
                             before <- State.get
@@ -919,7 +919,7 @@ resolveModesWith runSubgame stackId srcId modes = do
                             after <- State.get
                             pure (answers2, picked2, recordTaken clause admitted before after cIdx ran)
                     )
-                    (Map.empty, Map.empty, Map.empty)
+                    (Map.empty, Map.empty, Set.empty)
                     indexedClauses
        in do
             Monad.unless fizzles $ do
@@ -959,36 +959,46 @@ recordAbilityResolution obj = case Object.source obj of
 -- has not run. ANY of the names is enough, which is what Worms of the Earth's "if
 -- a player does either" prints over the two halves of an either-or pair; the
 -- negative, Browbeat's "if no one does", holds when NONE of them ran. Lich's
--- "if you can't" holds when one did not run IN FULL (CR 609.3): it ran short, or
--- not at all. Asked BEFORE the other three, so a skipped clause raises no prompt.
---
--- Not implemented: not starting that instruction unless it can be done in full,
--- which CR 118.12 and 118.3 ask of it as a cost (Egon, God of Death's ruling of
--- 2021-02-05) (#6181).
+-- "if you can't" holds when one did not run: CR 118.12 makes that instruction a
+-- cost, and CR 118.3 refuses to start a cost that cannot be paid in full
+-- (`exercises`; Egon, God of Death's ruling of 2021-02-05). Asked BEFORE the
+-- other three, so a skipped clause raises no prompt.
 --
 -- A pure function rather than a Game action: it reads nothing but the fold.
-ifTakenHolds :: Map.Map ClauseIndex Bool -> Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
+ifTakenHolds :: Set ClauseIndex -> Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
 ifTakenHolds ran clause = case Clause.ifTaken clause of
   Nothing -> True
-  Just (IfTaken.AnyTaken names) -> any (`Map.member` ran) names
-  Just (IfTaken.NoneTaken names) -> not (any (`Map.member` ran) names)
-  Just (IfTaken.Couldnt names) -> any (\name -> Map.lookup name ran /= Just True) names
+  Just (IfTaken.AnyTaken names) -> any (`Set.member` ran) names
+  Just (IfTaken.NoneTaken names) -> not (any (`Set.member` ran) names)
+  Just (IfTaken.Couldnt names) -> not (all (`Set.member` ran) names)
 
--- CR 118.12: a clause some clause of its mode names with "If [a player] does"
--- or "doesn't" (Clause.ifTaken) is that sentence's "[do something]" -- "a cost,
--- paid when the spell or ability resolves" -- so its instructions run under
--- Event.payingOnResolution. Library of Leng's ruling is what observes it:
+-- The clauses an IfTaken names, whichever way it reads them.
+namedByIfTaken :: IfTaken.IfTaken -> [ClauseIndex]
+namedByIfTaken ifTaken = case ifTaken of
+  IfTaken.AnyTaken named -> Foldable.toList named
+  IfTaken.NoneTaken named -> Foldable.toList named
+  IfTaken.Couldnt named -> Foldable.toList named
+
+-- CR 118.12 / 118.3: is this clause the "[do something]" of some clause's "If
+-- you can't", so that it is not started unless it can be done in full?
+namedByCouldnt :: [(ClauseIndex, Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))] -> ClauseIndex -> Bool
+namedByCouldnt indexed cIdx =
+  any
+    ( \(_, clause) -> case Clause.ifTaken clause of
+        Just (IfTaken.Couldnt named) -> elem cIdx named
+        _ -> False
+    )
+    indexed
+
+-- CR 118.12: a clause some clause of its mode names with "If [a player] does",
+-- "doesn't" or "can't" (Clause.ifTaken) is that sentence's "[do something]" --
+-- "a cost, paid when the spell or ability resolves" -- so its instructions run
+-- under Event.payingOnResolution. Library of Leng's ruling is what observes it:
 -- Tweeze's "you may discard a card. If you do, draw a card" discards as a cost,
 -- and "costs aren't effects".
 asCostWhenNamed :: [(ClauseIndex, Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))] -> ClauseIndex -> Game a -> Game a
 asCostWhenNamed indexed cIdx body =
-  let names clause = case Clause.ifTaken clause of
-        Nothing -> []
-        Just (IfTaken.AnyTaken named) -> Foldable.toList named
-        Just (IfTaken.NoneTaken named) -> Foldable.toList named
-        -- "If you can't" names an instruction, not CR 118.12's cost.
-        Just (IfTaken.Couldnt _) -> []
-   in if any (elem cIdx . names . snd) indexed then Event.payingOnResolution True body else body
+  if any (elem cIdx . foldMap namedByIfTaken . Clause.ifTaken . snd) indexed then Event.payingOnResolution True body else body
 
 -- The other end of the same fold: a clause's ordinal is recorded exactly when
 -- its instructions ran, which is what CR 118.12's "If you do" asks about. One
@@ -1006,17 +1016,12 @@ asCostWhenNamed indexed cIdx body =
 -- the spell loop, and "CR 118.12 Gristle Glutton with an empty hand draws
 -- nothing" on the ability loop. The two CR 701.55d limb sites are a REGRESSION
 -- FENCE: no "If you do" in data/cards/ hangs off a villainous limb.
---
--- Recorded beside it is whether the clause ran IN FULL, for CR 609.3's "if you
--- can't" (IfTaken.Couldnt): no instruction of it fell short
--- (GameState.fellShort). Parun.ScenarioSpec's Lich scenarios prove it.
-recordTaken :: Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool -> GameState -> GameState -> ClauseIndex -> Map.Map ClauseIndex Bool -> Map.Map ClauseIndex Bool
+recordTaken :: Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool -> GameState -> GameState -> ClauseIndex -> Set ClauseIndex -> Set ClauseIndex
 recordTaken clause admitted before after cIdx ran =
   let happened = case Clause.optionality clause of
         Optionality.Mandatory -> Common.happenedBetween before after
         Optionality.Optional _ -> True
-      inFull = GameState.fellShort after == GameState.fellShort before
-   in if admitted && happened then Map.insert cIdx inFull ran else ran
+   in if admitted && happened then Set.insert cIdx ran else ran
 
 -- CR 701.46a: does this clause's printed "if" hold? CR 701.37a prints the same
 -- gate on a proper prefix of a longer ability, which is why the rider is on CR
@@ -1319,11 +1324,18 @@ villainousPass resolving source controller idx legal orElse limbs performLimb ac
 -- second gate is asked again per seat, with `thoseWhoMay` holding that seat
 -- alone, so a seat that cannot carry the clause out is not asked;
 -- Parun.AnteSpec's Rebirth case proves it.
-exercises :: ObjectId -> ObjectId -> PlayerId -> ModeIndex -> ClauseIndex -> Set SlotName -> Map.Map SlotName (Set Recipient) -> Maybe (Set PlayerId) -> Set PlayerId -> Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game Bool
-exercises resolving source controller idx cIdx bound legal announced committed clause = do
+--
+-- `couldnt` marks the "[do something]" of an "If you can't" (namedByCouldnt):
+-- CR 118.12 makes it a cost and CR 118.3 forbids starting one that cannot be
+-- paid in full, so even a mandatory one is not exercised where it is
+-- impossible -- Egon, God of Death's ruling of 2021-02-05. The scenario "CR
+-- 118.3 Lich short of permanents under Platinum Angel sacrifices none and plays
+-- on" proves it.
+exercises :: Bool -> ObjectId -> ObjectId -> PlayerId -> ModeIndex -> ClauseIndex -> Set SlotName -> Map.Map SlotName (Set Recipient) -> Maybe (Set PlayerId) -> Set PlayerId -> Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game Bool
+exercises couldnt resolving source controller idx cIdx bound legal announced committed clause = do
   impossible <- State.gets (\gs -> Common.clauseIsImpossible resolving source controller legal gs clause)
   case Clause.optionality clause of
-    Optionality.Mandatory -> pure True
+    Optionality.Mandatory -> pure (not (couldnt && impossible))
     Optionality.Optional asker
       | impossible || clauseIsInert (Set.insert Binding.mayPlayers bound) legal clause -> pure False
       | otherwise -> do

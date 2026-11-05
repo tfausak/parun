@@ -672,23 +672,17 @@ Entries are ordered by the first rule each cites.
   "power-leak-prevents-before-furnace-of-rath-doubles".
 - **Issue**: #6128.
 
-## Whether a phased-out permanent a subgame takes leaves visibly
+## Whether a phased-out permanent exiled with its departed controller leaves visibly
 
-- **Question**: A wish brings a phased-out permanent into a Shahrazad
-  subgame. CR 729.4a fires main-game leave triggers; CR 702.26b treats the
-  permanent as though it doesn't exist. The same question arises, by analogy,
-  when CR 800.4a or 800.4c exiles a phased-out permanent (CR 702.26n).
-- **Rules**: CR 702.26b, 702.26d, 702.26k, 702.26n, 729.1a, 729.4, 729.4a,
-  800.4a, 800.4c; CR of 2026-08-07.
-- **Decision**: It crosses, or is exiled, but nothing triggers. The exile
-  records only an arrival no trigger reads, so CR 903.9a still offers a
-  commander back.
+- **Question**: CR 800.4a or 800.4c exiles a phased-out permanent (CR
+  702.26n). Does a leaves-the-battlefield or put-into-exile trigger see it go?
+- **Rules**: CR 702.26b, 702.26d, 702.26k, 702.26n, 800.4a, 800.4c; CR of
+  2026-08-07.
+- **Decision**: It is exiled, but nothing triggers. The exile records only an
+  arrival no trigger reads, so CR 903.9a still offers a commander back.
 - **Rejected**: Recording the leave: CR 702.26b overrides rules that don't
-  name phasing. Leaving it unreachable: the wish belongs to a separate game
-  (CR 729.1a), and CR 702.26n names the exiles.
-- **Site**: `Parun.Engine.Setup.applyCrossings`, proved by `Parun.SetupSpec`'s
-  "CR 702.26b a phased-out permanent a subgame takes leaves the main game and
-  triggers nothing"; `Parun.Engine.Departure.exilePhasedOut`, proved by
+  name phasing, and CR 702.26k says as much for the road beside it.
+- **Site**: `Parun.Engine.Departure.exilePhasedOut`, proved by
   `Parun.PhasingSpec`'s "CR 702.26n a phased-out permanent its departed
   controller doesn't own is exiled at once".
 - **Issue**: #2468, #6254, #6263.
@@ -876,6 +870,21 @@ Entries are ordered by the first rule each cites.
   is refused as paid, not as announced", and "a choice the resolution offers does
   not make a repeated activation a new one".
 - **Issue**: #951.
+
+## When a re-created object is the same game state
+
+- **Question**: CR 732.3 turns on "the same game state" being reached again,
+  which the CR doesn't define. A lap that moves a card makes a new object
+  (CR 400.7). Is the state it returns to the same one?
+- **Rules**: CR 732.3, 400.7, 613.7; CR of 2026-08-07. No ruling.
+- **Decision**: The same, where it differs only in which objects and stamps
+  stand for which, in an order-preserving renaming, and what the log says of
+  each held object answers alike. No card or player can tell the two apart.
+- **Rejected**: Different, by identity, which lets Blinking Spirit under
+  Omniscience loop forever with no player made to choose otherwise.
+- **Site**: `Parun.Engine.Fragmented.digest`, proved by `Parun.FragmentedSpec`'s
+  "a loop that moves a card recurs under the card's new identity".
+- **Issue**: #6184.
 
 ## Whether attack left closes up over a seat that emptied
 
