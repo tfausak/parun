@@ -1276,7 +1276,7 @@ monarchTriggerSpec s registry =
       -- combat: Event.Trigger.inherentTriggers reads the recorded DamageEvent, and
       -- ExpirySpec's monarch group drives the same rule the same way.
       combatDamageTo monarch damager =
-        S.withEvents [GameEvent.DamageDealt (DamageEvent.MkDamageEvent damager (Recipient.ToPlayer monarch) 2 False False False 0 Nothing Nothing mempty False DamageKind.Combat)]
+        S.withEvents [GameEvent.DamageDealt (DamageEvent.MkDamageEvent damager (Recipient.ToPlayer monarch) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Combat)]
    in Spec.describe s "MonarchTrigger" $ do
         -- The whole chain off one entry: CR 603.6a's entry trigger crowns alice,
         -- Effect.BecomeMonarch records CR 725.1's event, and the second ability

@@ -667,12 +667,12 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing})
+      (Quantity.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing, DealtDamage.by = Nothing})
       " {\"type\":\"PlayersDealtDamageThisTurn\",\"value\":{\"recipient\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), DealtDamage.kind = Just DamageKind.Combat})
+      (Quantity.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), DealtDamage.kind = Just DamageKind.Combat, DealtDamage.by = Nothing})
       " {\"type\":\"PlayersDealtDamageThisTurn\",\"value\":{\"recipient\":{\"type\":\"InSlot\",\"value\":\"target\"},\"kind\":{\"type\":\"Combat\"}}} "
   -- CR 120.1 again, the same log read as a TOTAL: Petrified Wood-Kin's rule
   -- 702.54b X is the Relative arm over Opponent, and it must not share a tag with
@@ -681,12 +681,12 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.DamageDealtToPlayersThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Just DamageKind.Noncombat})
+      (Quantity.DamageDealtToPlayersThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Just DamageKind.Noncombat, DealtDamage.by = Nothing})
       " {\"type\":\"DamageDealtToPlayersThisTurn\",\"value\":{\"kind\":{\"type\":\"Noncombat\"},\"recipient\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.DamageDealtToPlayersThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), DealtDamage.kind = Nothing})
+      (Quantity.DamageDealtToPlayersThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), DealtDamage.kind = Nothing, DealtDamage.by = Nothing})
       " {\"type\":\"DamageDealtToPlayersThisTurn\",\"value\":{\"recipient\":{\"type\":\"InSlot\",\"value\":\"target\"}}} "
   -- CR 601.2i: the tally's record. Daybreak Ranger // Nightfall Predator writes
   -- the Candidate arm last turn, Ertai's Scorn this turn.

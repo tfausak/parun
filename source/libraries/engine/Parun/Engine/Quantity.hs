@@ -151,7 +151,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
       -- shared fold, so this count and the Filter.DealtDamageThisTurn atom a player
       -- candidate answers cannot come apart; see Game.damagedPlayer under it for CR
       -- 120.3a's recipient and for CR 120.8's zero.
-      wasDealtDamage kind = Game.wasDealtDamageThisTurn kind gs
+      wasDealtDamage kind by = Game.wasDealtDamageThisTurn kind by gs
       -- CR 102.1's reference, resolved by Count.playersFor for every arm but the
       -- fold's own candidate. That one is answered HERE because this is where the
       -- candidate is: Count.evaluate's Scope.OverPlayers arm hands each candidate
@@ -888,7 +888,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- so -- Tymna the Weaver's "opponents that were dealt combat damage".
         Quantity.PlayersDealtDamageThisTurn tally -> case historyPlayersOf (DealtDamage.recipient tally) of
           Nothing -> Nothing
-          Just pids -> Just (toInteger (length (filter (wasDealtDamage (DealtDamage.kind tally)) pids)))
+          Just pids -> Just (toInteger (length (filter (wasDealtDamage (DealtDamage.kind tally) (DealtDamage.by tally)) pids)))
         -- CR 120.1 / 608.2i: how much damage in total the players this reference names
         -- were dealt this turn -- rule 702.54b's "the total damage your opponents have
         -- been dealt this turn", which Parun.Engine.Event's Bloodthirst arm asks with
@@ -900,10 +900,12 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         --
         -- Same log, same CR 120.3a recipient, same roster (Chandra's Incinerator's
         -- ruling) and the same empty-log answer of 0; only the reference is ever
-        -- unanswered.
+        -- unanswered. `by` asks what each source was as it dealt the damage
+        -- (Reverse Polarity's scenarios; Admiral Beckett Brass's ruling, "checks what
+        -- happened earlier in the turn").
         Quantity.DamageDealtToPlayersThisTurn tally -> case historyPlayersOf (DealtDamage.recipient tally) of
           Nothing -> Nothing
-          Just pids -> Just (toInteger (sum (fmap (Game.damageDealtToPlayerThisTurn (DealtDamage.kind tally) gs) pids)))
+          Just pids -> Just (toInteger (sum (fmap (Game.damageDealtToPlayerThisTurn (DealtDamage.kind tally) (DealtDamage.by tally) gs) pids)))
         -- CR 601.2i / 608.2i: how many spells that player cast during the turn the
         -- tally names, folded off that turn's log (Game.turnLog). LifeTotal's arm in
         -- ARITY -- one player's tally, so a reference naming several answers "whose?"

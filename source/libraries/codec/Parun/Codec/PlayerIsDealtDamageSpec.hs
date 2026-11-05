@@ -14,12 +14,12 @@ spec s = Spec.describe s "Parun.Codec.PlayerIsDealtDamage" $ do
     Common.assertCodec
       s
       PlayerIsDealtDamage.codec
-      (PlayerIsDealtDamage.MkPlayerIsDealtDamage {PlayerIsDealtDamage.dealt = DealtDamage.MkDealtDamage PlayerRelation.You Nothing, PlayerIsDealtDamage.orTheirPlaneswalkers = False})
+      (PlayerIsDealtDamage.MkPlayerIsDealtDamage {PlayerIsDealtDamage.dealt = DealtDamage.MkDealtDamage PlayerRelation.You Nothing Nothing, PlayerIsDealtDamage.orTheirPlaneswalkers = False})
       " {\"dealt\":{\"recipient\":{\"type\":\"You\"}}} "
   Spec.it s "the player or their planeswalkers" $
     Common.assertCodec
       s
       PlayerIsDealtDamage.codec
-      (PlayerIsDealtDamage.MkPlayerIsDealtDamage {PlayerIsDealtDamage.dealt = DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Combat), PlayerIsDealtDamage.orTheirPlaneswalkers = True})
+      (PlayerIsDealtDamage.MkPlayerIsDealtDamage {PlayerIsDealtDamage.dealt = DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Combat) Nothing, PlayerIsDealtDamage.orTheirPlaneswalkers = True})
       " {\"dealt\":{\"recipient\":{\"type\":\"You\"},\"kind\":{\"type\":\"Combat\"}},\"orTheirPlaneswalkers\":true} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlayerIsDealtDamage.codec

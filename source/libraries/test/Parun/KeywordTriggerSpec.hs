@@ -116,7 +116,7 @@ poisonousSpec s registry =
         -- falsifier is an implementation that hands the poison to the ability's
         -- controller (Binding.you) instead.
         Spec.it s "CR 603.2 the damaged player rides the trigger in the reserved slot" $ do
-          let ev = GameEvent.DamageDealt (DamageEvent.MkDamageEvent (ObjectId.MkObjectId 7) (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False DamageKind.Combat)
+          let ev = GameEvent.DamageDealt (DamageEvent.MkDamageEvent (ObjectId.MkObjectId 7) (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Combat)
               bindings = Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice Mint.dealsCombatDamageToAPlayer ev
           Spec.assertEqWith s "bob is bound under thatPlayer" (Map.lookup Binding.triggerPlayer (Binding.targetsOf bindings)) (Just (Set.singleton (Recipient.ToPlayer S.bob)))
         -- What separates poisonous from infect and toxic: it is a TRIGGERED

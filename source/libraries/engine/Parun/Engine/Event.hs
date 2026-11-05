@@ -1079,6 +1079,7 @@ damageEvent gs kind source target amount =
           DamageEvent.dealtByController = controller,
           DamageEvent.dealtByCreatureTypes = Set.filter Subtype.Engine.isCreatureType (PC.subtypes characteristics),
           DamageEvent.dealtByCommander = Commander.isCommander source gs,
+          DamageEvent.dealtByCardTypes = PC.cardTypes characteristics,
           DamageEvent.kind = kind
         }
 
@@ -3721,7 +3722,7 @@ apply settle batch applied batchPrevented candidate event =
               Just printed -> printed
               Nothing ->
                 let context = Projection.sourceContext gs (Projection.controllerOf oid gs) oid
-                    quantity = Quantity.Type.DamageDealtToPlayersThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing}
+                    quantity = Quantity.Type.DamageDealtToPlayersThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing, DealtDamage.by = Nothing}
                  in maybe 0 Integer.toNaturalSaturating (Quantity.evaluate (Projection.fullView gs) context gs oid quantity)
         Replacement.consume (ReplacementCandidate.identity candidate)
         addEnteringCounters Nothing oid CounterKind.PlusOnePlusOne count
@@ -4194,24 +4195,16 @@ apply settle batch applied batchPrevented candidate event =
       -- amount, fixed off the face-down 2/2 as the effect was applied (CR
       -- 608.2h), which the modified event keeps (CR 614.6).
       --
-      -- Through turnFaceUpByEffect's guard, so a batch that collected the row
-      -- for two events turns the permanent up once. `consume` is skipped for the
-      -- stun arm's reason: the status is the resource, and turning face up ends it.
+      -- `consume` is skipped for the stun arm's reason: the status is the
+      -- resource, and turning face up ends it.
       --
-      -- The event's deal-time riders are the SOURCE's (damageEvent), so a
-      -- source that turned up has them read again off the face-up creature:
-      -- CR 702.2b's deathtouch and CR 702.15b's lifelink belong to whatever
-      -- deals the damage as it is dealt, and the 2/2 had none. A recipient that
+      -- The event's riders wait for resolveDamageBatch's asDealt, which reads them
+      -- off the face-up source for every event of the batch. A recipient that
       -- turned up needs nothing here: its protection and prevention are rows the
       -- loop's next pass collects (CR 616.2).
       DamageRewrite.TurnFaceUp -> do
-        let turning = ReplacementCandidate.source candidate
-        turnFaceUpByEffect turning
-        gs <- State.get
-        pure . Just . ProposedEvent.WouldDealDamage $
-          if DamageEvent.source de == turning
-            then damageEvent gs (DamageEvent.kind de) turning (DamageEvent.target de) (DamageEvent.amount de)
-            else de
+        turnFaceUpByEffect (ReplacementCandidate.source candidate)
+        pure (Just event)
       -- CR 614.1a: the damage goes on as it was. Reached only out of range
       -- of the second damage's payer: chooseAndApply takes the rest.
       DamageRewrite.AlsoToSourceController -> do
@@ -5868,8 +5861,26 @@ resolveDamage allowances spent earlier de = do
 --     the total rather than three.
 resolveDamageBatch :: [DamageEvent.DamageEvent] -> Game ([DamageEvent.DamageEvent], [Prevention])
 resolveDamageBatch events = do
+  before <- State.get
   (dealt, (prevented, _)) <- settleThreads mempty (fmap (\de -> (de, Set.empty)) events)
-  pure (Replacement.oneEventPerRecipient dealt, Replacement.groupPreventions prevented)
+  after <- State.get
+  pure (Replacement.oneEventPerRecipient (fmap (asDealt before after) dealt), Replacement.groupPreventions prevented)
+
+-- CR 120.4b: damage is dealt once replacement and prevention effects have
+-- finished, so the riders of a source the batch turned face up (CR 708.8) are
+-- read again then (damageEvent): settling one of its events turns it up for all
+-- of them, with no row left to meet the rest. Every other event keeps the riders
+-- it was built with, and every amount stays as modified (CR 614.6). Proved by the
+-- scenarios
+-- reverse-polarity-counts-every-event-of-a-source-turned-face-up-dealing-them and
+-- cr-702-2b-a-masked-vampire-nighthawk-dealt-damage-first-fights-with-deathtouch-and-lifelink.
+asDealt :: GameState -> GameState -> DamageEvent.DamageEvent -> DamageEvent.DamageEvent
+asDealt before after de
+  | faceDown before && not (faceDown after) =
+      damageEvent after (DamageEvent.kind de) (DamageEvent.source de) (DamageEvent.target de) (DamageEvent.amount de)
+  | otherwise = de
+  where
+    faceDown gs = maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject (DamageEvent.source de) gs)
 
 -- CR 615.7: a row owes its division over damage an Eye for an Eye adds as much
 -- as over what was proposed, so a batch holding a thread such a row reaches

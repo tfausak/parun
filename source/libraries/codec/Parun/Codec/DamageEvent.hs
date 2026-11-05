@@ -3,6 +3,7 @@
 module Parun.Codec.DamageEvent where
 
 import qualified Data.Set as Set
+import qualified Parun.Codec.CardType as CardType
 import qualified Parun.Codec.DamageKind as DamageKind
 import qualified Parun.Codec.ObjectId as ObjectId
 import qualified Parun.Codec.PlayerId as PlayerId
@@ -33,6 +34,7 @@ codec = Fields.object $ do
   dealtByController <- Fields.defaulted "dealtByController" Nothing (Common.maybe PlayerId.codec) DamageEvent.dealtByController
   dealtByCreatureTypes <- Fields.defaulted "dealtByCreatureTypes" Set.empty (Common.set Subtype.codec) DamageEvent.dealtByCreatureTypes
   dealtByCommander <- Fields.defaulted "dealtByCommander" False Common.boolean DamageEvent.dealtByCommander
+  dealtByCardTypes <- Fields.defaulted "dealtByCardTypes" Set.empty (Common.set CardType.codec) DamageEvent.dealtByCardTypes
   kind <- Fields.required "kind" DamageKind.codec DamageEvent.kind
   pure
     DamageEvent.MkDamageEvent
@@ -47,5 +49,6 @@ codec = Fields.object $ do
         DamageEvent.dealtByController = dealtByController,
         DamageEvent.dealtByCreatureTypes = dealtByCreatureTypes,
         DamageEvent.dealtByCommander = dealtByCommander,
+        DamageEvent.dealtByCardTypes = dealtByCardTypes,
         DamageEvent.kind = kind
       }
