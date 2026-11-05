@@ -115,7 +115,6 @@ import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
 import qualified Parun.Types.CreateEmblem as CreateEmblem
-import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.CrewRestriction as CrewRestriction
 import qualified Parun.Types.DamagePart as DamagePart
 import qualified Parun.Types.DamagePattern as DamagePattern
@@ -161,6 +160,7 @@ import qualified Parun.Types.ExchangeOwnership as ExchangeOwnership
 import qualified Parun.Types.ExchangeValues as ExchangeValues
 import qualified Parun.Types.ExchangedValue as ExchangedValue
 import qualified Parun.Types.ExileFromGraveyard as ExileFromGraveyard
+import qualified Parun.Types.ExploitTrigger as ExploitTrigger
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Parun.Types.FaceDownState as FaceDownState
@@ -2197,8 +2197,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.PermanentTappedForMana payload -> TriggerCondition.PermanentTappedForMana payload {PermanentTappedForMana.filter = Filter.rewrite pairs (PermanentTappedForMana.filter payload), PermanentTappedForMana.mana = rewriteManaSpecification pairs (PermanentTappedForMana.mana payload)}
   TriggerCondition.AbilityAddsMana payload -> TriggerCondition.AbilityAddsMana payload {AbilityAddsMana.source = Filter.rewrite pairs (AbilityAddsMana.source payload), AbilityAddsMana.mana = rewriteManaSpecification pairs (AbilityAddsMana.mana payload)}
   TriggerCondition.SelfManaAbilityResolves -> condition
-  TriggerCondition.SelfExploits -> condition
-  TriggerCondition.CreatureExploits (CreatureExploits.MkCreatureExploits exploiter exploited) -> TriggerCondition.CreatureExploits (CreatureExploits.MkCreatureExploits (Filter.rewrite pairs exploiter) (Filter.rewrite pairs exploited))
+  TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger exploiter exploited) -> TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger (acting exploiter) (Filter.rewrite pairs exploited))
   TriggerCondition.SelfBecomesCrewed {} -> condition
   TriggerCondition.SelfCrewsVehicle -> condition
   TriggerCondition.PermanentSacrificed payload -> TriggerCondition.PermanentSacrificed payload {PlayerActsOn.filter = Filter.rewrite pairs (PlayerActsOn.filter payload)}

@@ -75,6 +75,8 @@ to agents as written. What it doesn't say:
   or anything that closes the pipe early (it deadlocks holding a lock slot);
   redirect to a file and read the file. While `script/mutate.sh` runs, run no
   other build in that checkout and edit no source: both read the mutated tree.
+  A tasty `-p` pattern cannot hold an apostrophe (it fails to parse): match a
+  rule number or another fragment of the test name.
 
 - Derive against `origin/main`, not the working checkout: `git fetch`, then
   `git show origin/main:<path>` or a worktree cut from it. Grep for

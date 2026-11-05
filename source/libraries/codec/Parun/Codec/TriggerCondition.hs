@@ -11,11 +11,11 @@ import qualified Parun.Codec.ClassLevel as ClassLevel
 import qualified Parun.Codec.Condition as Condition
 import qualified Parun.Codec.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Codec.CounterTrigger as CounterTrigger
-import qualified Parun.Codec.CreatureExploits as CreatureExploits
 import qualified Parun.Codec.DamageTrigger as DamageTrigger
 import qualified Parun.Codec.DieResult as DieResult
 import qualified Parun.Codec.DiscardTrigger as DiscardTrigger
 import qualified Parun.Codec.EntersTrigger as EntersTrigger
+import qualified Parun.Codec.ExploitTrigger as ExploitTrigger
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.LeavesTrigger as LeavesTrigger
@@ -109,8 +109,7 @@ codec =
           Arm.nullary "FaceDownPermanentLeavesRevealed" TriggerCondition.FaceDownPermanentLeavesRevealed,
           Arm.payload "PermanentBecomesDesignated" PermanentBecomesDesignated.codec TriggerCondition.PermanentBecomesDesignated (\x -> case x of TriggerCondition.PermanentBecomesDesignated y -> Just y; _ -> Nothing),
           Arm.nullary "AttachedCreatureMentors" TriggerCondition.AttachedCreatureMentors,
-          Arm.nullary "SelfExploits" TriggerCondition.SelfExploits,
-          Arm.payload "CreatureExploits" CreatureExploits.codec TriggerCondition.CreatureExploits (\x -> case x of TriggerCondition.CreatureExploits y -> Just y; _ -> Nothing),
+          Arm.payload "Exploits" ExploitTrigger.codec TriggerCondition.Exploits (\x -> case x of TriggerCondition.Exploits y -> Just y; _ -> Nothing),
           Arm.payload "SelfBecomesCrewed" TriggerFrequency.codec TriggerCondition.SelfBecomesCrewed (\x -> case x of TriggerCondition.SelfBecomesCrewed y -> Just y; _ -> Nothing),
           Arm.nullary "SelfCrewsVehicle" TriggerCondition.SelfCrewsVehicle,
           Arm.payload "PermanentSacrificed" PlayerActsOn.codec TriggerCondition.PermanentSacrificed (\x -> case x of TriggerCondition.PermanentSacrificed y -> Just y; _ -> Nothing),
@@ -193,8 +192,7 @@ tagOf x = case x of
   TriggerCondition.FaceDownPermanentLeavesRevealed {} -> "FaceDownPermanentLeavesRevealed"
   TriggerCondition.PermanentBecomesDesignated {} -> "PermanentBecomesDesignated"
   TriggerCondition.AttachedCreatureMentors {} -> "AttachedCreatureMentors"
-  TriggerCondition.SelfExploits {} -> "SelfExploits"
-  TriggerCondition.CreatureExploits {} -> "CreatureExploits"
+  TriggerCondition.Exploits {} -> "Exploits"
   TriggerCondition.SelfBecomesCrewed {} -> "SelfBecomesCrewed"
   TriggerCondition.SelfCrewsVehicle {} -> "SelfCrewsVehicle"
   TriggerCondition.PermanentSacrificed {} -> "PermanentSacrificed"

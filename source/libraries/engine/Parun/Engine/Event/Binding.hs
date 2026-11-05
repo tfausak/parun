@@ -573,16 +573,14 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
     Binding.setMentoredCreature mentored Map.empty
   -- CR 702.110b's "a creature": the creature that was exploited, the event's
   -- second id -- Profaner of the Dead's "the exploited creature's toughness"
-  -- reads it. The EXPLOITER gets no slot: matchesTrigger has just proved it is
-  -- the bearer, which Binding.triggerSource already answers.
+  -- and Henry Wu, InGen Geneticist's "the exploited creature" read it. The
+  -- EXPLOITER gets no slot: under Self, matchesTrigger has just proved it is
+  -- the bearer, which Binding.triggerSource already answers, and under Matching
+  -- no printed payload names it.
   --
   -- Unconditional given a match, which is what eventBindingSlots' per-condition
   -- promise needs: every GameEvent.Exploited carries both ids.
-  (TriggerCondition.SelfExploits, GameEvent.Exploited (Exploited.MkExploited _ exploited)) ->
-    Binding.setExploitedCreature exploited Map.empty
-  -- The same slot read by a bystander, Henry Wu, InGen Geneticist's "the
-  -- exploited creature". The exploiter gets none: no printed payload names it.
-  (TriggerCondition.CreatureExploits {}, GameEvent.Exploited (Exploited.MkExploited _ exploited)) ->
+  (TriggerCondition.Exploits {}, GameEvent.Exploited (Exploited.MkExploited _ exploited)) ->
     Binding.setExploitedCreature exploited Map.empty
   -- CR 702.122b's "that Vehicle": the Vehicle the bearer just crewed, which
   -- Gearshift Ace's "that Vehicle gains first strike until end of turn" reads.
@@ -1575,10 +1573,8 @@ eventBindingSlots cond = case cond of
   -- 702.110b's event names the exploiter, which Binding.triggerSource already
   -- answers, and a SECOND creature besides -- Profaner of the Dead's "the
   -- exploited creature's toughness". Guaranteed given a match, every
-  -- GameEvent.Exploited carrying both ids.
-  TriggerCondition.SelfExploits -> Set.singleton Binding.exploitedCreature
-  -- The same slot, guaranteed for the same reason.
-  TriggerCondition.CreatureExploits {} -> Set.singleton Binding.exploitedCreature
+  -- GameEvent.Exploited carrying both ids. Either exploiter.
+  TriggerCondition.Exploits {} -> Set.singleton Binding.exploitedCreature
   -- NOT empty, unlike PermanentActs above: rule 702.122e's event names the Vehicle,
   -- which Binding.triggerSource already answers, but its rider makes the CREWERS
   -- a subject of their own -- Mighty Servant of Leuk-o's "if it was crewed by
