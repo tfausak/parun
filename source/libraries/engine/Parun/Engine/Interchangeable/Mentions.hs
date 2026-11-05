@@ -603,7 +603,7 @@ filterNames asking criterion = case criterion of
   Filter.DeclaredBlockerThisCombat -> mempty
   Filter.DeclaredThisTurn role -> keyed asking <> history asking (case role of BlockRole.Attacker -> HistoryRead.Attacks; BlockRole.Blocker -> HistoryRead.Blockers)
   Filter.CouldAttackThisTurn -> keyed asking
-  Filter.LeftLibraryThisTurn how -> keyed asking <> case how of LibraryDeparture.Drawn -> mempty; LibraryDeparture.Milled -> history asking HistoryRead.Mills
+  Filter.LeftLibraryThisTurn how -> keyed asking <> case how of LibraryDeparture.Drawn -> mempty; LibraryDeparture.LastDrawn -> mempty; LibraryDeparture.Milled -> history asking HistoryRead.Mills
   Filter.CantCrewVehicles -> contextNames asking
   Filter.CrewedSourceThisTurn -> keyed asking <> history asking HistoryRead.Crews
   Filter.ConvokedSourceThisTurn -> keyed asking <> history asking HistoryRead.Convokes <> history asking HistoryRead.Moves

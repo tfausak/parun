@@ -2321,8 +2321,9 @@ matches context view predicate = case predicate of
     Just oid -> Set.member oid (cantCrewVehicles context)
     Nothing -> False
   -- CR 120.1 / 608.2i: the same look-back again, over the damage events. Like
-  -- DeclaredThisTurn and LeftLibraryThisTurn it cannot stop being true within a turn,
-  -- and unlike either it is not the reading CR 120.3e's marked damage would give
+  -- DeclaredThisTurn and LeftLibraryThisTurn (LastDrawn aside, which a later draw
+  -- unseats) it cannot stop being true within a turn, and unlike either it is not
+  -- the reading CR 120.3e's marked damage would give
   -- -- CR 120.6's regeneration and CR 120.3d's wither both leave a creature that
   -- was dealt damage carrying nothing marked. Named rather than counted, since
   -- CantCrewVehicles sits between them and is neither: a prohibition lifts the
