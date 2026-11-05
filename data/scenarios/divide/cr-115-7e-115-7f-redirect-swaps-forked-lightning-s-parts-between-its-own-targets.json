@@ -1,0 +1,195 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "mountain1"
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain2"
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain3"
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain4"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Forked Lightning",
+            "label": "lightning"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "island1"
+          },
+          {
+            "card": "Island",
+            "label": "island2"
+          },
+          {
+            "card": "Craw Wurm",
+            "label": "wurm-a"
+          },
+          {
+            "card": "Craw Wurm",
+            "label": "wurm-b"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Redirect",
+            "label": "redirect"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 115.7e / 115.7f Redirect changes each of Forked Lightning's targets to the other, so the parts trade places",
+  "note": "Alice divides 4 damage 3 onto the first Wurm and 1 onto the second. No other creature exists, so Redirect's only final set is the one the spell has, but bob may still change each target to the other (Goblin Flectomancer's ruling): bob is asked who takes which part and hands the 3 to the second Wurm.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$mountain1",
+            "$mountain2",
+            "$mountain3",
+            "$mountain4"
+          ],
+          "object": "$lightning",
+          "targets": [
+            "$wurm-a",
+            "$wurm-b"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseDivision",
+          "with": [
+            [
+              [
+                "Creature",
+                "$wurm-a"
+              ],
+              3
+            ],
+            [
+              [
+                "Creature",
+                "$wurm-b"
+              ],
+              1
+            ]
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$island1",
+            "$island2"
+          ],
+          "object": "$redirect",
+          "targets": [
+            "Forked Lightning"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseDivision",
+          "with": [
+            [
+              [
+                "Creature",
+                "$wurm-a"
+              ],
+              1
+            ],
+            [
+              [
+                "Creature",
+                "$wurm-b"
+              ],
+              3
+            ]
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Damage": {
+          "damage": 1,
+          "object": "$wurm-a"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Damage": {
+          "damage": 3,
+          "object": "$wurm-b"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

@@ -2823,8 +2823,13 @@ chooseNewTargetsFor unannounced source chooser controller copyId = do
         -- Every slot answerable only one way means the options are
         -- indistinguishable, and CR 707.10c's offer is elided.
         settled slot = Set.isSubsetOf (piled slot (maybe 0 fst (Map.lookup slot asked)))
-    Monad.unless (and (Map.elems (Map.mapWithKey settled held))) $ do
-      answer <- Game.choose (Prompt.ChooseTargets (Decide.deciderFor chooser gs) chooser copyId asked)
+        -- CR 115.7e: a current target legal now may take another's place, so
+        -- with CR 115.7f its part can move even when the set does not change
+        -- (Goblin Flectomancer's ruling of 2006-02-01). reaimDivisions asks.
+        movable = Map.intersectionWith Set.intersection current fresh
+        unasked = and (Map.elems (Map.mapWithKey settled held))
+    Monad.unless (unasked && not (any (divisionMoves (Object.bindings copy) movable) (Map.keys current))) $ do
+      answer <- if unasked then pure held else Game.choose (Prompt.ChooseTargets (Decide.deciderFor chooser gs) chooser copyId asked)
       let admits slot (n, offered) picked = picked == Map.findWithDefault Set.empty slot current || (Natural.length picked == n && Set.isSubsetOf picked offered)
           wellFormed =
             Map.keysSet answer == Map.keysSet asked
@@ -2856,7 +2861,7 @@ chooseNewTargetsFor unannounced source chooser controller copyId = do
             caused slot refused = not (Set.isSubsetOf refused (Map.findWithDefault Set.empty slot already))
             coherent = not (or (Map.mapWithKey caused (Target.jointlyIllegal (resolvingKind copyId gs) (resolvingAbilityName copyId gs) (Just controller) seed aimer slots drawn gs)))
         Monad.when (and (Map.elems (Map.mapWithKey stands drawn)) && coherent) $ do
-          rebound <- reaimDivisions chooser copyId (Object.bindings copy) (Map.filter (not . Set.null) drawn)
+          rebound <- reaimDivisions chooser copyId movable (Object.bindings copy) (Map.filter (not . Set.null) drawn)
           Monad.forM_ rebound $ \bindings -> do
             let write o = o {Object.bindings = Map.union bindings (Object.bindings o)}
             State.modify' (\g -> g {GameState.objects = Map.adjust write copyId (GameState.objects g)})
@@ -2920,7 +2925,7 @@ changeTargetsFor onto source chooser controller oid = do
         fresh = Target.legalSets (resolvingKind oid gs) (resolvingAbilityName oid gs) (Just controller) False seed aimer slots gs
         another old = Set.filter (\r -> not (any (Recipient.sameReferent r) old))
         rebind picked = do
-          rebound <- reaimDivisions chooser oid (Object.bindings obj) picked
+          rebound <- reaimDivisions chooser oid Map.empty (Object.bindings obj) picked
           Monad.forM_ rebound $ \bindings -> do
             let write o = o {Object.bindings = Map.union bindings (Object.bindings o)}
             State.modify' (\g -> g {GameState.objects = Map.adjust write oid (GameState.objects g)})
@@ -2992,7 +2997,9 @@ changeTargetsFor onto source chooser controller oid = do
 -- CR 115.7f: each re-aimed slot's new binding, "the original division can't be
 -- changed": a target left standing keeps its part, and the parts of the
 -- replaced targets go to the new ones -- each the same where they are equal, and
--- otherwise as the chooser hands them out (Prompt.ChooseDivision's Parts). An
+-- otherwise as the chooser hands them out (Prompt.ChooseDivision's Parts). A
+-- `movable` target still in the final set stands in no place of its own (CR
+-- 115.7e), so its part joins the ones handed out and it is handed one. An
 -- answer that does not hand out exactly those parts reverses the whole re-aim,
 -- chooseNewTargetsFor's reject-not-repair. An undivided slot binds its targets
 -- alone.
@@ -3003,18 +3010,16 @@ changeTargetsFor onto source chooser controller oid = do
 -- individually"; Lutri's of 2020-04-17: "the division can't be changed, although
 -- the targets receiving that damage still can"). CR 115.3 gives each new target
 -- one part.
---
--- Not implemented: a target that stays in the final set taking another target's
--- part, which CR 115.7e allows (#6173).
-reaimDivisions :: PlayerId -> ObjectId -> Map.Map SlotName Binding.Type.Binding -> Map.Map SlotName (Set Recipient) -> Game (Maybe (Map.Map SlotName Binding.Type.Binding))
-reaimDivisions chooser oid bindings picked =
+-- data/scenarios/divide's Redirect swapping Forked Lightning's parts proves it.
+reaimDivisions :: PlayerId -> ObjectId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName Binding.Type.Binding -> Map.Map SlotName (Set Recipient) -> Game (Maybe (Map.Map SlotName Binding.Type.Binding))
+reaimDivisions chooser oid movable bindings picked =
   fmap sequence . flip Map.traverseWithKey picked $ \slot new ->
     case Binding.Type.division =<< Map.lookup slot bindings of
       Nothing -> pure (Just (Binding.toRecipients new))
       Just division -> do
-        let kept = Map.restrictKeys division new
+        let kept = Map.withoutKeys (Map.restrictKeys division new) (Map.findWithDefault Set.empty slot movable)
             dividedAs parts = Just ((Binding.toRecipients new) {Binding.Type.division = Just (Map.union kept parts)})
-        case (NonEmpty.nonEmpty (List.sort (Map.elems (Map.withoutKeys division new))), NonEmpty.nonEmpty (Set.toList (Set.difference new (Map.keysSet division)))) of
+        case (NonEmpty.nonEmpty (List.sort (Map.elems (Map.withoutKeys division (Map.keysSet kept)))), NonEmpty.nonEmpty (Set.toList (Set.difference new (Map.keysSet kept)))) of
           (Just parts, Just added)
             | any (/= NonEmpty.head parts) parts -> do
                 gs <- State.get
@@ -3023,6 +3028,12 @@ reaimDivisions chooser oid bindings picked =
                 pure (if Target.divides dividing added answer then dividedAs answer else Nothing)
             | otherwise -> pure (dividedAs (Map.fromList (fmap (\r -> (r, NonEmpty.head parts)) (NonEmpty.toList added))))
           _ -> pure (dividedAs Map.empty)
+
+-- Whether CR 115.7e lets `slot`'s parts change hands among the targets it
+-- already holds: two `movable` targets with different parts.
+divisionMoves :: Map.Map SlotName Binding.Type.Binding -> Map.Map SlotName (Set Recipient) -> SlotName -> Bool
+divisionMoves bindings movable slot =
+  maybe False ((> 1) . Set.size . Set.fromList . Map.elems . flip Map.restrictKeys (Map.findWithDefault Set.empty slot movable)) (Binding.Type.division =<< Map.lookup slot bindings)
 
 -- CR 707.2: a spell on the stack that becomes a copy acquires the original's
 -- "choices made when casting or activating it (mode, targets, the value of X,
