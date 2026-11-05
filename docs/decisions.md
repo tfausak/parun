@@ -760,6 +760,23 @@ Entries are ordered by the first rule each cites.
   is offered to a subgame's wish as a creature and not as a sorcery".
 - **Issue**: none.
 
+## Whether a subgame of a Commander game is one
+
+- **Question**: CR 903.11 limits what comes in from outside "a Commander
+  game". Does that cover a subgame of one (Shahrazad), whose main-game cards
+  are outside it?
+- **Rules**: CR 729.2, 729.2c, 729.4, 903.11, 903.11a; CR of 2026-09-25.
+- **Decision**: Yes. CR 729.2c moves the commander into the subgame's command
+  zone, so the subgame is played as a Commander game: a wish there reaches no
+  main-game card, and the companion action meets CR 903.11a's limits.
+- **Rejected**: A plain game. CR 729.2 says the subgame follows rule 103 and
+  names no variant, but the commander CR 729.2c moves would then be no
+  commander, leaving rule 903's other rules unread for it.
+- **Site**: `Parun.Engine.Commander.isCommanderGame`, proved by
+  `Parun.OutsideTheGameSpec`'s "CR 729.2c/903.11 a wish in a subgame of a
+  Commander game reaches no main-game creature".
+- **Issue**: #6170.
+
 ## How perpetual effects follow a meld
 
 - **Question**: Alchemy's "perpetually" follows an object across zone
