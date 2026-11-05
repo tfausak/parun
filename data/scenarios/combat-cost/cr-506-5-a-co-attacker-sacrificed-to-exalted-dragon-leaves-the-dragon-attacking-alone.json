@@ -1,0 +1,114 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Exalted Dragon",
+            "label": "dragon",
+            "ready": true
+          },
+          {
+            "card": "Mishra's Factory",
+            "label": "factory",
+            "ready": true
+          },
+          {
+            "card": "Akrasan Squire",
+            "label": "squire",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "forest",
+            "ready": true
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "BeginningOfCombat"
+  },
+  "description": "CR 506.5 / 508.1k a co-attacker sacrificed to Exalted Dragon leaves the Dragon attacking alone: Akrasan Squire exalts it",
+  "note": "Alice animates Mishra's Factory, attacks with it and the Dragon, and pays the Dragon's land with the Factory. Only the Dragon becomes attacking, so exalted triggers (docs/decisions.md, \"Attacks alone after a sacrificed co-attacker\").",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "ability": 1,
+          "mana": [
+            "$forest",
+            null
+          ],
+          "object": "$factory"
+        }
+      },
+      "player": "alice",
+      "step": "BeginningOfCombat",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Attack": [
+          "$dragon",
+          "$factory"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseSacrifices",
+          "with": [
+            "$factory"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Attackers": {
+          "attackers": {
+            "$dragon": "$bob"
+          }
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "$dragon",
+          "power": 6,
+          "toughness": 6
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 14,
+          "player": "bob"
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
+      "turn": 1
+    }
+  ]
+}

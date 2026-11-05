@@ -1,0 +1,28 @@
+{
+  "description": "CR 612.1, 712.8g: Artificial Evolution on Graf Rats leaves the melded Chittering Host an Eldrazi Horror",
+  "note": "alice swaps Horror -> Zombie in Graf Rats' text. The Rats print only \"meld them into Chittering Host\", not the Host's type line, so the melded permanent keeps its printed subtypes (Artificial Evolution's 2004-10-04 ruling).",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Graf Rats", "label": "rats" },
+          { "card": "Midnight Scavengers" },
+          { "card": "Island", "label": "island", "ready": true }
+        ],
+        "hand": [{ "card": "Artificial Evolution", "label": "evo" }]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$evo", "targets": ["$rats"], "mana": ["$island"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Artificial Evolution", "do": { "ChooseWordSwap": { "from": { "type": "Horror" }, "to": { "type": "Zombie" } } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Chittering Host", "count": 1 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Subtypes": { "object": "Chittering Host", "subtypes": ["Eldrazi", "Horror"] } } }
+  ]
+}

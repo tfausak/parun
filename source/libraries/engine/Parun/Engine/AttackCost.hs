@@ -21,6 +21,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.Rewrite as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
 import qualified Parun.Extra.Integer as Integer
@@ -101,7 +102,11 @@ costsOn attacker target gs =
           -- projection.
           if (null setEffs || Projection.liveAfterLayers setEffs source gs)
             && not (removed source)
-            then concatMap (fromCost source) costs
+            then
+              -- CR 612.1 over the source's own text, CombatRestriction.gathered's
+              -- reading: the swap is the source's, as the cost is printed there.
+              let changes = Projection.readerTextChanges source gs
+               in concatMap (fromCost source) (if null changes then costs else fmap (Projection.rewriteAttackCost changes) costs)
             else []
       -- CR 508.1b's announcement judged against the source's controller. The
       -- wide arm asks the same question of the planeswalker's controller, which
@@ -144,8 +149,7 @@ costsOn attacker target gs =
               generic n = Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic (Integer.toNaturalSaturating n)])) []
            in Maybe.maybeToList (fmap generic (Quantity.evaluate (Projection.fullView gs) context gs source quantity))
       -- CR 611.3a: an "as long as" is asked live, once per cost, with CR
-      -- 109.5's "you" the source's controller. No CR 612.1 word swap, as the
-      -- rest of the cost gets none (Projection.Rewrite.rewriteRuleAbilities).
+      -- 109.5's "you" the source's controller.
       inForce source ac = case AttackCost.while ac of
         Nothing -> True
         Just condition ->

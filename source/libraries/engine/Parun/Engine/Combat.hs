@@ -1893,10 +1893,8 @@ exchangeBlocks first second gs =
 -- Every creature currently IN combat: the attackers, plus every blocking
 -- creature, Combat.blockingNothing's included (CR 509.1g). Not the keys of
 -- Combat.joinedUnder, which can outlive the record it was taken for.
---
--- That inclusion is a regression fence rather than proved behaviour: dropping it
--- leaves the Combat specs green, no board yet changing the control of a creature
--- blocking nothing.
+-- data/scenarios/combat/cr-510-4-white-knight-blocking-nothing-still-makes-a-first-strike-step.json
+-- proves that inclusion.
 combatants :: Combat -> Set ObjectId
 combatants c = Set.unions [Map.keysSet (Combat.attackers c), Combat.blockingNothing c, Set.unions (Map.elems (Combat.blockers c))]
 
@@ -2279,17 +2277,16 @@ attemptAttackDeclaration perform pid asked forced rejected = do
             tapIt oid = do
               g <- State.get
               Monad.unless (Projection.hasKeyword Keyword.Vigilance oid g) (Event.tap oid)
-            -- CR 506.4's comparand, taken where the creature joins combat.
-            joined = Map.fromList (fmap (\oid -> (oid, attackerOf oid)) attacking)
         -- UNIONED into the record, not written over it: "the record is mine alone"
         -- is exactly the assumption CR 508.8's second clause breaks, and replacing
         -- the map would silently remove such a creature from combat.
-        let attach g =
+        let attach kept g =
               g
                 { GameState.combat =
                     (GameState.combat g)
-                      { Combat.attackers = Map.union recorded (Combat.attackers (GameState.combat g)),
-                        Combat.joinedUnder = Map.union joined (Combat.joinedUnder (GameState.combat g)),
+                      { Combat.attackers = Map.union kept (Combat.attackers (GameState.combat g)),
+                        -- CR 506.4's comparand, taken where the creature joins combat.
+                        Combat.joinedUnder = Map.union (Map.fromSet attackerOf (Map.keysSet kept)) (Combat.joinedUnder (GameState.combat g)),
                         -- CR 802.2a's third sentence, taken where the creature
                         -- joins combat: the seat its target names NOW is the
                         -- seat it named before any CR 506.4 removal, since a
@@ -2297,7 +2294,7 @@ attemptAttackDeclaration perform pid asked forced rejected = do
                         -- this and the reader cannot answer differently.
                         Combat.attackedUnder =
                           Map.union
-                            (Map.mapMaybe (\target -> Defender.playerOf Projection.controllerWithLastKnown target g) recorded)
+                            (Map.mapMaybe (\target -> Defender.playerOf Projection.controllerWithLastKnown target g) kept)
                             (Combat.attackedUnder (GameState.combat g)),
                         -- CR 506.4's controller clause for a battle, taken at the
                         -- same moment and off the battle itself: the seat above is
@@ -2305,31 +2302,31 @@ attemptAttackDeclaration perform pid asked forced rejected = do
                         -- separately.
                         Combat.attackedControlledBy =
                           Map.union
-                            (Map.mapMaybe (\target -> attackedBattleController target g) recorded)
+                            (Map.mapMaybe (\target -> attackedBattleController target g) kept)
                             (Combat.attackedControlledBy (GameState.combat g)),
                         -- CR 508.8's first clause. Never cleared, so a CR 506.4
                         -- removal later in the step cannot un-declare these
                         -- creatures, and never narrowed to the targets still being
                         -- attacked (see Parun.Types.Combat's `attacked` field).
                         Combat.attacked =
-                          Set.union (Set.fromList (Map.elems recorded)) (Combat.attacked (GameState.combat g)),
+                          Set.union (Set.fromList (Map.elems kept)) (Combat.attacked (GameState.combat g)),
                         -- CR 508.3b / 508.4's narrower record, written HERE and
                         -- only here: these creatures were DECLARED, which is what
                         -- those rules distinguish from being put onto the
                         -- battlefield attacking.
                         Combat.declaredAttacked =
-                          Set.union (Set.fromList (Map.elems recorded)) (Combat.declaredAttacked (GameState.combat g)),
+                          Set.union (Set.fromList (Map.elems kept)) (Combat.declaredAttacked (GameState.combat g)),
                         -- The same record split by attacking player (CR 805.10a).
                         Combat.declaredAttackedBy =
                           Map.unionWith
                             Set.union
-                            (Map.fromListWith Set.union (fmap (Bifunctor.bimap attackerOf Set.singleton) (Map.toList recorded)))
+                            (Map.fromListWith Set.union (fmap (Bifunctor.bimap attackerOf Set.singleton) (Map.toList kept)))
                             (Combat.declaredAttackedBy (GameState.combat g)),
                         -- CR 508.6's same record on CR 500.1's narrower span,
                         -- written here for the reason above and emptied as the
                         -- step ends (Parun.Engine.Engine.runStepThatBegan).
                         Combat.declaredAttackedThisStep =
-                          Set.union (Set.fromList (Map.elems recorded)) (Combat.declaredAttackedThisStep (GameState.combat g))
+                          Set.union (Set.fromList (Map.elems kept)) (Combat.declaredAttackedThisStep (GameState.combat g))
                       }
                 }
         -- CR 508.1's preamble, captured here: everything from this line on is
@@ -2474,10 +2471,20 @@ attemptAttackDeclaration perform pid asked forced rejected = do
             -- announcements only, so `forced` cannot come back here.
             Monad.unless forced (attemptAttackDeclaration perform pid (Just chooser) (not again) (if again then Set.insert proposal rejected else rejected))
           else
-            -- CR 508.1k: each chosen creature becomes an attacking creature. After
-            -- the payment, which is the rules' own order.
+            -- CR 508.1k: each chosen creature STILL CONTROLLED by its attacking
+            -- player becomes an attacking creature. After the payment, which is
+            -- the rules' own order, and which can sacrifice a chosen creature
+            -- (Ashnod's Altar, Exalted Dragon's land). One that left never
+            -- attacked, so it leaves CR 508.1a's record too and every event below
+            -- is over `survivors` (docs/decisions.md, "Attacks alone after a
+            -- sacrificed co-attacker").
             do
-              State.modify' attach
+              gsPaid <- State.get
+              let survivors = filter (\oid -> stillChosen (attackerOf oid) oid gsPaid) attacking
+                  gone = Set.difference (Set.fromList attacking) (Set.fromList survivors)
+                  kept = Map.restrictKeys recorded (Set.fromList survivors)
+              State.modify' (attach kept)
+              State.modify' $ \g -> g {GameState.combat = (GameState.combat g) {Combat.declaredAttackers = Set.difference (Combat.declaredAttackers (GameState.combat g)) gone}}
               -- CR 508.2b: the declaration is what abilities trigger on, and CR
               -- 508.3a scopes them to a creature DECLARED as an attacker -- one
               -- event per creature chosen HERE, and none for one put onto the
@@ -2504,12 +2511,12 @@ attemptAttackDeclaration perform pid asked forced rejected = do
               -- aimed at the protector instead.
               State.modify'
                 ( \g ->
-                    let declared = Natural.length attacking
+                    let declared = Natural.length survivors
                         record h oid = Maybe.fromMaybe h $ do
-                          t <- Map.lookup oid recorded
+                          t <- Map.lookup oid kept
                           d <- Defender.playerOf Projection.controllerWithLastKnown t g
                           pure (Event.recordEvent (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared oid d t declared (attackerOf oid))) h)
-                     in List.foldl' record g attacking
+                     in List.foldl' record g survivors
                 )
               -- CR 508.3e's arity, which is the declaration's rather than the
               -- creature's: one event per DISTINCT (attacking player, target)
@@ -2528,7 +2535,7 @@ attemptAttackDeclaration perform pid asked forced rejected = do
               -- they triggered in does not matter.
               State.modify'
                 ( \g ->
-                    let attacked = Set.fromList (Maybe.mapMaybe (\oid -> fmap ((,) (attackerOf oid)) (Map.lookup oid recorded)) attacking)
+                    let attacked = Set.fromList (Maybe.mapMaybe (\oid -> fmap ((,) (attackerOf oid)) (Map.lookup oid kept)) survivors)
                      in Event.simultaneouslyPure (\g1 -> List.foldl' (\h (p, t) -> Event.recordEvent (GameEvent.BecameAttacked (BecameAttacked.MkBecameAttacked p t)) h) g1 (Set.toList attacked)) g
                 )
               -- CR 508.3d's arity, which is neither of the two above: the
@@ -2539,7 +2546,7 @@ attemptAttackDeclaration perform pid asked forced rejected = do
               --
               -- Only for a player who declared one or more creatures, which is
               -- rule 508.3d's "one or more creatures": a player who declined has
-              -- not attacked, and this block is reached with `attacking` empty
+              -- not attacked, and this block is reached with `survivors` empty
               -- whenever the whole side did. Proved
               -- by Parun.EventTriggerSpec's Avatar Roku, Firebender group, whose
               -- trigger targets nothing: dropping the guard adds six {R} on an
@@ -2551,7 +2558,13 @@ attemptAttackDeclaration perform pid asked forced rejected = do
               -- Last of the three, the batch above's reason: CR 508.2b puts every
               -- trigger from this declaration on the stack together.
               Monad.forM_ side $ \p ->
-                Monad.when (any ((== p) . attackerOf) attacking) (State.modify' (Event.recordEvent (GameEvent.AttackersDeclared p)))
+                Monad.when (any ((== p) . attackerOf) survivors) (State.modify' (Event.recordEvent (GameEvent.AttackersDeclared p)))
+
+-- CR 508.1k / 509.1g: whether a creature chosen under `who` still joins combat
+-- once its declaration's costs are paid: on the battlefield and still controlled
+-- by `who`. A cost can sacrifice it (Ashnod's Altar).
+stillChosen :: PlayerId -> ObjectId -> GameState -> Bool
+stillChosen who oid gs = Set.member oid (GameState.battlefield gs) && Projection.controllerOf oid gs == Just who
 
 -- CR 508.1j / 509.1f: pay each player's locked-in toll, in `owed`'s order,
 -- all or nothing -- a failed payment rewinds to `before` (Cost.payToll), which
@@ -3088,18 +3101,26 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
                   attacker <- Set.toList attackers
                   pure (blocker, attacker)
             Monad.unless (null pairs) $ do
-              let add m (b, a) = Map.insertWith Set.union a (Set.singleton b) m
+              -- CR 509.1g: only a chosen creature STILL CONTROLLED by its
+              -- defending player becomes blocking, since CR 509.1f's payment can
+              -- sacrifice one (Ashnod's Altar). Its attacker keeps its key with
+              -- what is left, CR 509.1h making it blocked all the same.
+              let live = filter (\(b, _) -> stillChosen (blockerOf b) b gs2) pairs
+                  gone = Set.difference (Set.fromList (fmap fst pairs)) (Set.fromList (fmap fst live))
+                  add m (b, a) = Map.insertWith Set.union a (if Set.member b gone then Set.empty else Set.singleton b) m
                   merged = List.foldl' add (Combat.blockers (GameState.combat gs2)) pairs
                   -- CR 506.4's comparand for the blockers, alongside the attackers'.
                   -- Unioned, the attackers' entries being already in this map.
-                  joined = Map.union (Map.fromList (fmap (\(b, _) -> (b, blockerOf b)) pairs)) (Combat.joinedUnder (GameState.combat gs2))
+                  joined = Map.union (Map.fromList (fmap (\(b, _) -> (b, blockerOf b)) live)) (Combat.joinedUnder (GameState.combat gs2))
               State.modify' $ \g -> g {GameState.combat = (GameState.combat g) {Combat.blockers = merged, Combat.joinedUnder = joined}}
               -- CR 509.1a again, for the declaration that actually stands. A
               -- second write and not a duplicate of the one above: on the
               -- CR 509.1c degradation path `declaration` is
               -- forcedBlockDeclaration's rather than `legal`, and the rewind
-              -- above has already unwritten `legal`.
-              State.modify' (recordDeclaredBlockers (Set.fromList (fmap fst pairs)))
+              -- above has already unwritten `legal`. Less `gone`, which the
+              -- first write recorded and which never blocked.
+              State.modify' (recordDeclaredBlockers (Set.fromList (fmap fst live)))
+              State.modify' $ \g -> g {GameState.combat = (GameState.combat g) {Combat.declaredBlockers = Set.difference (Combat.declaredBlockers (GameState.combat g)) gone}}
               -- CR 509.1i: the declaration is a trigger event, and CR 509.2a puts what
               -- it fires onto the stack before the active player gets priority.
               -- Recorded AFTER the state is written, and over `declaration` rather
@@ -3131,8 +3152,8 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
               -- and Aetherplasm has to be blocking already -- and read rather
               -- than written as Set.empty because the event is the record. No
               -- reader looks: both refuse BlockProducer.Declared.
-              State.modify' $ \g -> List.foldl' (\h (blocker, attacker) -> Event.recordEvent (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = blocker, BecameBlocking.attacker = attacker, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = Set.member attacker wasBlocked, BecameBlocking.blockersBefore = Map.findWithDefault Set.empty attacker (Combat.blockers (GameState.combat gs2))})) h) g pairs
-              State.modify' $ \g -> List.foldl' (\h (blocker, attackers) -> Event.recordEvent (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker attackers)) h) g (filter (not . Set.null . snd) (Map.toList declaration))
+              State.modify' $ \g -> List.foldl' (\h (blocker, attacker) -> Event.recordEvent (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = blocker, BecameBlocking.attacker = attacker, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = Set.member attacker wasBlocked, BecameBlocking.blockersBefore = Map.findWithDefault Set.empty attacker (Combat.blockers (GameState.combat gs2))})) h) g live
+              State.modify' $ \g -> List.foldl' (\h (blocker, attackers) -> Event.recordEvent (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker attackers)) h) g (filter (\(b, named) -> not (Set.null named) && Set.notMember b gone) (Map.toList declaration))
               -- CR 509.1h: the same declaration makes each attacker it named a BLOCKED
               -- creature. One event per attacker rather than per pair, which is CR
               -- 509.3c's "only once each combat for that creature" -- a real dedup,

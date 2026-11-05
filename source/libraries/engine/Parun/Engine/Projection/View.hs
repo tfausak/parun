@@ -1008,6 +1008,72 @@ keptActivated activated =
       name = ActivatedAbility.name ability
    in if maybe False (Binding.isKeptOn holder) name then ability else ability {ActivatedAbility.name = Just (Binding.keptAbility holder name)}
 
+-- CR 702.165c: copiable values less every ability their CR 707.9a exceptions
+-- added, one instance per exception, so an ability both copied and excepted
+-- keeps its copied instance. `PC.exceptions` survives a copy of the copy (CR
+-- 707.9b), so a Clone of a Dack's Duplicate loses the Duplicate's haste too.
+-- Parun.KeywordTriggerSpec's Backup group's CR 702.165c cases prove it.
+withoutExceptedAbilities :: ProjectedCharacteristics -> ProjectedCharacteristics
+withoutExceptedAbilities pc = List.foldl' withoutExceptedAbility pc (PC.exceptions pc)
+
+-- One arm per CopyException constructor, applyCopyException's reason. Each
+-- removes the LAST equal instance, the one applyCopyException appended.
+withoutExceptedAbility :: ProjectedCharacteristics -> CopyException.CopyException (GrantedAbility.GrantedAbility Card.Type.Card) -> ProjectedCharacteristics
+withoutExceptedAbility pc exception = case exception of
+  CopyException.GainKeywords keywords ->
+    let less :: Keyword.Type.Keyword -> Map Keyword.Type.Keyword Natural -> Map Keyword.Type.Keyword Natural
+        less = Map.update (\n -> if n <= 1 then Nothing else Just (n - 1))
+     in pc {PC.keywords = Foldable.foldl' (flip less) (PC.keywords pc) keywords}
+  CopyException.GainAbility granted -> case granted of
+    GrantedAbility.Activated activated -> pc {PC.activatedAbilities = deleteLast activated (PC.activatedAbilities pc)}
+    GrantedAbility.Triggered triggered -> pc {PC.triggeredAbilities = deleteLast triggered (PC.triggeredAbilities pc)}
+    GrantedAbility.Static static -> pc {PC.staticAbilities = deleteLast static (PC.staticAbilities pc)}
+    GrantedAbility.Rules rules -> pc {PC.ruleAbilities = withoutRuleAbilities rules (PC.ruleAbilities pc)}
+    GrantedAbility.Replacement replacement -> pc {PC.replacementEffects = deleteLast replacement (PC.replacementEffects pc)}
+    GrantedAbility.Player player -> pc {PC.playerAbilities = deleteLast player (PC.playerAbilities pc)}
+    GrantedAbility.SelfCostReduction reduction -> pc {PC.costReductions = deleteLast reduction (PC.costReductions pc)}
+    GrantedAbility.SelfAlternativeCost alternative -> pc {PC.alternativeCosts = deleteLast alternative (PC.alternativeCosts pc)}
+    GrantedAbility.SelfSpendManaAsThough clause -> pc {PC.grantedSpendManaAsThough = deleteLast clause (PC.grantedSpendManaAsThough pc)}
+  -- Settled into GainAbility before it is recorded (settleCopyException).
+  CopyException.GainThisAbility -> pc
+  CopyException.SetPowerToughness _ -> pc
+  CopyException.CardTypes {} -> pc
+  CopyException.AddSubtypes _ -> pc
+  CopyException.AddSupertypes _ -> pc
+  CopyException.SetCreatureSubtypes _ -> pc
+  CopyException.RemoveSupertypes _ -> pc
+  CopyException.SetName _ -> pc
+  CopyException.SetColors _ -> pc
+  CopyException.NoManaCost -> pc
+  CopyException.DontCopyColors -> pc
+
+-- withoutExceptedAbility's subtraction over each of the fifteen lists.
+withoutRuleAbilities :: RuleAbilities.RuleAbilities -> RuleAbilities.RuleAbilities -> RuleAbilities.RuleAbilities
+withoutRuleAbilities gone have =
+  let less :: (Eq a) => (RuleAbilities.RuleAbilities -> [a]) -> [a]
+      less field = Foldable.foldl' (flip deleteLast) (field have) (field gone)
+   in RuleAbilities.MkRuleAbilities
+        { RuleAbilities.activationProhibitions = less RuleAbilities.activationProhibitions,
+          RuleAbilities.attachRestrictions = less RuleAbilities.attachRestrictions,
+          RuleAbilities.attackCosts = less RuleAbilities.attackCosts,
+          RuleAbilities.attackPermissions = less RuleAbilities.attackPermissions,
+          RuleAbilities.attackRequirements = less RuleAbilities.attackRequirements,
+          RuleAbilities.blockCosts = less RuleAbilities.blockCosts,
+          RuleAbilities.blockPermissions = less RuleAbilities.blockPermissions,
+          RuleAbilities.blockRequirements = less RuleAbilities.blockRequirements,
+          RuleAbilities.combatRestrictions = less RuleAbilities.combatRestrictions,
+          RuleAbilities.counterRestrictions = less RuleAbilities.counterRestrictions,
+          RuleAbilities.crewRestrictions = less RuleAbilities.crewRestrictions,
+          RuleAbilities.entryRestrictions = less RuleAbilities.entryRestrictions,
+          RuleAbilities.sacrificeRestrictions = less RuleAbilities.sacrificeRestrictions,
+          RuleAbilities.targetRestrictions = less RuleAbilities.targetRestrictions,
+          RuleAbilities.untapRestrictions = less RuleAbilities.untapRestrictions
+        }
+
+-- The list without its last element equal to `x`, unchanged when none is.
+deleteLast :: (Eq a) => a -> [a] -> [a]
+deleteLast x = reverse . List.delete x . reverse
+
 -- One arm per CopyException constructor, no wildcard, for Event.apply's reason: a
 -- new exception shape must break the build here rather than silently copy without
 -- it.

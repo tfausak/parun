@@ -43,6 +43,7 @@ import qualified Parun.Types.AttachRewrite as AttachRewrite
 import qualified Parun.Types.AttachTarget as AttachTarget
 import qualified Parun.Types.AttachedToBound as AttachedToBound
 import qualified Parun.Types.AttackCompany as AttackCompany
+import qualified Parun.Types.AttackCost as AttackCost
 import qualified Parun.Types.AttackCount as AttackCount
 import qualified Parun.Types.AttackLimitUnless as AttackLimitUnless
 import qualified Parun.Types.AttackPermission as AttackPermission
@@ -56,6 +57,7 @@ import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.Bid as Bid
 import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Blight as Blight
+import qualified Parun.Types.BlockCost as BlockCost
 import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockPermission as BlockPermission
 import qualified Parun.Types.BlockRequirement as BlockRequirement
@@ -212,6 +214,7 @@ import qualified Parun.Types.NextDamageInstance as NextDamageInstance
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.OfferCast as OfferCast
 import qualified Parun.Types.PayGate as PayGate
+import qualified Parun.Types.PerCreature as PerCreature
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
@@ -988,11 +991,9 @@ rewriteEffect pairs effect = case effect of
   Effect.Transform ref -> Effect.Transform (rewriteObjectRef pairs ref)
   Effect.Convert ref -> Effect.Convert (rewriteObjectRef pairs ref)
   Effect.Flip ref -> Effect.Flip (rewriteObjectRef pairs ref)
-  -- Through the combined back face as well as the ref, because the face is card
-  -- data the ability carries. That goes further than the rules: CR 612.2a covers
-  -- tokens, and CR 612.1 words printed on the object, which this face's are not
-  -- (gap #6250).
-  Effect.Meld (Meld.MkMeld ref card) -> Effect.Meld (Meld.MkMeld (rewriteObjectRef pairs ref) (rewriteCard pairs card))
+  -- The ref only: the combined back face's words are not printed on the object
+  -- (CR 612.1), and a meld result is no token (CR 612.2a).
+  Effect.Meld (Meld.MkMeld ref card) -> Effect.Meld (Meld.MkMeld (rewriteObjectRef pairs ref) card)
   Effect.PhaseOut ref -> Effect.PhaseOut (rewriteObjectRef pairs ref)
   Effect.AddPhases _ -> effect
   Effect.EndTurn -> effect
@@ -1411,8 +1412,7 @@ rewritePlayerStaticAbility pairs ability =
 
 -- CR 613.11's fifteen families under CR 612.1, each at the positions its
 -- gatherer module rewrites (Parun.Engine.CombatRestriction and its siblings), so
--- the layer fold and the gatherers agree on where a word is. CR 508.1h's and CR
--- 509.1d's costs stay as printed, as their gatherers leave them.
+-- the layer fold and the gatherers agree on where a word is.
 rewriteRuleAbilities :: [(TextWord.TextWord, TextWord.TextWord)] -> RuleAbilities.RuleAbilities -> RuleAbilities.RuleAbilities
 rewriteRuleAbilities pairs abilities =
   let affected = rewriteAffected pairs
@@ -1421,10 +1421,10 @@ rewriteRuleAbilities pairs abilities =
    in RuleAbilities.MkRuleAbilities
         { RuleAbilities.activationProhibitions = fmap (\x -> x {ActivationProhibition.affected = affected (ActivationProhibition.affected x)}) (RuleAbilities.activationProhibitions abilities),
           RuleAbilities.attachRestrictions = fmap (\x -> x {AttachRestriction.affected = affected (AttachRestriction.affected x), AttachRestriction.attachers = Filter.rewrite pairs (AttachRestriction.attachers x)}) (RuleAbilities.attachRestrictions abilities),
-          RuleAbilities.attackCosts = RuleAbilities.attackCosts abilities,
+          RuleAbilities.attackCosts = fmap (rewriteAttackCost pairs) (RuleAbilities.attackCosts abilities),
           RuleAbilities.attackPermissions = fmap (\x -> x {AttackPermission.affected = affected (AttackPermission.affected x), AttackPermission.while = condition (AttackPermission.while x)}) (RuleAbilities.attackPermissions abilities),
           RuleAbilities.attackRequirements = fmap (\x -> x {AttackRequirement.subject = affected (AttackRequirement.subject x), AttackRequirement.while = condition (AttackRequirement.while x)}) (RuleAbilities.attackRequirements abilities),
-          RuleAbilities.blockCosts = RuleAbilities.blockCosts abilities,
+          RuleAbilities.blockCosts = fmap (rewriteBlockCost pairs) (RuleAbilities.blockCosts abilities),
           RuleAbilities.blockPermissions = fmap (\x -> x {BlockPermission.affected = affected (BlockPermission.affected x), BlockPermission.additional = fmap (rewriteQuantity pairs) (BlockPermission.additional x), BlockPermission.while = condition (BlockPermission.while x)}) (RuleAbilities.blockPermissions abilities),
           RuleAbilities.blockRequirements = fmap (\x -> x {BlockRequirement.subject = fmap affected (BlockRequirement.subject x), BlockRequirement.attacker = fmap affected (BlockRequirement.attacker x), BlockRequirement.while = condition (BlockRequirement.while x)}) (RuleAbilities.blockRequirements abilities),
           RuleAbilities.combatRestrictions = fmap (rewriteCombatRestriction pairs) (RuleAbilities.combatRestrictions abilities),
@@ -1435,6 +1435,34 @@ rewriteRuleAbilities pairs abilities =
           RuleAbilities.targetRestrictions = fmap (\x -> x {TargetRestriction.affected = affected (TargetRestriction.affected x), TargetRestriction.aimers = Filter.rewrite pairs (TargetRestriction.aimers x)}) (RuleAbilities.targetRestrictions abilities),
           RuleAbilities.untapRestrictions = fmap (\x -> x {UntapRestriction.affected = affected (UntapRestriction.affected x), UntapRestriction.while = condition (UntapRestriction.while x)}) (RuleAbilities.untapRestrictions abilities)
         }
+
+-- A CR 508.1h cost to attack under CR 612.1: who it taxes, what each share
+-- costs and its gate. Its scope names no word. Parun.Engine.AttackCost.costsOn
+-- applies it to the source's own costs.
+rewriteAttackCost :: [(TextWord.TextWord, TextWord.TextWord)] -> AttackCost.AttackCost -> AttackCost.AttackCost
+rewriteAttackCost pairs cost =
+  cost
+    { AttackCost.subject = rewriteAffected pairs (AttackCost.subject cost),
+      AttackCost.perAttacker = rewritePerCreature pairs (AttackCost.perAttacker cost),
+      AttackCost.while = fmap (rewriteCondition pairs) (AttackCost.while cost)
+    }
+
+-- A CR 509.1d cost to block under CR 612.1, rewriteAttackCost's twin plus the
+-- attackers it is owed against. Parun.Engine.BlockCost.costsOn applies it.
+rewriteBlockCost :: [(TextWord.TextWord, TextWord.TextWord)] -> BlockCost.BlockCost -> BlockCost.BlockCost
+rewriteBlockCost pairs cost =
+  cost
+    { BlockCost.subject = rewriteAffected pairs (BlockCost.subject cost),
+      BlockCost.perBlocker = rewritePerCreature pairs (BlockCost.perBlocker cost),
+      BlockCost.attackers = fmap (Filter.rewrite pairs) (BlockCost.attackers cost),
+      BlockCost.while = fmap (rewriteCondition pairs) (BlockCost.while cost)
+    }
+
+-- One taxed creature's share under CR 612.1.
+rewritePerCreature :: [(TextWord.TextWord, TextWord.TextWord)] -> PerCreature.PerCreature -> PerCreature.PerCreature
+rewritePerCreature pairs share = case share of
+  PerCreature.Fixed cost -> PerCreature.Fixed (Filter.rewriteCost pairs cost)
+  PerCreature.Counted quantity -> PerCreature.Counted (rewriteQuantity pairs quantity)
 
 -- One CR 508.1c / 509.1b restriction under CR 612.1: its subject, its gate, its
 -- amount and the other side of the pair it describes, as Parun.Engine.CombatRestriction

@@ -13,13 +13,16 @@ module Parun.Engine.Departure where
 
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
 import qualified Parun.Engine.Ante as Ante
+import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Emperor as Emperor
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
@@ -43,11 +46,13 @@ import qualified Parun.Types.GameSettings as GameSettings
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.LeftTheGame as LeftTheGame
+import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerControl as PlayerControl
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.ProposedEvent as ProposedEvent
 import qualified Parun.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Parun.Types.ReplacementBucket as ReplacementBucket
@@ -547,7 +552,8 @@ nonCardStackObjectsCease pid gs =
 -- Bribery is not in the pool.
 --
 -- CR 109.4 gives a controller only to objects on the stack or the battlefield,
--- so the search covers those two and needs no others.
+-- so the search covers those two and needs no others; the battlefield's half
+-- includes phased-out permanents (CR 702.26n), exiled by exilePhasedOut.
 --
 -- Both have real work to do, and for the one reason: source 1 is the DEFAULT
 -- controller, and Object.enteredUnder can carry `pid` for an object `pid`
@@ -615,21 +621,62 @@ remainingControlledExiled pid = do
   exileAll gs (controlledBy pid gs)
 
 -- The objects a player controls, over the two zones CR 109.4 gives a controller
--- one in. Projection.controls already hoists the control-grant list once rather
--- than rebuilding it per battlefield object; the stack is short enough that the
--- plain query is not worth a second hoist.
+-- one in, phased-out permanents included: CR 702.26n's first sentence names CR
+-- 800.4a's exile and CR 800.4c's as rules reaching one, so both searches are on
+-- the far side of CR 702.26b's "except". The control-grant list is hoisted once
+-- for the battlefield and the phased-out rows; the stack is short enough that the
+-- plain query is not worth threading it.
 controlledBy :: PlayerId -> GameState -> [ObjectId]
 controlledBy pid gs =
-  let onStack = filter (\oid -> Projection.controllerOf oid gs == Just pid) (GameState.stack gs)
-   in Projection.controls pid gs <> onStack
+  let grants = Projection.controlGrants gs
+      onStack = filter (\oid -> Projection.controllerOf oid gs == Just pid) (GameState.stack gs)
+      phasedOut = filter (\oid -> Projection.controllerOfGiven grants oid gs == Just pid) (Map.keys (GameState.phasedOut gs))
+   in Projection.controlsGiven grants pid gs <> onStack <> phasedOut
 
 -- One writer for both exiles this rule asks for, and for the reason
 -- remainingControlledExiled's own comment gives: the victims are fixed from the
 -- board BEFORE the first move, and they go in ONE event group so that neither a
 -- member's CR 608.2h record nor its CR 616.1 candidate list reads a board its
 -- siblings have already left.
+--
+-- A phased-out victim goes by exilePhasedOut instead of the funnel.
 exileAll :: GameState -> [ObjectId] -> Game ()
-exileAll gs victims = Event.simultaneously (Monad.mapM_ (\oid -> Event.changeZoneInBatch (pure ()) gs oid Zone.Exile) victims)
+exileAll gs victims =
+  let (hidden, seen) = List.partition (`Map.member` GameState.phasedOut gs) victims
+   in Event.simultaneously $ do
+        Monad.mapM_ (\oid -> Event.changeZoneInBatch (pure ()) gs oid Zone.Exile) seen
+        Monad.mapM_ (exilePhasedOut gs) hidden
+
+-- CR 702.26n: a phased-out permanent exiled by CR 800.4a or CR 800.4c. CR
+-- 702.26b keeps it out of the zone-change funnel: no CR 616.1 replacement
+-- applies to it and no event is recorded, so nothing sees it leave.
+-- docs/decisions.md, "Whether a phased-out permanent a subgame takes leaves
+-- visibly". Event.leaveTheGame files its CR 608.2h record and deletes it with
+-- its phased-out row, and each card it represents (CR 712.21, CR 730.3) arrives
+-- in its owner's exile as a new object (CR 400.7), its stickers on the one its
+-- owner picks (CR 400.7m, CR 123.5c, CR 613.7k).
+--
+-- CR 903.9a's return to the command zone is not implemented for a commander
+-- exiled this way (#6263).
+exilePhasedOut :: GameState -> ObjectId -> Game ()
+exilePhasedOut asOf oid = case Game.lookupObject oid asOf of
+  Nothing -> pure ()
+  Just obj -> do
+    State.modify' (\g -> Event.leaveTheGame asOf g oid)
+    let owner = Object.owner obj
+        stickers = Object.stickers obj
+        arriving keeps ts = (Object.newIncarnation obj) {Object.zone = Zone.Exile, Object.timestamp = ts, Object.stickers = if keeps then stickers else Seq.empty}
+        place mk = do
+          newId <- Event.placeObject owner mk Zone.Exile LibraryPosition.defaultValue
+          State.modify' (Game.restampStickers newId)
+        components = Foldable.toList (Game.componentsOf (Object.source obj))
+    case components of
+      [] -> place (arriving True)
+      _ -> do
+        asked <- State.get
+        let ask offered = Prompt.ChooseStickerKeeper (Decide.deciderFor owner asked) owner (fmap (Game.printingOfComponent . List.genericIndex components) offered)
+        keeper <- if Seq.null stickers then pure Nothing else Game.among Game.choose ask (zipWith const [0 ..] components)
+        Monad.forM_ (zip [0 ..] components) (\(index, component) -> place (Game.representComponent component . arriving (keeper == Just index)))
 
 -- CR 800.4c: when an effect giving a player still in the game control of an
 -- object ends, no other effect gives control of it to a player in the game, and
@@ -645,7 +692,9 @@ exileAll gs victims = Event.simultaneously (Monad.mapM_ (\oid -> Event.changeZon
 -- Nothing else can put an object into that state after the departure: CR 800.4b
 -- refuses to change control to a departed player and refuses to put an object
 -- onto the battlefield or the stack under one, and CR 800.4d refuses to create
--- an object they would own. So a hit here is always a loan that has just ended.
+-- an object they would own. CR 800.4a's fourth clause has already exiled every
+-- object the player controlled, phased-out ones included (controlledBy). So a hit
+-- here is always a loan that has just ended, on a phased-out permanent too.
 --
 -- Not a state-based action, and Parun.Engine.Engine.performSettle is where it
 -- runs anyway, beside CR 702.145c's day/night check and CR 701.54a's ring for

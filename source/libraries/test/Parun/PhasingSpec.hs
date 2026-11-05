@@ -84,6 +84,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.Departure as Departure.Type
+import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Expiry as Expiry
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.GameEvent as GameEvent
@@ -767,9 +768,8 @@ departureSpec s registry = Spec.describe s "Departure" $ do
   -- alice borrows bob's Piker with Ray of Command, phases it out with Reality
   -- Ripple while she controls it, and concedes. CR 800.4a's first clause does not
   -- reach it (bob owns it) and its exile clause does not either -- the control
-  -- effect ends before that clause runs, and a phased-out permanent is on no
-  -- battlefield walk anyway -- so the row survives, keyed to a player CR 800.4k
-  -- gives no further turn.
+  -- effect ends before that clause runs, so bob controls it again -- and the row
+  -- survives, keyed to a player CR 800.4k gives no further turn.
   --
   -- The MINIMAL PAIR is bob's own untap step before and after alice's seat is
   -- walked past: same player, same board, differing only in whether the turn she
@@ -838,6 +838,114 @@ departureSpec s registry = Spec.describe s "Departure" $ do
     Spec.assertEqWith s "still saying who it phased out under" (Phasing.phasedOutUnder victim walked) (Just S.alice)
     Spec.assertEqWith s "and it phases in at that untap step" (onBattlefield victim back) True
     Spec.assertEqWith s "with no row left" (Phasing.isPhasedOut victim back) False
+  -- CR 702.26n's first sentence with CR 800.4a's fourth clause: alice returns
+  -- bob's Piker under her own control with Rise from the Grave (CR 110.2a),
+  -- carol phases it out with Reality Ripple, and alice concedes. The Piker is
+  -- exiled at once rather than phasing in later under nobody.
+  --
+  -- The MINIMAL PAIR is the same departure without the Ripple: bob's Super
+  -- Shredder sees the phased-in Piker exiled, and not the phased-out one
+  -- (docs/decisions.md, "Whether a phased-out permanent a subgame takes leaves
+  -- visibly"). Both legs also see alice's five Swamps leave the game with her
+  -- (CR 603.6c).
+  Spec.it s "CR 702.26n a phased-out permanent its departed controller doesn't own is exiled at once" $ do
+    fixture <- risenFixture s registry
+    let (victim, risen, rippled) = risenAndRippled fixture
+        left = concede rippled
+        plain = concede risen
+    Spec.assertEqWith s "setup: bob owns the risen Piker" (fmap Object.owner (Game.lookupObject victim risen)) (Just S.bob)
+    Spec.assertEqWith s "setup: and alice controls it, by CR 110.2a" (Projection.controllerOf victim risen) (Just S.alice)
+    Spec.assertEqWith s "setup: carol's Ripple phased it out under alice" (Phasing.phasedOutStatus victim rippled) (Just (PhasedOut.Directly S.alice))
+    Spec.assertEqWith s "the game continued without alice" (GameState.result left) Nothing
+    Spec.assertEqWith s "alice leaving exiles the Piker at once" (zoneOfNamed (rfPiker fixture) left) (Just Zone.Exile)
+    Spec.assertEqWith s "as a new object" (Game.lookupObject victim left) Nothing
+    Spec.assertEqWith s "leaving no phased-out row" (Map.null (GameState.phasedOut left)) True
+    Spec.assertEqWith s "control: phased in, the same departure exiles it too" (zoneOfNamed (rfPiker fixture) plain) (Just Zone.Exile)
+    Spec.assertEqWith s "control: and the Shredder sees it go, beside the five Swamps" (Projection.powerOf (rfShredder fixture) (resolveAll plain)) (Just 7)
+    Spec.assertEqWith s "phased out, the Shredder sees only the Swamps" (Projection.powerOf (rfShredder fixture) (resolveAll left)) (Just 6)
+  -- CR 702.26n's first sentence with CR 800.4c: the same Piker, but carol takes
+  -- it with Ray of Command before her Ripple, so alice's leaving ends nothing
+  -- and carol controls it. At end of turn the Ray's effect ends, the Piker's
+  -- default controller (alice) has left, and it is exiled while still phased
+  -- out. The minimal pair is again the board without the Ripple.
+  Spec.it s "CR 702.26n/800.4c a loan ending on a phased-out permanent whose default controller left exiles it" $ do
+    fixture <- risenFixture s registry
+    let (victim, risen, _) = risenAndRippled fixture
+        borrowed = castBy S.carol victim (rfCommand fixture) risen
+        rippled = castBy S.carol victim (rfRipple fixture) borrowed
+        left = concede rippled
+        plain = concede borrowed
+        ended gs = settleFor (S.runPure S.identityAnswer gs (Engine.runTurnBasedActions (Phase.Ending EndingStep.Cleanup)))
+    Spec.assertEqWith s "setup: carol took the Piker" (Projection.controllerOf victim borrowed) (Just S.carol)
+    Spec.assertEqWith s "setup: and phased it out under herself" (Phasing.phasedOutStatus victim rippled) (Just (PhasedOut.Directly S.carol))
+    Spec.assertEqWith s "alice leaving does not exile what carol controls" (Phasing.phasedOutStatus victim left) (Just (PhasedOut.Directly S.carol))
+    Spec.assertEqWith s "the Ray's effect ending exiles it" (zoneOfNamed (rfPiker fixture) (ended left)) (Just Zone.Exile)
+    Spec.assertEqWith s "leaving no phased-out row" (Map.null (GameState.phasedOut (ended left))) True
+    Spec.assertEqWith s "control: phased in, the effect ending exiles it too" (zoneOfNamed (rfPiker fixture) (ended plain)) (Just Zone.Exile)
+    Spec.assertEqWith s "control: and the Shredder sees it go" (Projection.powerOf (rfShredder fixture) (resolveAll (ended plain))) (Just 7)
+    Spec.assertEqWith s "phased out, the Shredder sees only the Swamps" (Projection.powerOf (rfShredder fixture) (resolveAll (ended left))) (Just 6)
+
+-- The cards and board both CR 702.26n exile cases share: alice with five
+-- Swamps and Rise from the Grave in hand, bob's Goblin Piker in his graveyard
+-- and his Super Shredder on the battlefield, carol with six Islands, Ray of
+-- Command and Reality Ripple. Three seats, so CR 800.4a runs (CR 800.1).
+data RisenFixture = MkRisenFixture
+  { rfPiker :: Printing.Printing,
+    rfRise :: ObjectId.ObjectId,
+    rfCommand :: ObjectId.ObjectId,
+    rfRipple :: ObjectId.ObjectId,
+    rfShredder :: ObjectId.ObjectId,
+    rfBoard :: GameState.GameState
+  }
+
+risenFixture :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m RisenFixture
+risenFixture s registry = do
+  swamp <- S.printingOf s registry "Swamp"
+  island <- S.printingOf s registry "Island"
+  piker <- S.printingOf s registry "Goblin Piker"
+  rise <- S.printingOf s registry "Rise from the Grave"
+  command <- S.printingOf s registry "Ray of Command"
+  ripple <- S.printingOf s registry "Reality Ripple"
+  shredder <- S.printingOf s registry "Super Shredder"
+  let lands = S.landsFor island S.carol 6 (S.landsFor swamp S.alice 5 (Setup.emptyGame S.threePlayers))
+      (_, g1) = S.addGraveyardCard piker S.bob lands
+      (shredderId, g2) = S.addPermanent shredder S.bob g1
+      (riseId, g3) = S.addHandCard rise S.alice g2
+      (commandId, g4) = S.addHandCard command S.carol g3
+      (rippleId, g5) = S.addHandCard ripple S.carol g4
+      board = g5 {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+  pure (MkRisenFixture piker riseId commandId rippleId shredderId board)
+
+-- alice's Rise from the Grave resolved, with the risen Piker's id, and then
+-- carol's Reality Ripple resolved at it.
+risenAndRippled :: RisenFixture -> (ObjectId.ObjectId, GameState.GameState, GameState.GameState)
+risenAndRippled fixture =
+  let risen = S.runPure S.identityAnswer (rfBoard fixture) (S.cast S.alice (rfRise fixture) >> Monad.void Stack.resolveTop)
+      victim = Maybe.fromMaybe (ObjectId.MkObjectId 0) (List.find (`onBattlefield` risen) (namedIn (rfPiker fixture) risen))
+   in (victim, risen, castBy S.carol victim (rfRipple fixture) risen)
+
+-- `pid` casts `spell` at `victim` and it resolves.
+castBy :: PlayerId.PlayerId -> ObjectId.ObjectId -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
+castBy pid victim spell gs =
+  S.runPure (aimedAt victim) gs {GameState.priority = Just pid} $ do
+    S.cast pid spell
+    Monad.void Stack.resolveTop
+
+concede :: GameState.GameState -> GameState.GameState
+concede gs = S.runPure S.identityAnswer gs (Departure.leaveGame Departure.Type.Conceded S.alice)
+
+-- Every pending trigger put on the stack and resolved.
+resolveAll :: GameState.GameState -> GameState.GameState
+resolveAll gs = S.runPure S.identityAnswer (settleFor gs) Engine.priorityLoop
+
+-- Every object made from this printing, in any zone.
+namedIn :: Printing.Printing -> GameState.GameState -> [ObjectId.ObjectId]
+namedIn printing gs = filter (\oid -> fmap S.nameOf (Game.cardOf oid gs) == Just (S.printingName printing)) (Map.keys (GameState.objects gs))
+
+zoneOfNamed :: Printing.Printing -> GameState.GameState -> Maybe Zone.Zone
+zoneOfNamed printing gs = case namedIn printing gs of
+  [oid] -> zoneOf oid gs
+  _ -> Nothing
 
 -- CR 601.2b's announcement answered by NAMING Nyxborn Rollicker's bestow cost
 -- rather than its printed one, and CR 601.2c's granted enchant slot filtered to
