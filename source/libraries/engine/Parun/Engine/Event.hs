@@ -884,7 +884,7 @@ revealsInsteadOfTurningUp oid gs =
       manifested =
         (reason == Just (Just FaceDownReason.Manifested) || reason == Just (Just FaceDownReason.Cloaked) || reason == Just (Just FaceDownReason.EnteredFaceDown))
           && maybe False (isInstantOrSorcery . snd) (representingCardOf oid gs)
-      components = foldMap (Seq.filter Game.componentIsCard . Game.componentsOf . Object.source) object
+      components = foldMap (Seq.filter (not . Game.componentIsToken) . Game.componentsOf . Object.source) object
       merged =
         maybe False (Facing.isFaceDown . Object.facing) object
           && any (maybe False (isInstantOrSorcery . TypeLine.types . Face.typeLine . Card.combined) . (`Game.cardOfPrinting` gs) . Game.printingOfComponent) components
@@ -8076,8 +8076,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- merged permanent can have a TOKEN component, which arrives as a
               -- token (Game.sourceOfComponent) and is then removed by CR 111.7's
               -- state-based action, rather than as a card that would sit in the
-              -- graveyard for ever. CR 730.2's copy component arrives as the copy
-              -- it is and CR 704.5e removes it there, one rule over.
+              -- graveyard for ever.
               --
               -- CR 712.21d needs nothing here: the CR 616.1 replacement loop
               -- ran ONCE above, against the melded permanent, so a replacement
@@ -8104,13 +8103,11 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                   --
                   -- Only a CARD component goes to the command zone, whatever
                   -- printing the others were interned under: CR 903.9c splits off
-                  -- "the card that represents it and is a commander", and neither
-                  -- a token (CR 111.6) nor CR 730.2's copy (CR 707.10, "no spell
-                  -- card associated with it") is one. Game.componentIsCard is
-                  -- that read, and Commander.commanderCardOf takes it on the
-                  -- way in, so the two agree about which component the
-                  -- designation can sit on.
-                  (commandComponents, destComponents) = Seq.partition (\component -> Game.componentIsCard component && Just (Game.printingOfComponent component) == splitOff) components
+                  -- "the card that represents it and is a commander", and a token
+                  -- (CR 111.6) is none. Game.componentIsToken is that read, and
+                  -- Commander.commanderCardOf takes it on the way in, so the two
+                  -- agree about which component the designation can sit on.
+                  (commandComponents, destComponents) = Seq.partition (\component -> not (Game.componentIsToken component) && Just (Game.printingOfComponent component) == splitOff) components
                   -- CR 123.5c: only the component `keeps` names takes the
                   -- departing permanent's stickers.
                   asComponent keeps zone mComponent ts =
@@ -8179,7 +8176,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               Monad.when (dest == Zone.Exile) $ do
                 placed <- State.get
                 let exiler = Maybe.fromMaybe lastController ((exiledBy >>= \replacer -> Projection.controllerOf replacer placed) <|> under)
-                    cards = [arrival | (arrival, Just component) <- zip (newId : Foldable.toList trailingIds0) (leading : fmap Just (Foldable.toList trailing)), Game.componentIsCard component]
+                    cards = [arrival | (arrival, Just component) <- zip (newId : Foldable.toList trailingIds0) (leading : fmap Just (Foldable.toList trailing)), not (Game.componentIsToken component)]
                 Restamp.orderFor exiler start cards
               -- CR 400.1's command zone is one shared area rather than one per
               -- player, so placeObject's `pid` decides nothing about where the
@@ -10282,23 +10279,22 @@ mergeComponents permanent = case Object.source permanent of
     alone component = Just [ShownComponent.MkShownComponent component (Object.face permanent) (Object.facing permanent)]
 
 -- CR 730.2's OTHER side: "the card or copy that represented that object", which
--- is what the merging spell contributes to the component list. Two of rule
--- 730.2's three nouns, since only these two can be a spell on the stack -- a
--- token is never one (CR 111.1) and a melded permanent is put onto the
--- battlefield (CR 701.42a).
+-- is what the merging spell contributes to the component list. Only a card or a
+-- copy of one can be a spell on the stack -- a token is never one (CR 111.1) and
+-- a melded permanent is put onto the battlefield (CR 701.42a).
 --
--- The COPY arm is CR 707.10's own sentence: "a copy of a spell is itself a
--- spell", so a copy of a mutating creature spell is a mutating creature spell
--- and CR 702.140c merges it like the original. It stays a copy through the
--- merge because CR 608.3f turns one into a token only "as it is put onto the
--- battlefield", which rule 702.140c is the resolution that never does.
+-- The COPY arm is a token: a copy of a permanent spell becomes one as it
+-- resolves (CR 111.13, 707.10f), merging included, so CR 730.2d makes the
+-- merged permanent a token while the copy is topmost. Parun.MutateSpec's "CR
+-- 730.2d/111.13 a merged permanent whose topmost component is a spell copy is a
+-- token" proves it.
 --
 -- Nothing where the object is no spell at all, which `merge` and `mergeable`
 -- both report as a refusal.
 mergingComponent :: Object.Object -> Maybe MergeComponent.MergeComponent
 mergingComponent spell = case Object.source spell of
   Source.OfCard pid -> Just (MergeComponent.OfCard (Game.componentCardOf spell pid))
-  Source.OfSpellCopy pid -> Just (MergeComponent.OfSpellCopy pid)
+  Source.OfSpellCopy pid -> Just (MergeComponent.OfToken pid)
   -- A copy of a card is a spell once cast, and no such spell parun mints is a
   -- mutating creature spell: CR 722.3c's "has only the characteristics of that
   -- permanent's prepare spell" leaves rule 702.140a's mutate out, and CR 707.12's

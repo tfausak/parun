@@ -130,7 +130,6 @@ objects pcs gs a b =
         MergeComponent.OfCard card -> MergeComponent.OfCard (unserialCard card)
         MergeComponent.OfMeld meld -> MergeComponent.OfMeld (unserialMeld meld)
         MergeComponent.OfToken _ -> component
-        MergeComponent.OfSpellCopy _ -> component
       unserialSource source = case source of
         Source.OfMerge components -> Source.OfMerge (fmap (\shown -> shown {ShownComponent.component = unserialComponent (ShownComponent.component shown)}) components)
         Source.OfMeld meld -> Source.OfMeld (unserialMeld meld)
