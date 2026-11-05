@@ -996,18 +996,21 @@ Entries are ordered by the first rule each cites.
 
 - **Question**: A wish brings a phased-out permanent into a Shahrazad
   subgame. CR 729.4a fires main-game leave triggers; CR 702.26b treats the
-  permanent as though it doesn't exist.
-- **Rules**: CR 702.26b, 702.26d, 702.26k, 729.1a, 729.4, 729.4a; CR of
-  2026-08-07.
-- **Decision**: It crosses, but no event is recorded and nothing in the main
-  game triggers.
+  permanent as though it doesn't exist. The same question arises, by analogy,
+  when CR 800.4a or 800.4c exiles a phased-out permanent (CR 702.26n).
+- **Rules**: CR 702.26b, 702.26d, 702.26k, 702.26n, 729.1a, 729.4, 729.4a,
+  800.4a, 800.4c; CR of 2026-08-07.
+- **Decision**: It crosses, or is exiled, but no event is recorded and nothing
+  triggers.
 - **Rejected**: Recording the leave: CR 702.26b overrides rules that don't
   name phasing. Leaving it unreachable: the wish belongs to a separate game
-  (CR 729.1a).
+  (CR 729.1a), and CR 702.26n names the exiles.
 - **Site**: `Parun.Engine.Setup.applyCrossings`, proved by `Parun.SetupSpec`'s
   "CR 702.26b a phased-out permanent a subgame takes leaves the main game and
-  triggers nothing".
-- **Issue**: #2468.
+  triggers nothing"; `Parun.Engine.Departure.exilePhasedOut`, proved by
+  `Parun.PhasingSpec`'s "CR 702.26n a phased-out permanent its departed
+  controller doesn't own is exiled at once".
+- **Issue**: #2468, #6254.
 
 ## Which component of a merged permanent answers for day and night
 

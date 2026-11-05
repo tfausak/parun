@@ -67,10 +67,11 @@
 -- is the moment CR 800.4k decides that turn does not begin, and the
 -- PhasedOut.Orphaned row it writes is what `phasingIn` then takes at whatever
 -- untap step comes next. Rule 702.26n's first sentence names two things. CR
--- 702.26k's leaving the game is Parun.Engine.Game.removeFromZones. CR 800.4a's exile
--- reaches a phased-out permanent by that sentence, but
--- Parun.Engine.Departure.controlledBy walks the battlefield and does not find one
--- (gap #6254).
+-- 702.26k's leaving the game is Parun.Engine.Game.removeFromZones. CR 800.4a's and
+-- CR 800.4c's exiles are Parun.Engine.Departure.controlledBy, which searches
+-- GameState.phasedOut too, and Departure.exilePhasedOut. Parun.PhasingSpec's "CR
+-- 702.26n a phased-out permanent its departed controller doesn't own is exiled at
+-- once" and its CR 800.4c sibling prove them.
 --
 -- CR 702.26f, one of the two continuous-effect consequences of being gone, needs
 -- nothing here. A "for as long as" duration (CR 611.2b) counting the
