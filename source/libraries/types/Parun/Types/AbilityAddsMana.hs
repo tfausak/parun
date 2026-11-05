@@ -10,7 +10,7 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 -- and which mana they have to add -- Caged Sun's "whenever a land's ability
 -- causes you to add one or more mana of the chosen color".
 --
--- A record with no defaults, Parun.Types.PermanentTappedForMana's shape and its
+-- A record with no defaults, Parun.Types.TappedForManaTrigger's shape and its
 -- reason.
 data AbilityAddsMana = MkAbilityAddsMana
   { player :: PlayerRelation.PlayerRelation,

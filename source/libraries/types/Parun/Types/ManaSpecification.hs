@@ -4,7 +4,7 @@ import qualified Parun.Types.Color as Color
 
 -- | CR 106.12a's "or is tapped for mana of a specified type": which mana a tap
 -- has to have produced for the ability to trigger. The narrowing half of
--- Parun.Types.PermanentTappedForMana, beside its subject and its filter. Also
+-- Parun.Types.TappedForManaTrigger, beside its subject and its player. Also
 -- which mana may pay for an activation (Parun.Types.ActivationRestriction.SpendOnly).
 --
 -- A SPECIFICATION and not a Parun.Types.ManaProduction, which the AddMana opcode

@@ -325,7 +325,6 @@ import qualified Parun.Types.PerCreature as PerCreature
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
-import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PermissionLimit as PermissionLimit
 import qualified Parun.Types.PermissionPool as PermissionPool
@@ -418,6 +417,8 @@ import qualified Parun.Types.TapForMana as TapForMana
 import qualified Parun.Types.TapForTotalPower as TapForTotalPower
 import qualified Parun.Types.TapPermanents as TapPermanents
 import qualified Parun.Types.TapState as TapState
+import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
+import qualified Parun.Types.TappedPermanent as TappedPermanent
 import qualified Parun.Types.TargetRestriction as TargetRestriction
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TheseDiscard as TheseDiscard
@@ -1145,10 +1146,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- CR 702.134c's is nullary too, so it holds no Quantity.
   TriggerCondition.AttachedCreatureMentors -> []
   TriggerCondition.BecomesTapState _ -> []
-  TriggerCondition.AttachedPermanentTappedForMana -> []
-  -- CR 106.12a's bystander reading carries a PlayerRelation and a Filter,
-  -- neither of which holds a Count.
-  TriggerCondition.PermanentTappedForMana {} -> []
+  TriggerCondition.TappedForMana _ -> []
   TriggerCondition.AbilityAddsMana {} -> []
   TriggerCondition.SelfManaAbilityResolves -> []
   -- Nor does CR 702.110b's, whose Filters hold no Count for a Matching Enters'
@@ -4590,7 +4588,6 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- Thoughtleech's "an Island an opponent controls" and Deeproot Pilgrimage's
   -- "nontoken Merfolk you control" are card text, swept like Leaves'.
   TriggerCondition.BecomesTapState watched -> actingFilters (BecomesTapState.actor watched)
-  TriggerCondition.AttachedPermanentTappedForMana -> []
   -- Skull Skaab's two, both card text.
   TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger exploiter exploited) -> actingFilters exploiter <> unframed [exploited]
   -- CR 702.122e's carries none either: it names "this Vehicle" and nothing about
@@ -4601,8 +4598,10 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.SelfCrewsVehicle -> []
   -- CR 106.12a's bystander reading DOES carry a Filter -- Autumn Willow,
   -- Harmony's "a land creature" -- and is swept like the PermanentSacrificed arm
-  -- below.
-  TriggerCondition.PermanentTappedForMana payload -> unframed [PermanentTappedForMana.filter payload]
+  -- below; the attachment link carries none.
+  TriggerCondition.TappedForMana payload -> case TappedForManaTrigger.permanent payload of
+    TappedPermanent.Attached -> []
+    TappedPermanent.Matching f -> unframed [f]
   -- Caged Sun's "a land's" is a Filter over the ability's source, swept alike.
   TriggerCondition.AbilityAddsMana payload -> unframed [AbilityAddsMana.source payload]
   TriggerCondition.SelfManaAbilityResolves -> []
@@ -4784,8 +4783,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.LeavesZone _ -> []
   TriggerCondition.PutIntoZone _ -> []
   TriggerCondition.BecomesTapState _ -> []
-  TriggerCondition.AttachedPermanentTappedForMana -> []
-  TriggerCondition.PermanentTappedForMana {} -> []
+  TriggerCondition.TappedForMana _ -> []
   TriggerCondition.AbilityAddsMana {} -> []
   TriggerCondition.SelfManaAbilityResolves -> []
   TriggerCondition.SpellOrAbilityCounters _ -> []

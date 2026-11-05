@@ -202,10 +202,7 @@ triggersFromMana :: TriggerCondition.TriggerCondition -> Bool
 triggersFromMana condition = case condition of
   -- CR 106.12 makes "tapped for mana" the resolution of an activated mana
   -- ability, which is CR 605.1b's first alternative in as many words.
-  TriggerCondition.AttachedPermanentTappedForMana -> True
-  -- The same resolution watched by a bystander rather than through an
-  -- attachment link, so the same alternative and the same answer.
-  TriggerCondition.PermanentTappedForMana {} -> True
+  TriggerCondition.TappedForMana _ -> True
   -- CR 605.1b's second alternative in as many words, "mana being added to a
   -- player's mana pool".
   TriggerCondition.AbilityAddsMana {} -> True

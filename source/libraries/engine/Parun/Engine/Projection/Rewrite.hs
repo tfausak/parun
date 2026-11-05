@@ -220,7 +220,6 @@ import qualified Parun.Types.PerCreature as PerCreature
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
-import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
@@ -284,6 +283,8 @@ import qualified Parun.Types.Subtype as Subtype.Type
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TapForMana as TapForMana
+import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
+import qualified Parun.Types.TappedPermanent as TappedPermanent
 import qualified Parun.Types.TargetRestriction as TargetRestriction
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TextWord as TextWord
@@ -2187,8 +2188,14 @@ rewriteTriggerCondition pairs condition = case condition of
       acts {PermanentActed.permanent = acting (PermanentActed.permanent acts)}
   TriggerCondition.AttachedCreatureMentors -> condition
   TriggerCondition.BecomesTapState watched -> TriggerCondition.BecomesTapState watched {BecomesTapState.actor = acting (BecomesTapState.actor watched)}
-  TriggerCondition.AttachedPermanentTappedForMana -> condition
-  TriggerCondition.PermanentTappedForMana payload -> TriggerCondition.PermanentTappedForMana payload {PermanentTappedForMana.filter = Filter.rewrite pairs (PermanentTappedForMana.filter payload), PermanentTappedForMana.mana = rewriteManaSpecification pairs (PermanentTappedForMana.mana payload)}
+  TriggerCondition.TappedForMana payload ->
+    TriggerCondition.TappedForMana
+      payload
+        { TappedForManaTrigger.permanent = case TappedForManaTrigger.permanent payload of
+            TappedPermanent.Attached -> TappedPermanent.Attached
+            TappedPermanent.Matching f -> TappedPermanent.Matching (Filter.rewrite pairs f),
+          TappedForManaTrigger.mana = rewriteManaSpecification pairs (TappedForManaTrigger.mana payload)
+        }
   TriggerCondition.AbilityAddsMana payload -> TriggerCondition.AbilityAddsMana payload {AbilityAddsMana.source = Filter.rewrite pairs (AbilityAddsMana.source payload), AbilityAddsMana.mana = rewriteManaSpecification pairs (AbilityAddsMana.mana payload)}
   TriggerCondition.SelfManaAbilityResolves -> condition
   TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger exploiter exploited) -> TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger (acting exploiter) (Filter.rewrite pairs exploited))

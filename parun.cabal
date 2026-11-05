@@ -1174,8 +1174,6 @@ library codec
     Parun.Codec.PermanentIsDealtDamageSpec
     Parun.Codec.PermanentsDealCombatDamageToPlayer
     Parun.Codec.PermanentsDealCombatDamageToPlayerSpec
-    Parun.Codec.PermanentTappedForMana
-    Parun.Codec.PermanentTappedForManaSpec
     Parun.Codec.PermanentWasSacrificed
     Parun.Codec.PermanentWasSacrificedSpec
     Parun.Codec.PermissionCost
@@ -1531,8 +1529,12 @@ library codec
     Parun.Codec.TapForTotalPowerSpec
     Parun.Codec.TappedForMana
     Parun.Codec.TappedForManaSpec
+    Parun.Codec.TappedForManaTrigger
+    Parun.Codec.TappedForManaTriggerSpec
     Parun.Codec.TappedIs
     Parun.Codec.TappedIsSpec
+    Parun.Codec.TappedPermanent
+    Parun.Codec.TappedPermanentSpec
     Parun.Codec.TapPermanents
     Parun.Codec.TapPermanentsSpec
     Parun.Codec.TapSpec
@@ -3026,7 +3028,6 @@ library types
     Parun.Types.PermanentCandidate
     Parun.Types.PermanentIsDealtDamage
     Parun.Types.PermanentsDealCombatDamageToPlayer
-    Parun.Types.PermanentTappedForMana
     Parun.Types.PermanentWasSacrificed
     Parun.Types.PermissionCost
     Parun.Types.PermissionLimit
@@ -3232,7 +3233,9 @@ library types
     Parun.Types.TapForMana
     Parun.Types.TapForTotalPower
     Parun.Types.TappedForMana
+    Parun.Types.TappedForManaTrigger
     Parun.Types.TappedIs
+    Parun.Types.TappedPermanent
     Parun.Types.TapPermanents
     Parun.Types.TapState
     Parun.Types.TargetCount
