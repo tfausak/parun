@@ -377,7 +377,8 @@ historyReads =
       Mentions.context = Set.empty,
       Mentions.keyed = Set.empty,
       Mentions.history = Set.singleton,
-      Mentions.prevention = Set.empty
+      Mentions.prevention = Set.empty,
+      Mentions.melded = id
     }
 
 -- | Does this logged event record part of what `reading` reads? Through the read

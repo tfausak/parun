@@ -1,10 +1,12 @@
--- | The effect DSL's one walk, answering three questions of a tree -- an effect,
+-- | The effect DSL's one walk, answering four questions of a tree -- an effect,
 -- an ability, a replacement, a cost, a duration, a card -- through the leaves
 -- an Asking names: whether it might name one object, which
 -- Parun.Engine.Interchangeable asks of every stored row; which of the turn's
 -- history it reads (CR 732.3), which Parun.Engine.Fragmented asks of every
--- printing; and whether it reads what its source's prevention effect stopped
--- (CR 615.13), which Parun.Engine.Replacement.choose asks of a waiting ability.
+-- printing; whether it reads what its source's prevention effect stopped
+-- (CR 615.13), which Parun.Engine.Replacement.choose asks of a waiting ability;
+-- and which combined back faces it carries (CR 712.4a), which
+-- Parun.Interpreter.chosenFace asks of the reference (CR 201.4e).
 --
 -- One function per type, each matching every constructor POSITIONALLY, so a
 -- new constructor is a missing-pattern error here and a new field an arity
@@ -489,8 +491,26 @@ data Asking r = MkAsking
     -- | A read of the turn's history (CR 732.3).
     history :: HistoryRead.HistoryRead -> r,
     -- | A read of what the source's own prevention effect stopped (CR 615.13).
-    prevention :: r
+    prevention :: r,
+    -- | What an inline card answers as a meld pair's combined back face (CR
+    -- 712.4a), given what it answers as any inline card.
+    melded :: r -> r
   }
+
+-- | CR 201.4e / 712.4a: the combined back faces a card's meld instructions
+-- carry inline, each the whole card the melded permanent shows.
+combinedBackFaces :: Card.Card -> [Card.Card]
+combinedBackFaces = snd . foldMap (faceNames asking (\card -> ([card], []))) . Card.faces
+  where
+    asking =
+      MkAsking
+        { names = const mempty,
+          context = mempty,
+          keyed = mempty,
+          history = const mempty,
+          prevention = mempty,
+          melded = \(inline, backs) -> ([], inline <> backs)
+        }
 
 -- | Does this ability read what its source's prevention effect stopped?
 readsPrevention :: TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Bool
@@ -507,7 +527,8 @@ readsPrevention =
           context = mempty,
           keyed = mempty,
           history = const mempty,
-          prevention = Monoid.Any True
+          prevention = Monoid.Any True,
+          melded = id
         }
 
 -- Whether reading this slot might name the object.
@@ -2196,7 +2217,7 @@ measuresNames asking x = case x of
 
 meldNames :: (Monoid r) => Asking r -> (card -> r) -> Meld.Meld card -> r
 meldNames asking onCard x = case x of
-  Meld.MkMeld objects result -> objectRefNames asking objects <> onCard result
+  Meld.MkMeld objects result -> objectRefNames asking objects <> melded asking (onCard result)
 
 millNames :: (Monoid r) => Asking r -> Mill.Mill -> r
 millNames asking x = case x of

@@ -43,7 +43,6 @@ import qualified Parun.Engine.Driver as Driver
 import qualified Parun.Engine.EndEffect as EndEffect
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Event.Trigger as Event.Trigger
-import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Ledger as Ledger
 import qualified Parun.Engine.Mana as Mana
@@ -60,6 +59,7 @@ import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Engine.Visibility as Visibility
 import qualified Parun.Extra.Int as Int
 import qualified Parun.Extra.Natural as Natural
+import qualified Parun.Interpreter as Interpreter
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Registry as Registry
@@ -188,10 +188,11 @@ data Rehearsal = MkRehearsal
     -- | The state the last priority prompt was asked in, which the next one's
     -- log must account for (Parun.Engine.Ledger).
     audited :: Maybe GameState.GameState,
-    -- | CR 108.1: the Oracle card reference, as far as the run has asked it,
-    -- a name it lacks mapped to Nothing; Nothing for a run holding none, whose
-    -- every lookup answers Nothing.
-    reference :: Maybe (Map.Map CardName.CardName (Maybe Card.Card)),
+    -- | CR 108.1: the Oracle card reference, as far as the run has asked it:
+    -- each name's card, and the face it answers to when chosen
+    -- (Interpreter.chosenFace), a name it lacks mapped to neither; Nothing for
+    -- a run holding none, whose every lookup answers neither.
+    reference :: Maybe (Map.Map CardName.CardName (Maybe Card.Card, Maybe (Face.Face Card.Card))),
     -- | Whether the run replays a game from its decks, which ends at the
     -- game's result or where its recording stops.
     replaying :: Bool,
@@ -237,7 +238,10 @@ run registry scenario = do
         State.evalStateT (mapM_ (expect Nothing final) (Scenario.final scenario)) rehearsal
         pure final
       fetching known = case attempt known of
-        Left (Fetching name) -> Registry.fetchCard registry name >>= either (pure . Left . Failure.MkInvalidCorpus) (fetching . flip (Map.insert name) known)
+        Left (Fetching name) -> do
+          card <- Registry.fetchCard registry name
+          face <- Interpreter.chosenFace registry name
+          either (pure . Left . Failure.MkInvalidCorpus) (fetching . flip (Map.insert name) known) ((,) <$> card <*> face)
         Left (Failed failure) -> pure (Left failure)
         Right final -> pure (Right final)
   fetching Map.empty
@@ -930,11 +934,7 @@ answerGeneric gs key kind index timed prompt = case Timed.entry timed of
 -- engine judges those itself, or trusts them.
 legalAnswer :: GameState.GameState -> Prompt.Type.Prompt r -> r -> Run Bool
 legalAnswer gs prompt chosen = case prompt of
-  Prompt.Type.ChooseCardName _ chooser _ restriction _ -> do
-    known <- lookUp chosen
-    pure $ case known >>= Engine.Card.faceNamed chosen of
-      Nothing -> False
-      Just face -> Filter.matches (Filter.contextIn gs (Just chooser) Nothing) (Projection.viewOfCard face) restriction
+  Prompt.Type.ChooseCardName _ chooser _ restriction _ -> fmap (Interpreter.admitsName gs chooser restriction . snd) (referenced chosen)
   _ -> pure True
 
 -- | Whether an answer names only what its prompt offers, for a prompt that
@@ -1602,10 +1602,13 @@ failWith failure = State.StateT (const (Left (Failed failure)))
 -- | CR 108.1: the card the reference gives a name, halting the run for `run`
 -- to fetch a name it has not yet been asked.
 lookUp :: CardName.CardName -> Run (Maybe Card.Card)
-lookUp name = do
+lookUp = fmap fst . referenced
+
+referenced :: CardName.CardName -> Run (Maybe Card.Card, Maybe (Face.Face Card.Card))
+referenced name = do
   held <- State.gets reference
   case held of
-    Nothing -> pure Nothing
+    Nothing -> pure (Nothing, Nothing)
     Just fetched -> maybe (State.StateT (const (Left (Fetching name)))) pure (Map.lookup name fetched)
 
 -- References -------------------------------------------------------------------

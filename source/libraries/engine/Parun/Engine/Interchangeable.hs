@@ -375,7 +375,8 @@ unread oid =
       Mentions.context = Monoid.Any True,
       Mentions.keyed = Monoid.Any True,
       Mentions.history = mempty,
-      Mentions.prevention = mempty
+      Mentions.prevention = mempty,
+      Mentions.melded = id
     }
 
 -- CR 613.7a: an object's static abilities apply at its own timestamp, so a
