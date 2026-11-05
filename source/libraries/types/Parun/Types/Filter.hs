@@ -329,7 +329,8 @@ data Filter keyword
   | -- | The candidate is a card that left a library this way earlier this turn
     -- (CR 121.1, 701.17a). Matches the incarnation that left (CR 400.7), so a card
     -- that has moved again does not answer. Proved by the scenarios under
-    -- sylvan-library and Parun.CostSpec's "CR 701.17a a card milled to pay a cost".
+    -- sylvan-library and jandors-ring and Parun.CostSpec's "CR 701.17a a card
+    -- milled to pay a cost".
     LeftLibraryThisTurn LibraryDeparture.LibraryDeparture
   | -- | CR 702.122d: an effect in force says this candidate "can't crew
     -- Vehicles". Read off the surrounding evaluation's context rather than off
