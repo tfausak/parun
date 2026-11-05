@@ -21,6 +21,9 @@ import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActingPermanent as ActingPermanent
+import qualified Parun.Types.AttachDirection as AttachDirection
+import qualified Parun.Types.AttachmentEnd as AttachmentEnd
+import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
 import qualified Parun.Types.AttackCount as AttackCount
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackTrigger as AttackTrigger
@@ -530,20 +533,20 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker _ (BlockCount.AtLeast _ _)), GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker})) ->
     Binding.setAttackingCreature attacker Map.empty
   -- CR 701.3a's "that creature" read from the ATTACHMENT: the host the bearer
-  -- went onto, which Enormous Energy Blade taps. SelfBecomesAttachedBy has no arm
-  -- here at all, and the two together are the pair -- whichever end of rule
+  -- went onto, which Enormous Energy Blade taps. A Host end has no arm here at
+  -- all, and the two together are the pair -- whichever end of rule
   -- 701.3a's event is not the bearer is the one that earns a name.
   --
   -- Guaranteed given a match rather than conditional, which is what
   -- eventBindingSlots' per-condition promise needs: matchesTrigger has already
   -- declined every event whose host is a player, so Recipient.objectOf answers
   -- Just for every event that reaches here and the Map.empty branch is dead.
-  (TriggerCondition.SelfBecomesAttachedTo _, GameEvent.BecameAttached (BecameAttached.MkBecameAttached {BecameAttached.host = host})) ->
+  (TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Attachment AttachDirection.Attaches _), GameEvent.BecameAttached (BecameAttached.MkBecameAttached {BecameAttached.host = host})) ->
     maybe Map.empty (`Binding.setAttachedHost` Map.empty) (Recipient.objectOf host)
   -- CR 701.3d's "that permanent": the host the bearer came OFF, which Grafted
   -- Wargear sacrifices. The arm above's mirror off the other event, guaranteed
   -- for the same reason.
-  (TriggerCondition.SelfBecomesUnattachedFrom _, GameEvent.BecameUnattached (BecameUnattached.MkBecameUnattached {BecameUnattached.host = host})) ->
+  (TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Attachment AttachDirection.Unattaches _), GameEvent.BecameUnattached (BecameUnattached.MkBecameUnattached {BecameUnattached.host = host})) ->
     maybe Map.empty (`Binding.setUnattachedHost` Map.empty) (Recipient.objectOf host)
   -- CR 702.134c's "that creature": the creature that was mentored, the event's
   -- second id -- Aegis of the Legion's shield counter goes on it. The MENTOR gets no
@@ -1393,17 +1396,17 @@ eventBindingSlots cond = case cond of
   -- one of them -- CR 113.7a's source slot already names the host. The other,
   -- the attachment, has no printed reader: Bramble Elemental says "create two
   -- 1\/1 green Saproling creature tokens" and names no "it". Enormous Energy
-  -- Blade's "tap that creature" reads the event from the other end, under
-  -- SelfBecomesAttachedTo below.
-  TriggerCondition.SelfBecomesAttachedBy _ -> Set.empty
-  -- The other end of the same event, and the one that DOES earn a slot: here the
-  -- bearer is the attachment, so CR 113.7a's source slot names it and the host is
-  -- a second object. Guaranteed given a match -- matchesTrigger declines a player
-  -- host outright.
-  TriggerCondition.SelfBecomesAttachedTo _ -> Set.singleton Binding.attachedHost
-  -- CR 701.3d's mirror, on its own slot for Parun.Engine.Binding.unattachedHost's
-  -- reason.
-  TriggerCondition.SelfBecomesUnattachedFrom _ -> Set.singleton Binding.unattachedHost
+  -- Blade's "tap that creature" reads the event from the other end, the
+  -- Attachment end.
+  --
+  -- That other end DOES earn a slot: there the bearer is the attachment, so CR
+  -- 113.7a's source slot names it and the host is a second object. Guaranteed
+  -- given a match -- matchesTrigger declines a player host outright. CR 701.3d's
+  -- mirror is on its own slot for Parun.Engine.Binding.unattachedHost's reason.
+  TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger end direction _) -> case (end, direction) of
+    (AttachmentEnd.Host, _) -> Set.empty
+    (AttachmentEnd.Attachment, AttachDirection.Attaches) -> Set.singleton Binding.attachedHost
+    (AttachmentEnd.Attachment, AttachDirection.Unattaches) -> Set.singleton Binding.unattachedHost
   -- CR 603.6a: entersSlots has the whole of it.
   TriggerCondition.Enters t -> fst (entersSlots t)
   -- CR 603.2b's step beginning names no OBJECT -- but it names the active player,

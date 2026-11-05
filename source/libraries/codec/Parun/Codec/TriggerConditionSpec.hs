@@ -7,6 +7,9 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.ActingPermanent as ActingPermanent
+import qualified Parun.Types.AttachDirection as AttachDirection
+import qualified Parun.Types.AttachmentEnd as AttachmentEnd
+import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
 import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackTrigger as AttackTrigger
 import qualified Parun.Types.AttackerTarget as AttackerTarget
@@ -783,32 +786,29 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.Reflexive
       " {\"type\":\"Reflexive\"} "
-  -- CR 701.3a read from the host. The Filter is over the ATTACHMENT, and Bramble
-  -- Elemental's narrows to Auras, so the payload is a real HasSubtype rather than
-  -- the trivial `And []`.
-  Spec.it s "SelfBecomesAttachedBy round-trips" $
+  -- CR 701.3a read from the host, Bramble Elemental's: the Filter is over the
+  -- ATTACHMENT. Parun.Codec.AttachmentTriggerSpec has the fields.
+  Spec.it s "AttachmentChanges round-trips a host's attach" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfBecomesAttachedBy (Filter.HasSubtype Subtype.Aura))
-      " {\"type\":\"SelfBecomesAttachedBy\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}} "
-  -- CR 701.3a read from the ATTACHMENT, the mirror of the arm above: the tag is
-  -- the only thing that separates the two, so both are round-tripped rather than
-  -- one standing in for the other.
-  Spec.it s "SelfBecomesAttachedTo round-trips" $
+      (TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Host AttachDirection.Attaches (Filter.HasSubtype Subtype.Aura)))
+      " {\"type\":\"AttachmentChanges\",\"value\":{\"end\":{\"type\":\"Host\"},\"direction\":{\"type\":\"Attaches\"},\"other\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}}} "
+  -- CR 701.3a read from the ATTACHMENT, Enormous Energy Blade's: the Filter is
+  -- over the host.
+  Spec.it s "AttachmentChanges round-trips an attachment's attach" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfBecomesAttachedTo (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"SelfBecomesAttachedTo\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
-  -- CR 701.3d. Grafted Wargear says "from a permanent" and narrows nothing, so
-  -- the trivial `And []` is the payload the card actually prints.
-  Spec.it s "SelfBecomesUnattachedFrom round-trips" $
+      (TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Attachment AttachDirection.Attaches (Filter.HasCardType CardType.Creature)))
+      " {\"type\":\"AttachmentChanges\",\"value\":{\"end\":{\"type\":\"Attachment\"},\"direction\":{\"type\":\"Attaches\"},\"other\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+  -- CR 701.3d, Grafted Wargear's "from a permanent": the trivial `And []`.
+  Spec.it s "AttachmentChanges round-trips an attachment's unattach" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfBecomesUnattachedFrom (Filter.And []))
-      " {\"type\":\"SelfBecomesUnattachedFrom\",\"value\":{\"type\":\"And\",\"value\":[]}} "
+      (TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Attachment AttachDirection.Unattaches (Filter.And [])))
+      " {\"type\":\"AttachmentChanges\",\"value\":{\"end\":{\"type\":\"Attachment\"},\"direction\":{\"type\":\"Unattaches\"},\"other\":{\"type\":\"And\",\"value\":[]}}} "
   Spec.it s "PlacesSticker round-trips" $
     Common.assertCodec
       s

@@ -2,6 +2,7 @@ module Parun.Codec.TriggerCondition where
 
 import qualified Parun.Codec.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Codec.ActingPermanent as ActingPermanent
+import qualified Parun.Codec.AttachmentTrigger as AttachmentTrigger
 import qualified Parun.Codec.AttackTrigger as AttackTrigger
 import qualified Parun.Codec.BecomesTapState as BecomesTapState
 import qualified Parun.Codec.BecomesTargetedTrigger as BecomesTargetedTrigger
@@ -126,11 +127,9 @@ codec =
           Arm.payload "FlipsCoin" CoinFlipTrigger.codec TriggerCondition.FlipsCoin (\x -> case x of TriggerCondition.FlipsCoin y -> Just y; _ -> Nothing),
           Arm.nullary "SelfBecomesPlotted" TriggerCondition.SelfBecomesPlotted,
           Arm.nullary "Reflexive" TriggerCondition.Reflexive,
-          Arm.payload "SelfBecomesAttachedBy" filterCodec TriggerCondition.SelfBecomesAttachedBy (\x -> case x of TriggerCondition.SelfBecomesAttachedBy y -> Just y; _ -> Nothing),
+          Arm.payload "AttachmentChanges" AttachmentTrigger.codec TriggerCondition.AttachmentChanges (\x -> case x of TriggerCondition.AttachmentChanges y -> Just y; _ -> Nothing),
           -- CR 701.3a read from the attachment, and CR 701.3d's mirror of it. Same
           -- shape as the arm above with the Filter over the HOST instead.
-          Arm.payload "SelfBecomesAttachedTo" filterCodec TriggerCondition.SelfBecomesAttachedTo (\x -> case x of TriggerCondition.SelfBecomesAttachedTo y -> Just y; _ -> Nothing),
-          Arm.payload "SelfBecomesUnattachedFrom" filterCodec TriggerCondition.SelfBecomesUnattachedFrom (\x -> case x of TriggerCondition.SelfBecomesUnattachedFrom y -> Just y; _ -> Nothing),
           Arm.payload "PlacesSticker" PlacesSticker.codec TriggerCondition.PlacesSticker (\x -> case x of TriggerCondition.PlacesSticker y -> Just y; _ -> Nothing)
         ]
 
@@ -201,7 +200,5 @@ tagOf x = case x of
   TriggerCondition.FlipsCoin {} -> "FlipsCoin"
   TriggerCondition.SelfBecomesPlotted {} -> "SelfBecomesPlotted"
   TriggerCondition.Reflexive {} -> "Reflexive"
-  TriggerCondition.SelfBecomesAttachedBy {} -> "SelfBecomesAttachedBy"
-  TriggerCondition.SelfBecomesAttachedTo {} -> "SelfBecomesAttachedTo"
-  TriggerCondition.SelfBecomesUnattachedFrom {} -> "SelfBecomesUnattachedFrom"
+  TriggerCondition.AttachmentChanges {} -> "AttachmentChanges"
   TriggerCondition.PlacesSticker {} -> "PlacesSticker"

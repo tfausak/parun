@@ -76,11 +76,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfBecomesAttachedTo",
+            "type": "AttachmentChanges",
             "value": {
-              "type": "HasCardType",
-              "value": {
-                "type": "Creature"
+              "direction": {
+                "type": "Attaches"
+              },
+              "end": {
+                "type": "Attachment"
+              },
+              "other": {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Creature"
+                }
               }
             }
           },

@@ -37,6 +37,9 @@ import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActingPermanent as ActingPermanent
+import qualified Parun.Types.AttachDirection as AttachDirection
+import qualified Parun.Types.AttachmentEnd as AttachmentEnd
+import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
 import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackCount as AttackCount
 import qualified Parun.Types.AttackTarget as AttackTarget
@@ -2249,14 +2252,17 @@ representativeEvents cond =
         -- attachment is `arrived`, and the Filter this condition is instantiated
         -- with below is the trivial one, which admits whatever that id resolves
         -- to.
-        TriggerCondition.SelfBecomesAttachedBy _ -> one (GameEvent.BecameAttached (BecameAttached.MkBecameAttached arrived (Recipient.ToCreature departed)))
-        -- The same event read from the other end: here `departed` is the
-        -- ATTACHMENT, the bearer position, and `arrived` is the host the slot
-        -- names.
-        TriggerCondition.SelfBecomesAttachedTo _ -> one (GameEvent.BecameAttached (BecameAttached.MkBecameAttached departed (Recipient.ToCreature arrived)))
-        -- CR 701.3d's own event, the arm above's mirror and the only one this
-        -- condition admits.
-        TriggerCondition.SelfBecomesUnattachedFrom _ -> one (GameEvent.BecameUnattached (BecameUnattached.MkBecameUnattached departed (Recipient.ToCreature arrived)))
+        --
+        -- An Attachment end reads the same event from the other end: there
+        -- `departed` is the ATTACHMENT, the bearer position, and `arrived` is the
+        -- host the slot names. CR 701.3d's own event is the mirror for Unattaches.
+        TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger end direction _) ->
+          let (attachment, host) = case end of
+                AttachmentEnd.Host -> (arrived, departed)
+                AttachmentEnd.Attachment -> (departed, arrived)
+           in one $ case direction of
+                AttachDirection.Attaches -> GameEvent.BecameAttached (BecameAttached.MkBecameAttached attachment (Recipient.ToCreature host))
+                AttachDirection.Unattaches -> GameEvent.BecameUnattached (BecameUnattached.MkBecameUnattached attachment (Recipient.ToCreature host))
         -- CR 603.12: a reflexive matches no log entry at all
         -- (Event.matchesTrigger's Reflexive arm answers False for every event),
         -- so any event is as representative as any other -- StateIs' arm above.
@@ -2537,9 +2543,9 @@ everyTriggerCondition =
     TriggerCondition.FlipsCoin (CoinFlipTrigger.MkCoinFlipTrigger PlayerRelation.You FlipOutcome.Lost),
     TriggerCondition.FlipsCoin (CoinFlipTrigger.MkCoinFlipTrigger PlayerRelation.Opponent FlipOutcome.Lost),
     TriggerCondition.SelfBecomesPlotted,
-    TriggerCondition.SelfBecomesAttachedBy (Filter.Type.And []),
-    TriggerCondition.SelfBecomesAttachedTo (Filter.Type.And []),
-    TriggerCondition.SelfBecomesUnattachedFrom (Filter.Type.And []),
+    TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Host AttachDirection.Attaches (Filter.Type.And [])),
+    TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Attachment AttachDirection.Attaches (Filter.Type.And [])),
+    TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Attachment AttachDirection.Unattaches (Filter.Type.And [])),
     TriggerCondition.Reflexive,
     TriggerCondition.PlacesSticker (PlacesSticker.MkPlacesSticker PlayerRelation.You (Set.singleton StickerKind.Art) (Filter.Type.And []))
   ]
