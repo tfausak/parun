@@ -7352,12 +7352,14 @@ remint oid gs = case Game.lookupObject oid gs of
 -- settle that is no longer revealed there -- a card is over it, or nothing
 -- reveals it now -- is re-minted where it lies (remint), so it is a new object
 -- once revealed again; then each library's revealed top is recorded
--- (Visibility.revealedTop). Not implemented: a run on top that ends and resumes
--- between two settles, with no reorder between, keeps the card the same object
--- (#5940).
+-- (Visibility.revealedTop). Settled at CR 117.5 and after each instruction
+-- (Parun.Engine.Resolve.Effect.applyEffectWith), so a run that ends and
+-- resumes within one resolution is seen.
 --
 -- data/scenarios/conspicuous-snoop-a-goblin-back-on-top-after-another-card-is-a-new-object.json
--- proves a run that ends under another card, and
+-- proves a run that ends under another card,
+-- data/scenarios/conspicuous-snoop-a-goblin-covered-and-uncovered-in-one-resolution-is-a-new-object.json
+-- one that ends and resumes within one resolution, and
 -- data/scenarios/conspicuous-snoop-a-goblin-shuffled-back-on-top-is-a-new-object.json
 -- one that a shuffle ends (forgetShown).
 settleRevealedTops :: GameState -> GameState

@@ -501,6 +501,9 @@ applyEffectWith runSubgame resolving source controller legal chosen effect = Eve
   -- CR 603.2 / 603.10d: a control change this instruction made, observed before
   -- the next one can make another.
   Monad.void Event.sampleControl
+  -- CR 401.6: a revealed top card this instruction covered, re-minted before
+  -- the next one can uncover it (Event.settleRevealedTops).
+  State.modify' Event.settleRevealedTops
   -- CR 603.4: the board this instruction's events left, before the next one
   -- changes it. data/scenarios/trigger's Slaughterhouse Bouncer scenario proves
   -- it.
