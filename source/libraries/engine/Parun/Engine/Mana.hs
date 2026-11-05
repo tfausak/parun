@@ -780,7 +780,7 @@ triggerAdds pid gs pending = case PendingTrigger.source pending of
               ManaUnit.rider = ManaAddition.rider addition,
               ManaUnit.spendTrigger = spendTriggerOf controller source gs =<< ManaAddition.whenSpent addition,
               ManaUnit.sourceChoices = sourceChoicesOf source gs,
-              ManaUnit.sourceLastExiled = lastExiledWith Nothing source gs
+              ManaUnit.sourceLastExiled = lastExiledWith Nothing (Game.acquisitionOf source gs) source gs
             }
         adds addition
           | List.notElem pid (Maybe.fromMaybe [] (Players.named resolutionReads gs (ManaAddition.player addition))) = [[]]
@@ -905,7 +905,7 @@ pricedOptionsVisiting visited paid poolBoard pcs oid gs =
               whenSpent <- ManaAddition.whenSpent addition
               spendTriggerOf controller oid gs whenSpent,
             ManaUnit.sourceChoices = choices,
-            ManaUnit.sourceLastExiled = lastExiledWith reader oid gs
+            ManaUnit.sourceLastExiled = lastExiledWith reader (Game.acquisitionFor reader oid gs) oid gs
           }
       -- CR 106.3's count, read off the BOARD rather than off the card: Cabal
       -- Coffers' "Add {B} for each Swamp you control" is ONE instruction whose
@@ -1081,8 +1081,9 @@ sourceChoicesOf oid gs = case Game.lookupObject oid gs of
 -- CR 607.2a's production-time capture, sourceChoicesOf's twin: the last
 -- card exiled with this source that is still in exile, baked onto every unit it
 -- adds (Parun.Types.ManaUnit.sourceLastExiled). Only a card the mana ability
--- named `reader` is linked to counts (Game.linkedPile), so one the source
--- acquired with its exiling twin reads that twin's pile alone (CR 607.5).
+-- named `reader`, come with `acquisition`, is linked to counts
+-- (Game.linkedPile), so one the source acquired with its exiling twin reads
+-- that twin's pile alone (CR 607.5).
 -- data/scenarios/mana-source/cr-607-5-myr-welder-s-acquired-ice-cauldron-mana-casts-what-its-pair-exiled.json
 -- is the proof. "Last" is Game.lastExiled's, so a second card the source
 -- exiles replaces the first, and a card that left exile is no longer one (CR
@@ -1093,8 +1094,8 @@ sourceChoicesOf oid gs = case Game.lookupObject oid gs of
 -- stack before CR 601.2h pays for it, so a spend-time read would never find it in
 -- exile. Mana made while that card is already being cast (CR 601.2g) therefore
 -- names whatever was exiled before it.
-lastExiledWith :: Maybe AbilityName.AbilityName -> ObjectId -> GameState -> Maybe ObjectId
-lastExiledWith reader oid gs = Game.lastExiled (Game.linkedPile reader ExiledPile.OwnAbilities oid gs) gs
+lastExiledWith :: Maybe AbilityName.AbilityName -> Acquisition.Acquisition -> ObjectId -> GameState -> Maybe ObjectId
+lastExiledWith reader acquisition oid gs = Game.lastExiled (Game.linkedPile reader acquisition ExiledPile.OwnAbilities oid gs) gs
 
 -- The production-time tags (Parun.Types.ProductionTag) every mana this object
 -- adds will carry. THE one place they are decided; manaOptionsOfGiven just above

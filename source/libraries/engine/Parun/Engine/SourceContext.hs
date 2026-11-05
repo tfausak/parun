@@ -77,12 +77,14 @@ choicesOf acquisition source gs =
     }
 
 -- | `context` with these choices as the source's: CR 105.2's colours, CR
--- 205.3's subtype, CR 201.4's names and CR 107.1c's number.
+-- 205.3's subtype, CR 201.4's names and CR 107.1c's number, and the
+-- acquisition they belong to (CR 607.5).
 withChoices :: SourceChoices.SourceChoices -> Filter.Context -> Filter.Context
 withChoices choices context =
   context
     { Filter.sourceChosenColors = SourceChoices.colors choices,
       Filter.sourceChosenSubtype = SourceChoices.subtype choices,
       Filter.sourceChosenNumber = SourceChoices.number choices,
-      Filter.sourceChosenNames = SourceChoices.names choices
+      Filter.sourceChosenNames = SourceChoices.names choices,
+      Filter.sourceAcquisition = Just (SourceChoices.acquisition choices)
     }

@@ -1684,6 +1684,7 @@ magister-sphinx
 magistrates-scepter
 magmakin-artillerist
 magmatic-insight
+magnetic-mountain
 magnetic-theft
 magnivore
 magnus-the-red
@@ -2469,6 +2470,7 @@ serras-hymn
 serum-powder
 setons-desire
 shacklegeist
+shadow-in-the-warp
 shadow-prophecy
 shadow-the-hedgehog
 shadow-urchin
