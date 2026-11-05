@@ -1,0 +1,211 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Aladdin's Lamp",
+            "label": "two"
+          },
+          {
+            "card": "Aladdin's Lamp",
+            "label": "three"
+          },
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          },
+          {
+            "card": "Island",
+            "label": "i3"
+          },
+          {
+            "card": "Island",
+            "label": "i4"
+          },
+          {
+            "card": "Island",
+            "label": "i5"
+          }
+        ],
+        "library": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          },
+          {
+            "card": "Gray Ogre",
+            "label": "ogre"
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "elves"
+          },
+          {
+            "card": "Raging Goblin",
+            "label": "goblin"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Forest"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "Upkeep",
+    "turn": 3
+  },
+  "description": "A second Aladdin's Lamp replaces the draw the first one makes",
+  "note": "The card's ruling (2004-10-04), CR 614.5. X = 2 then X = 3, so which row ran first shows in the cards offered. The first row looks at bears and giant, keeps giant and bottoms bears; the second looks at giant, ogre and piker, keeps piker and bottoms the others. One card is drawn in all, the one the second row kept.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "mana": [
+            "$i1",
+            "$i2",
+            null
+          ],
+          "object": "$two",
+          "x": 2
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 3
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 3
+    },
+    {
+      "do": {
+        "Activate": {
+          "mana": [
+            "$i3",
+            "$i4",
+            "$i5"
+          ],
+          "object": "$three",
+          "x": 3
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 3
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 3
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseReplacement",
+          "with": 1
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 3
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardFromAmong",
+          "with": "$giant"
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 3
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardFromAmong",
+          "with": "$piker"
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 3
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$ogre",
+            "$giant"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 3
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Goblin Piker"
+          ],
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Hand"
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 3
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "$elves",
+            "$goblin",
+            "Grizzly Bears",
+            "Hill Giant",
+            "Gray Ogre"
+          ],
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Library"
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 3
+    }
+  ]
+}

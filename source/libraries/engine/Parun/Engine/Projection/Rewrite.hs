@@ -1771,6 +1771,7 @@ rewriteDrawRewrite pairs rewrite = case rewrite of
   DrawRewrite.RevealUntilChosenKind -> rewrite
   DrawRewrite.DrawInstead _ -> rewrite
   DrawRewrite.DiscardThenDrawOrMill -> rewrite
+  DrawRewrite.KeepOneOfTopThenDraw quantity -> DrawRewrite.KeepOneOfTopThenDraw (rewriteQuantity pairs quantity)
   DrawRewrite.MaySkipFor effects -> DrawRewrite.MaySkipFor (fmap (rewriteEffect pairs) effects)
 
 -- CR 612.1 through CR 707.9's "except ..." clause. Exhaustive for

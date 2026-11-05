@@ -1,0 +1,181 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Aladdin's Lamp",
+            "label": "one"
+          },
+          {
+            "card": "Aladdin's Lamp",
+            "label": "other"
+          },
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          },
+          {
+            "card": "Island",
+            "label": "i3"
+          },
+          {
+            "card": "Island",
+            "label": "i4"
+          }
+        ],
+        "library": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          },
+          {
+            "card": "Gray Ogre",
+            "label": "ogre"
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "elves"
+          },
+          {
+            "card": "Raging Goblin",
+            "label": "goblin"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Forest"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "Upkeep",
+    "turn": 3
+  },
+  "description": "Two Aladdin's Lamps at one X ask nothing about their order",
+  "note": "CR 616.1: the rows differ only in a source that names the prompt, so neither order is distinguishable and no ChooseReplacement is scheduled. The first looks at bears and giant and keeps giant; the second looks at giant and ogre and keeps ogre, which is drawn.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "mana": [
+            "$i1",
+            "$i2",
+            null
+          ],
+          "object": "$one",
+          "x": 2
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 3
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 3
+    },
+    {
+      "do": {
+        "Activate": {
+          "mana": [
+            "$i3",
+            "$i4"
+          ],
+          "object": "$other",
+          "x": 2
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 3
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 3
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardFromAmong",
+          "with": "$giant"
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 3
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardFromAmong",
+          "with": "$ogre"
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 3
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Gray Ogre"
+          ],
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Hand"
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 3
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "$piker",
+            "$elves",
+            "$goblin",
+            "Grizzly Bears",
+            "Hill Giant"
+          ],
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Library"
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 3
+    }
+  ]
+}

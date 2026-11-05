@@ -2,6 +2,7 @@ module Parun.Codec.DrawRewrite where
 
 import qualified Data.Typeable as Typeable
 import qualified Parun.Codec.FromOutsideTheGame as FromOutsideTheGame
+import qualified Parun.Codec.Quantity as Quantity
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
@@ -20,6 +21,7 @@ codec effectCodec =
       Arm.nullary "RevealUntilChosenKind" DrawRewrite.RevealUntilChosenKind,
       Arm.payload "DrawInstead" Common.natural DrawRewrite.DrawInstead (\x -> case x of DrawRewrite.DrawInstead y -> Just y; _ -> Nothing),
       Arm.nullary "DiscardThenDrawOrMill" DrawRewrite.DiscardThenDrawOrMill,
+      Arm.payload "KeepOneOfTopThenDraw" Quantity.codec DrawRewrite.KeepOneOfTopThenDraw (\x -> case x of DrawRewrite.KeepOneOfTopThenDraw y -> Just y; _ -> Nothing),
       Arm.payload "MaySkipFor" (Common.seq effectCodec) DrawRewrite.MaySkipFor (\x -> case x of DrawRewrite.MaySkipFor y -> Just y; _ -> Nothing)
     ]
 
@@ -34,4 +36,5 @@ tagOf x = case x of
   DrawRewrite.RevealUntilChosenKind {} -> "RevealUntilChosenKind"
   DrawRewrite.DrawInstead {} -> "DrawInstead"
   DrawRewrite.DiscardThenDrawOrMill {} -> "DiscardThenDrawOrMill"
+  DrawRewrite.KeepOneOfTopThenDraw {} -> "KeepOneOfTopThenDraw"
   DrawRewrite.MaySkipFor {} -> "MaySkipFor"

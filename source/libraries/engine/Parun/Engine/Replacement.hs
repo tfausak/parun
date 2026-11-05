@@ -1161,6 +1161,8 @@ stocked gs rewrite pid = case rewrite of
   DrawRewrite.RevealUntilChosenKind -> True
   DrawRewrite.DrawInstead _ -> True
   DrawRewrite.DiscardThenDrawOrMill -> True
+  -- CR 614.11: an empty library still looks at nothing and then draws.
+  DrawRewrite.KeepOneOfTopThenDraw _ -> True
   DrawRewrite.MaySkipFor _ -> True
 
 breaches :: GameState -> Maybe PlayerId -> LifeLossRewrite.LifeLossRewrite -> PlayerId -> Natural -> Bool
@@ -2401,6 +2403,10 @@ readsApplier re = case re of
   -- CR 609.1: the discard is the row's controller's effect (Event.causedBy), so
   -- two rows under different controllers make different players its cause.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> True
+  -- The looker is the drawer the EVENT named. A baked count reads nothing of the
+  -- row; any other is read against its Context, countedCeiling's answer.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.KeepOneOfTopThenDraw (Quantity.Type.Literal _))) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.KeepOneOfTopThenDraw _)) -> True
   -- CR 109.5: the effects run under the row's controller, GameLossR's answer.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.MaySkipFor _)) -> True
   -- CR 121.2a: "you and that player each draw a card" -- the "you" is the row's
@@ -2531,6 +2537,10 @@ readsSource effect = case effect of
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.RevealUntilChosenKind) -> False
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.DrawInstead _)) -> False
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> False
+  -- The source only names the prompt once the count is baked; any other count
+  -- is read against it.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.KeepOneOfTopThenDraw (Quantity.Type.Literal _))) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.KeepOneOfTopThenDraw _)) -> True
   -- The effects run from the row's source, GameLossR's answer.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.MaySkipFor _)) -> True
   -- CR 616.1: Event.eligible scans the pool under Projection.sourceContext

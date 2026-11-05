@@ -4610,6 +4610,28 @@ apply settle batch applied candidate event =
             Monad.unless (null milled) (State.modify' (recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList milled)))))
           else Monad.void (drawSeries settle (spentWith candidate applied) pid 1)
         pure Nothing
+      -- CR 614.1a / 701.20e: Aladdin's Lamp. Run here rather than queued, so the
+      -- inner draw is offered only to the rows CR 614.5 leaves it (a second Lamp,
+      -- the card's ruling; never an Archive that made this draw), and done before
+      -- this call returns (CR 614.11a). The looker and the drawer are the seat the
+      -- EVENT named, GainLife's reason. The kept card stays where it is, on top
+      -- once the rest have gone, and CR 614.11 draws off an empty library too.
+      DrawRewrite.KeepOneOfTopThenDraw quantity -> do
+        Replacement.consume (ReplacementCandidate.identity candidate)
+        gs <- State.get
+        let source = ReplacementCandidate.source candidate
+            count = maybe 0 Integer.toNaturalSaturating (Quantity.evaluate (Projection.fullView gs) (Replacement.candidateContext gs candidate) gs source quantity)
+            looked = List.genericTake count (Game.zoneMembers Zone.Library pid gs)
+        Monad.mapM_ (look pid) looked
+        kept <- Game.chooseAmong (\decider who -> Prompt.ChooseCardFromAmong decider who source) pid looked
+        let rest = filter ((/= kept) . Just) looked
+        ordered <- case rest of
+          _ : _ : _ -> Game.honourShuffle rest <$> Game.ask (Prompt.Shuffle rest)
+          _ -> pure rest
+        Monad.forM_ (reverse ordered) $ \oid ->
+          changeZoneAttaching settle Nothing Set.empty oid Zone.Library LibraryPosition.Bottom Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
+        Monad.void (drawSeries settle (spentWith candidate applied) pid 1)
+        pure Nothing
       -- CR 614.10: Island Sanctuary's "instead you may skip that draw. If you do,
       -- [these effects]". The decider is the drawer, Dredge's posture; declining
       -- leaves the event STANDING for the same reason, and a draw off an empty

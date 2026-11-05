@@ -1386,6 +1386,7 @@ drawRewriteNames asking onEffect x = case x of
   DrawRewrite.RevealUntilChosenKind -> mempty
   DrawRewrite.DrawInstead _natural -> mempty
   DrawRewrite.DiscardThenDrawOrMill -> mempty
+  DrawRewrite.KeepOneOfTopThenDraw quantity -> quantityNames asking quantity
   DrawRewrite.MaySkipFor effects -> foldMap onEffect effects
 
 dungeonRoomNames :: (Monoid r) => Asking r -> (card -> r) -> DungeonRoom.DungeonRoom card -> r
