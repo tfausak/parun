@@ -178,9 +178,8 @@ data ActivationRestriction
     -- id.
     TimesEachTurn Natural
   | -- | "Activate only any time it makes sense" (Goblin Bookie): activatable only
-    -- inside CR 706.2's modification of a die roll, where the ability resolves
-    -- at once. No rule grants that window (CR 117.1b); Parun.DiceSpec's Goblin
-    -- Bookie group proves the reading.
+    -- inside CR 706.2's modification of a die roll, resolving at once.
+    -- Parun.DiceSpec's Goblin Bookie group proves it.
     DuringDieRoll
   | -- | CR 602.5e's "Activate only as an instant": the player must have priority
     -- (CR 304.5), so never inside a payment -- Rhystic Cave.

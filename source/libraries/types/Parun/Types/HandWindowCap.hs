@@ -5,9 +5,10 @@ module Parun.Types.HandWindowCap where
 -- serves answer differently, and nothing about the effects themselves says which
 -- -- the rule the window implements does, so the window passes it in.
 data HandWindowCap
-  = -- | CR 103.5b: no cap. That rule lets a player act "at a time they would
-    -- declare" as often as they like, and Serum Powder's second copy is drawn by
-    -- the first one's action -- so a card back in hand is a fresh offer.
+  = -- | CR 103.5b: no cap across a declaration; its "they then declare" leaves a
+    -- second action open (docs/decisions.md, "Whether a mulligan-time action can be
+    -- repeated before declaring"). Serum Powder's second copy is drawn by the first
+    -- one's action, so a card back in hand is a fresh offer.
     Repeatable
   | -- | CR 103.6b: "Each card may be revealed this way only once." Enforced per
     -- CARD rather than per action, which is how that sentence words it: two

@@ -1668,9 +1668,10 @@ createEmblem pid card = do
 -- A FACE-DOWN main-game object is the one exception, and CR 708.2 is why: "face-
 -- down spells and face-down permanents have no characteristics other than those
 -- listed by the ability or rules that allowed the spell or permanent to be face
--- down", and those listed values are the object's own COPIABLE values. Copiable
--- values are not an effect or a definition created in the main game, so CR
--- 729.1b does not reach them -- the same reason the entry's owner survives the
+-- down", and those listed values are the object's own COPIABLE values. CR
+-- 701.40a's defining effect has no meaning here (CR 729.1b), but CR 708.2a itself
+-- gives a face-down permanent these values, and face down is a status (CR 110.5)
+-- -- the same reason the entry's owner survives the
 -- crossing -- and the object is offered as CR 708.2a's 2/2 creature with no
 -- name. So Living Wish reaches a manifested sorcery and Burning Wish does not.
 --
@@ -4511,8 +4512,8 @@ apply settle batch applied batchPrevented candidate event =
       -- milled (CR 701.17a's instruction is not printed). Unpaid, the event is
       -- left STANDING, Dredge's declining arm: CR 614.5 keeps this row off it, so
       -- a dredger may still replace the draw (the card's own ruling).
-      -- Standing, it keeps its kind: see docs/decisions.md, "Which draw is the
-      -- first one drawn in a draw step".
+      -- Standing, it keeps its kind: it is still the first card its drawer draws
+      -- in the step, which the exception on Chains of Mephistopheles names.
       DrawRewrite.OthersMayPayLife n -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
@@ -8732,7 +8733,8 @@ reanchor oldId newIds eff = case ContinuousEffect.affected eff of
 --
 -- Everything is read from `gs`, the board the permanent is still on and still
 -- projecting from, so what is handed over is the effect that was actually
--- applying. Its set is then fixed for good, by analogy with CR 611.2c: the
+-- applying. Its set is then fixed for good (docs/decisions.md, "Whether a lingering
+-- static effect's set is fixed as its permanent leaves"): the
 -- noncreature artifacts Titania's Song names at THIS instant, never the live filter -- an artifact
 -- that enters after the Song is gone is not animated. Parun.ExpirySpec's
 -- whole-card case proves both halves, and its Humility case is the control for
@@ -9699,9 +9701,10 @@ isDiverted refusal = case refusal of
   EntryRefusal.Unhosted -> False
 
 -- A minted object a redirect took is put straight into the redirect's zone, with
--- no zone change logged, as a conjured card is (docs/decisions.md, "Whether a
--- minted object an entry redirect takes changes zones"); a token there ceases to
--- exist by CR 111.7.
+-- no zone change logged. A token there ceases to exist by CR 111.7.
+--
+-- Not implemented: a trigger naming no origin seeing a conjured card arrive this
+-- way, CR 614.6's modified event having put it into exile (#6182).
 placeDiverted :: ObjectId -> Zone.Zone -> LibraryPosition.LibraryPosition -> Game ()
 placeDiverted oid zone position = State.modify' $ \g -> case Game.lookupObject oid g of
   Nothing -> g
@@ -10040,8 +10043,10 @@ meldable victims gs = do
 -- Object.face is left to an unmerged permanent: Game.shownFace reads the pile's.
 --
 -- CR 123.5b / 613.7k: the spell's stickers join the host's, all restamped at
--- the merge, in their old timestamp order across the two objects:
--- docs/decisions.md, "How a host's and a merging spell's stickers interleave".
+-- the merge, in their old timestamp order across the two objects.
+--
+-- Not implemented: restamping only the spell's stickers, the host staying the
+-- same object with its stickers' timestamps (CR 730.2b, 730.2c) (#6174).
 merge :: ObjectId -> ObjectId -> MutateSide.MutateSide -> Game Bool
 merge sid target side = do
   gs <- State.get

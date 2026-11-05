@@ -930,12 +930,12 @@ spec s registry = Spec.describe s "Mutate" $ do
     Spec.assertEqWith s "the token and the card represent one permanent, the card on top" (componentNames cat (onto MutateSide.Over)) [CardName.MkCardName (Text.pack "Cubwarden"), CardName.MkCardName (Text.pack "Cat Token")]
     Spec.assertEqWith s "and the other way under" (componentNames cat (onto MutateSide.Under)) [CardName.MkCardName (Text.pack "Cat Token"), CardName.MkCardName (Text.pack "Cubwarden")]
     Spec.assertBool s (not (isForest catBoard)) "setup: the Cat token was a token before anything merged with it, so Ashaya left it alone"
-  -- CR 730.2d with a COPY topmost, which is neither card nor token: Double Major
-  -- copies alice's mutating Cubwarden and the copy merges over her Falcon
-  -- Abomination. CR 608.3f gives a copy of a permanent spell its token-ness only
-  -- as it is put onto the battlefield, and rule 702.140c's merge never puts it
-  -- there, so the merged permanent is no token and Ashaya makes it a Forest.
-  -- docs/decisions.md, "Whether a merged copy of a mutating spell is a token".
+  -- CR 730.2d with a COPY topmost: Double Major copies alice's mutating Cubwarden
+  -- and the copy merges over her Falcon Abomination.
+  --
+  -- Not implemented: the copy is a token as it resolves (CR 111.13, 707.10f), so
+  -- this pins today's wrong answer, a merged permanent that is no token and that
+  -- Ashaya makes a Forest (#6172).
   --
   -- THREE resolutions -- Double Major, the copy, rule 702.140d's Cat trigger --
   -- with the original Cubwarden left waiting, so one CR 702.140c side prompt is

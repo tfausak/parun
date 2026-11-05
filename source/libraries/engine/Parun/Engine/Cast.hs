@@ -2571,7 +2571,8 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
   looks <- State.gets (Exile.mayLookAt pid oid)
   -- CR 406.3a, run BEFORE `before` is read and so before CR 601.2e's rewind
   -- captures it: the turn happens just before the announcement rather than
-  -- inside it, so a cast the player backs out of leaves the card face up.
+  -- inside it, so a cast the player backs out of leaves the card face up
+  -- (docs/decisions.md, "Whether a reversed cast turns a face-down card back down").
   State.modify' (turnedUpForPlay oid facing)
   before <- State.get
   -- The state the GATE measured, which is `before` with CR 709.3's half and CR
@@ -2714,7 +2715,7 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
       -- Nothing means the id was unknown or the CR 616.1 replacement loop
       -- cancelled the move, and a proposal whose first step did not happen is
       -- one the game returns from (CR 601.2). A redirect that lands the card
-      -- elsewhere is not Nothing, and the cast runs on: docs/decisions.md,
+      -- elsewhere is not Nothing, and the cast runs on: docs/synthetic-readings.md,
       -- "Whether a cast redirected off the stack is still a cast".
       --
       -- CR 708.4 is the same claim about the other status: the object is turned
@@ -4168,10 +4169,12 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
                           -- is `pricedGs`, taken before CR 601.2g/h's payment.
                           Event.becameTarget pricedGs sid StackObjectKind.Spell pid chosen
                           -- CR 406.4: a target drawn out of a face-down pile is
-                          -- revealed only now the cost is paid, and stays so
-                          -- while the spell is on the stack (docs/decisions.md,
-                          -- "When a target drawn out of a face-down pile is
-                          -- revealed, and for how long").
+                          -- revealed only now the cost is paid
+                          -- (docs/synthetic-readings.md, "Whether a target drawn
+                          -- out of a face-down pile is revealed"). Not
+                          -- implemented: ending that reveal after a brief time
+                          -- (CR 701.20a); it lasts while the spell is on the
+                          -- stack (#6175).
                           Monad.mapM_ (Cost.revealPaying (Just sid) pid) drawn
                           Monad.when (castFrom == Just Zone.Graveyard) (armCastFromGraveyard pid keywordsBefore castFor sid)
                           -- CR 903.8: the cast is now announced, so this is a

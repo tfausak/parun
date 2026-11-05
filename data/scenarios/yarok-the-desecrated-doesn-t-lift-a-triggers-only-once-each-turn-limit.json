@@ -1,6 +1,6 @@
 {
   "description": "CR 603.2d: with Yarok, the Desecrated, Enduring Innocence's \"triggers only once each turn\" ability still triggers once when a creature enters",
-  "note": "docs/decisions.md, \"A trigger limit caps an additional trigger\": Grizzly Bears entering would make the ability trigger twice, but its limit holds it to one, so alice draws one card, not two.",
+  "note": "CR 603.2d and Yarok's ruling make the additional instance a second triggering, and CR 101.2 puts the limit over it: Grizzly Bears entering would make the ability trigger twice, but it \"triggers only once each turn\", so alice draws one card, not two.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",

@@ -715,7 +715,7 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
         decodeFace
         baseFace {Face.mulliganActions = [HandAction.MkHandAction Nothing [Effect.ExileHandThenDraw]]}
         (init baseFaceJson <> ",\"mulliganActions\":[{\"effects\":[{\"type\":\"ExileHandThenDraw\"}]}]}")
-    -- CR 103.5b caps nothing, so two actions must survive the round trip AS TWO.
+    -- A face may print two CR 103.5b actions, so they must survive the round trip AS TWO.
     -- The arms differ in length on purpose: a codec that flattened them would
     -- read back one action of three effects, which is a different face.
     Spec.it s "mulliganActions keeps two actions apart" $

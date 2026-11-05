@@ -24,7 +24,6 @@ import qualified Parun.Types.ActivationRestriction as ActivationRestriction
 import qualified Parun.Types.Activator as Activator
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AffectedUnless as AffectedUnless
-import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Anchor as Anchor
@@ -1873,8 +1872,8 @@ battlefieldAbilitiesOf counts = concatMap (uncurry battlefieldAbilitiesFor) (Map
 
 -- CR 602.1: every activated ability an object HAS, the one roster every view
 -- builder reads. `abilities` is its own list beside rule 702's battlefield mint,
--- which no CR 612 text change reaches (docs/decisions.md, "What a text change
--- reaches inside a keyword"); then the hand and graveyard mints, and CR 804.2's
+-- which no CR 612 text change reaches (CR 702.1, 612.1); then the hand and
+-- graveyard mints, and CR 804.2's
 -- ability where `deploys`.
 --
 -- HAS, not can activate here: CR 113.6 says where an ability FUNCTIONS, so crew
@@ -6227,9 +6226,9 @@ myriadExile =
 -- planeswalker they control": a CR 508.4 choice narrowed to the iteration's
 -- opponent, made by the controller in Parun.Engine.Combat and elided at one
 -- candidate. An opponent who is not a defending player narrows to nothing, and
--- the token enters not attacking, by analogy with CR 508.4a, which stops short
--- of a player who never defended -- which is what a game not using CR
--- 802's option leaves.
+-- the token enters not attacking (docs/decisions.md, "Whether a myriad token
+-- attacks an opponent who is not a defending player") -- which is what a game not
+-- using CR 802's option leaves.
 --
 -- Rule 702.116a's "you may" is PER OPPONENT, so it is the loop's own
 -- LoopMembers.AnyNumber rather than a clause's Optionality: the controller picks
@@ -7493,8 +7492,7 @@ paidTokenCopies keyword quantity exceptions ordinal =
 -- having no mana cost to read a colour off (CR 105.2).
 --
 -- No CR 612 text change reaches the Spirit or its colours: they are the rule's
--- words, not the card's (docs/decisions.md, "What a text change reaches inside a
--- keyword").
+-- words, not the card's (CR 702.1).
 afterlife :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 afterlife n =
   let spawn =
@@ -9502,22 +9500,19 @@ champion :: Filter Keyword -> [TriggeredAbility Card (GrantedAbility.GrantedAbil
 champion quality = [championEnters quality, championLeaves]
 
 -- CR 702.72a's FIRST ability, written as CR 118.12a rewrites an "unless": an
--- optional exile, then a sacrifice for the case where it did not happen. Not a
+-- optional exile, then a sacrifice hung off it by IfTaken.NoneTaken. Not a
 -- PayGate, which is the tree's usual carrier for that rule, because no
 -- Parun.Types.CostComponent arm exiles a permanent and a cost binds nothing the
 -- linked second ability could name.
 --
--- The sacrifice's CR 608.2c condition therefore reads the exile PILE rather than
--- CR 118.12's answer to the "may". They differ where something replaces the exile
--- a willing controller announced -- stricter than printed there, the sacrifice
--- happening when rule 118.12 would not have it -- and where another instance of the
--- trigger already exiled (Yarok, the Desecrated): the pile is every instance's, so
--- the creature stays when rule 118.12 would have it sacrificed (gap #6240). A
--- quality nothing on
--- the battlefield matches leaves that pile empty however the "may" is answered,
--- so the sacrifice follows, which is what "unless" demands -- proved by
--- Parun.KeywordTriggerSpec's "CR 702.72a with no other Merfolk to exile the
--- Prophet is sacrificed".
+-- The sacrifice keys on THIS resolution's answer to the "may" (CR 118.12), not
+-- on the linked pile, which holds every instance's exile: with Yarok, the
+-- Desecrated the second instance sacrifices a creature the first championed
+-- with -- the scenario
+-- wanderwine-prophets-with-yarok-is-sacrificed-by-its-second-champion-trigger. A
+-- quality nothing on the battlefield matches makes the "may" impossible, so it
+-- is not offered (CR 608.2d) and the sacrifice follows -- Parun.KeywordTriggerSpec's
+-- "CR 702.72a with no other Merfolk to exile the Prophet is sacrificed".
 --
 -- The Filter is the printed [object]; "another" is Not IsSource and "you
 -- control" is HeldBy Controller You (CR 109.5), both the rule's rather than the
@@ -9545,20 +9540,13 @@ championEnters quality =
                   )
               )
           )
-      -- CR 607.2k's pile, counted: one per card this source exiled (CR 607.3), so
-      -- zero is "you did not exile". Read as this clause is APPLIED rather than
-      -- when the trigger resolved, which is what lets the clause before it flip
-      -- the answer.
-      nothingExiled =
-        Condition.Compares
-          ( Compares.MkCompares
-              (Quantity.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile ExiledPile.OwnAbilities (Quantity.Literal 1)))
-              Comparison.AtMost
-              (Quantity.Literal 0)
-          )
       sacrifice =
-        Mint.mandatoryIf
-          nothingExiled
+        Clause.MkClause
+          (Just (IfTaken.NoneTaken (NonEmpty.singleton (ClauseIndex.MkClauseIndex 0))))
+          Nothing
+          Nothing
+          Optionality.Mandatory
+          Nothing
           (Seq.singleton (Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.triggerSource, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}))
    in Mint.triggerOf
         (TriggerCondition.Enters EntersTrigger.defaultValue)

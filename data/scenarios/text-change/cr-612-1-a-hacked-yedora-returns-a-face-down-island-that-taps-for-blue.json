@@ -1,0 +1,56 @@
+{
+  "description": "CR 612.1 a hacked Yedora returns a face-down Island that taps for blue",
+  "note": "alice's Magical Hack swaps Forest for Island in Yedora, Grave Gardener's text, then her Lightning Bolt kills her Ornithopter. Yedora's listing \"It's a Forest land\" is printed text CR 612.1 reaches, so the Ornithopter returns face down as an Island land and its CR 305.6 mana ability adds {U}, not {G}.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Yedora, Grave Gardener", "label": "yedora" },
+          { "card": "Ornithopter", "label": "opter" },
+          { "card": "Island", "label": "island" },
+          { "card": "Mountain", "label": "mountain" }
+        ],
+        "hand": [
+          { "card": "Magical Hack", "label": "hack" },
+          { "card": "Lightning Bolt", "label": "bolt" }
+        ]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$hack", "targets": ["$yedora"], "mana": ["$island", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack", "do": { "ChooseWordSwap": { "from": { "type": "Forest" }, "to": { "type": "Island" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bolt", "targets": ["$opter"], "mana": ["$mountain"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Yedora, Grave Gardener", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Take": { "action": "ActivateManaAbility Ornithopter" } } },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "ManaPool",
+          "player": "alice",
+          "is": [
+            {
+              "manaType": { "type": "Colored", "value": { "type": "Blue" } },
+              "tags": [],
+              "retention": { "type": "Ordinary" },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            }
+          ]
+        }
+      }
+    },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "Ornithopter", "subtypes": ["Island"] } } }
+  ]
+}

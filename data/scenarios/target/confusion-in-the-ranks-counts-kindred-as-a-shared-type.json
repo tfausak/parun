@@ -86,7 +86,7 @@
     "step": "PrecombatMain"
   },
   "description": "Confusion in the Ranks shares a card type, and kindred is one (CR 205.2a)",
-  "note": "docs/decisions.md, \"Whether Confusion in the Ranks counts Kindred as a shared type\": Bob's Kindred Enchantment enters; alice's Kindred Artifact shares only Kindred and is a target, as is carol's Spear, which shares enchantment; carol's Giant shares nothing.",
+  "note": "CR 205.2a and Possibility Storm's ruling (2013-04-15) on \"shares a card type\": Bob's Kindred Enchantment enters; alice's Kindred Artifact shares only Kindred and is a target, as is carol's Spear, which shares enchantment; carol's Giant shares nothing.",
   "timeline": [
     {
       "do": {

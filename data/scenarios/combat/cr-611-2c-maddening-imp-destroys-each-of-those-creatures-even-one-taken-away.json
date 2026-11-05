@@ -1,6 +1,6 @@
 {
   "description": "CR 611.2c Maddening Imp: alice's non-Wall creatures must attack, and each of them that did not is destroyed at the end step, even one bob has since taken",
-  "note": "The Bears are tapped and cannot attack. Ray of Command then hands them to bob until end of turn, so at the end step they are no longer the active player's: they are destroyed as one of \"those creatures\". The Wall is excluded, the Piker attacked, and carol's Hill Giant was never the active player's.",
+  "note": "docs/decisions.md, \"Which creatures are \"those creatures\" after a forced attack on a class\". The Bears are tapped and cannot attack. Ray of Command then hands them to bob until end of turn, so at the end step they are no longer the active player's: they are destroyed as one of \"those creatures\". The Wall is excluded, the Piker attacked, and carol's Hill Giant was never the active player's.",
   "board": {
     "active": "alice",
     "step": "Upkeep",

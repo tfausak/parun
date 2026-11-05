@@ -8,12 +8,13 @@ a new CR can be checked against it.
 
 An entry is owed whenever a change picks such a reading, and only when both
 hold: the readings are observable, giving different game states or different
-legal choices on some legal board, and nothing official picks one. It lands in
-the same PR as the code, and the code site cites it by heading. Three things
-are not entries: a reading the CR or an official ruling forces, whose code site
-cites that rule or ruling; an implementation choice no legal board can tell
-apart from the alternative; and an elision, which is a known gap with an issue
-rather than a settled answer.
+legal choices on a board printed cards can build, and nothing official picks
+one. It lands in the same PR as the code, and the code site cites it by heading.
+Four things are not entries: a reading the CR or an official ruling forces, whose
+code site cites that rule or ruling; an implementation choice no legal board can
+tell apart from the alternative; a reading only a synthetic card can observe,
+which goes in `docs/synthetic-readings.md`; and an elision, which is a known gap
+with an issue rather than a settled answer.
 
 When `docs/rules.txt` is updated, or a ruling lands on a question here,
 re-read each entry against the new text. An entry it decides is either
@@ -31,41 +32,39 @@ Each entry gives:
 
 Entries are ordered by the first rule each cites.
 
-## Whether a sticker outlasts the draw of its sheet
+## Whether a mulligan-time action can be repeated before declaring
 
-- **Question**: A card left in exile through a restart, or a commander moved
-  into a subgame, keeps its stickers while each game draws sheets again. The
-  sticker's sheet may not be drawn this time, and if it is drawn, the sticker
-  is already on an object.
-- **Rules**: CR 103.2d, 123.2c, 123.3, 123.5, 727.5, 729.2, 729.2c; CR of
-  2026-08-07. No ruling.
-- **Decision**: The sticker stays and goes on applying off a sheet not drawn.
-  Off a drawn one, it counts as on an object its owner owns, so it is not
-  offered again.
-- **Rejected**: it comes off, which only CR 123.5's hidden zones do; it stays
-  but stops applying, since CR 123.2c's access limits which sticker a player
-  chooses, under CR 123.3, and no rule ends a placed sticker's effect.
-- **Site**: `Parun.Engine.Game.stickerContent`, which reads the brought sheets,
-  and `Parun.Engine.Sticker.available`, proved by `Parun.StickerSpec`'s "CR
-  727.5/123.2c a card left in exile keeps its stickers, one off an undrawn sheet
-  still applying and one off a drawn sheet still used".
-- **Issue**: #4887.
-
-## Whether a merged copy of a mutating spell is a token
-
-- **Question**: A copy of a mutating creature spell merges with its target
-  instead of entering. CR 111.13 and 707.10f make the copy a token "as it
-  resolves"; CR 608.3f does so only "as it is put onto the battlefield". Is
-  the merged component a token?
-- **Rules**: CR 111.13, 608.3f, 702.140c, 707.10f, 730.2d; CR of 2026-08-07.
-- **Decision**: It is not a token. CR 702.140c's merge never puts it onto the
-  battlefield, so CR 608.3f never confers token-ness.
-- **Rejected**: Making it a token, on CR 111.13 and 707.10f's unconditional
-  "as it resolves".
-- **Site**: `Parun.Engine.Game.componentIsToken`'s `OfSpellCopy` arm, proved by
-  `Parun.MutateSpec`'s "CR 730.2d/608.3f a merged permanent whose topmost
-  component is a spell copy is no token".
+- **Question**: CR 103.5b ends "If the player performs the action, they then
+  declare". May a player take another such action first?
+- **Rules**: CR 103.5, 103.5b; CR of 2026-08-07.
+- **Decision**: Yes, until they decline. Each moment before the declaration is
+  still "a time they would declare".
+- **Rejected**: One action per declaration: "then" orders the declaration after
+  the action without saying nothing may come between. Serum Powder's rulings
+  and No-Regrets Egret's reminder text fit either reading.
+- **Site**: `Parun.Engine.Mulligan.handWindow`, proved by
+  `Parun.MulliganSpec`'s "CR 103.5b: an action that leaves its card in hand is
+  offered again".
 - **Issue**: none.
+
+## Whether a commander keeps its stickers into a subgame
+
+- **Question**: CR 729.2c and 729.5c move a commander between command zones, and
+  CR 123.5 retains stickers on a move to a public zone. Tug of War's rulings have
+  its owner remove them going in, and bring none back. Do those rulings reach
+  every subgame?
+- **Rules**: CR 123.5, 729.2c, 729.5c; Tug of War's rulings of 2022-10-07,
+  "removes all stickers from it" and "No counters, stickers, or other effects
+  from the subgame move back into the main game"; CR of 2026-08-07.
+- **Decision**: It keeps them both ways: CR 123.5 has no exception for these
+  moves, and the rulings are on one card.
+- **Rejected**: Clearing them on both moves, as the rulings do, on the ground that
+  they are the specific word on this move. #6176 argues for it, and this entry
+  goes if that issue lands.
+- **Site**: `Parun.Engine.Setup`'s two `toCommandCard`s, proved by
+  `Parun.StickerSpec`'s "CR 123.5/729.2c a commander keeps its stickers into a
+  subgame and back, but not through a restart".
+- **Issue**: #4887, #6176.
 
 ## A rider ability regained from one granter stays spent
 
@@ -88,60 +87,31 @@ Entries are ordered by the first rule each cites.
   proves it.
 - **Issue**: #4627.
 
-## Who says which new target takes a replaced target's part of a division
-
-- **Question**: CR 115.7f keeps a divided spell's division through a change of
-  targets. When two or more replaced targets held different parts, which new
-  target takes which part?
-- **Rules**: CR 115.7a, 115.7d, 115.7f, 601.2d; CR of 2026-08-07.
-- **Decision**: The player changing the targets hands the replaced parts out
-  among the new targets, each new target taking exactly one of them; a target
-  left unchanged keeps its own. Where the replaced parts are all equal nobody
-  is asked.
-- **Rejected**: Pairing by some engine order, which makes the changer's choice
-  for them; re-dividing the replaced total freely, which changes the division
-  CR 115.7f forbids.
-- **Site**: Parun.Engine.Resolve.Common's reaimDivisions;
-  data/scenarios/divide's Redirect case.
-- **Issue**: #5235.
-
 ## Whether a concession restarts the pass count
 
 - **Question**: CR 117.4 resolves the top object once all players pass in
   succession "without taking any actions in between". When the priority
   holder concedes and priority moves on (CR 800.4a), do earlier passes still
   count?
-- **Rules**: CR 117.4, 104.3a, 117.3d, 800.4a; CR of 2026-08-07.
+- **Rules**: CR 117.4, 104.3a, 117.1, 117.3d, 800.4a; the glossary's Pass in
+  Succession; CR of 2026-08-07.
 - **Decision**: No. The pass set empties and priority goes to the next seat
   still playing.
-- **Rejected**: Keeping the passes: it can resolve a spell a player would
-  have answered after the board changed.
+- **Rejected**: Keeping the passes, which the glossary's "each player in the
+  game ... opts not to take an action" allows if a concession is no action: it
+  can resolve a spell a player would have answered after the board changed.
 - **Site**: `Parun.Engine.Engine.priorityLoop`, the `Concession.Concedes` arm,
   proved by `Parun.GameSpec`'s "CR 800.4a/117.4 priority after a concede goes
   to the next seat, and the pass cycle restarts".
 - **Issue**: #143.
 
-## How a hybrid Phyrexian symbol in a cost reduction reduces
-
-- **Question**: A reduction written `{G/U/P}`. CR 118.7f gives a Phyrexian
-  reduction one mana of that symbol's colour, but CR 107.4f makes a hybrid
-  Phyrexian symbol both colours. Which colour, and is the 2 life a half?
-- **Rules**: CR 118.7f, 107.4f, 118.7e, 601.2f; CR of 2026-08-07.
-- **Decision**: The payer picks one of the two colours at CR 601.2f, CR
-  118.7e's mechanism. The 2 life is no half.
-- **Rejected**: Reducing nothing: matches no reading. The engine picking: the
-  choice is the payer's. A life half: no rule reduces a cost by life.
-- **Site**: `Parun.Engine.Cost.reductionHalvesOf`, proved by
-  `Parun.PlayerEffectSpec`'s "CR 118.7e a hybrid Phyrexian reduction offers its
-  two colours" and the `data/scenarios/player-effect/cr-118-7e-*g-u-p*`
-  scenarios.
-- **Issue**: #1995.
-
 ## Whether one instruction naming a recipient twice deals one damage event
 
 - **Question**: Char aimed at its own caster deals 4 and 2 to one player. Is
   that two damage events or one of 6? CR 615.10's per-event floor observes it.
-- **Rules**: CR 120.4, 608.2f, 614.5, 615.7, 615.10, 701.14c; CR of 2026-08-07.
+- **Rules**: CR 120.4, 608.2f, 614.5, 615.7, 615.10, 701.14c; adjacent,
+  Dragonborn Champion's ruling of 2021-07-23 and Savage Alliance's of
+  2016-07-13; CR of 2026-08-07.
 - **Decision**: One event per recipient, source and moment; the amounts sum,
   over an instruction's aims and over a whole batch's survivors, since a
   redirect can land two proposals of one source together. A counted redirect
@@ -149,7 +119,8 @@ Entries are ordered by the first rule each cites.
   Pyromancer's Gauntlet's applies to the one event once (CR 614.5). Parts
   redirects land on one recipient join before its replacements apply, carrying
   every effect that applied to any part, so the bonus applies once there too.
-- **Rejected**: Two events, which applies CR 615.10 twice. A key without the
+- **Rejected**: Two events, which applies CR 615.10 twice; Savage Alliance's two
+  events come from two instructions, which agrees with this. A key without the
   source: combat and fights have several dealers.
 - **Site**: `Parun.Engine.Replacement.oneEventPerRecipient`, proved by
   `Parun.DamageReplacementSpec`'s "CR 120.4 one sentence naming alice twice
@@ -202,8 +173,9 @@ Entries are ordered by the first rule each cites.
 - **Decision**: X. One damage instruction over a union of descriptions
   ("each Y and each Z") deals its amount once to each object matching either
   or both; two instructions ("Deal X to each Y. Deal X to each Z.") deal it
-  twice. This governs every "damage to each creature and each planeswalker"
-  card (Hour of Devastation, Storm's Wrath, Star of Extinction). No ruling
+  twice. This governs any card dealing one amount to a union of descriptions,
+  such as Sarkhan's Unsealing, and any later card of this wording (Storm's
+  Wrath, Star of Extinction). No ruling
   forces it; the counting rulings read a union the same way: Asari Captain ("A
   creature that is both a Samurai and a Warrior is only counted once"), Aysen
   Crusader ("A permanent with both creature types is counted only once"),
@@ -220,29 +192,40 @@ Entries are ordered by the first rule each cites.
   a Chandra Nalaar that Liquimetal Coating and March of the Machines animate.
 - **Issue**: none.
 
-## A life-total condition during damage processing
+## How a life floor treats a loss in the same damage event
 
-- **Question**: CR 120.4c processes a damage event into all its results
-  before CR 120.4d's event occurs. A life-loss replacement conditioned on a
-  life total (Elderscale Wurm's "as long as you have 7 or more life") is asked
-  while a lifelink gain from the same event, or the loss Tainted Remedy makes
-  of it, is already a result. Does the condition read the total before the
-  event, or net of those results?
-- **Rules**: CR 120.3f, 120.4c, 120.4d, 611.3a, 702.15e; CR of 2026-08-07.
-- **Decision**: Before the event. The life total has not moved until CR
-  120.4d. The floor itself still judges what the whole event leaves, as CR
-  120.4d's Worship example forces (#2563), and Elderscale Wurm's ruling that it
-  "doesn't affect the loss or payment of life" leaves Tainted Remedy's loss
-  standing: bob at 8 losing 2 to Tainted Remedy and dealt 5 ends at 6; bob at
-  6 gaining 2 by lifelink and dealt 5 ends at 3.
-- **Rejected**: Net of the event's other results, which reads 6 on the first
-  board (bob ends at 1) and 8 on the second (bob ends at 7): a result of the
-  very event would decide whether the event is replaced.
-- **Site**: `Parun.Engine.Damage.processDamage`'s life-loss pass, gathering
-  its rows off the pre-batch board, and
-  `Parun.Engine.Replacement.changesLoss`, judging the floor live. Proved by
-  the scenarios `cr-120-4c-elderscale-wurm-reads-the-life-before-*`.
+- **Question**: CR 120.4d's Worship example judges a floor on what the whole event
+  leaves, counting a gain. A damage event's results can also include a loss that
+  is not damage, as when Tainted Remedy replaces a lifelink gain. Bob at 8 with
+  Elderscale Wurm is dealt 5 and loses 2. How much does the damage take?
+- **Rules**: CR 119.3, 120.4c, 120.4d; Elderscale Wurm's ruling of 2012-07-01,
+  "doesn't affect the loss or payment of life"; Worship's of 2004-10-04; CR of
+  2026-08-07.
+- **Decision**: The event's other results count first, as the example counts a
+  gain, and the damage may take the total no lower than the floor. A total already
+  below it takes nothing. Bob ends at 6.
+- **Rejected**: 5, flooring the damage alone and then taking the loss, which
+  ignores the event's other results as the example does not. 7, flooring the whole
+  event, which affects a loss the rulings say it doesn't.
+- **Site**: `Parun.Engine.Replacement.breaches` and `Parun.Engine.Event`'s
+  `LeaveAtLeast` arm, proved by the scenario
+  `cr-120-4c-elderscale-wurm-reads-the-life-before-tainted-remedy-s-loss-from-the-same-damage`.
 - **Issue**: #5809.
+
+## Whether infect and toxic from one source give poison once
+
+- **Question**: CR 120.3b and 702.164c each give poison counters for one source's
+  damage to a player. Tainted Strike on a toxic creature gives both. Is that one
+  placement of the sum, or two?
+- **Rules**: CR 120.3b, 120.3g, 702.164c, 616.1; CR of 2026-08-07.
+- **Decision**: One placement of the sum.
+- **Rejected**: Two placements, a CR 616.1 loop each, which under an opponent's
+  Vorinclex, Monstrous Raider halves 3 infect and 1 toxic to 1 rather than 2.
+  Neither rule says.
+- **Site**: `Parun.Engine.Damage`'s `counterResults`. `Parun.DamageSpec`'s "CR
+  120.3b/120.3g infect and toxic stack: poison is amount plus N, and no life is
+  lost" proves the sum; no test tells one placement from two.
+- **Issue**: none.
 
 ## Whether a card a restart leaves in exile keeps its stickers
 
@@ -251,7 +234,9 @@ Entries are ordered by the first rule each cites.
   taken in the restarted game applies to the new one, and putting on a sticker
   was one.
 - **Rules**: CR 123.5, 727.1, 727.5; Karn Liberated's ruling, "No actions taken
-  in the game that was restarted apply to the new game"; CR of 2026-08-07.
+  in the game that was restarted apply to the new game"; adjacent, Tug of War's
+  ruling of 2022-10-07, "removes all stickers from it", on a commander going
+  into a subgame; CR of 2026-08-07.
 - **Decision**: It keeps them. It stays the same object, as its CR 727.4 "those
   cards" read needs. Every other card's stickers come off.
 - **Rejected**: it loses them under the ruling, whose example is an effect
@@ -261,112 +246,44 @@ Entries are ordered by the first rule each cites.
   sheet still applying and one off a drawn sheet still used".
 - **Issue**: #4887.
 
-## How a host's and a merging spell's stickers interleave
-
-- **Question**: Every sticker on either object takes a new timestamp at a merge.
-  CR 613.7k keeps the relative order of "those stickers" as an object "becomes
-  part of a merged permanent", which fixes each object's own and not how the
-  two objects' interleave.
-- **Rules**: CR 123.5b, 613.7k; CR of 2026-08-07. No ruling.
-- **Decision**: Old timestamp order across both objects.
-- **Rejected**: the host's then the spell's, or the reverse, which make the over
-  or under choice or which object is the host decide P/T when no rule ties the
-  two together.
-- **Site**: `Parun.Engine.Event.merge`, proved by `Parun.StickerSpec`'s "CR
-  613.7k a host's and a merging spell's stickers keep their old timestamp
-  order".
-- **Issue**: #4947.
-
-## Where a name sticker's word goes beside a blank
-
-- **Question**: A name with a blank line (Wolf in _____ Clothing). The blank
-  is not a word, so a word placed after k words could go either side of a
-  blank that follows word k.
-- **Rules**: CR 123.6a, 123.6b, 123.6c; CR of 2026-08-07.
-- **Decision**: The blank stays, counts for nothing, and the word goes before
-  it: Wolf in Otter _____ Clothing.
-- **Rejected**: not recorded.
-- **Site**: `Parun.Engine.NameWords.insertAfter`, proved by
-  `Parun.StickerSpec`'s "CR 123.6a Wolf in _____ Clothing offers four
-  positions, and the word goes before a following blank".
-- **Issue**: #4900.
-
 ## Where a name sticker's word goes in an object with several names
 
 - **Question**: CR 123.6b speaks of one name, but a split card off the stack and
   a creature with Spy Kit have several, which may differ in length.
-- **Rules**: CR 123.6b, 123.6c, 612.7, 709.4; CR of 2026-08-07. No ruling.
+- **Rules**: CR 123.6b, 123.6c, 612.7, 709.4; It Came from Planet Glurg's ruling
+  of 2022-10-07, "it looks at all its names ... it has six words in its name";
+  Solaflora's of 2022-10-07 is per position and does not settle this; CR of
+  2026-08-07.
 - **Decision**: One position, offered up to the longest name's word count, and
   the word goes into every name: after that many words, or at the end of a
   shorter name as CR 123.6c has it.
 - **Rejected**: one position per name, since CR 123.6b has the controller choose
   one position and a Spy Kit host's names cannot be asked one by one; capping at
-  the shortest name, which refuses positions CR 123.6b allows in a longer one.
+  the shortest name, which refuses positions CR 123.6b allows in a longer one;
+  the names as one concatenated list, which CR 123.6b's position in a name does
+  not describe. Offering up to the total word count, as CR 123.6b's "any number
+  of the other words that are currently in its name" reads under Glurg's ruling,
+  was not taken; the cap refuses those positions, which shows only if a name
+  later lengthens (CR 123.6c).
 - **Site**: `Parun.Engine.Sticker.namePosition` and
   `Parun.Engine.Projection.applyModification`'s `InsertNameWords` arm, proved by
   `Parun.StickerSpec`'s "CR 123.6b/612.7 positions run to the longest name and a
   shorter name takes the word at its end".
 - **Issue**: #4901.
 
-## Whether Confusion in the Ranks counts Kindred as a shared type
+## Whether a reversed cast turns a face-down card back down
 
-- **Question**: Its Oracle says "shares a card type", and CR 205.2a lists
-  kindred. Its 2004 ruling says "share a permanent type", which CR 110.4's six
-  omit. Is a Kindred Artifact a target for a Kindred Enchantment?
-- **Rules**: CR 205.2a, 108.1, 110.4, 308.1; CR of 2026-08-07.
-- **Decision**: Yes: the permanents may share any card type.
-- **Rejected**: CR 110.4's six: the ruling is dated 2004-12-01 and the first
-  Kindred card (then tribal) 2007-05-04, so it cannot have decided Kindred, and
-  CR 108.1 takes the wording from Oracle. Its point is that the types are
-  compared at both moments, which holds either way.
-- **Site**: `data/cards/confusion-in-the-ranks.json`'s bare `CardType` trait,
-  proved by the `confusion-in-the-ranks-counts-kindred-as-a-shared-type`
-  scenario.
-- **Issue**: #5177.
-
-## What the greatest value is over an empty or undeterminable set
-
-- **Question**: What is "the greatest X among ..." over an empty set, or when
-  some member's value cannot be determined?
-- **Rules**: CR 208.2a, 608.2h, 714.2d; CR of 2026-08-07.
-- **Decision**: Undetermined in both cases. Wherever a number is consumed,
-  CR 208.2a's characteristic-defining ability among them, that becomes 0, so
-  only a condition sees the difference. A total over an empty set is 0.
-- **Rejected**: 0 for an empty set: no rule gives a maximum over nothing a
-  value, and the CR legislates 0 case by case (CR 714.2d). Dropping
-  undeterminable members: that is the maximum of a set the card never named.
-- **Site**: `Parun.Engine.Count.aggregate`'s `Aggregation.Greatest` arm, proved
-  by `Parun.CountSpec`'s "CR 208.2a Greatest over an EMPTY matched set is
-  Nothing, not 0" and "a member whose quantity cannot be determined makes the
-  whole maximum Nothing".
+- **Question**: CR 406.3a turns a face-down exiled card up "just before" the
+  announcement. Does CR 733.1 undo that when the cast is reversed?
+- **Rules**: CR 406.3a, 601.2, 733.1; CR of 2026-08-07.
+- **Decision**: No. The turn precedes the action reversed, so the card stays up,
+  and Riftsweeper may now target it.
+- **Rejected**: Turning it back down, because CR 733.1's list of the irreversible
+  omits it. The 2026-11-04 audit preferred this, moderate confidence, on that
+  closed list.
+- **Site**: `Parun.Engine.Cast.castSpellWith`, the `turnedUpForPlay` step ahead of
+  `before`. No test names it.
 - **Issue**: none.
-
-## When a target drawn out of a face-down pile is revealed, and for how long
-
-- **Question**: CR 406.4 says a card drawn at random out of a face-down pile
-  while casting a spell or activating an ability "isn't revealed until after
-  that cost is fully paid". No rule orders the reveal, and CR 701.20a gives it
-  no duration.
-- **Rules**: CR 406.4, 406.3, 601.2h, 601.2i, 602.2b, 608.2b, 701.20a; CR of
-  2026-08-07.
-- **Decision**: Once the cost is paid and the spell becomes cast (CR 601.2i),
-  or the ability becomes activated (CR 602.2b), the caster reveals the drawn
-  card to every player. It stays revealed until the spell or ability leaves
-  the stack, CR 701.20a's duration for a card revealed as part of casting or
-  activating, so the table can check the target as it resolves (CR 608.2b).
-  Until then nobody sees it, the caster included.
-- **Rejected**: No reveal at all, reading the sentence as forbidding only an
-  early one (owner, 2026-10-21). A momentary reveal, the `Revealed` event
-  alone: the reveal lets the table follow the target, which matters until it
-  resolves. Revealed until it leaves exile, as CR 406.3's lasting look: a
-  reveal is not an instruction letting a player look, and the card would stay
-  public after the spell is gone.
-- **Site**: `Parun.Engine.Cast.castProposed` and
-  `Parun.Engine.Activate.activateAbilityWith`, revealing what
-  `Parun.Engine.Target.chooseTargets` drew; proved by `Parun.ExileSpec`'s "CR
-  406.4 the card drawn for a spell's target is hidden while it is paid for,
-  and revealed to both seats once cast" and its activation twin.
-- **Issue**: #2568.
 
 ## Who on a winning team takes the ante
 
@@ -376,73 +293,48 @@ Entries are ordered by the first rule each cites.
 - **Rules**: CR 407.2, 104.2c, 805.2; CR of 2026-08-07.
 - **Decision**: The team chooses card by card, and its first seat still
   playing speaks for it. Not asked for a team of one.
-- **Rejected**: not recorded.
+- **Rejected**: One winner taking all: CR 407.2's "the winner" has several (CR
+  104.2c). The card's owner keeping it.
 - **Site**: `Parun.Engine.Ante.payOut`, proved by the scenario "CR 407.2 /
   104.2c the winning team's primary player shares out the ante".
 - **Issue**: none.
 
-## Which combat phase ends a duration until combat on your next turn
+## What ends a duration until combat on your next turn when it has no combat phase
 
-- **Question**: Brazen Cannonade's "until end of combat on your next turn",
-  when CR 500.8 allows a turn several combat phases or none.
-- **Rules**: CR 500.8, 500.5a, 511.2, 611.2a, 800.4m; CR of 2026-08-07.
-- **Decision**: The first combat phase to end on that player's next turn;
-  with none, that turn's cleanup.
-- **Rejected**: The first combat phase anywhere, an opponent's included.
-  Carrying it to a later turn of theirs.
+- **Question**: Brazen Cannonade's "until end of combat on your next turn", when
+  False Peace leaves that turn no combat phase. The stated endpoint never comes.
+  (With a combat phase, CR 500.5 and 500.5a end it at the first to end, and "your
+  next turn" excludes an opponent's.)
+- **Rules**: CR 500.5, 500.5a, 500.8, 511.2, 611.2a, 800.4m; CR of 2026-08-07.
+- **Decision**: That turn's cleanup.
+- **Rejected**: The point combat would have ended, before the postcombat main.
+  Carrying it to a later turn of theirs. CR 800.4m's "neither expire immediately
+  nor last indefinitely" is for a departed player only, and Brazen Cannonade's
+  rulings of 2022-12-02 are silent.
 - **Site**: `Parun.Engine.Expiry`'s `AtEndOfCombatOn` drop arm, proved by
   `Parun.ExpirySpec`'s "CR 500.5a / 500.8 only a combat PHASE of a later turn
   of that player ends it" and "CR 611.2a a next turn with no combat phase
   takes it at its cleanup".
 - **Issue**: #525.
 
-## An untap cap leaves tapped only what it must
-
-- **Question**: Static Orb says players "can't untap more than two
-  permanents during their untap steps". May the active player untap fewer
-  than the caps allow? And does a stunned permanent they choose count
-  against a cap, though its stun counter takes the untap?
-- **Rules**: CR 502.3, 101.2, 122.1d, 614.6; CR of 2026-08-07.
-- **Decision**: The answer must be maximal. Every tapped permanent the caps
-  still allow, given the others chosen, untaps. A permanent stays tapped
-  only when an effect keeps it tapped, which CR 502.3 makes the default for
-  the rest. A stunned permanent chosen to untap counts against the cap. The
-  cap limits CR 502.3's determination, and CR 122.1d's replacement applies to
-  the untap that determination produces (CR 614.6).
-- **Rejected**: Letting the player untap fewer, which would make a cap
-  read as "may untap up to two". Leaving a stunned permanent out of the
-  count, which would let the player untap more than the cap names by
-  choosing one.
-- **Site**: `Parun.Engine.UntapRestriction.settle`, called from
-  `Parun.Engine.Engine.untapAll`. The Static Orb and Winter Orb scenarios
-  under `data/scenarios/untap-restriction/` prove it.
-- **Issue**: #5531.
-
 ## Which draw is the first one drawn in a draw step
 
-- **Question**: Chains of Mephistopheles and Alhammarret's Archive except
-  "the first one [they/you] draw in each of [their/your] draw steps". Chains'
-  ruling exempts "a player's normal card draw on their turn"; Archive has no
-  such ruling. Does Archive's identical wording read the same? And is the
-  draw Zur's Weirding leaves its drawer when nobody pays ("Otherwise, that
-  player draws a card") still the normal draw?
-- **Rules**: CR 504.1, 121.1, 614.5, 614.6; CR of 2026-08-07.
-- **Decision**: The exempt draw is the drawer's own CR 504.1 draw, on both
-  cards. Zur's Weirding's unpaid draw is that same draw left standing (its
-  ruling lets a dredger replace it), so it stays exempt. A dredged normal
-  draw still uses the exemption up.
-- **Rejected**: Counting the cards actually drawn, which Archive's text alone
-  would allow: alice dredges her normal draw and Howling Mine's draw is then
-  the first she draws, drawing one card where parun draws two; and wording
-  Wizards ruled on for one card is read differently on its twin. Making Zur's
-  unpaid draw a new draw, which would let Chains take a normal draw nobody
-  paid to stop.
-- **Site**: `Parun.Engine.Replacement.matchesPrinted`'s `DrawR` arm and
-  `Parun.Engine.Event.apply`'s `OthersMayPayLife` arm. The scenarios
+- **Question**: Chains of Mephistopheles and Alhammarret's Archive except "the
+  first one [they/you] draw in each of [their/your] draw steps". When a replacement
+  took the drawer's CR 504.1 draw (dredge, a paid Zur's Weirding), is the next draw
+  of that step the exempt one?
+- **Rules**: CR 504.1, 121.1, 614.6; Chains' rulings of 2004-10-04 and 2007-09-16;
+  CR of 2026-08-07.
+- **Decision**: No. The exempt draw is the drawer's own CR 504.1 draw, on every
+  card with this wording, so a replaced normal draw still uses the exemption up.
+- **Rejected**: Counting the cards actually drawn, which the Oracle text, CR 614.6
+  and Chains' 2004 ruling all allow: alice dredges her normal draw and Think
+  Twice's draw is then the first she draws. It lost to Chains' 2007 ruling, "All
+  other draws will be affected", which never mentions a replaced draw and so
+  doesn't settle it.
+- **Site**: `Parun.Engine.Replacement.matchesPrinted`'s `DrawR` arm. The scenario
   `cr-504-1-chains-of-mephistopheles-takes-alice-s-think-twice-draw-after-she-dredged-her-normal-draw`
-  and
-  `cr-504-1-zur-s-weirding-s-unpaid-draw-is-alice-s-normal-draw-so-chains-of-mephistopheles-spares-it`
-  prove it.
+  proves it.
 - **Issue**: #4781.
 
 ## The seat of a departed attacker's planeswalker
@@ -472,6 +364,23 @@ Entries are ordered by the first rule each cites.
   mangara-draws-when-two-attack-you-or-your-planeswalkers-and-for-an-opponents-second-spell.
 - **Issue**: #5890.
 
+## Whether a myriad token attacks an opponent who is not a defending player
+
+- **Question**: CR 702.116a's token is "attacking that player or a planeswalker
+  they control", for each opponent other than defending player. Where CR 506.2a
+  has the attacking player choose one defending player, the others are not. CR
+  508.4 lets an effect say what a creature attacks, and CR 508.4a speaks of a
+  player no longer in the game.
+- **Rules**: CR 506.2a, 508.4, 508.4a, 702.116a; Warchief Giant's rulings of
+  2015-11-04 are silent; CR of 2026-08-07.
+- **Decision**: The token enters, not attacking, by analogy with CR 508.4a.
+- **Rejected**: Attacking that player as written: it makes an attack on a player
+  CR 506.2a left out of combat.
+- **Site**: `Parun.Engine.Keyword`'s `myriad` and
+  `Parun.Engine.Combat.putOntoBattlefieldAttacking`'s narrowing. No test yet: the
+  myriad tests run under CR 802's option.
+- **Issue**: none.
+
 ## Who may block a creature attacking nothing
 
 - **Question**: CR 506.4c's creature, its planeswalker or battle removed from
@@ -482,8 +391,9 @@ Entries are ordered by the first rule each cites.
 - **Decision**: Only the player it attacked before the removal: the
   planeswalker's controller or the battle's protector, extending CR 802.2a's
   "before it was removed from combat" by analogy.
-- **Rejected**: Every defending player: under CR 802.4b's separate judging,
-  two players could block it at once. Nobody: contradicts CR 506.4c.
+- **Rejected**: Every defending player: it has no tie to the attack, and CR
+  802.4b would then judge each player's block separately, so two players could
+  block it at once. Nobody: contradicts CR 506.4c.
 - **Site**: `Parun.Engine.Combat.attackersOn`, proved by
   `Parun.PlaneswalkerCombatSpec`'s "CR 802.4a once the planeswalker is gone,
   only ITS controller may block the creature attacking nothing".
@@ -511,102 +421,34 @@ Entries are ordered by the first rule each cites.
   sacrificed to Exalted Dragon leaves the Dragon attacking alone".
 - **Issue**: #6245.
 
-## Which creatures could have attacked
+## Which defending player Cunning Giant attacking nothing reads
 
-- **Question**: Season of the Witch spares "creatures that couldn't attack";
-  its ruling reads that as could not have been declared as an attacker in
-  that turn's declare attackers step. Is a creature that could attack only by
-  paying a cost to attack, payable or not, one that couldn't?
-- **Rules**: CR 508.1, 508.1c, 508.1d, 508.1h, 508.1j; CR of 2026-08-07.
-- **Decision**: No. A creature could have attacked when some declaration
-  obeying CR 508.1a-d contains it, costs aside: CR 508.1d excuses the cost
-  without forbidding the attack, and CR 508.1h asks for it only after the
-  creature is chosen. Asked as each declaration begins, over every declare
-  attackers step of the turn.
-- **Rejected**: Counting a creature as unable when its cost is unpayable:
-  payability turns on mana abilities CR 508.1i offers only after the
-  creatures are chosen. Counting every taxed creature as unable: CR 508.1d
-  makes paying optional, not impossible.
-- **Site**: `Parun.Engine.Combat.couldAttack`, proved by data/scenarios/combat's
-  "CR 508.1d Season of the Witch destroys creatures that could have attacked
-  only by paying a cost".
-- **Issue**: #5441.
-
-## When a face-down creature Illusionary Mask cast turns face up in combat
-
-- **Question**: Illusionary Mask turns its face-down creature face up when it
-  "would assign" combat damage. CR 510.1 has the attacking player announce
-  every attacker's assignment before the defending player announces the
-  blockers'. Does a face-down blocker turn up before the attackers assign, so
-  a trampler must assign lethal damage to the face-up creature?
-- **Rules**: CR 510.1, 510.1c, 510.1d, 614.1a, 702.19b; CR of 2026-08-07.
-- **Decision**: As its own assignment comes up, in CR 510.1's order. An
-  attacker blocked by a face-down creature assigns against the 2/2; the
-  blocker turns face up when its controller announces, and assigns as the
-  face-up creature.
-- **Rejected**: Turning every such creature face up when the combat damage
-  step begins: the event replaced is the creature's own assignment, which has
-  not happened while the attackers assign.
-- **Site**: `Parun.Engine.Damage.turnUpToAssign`, proved by
-  data/scenarios/face-down's "CR 510.1 a Craw Wurm Illusionary Mask cast face
-  down turns face up to assign its 6 as it blocks". The trampler half is a
-  regression fence: no board drives it.
-- **Issue**: #5440.
-
-## Whether Cunning Giant attacking nothing may still assign to a creature
-
-- **Question**: Cunning Giant, unblocked, "may ... assign its combat damage to
-  a creature defending player controls". Attacking a planeswalker that has
-  left, it attacks nothing and CR 510.1b gives it no recipient. Is the option
-  still open, and does Illusionary Mask's "would assign" count a creature
-  whose option could give it a recipient?
-- **Rules**: CR 510.1b, 506.4c, 508.5, 614.1a; CR of 2026-08-07.
-- **Decision**: Yes to both. The option names its own recipient, and CR
-  508.5's second sentence still names the defending player, so it stands
-  apart from what the creature is attacking. A creature whose option could
-  give it a recipient is one that would assign, its controller having yet to
-  decline.
-- **Rejected**: Closing the option with CR 510.1b: the text is a permission
-  to assign elsewhere, not a reading of what the creature attacks. Leaving
-  the Mask's creature face down: a later "yes" would then have it assign as
-  the face-down 2/2.
-- **Site**: `Parun.Engine.Damage.attackerAssignment` and `wouldAssign`. Both
-  halves are regression fences: no board drives either.
+- **Question**: With several defending players, whose creature may Cunning Giant
+  assign to once the planeswalker or battle it attacked has left combat? CR
+  802.2a's sentences name no one for a creature still attacking but attacking
+  nothing.
+- **Rules**: CR 506.4c, 508.5, 802.2a; CR of 2026-08-07.
+- **Decision**: The player it attacked before the removal, as in "Who may block a
+  creature attacking nothing".
+- **Rejected**: Its controller choosing among all of them, under CR 802.2a's last
+  sentence: that has no tie to the attack.
+- **Site**: `Parun.Engine.Damage.attackerAssignment`. No test yet.
 - **Issue**: #5437.
 
-## Whether a cast redirected off the stack is still a cast
+## Who sends a trampler's excess past a banding blocker
 
-- **Question**: A CR 614 replacement sends a card being cast somewhere other
-  than the stack (Synthetic Stack Interdiction). Does the cast rewind, stop,
-  or complete?
-- **Rules**: CR 601.2i, 601.2a, 601.2e, 614.6, 709.3a, 709.4; CR of
-  2026-08-07.
-- **Decision**: Only the arrival is replaced. CR 601.2b-i run on: targets
-  chosen, costs paid, and the spell becomes cast, so "whenever you cast"
-  triggers fire. The card shows CR 709.4's combined view where it lands.
-- **Rejected**: Rewinding: CR 601.2e covers only illegal casts. Stopping
-  partway: no rule ends a cast midway.
-- **Site**: `Parun.Engine.Cast.castSpellWith`, the `Event.changeZoneCasting`
-  step, proved by `Parun.CastRestrictionSpec`'s "CR 601.2i a cast redirected
-  off the stack is still a cast" and "CR 709.4 a cast redirected off the stack
-  keeps both halves".
-- **Issue**: none; #781 settled the face ordering beside it.
-
-## Whether a trigger limit differs from a first-time-each-turn trigger
-
-- **Question**: Neither "this ability triggers only once each turn" nor "for
-  the first time each turn" has a rule. Does an ability gained after the
-  turn's first matching event still trigger?
-- **Rules**: CR 603.2c, 603.2h, 702.179d; CR of 2026-08-07.
-- **Decision**: "Triggers only once each turn" (`TriggerLimit`) counts the
-  ability's own triggerings, so a late-gained ability still triggers once.
-  "For the first time each turn" (`TriggerFrequency`) narrows the event, so
-  it never does.
-- **Rejected**: Reading them as synonyms: the gained-late case tells them
-  apart.
-- **Site**: `Parun.Types.TriggerLimit` and `Parun.Types.TriggerFrequency`;
-  `Parun.SpeedSpec`'s "CR 702.179d an ability gained after the turn's first
-  life loss still triggers once" proves the gained-late case.
+- **Question**: A creature with trample is blocked by a creature with banding. CR
+  702.22j gives the defending player the division "among any creatures blocking
+  it". May they also assign the excess to what the creature attacks?
+- **Rules**: CR 510.1c, 702.19b, 702.22j; CR of 2026-08-07.
+- **Decision**: Yes. The defending player makes the whole assignment under CR
+  702.19b's thresholds.
+- **Rejected**: Blockers only, which is the rule's second sentence and the reminder
+  text read as a limit. Thorn Elemental's and Lone Wolf's 2018-04-27 ruling has the
+  defending player decide on sending damage past the blockers, which that sentence
+  doesn't name either.
+- **Site**: `Parun.Engine.Damage`, the `banded` chooser. No test yet: War Elephant
+  blocked by Benalish Hero is the board.
 - **Issue**: none.
 
 ## Whether conjuring a card is a zone change
@@ -616,7 +458,8 @@ Entries are ordered by the first rule each cites.
   from anywhere" trigger or a replacement sees a card conjured into a
   graveyard?
 - **Rules**: CR 603.6, 111.2, 400.6, 400.11, 400.11c, 603.6a, 603.6c, 616.1;
-  no rule names conjure; CR of 2026-08-07.
+  no rule names conjure; Toralf's Disciple's rulings of 2024-11-08, which say how
+  to represent a conjured card and name no origin; CR of 2026-08-07.
 - **Decision**: It is not a zone change. The card is minted straight into the
   zone, the way a wish brings in a card from outside the game. An arrival on
   the battlefield is still an entry, by analogy with a token: it runs the CR
@@ -628,37 +471,6 @@ Entries are ordered by the first rule each cites.
   `Parun.ConjureSpec`'s "CR 603.6 a conjure into a graveyard is no zone change,
   so a graveyard trigger does not see it".
 - **Issue**: #2809.
-
-## What counts as an instruction having happened
-
-- **Question**: CR 603.12's "when you do" and CR 118.12's "if you do" ask
-  whether an instruction happened, and the CR does not define the test.
-- **Rules**: CR 603.12, 118.12; CR of 2026-08-07.
-- **Decision**: It happened if it recorded a game event or changed any state
-  but bookkeeping. Bookkeeping is whatever an instruction that did not happen
-  can still write (event-log samples, allocators, the last choice, a draw from
-  an empty library, a shortfall, exile-link prunes, the control sample and the
-  clock it stamps, bound zero amounts, vote tallies), and is copied across from
-  the state before. Not covered, because rulings settle them for CR 603.12: an
-  "any number" choice, which happened even at zero, and a draw or mill finding
-  too few cards, which did not.
-- **Rejected**: An allow-list of state that counts, the earlier event-log
-  reading, which misses every state-only instruction writing a field it does
-  not name.
-- **Site**: `Parun.Engine.Resolve.Common.happenedBetween`, with the two ruled
-  shapes in `applyClauseEffects`'s `instructionDone`. The state half is
-  proved by the scenario "CR 603.12 a choice that records no event still arms
-  its when you do". Copies proved: `exiledWith` by "CR 603.12 an empty mill
-  after a token ceased in exile arms no reflexive", `exilePiles` by "CR 603.12
-  an empty mill after a face-down card left exile arms no reflexive",
-  `nextTimestamp` by "CR 701.28e / 603.12 an ignored convert arms no
-  reflexive", `nextEventGroup` by `Parun.ResolveSpec`'s "CR 118.12 Victimize
-  with no creature to sacrifice returns nothing", `controlSample` and
-  `Object.controlClock` by the same test, `boardAtControlSample` by
-  `Parun.AuraSpec`'s "CR 603.12 Thorin's Equipment go to its target, which
-  then deals damage equal to its power". The other copies are a regression
-  fence.
-- **Issue**: none.
 
 ## Whether an ability a merge grafts is still characteristic-defining
 
@@ -684,87 +496,20 @@ Entries are ordered by the first rule each cites.
   merged under a Cubwarden".
 - **Issue**: #5323.
 
-## Whether conjuring into a library is a library move for a mana ability
+## Whether Thieves' Auction offers an Aura with nothing to enchant
 
-- **Question**: CR 605.1a disqualifies a mana ability whose effect moves a
-  card to or from a library. A conjured card comes from no zone.
-- **Rules**: CR 605.1a; no rule names conjure; CR of 2026-08-07.
-- **Decision**: The destination decides: conjuring into a library is a
-  library move, conjuring anywhere else is not.
-- **Rejected**: Nothing moves, since the card was in no zone. It loses
-  because a library still gains a card, which is what the clause keeps out
-  of mana abilities.
-- **Site**: `Parun.Engine.ManaAbility.movesLibraryCard`'s `Effect.Conjure` arm,
-  proved by the scenario "CR 605.1a conjuring into a library keeps an ability
-  that adds mana off the mana path" on Synthetic Seeded Grove: no printing
-  conjures inside an ability that could add mana.
-- **Issue**: none.
-
-## A kept ability stays linked to its holder's own exiles
-
-- **Question**: Mimeoplasm, Revered One becomes a copy of a card "except it's
-  0/0 and has this ability". After the copy, does the kept {2} still refer to
-  the cards Mimeoplasm's printed as-enters ability exiled, or to none, as an
-  ability acquired without its linked twin?
-- **Rules**: CR 607.1a, 607.2b, 607.5, 607.5a, 707.9a; CR of 2026-08-07. No
-  ruling for Mimeoplasm.
-- **Decision**: It stays linked. The exception grants the ability from within
-  the ability itself, so CR 607.1a counts it as printed on the object; the CR
-  607.2b pair is then intact, and CR 607.5's bar covers only a pair acquired
-  together. Only the instance the exception keeps is linked: a second
-  instance the copy itself brought (Mimeoplasm copying a second Mimeoplasm) is
-  CR 607.5's acquired ability and refers to no card.
-- **Rejected**: The kept ability refers to nothing (CR 607.5a by analogy). It
-  loses because CR 607.5a speaks of a choice and not an exile, and it would
-  make "and has this ability" do nothing on the one printing that keeps a
-  linked ability this way. Reading the old pile from every ability of the copy
-  loses on the same board: the copied {2} would find the kept one's cards.
-- **Site**: `Parun.Engine.Binding.keptAbility`, read by
-  `Parun.Engine.Game.acquisitionFor`; proved by
-  `data/scenarios/copy/cr-607-1a-mimeoplasm-copying-a-mimeoplasm-keeps-one-ability-linked-to-its-exiles.json`
-  and
-  `data/scenarios/copy/cr-614-14-mimeoplasm-becomes-a-copy-of-each-card-exiled-with-it-in-turn-and-of-no-other.json`.
-- **Issue**: #4985.
-
-## When Thieves' Auction's repeated process ends
-
-- **Question**: Thieves' Auction repeats "until all cards exiled this way have
-  been chosen". Its 2005 ruling keeps a chosen Aura with nothing to enchant in
-  exile, choosable again, and has the rest stay exiled once only such Auras
-  are left; its 2004 ruling forbids choosing one at all. When does the
-  process stop?
-- **Rules**: CR 608.2c, 303.4g; CR of 2026-08-07.
-- **Decision**: After a round in which no card is put onto the battlefield.
-  Any Aura is offered, per the newer ruling.
-- **Rejected**: Repeating while any exiled card is still in exile, which never
-  ends once only Auras with nothing to enchant are left. Filtering those Auras
-  out of the choice, the 2004 ruling, which the 2005 one supersedes. The
-  reading taken ends early in one case: every player in a round choosing an
-  Aura with nothing to enchant while a card that could enter is left.
-- **Site**: `data/cards/thieves-auction.json`'s RepeatIf condition, proved by
-  the scenario "CR 303.4g / Thieves' Auction's 2005 ruling: an Aura chosen
-  while there is nothing it can enchant stays exiled".
-- **Issue**: none.
-
-## What a mandatory blight puts its counters on when no creature can take them
-
-- **Question**: An effect says "blight N" and every creature the player
-  controls can't have -1/-1 counters put on it (Solemnity, Melira, Sylvok
-  Outcast). Does the player still choose one, so the blight happens, or is it
-  CR 101.3's no-op? Where some creature can take them, CR 608.2d forbids
-  choosing one that can't; no ruling covers the case where none can.
-- **Rules**: CR 608.2d, 609.3, 701.68a, 701.68c, 701.68d; CR of 2026-08-07.
-- **Decision**: The player chooses among every creature they control, nothing
-  is put, and they have blighted: the chosen creature is CR 701.68c's
-  "blighted creature" and "whenever a player blights" triggers.
-- **Rejected**: No choice and no blight, which reads CR 608.2d's impossible
-  option as emptying the pool. CR 609.3 has the effect do as much as it can,
-  and choosing the creature can be done; CR 701.68d's "regardless of what
-  events actually occurred" says a blight putting nothing still counts.
-- **Site**: `Parun.Engine.Blight.instructed`, proved by
-  `Parun.EventTriggerSpec`'s "CR 701.68d Solemnity keeps every counter off
-  and the Chronicler still triggers".
-- **Issue**: #5830.
+- **Question**: Its 2005 ruling keeps a chosen Aura with nothing to enchant in
+  exile, choosable again; its 2004 ruling forbids choosing one. May a player
+  choose one?
+- **Rules**: CR 303.4g; CR of 2026-08-07.
+- **Decision**: Yes, on the later and more specific ruling. Choosing one passes
+  that player's pick.
+- **Rejected**: Filtering those Auras out, the 2004 ruling, which the 2005 one's
+  "can still be chosen by you or another player later" contradicts.
+- **Site**: `data/cards/thieves-auction.json`'s chooser filter, proved by the
+  scenario `thieves-auction-keeps-an-aura-with-nothing-to-enchant-choosable`.
+  Where the repeat stops is not a reading: #6179.
+- **Issue**: #6179.
 
 ## Which board an entry inside a batch collects replacement effects from
 
@@ -782,84 +527,20 @@ Entries are ordered by the first rule each cites.
   board".
 - **Issue**: none.
 
-## What a spell or ability causes
-
-- **Question**: Sacred Ground, Spiritual Focus and Obstinate Baloth watch for
-  "a spell or ability an opponent controls causes" a move or a discard. Does a
-  cost paid for it count, a CR 118.12 cost paid as it resolves (Professor
-  Onyx's "each opponent may discard a card. If they don't, ..."), or the
-  state-based action that follows its damage? Does Doubling Season's "if an
-  effect would create" reach a token made as such a cost?
-- **Rules**: CR 609.1, 118.12, 601.2h, 602.2b, 614.16, 704.3; CR of
-  2026-08-07.
-- **Decision**: Only an effect (CR 609.1) of a spell or ability counts, with
-  that spell or ability's controller as the effect is performed. A cost,
-  CR 118.12's included, a state-based action, a turn-based action and the
-  cast itself cause nothing. Guerrilla Tactics' ruling says the cost half for
-  a discard: "Only discarding as an effect will trigger the ability." Library
-  of Leng's says it of any cost: "costs aren't effects".
-- **Rejected**: Counting a cost paid for the spell or ability, which would
-  make a stolen land sacrificed to its controller's cost count; crediting
-  a state-based action to the spell whose damage led to it, which CR 704.3
-  performs on its own when a player would receive priority; and counting
-  CR 118.12's resolution cost on the strength of Guerrilla Tactics' other
-  ruling, "The second ability will trigger even on an optional discard caused
-  by an opponent". An optional discard that is an effect satisfies that
-  ruling without the cost reading -- Flux's "discards any number of cards" has
-  no "if they do" clause -- and CR 118.12 names the action a cost outright.
-- **Site**: `Parun.Engine.Event.causedBy`, `Parun.Engine.Game.causeNow`,
-  `Parun.Engine.Resolve.Effect.applyEffectWith` and
-  `Parun.Engine.Cost.payComponent`, proved by the `sacred-ground-*` and
-  `spiritual-focus-*` scenarios. The `obstinate-baloth-*` scenarios prove
-  only whose spell or ability caused the discard. A token lot made as that
-  cost is no effect's either, while one another replacement appends is (CR
-  614.16): `Parun.Engine.Replacement.reachesLot` reads `TokenLot.byEffect`,
-  proved by the `turntimber-ranger-*` scenarios.
-- **Issue**: #5530, #6114.
-
-## Whether "if you can't" holds after doing part of an instruction
-
-- **Question**: Lich's "sacrifice that many nontoken permanents. If you can't,
-  you lose the game": does a player who sacrificed some but fewer than that
-  many lose? The CR defines no "if you can't", and no ruling on Lich says.
-- **Rules**: CR 609.3, 608.2c; CR of 2026-08-07.
-- **Decision**: Yes. "If you can't" holds when the named instruction did
-  fewer than it named, including none. A sacrifice falling short counts as
-  not done for CR 603.12's "when you do" too, as a short draw or mill does.
-- **Rejected**: Holding only when nothing was sacrificed, CR 118.12's "started
-  to pay" test: "that many" is the instruction, and CR 609.3's "as much as
-  possible" is not all of it.
-- **Site**: `Parun.Engine.Resolve.ifTakenHolds` and `recordTaken`, fed by
-  `Parun.Engine.Resolve.Arms.Zones`'s PlayerSacrifices arm. Proved by the
-  scenarios "CR 609.3 Lich sacrificing two of three loses alice the game" and
-  "CR 609.3 Lich sacrificing three of three keeps alice in".
-- **Issue**: #5442.
-
-## How two only-clauses about spending one mana combine
-
-- **Question**: Two effects each say a mana may be spent "only as though it
-  were" a different type. Which types may it be spent as?
-- **Rules**: CR 609.4b, 101.2, 613.11; CR of 2026-08-07.
-- **Decision**: The union of the clauses' sets, unordered. An "only" clause
-  names permitted types rather than saying "can't".
-- **Rejected**: Each "only" as a prohibition, which pulls in CR 101.2 and has
-  the two clauses forbid each other's types.
-- **Site**: `Parun.Engine.Mana.spendableAs`, proved by the scenario "CR 609.4b
-  two only-clauses about one red mana each permit their own type" on
-  Celestial Dawn and Synthetic Verdant Prism: Celestial Dawn is the one
-  printing with such a clause.
-- **Issue**: none.
-
 ## How a mana of any type rider combines with an only-clause
 
 - **Question**: Celestial Dawn lets other mana be spent "only as though it were
   colorless"; a cast permission says "mana of any type can be spent". May red
   mana pay that spell's {B}?
-- **Rules**: CR 118.14, 609.4a, 609.4b; CR of 2026-08-07.
-- **Decision**: Yes. Both permissions apply (CR 609.4a), the only-clause naming
-  what it permits rather than saying "can't", as in the entry above.
-- **Rejected**: The only-clause overriding the rider under CR 101.2, which the
-  entry above rejects for two only-clauses.
+- **Rules**: CR 118.14, 609.4a, 609.4b, 101.2, 613.11; CR of 2026-08-07.
+- **Decision**: Yes. Both permissions apply (CR 609.4a). An only-clause names
+  what it permits rather than saying "can't", so CR 101.2 is not engaged.
+- **Rejected**: The only-clause overriding the rider under CR 101.2: it does not
+  say "can't". The later of the two winning by timestamp under CR 613.11: two
+  permissions do not conflict, so there is nothing to order. Mycosynth Lattice's
+  2004-12-01 ruling, "it doesn't remove restrictions on the mana", is the closest
+  official text against this reading; its example restricts what the mana pays
+  for, not what it is spent as.
 - **Site**: `Parun.Engine.Mana.relax`, proved by the scenario "CR 118.14 / 609.4a
   Tinybones, Bauble Burglar under Celestial Dawn"; Dire Fleet Daredevil shares it.
   A static clause reaches the same reading through `Parun.Engine.Mana.spendableAs`
@@ -880,19 +561,21 @@ Entries are ordered by the first rule each cites.
   Tinybones, Bauble Burglar: a madness card another effect moved".
 - **Issue**: none.
 
-## Whether a condition that cannot be evaluated holds
+## Whether a lingering static effect's set is fixed as its permanent leaves
 
-- **Question**: When a condition's quantity cannot be determined, is it true,
-  false or pending?
-- **Rules**: CR 611.2b, 208.2a, 603.4, 604.2; CR of 2026-08-07.
-- **Decision**: False, CR 611.2b's conservative direction: such a "for as
-  long as" ends rather than persists. Each conjunct and disjunct collapses its
-  own, so an `All` with an unevaluable conjunct is false.
-- **Rejected**: Substituting 0: CR 208.2a is scoped to characteristic-defining
-  abilities, which a condition is not.
-- **Site**: `Parun.Engine.Condition.holds`, proved by the scenario "CR
-  702.100c a Raptor One with the Stars made an enchantment keeps evolve and
-  does not evolve", where CR 702.100c agrees with this reading.
+- **Question**: Titania's Song: "If this enchantment leaves the battlefield, this
+  effect continues until end of turn." CR 611.2c fixes the set only for an effect
+  "generated by the resolution of a spell or ability", and this one is a static
+  ability's. Is an artifact entering after the Song has gone animated?
+- **Rules**: CR 604.2, 611.2c; the card's one ruling is on attacking; CR of
+  2026-08-07.
+- **Decision**: No. The set is fixed as the permanent leaves, by analogy with CR
+  611.2c.
+- **Rejected**: Reading "each noncreature artifact" live until end of turn: the
+  words allow it, but the stored effect then has no permanent to read it from.
+- **Site**: `Parun.Engine.Event`'s departure handover and
+  `Parun.Engine.Projection.frozenStaticParts`, proved by `Parun.ExpirySpec`'s "CR
+  611.2a whole card: the animation outlives Titania's Song and ends at cleanup".
 - **Issue**: none.
 
 ## Which creatures are "those creatures" after a forced attack on a class
@@ -917,64 +600,21 @@ Entries are ordered by the first rule each cites.
   since taken".
 - **Issue**: #5445.
 
-## Colour words a text change reaches
+## What a gift does after a text change swaps its creature type
 
-- **Question**: CR 612.2 changes "a Magic color word being used as a color
-  word" but lists no positions. Which of a card's colours are such words?
-- **Rules**: CR 612.1, 612.2, 105.1, 105.2, 105.4, 107.4, 202.2e, 700.5; CR
-  of 2026-08-07.
-- **Decision**: Every colour a card writes in words: a filter's colour
-  ("black creature", the "black" in "nonblack", protection or hexproof from
-  black), a set or added colour ("becomes black", a copy "except it's
-  white"), a token's defining colour ("a 1/1 black Rat token"), devotion's
-  colour, Drought's "black mana symbol", and mana a card names in words
-  ("white mana", "spent as though it were red mana", "unspent green mana").
-  Never a mana symbol, so mana an effect produces and every cost keep their
-  colour, and never the object's own colour, which comes from its mana cost
-  and colour indicator (CR 105.2, 202.2e) rather than from text. "Colorless"
-  is no colour (CR 105.4) and so no colour word. Neither is a colour a card
-  reaches without naming it: "mana of any color" (CR 609.4b, stored as all
-  five, which only that phrase writes) and "protection from each color" (CR
-  702.16h, stored under `Filter.Unwritten`) keep every colour.
-- **Rejected**: Reaching mana symbols too, on CR 612.1's "words or symbols":
-  CR 612.2 limits a colour-word change to words, and the cards' own rulings
-  ("It only changes what is printed on the card") describe text. Leaving
-  written mana types alone as if they were symbols: Oracle writes them as
-  words.
-- **Site**: `Parun.Engine.Filter.rewrite`'s HasColor arm and
-  `Parun.Engine.Projection.Rewrite`'s rewriteModification, rewriteFace,
-  rewriteManaFilter, rewriteCostScale and Devotion arm; proved by the
-  `data/scenarios/text-change/` scenarios.
+- **Question**: "Gift a tapped Fish" prints a creature type a text change reaches.
+  CR 702.174f and 702.174i define Fish and Octopus; no rule defines "Gift a tapped
+  Elf". What does it do?
+- **Rules**: CR 612.2a, 702.174a, 702.174b, 702.174f, 702.174i; CR of 2026-08-07.
+- **Decision**: The defined effect with the word swapped: a tapped 1/1 blue Elf. CR
+  612.2a treats a word that names a token as its type and name.
+- **Rejected**: No effect, since CR 702.174b defines the effect by the [something]
+  listed and nothing defines this one: it makes a legal text change disarm the
+  keyword.
+- **Site**: `Parun.Engine.Filter.rewriteKeyword`'s Gift arms, proved by
+  `Parun.CounterspellSpec`'s "CR 612.2a an Evolution swapping Fish for Elf on a
+  promised Into the Flood Maw gives bob a tapped 1/1 blue Elf Token".
 - **Issue**: #4819.
-
-## What a text change reaches inside a keyword
-
-- **Question**: Rule 702 defines what a keyword ability does, and its words
-  (afterlife's "white and black Spirit", mobilize's "red Warrior", Aura
-  swap's "Aura card") appear on the card only as reminder text. Does CR 612's
-  text change reach them?
-- **Rules**: CR 612.1, 612.2, 207.2, 207.2a, 702.14a, 702.135a, 702.181a; CR
-  of 2026-08-07.
-- **Decision**: Only a word the keyword is WRITTEN with: a payload rule 702
-  states as a variable, such as landwalk's "[type]", cycling's "[type]",
-  protection's and hexproof's quality, champion's object, gift's creature type
-  ("Gift a tapped Fish"). Those are rewritten at layer 3 in the keyword
-  itself. What the rule writes for itself is untouched, so an evolved
-  Ministrant of Obligation still leaves Spirits and a Sleighted Dalkovan
-  Packbeasts still makes red Warriors.
-- **Rejected**: Rewriting the whole ability as it is minted, the earlier
-  reading: CR 612.1 reaches "words or symbols printed on that object", and
-  CR 207.2 gives reminder text no game function, so the rule's own words are
-  not the card's.
-- **Site**: `Parun.Engine.Projection.mintedTriggeredAbilitiesOf` and
-  `Parun.Engine.Count.abilitiesOf`, which mint without a swap; proved by the
-  scenarios "CR 207.2a / 612.2 a Sleight of Mind on Dalkovan Packbeasts
-  leaves its mobilized Warriors red" and "CR 207.2a / 612.2 an evolved
-  Ministrant of Obligation still leaves Spirits". Gift's word is
-  `Parun.Engine.Filter.rewriteKeyword`'s, proved by `Parun.CounterspellSpec`'s
-  "CR 612.2a an Evolution swapping Fish for Elf on a promised Into the Flood
-  Maw gives bob a tapped 1/1 blue Elf Token".
-- **Issue**: #4819, #5457.
 
 ## Which timestamp the suspected designation's abilities have
 
@@ -983,29 +623,34 @@ Entries are ordered by the first rule each cites.
   ability removal.
 - **Rules**: CR 613.7a, 613.1f, 613.7b, 701.60b, 701.60c; CR of 2026-08-07.
 - **Decision**: The permanent's own timestamp, for both halves.
-- **Rejected**: The moment it became suspected.
+- **Rejected**: The moment it became suspected: CR 701.60c states the abilities
+  as what a suspected permanent has, and no effect creates them, so CR 613.7b has
+  nothing to stamp. The MKM rulings' "It gains menace" lean this way, but say
+  nothing of order.
 - **Site**: `Parun.Engine.Projection.designationGathered` and
   `Parun.Engine.CombatRestriction.gathered`'s designation rows, proved by
   `Parun.FaceDownSpec`'s "CR 613.7f turning face down restamps the permanent
   after a removal that had wiped its grant" and its face-up twin.
 - **Issue**: PR #1607.
 
-## Whether a minted object an entry redirect takes changes zones
+## How many times a prevention's additional effect runs
 
-- **Question**: Hallowed Moonlight exiles a creature token, or a card
-  conjured onto the battlefield, that would enter (ruling 2015-06-22). Is its
-  arrival in exile a zone change? Stonebinder's Familiar triggers on one: under
-  Moonlight, it would see Furgul, Quag Nurturer's conjured Slimy Dualleech.
-- **Rules**: CR 614.6, 111.7, 603.6; no rule names conjure; CR of 2026-08-07.
-- **Decision**: No zone change, so the Familiar does not trigger. The object
-  is put straight into the redirect's zone, as "Whether conjuring a card is a
-  zone change" (#2809) puts a conjured card; a token there ceases to exist by
-  CR 111.7.
-- **Rejected**: A zone change, which would announce a departure from a zone
-  the object was never in, as #2809's entry rejects.
-- **Site**: `Parun.Engine.Event.placeDiverted`. Proved by the scenario
-  hallowed-moonlight-exiles-a-card-conjured-onto-the-battlefield.
-- **Issue**: #5764.
+- **Question**: One application of a shield stops damage from two sources at once.
+  Divine Deflection's "deals that much damage" names no source. Does it throw one
+  lot or one per source?
+- **Rules**: CR 615.5, 615.7, 615.13; CR of 2026-08-07.
+- **Decision**: Once per source the application covered, with that source's share,
+  for every rider. A shield spanning a 2 and a 1 throws a 2 and a 1, so an enrage
+  target triggers twice. The CR 615.13 trigger still fires once for the
+  application. Comeuppance's "that creature" needs the split, and it is one rule
+  for all riders. Owner's reading, PR `#4738`.
+- **Rejected**: One summed lot, which leaves Comeuppance nothing to aim at. One lot
+  where the rider reads no source, which fits CR 615.7's "the number of events or
+  sources ... doesn't matter" but gives two riders of one shape different counts;
+  the 2026-11-04 audit preferred it, moderate confidence. No ruling picks one.
+- **Site**: `Parun.Engine.Resolve.Effect.runPreventionRider`, proved by
+  `Parun.DamageReplacementSpec`'s Divine Deflection case.
+- **Issue**: #2287.
 
 ## Whether an ability's own "prevent" is a self-replacement
 
@@ -1047,17 +692,16 @@ Entries are ordered by the first rule each cites.
 
 ## Which component of a merged permanent answers for day and night
 
-- **Question**: Daybound and nightbound transform a permanent that is front or
-  back face up. A merged permanent whose double-faced components show
-  different faces is neither, by any rule.
+- **Question**: A merged permanent with one double-faced component under a
+  single-faced top: is it front or back face up for CR 702.145?
 - **Rules**: CR 702.145b/c/e/f, 730.2e, 730.2i, 701.27g; CR of 2026-08-07.
 - **Decision**: The topmost double-faced component decides. Every printed pile
   holds at most one double-faced component, since no mutate card is
-  double-faced, and there all readings agree.
+  double-faced.
 - **Rejected**: The topmost component, by analogy with CR 730.2e's face-down
-  status, stops Cubwarden over a nightbound Werewolf turning at day. "Any
-  component back face up" leaves a mixed pile with nightbound back face up
-  after every transform, so it transforms again on every check.
+  status, stops Cubwarden over a nightbound Werewolf turning at day. Neither front
+  nor back face up, reading CR 730.2i with 701.27g, does the same. A pile with two
+  double-faced components has no printing.
 - **Site**: `Parun.Engine.Game.isFrontFaceUp`, proved by `Parun.MutateSpec`'s
   "CR 730.2i/702.145c a Cubwarden over a nightbound Werewolf turns with the day
   and back with the night".
@@ -1067,8 +711,9 @@ Entries are ordered by the first rule each cites.
 
 - **Question**: CR 702.179e says a player has max speed "if their speed is
   4". No rule caps speed, and none says what a speed above 4 is.
-- **Rules**: CR 702.179e, 702.178a, 702.179b, 702.179c, 702.179d, 702.179f;
-  CR of 2026-08-07.
+- **Rules**: CR 702.179e, 702.178a, 702.179b, 702.179c, 702.179d, 702.179f; the
+  reminder "Max speed is 4", Hazoret, Godseeker's rulings of 2025-02-07; CR of
+  2026-08-07.
 - **Decision**: An effect may push speed past 4, and a player at 4 or more has
   max speed. Every max speed gate is written as `AtLeast 4`. Gomif, Fast
   Racer, an un-set printing, says "Your speed can increase beyond 4. (You're
@@ -1080,31 +725,41 @@ Entries are ordered by the first rule each cites.
 - **Site**: `Parun.Engine.Speed.maxSpeed`, proved by `Parun.SpeedSpec`'s "CR
   702.178a past 4 the Raceway keeps its max speed ability" and "CR 702.178a
   past max speed the Surveyor's ability is still offered", both through
-  Synthetic Speed Boost.
+  Synthetic Speed Boost. On regular printings speed never passes 4; Gomif is the
+  only printed producer.
 - **Issue**: #809.
 
-## When Goblin Bookie can be activated
+## Whether Goblin Bookie can be activated with nothing to reroll
 
-- **Question**: Goblin Bookie (Unglued): "{R}, {T}: Reflip any coin or reroll
-  any die. (Activate only any time it makes sense.)" Priority (CR 117.1b)
-  never falls inside a roll, and CR 706.2 has no activated modifier.
-- **Rules**: CR 706.2, 117.1b, 117.3b, 602.2b, 605.3b, 706.2a, 706.2b; CR of
-  2026-08-07.
-- **Decision**: Activatable only inside CR 706.2's modification step while a
-  die is being rolled, never at priority. It goes through the ordinary
-  activation gate (summoning sickness, prohibitions, records) and resolves at
-  once with no stack object, as CR 605.3b's mana ability does. Offers come in
-  APNAP order, then object order within a player, behind the static
-  modifiers, and compete in the roller's pick.
-- **Rejected**: An ordinary activation at priority: by then the roll is over,
-  so the reroll reaches no die. A static modifier carrying the printed cost:
-  it dodges summoning sickness and prohibitions.
+- **Question**: "(Activate only any time it makes sense.)" is parenthetical, and
+  no rule defines "makes sense". With no die being rolled and no Die creature,
+  can the Bookie be activated at priority, tapping it and rerolling nothing?
+- **Rules**: CR 117.1b, 207.2, 207.2a, 602.1b, 609.3; Pippa, Duchess of Dice's
+  rulings of 2020-02-29 settle a die that exists and not this; CR of 2026-08-07.
+- **Decision**: No. The sentence is an activation instruction (CR 602.1b), and
+  with nothing to reroll the ability is not offered.
+- **Rejected**: Reading the parenthetical as text with no game function (CR
+  207.2), so CR 117.1b lets it be activated at any priority: CR 207.2a's reminder
+  text summarizes a rule, and no rule says this.
 - **Site**: `Parun.Types.ActivationRestriction.DuringDieRoll`, gated in
-  `Parun.Engine.ActivationRestriction`, and
-  `Parun.Engine.Resolve.Effect.throwDice`'s `windowCandidates`, proved by
-  `Parun.DiceSpec`'s "CR 706.2b Goblin Bookie rerolls another player's die"
-  and "CR 117.1b the Bookie cannot be activated at priority".
+  `Parun.Engine.ActivationRestriction`, proved by `Parun.DiceSpec`'s "CR 117.1b
+  the Bookie cannot be activated at priority".
 - **Issue**: PR #4020.
+
+## Whether a reroll reaches a die before the lowest roll is ignored
+
+- **Question**: Under Pixie Guide, does a reroll modify a die before the lowest roll
+  is ignored, or only a die that survived? CR 706.6's "no effects apply to that
+  roll" points one way, its "results tied for the lowest" and CR 706.2 the other.
+- **Rules**: CR 706.2, 706.2b, 706.6; CR of 2026-08-07.
+- **Decision**: Rerolls first. Valiant Endeavor with Clam-I-Am on 3, 5, 5: the 3
+  may be rerolled, and a 6 gives results 6 and 5.
+- **Rejected**: Ignoring first, so the 3 "never happened" and the results are 5 and
+  5. The 2026-11-04 audit preferred this, moderate confidence: it is the printed
+  order and CR 706.6's plainer sentence.
+- **Site**: `Parun.Engine.Resolve.Effect.throwDice`, pinned by the scenario
+  `cr-706-2b-pixie-guide-adds-a-die-to-clam-i-am-s-reroll`.
+- **Issue**: none.
 
 ## How a subgame's wish sees a face-down main-game object
 
@@ -1112,9 +767,10 @@ Entries are ordered by the first rule each cites.
   subgame's wish is offered a face-down main-game permanent, such as a
   manifested sorcery. Is it matched as its printed card or as its face-down
   2/2?
-- **Rules**: CR 708.2, 708.2a, 729.1b, 729.4; CR of 2026-08-07.
-- **Decision**: As the face-down 2/2 with no name. Its listed values are
-  copiable values, not a main-game effect, so CR 729.1b does not reach them.
+- **Rules**: CR 110.5, 701.40a, 708.2, 708.2a, 729.1b, 729.4; CR of 2026-08-07.
+- **Decision**: As the face-down 2/2 with no name. CR 701.40a's defining effect
+  has no meaning here (CR 729.1b), but CR 708.2a itself gives a face-down
+  permanent these values, and face down is a status (CR 110.5).
   Living Wish can fetch a manifested sorcery and Burning Wish cannot.
 - **Rejected**: Reading every entry through its printed face. That turns CR
   729.1b's bar on effects into a bar on what the object is, and it lets the
@@ -1123,32 +779,6 @@ Entries are ordered by the first rule each cites.
   `Parun.OutsideTheGameSpec`'s "CR 708.2/729.4 a manifested main-game sorcery
   is offered to a subgame's wish as a creature and not as a sorcery".
 - **Issue**: none.
-
-## Which half of a split card answers for a box both halves have
-
-- **Question**: CR 709.4 combines a split card's halves, but a power,
-  toughness, loyalty, defense, intensity or vanguard box can be had only
-  once. Which half answers when both print one, or when both halves'
-  characteristic-defining abilities define it?
-- **Rules**: CR 709.4, 208.1, 208.5, 604.3, 613.4, 613.4a, 613.7a, 613.8,
-  709.4a, 709.4b, 709.4c; CR of 2026-08-07.
-- **Decision**: The left half's printed box, and for two
-  characteristic-defining abilities on one box, the left half's ability.
-  Disjoint boxes take each half's own.
-- **Rejected**: Summing, generalising CR 709.4b: that rule concatenates
-  symbols, states no arithmetic, and summing doubles a characteristic both
-  halves share. Ordering the two abilities by CR 613: they tie on timestamp
-  (CR 613.7a), neither changes the other, and CR 613.8 falls back to
-  timestamp.
-- **Site**: `Parun.Engine.Card.merge2` and its `definedBox`, reached through
-  `combined`. `Parun.CardSpec`'s SplitBox group proves the disjoint and
-  one-half cases, and "CR 709.4 the left half answers for a box both halves
-  print or define" the power and toughness boxes on Synthetic Rival Golem //
-  Synthetic Rival Giant: no split printing has a creature half. "CR 709.4
-  the left half answers for a loyalty both halves print", and its defense
-  and starting intensity siblings, prove the `firstJust` boxes on the other
-  Synthetic Rival pairs.
-- **Issue**: #658, #2019.
 
 ## How perpetual effects follow a meld
 
@@ -1177,13 +807,16 @@ Entries are ordered by the first rule each cites.
 - **Question**: The monarch leaves the game and the active player can't
   become the monarch (Jared Carthalion). CR 725.4's first sentence crowns the
   active player with no eligibility gate.
-- **Rules**: CR 725.4, 101.2, 726.4; CR of 2026-08-07.
+- **Rules**: CR 725.4, 101.2, 726.4; CR of 2026-08-07. Jared Carthalion, True
+  Heir, 2020-11-10 ("exactly one monarch from that point forward").
 - **Decision**: The "can become the monarch" test covers the active player
   too, so an ineligible one is skipped and the crown goes to the next
   eligible seat in turn order.
-- **Rejected**: The literal reading: an ineligible active player blocks
-  sentence 1, fails sentence 2's departure condition, and the crown never
-  moves, which makes sentence 3 unreachable.
+- **Rejected**: The literal reading: CR 101.2 stops sentence 1, an active player
+  still in the game fails sentence 2's departure condition, and an eligible seat
+  fails sentence 3's, so nobody is crowned. That leaves a game with no monarch
+  while a player could be one, which sits badly with Jared's ruling, though
+  sentence 3 keeps that ruling from being absolute.
 - **Site**: `Parun.Engine.Monarch.reassignOnDeparture`, proved by
   `Parun.DepartureSpec`'s "CR 725.4 the crown skips a seat that can't become
   the monarch".
@@ -1220,29 +853,42 @@ Entries are ordered by the first rule each cites.
 
 ## What a fragmented loop forbids, and who is involved
 
-- **Question**: CR 732.3 says the active player, or the first involved
-  player, "must then make a different game choice". Who counts as involved,
-  which choices count as the same one, and when does a state count as
-  recurring?
-- **Rules**: CR 732.3, 732.1, 732.5; CR of 2026-08-07.
+- **Question**: CR 732.3 names the players "involved in the loop", and has them
+  "make a different game choice". Over what span is a player involved, and how
+  fine is a choice?
+- **Rules**: CR 732.1, 732.3, 732.5; CR of 2026-08-07.
 - **Decision**:
-  - The involved players are those who took any action other than passing
-    since the state first occurred.
-  - Every choice that player made at any earlier occurrence is forbidden, not
-    only the last one, so A, B, A, B is refused too.
-  - An action with no choices in it is forbidden outright. An activation is
-    forbidden as it was completed, meaning announced and paid. Choices made
-    later at resolution are separate choices.
-  - A state counts as recurring only if nothing in the game reads the history
-    the lap appended.
-  - Where detection is uncertain, the engine errs towards seeing no loop.
-- **Rejected**: Forbidding only the last occurrence's choice. Letting a
-  shorter loop nested inside a longer one hide the longer loop's players.
-- **Site**: `Parun.Engine.Fragmented.forbidden` and `lapIsRead`, proved by
-  `Parun.FragmentedSpec`'s "an activation is refused as announced, not as a
-  whole", "an activation is refused as paid, not as announced", "a choice the
-  resolution offers does not make a repeated activation a new one" and their
-  siblings.
+  - Involvement runs from when the state first occurred, not over the last lap.
+  - An activation with something to announce or pay is refused as it was
+    completed. Aiming or paying it another way is a different choice.
+  - A choice made later at resolution is separate, and doesn't make a repeated
+    activation a new one.
+- **Rejected**: Involvement over the last lap only, which lets a shorter loop
+  nested inside a longer one hide the longer one's players. Refusing a targeted or
+  paid activation as a whole, which CR 732.1's "taking an action" would allow and
+  CR 732.3's example, with no target, doesn't settle.
+- **Site**: `Parun.Engine.Fragmented.forbidden`, proved by
+  `Parun.FragmentedSpec`'s "a state that does not recur leaves the activation
+  offered", "an activation is refused as announced, not as a whole", "an activation
+  is refused as paid, not as announced", and "a choice the resolution offers does
+  not make a repeated activation a new one".
+- **Issue**: #951.
+
+## Whether attack left closes up over a seat that emptied
+
+- **Question**: CR 803.1a and 803.1b let a player attack only the opponent seated
+  immediately beside them. After a seat empties, is that still measured over it on
+  later turns?
+- **Rules**: CR 801.2c, 803.1a, 803.1b, 807.2, 807.4h; CR of 2026-08-07.
+- **Decision**: Yes, for the rest of the game. A player whose neighbour left can't
+  attack again.
+- **Rejected**: Closing up as the next turn begins, as range of influence does (CR
+  801.2c's Example, 807.4h). The 2026-11-04 audit preferred this: one reading of
+  "seat" across a game, and no player locked out by an unrelated concession.
+- **Site**: `Parun.Engine.Combat.attackableOpponents`' `Leftward` and `Rightward`
+  arms. The scenarios `attack-option-left-seat-empty` and
+  `attack-option-right-seat-after-departure` stop at the same turn; no test reaches
+  a later one.
 - **Issue**: none.
 
 ## Whether a player leaving ends a control-on-entry replacement
@@ -1329,12 +975,15 @@ Entries are ordered by the first rule each cites.
   or a "whenever counters are put" or "becomes attached" ability, triggers on
   that. Does a permanent entering "cause" it, so that Yarok, the Desecrated
   makes it trigger an additional time and Hushwing Gryff silences it?
-- **Rules**: CR 603.2d, 603.6a, 613.11, 122.6, 714.2b, 714.3a; CR of
-  2026-08-07. No ruling: none of Yarok, Panharmonicon, Elesh Norn, Mother of
+- **Rules**: CR 603.2c, 603.2d, 603.6a, 603.6d, 613.11, 122.6, 303.4f, 608.3c,
+  714.2b, 714.3a; CR of 2026-08-07. No ruling: none of Yarok, Panharmonicon, Elesh Norn, Mother of
   Machines, Torpor Orb or any Saga has one on it.
 - **Decision**: No. Only abilities triggering on the zone change itself are
-  multiplied or silenced; a counter put or an attachment made as the
-  permanent enters is an event of its own.
+  multiplied or silenced. A counter put as the permanent enters is part of the
+  entry event (CR 603.6d, 714.3a) and an attachment made as it enters comes with
+  the move (CR 303.4f, 608.3c), but the trigger event of such an ability is the
+  counter or the attachment, not the permanent entering (CR 714.2b, 122.6; The
+  Raven's Warning, 2021-02-05).
 - **Rejected**: Treating every event that happens because a permanent entered
   as caused by the entry. CR 714.2b's trigger event is the lore counter being
   put, which CR 122.6 counts whether or not the Saga is entering, so the
@@ -1344,133 +993,6 @@ Entries are ordered by the first rule each cites.
   asks only of a move onto the battlefield. Proved by the scenario
   yarok-the-desecrated-doesn-t-double-a-saga-s-chapter-i.
 - **Issue**: #5837.
-
-## A paid flash permission is offered at sorcery timing too
-
-- **Question**: Harbinger of the Tides lets itself be cast "as though it had
-  flash if you pay {2} more". At a time its caster could cast a sorcery
-  anyway, may they still use the permission and pay the {2}?
-- **Rules**: CR 601.2b, 601.2f, 601.3c, 702.8a; CR of 2026-08-07. No ruling.
-- **Decision**: Yes. The permission's cost is a candidate beside the printed
-  one wherever the card may be cast, and the caster picks.
-- **Rejected**: Withholding it where the card's own window is open. Nothing
-  in the card or CR 601.3c confines the permission to the moments it is
-  needed, and the engine does not make the caster's choice.
-- **Site**: `Parun.Engine.Cost.withFlashPermission`. Proved by the scenario
-  harbinger-of-the-tides-cast-in-a-main-phase-may-pay-two-more.
-- **Issue**: #5765.
-
-## A trigger limit caps an additional trigger
-
-- **Question**: Yarok, the Desecrated makes an ability a permanent entering
-  causes to trigger trigger an additional time. Enduring Innocence's entry
-  ability "triggers only once each turn". With both, does a creature entering
-  make it trigger twice?
-- **Rules**: CR 603.2c, 603.2d; CR of 2026-08-07. No ruling.
-- **Decision**: No. The limit counts each instance as a triggering, so the
-  additional instance is spent against it like any other.
-- **Rejected**: Letting the additional instance through. CR 603.2d says an
-  additional-times effect "doesn't apply to other effects that affect how many
-  times an ability triggers", and the limit is the ability's own text, not an
-  effect, so nothing exempts the second instance from it.
-- **Site**: `Parun.Engine.Event.withinTriggerLimit`, which spends the limit on
-  the instances `Parun.Engine.Event.Trigger.eventTriggers` multiplies. Proved
-  by the scenario
-  yarok-the-desecrated-doesn-t-lift-a-triggers-only-once-each-turn-limit.
-- **Issue**: #5837.
-
-## A look-back ability's additional triggers look back
-
-- **Question**: Sanctum of All ("while you control six or more Shrines") and
-  Harmonic Prodigy double an ability by whose it is, not by its cause. A
-  leaves-the-battlefield ability looks back. Is its doubling read before the
-  event, or after? It splits on Harmonic Prodigy dying alone, with the bearer
-  staying (Xathrid Necromancer) or leaving beside it. Sanctum's count has no such
-  split yet: Scryfall `t:shrine (o:"leaves the battlefield" or o:"dies" or o:"put
-  into a graveyard")`, 2026-11-01, no hit.
-- **Rules**: CR 603.2d, 603.10, 603.10a, 603.10b, 603.10c, 603.10d, 603.10f; CR of 2026-08-07. No ruling on either
-  card. Teysa Karlov and Drivnod, Carnage Dominus rule the same split for a dying
-  cause: an effect's source dying beside the creature still counts, whether or not
-  the ability's permanent leaves too.
-- **Decision**: Before. The ability decides, not its bearer: CR 603.10a's look-back
-  reads the whole board before the event, the bearer, the effect's source and its
-  condition. Any other ability reads the board immediately after its event (CR
-  603.10), a bearer that left later in the same cost included.
-- **Rejected**: Choosing by whether the bearer left, which gives a staying bearer
-  the after board, one trigger under a lone Prodigy's death and two under a Wrath;
-  the Teysa rulings give both the same answer.
-- **Site**: `Parun.Engine.Event.Match.additionalTriggers`, reading
-  `GameState.boardBeforeEvent`. data/scenarios's "Harmonic Prodigy dying alone"
-  and "Harmonic Prodigy dying beside a Wizard" scenarios prove it, and its two
-  Harmonic Prodigy and Khârn the Betrayer scenarios for a control change, its
-  Harmonic Prodigy and Teferi's Imp scenario for a phasing, its "Harmonic
-  Prodigy stolen by a conceding player" scenario for a loss, and
-  data/scenarios/cloud-midgar-mercenary for an unattaching.
-
-## Drain Life's limits at a target they don't name
-
-- **Question**: Drain Life gains "not more life than the player's life total
-  ..., the planeswalker's loyalty ..., or the creature's toughness", but "any
-  target" includes a battle (CR 115.4), which none of the three names. Is the
-  gain uncapped, or nothing?
-- **Rules**: CR 115.4, 120.3h, 107.1; CR of 2026-08-07. No ruling on Drain Life
-  or Soul Burn at a battle.
-- **Decision**: Uncapped. Each limit is read alone, and one naming nothing that
-  exists imposes nothing, so Drain Life at a battle gains the damage dealt.
-- **Rejected**: Reading a missing limit as 0 (CR 208.2a's undeterminable
-  number), which gains nothing; the sentence names its limits by what the target
-  is, so a target it never names is not limited by them.
-- **Site**: `Parun.Engine.Quantity`'s AtMost arm, proved by the scenario
-  "Drain Life at a battle gains all the damage dealt".
-- **Issue**: #5571.
-
-## Drain Life at a planeswalker that is also a creature
-
-- **Question**: A target that is both a creature and a planeswalker matches
-  two of Drain Life's limits. Which bounds the gain?
-- **Rules**: CR 306.5c, 208.1, 107.1; CR of 2026-08-07. No ruling.
-- **Decision**: Both: the gain is no more than the lower of its loyalty and its
-  toughness, each limit applying wherever it names something.
-- **Rejected**: Picking one by the target's "kind" in the printed order, which
-  the list's "or" does not rank.
-- **Site**: `Parun.Engine.Quantity`'s AtMost arm, proved by the scenario
-  "Drain Life at a planeswalker that is also a creature".
-- **Issue**: #5571.
-
-## When Drain Life reads the creature's toughness
-
-- **Question**: Drain Life reads the player's life and the planeswalker's
-  loyalty "before the damage was dealt", but says only "the creature's
-  toughness". Damage from a source with wither or infect lowers toughness
-  (CR 120.3d). Before the damage, or after?
-- **Rules**: CR 120.3d, 608.2c; CR of 2026-08-07. The card's ruling: "You may
-  gain up to the total toughness of the creature even if it was already
-  damaged".
-- **Decision**: Before, beside the other two limits.
-- **Rejected**: After, which the ruling's "total toughness" leans against and
-  which would read one limit at a different moment from the others.
-- **Site**: data/cards/drain-life.json and soul-burn.json bind every limit
-  before the damage. Unproven by a scenario: no card in the pool gives Drain
-  Life wither or infect.
-- **Issue**: #5571.
-
-## Whether "at the beginning of this turn" sees an effect lasting until that turn
-
-- **Question**: Power Surge counts the lands a player controlled at the beginning
-  of this turn. An "until your next turn" effect ended as that turn began: is the
-  count of the board with it or without it?
-- **Rules**: CR 500.12 leaves no game event between turns, and neither CR 500.4
-  nor CR 514.2 says when a duration naming a turn ends relative to its beginning.
-  No ruling on the card.
-- **Decision**: Without it. The turn has begun once its first step is reached, and
-  the effect ended as it began.
-- **Rejected**: With it, which counts Hydro-Man, Fluid Felon as a land, though his
-  "until your next turn, he becomes a land" ended as that turn began.
-- **Site**: `Parun.Engine.Engine`'s `runStep`, filing
-  `GameState.permanentsAsTurnBegan` after `Parun.Engine.Expiry.dropAtTurnOf`.
-  Unproven by a scenario: no card in the pool is a land only until its
-  controller's next turn (Hydro-Man; Absorbing Man and Crystalline Resonance as a
-  copy of one).
 
 ## Whether assigning no combat damage beats assigning toughness
 

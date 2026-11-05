@@ -4,11 +4,12 @@
 -- Modification.
 --
 -- Total, so it must collapse the Maybe its two inputs carry: an undeterminable
--- quantity on EITHER side makes the condition FALSE. That is the conservative
--- reading of CR 611.2b -- a "for as long as" whose condition cannot be
--- evaluated ends rather than persists. CR 208.2a's substituted 0 is a different
--- rule scoped to a characteristic-defining ability, which a condition is not.
--- docs/decisions.md, "Whether a condition that cannot be evaluated holds".
+-- quantity on EITHER side makes the condition FALSE.
+--
+-- Not implemented: CR 107.2's 0 for a noncreature's missing power or toughness
+-- (CR 208.3; One with the Stars' ruling of 2020-01-24, "it uses 0"), so Yorvo made
+-- an enchantment compares against nothing (#6220). An unfilled slot is CR 608.2b's
+-- and is not that number.
 --
 -- The VIEW is the caller's, and picking it is a rules decision rather than a
 -- detail. Three answers, one per kind of question:

@@ -456,11 +456,10 @@ endsAt gs moment source expiry = case expiry of
     moment == Cleanup && not (any ((== stamp) . ExtraTurn.createdAt) (GameState.extraTurns gs))
   -- CR 500.5a: EQUALITY on the selector -- dropAtEndOf says why.
   Expiry.AtEndOf window -> moment == EndOf window
-  -- CR 500.8: the FIRST combat phase of that turn to end ends it, so an added
-  -- combat phase after it finds nothing left. A turn with no combat phase takes
-  -- it at cleanup rather than handing it to a later turn of theirs.
-  -- docs/decisions.md, "Which combat phase ends a duration until combat on
-  -- your next turn".
+  -- CR 500.5 / 500.5a: the first combat phase of that turn to end ends it, so an
+  -- added phase after it (CR 500.8) finds nothing. A turn with no combat phase
+  -- takes it at cleanup: docs/decisions.md, "What ends a duration until combat on
+  -- your next turn when it has no combat phase".
   Expiry.AtEndOfCombatOn afterTurn ->
     namedTurnEnds (EndOf PhaseSelector.CombatPhase) afterTurn || namedTurnEnds Cleanup afterTurn
   -- CR 116.2c: only a payment ends this, and CR 800.4m does not reach it -- the

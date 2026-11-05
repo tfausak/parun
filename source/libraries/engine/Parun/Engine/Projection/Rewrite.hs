@@ -529,8 +529,7 @@ rewritePlayerEffect pairs effect = case effect of
   -- cost rather than printed in one. The subject's criteria (a rule-702
   -- designator, CR 605.1a's and CR 606.2's classifications) are no words CR
   -- 612.2 reaches; an addition's scale is Drought's "for each black mana
-  -- symbol", a colour word used as one (docs/decisions.md, "Colour words a
-  -- text change reaches").
+  -- symbol", a colour word used as one (CR 612.2).
   PlayerEffect.ModifyCost (CostModifier.MkCostModifier subject f targets perTarget perEach first change) ->
     let change' = case change of
           CostChange.Add (CostAddition.MkCostAddition components scale) -> CostChange.Add (CostAddition.MkCostAddition (fmap (Filter.rewriteComponent pairs) components) (rewriteCostScale pairs scale))
@@ -671,8 +670,7 @@ rewriteEffect pairs effect = case effect of
   -- that may name a subtype -- Cabal Coffers' "for each Swamp you control"
   -- under a Magical Hack. Parun.ManaSpec's "Cabal Coffers" hacked board is what
   -- proves it. The PRODUCTION is reachable by no pair, naming a mana type
-  -- written as a symbol rather than a word (docs/decisions.md, "Colour words a
-  -- text change reaches").
+  -- written as a symbol rather than a word (Glamerdye's ruling of 2008-08-01).
   --
   -- CR 106.6's restriction and rider carry a filter each, and rule 612.1 reaches
   -- those by the same sentence. A REGRESSION FENCE rather than a proved
@@ -759,15 +757,14 @@ rewriteEffect pairs effect = case effect of
   -- nothing.
   Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect ref sacrificer mSacrificed) -> Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect (rewriteObjectRef pairs ref) sacrificer mSacrificed)
   -- CR 612.1: the ref carries a Filter of printed card text, so a text-changer
-  -- reaches it exactly as Destroy's above. rewriteListing rewrites the listing's
-  -- quoted abilities and leaves its type line, which CR 612.1 and CR 612.2 reach too
-  -- (gap #6243).
+  -- reaches it exactly as Destroy's above, and the listing's printed words reach
+  -- rewriteListing.
   --
-  -- A REGRESSION FENCE rather than a proven behaviour, the shape
+  -- The ref's half is A REGRESSION FENCE rather than a proven behaviour, the shape
   -- FromOutsideTheGame above records: the two filters this opcode carries in
   -- data/cards name a keyword family (Backslide, Weaver of Lies) and the source,
   -- neither of which rule 612 changes, so both readings leave the same board and
-  -- mutating this line reddens nothing.
+  -- mutating the ref's rewrite reddens nothing.
   Effect.TurnFaceDown (TurnFaceDown.MkTurnFaceDown ref listed) -> Effect.TurnFaceDown (TurnFaceDown.MkTurnFaceDown (rewriteObjectRef pairs ref) (rewriteListing pairs listed))
   Effect.TurnFaceUp _ -> effect
   Effect.RemoveFromCombat ref -> Effect.RemoveFromCombat (rewriteObjectRef pairs ref)
@@ -1180,9 +1177,9 @@ composeWordChanges pairs =
 
 -- CR 612.2 over a mana type a card WRITES as a word -- "white mana", "spent as
 -- though it were red mana" -- which is a colour word used as one, where a mana
--- symbol ("Add {W}") is no word and an effect producing mana is never
--- rewritten (docs/decisions.md, "Colour words a text change reaches").
--- Colorless is no colour (CR 105.4) and so no colour word.
+-- symbol ("Add {W}") is no word (Glamerdye's ruling of 2008-08-01) and an effect
+-- producing mana is never rewritten. Colorless is no colour (CR 105.4) and so no
+-- colour word.
 rewriteManaFilter :: [(TextWord.TextWord, TextWord.TextWord)] -> ManaFilter.ManaFilter -> ManaFilter.ManaFilter
 rewriteManaFilter pairs f = case f of
   ManaFilter.Any -> f
@@ -1350,16 +1347,13 @@ rewriteFace :: [(TextWord.TextWord, TextWord.TextWord)] -> Face.Face Card.Type.C
 rewriteFace pairs face =
   let apply1 f (from, to) =
         let pair = [(from, to)]
-            typeLine = Face.typeLine f
-            subtypes = TypeLine.subtypes typeLine
-            renamed = case (from, to) of
-              (TextWord.SubtypeWord old, TextWord.SubtypeWord new)
-                | Set.member old subtypes ->
-                    f
-                      { Face.typeLine = typeLine {TypeLine.subtypes = Set.insert new (Set.delete old subtypes)},
-                        Face.name = rewriteTokenName old new (Face.name f)
-                      }
-              _ -> f
+            renamed = case swapSubtype (from, to) (Face.typeLine f) of
+              Just (old, new, typeLine) ->
+                f
+                  { Face.typeLine = typeLine,
+                    Face.name = rewriteTokenName old new (Face.name f)
+                  }
+              Nothing -> f
          in renamed
               { -- CR 612.2's colour word in the defining text ("a 1/1 black Rat
                 -- token"), which is where a token's colour comes from (CR 111.3).
@@ -2455,9 +2449,8 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.PlayedBy _ -> quantity
   Quantity.Type.DamageDealtThisTurn _ -> quantity
   Quantity.Type.PlayerCounters {} -> quantity
-  -- CR 700.5's "devotion to black": a colour word used as one
-  -- (docs/decisions.md, "Colour words a text change reaches"). The PlayerRef
-  -- names no word.
+  -- CR 700.5's "devotion to black": a colour word used as one (CR 612.2). The
+  -- PlayerRef names no word.
   Quantity.Type.Devotion devotion -> Quantity.Type.Devotion devotion {Devotion.colors = Set.map (TextWord.Engine.colorAfter pairs) (Devotion.colors devotion)}
   -- A leaf: CR 700.8's four types are the rule's, not printed words for CR
   -- 612.2 to swap.
@@ -2541,10 +2534,26 @@ rewriteEntryRiders pairs riders =
       EntryHost.Specified _ -> host
       EntryHost.Chosen f -> EntryHost.Chosen (Filter.rewrite pairs f)
 
--- CR 612.1 over a CR 708.2 listing's quoted abilities, which are printed on the
--- card whose effect lists them.
+-- CR 612.1 / 612.2 over a CR 708.2 listing's subtypes and quoted abilities, both
+-- printed on the card whose effect lists them. The text-change scenarios of an
+-- evolved Cyber Conversion and a hacked Yedora, Grave Gardener prove the
+-- subtype swap.
 rewriteListing :: [(TextWord.TextWord, TextWord.TextWord)] -> FaceDownCharacteristics.FaceDownCharacteristics (GrantedAbility.GrantedAbility Card.Type.Card) -> FaceDownCharacteristics.FaceDownCharacteristics (GrantedAbility.GrantedAbility Card.Type.Card)
-rewriteListing pairs listed = listed {FaceDownCharacteristics.abilities = fmap (rewriteGrantedAbility pairs) (FaceDownCharacteristics.abilities listed)}
+rewriteListing pairs listed =
+  listed
+    { FaceDownCharacteristics.typeLine = List.foldl' (\typeLine pair -> maybe typeLine (\(_, _, swapped) -> swapped) (swapSubtype pair typeLine)) (FaceDownCharacteristics.typeLine listed) pairs,
+      FaceDownCharacteristics.abilities = fmap (rewriteGrantedAbility pairs) (FaceDownCharacteristics.abilities listed)
+    }
+
+-- CR 612.2: one subtype swap over a type line holding the old word, with the
+-- swapped pair, which a defined face's name follows too (CR 612.2a).
+swapSubtype :: (TextWord.TextWord, TextWord.TextWord) -> TypeLine.TypeLine -> Maybe (Subtype.Type.Subtype, Subtype.Type.Subtype, TypeLine.TypeLine)
+swapSubtype pair typeLine = case pair of
+  (TextWord.SubtypeWord old, TextWord.SubtypeWord new)
+    | Set.member old subtypes -> Just (old, new, typeLine {TypeLine.subtypes = Set.insert new (Set.delete old subtypes)})
+  _ -> Nothing
+  where
+    subtypes = TypeLine.subtypes typeLine
 
 -- Greatest and Total are the Aggregations carrying a Quantity.
 rewriteAggregation :: [(TextWord.TextWord, TextWord.TextWord)] -> Aggregation.Aggregation Quantity.Type.Quantity -> Aggregation.Aggregation Quantity.Type.Quantity

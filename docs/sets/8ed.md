@@ -36,7 +36,7 @@ Finished 2026-10-24.
   297k (#5556), 225k (#5557), 170k (#5558). Total 1.99M, 16.6k per card.
   Wall clock ~7h; two lanes.
 - Owner review:
-  - #5553: decisions.md "When Thieves' Auction's repeated process ends" (an
+  - #5553: when Thieves' Auction's repeated process ends (now #6179; an
     Aura ruling conflict); wire change `underOwner` to `under`, whose old key
     the decoder ignores silently.
   - #5555: a `FilterPositionLintSpec` change (`ChosenSourceFramed`).

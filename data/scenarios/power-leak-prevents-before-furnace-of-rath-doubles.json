@@ -1,5 +1,5 @@
 {
-  "description": "Power Leak's prevention applies before Furnace of Rath, per decisions.md's self-replacement entry: 2 - 1, then doubled",
+  "description": "Power Leak's prevention applies before Furnace of Rath, per docs/decisions.md, \"Whether an ability's own \"prevent\" is a self-replacement\": 2 - 1, then doubled",
   "note": "bob pays 1. He is asked nothing about the order: 2 becomes 1 becomes 2, never 4 - 1.",
   "board": {
     "active": "alice",

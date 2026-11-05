@@ -83,8 +83,8 @@ import qualified Parun.Types.Timestamp as Timestamp
 -- ride along uncompared, and `lapIsRead` asks whether anything in the game
 -- reads what the loop appended to them.
 --
--- Object ids are compared as they stand, so a loop that moves a card (CR
--- 400.7) is never detected.
+-- Not implemented: a loop that moves a card (CR 400.7) is never detected, since
+-- object ids are compared as they stand (#6184).
 digest :: GameState -> StateDigest
 digest gs =
   let (effects, objects, reacquire) = canonicalStamps gs
@@ -423,18 +423,19 @@ planarDieRolled event = case event of
 -- history the loop appended since (`lapIsRead`), and `pid` is the player the
 -- rule names.
 --
--- "Involved in the loop" is the players who took a non-Pass action since the
--- state FIRST occurred: a shorter loop nested inside a longer one through the
--- same state (a no-op lap by one player) must not hide the longer one's
--- players. Forbidden is every choice `pid` made at ANY prior occurrence, not
--- only the last, so A, B, A, B through one state is refused too: a
--- `choiceless` action as a whole, and an activation, a mana ability's among
+-- "Involved in the loop" is the players who took a non-Pass action (CR 732.1,
+-- 732.5) since the state FIRST occurred: a shorter loop nested inside a longer
+-- one through the same state (a no-op lap by one player) must not hide the
+-- longer one's players. Forbidden is every choice `pid` made at ANY prior
+-- occurrence, not only the last, each having led back here: CR 732.3's "so the
+-- loop does not continue" refuses A, B, A, B too. A `choiceless` action is
+-- refused as a whole, by CR 732.3's example ("anything other than activating
+-- that creature's ability again"), and an activation, a mana ability's among
 -- them (CR 605.3a), as it was completed -- announced and paid -- so aiming it
 -- elsewhere (CR 601.2c) or paying it another way (CR 601.2g/h) is still a
 -- choice to make. A choice made later in the lap -- as the object
 -- resolves (CR 608.2d), or for a trigger it causes -- is a game choice of its
--- own, and leaves this one as it was: CR 732.3's example refuses "activating
--- that creature's ability again" outright. Pass never is (CR 732.5). Parun.FragmentedSpec's
+-- own, and leaves this one as it was. Pass never is (CR 732.5). Parun.FragmentedSpec's
 -- control case is the board where the nesting happens, its Grim Poppet case
 -- the announcement, its Freed from the Real cases the payment and the mana
 -- ability, and its Fatestitcher case a choice at resolution.
