@@ -173,10 +173,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "$handMemnite",
-          "mana": [
-            null
-          ]
+          "object": "$handMemnite"
         }
       }
     },
@@ -203,10 +200,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "Memnite",
-          "mana": [
-            null
-          ]
+          "object": "Memnite"
         }
       }
     },

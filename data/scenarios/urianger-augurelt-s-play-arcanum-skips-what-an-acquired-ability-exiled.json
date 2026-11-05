@@ -52,12 +52,12 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$urianger", "ability": 3, "mana": ["$island", "$island-2", null], "costOrder": [0, 1] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Grizzly Bears", "count": 1 } } },
-    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$urianger", "ability": 0, "mana": [null] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$urianger", "ability": 0 } } },
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseOptional", "with": { "type": "Exercises" } } } },
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Balduvian Bears", "count": 1 } } },
     { "turn": 3, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
-    { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$urianger", "ability": 1, "mana": [null] } } },
+    { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$urianger", "ability": 1 } } },
     { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 5, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Cast Balduvian Bears", "ActivateManaAbility $forest", "ActivateManaAbility $forest-2", "ActivateManaAbility $forest-3", "ActivateManaAbility $forest-4", "ActivateManaAbility $island", "ActivateManaAbility $island-2", "ActivateManaAbility Steward of the Harvest"] } } }
   ]

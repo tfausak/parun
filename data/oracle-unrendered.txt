@@ -3347,6 +3347,7 @@ harmonic-prodigy
 sanctum-of-all
 chandras-incinerator
 chandras-pyreling
+channel
 curator-of-destinies
 hooded-blightfang
 hydroblast

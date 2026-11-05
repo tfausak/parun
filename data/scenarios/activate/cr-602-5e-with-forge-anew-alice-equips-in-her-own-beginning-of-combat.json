@@ -42,10 +42,7 @@
           "targets": [
             "$goblin-piker"
           ],
-          "cost": [],
-          "mana": [
-            null
-          ]
+          "cost": []
         }
       }
     }

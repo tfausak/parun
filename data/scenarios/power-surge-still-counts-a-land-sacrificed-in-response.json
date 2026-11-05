@@ -107,9 +107,6 @@
     {
       "do": {
         "Activate": {
-          "mana": [
-            null
-          ],
           "object": "$hornclaw"
         }
       },

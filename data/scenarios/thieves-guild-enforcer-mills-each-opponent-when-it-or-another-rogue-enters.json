@@ -303,10 +303,7 @@
     {
       "do": {
         "Cast": {
-          "object": "$bears",
-          "mana": [
-            null
-          ]
+          "object": "$bears"
         }
       },
       "player": "alice",

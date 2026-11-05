@@ -238,10 +238,7 @@
         "ChooseToPay": {
           "decision": {
             "type": "Pays"
-          },
-          "mana": [
-            null
-          ]
+          }
         }
       },
       "player": "bob",

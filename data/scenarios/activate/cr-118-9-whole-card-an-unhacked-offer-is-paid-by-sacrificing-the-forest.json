@@ -58,9 +58,6 @@
           "object": "$bargainer",
           "targets": [
             "$piker"
-          ],
-          "mana": [
-            null
           ]
         }
       }
@@ -81,17 +78,6 @@
           "with": {
             "type": "Exercises"
           }
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "ChooseExtraManaSource",
-          "with": null
         }
       }
     },

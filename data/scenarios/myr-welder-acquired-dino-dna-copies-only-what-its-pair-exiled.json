@@ -42,13 +42,13 @@
     "step": "PrecombatMain"
   },
   "timeline": [
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 0, "targets": ["$dna"], "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 0, "targets": ["$dna"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Dino DNA", "count": 1 } } },
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 1, "targets": ["Grizzly Bears"], "mana": ["$island", null] } } },
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Grizzly Bears", "count": 1 } } },
-    { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 0, "targets": ["Bronze Sable"], "mana": [null] } } },
+    { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 0, "targets": ["Bronze Sable"] } } },
     { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 5, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Bronze Sable", "count": 1 } } },
     { "turn": 7, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "$welder", "ability": 2, "targets": ["Bronze Sable"], "mana": ["$island", "$island-2", "$island-3", "$island-4", "$island-5", "$island-6"] } } },

@@ -149,17 +149,6 @@
       "turn": 2,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "ChooseExtraManaSource",
-          "with": null
-        }
-      }
-    },
-    {
-      "turn": 2,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": "Pass"
     },
     {

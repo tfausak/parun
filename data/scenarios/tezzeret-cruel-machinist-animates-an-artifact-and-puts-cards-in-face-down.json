@@ -124,9 +124,6 @@
           "ability": 1,
           "targets": [
             "$ring"
-          ],
-          "mana": [
-            null
           ]
         }
       }
@@ -218,10 +215,7 @@
       "do": {
         "Activate": {
           "object": "$tez",
-          "ability": 0,
-          "mana": [
-            null
-          ]
+          "ability": 0
         }
       }
     },
@@ -265,10 +259,7 @@
       "do": {
         "Activate": {
           "object": "$tez",
-          "ability": 2,
-          "mana": [
-            null
-          ]
+          "ability": 2
         }
       }
     },

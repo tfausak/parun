@@ -91,9 +91,6 @@
       "do": {
         "Activate": {
           "ability": 2,
-          "mana": [
-            null
-          ],
           "object": "$mu"
         }
       },
@@ -127,9 +124,6 @@
       "do": {
         "Activate": {
           "ability": 0,
-          "mana": [
-            null
-          ],
           "object": "$isl"
         }
       },

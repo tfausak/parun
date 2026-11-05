@@ -68,9 +68,6 @@
           "object": "$jackal",
           "targets": [
             "$troll"
-          ],
-          "mana": [
-            null
           ]
         }
       }

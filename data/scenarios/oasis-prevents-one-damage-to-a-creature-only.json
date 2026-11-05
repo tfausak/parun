@@ -105,9 +105,6 @@
     {
       "do": {
         "Activate": {
-          "mana": [
-            null
-          ],
           "object": "$oasis",
           "targets": [
             "$giant"

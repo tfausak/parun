@@ -157,9 +157,6 @@
           "object": "$b-sorc",
           "targets": [
             "$bob"
-          ],
-          "mana": [
-            null
           ]
         }
       }
@@ -215,9 +212,6 @@
           "object": "$a-sorc",
           "targets": [
             "$alice"
-          ],
-          "mana": [
-            null
           ]
         }
       }

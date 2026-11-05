@@ -187,10 +187,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "Flametongue Kavu",
-          "mana": [
-            null
-          ]
+          "object": "Flametongue Kavu"
         }
       }
     },

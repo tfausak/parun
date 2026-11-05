@@ -102,9 +102,6 @@
     {
       "do": {
         "Cast": {
-          "mana": [
-            null
-          ],
           "object": "$o1"
         }
       },

@@ -158,17 +158,6 @@
     },
     {
       "turn": 3,
-      "step": "Upkeep",
-      "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "ChooseExtraManaSource",
-          "with": null
-        }
-      }
-    },
-    {
-      "turn": 3,
       "step": "DrawStep",
       "player": "alice",
       "check": {

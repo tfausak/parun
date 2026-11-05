@@ -100,10 +100,7 @@
       "do": {
         "Activate": {
           "ability": 0,
-          "object": "$hb",
-          "mana": [
-            null
-          ]
+          "object": "$hb"
         }
       },
       "player": "alice",

@@ -57,9 +57,6 @@
           "ability": 0,
           "targets": [
             "$drudge-skeletons"
-          ],
-          "mana": [
-            null
           ]
         }
       }

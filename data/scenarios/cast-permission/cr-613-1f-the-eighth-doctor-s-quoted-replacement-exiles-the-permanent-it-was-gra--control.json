@@ -86,10 +86,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "$held",
-          "mana": [
-            null
-          ]
+          "object": "$held"
         }
       }
     },

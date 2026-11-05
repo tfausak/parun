@@ -227,32 +227,10 @@
       "player": "alice",
       "do": {
         "Answer": {
-          "prompt": "ChooseExtraManaSource",
-          "with": null
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "Answer": {
           "prompt": "OfferedCast",
           "with": {
             "type": "Exercises"
           }
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "ChooseExtraManaSource",
-          "with": null
         }
       }
     },

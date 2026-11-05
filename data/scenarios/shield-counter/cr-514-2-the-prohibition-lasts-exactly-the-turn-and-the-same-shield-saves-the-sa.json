@@ -51,7 +51,7 @@
     "step": "PrecombatMain"
   },
   "timeline": [
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$jackal", "targets": ["$troll"], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$jackal", "targets": ["$troll"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 2, "step": "Upkeep", "player": "bob", "do": {"Activate": {"object": "$troll", "mana": ["$b-mountain"]}}},
     {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},

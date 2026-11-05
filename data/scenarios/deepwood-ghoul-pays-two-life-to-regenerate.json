@@ -58,10 +58,7 @@
       "player": "alice",
       "do": {
         "Activate": {
-          "object": "$ghoul",
-          "mana": [
-            null
-          ]
+          "object": "$ghoul"
         }
       }
     },

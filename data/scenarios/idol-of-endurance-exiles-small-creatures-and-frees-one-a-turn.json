@@ -320,10 +320,7 @@
     {
       "do": {
         "Cast": {
-          "object": "Grizzly Bears#2",
-          "mana": [
-            null
-          ]
+          "object": "Grizzly Bears#2"
         }
       },
       "player": "alice",

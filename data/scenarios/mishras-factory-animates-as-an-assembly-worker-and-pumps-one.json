@@ -184,9 +184,6 @@
       "do": {
         "Activate": {
           "ability": 2,
-          "mana": [
-            null
-          ],
           "object": "$b",
           "targets": [
             "$a"

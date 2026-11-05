@@ -201,17 +201,6 @@
     },
     {
       "turn": 3,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "ChooseExtraManaSource",
-          "with": null
-        }
-      }
-    },
-    {
-      "turn": 3,
       "step": "BeginningOfCombat",
       "player": "alice",
       "check": {
@@ -243,17 +232,6 @@
           "target": [
             "$bob"
           ]
-        }
-      }
-    },
-    {
-      "turn": 5,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "ChooseExtraManaSource",
-          "with": null
         }
       }
     },

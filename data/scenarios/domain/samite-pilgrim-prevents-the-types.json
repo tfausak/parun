@@ -65,9 +65,6 @@
           "object": "$pilgrim",
           "targets": [
             "$giant"
-          ],
-          "mana": [
-            null
           ]
         }
       }

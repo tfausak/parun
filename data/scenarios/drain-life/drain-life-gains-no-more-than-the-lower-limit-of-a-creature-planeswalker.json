@@ -85,9 +85,6 @@
     {
       "do": {
         "Activate": {
-          "mana": [
-            null
-          ],
           "object": "$coating",
           "targets": [
             "$chandra"

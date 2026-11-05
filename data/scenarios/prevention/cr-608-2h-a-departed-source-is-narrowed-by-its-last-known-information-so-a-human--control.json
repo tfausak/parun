@@ -55,9 +55,6 @@
           "targets": [
             "$alice"
           ],
-          "mana": [
-            null
-          ],
           "costOrder": [
             0,
             1

@@ -144,10 +144,7 @@
         "Activate": {
           "object": "$viv",
           "ability": 0,
-          "targets": [],
-          "mana": [
-            null
-          ]
+          "targets": []
         }
       }
     },
@@ -260,10 +257,7 @@
             "victim": [
               "$giant"
             ]
-          },
-          "mana": [
-            null
-          ]
+          }
         }
       }
     },
@@ -328,10 +322,7 @@
             "victim": [
               "$wurm"
             ]
-          },
-          "mana": [
-            null
-          ]
+          }
         }
       }
     },
@@ -377,10 +368,7 @@
       "do": {
         "Activate": {
           "object": "$viv",
-          "ability": 2,
-          "mana": [
-            null
-          ]
+          "ability": 2
         }
       }
     },

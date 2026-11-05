@@ -100,9 +100,6 @@
           "ability": 0,
           "targets": [
             "$sculptor"
-          ],
-          "mana": [
-            null
           ]
         }
       }

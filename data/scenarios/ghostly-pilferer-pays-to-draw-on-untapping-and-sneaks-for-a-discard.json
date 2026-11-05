@@ -130,10 +130,7 @@
       "do": {
         "Activate": {
           "object": "$gp",
-          "ability": 0,
-          "mana": [
-            null
-          ]
+          "ability": 0
         }
       },
       "player": "alice",

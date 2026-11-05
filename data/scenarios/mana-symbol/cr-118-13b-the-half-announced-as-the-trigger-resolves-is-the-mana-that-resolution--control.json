@@ -57,10 +57,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "$boost",
-          "mana": [
-            null
-          ]
+          "object": "$boost"
         }
       }
     },

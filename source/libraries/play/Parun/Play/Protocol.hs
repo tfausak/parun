@@ -139,6 +139,7 @@ offerOf gs prompt = case prompt of
   Prompt.ChooseManaSource _ payer cost sources ->
     fields [("payer", Reply.encode Reply.player namer payer), ("cost", Reply.encode (Reply.viaCodec Codec.ManaCost.codec) namer cost), ("sources", manaSources gs sources)]
   Prompt.ChooseExtraManaSource _ _ sources -> fields [("sources", manaSources gs sources)]
+  Prompt.PayLifeForMana _ _ life mana -> fields [("life", natural life), ("mana", Reply.encode (Reply.viaCodec Codec.ManaType.codec) namer mana)]
   Prompt.ChooseManaYield _ _ source options -> fields [("source", object source), ("yields", Reply.encode (Reply.list (Reply.list (Reply.viaCodec Codec.ManaType.codec))) namer (fmap (fmap ManaUnit.manaType . Mana.yieldUnits) (Foldable.toList options)))]
   Prompt.ChooseX _ _ source variable least greatest -> fields [("source", object source), ("variable", Reply.encode (Reply.viaCodec Codec.SlotName.codec) namer variable), ("least", natural least), ("greatest", natural greatest)]
   Prompt.ChooseOptional _ _ source _ _ _ -> fields [("source", object source)]
@@ -178,6 +179,7 @@ actionOffer gs action = fields (("action", R.Text (Text.pack kind)) : rest)
       Action.Suspend oid -> ("Suspend", on oid)
       Action.PutCompanionIntoHand -> ("PutCompanionIntoHand", [])
       Action.EndEffect oid _ -> ("EndEffect", on oid)
+      Action.PayLifeForMana life mana -> ("PayLifeForMana", [("life", natural life), ("mana", Reply.encode (Reply.viaCodec Codec.ManaType.codec) namer mana)])
       Action.RollPlanarDie -> ("RollPlanarDie", [])
     on oid = [("object", object oid)]
     named name = [("name", R.Text (CardName.unwrap name))]

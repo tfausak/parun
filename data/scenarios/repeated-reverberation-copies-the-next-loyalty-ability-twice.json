@@ -146,9 +146,6 @@
       "do": {
         "Activate": {
           "ability": 0,
-          "mana": [
-            null
-          ],
           "object": "$pyro",
           "targets": [
             "$bob"
@@ -193,9 +190,6 @@
       "do": {
         "Activate": {
           "ability": 0,
-          "mana": [
-            null
-          ],
           "object": "$chandra",
           "targets": [
             "$bob"

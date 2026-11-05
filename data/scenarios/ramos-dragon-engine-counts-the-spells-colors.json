@@ -131,10 +131,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "$mem",
-          "mana": [
-            null
-          ]
+          "object": "$mem"
         }
       }
     },

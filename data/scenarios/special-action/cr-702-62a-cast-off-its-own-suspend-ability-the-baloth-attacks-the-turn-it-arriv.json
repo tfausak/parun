@@ -97,17 +97,6 @@
     },
     {
       "turn": 2,
-      "step": "Upkeep",
-      "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "ChooseExtraManaSource",
-          "with": null
-        }
-      }
-    },
-    {
-      "turn": 2,
       "step": "DeclareAttackers",
       "player": "alice",
       "do": {

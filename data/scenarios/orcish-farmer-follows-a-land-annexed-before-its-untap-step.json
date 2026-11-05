@@ -90,9 +90,6 @@
     {
       "do": {
         "Activate": {
-          "mana": [
-            null
-          ],
           "object": "$farmer",
           "targets": [
             "$forest"

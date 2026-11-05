@@ -283,9 +283,6 @@
     {
       "do": {
         "Activate": {
-          "mana": [
-            null
-          ],
           "object": "$sorc",
           "targets": [
             "$bob"

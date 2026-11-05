@@ -82,10 +82,7 @@
       "player": "alice",
       "do": {
         "Activate": {
-          "object": "$izoni",
-          "mana": [
-            null
-          ]
+          "object": "$izoni"
         }
       }
     },

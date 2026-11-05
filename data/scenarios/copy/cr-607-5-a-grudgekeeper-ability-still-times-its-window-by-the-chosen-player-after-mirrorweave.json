@@ -41,7 +41,7 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePlayer", "with": "carol" } } },
     { "turn": 2, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": [] } },
-    { "turn": 4, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Synthetic Grudgekeeper", "mana": [null] } } },
+    { "turn": 4, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Synthetic Grudgekeeper" } } },
     { "turn": 4, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["ability of Synthetic Grudgekeeper"] } } },
     { "turn": 4, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$mirrorweave", "targets": ["$giant"], "mana": ["$i1", "$i2", "$i3", "$i4"] } } },
     { "turn": 4, "step": "PrecombatMain", "player": "alice", "do": "Pass" },

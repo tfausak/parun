@@ -49,9 +49,6 @@
           "object": "$sorcerer",
           "targets": [
             "$giant"
-          ],
-          "mana": [
-            null
           ]
         }
       }

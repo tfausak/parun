@@ -39,7 +39,7 @@
     "step": "PrecombatMain"
   },
   "timeline": [
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 0, "mana": [null], "targets": ["$cauldron"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 0, "targets": ["$cauldron"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Ice Cauldron", "count": 1 } } },
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 1, "mana": ["$forest"], "x": 1 } } },
@@ -47,7 +47,7 @@
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseOptional", "with": { "type": "Exercises" } } } },
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardInHand", "with": "$bears" } } },
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Balduvian Bears", "count": 1 } } },
-    { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 0, "mana": [null], "targets": ["$ornithopter"] } } },
+    { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 0, "targets": ["$ornithopter"] } } },
     { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 5, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Ornithopter", "count": 1 } } },
     { "turn": 7, "step": "PrecombatMain", "player": "alice", "do": { "Take": { "action": "ActivateManaAbility $welder", "costOrder": [0, 1] } } },

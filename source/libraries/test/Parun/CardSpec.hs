@@ -4934,6 +4934,7 @@ playerEffectFilters playerEffect = case playerEffect of
   -- this traversal is about the spells a player effect names.
   PlayerEffect.DontLoseUnspentMana _ -> []
   PlayerEffect.LoseLifeForUnspentMana -> []
+  PlayerEffect.MayPayLifeForMana {} -> []
   -- CR 609.4b's ManaFilter and set of types name MANA, for the same reason; its
   -- `casting` names spells.
   PlayerEffect.SpendManaAsThough clause -> Maybe.maybeToList (SpendManaAsThough.casting clause)

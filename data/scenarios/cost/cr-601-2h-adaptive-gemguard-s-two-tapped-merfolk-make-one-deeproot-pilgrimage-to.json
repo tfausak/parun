@@ -59,10 +59,7 @@
       "do": {
         "Activate": {
           "object": "$adaptive-gemguard",
-          "ability": 0,
-          "mana": [
-            null
-          ]
+          "ability": 0
         }
       }
     }

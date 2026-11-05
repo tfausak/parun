@@ -3,7 +3,7 @@
   "note": "Alice makes bob's green Grizzly Bears red, untaps the Lens with Twiddle and makes his red Hill Giant white. A colour read live off the Lens would turn the Bears white too. Both are their printed colours again on bob's turn.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "hand": [{"card": "Twiddle", "label": "twiddle"}], "battlefield": [{"card": "Distorting Lens", "label": "lens"}, {"card": "Island", "label": "i1"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$lens", "targets": ["$bears"], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$lens", "targets": ["$bears"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseColor", "with": {"type": "Red"}}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Colors", "object": "$bears", "is": ["Red"]}}},

@@ -68,9 +68,6 @@
     {
       "do": {
         "Activate": {
-          "mana": [
-            null
-          ],
           "object": "$sorcerer",
           "targets": [
             "$istvan"
@@ -101,9 +98,6 @@
     {
       "do": {
         "Activate": {
-          "mana": [
-            null
-          ],
           "object": "$fanatic",
           "targets": [
             "$istvan"

@@ -94,9 +94,6 @@
     {
       "do": {
         "Activate": {
-          "mana": [
-            null
-          ],
           "object": "$liege",
           "targets": [
             "$theirs"

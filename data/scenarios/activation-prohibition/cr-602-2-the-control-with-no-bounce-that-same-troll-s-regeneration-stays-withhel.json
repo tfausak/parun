@@ -73,9 +73,6 @@
           "ability": 0,
           "targets": [
             "$uthden-troll"
-          ],
-          "mana": [
-            null
           ]
         }
       }

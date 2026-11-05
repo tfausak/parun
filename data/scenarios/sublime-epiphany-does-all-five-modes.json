@@ -190,9 +190,6 @@
           "object": "$pinger",
           "targets": [
             "$alice"
-          ],
-          "mana": [
-            null
           ]
         }
       },

@@ -94,9 +94,6 @@
           "ability": null,
           "targets": [
             "$mammoth"
-          ],
-          "mana": [
-            null
           ]
         }
       }
@@ -263,9 +260,6 @@
           "ability": null,
           "targets": [
             "$mammoth"
-          ],
-          "mana": [
-            null
           ]
         }
       }

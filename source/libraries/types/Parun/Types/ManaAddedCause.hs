@@ -12,4 +12,6 @@ data ManaAddedCause
   | -- | A spell or an ability resolving in the ordinary way, which is the road
     -- Parun.Engine.Resolve.Arms.Damage's AddMana arm takes (CR 608.2).
     Resolution
+  | -- | CR 116.2c's special action, Parun.Engine.Cost.payLifeForMana's road.
+    SpecialAction
   deriving (Bounded, Enum, Eq, Ord, Show)

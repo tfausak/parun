@@ -64,10 +64,7 @@
       "do": {
         "Activate": {
           "object": "$liliana-untouched-by-death",
-          "ability": 0,
-          "mana": [
-            null
-          ]
+          "ability": 0
         }
       }
     }

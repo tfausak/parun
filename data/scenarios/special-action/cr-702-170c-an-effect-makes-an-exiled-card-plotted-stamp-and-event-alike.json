@@ -269,10 +269,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "Aloe Alchemist",
-          "mana": [
-            null
-          ]
+          "object": "Aloe Alchemist"
         }
       }
     },

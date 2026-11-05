@@ -137,9 +137,6 @@
           "ability": 0,
           "targets": [
             "$roaring-furnace"
-          ],
-          "mana": [
-            null
           ]
         }
       }

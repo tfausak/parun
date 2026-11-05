@@ -128,9 +128,6 @@
     {
       "do": {
         "Activate": {
-          "mana": [
-            null
-          ],
           "object": "$inc"
         }
       },

@@ -26,7 +26,7 @@
   "timeline": [
     { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$bears", "$rhino"] } },
     { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Block": { "$elves": ["$rhino"] } } },
-    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Activate": { "object": "$guard", "ability": 0, "mana": [null] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Activate": { "object": "$guard", "ability": 0 } } },
     { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "CombatDamage", "player": "bob", "source": "$rhino", "do": { "AssignDamage": { "$elves": 1, "$alice": 3 } } },
     { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Life": { "player": "alice", "life": 17 } } },

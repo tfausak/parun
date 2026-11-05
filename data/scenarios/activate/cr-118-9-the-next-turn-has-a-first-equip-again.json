@@ -108,9 +108,6 @@
       "do": {
         "Activate": {
           "cost": [],
-          "mana": [
-            null
-          ],
           "object": "$aegis",
           "targets": [
             "$mammoth"
@@ -250,9 +247,6 @@
       "do": {
         "Activate": {
           "cost": [],
-          "mana": [
-            null
-          ],
           "object": "$splitter",
           "targets": [
             "$kili"

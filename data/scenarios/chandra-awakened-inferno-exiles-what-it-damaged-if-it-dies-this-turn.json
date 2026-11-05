@@ -124,9 +124,6 @@
       "do": {
         "Activate": {
           "ability": 2,
-          "mana": [
-            null
-          ],
           "object": "$chandra",
           "targets": [
             "$bears"
@@ -173,9 +170,6 @@
       "do": {
         "Activate": {
           "ability": 2,
-          "mana": [
-            null
-          ],
           "object": "$chandra",
           "targets": [
             "$giant"

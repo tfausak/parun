@@ -116,9 +116,6 @@
           "ability": 0,
           "targets": [
             "$bears"
-          ],
-          "mana": [
-            null
           ]
         }
       }

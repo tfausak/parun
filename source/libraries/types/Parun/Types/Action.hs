@@ -1,5 +1,6 @@
 module Parun.Types.Action where
 
+import qualified Numeric.Natural as Natural
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.Card as Card
@@ -8,12 +9,13 @@ import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.TurnUpProcedure as TurnUpProcedure
 
 -- | What a player with priority may do. The SPECIAL actions CR 116.2 lists that
 -- are here are CR 116.2a's land play, CR 116.2b's turning a face-down permanent
--- face up, CR 116.2c's paying to end a continuous effect, CR 116.2d's ignoring a
+-- face up, CR 116.2c's paying to end a continuous effect and paying life for mana, CR 116.2d's ignoring a
 -- static ability's effect, CR 116.2e's Circling Vultures discard, CR 116.2h's
 -- foretell, CR 116.2f's suspend, CR 116.2i's planar die, CR 116.2j's
 -- conspiracy, CR 116.2k's plot and CR 116.2m's unlock cost. Grows.
@@ -223,6 +225,9 @@ data Action
     -- spell's controller -- answered by Parun.Engine.EndEffect.canEnd off the
     -- seat baked into the stored effect.
     EndEffect ObjectId.ObjectId ObjectId.ObjectId
+  | -- | CR 116.2c / 605.3a / Channel: pay this much life to add one mana of this
+    -- type, at priority; Prompt.PayLifeForMana is the same action inside a payment.
+    PayLifeForMana Natural.Natural ManaType.ManaType
   | -- | CR 116.2i / 901.9: roll the planar die, costing {1} for each time this
     -- player has taken this action this turn.
     RollPlanarDie

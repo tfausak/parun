@@ -233,9 +233,6 @@
       "do": {
         "Activate": {
           "ability": 0,
-          "mana": [
-            null
-          ],
           "object": "$sorcerer",
           "targets": [
             "$bob"

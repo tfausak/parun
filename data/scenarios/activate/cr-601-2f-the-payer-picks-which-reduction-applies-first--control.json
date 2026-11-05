@@ -118,10 +118,7 @@
       "do": {
         "Activate": {
           "object": "$foundry",
-          "ability": 1,
-          "mana": [
-            null
-          ]
+          "ability": 1
         }
       }
     },

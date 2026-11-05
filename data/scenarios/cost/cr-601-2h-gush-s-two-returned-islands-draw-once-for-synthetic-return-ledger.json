@@ -54,10 +54,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "$gush",
-          "mana": [
-            null
-          ]
+          "object": "$gush"
         }
       }
     },

@@ -86,10 +86,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "$buried",
-          "mana": [
-            null
-          ]
+          "object": "$buried"
         }
       }
     },

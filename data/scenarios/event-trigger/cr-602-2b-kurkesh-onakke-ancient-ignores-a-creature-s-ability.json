@@ -54,9 +54,6 @@
           "ability": 0,
           "targets": [
             "$bob"
-          ],
-          "mana": [
-            null
           ]
         }
       }

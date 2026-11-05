@@ -44,11 +44,11 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crawler", "ability": 0, "mana": ["$island-4", "$island-5", "$island-6", null], "targets": ["$grizzly"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Grizzly Bears", "count": 1 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crawler", "ability": 1, "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crawler", "ability": 1 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseOptional", "with": { "type": "Exercises" } } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Balduvian Bears", "count": 1 } } },
-    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crawler", "ability": 2, "mana": [null] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crawler", "ability": 2 } } },
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Cast Balduvian Bears", "ActivateManaAbility $island", "ActivateManaAbility $island-2", "ActivateManaAbility $island-3", "ActivateManaAbility $island-4", "ActivateManaAbility $island-5", "ActivateManaAbility $island-6", "ActivateManaAbility $forest"] } } }
   ]

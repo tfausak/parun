@@ -92,9 +92,6 @@
       "do": {
         "Activate": {
           "object": "$z",
-          "mana": [
-            null
-          ],
           "targets": [
             "$gz"
           ]

@@ -70,9 +70,6 @@
           "ability": 0,
           "targets": [
             "$piker"
-          ],
-          "mana": [
-            null
           ]
         }
       }

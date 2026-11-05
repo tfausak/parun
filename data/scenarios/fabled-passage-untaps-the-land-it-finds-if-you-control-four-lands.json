@@ -112,9 +112,6 @@
             0,
             1
           ],
-          "mana": [
-            null
-          ],
           "object": "$fp1"
         }
       },
@@ -195,9 +192,6 @@
           "costOrder": [
             0,
             1
-          ],
-          "mana": [
-            null
           ],
           "object": "$fp2"
         }

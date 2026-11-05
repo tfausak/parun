@@ -172,10 +172,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "Djinn of Fool's Fall",
-          "mana": [
-            null
-          ]
+          "object": "Djinn of Fool's Fall"
         }
       }
     },

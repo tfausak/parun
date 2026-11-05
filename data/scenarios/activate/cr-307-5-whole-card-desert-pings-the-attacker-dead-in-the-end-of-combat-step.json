@@ -45,9 +45,6 @@
           "object": "$desert",
           "targets": [
             "$goblin-piker"
-          ],
-          "mana": [
-            null
           ]
         }
       }

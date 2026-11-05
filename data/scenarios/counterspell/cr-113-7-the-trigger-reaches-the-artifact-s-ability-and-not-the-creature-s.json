@@ -74,9 +74,6 @@
           "object": "$sorcerer",
           "targets": [
             "$alice"
-          ],
-          "mana": [
-            null
           ]
         }
       }

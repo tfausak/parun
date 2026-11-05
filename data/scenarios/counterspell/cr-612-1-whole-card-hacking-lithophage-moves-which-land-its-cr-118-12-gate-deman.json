@@ -135,10 +135,7 @@
         "ChooseToPay": {
           "decision": {
             "type": "Pays"
-          },
-          "mana": [
-            null
-          ]
+          }
         }
       },
       "source": "$litho"

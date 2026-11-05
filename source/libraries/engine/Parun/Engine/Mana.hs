@@ -1201,6 +1201,22 @@ productionTagsGiven pcs oid gs =
 unitsOf :: Mana -> [ManaUnit]
 unitsOf (Mana.MkMana units) = units
 
+-- CR 116.2c: one mana Channel's special action adds. CR 106.3 makes Channel its
+-- source (ManaAdded.source); Channel is not snow and has chosen and exiled
+-- nothing, so ManaUnit's facts about a source are all empty.
+lifeForManaUnit :: ManaType -> ManaUnit
+lifeForManaUnit manaType =
+  ManaUnit.MkManaUnit
+    { ManaUnit.manaType = manaType,
+      ManaUnit.tags = Set.empty,
+      ManaUnit.retention = ManaRetention.Ordinary,
+      ManaUnit.restriction = Nothing,
+      ManaUnit.rider = Nothing,
+      ManaUnit.spendTrigger = Nothing,
+      ManaUnit.sourceChoices = Nothing,
+      ManaUnit.sourceLastExiled = Nothing
+    }
+
 -- The types in one yield, in printed order.
 typesOf :: Mana -> [ManaType]
 typesOf = fmap ManaUnit.manaType . unitsOf
@@ -3122,7 +3138,21 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
       needsOf (demands, _, _) = Map.fromListWith (+) [(manaType, 1 :: Natural) | demand <- demands, demand /= anyTypeDemand, manaType <- Set.toList (demandTypes demand)]
       mostOf ways = List.foldl' (Map.unionWith max) Map.empty (fmap needsOf ways)
       typedNeeds = Map.unionsWith (+) (mostOf costResolutions : [fmap (* times) (mostOf ways) | (times, ways) <- eatingResolutions])
-      options = concat (zipWith (\oid supplies -> fmap (fmap ((,) oid)) (sourceOptions clauses (admitting . producedDuring subject) (Claim.contends contested) demandBound typedNeeds supplies)) sources suppliesPer)
+      -- CR 116.2c: Channel's life for mana is one more group, with no activation
+      -- behind it: taken k times it adds k mana and pays k times its price, which
+      -- CR 119.4's clause below holds against the rest of the board. Never more
+      -- often than the board could spend. Its options are mana-FREE, so the object
+      -- beside them names no payment. This takeWhile only prunes: `affordable`
+      -- below holds every board to the same floor. Together they end
+      -- Cost.greatestPayableX's climb, demandBound growing with X, so lifting
+      -- both loops it; lifting one takeWhile changes nothing.
+      lifeForManaOptions =
+        [ [ (oid, MkSourceOption {optionSupplies = List.genericReplicate k (rewriteSupply clauses (supplyOf admitting (lifeForManaUnit mana))), optionDemands = [], optionClaims = [], optionLife = k * life, optionEnergy = 0, optionDoublings = []})
+          | k <- takeWhile (Event.lifePayable pid gs . (* life)) [0 .. demandBound]
+          ]
+        | (oid, life, mana) <- PlayerEffect.lifeForMana pid gs
+        ]
+      options = lifeForManaOptions <> concat (zipWith (\oid supplies -> fmap (fmap ((,) oid)) (sourceOptions clauses (admitting . producedDuring subject) (Claim.contends contested) demandBound typedNeeds supplies)) sources suppliesPer)
       -- One option taken from each group, appended to the pool: `sequenceA` over
       -- the list applicative is that product, and it is [[]] -- one board, the
       -- pool alone -- when the player controls no source at all. Each board

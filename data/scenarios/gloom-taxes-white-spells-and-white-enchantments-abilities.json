@@ -143,9 +143,6 @@
           "object": "$healer",
           "targets": [
             "$bob"
-          ],
-          "mana": [
-            null
           ]
         }
       }
@@ -162,10 +159,7 @@
       "player": "bob",
       "do": {
         "Activate": {
-          "object": "$storm",
-          "mana": [
-            null
-          ]
+          "object": "$storm"
         }
       }
     },

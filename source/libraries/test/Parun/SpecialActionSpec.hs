@@ -170,6 +170,7 @@ isPlay action = case action of
   Action.Type.RollPlanarDie -> False
   Action.Type.Ignore _ _ -> False
   Action.Type.EndEffect {} -> False
+  Action.Type.PayLifeForMana _ _ -> False
   Action.Type.ActivateManaAbility _ -> False
 
 -- Take the named action the first time it is offered and pass ever after,
@@ -264,6 +265,7 @@ playing wanted action = case action of
   Action.Type.RollPlanarDie -> False
   Action.Type.Ignore _ _ -> False
   Action.Type.EndEffect {} -> False
+  Action.Type.PayLifeForMana _ _ -> False
   Action.Type.ActivateManaAbility _ -> False
 
 -- Is this the offer to cast THAT card face up?
@@ -284,6 +286,7 @@ casting wanted action = case action of
   Action.Type.RollPlanarDie -> False
   Action.Type.Ignore _ _ -> False
   Action.Type.EndEffect {} -> False
+  Action.Type.PayLifeForMana _ _ -> False
   Action.Type.ActivateManaAbility _ -> False
 
 -- Pays CR 116.2d's cost by sacrificing the NAMED permanent, and answers every
@@ -2115,6 +2118,7 @@ activating wanted action = case action of
   Action.Type.RollPlanarDie -> False
   Action.Type.Ignore _ _ -> False
   Action.Type.EndEffect {} -> False
+  Action.Type.PayLifeForMana _ _ -> False
   Action.Type.ActivateManaAbility _ -> False
 
 -- Volrath's Curse under BOB's control, on a Teardrop Kami ALICE controls, on a
