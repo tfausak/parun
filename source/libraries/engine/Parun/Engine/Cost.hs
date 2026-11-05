@@ -4988,6 +4988,13 @@ paySubstituting refuses perform began earlier moment subject announced spending 
 paySubstitutingReading :: (GameState -> Bool) -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> [ManaWindow.ManaWindow] -> PaymentMoment.PaymentMoment -> PaymentSubject.PaymentSubject -> Maybe ObjectId -> ManaSpending.ManaSpending -> PlayerId -> ObjectId -> (Cost Keyword.Type.Keyword -> Game (Cost Keyword.Type.Keyword, [(Keyword.Substitute, Natural)])) -> Cost Keyword.Type.Keyword -> Game (Payment.Payment, Map.Map SlotName.SlotName Binding.Type.Binding)
 paySubstitutingReading refuses slots perform began earlier moment subject announced spending pid oid substituting cost = Monad.join (paySubstitutingReadingThen refuses slots perform began earlier moment subject announced spending pid oid substituting cost)
 
+-- CR 118.5: no symbol, or only {0}s, asks for no mana, so no window opens
+-- (docs/decisions.md, "Whether a total cost of {0} opens a mana window"). The
+-- {0}s are a gate's (`Clash of Wills` at X of 0) and a toll's (Collective Restraint
+-- with no basic land type); a cast's or an activation's total drops the symbol.
+requiresNoMana :: ManaCost.ManaCost -> Bool
+requiresNoMana = all (== ManaSymbol.Generic 0) . ManaCost.unwrap
+
 -- `paySubstitutingReading` with its mana window's activations run and the rest
 -- of the payment handed back unrun (`payManaWindowThen`): what
 -- Parun.Engine.Resolve.Effect.payGatePaid needs to run every payer's window
@@ -5011,7 +5018,7 @@ paySubstitutingReadingThen refuses slots perform began earlier moment subject an
       -- (docs/decisions.md, "Whether a total cost of {0} opens a mana window").
       entry <- State.get
       settle <-
-        if all (== ManaSymbol.Generic 0) (ManaCost.unwrap manaCost)
+        if requiresNoMana manaCost
           then pure (fmap (\(_, extra) -> (True, extra, ManaWindow.MkManaWindow {ManaWindow.payer = pid, ManaWindow.activated = [], ManaWindow.segments = [], ManaWindow.spent = [], ManaWindow.opened = entry, ManaWindow.closed = entry, ManaWindow.unreversible = False})) (announceMana manaCost))
           else payManaWindowThen perform Set.empty announced subject spending pid announceMana manaCost
       pure $ do
@@ -5119,7 +5126,7 @@ payToll perform began earlier pid charges =
       announced <- announceToll pid charges
       let pooled = ManaCost.MkManaCost (concatMap (foldMap ManaCost.unwrap . Cost.mana . snd) announced)
       (paidMana, windows) <-
-        if null (ManaCost.unwrap pooled)
+        if requiresNoMana pooled
           then pure (True, [])
           -- No subject (ForNeither), so mana a CR 106.6 permission restricts
           -- cannot pay a combat toll and mana a prohibition restricts can

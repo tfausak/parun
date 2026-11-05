@@ -1,29 +1,8 @@
 {
-  "description": "CR 601.2g / 118.9 a cast without paying its mana cost opens no window, so Channel is not asked",
-  "note": "The negative of the pair: channel-asks-for-the-same-cast-at-its-full-price differs from this one in Omniscience alone. A prompt for the life or a land would fail the scenario with no entry to answer it.",
   "board": {
     "active": "alice",
-    "step": "PrecombatMain",
     "seats": [
       {
-        "name": "alice",
-        "library": [
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          }
-        ],
         "battlefield": [
           {
             "card": "Omniscience"
@@ -62,10 +41,7 @@
             "card": "Juggernaut",
             "label": "jugg"
           }
-        ]
-      },
-      {
-        "name": "bob",
+        ],
         "library": [
           {
             "card": "Island"
@@ -82,18 +58,38 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
       }
-    ]
+    ],
+    "step": "PrecombatMain"
   },
+  "description": "CR 601.2g / 118.9 a cast without paying its mana cost opens no window, so Channel is not asked",
+  "note": "The negative of the pair: channel-asks-for-the-same-cast-at-its-full-price differs from this one in Omniscience, the `cost` keys choosing its free cast and the prompts that cast never asks. A prompt for the life or a land would fail the scenario with no entry to answer it.",
   "timeline": [
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Cast": {
-          "object": "$channel",
           "cost": [
             {
               "type": "OfType",
@@ -118,62 +114,66 @@
             "$f1",
             "$f2",
             null
-          ]
+          ],
+          "object": "$channel"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Cast": {
-          "object": "$jugg",
-          "cost": []
+          "cost": [],
+          "object": "$jugg"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "View": {
-          "of": "Stack",
           "is": [
             "Juggernaut"
-          ]
+          ],
+          "of": "Stack"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Life": {
-          "player": "alice",
-          "life": 20
+          "life": 20,
+          "player": "alice"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "View": {
+          "is": [],
           "of": "ManaPool",
-          "player": "alice",
-          "is": []
+          "player": "alice"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     }
   ]
 }

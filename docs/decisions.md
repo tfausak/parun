@@ -1404,12 +1404,17 @@ Entries are ordered by the first rule each cites.
   "requires no resources" and is still paid by acknowledging it. A cast with no
   mana cost to pay at all (CR 118.9) has no mana payment, forced.
 - **Decision**: No window. A cost requiring no mana asks for no mana payment.
-  Covers a printed {0}, a reduction to it, and X announced as 0.
+  Covers a printed {0}, a reduction to it, an alternative cost of {0}, X
+  announced as 0, and Phyrexian symbols all announced as life (Mutagenic Growth).
 - **Rejected**: A window at {0}, reading "mana component" as a mana payment of
   nothing. It splits a printed {0} from a free cast, which `Cost.mana` does not
-  (`data/cards/ornithopter.json`'s cost is empty), and `Cost.payActivation` and
-  `Cost.payToll` already skip it.
-- **Site**: `Cost.paySubstitutingReadingThen`, proved by the scenarios
+  (`data/cards/ornithopter.json`'s cost is empty), and from a combat toll of {0},
+  where CR 508.1i's and CR 509.1e's "If any of the costs require mana" forces no
+  window.
+- **Site**: `Cost.requiresNoMana`, read by `Cost.paySubstitutingReadingThen` and
+  `Cost.payToll`, proved by the scenarios
   channel/channel-asks-nothing-of-a-free-cast,
-  channel/channel-asks-nothing-when-x-is-zero and
-  channel/channel-asks-nothing-of-a-gate-of-zero.
+  channel/channel-asks-nothing-when-x-is-zero,
+  channel/channel-asks-nothing-of-a-gate-of-zero,
+  channel/channel-asks-nothing-of-phyrexian-mana-paid-in-life and, for the toll,
+  channel/channel-asks-nothing-of-a-toll-of-zero.
