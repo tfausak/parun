@@ -2219,7 +2219,7 @@ representativeEvents cond =
         TriggerCondition.PlayerLosesGame _ -> one (GameEvent.LostTheGame S.bob)
         TriggerCondition.PlacesSticker _ -> one (GameEvent.StickerPut StickerPut.MkStickerPut {StickerPut.placer = S.bob, StickerPut.object = departed, StickerPut.kind = StickerKind.Art})
         -- CR 305.1's own event: a land play binds nothing.
-        TriggerCondition.PlayerPlaysLand p -> one (GameEvent.LandPlayed (LandPlayed.MkLandPlayed S.bob departed (PlaysLand.from p)))
+        TriggerCondition.PlayerPlaysLand p -> one (GameEvent.LandPlayed (LandPlayed.MkLandPlayed S.bob departed (Maybe.fromMaybe Zone.Hand (PlaysLand.from p))))
         -- TWO: CR 701.62b's manifest dread that binned nothing, and one that
         -- binned a card, which is what parts the floor from the ceiling.
         TriggerCondition.PlayerManifestsDread _ ->
@@ -2529,7 +2529,9 @@ everyTriggerCondition =
     -- PlayerBecomesMonarch pair's reasoning.
     TriggerCondition.PlayerLosesGame PlayerRelation.AnyPlayer,
     TriggerCondition.PlayerLosesGame PlayerRelation.Opponent,
-    TriggerCondition.PlayerPlaysLand (PlaysLand.MkPlaysLand PlayerRelation.You Zone.Exile (Filter.Type.And [])),
+    TriggerCondition.PlayerPlaysLand (PlaysLand.MkPlaysLand PlayerRelation.You (Just Zone.Exile) (Filter.Type.And [])),
+    -- Fastbond's play from any zone.
+    TriggerCondition.PlayerPlaysLand (PlaysLand.MkPlaysLand PlayerRelation.You Nothing (Filter.Type.And [])),
     TriggerCondition.PlayerManifestsDread PlayerRelation.You,
     TriggerCondition.PlayerManifestsDread PlayerRelation.Opponent,
     TriggerCondition.PlayerRollsResult DieResult.MkDieResult {DieResult.roller = PlayerRelation.You, DieResult.result = 6},

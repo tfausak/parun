@@ -16,6 +16,7 @@ import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.TurnTally as TurnTally
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.AlternativeCost" $ do
@@ -42,7 +43,7 @@ spec s = Spec.describe s "Parun.Codec.AlternativeCost" $ do
             Just
               ( Condition.Compares
                   ( Compares.MkCompares
-                      (Quantity.CardsDiscardedThisTurn (PlayerRef.Relative PlayerRelation.You))
+                      (Quantity.TalliedThisTurn TurnTally.CardsDiscarded (PlayerRef.Relative PlayerRelation.You))
                       Comparison.AtLeast
                       (Quantity.Literal 1)
                   )

@@ -10,7 +10,8 @@ import qualified Parun.Types.Zone as Zone
 -- Fires of Mount Doom's "when you play a card this way".
 data PlaysLand = MkPlaysLand
   { player :: PlayerRelation.PlayerRelation,
-    from :: Zone.Zone,
+    -- | Nothing for a play from any zone -- Fastbond's "whenever you play a land".
+    from :: Maybe Zone.Zone,
     -- | Read against the land as it arrived (CR 400.7i).
     filter :: Filter.Filter Keyword.Keyword
   }

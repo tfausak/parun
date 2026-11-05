@@ -687,7 +687,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerPlaysLand (PlaysLand.MkPlaysLand PlayerRelation.You Zone.Exile (Filter.And [])))
+      (TriggerCondition.PlayerPlaysLand (PlaysLand.MkPlaysLand PlayerRelation.You (Just Zone.Exile) (Filter.And [])))
       " {\"type\":\"PlayerPlaysLand\",\"value\":{\"player\":{\"type\":\"You\"},\"from\":{\"type\":\"Exile\"},\"filter\":{\"type\":\"And\",\"value\":[]}}} "
   -- CR 603.9. Withengar Unbound's "a player" and Share the Spoils' "an
   -- opponent".

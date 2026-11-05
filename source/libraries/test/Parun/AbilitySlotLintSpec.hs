@@ -155,6 +155,7 @@ import qualified Parun.Types.TopOfLibrary as TopOfLibrary
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnScope as TurnScope
+import qualified Parun.Types.TurnTally as TurnTally
 import qualified Parun.Types.WhenSpent as WhenSpent
 import qualified Parun.Types.WhichTurn as WhichTurn
 import qualified Parun.Types.Zone as Zone
@@ -1133,7 +1134,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
   Spec.it s "the lint itself catches a slot read only from inside a number" $ do
     let drawsTally ref =
           Mode.MkMode
-            (Seq.singleton (Mint.mandatory (Seq.singleton (Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (Quantity.Type.CardsDiscardedThisTurn ref) Nothing)))))
+            (Seq.singleton (Mint.mandatory (Seq.singleton (Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (Quantity.Type.TalliedThisTurn TurnTally.CardsDiscarded ref) Nothing)))))
             Map.empty
     Spec.assertBool
       s

@@ -942,6 +942,7 @@ false-cure
 false-peace
 familiar-ground
 fanatic-of-mogis
+fastbond
 fatal-blow
 fatal-lore
 fate-transfer
