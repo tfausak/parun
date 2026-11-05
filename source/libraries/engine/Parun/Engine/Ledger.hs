@@ -2,8 +2,9 @@
 -- entries, replayed over an earlier state, must give the later state for the
 -- fields audited here, and each entry must be a real transition (CR 603.2e,
 -- 603.2g). Each happening keeps its own funnel (Parun.Engine.Event's `tap`,
--- `changeLife`, `putCounters`); this checks the funnels after the fact, so a write that skips
--- its record, or a record of a change that did not happen, shows by name.
+-- `changeLife`, `putCounters`, `attachVia`); this checks the funnels after the
+-- fact, so a write that skips its record, or a record of a change that did not
+-- happen, shows by name.
 --
 -- Run between priority prompts (Parun.Scenario), never inside a funnel, which
 -- may hold a write ahead of its record while a replacement prompt is open
@@ -16,6 +17,8 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Types.BecameAttached as BecameAttached
+import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CountersPlaced as CountersPlaced
@@ -28,6 +31,7 @@ import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.Player as Player
+import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.TapState as TapState
 
 -- | Where the log between two states fails to account for the later one. Empty
@@ -35,7 +39,7 @@ import qualified Parun.Types.TapState as TapState
 discrepancies :: GameState.GameState -> GameState.GameState -> [Discrepancy.Discrepancy]
 discrepancies before after = case logBetween before after of
   Nothing -> []
-  Just logged -> tapping before after logged <> life before after logged <> counting before after logged
+  Just logged -> tapping before after logged <> life before after logged <> counting before after logged <> attaching before after logged
 
 -- | The entries logged between two states: the later log past the earlier one,
 -- across at most one turn handoff (Parun.Engine.Engine.handoffTurn moves the
@@ -130,3 +134,28 @@ counting before after logged =
 
 countsOf :: GameState.GameState -> Map.Map (ObjectId.ObjectId, CounterKind.CounterKind Keyword.Keyword) Natural.Natural
 countsOf gs = Map.fromList [((oid, kind), n) | (oid, obj) <- Map.toList (GameState.objects gs), (kind, n) <- Map.toList (Object.counters obj)]
+
+-- | CR 701.3a, 701.3d: what each permanent is attached to, over the objects in
+-- both states. An attachment to the host it already has is no event (CR 701.3b),
+-- nor is an unattachment from a host it does not have. An object phased out in
+-- either state is skipped: phasing in unattached (CR 702.26i) is no event (CR
+-- 702.26j). An object in only one state is a new object (CR 400.7), which may
+-- arrive attached; its record is Parun.Engine.Event's `arrivedAttached`.
+attaching :: GameState.GameState -> GameState.GameState -> Seq.Seq LoggedEvent.LoggedEvent -> [Discrepancy.Discrepancy]
+attaching before after logged =
+  let move (held, idle) entry =
+        let event = LoggedEvent.event entry
+            to oid onto idling = case Map.lookup oid held of
+              Just from -> (Map.insert oid onto held, if idling from then idle Seq.|> Discrepancy.MkIdleEvent event else idle)
+              Nothing -> (held, idle)
+         in case event of
+              GameEvent.BecameAttached a -> to (BecameAttached.attachment a) (Just (BecameAttached.host a)) (== Just (BecameAttached.host a))
+              GameEvent.BecameUnattached a -> to (BecameUnattached.attachment a) Nothing (/= Just (BecameUnattached.host a))
+              _ -> (held, idle)
+      (replayed, idles) = Foldable.foldl' move (hostsOf before, Seq.empty) logged
+      differing = Map.intersectionWith (,) replayed (hostsOf after)
+   in Foldable.toList idles <> [Discrepancy.MkAttachment oid expected actual | (oid, (expected, actual)) <- Map.toList differing, expected /= actual]
+
+-- Phased-out objects left out, for `attaching`'s CR 702.26j reason.
+hostsOf :: GameState.GameState -> Map.Map ObjectId.ObjectId (Maybe Recipient.Recipient)
+hostsOf gs = fmap Object.attachedTo (Map.withoutKeys (GameState.objects gs) (Map.keysSet (GameState.phasedOut gs)))
