@@ -48,20 +48,26 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentsBecomeTargeted",
+            "type": "BecomesTargeted",
             "value": {
-              "filter": {
-                "type": "HeldBy",
+              "batching": {
+                "type": "OneOrMore"
+              },
+              "includesYou": true,
+              "permanent": {
+                "type": "Matching",
                 "value": {
-                  "holder": {
-                    "type": "Controller"
-                  },
-                  "relation": {
-                    "type": "You"
+                  "type": "HeldBy",
+                  "value": {
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "You"
+                    }
                   }
                 }
               },
-              "includesYou": true,
               "relation": {
                 "type": "Opponent"
               }

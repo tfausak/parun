@@ -118,6 +118,7 @@ import qualified Parun.Codec.BecameBlockingSpec
 import qualified Parun.Codec.BecameDesignatedSpec
 import qualified Parun.Codec.BecomeCopySpec
 import qualified Parun.Codec.BecomesTapStateSpec
+import qualified Parun.Codec.BecomesTargetedTriggerSpec
 import qualified Parun.Codec.BeginningStepSpec
 import qualified Parun.Codec.BeholdSpec
 import qualified Parun.Codec.BidSpec
@@ -551,7 +552,6 @@ import qualified Parun.Codec.PermanentCandidateSpec
 import qualified Parun.Codec.PermanentIsDealtDamageSpec
 import qualified Parun.Codec.PermanentTappedForManaSpec
 import qualified Parun.Codec.PermanentWasSacrificedSpec
-import qualified Parun.Codec.PermanentsBecomeTargetedSpec
 import qualified Parun.Codec.PermanentsDealCombatDamageToPlayerSpec
 import qualified Parun.Codec.PermissionCostSpec
 import qualified Parun.Codec.PermissionLimitSpec
@@ -1529,7 +1529,7 @@ spec s registry corpus = do
   Parun.Codec.BlockCountSpec.spec s
   Parun.Codec.BlockTriggerSpec.spec s
   Parun.Codec.PlayerActsOnSpec.spec s
-  Parun.Codec.PermanentsBecomeTargetedSpec.spec s
+  Parun.Codec.BecomesTargetedTriggerSpec.spec s
   Parun.Codec.PermanentsDealCombatDamageToPlayerSpec.spec s
   Parun.Codec.PermanentTappedForManaSpec.spec s
   Parun.Codec.PermanentWasSacrificedSpec.spec s

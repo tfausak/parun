@@ -50,13 +50,13 @@
                             "type": "Triggered",
                             "value": {
                               "condition": {
-                                "type": "PermanentBecomesTargeted",
+                                "type": "BecomesTargeted",
                                 "value": {
-                                  "filter": {
-                                    "type": "IsSource"
-                                  },
-                                  "relation": {
-                                    "type": "AnyPlayer"
+                                  "permanent": {
+                                    "type": "Matching",
+                                    "value": {
+                                      "type": "IsSource"
+                                    }
                                   }
                                 }
                               },

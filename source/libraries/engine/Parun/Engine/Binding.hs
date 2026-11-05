@@ -1097,10 +1097,10 @@ withAnnouncedTargets aiming =
 --
 -- For BOTH sides of rule 601.2c's announcement, which is why it is worded over
 -- the targeting object rather than over what was targeted: the bearer becoming a
--- target (TriggerCondition.SelfBecomesTargeted, ward's) and the bearer's
+-- target (a Self TriggerCondition.BecomesTargeted, ward's) and the bearer's
 -- CONTROLLER becoming one (TriggerCondition.ControllerBecomesTarget, Amulet of
 -- Safekeeping's "counter that spell or ability"), and a permanent the bearer
--- watches becoming one (TriggerCondition.PermanentBecomesTargeted, Diffusion
+-- watches becoming one (a Matching TriggerCondition.BecomesTargeted, Diffusion
 -- Sliver's). The object bound is the same field of the same event each way.
 --
 -- Distinct from `castSpell` even though both name a stack object: that one is the

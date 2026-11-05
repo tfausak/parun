@@ -85,6 +85,7 @@ import qualified Parun.Types.AttackingPlayers as AttackingPlayers
 import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.BecomesTapState as BecomesTapState
+import qualified Parun.Types.BecomesTargetedTrigger as BecomesTargetedTrigger
 import qualified Parun.Types.Behold as Behold
 import qualified Parun.Types.Bid as Bid
 import qualified Parun.Types.BindAmount as BindAmount
@@ -338,7 +339,6 @@ import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesig
 import qualified Parun.Types.PermanentCandidate as PermanentCandidate
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
-import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PhasePattern as PhasePattern
 import qualified Parun.Types.PlacesSticker as PlacesSticker
@@ -2398,10 +2398,6 @@ permanentTappedForManaNames :: (Monoid r) => Asking r -> PermanentTappedForMana.
 permanentTappedForManaNames asking x = case x of
   PermanentTappedForMana.MkPermanentTappedForMana _player filter_ _mana -> filterNames asking filter_
 
-permanentsBecomeTargetedNames :: (Monoid r) => Asking r -> PermanentsBecomeTargeted.PermanentsBecomeTargeted -> r
-permanentsBecomeTargetedNames asking x = case x of
-  PermanentsBecomeTargeted.MkPermanentsBecomeTargeted filter_ _relation _kind _includesYou -> filterNames asking filter_
-
 permanentsDealCombatDamageToPlayerNames :: (Monoid r) => Asking r -> PermanentsDealCombatDamageToPlayer.PermanentsDealCombatDamageToPlayer -> r
 permanentsDealCombatDamageToPlayerNames asking x = case x of
   PermanentsDealCombatDamageToPlayer.MkPermanentsDealCombatDamageToPlayer filter_ _recipient _oneOrMorePlayers -> filterNames asking filter_
@@ -3009,6 +3005,10 @@ attackTriggerNames asking x = case x of
   AttackTrigger.Declaration declarationTrigger -> declarationTriggerNames asking declarationTrigger
   AttackTrigger.Unblocked filter_ -> filterNames asking filter_
 
+becomesTargetedTriggerNames :: (Monoid r) => Asking r -> BecomesTargetedTrigger.BecomesTargetedTrigger -> r
+becomesTargetedTriggerNames asking x = case x of
+  BecomesTargetedTrigger.MkBecomesTargetedTrigger permanent _relation _kind _includesYou _batching -> actingPermanentNames asking permanent
+
 exploitTriggerNames :: (Monoid r) => Asking r -> ExploitTrigger.ExploitTrigger -> r
 exploitTriggerNames asking x = case x of
   ExploitTrigger.MkExploitTrigger exploiter exploited -> actingPermanentNames asking exploiter <> filterNames asking exploited
@@ -3116,10 +3116,8 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SpellCast spellCast -> spellCastNames asking spellCast
   TriggerCondition.SelfCast -> mempty
   TriggerCondition.AbilityActivated filter_ -> filterNames asking filter_
-  TriggerCondition.SelfBecomesTargeted _playerRelation -> mempty
+  TriggerCondition.BecomesTargeted becomesTargetedTrigger -> becomesTargetedTriggerNames asking becomesTargetedTrigger
   TriggerCondition.ControllerBecomesTarget _controllerBecomesTarget -> mempty
-  TriggerCondition.PermanentsBecomeTargeted permanentsBecomeTargeted -> permanentsBecomeTargetedNames asking permanentsBecomeTargeted
-  TriggerCondition.PermanentBecomesTargeted permanentsBecomeTargeted -> permanentsBecomeTargetedNames asking permanentsBecomeTargeted
   TriggerCondition.SelfHalfUnlocked _cardName -> mempty
   TriggerCondition.RoomFullyUnlocked _playerRelation -> mempty
   TriggerCondition.AnyOf items -> foldMap (triggerConditionNames asking) items

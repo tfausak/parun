@@ -4,6 +4,7 @@ import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.AttackTrigger as AttackTrigger
 import qualified Parun.Types.BecomesTapState as BecomesTapState
+import qualified Parun.Types.BecomesTargetedTrigger as BecomesTargetedTrigger
 import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CausedBy as CausedBy
@@ -25,7 +26,6 @@ import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
-import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlayerActed as PlayerActed
@@ -185,20 +185,12 @@ data TriggerCondition
     -- (Kurkesh, Onakke Ancient), the Filter read against the ability on the
     -- stack, as SpellCast's is against the spell.
     AbilityActivated (Filter.Filter Keyword.Keyword)
-  | -- | CR 601.2c: "whenever this permanent becomes the target of a spell or
-    -- ability [a player] controls" -- CR 702.21a's ward, once per spell or
-    -- ability however many of its "target" words name this permanent.
-    SelfBecomesTargeted PlayerRelation.PlayerRelation
+  | -- | CR 601.2c / 603.2c: a permanent became the target of a spell or ability
+    -- (CR 702.21a's ward, Venerated Rotpriest, Professor Hojo).
+    BecomesTargeted BecomesTargetedTrigger.BecomesTargetedTrigger
   | -- | CR 601.2c from the player's side: "whenever you become the target of a
     -- spell or ability" (Dormant Gomazoa).
     ControllerBecomesTarget ControllerBecomesTarget.ControllerBecomesTarget
-  | -- | CR 603.2c's batch reading of the same rule read by a BYSTANDER:
-    -- "whenever one or more creatures you control become the target of an
-    -- activated ability" (Professor Hojo), once for the whole announcement.
-    PermanentsBecomeTargeted PermanentsBecomeTargeted.PermanentsBecomeTargeted
-  | -- | CR 601.2c per permanent: "whenever a creature you control becomes the
-    -- target of a spell" (Venerated Rotpriest), once per creature targeted.
-    PermanentBecomesTargeted PermanentsBecomeTargeted.PermanentsBecomeTargeted
   | -- | CR 709.5h: "when you unlock this door", however the named half was
     -- unlocked. Self-scoped plus the half, which is what separates a Room's two
     -- doors.

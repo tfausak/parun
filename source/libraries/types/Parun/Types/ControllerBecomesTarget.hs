@@ -18,7 +18,7 @@ data ControllerBecomesTarget = MkControllerBecomesTarget
     -- Safekeeping's "an opponent controls". AnyPlayer is Dormant Gomazoa, which
     -- narrows not at all.
     --
-    -- The relation the sibling condition SelfBecomesTargeted carries for rule
+    -- The relation the sibling condition BecomesTargeted carries for rule
     -- 702.21a, read off the same field of the same event.
     relation :: PlayerRelation.PlayerRelation,
     -- | Which of CR 601.2c's announcement roads. Nothing is "a spell or

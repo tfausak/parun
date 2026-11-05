@@ -87,9 +87,11 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfBecomesTargeted",
+            "type": "BecomesTargeted",
             "value": {
-              "type": "Opponent"
+              "relation": {
+                "type": "Opponent"
+              }
             }
           },
           "modal": {

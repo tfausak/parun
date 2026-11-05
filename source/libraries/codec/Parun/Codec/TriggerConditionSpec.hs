@@ -13,6 +13,7 @@ import qualified Parun.Types.AttackerTarget as AttackerTarget
 import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BecomesTapState as BecomesTapState
+import qualified Parun.Types.BecomesTargetedTrigger as BecomesTargetedTrigger
 import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BlockTrigger as BlockTrigger
@@ -54,7 +55,6 @@ import qualified Parun.Types.PermanentAction as PermanentAction
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
-import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlacesSticker as PlacesSticker
@@ -400,17 +400,14 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.SpellCast (SpellCast.MkSpellCast (Filter.HeldBy Holder.Controller PlayerRelation.You) TurnScope.OpponentsTurn Nothing Nothing Nothing False))
       " {\"type\":\"SpellCast\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"scope\":{\"type\":\"OpponentsTurn\"}}} "
-  -- CR 601.2i read off the spell itself, Desolation Twin's "when you cast this
-  -- spell": nullary, since "this spell" needs neither Filter nor TurnScope.
-  -- CR 702.21a's relation is on the TARGETING side -- the opponent whose spell
-  -- named the bearer -- so the payload is the same PlayerRelation
-  -- SpellOrAbilityCounters carries and never a Filter over the bearer.
-  Spec.it s "SelfBecomesTargeted" $
+  -- CR 702.21a's ward: a Self subject, the relation on the TARGETING side.
+  -- Parun.Codec.BecomesTargetedTriggerSpec has the fields.
+  Spec.it s "BecomesTargeted round-trips ward's opponent relation" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfBecomesTargeted PlayerRelation.Opponent)
-      " {\"type\":\"SelfBecomesTargeted\",\"value\":{\"type\":\"Opponent\"}} "
+      (TriggerCondition.BecomesTargeted BecomesTargetedTrigger.defaultValue {BecomesTargetedTrigger.relation = PlayerRelation.Opponent})
+      " {\"type\":\"BecomesTargeted\",\"value\":{\"relation\":{\"type\":\"Opponent\"}}} "
   -- The same rule from the PLAYER's side. Two cases, because the payload's kind
   -- is elided when absent: Amulet of Safekeeping's "a spell or ability an
   -- opponent controls" writes no kind, and Dormant Gomazoa's "a spell" writes
@@ -427,20 +424,23 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.ControllerBecomesTarget (ControllerBecomesTarget.MkControllerBecomesTarget {ControllerBecomesTarget.relation = PlayerRelation.AnyPlayer, ControllerBecomesTarget.kind = Just StackObjectKind.Spell}))
       " {\"type\":\"ControllerBecomesTarget\",\"value\":{\"relation\":{\"type\":\"AnyPlayer\"},\"kind\":{\"type\":\"Spell\"}}} "
-  -- CR 603.2c's batch reading of the same rule with a Filter over the targeted
-  -- permanents: Professor Hojo's. Hand-written like every Arm.tagged arm.
-  Spec.it s "PermanentsBecomeTargeted round-trips with its Filter, its relation and its kind" $
+  -- CR 603.2c's batch reading with a Filter over the targeted permanents:
+  -- Professor Hojo's.
+  Spec.it s "BecomesTargeted round-trips a batch over a Matching subject and its kind" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted {PermanentsBecomeTargeted.filter = Filter.HeldBy Holder.Controller PlayerRelation.You, PermanentsBecomeTargeted.relation = PlayerRelation.AnyPlayer, PermanentsBecomeTargeted.kind = Just StackObjectKind.ActivatedAbility, PermanentsBecomeTargeted.includesYou = False}))
-      " {\"type\":\"PermanentsBecomeTargeted\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"relation\":{\"type\":\"AnyPlayer\"},\"kind\":{\"type\":\"ActivatedAbility\"}}} "
-  Spec.it s "PermanentBecomesTargeted round-trips with its Filter, its relation and its kind" $
+      (TriggerCondition.BecomesTargeted (BecomesTargetedTrigger.matching (Filter.HeldBy Holder.Controller PlayerRelation.You)) {BecomesTargetedTrigger.kind = Just StackObjectKind.ActivatedAbility, BecomesTargetedTrigger.batching = Batching.OneOrMore})
+      " {\"type\":\"BecomesTargeted\",\"value\":{\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"kind\":{\"type\":\"ActivatedAbility\"},\"batching\":{\"type\":\"OneOrMore\"}}} "
+  -- Venerated Rotpriest's per-permanent reading, an opponent's spell.
+  Spec.it s "BecomesTargeted round-trips a Matching subject per permanent" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted {PermanentsBecomeTargeted.filter = Filter.HeldBy Holder.Controller PlayerRelation.You, PermanentsBecomeTargeted.relation = PlayerRelation.Opponent, PermanentsBecomeTargeted.kind = Just StackObjectKind.Spell, PermanentsBecomeTargeted.includesYou = False}))
-      " {\"type\":\"PermanentBecomesTargeted\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"relation\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Spell\"}}} "
+      (TriggerCondition.BecomesTargeted (BecomesTargetedTrigger.matching (Filter.HeldBy Holder.Controller PlayerRelation.You)) {BecomesTargetedTrigger.relation = PlayerRelation.Opponent, BecomesTargetedTrigger.kind = Just StackObjectKind.Spell})
+      " {\"type\":\"BecomesTargeted\",\"value\":{\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"relation\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Spell\"}}} "
+  -- CR 601.2i read off the spell itself, Desolation Twin's "when you cast this
+  -- spell": nullary, since "this spell" needs neither Filter nor TurnScope.
   Spec.it s "SelfCast" $
     Common.assertCodec
       s
