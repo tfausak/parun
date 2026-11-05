@@ -571,6 +571,8 @@ library codec
     Parun.Codec.CrewingSpec
     Parun.Codec.CrewRestriction
     Parun.Codec.CrewRestrictionSpec
+    Parun.Codec.CrewRole
+    Parun.Codec.CrewRoleSpec
     Parun.Codec.Cycling
     Parun.Codec.CyclingSpec
     Parun.Codec.DamageDealer
@@ -2681,6 +2683,7 @@ library types
     Parun.Types.CreateEmblem
     Parun.Types.Crewing
     Parun.Types.CrewRestriction
+    Parun.Types.CrewRole
     Parun.Types.Cycling
     Parun.Types.DamageDealer
     Parun.Types.DamageDirection

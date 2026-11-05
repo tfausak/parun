@@ -38,9 +38,12 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfBecomesCrewed",
+            "type": "Crews",
             "value": {
-              "type": "EveryTime"
+              "type": "Vehicle",
+              "value": {
+                "type": "EveryTime"
+              }
             }
           },
           "modal": {

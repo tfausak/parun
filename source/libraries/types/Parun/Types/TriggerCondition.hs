@@ -13,6 +13,7 @@ import qualified Parun.Types.CoinFlipTrigger as CoinFlipTrigger
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Types.CounterTrigger as CounterTrigger
+import qualified Parun.Types.CrewRole as CrewRole
 import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardTrigger as DiscardTrigger
@@ -42,7 +43,6 @@ import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
 import qualified Parun.Types.TransformTrigger as TransformTrigger
-import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 
 -- | CR 603.2: the pattern that fires a triggered ability. Only
 -- Parun.Engine.Event may case on it for RULES purposes; Parun.Codec also cases on
@@ -220,23 +220,16 @@ data TriggerCondition
     -- creatures under the exploited creature's toughness" is what proves the
     -- exploited creature's slot is readable.
     Exploits ExploitTrigger.ExploitTrigger
-  | -- | CR 702.122e: "whenever this Vehicle becomes crewed" (Mobilizer Mech),
-    -- which that rule defines as a crew ability of the bearer RESOLVING.
-    -- Self-scoped; the TriggerFrequency is Mighty Servant of Leuk-o's "for the
-    -- first time each turn", as AttackerTrigger's is one rule over.
+  | -- | CR 702.122b / 702.122e: the bearer crewed a Vehicle (Gearshift Ace) or, as
+    -- a Vehicle, became crewed (Mobilizer Mech).
     --
     -- Rule 702.122e's last sentence is read off Parun.Engine.Binding.crewers,
-    -- which Parun.Engine.Event.Binding stamps for every match: an intervening
-    -- "if" counts that slot rather than the board, so it means only the
-    -- creatures that paid the cost of the activation that caused the trigger.
-    -- Parun.CrewSpec's "CR 702.122e a second crewing this turn does not trigger
-    -- it again" and "crewed by exactly two" are what prove it.
-    SelfBecomesCrewed TriggerFrequency.TriggerFrequency
-  | -- | CR 702.122b: "whenever this creature crews a Vehicle" (Gearshift Ace),
-    -- which that rule makes true of a creature tapped to pay a Vehicle's crew
-    -- cost. Self-scoped, SelfBecomesCrewed's other side: that one is asked of the
-    -- Vehicle and this one of a crewer.
-    SelfCrewsVehicle
+    -- which Parun.Engine.Event.Binding stamps for every Vehicle match: an
+    -- intervening "if" counts that slot rather than the board, so it means only
+    -- the creatures that paid the cost of the activation that caused the
+    -- trigger. Parun.CrewSpec's "CR 702.122e a second crewing this turn does not
+    -- trigger it again" and "crewed by exactly two" are what prove it.
+    Crews CrewRole.CrewRole
   | -- | CR 603.10a: "whenever an opponent sacrifices an artifact" (Vengeful
     -- Tracker) -- the CR 701.21a game action, not the zone change Leaves
     -- reads. Mayhem Devil's unrestricted wording is AnyPlayer and the trivial

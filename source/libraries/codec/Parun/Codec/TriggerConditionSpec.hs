@@ -32,6 +32,7 @@ import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterTrigger as CounterTrigger
+import qualified Parun.Types.CrewRole as CrewRole
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamageRecipient as DamageRecipient
 import qualified Parun.Types.DamageTrigger as DamageTrigger
@@ -590,27 +591,21 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.Exploits ExploitTrigger.defaultValue)
       " {\"type\":\"Exploits\",\"value\":{}} "
-  -- CR 702.122e's marker, self-scoped but carrying a frequency -- Mighty Servant of Leuk-o prints "for the first time each
-  -- turn". Both, since either could round-trip alone.
-  Spec.it s "SelfBecomesCrewed round-trips both frequencies" $ do
+  -- CR 702.122e's Vehicle side, carrying a frequency -- Mighty Servant of
+  -- Leuk-o prints "for the first time each turn" -- and CR 702.122b's crewer
+  -- side. Parun.Codec.CrewRoleSpec has the payload.
+  Spec.it s "Crews round-trips the Vehicle side" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfBecomesCrewed TriggerFrequency.EveryTime)
-      " {\"type\":\"SelfBecomesCrewed\",\"value\":{\"type\":\"EveryTime\"}} "
+      (TriggerCondition.Crews (CrewRole.Vehicle TriggerFrequency.EveryTime))
+      " {\"type\":\"Crews\",\"value\":{\"type\":\"Vehicle\",\"value\":{\"type\":\"EveryTime\"}}} "
+  Spec.it s "Crews round-trips the crewer side" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfBecomesCrewed TriggerFrequency.FirstTimeEachTurn)
-      " {\"type\":\"SelfBecomesCrewed\",\"value\":{\"type\":\"FirstTimeEachTurn\"}} "
-  -- CR 702.122b's crewer side, nullary: self-scoped; the arm
-  -- before it is where a frequency would go if a card printed one.
-  Spec.it s "SelfCrewsVehicle" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfCrewsVehicle
-      " {\"type\":\"SelfCrewsVehicle\"} "
+      (TriggerCondition.Crews CrewRole.Crewer)
+      " {\"type\":\"Crews\",\"value\":{\"type\":\"Crewer\"}} "
   -- CR 603.10a's sacrifice family, narrowed both ways: Vengeful Tracker's
   -- "whenever an opponent sacrifices an artifact".
   Spec.it s "PermanentSacrificed round-trips both halves" $

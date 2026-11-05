@@ -2194,8 +2194,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.AbilityAddsMana payload -> TriggerCondition.AbilityAddsMana payload {AbilityAddsMana.source = Filter.rewrite pairs (AbilityAddsMana.source payload), AbilityAddsMana.mana = rewriteManaSpecification pairs (AbilityAddsMana.mana payload)}
   TriggerCondition.SelfManaAbilityResolves -> condition
   TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger exploiter exploited) -> TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger (acting exploiter) (Filter.rewrite pairs exploited))
-  TriggerCondition.SelfBecomesCrewed {} -> condition
-  TriggerCondition.SelfCrewsVehicle -> condition
+  TriggerCondition.Crews _ -> condition
   TriggerCondition.PermanentSacrificed payload -> TriggerCondition.PermanentSacrificed payload {PlayerActsOn.filter = Filter.rewrite pairs (PlayerActsOn.filter payload)}
   TriggerCondition.SagaFinalChapterTriggers _ -> condition
   -- CR 603.7's slot name is card data but not card TEXT, so no CR 612.1 swap

@@ -72,6 +72,7 @@ import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Countering as Countering
 import qualified Parun.Types.CountersPlaced as CountersPlaced
+import qualified Parun.Types.CrewRole as CrewRole
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
@@ -1746,12 +1747,21 @@ armMatches bindings board gs bearer you cond event = case cond of
             ActingPermanent.Matching f -> admits exploiter f
        in exploiterAdmitted && admits exploited exploitedFilter
     _ -> False
-  -- CR 702.122e: the BEARER became crewed, which that rule defines as a crew
-  -- ability of the bearer RESOLVING. PermanentActs' Self reading, line for line
-  -- and for its reasons -- a bare id comparison, no view and no Filter, so a Vehicle
-  -- that has since left the battlefield is still answered about the event.
-  TriggerCondition.SelfBecomesCrewed frequency -> case event of
-    GameEvent.BecameCrewed ev ->
+  -- CR 702.122e: a Vehicle role is the BEARER becoming crewed, which that rule
+  -- defines as a crew ability of the bearer RESOLVING. PermanentActs' Self
+  -- reading, line for line and for its reasons -- a bare id comparison, no view
+  -- and no Filter, so a Vehicle that has since left the battlefield is still
+  -- answered about the event.
+  --
+  -- CR 702.122b: a Crewer role is the BEARER crewing a Vehicle, which that rule
+  -- makes true of a creature as it is tapped to pay a Vehicle's crew cost --
+  -- GameEvent.Crewed, written at the payment, and not the Vehicle's resolution.
+  -- A bare membership test for the same reasons, read off the EVENT's set and
+  -- not off the board: rule 702.122b is about what was tapped to pay, which
+  -- nothing on the battlefield afterwards records -- a creature tapped for any
+  -- other reason is not among these.
+  TriggerCondition.Crews role -> case (role, event) of
+    (CrewRole.Vehicle frequency, GameEvent.BecameCrewed ev) ->
       Crewing.vehicle ev == bearer && case frequency of
         TriggerFrequency.EveryTime -> True
         -- Mighty Servant of Leuk-o's "for the first time each turn", counted the way
@@ -1760,17 +1770,7 @@ armMatches bindings board gs bearer you cond event = case cond of
         -- "the first time" is "the only one so far", and Engine.handoffTurn
         -- clearing the log is what makes it "each turn".
         TriggerFrequency.FirstTimeEachTurn -> crewingsOf bearer gs <= 1
-    _ -> False
-  -- CR 702.122b: the BEARER crewed a Vehicle, which that rule makes true of a
-  -- creature as it is tapped to pay a Vehicle's crew cost -- GameEvent.Crewed,
-  -- written at the payment, and not the arm above's resolution. A bare
-  -- membership test for that arm's reasons -- no view and no Filter.
-  --
-  -- Read off the EVENT's set and not off the board: rule 702.122b is about what
-  -- was tapped to pay, which nothing on the battlefield afterwards records --
-  -- a creature tapped for any other reason is not among these.
-  TriggerCondition.SelfCrewsVehicle -> case event of
-    GameEvent.Crewed ev -> Set.member bearer (Crewing.crewedBy ev)
+    (CrewRole.Crewer, GameEvent.Crewed ev) -> Set.member bearer (Crewing.crewedBy ev)
     _ -> False
   -- CR 702.112b: a permanent the Filter admits was given the renowned designation.
   -- A Matching TurnedFaceUp's arm above, line for line, and for its reasons: the

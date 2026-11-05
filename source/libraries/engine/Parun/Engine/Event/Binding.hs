@@ -52,6 +52,7 @@ import qualified Parun.Types.CounterGrouping as CounterGrouping
 import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.CountersPlaced as CountersPlaced
+import qualified Parun.Types.CrewRole as CrewRole
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
@@ -572,7 +573,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   --
   -- Unconditional given a match, which is what eventBindingSlots' per-condition
   -- promise needs: every GameEvent.Crewed carries a vehicle.
-  (TriggerCondition.SelfCrewsVehicle, GameEvent.Crewed ev) ->
+  (TriggerCondition.Crews CrewRole.Crewer, GameEvent.Crewed ev) ->
     Binding.setCrewedVehicle (Crewing.vehicle ev) Map.empty
   -- CR 702.122e's rider: the creatures that paid THAT activation's crew cost,
   -- which Mighty Servant of Leuk-o's intervening "if" counts. The event the
@@ -586,7 +587,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- promise needs: every GameEvent.BecameCrewed carries the set, empty where the
   -- cost had no TapForTotalPower component. An empty set still binds, and the
   -- count reads 0 -- which is the rider's own answer, not an absent slot.
-  (TriggerCondition.SelfBecomesCrewed _, GameEvent.BecameCrewed ev) ->
+  (TriggerCondition.Crews (CrewRole.Vehicle _), GameEvent.BecameCrewed ev) ->
     Binding.setCrewers (Crewing.crewedBy ev) Map.empty
   -- CR 701.26a's permanent, bound because the attachment link is NOT enough:
   -- Blight's "destroy it" names the land that became tapped, which the Aura
@@ -1605,11 +1606,13 @@ eventBindingSlots cond = case cond of
   -- a subject of their own -- Mighty Servant of Leuk-o's "if it was crewed by
   -- exactly two creatures". Guaranteed given a match, every
   -- GameEvent.BecameCrewed carrying the set.
-  TriggerCondition.SelfBecomesCrewed {} -> Set.singleton Binding.crewers
-  -- CR 702.122b's crewer side, which DOES name somebody the bearer does not: the
+  --
+  -- CR 702.122b's crewer side DOES name somebody the bearer does not: the
   -- Vehicle it crewed, Gearshift Ace's "that Vehicle". Guaranteed given a match,
   -- every GameEvent.Crewed carrying a vehicle.
-  TriggerCondition.SelfCrewsVehicle -> Set.singleton Binding.crewedVehicle
+  TriggerCondition.Crews role -> case role of
+    CrewRole.Vehicle _ -> Set.singleton Binding.crewers
+    CrewRole.Crewer -> Set.singleton Binding.crewedVehicle
   -- CR 701.21a's event names a player and a permanent, and this claims the
   -- PLAYER: Vengeful Tracker's "deals 2 damage to them" reads the seat that
   -- sacrificed, which the eventBindings arm stamps for every match.
