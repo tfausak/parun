@@ -14,6 +14,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Mtgish as Mtgish
 import qualified Parun.Mtgish.Node as Node
 import qualified Parun.Oracle.Keyword as Oracle.Keyword
+import qualified Parun.Oracle.Trigger as Oracle.Trigger
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationRestriction as ActivationRestriction
@@ -36,6 +37,7 @@ import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostAmount as CostAmount
 import qualified Parun.Types.CostChange as CostChange
+import qualified Parun.Types.CostChoice as CostChoice
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CostModifier as CostModifier
 import qualified Parun.Types.Count as Count
@@ -238,6 +240,13 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
     let gates = [PayGate.branch g | t <- Face.triggeredAbilities (translated merfolkSeer), m <- Foldable.toList (Modal.modes (TriggeredAbility.modal t)), c <- Foldable.toList (Mode.clauses m), Just g <- [Clause.payGate c]]
     Spec.assertEq s [PayBranch.IfPaid] gates
 
+  -- CR 118.12a: "destroy that land unless that player pays {1} or 1 life", the
+  -- player being the one the upkeep trigger names.
+  Spec.it s "offers the trigger's player a choice of costs for the instructions" $ do
+    Spec.assertEq s (Right ()) (accepts erosion)
+    let gates = [g | t <- Face.triggeredAbilities (translated erosion), m <- Foldable.toList (Modal.modes (TriggeredAbility.modal t)), c <- Foldable.toList (Mode.clauses m), Just g <- [Clause.payGate c]]
+    Spec.assertEq s [(PayBranch.IfNotPaid, PlayerRef.InSlot Oracle.Trigger.thatPlayer, 2)] [(PayGate.branch g, PayGate.payer g, length (CostChoice.unwrap (PayGate.cost g))) | g <- gates]
+
   -- CR 601.2d: damage divided among one or two targets.
   Spec.it s "divides damage among the targets it is divided among" $ do
     Spec.assertEq s (Right ()) (accepts twinBolt)
@@ -394,6 +403,13 @@ merfolkSeer :: (String, String)
 merfolkSeer =
   ( "{\"_OracleCard\":\"Card\",\"Name\":\"Merfolk Seer\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Merfolk\",\"Wizard\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":2},{\"_ManaSymbol\":\"ManaCostU\"}],\"Rules\":[{\"_Rule\":\"TriggerA\",\"args\":[{\"_Trigger\":\"WhenAPermanentDies\",\"args\":{\"_Permanents\":\"SinglePermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"MayCost\",\"args\":{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1},{\"_ManaSymbol\":\"ManaCostU\"}]}},{\"_Action\":\"If\",\"args\":[{\"_Condition\":\"CostWasPaid\"},[{\"_Action\":\"DrawACard\"}]]}]}]}],\"CardPT\":{\"Power\":2,\"Toughness\":2}}",
     "When this creature dies, you may pay {1}{U}. If you do, draw a card."
+  )
+
+-- | Erosion's AST, and its Oracle text.
+erosion :: (String, String)
+erosion =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Erosion\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Enchantment\"],\"Subtypes\":[\"Aura\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostU\"},{\"_ManaSymbol\":\"ManaCostU\"},{\"_ManaSymbol\":\"ManaCostU\"}],\"Rules\":[{\"_Rule\":\"EnchantPermanent\",\"args\":{\"_Permanents\":\"IsCardtype\",\"args\":\"Land\"}},{\"_Rule\":\"TriggerA\",\"args\":[{\"_Trigger\":\"AtTheBeginningOfAPlayersUpkeep\",\"args\":{\"_Players\":\"SinglePlayer\",\"args\":{\"_Player\":\"HostController\"}}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"PlayerMayCost\",\"args\":[{\"_Player\":\"HostController\"},{\"_Cost\":\"Or\",\"args\":[{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1}]},{\"_Cost\":\"PayLife\",\"args\":{\"_GameNumber\":\"Integer\",\"args\":1}}]}]},{\"_Action\":\"Unless\",\"args\":[{\"_Condition\":\"CostWasPaid\"},[{\"_Action\":\"DestroyPermanent\",\"args\":{\"_Permanent\":\"HostPermanent\"}}]]}]}]}]}",
+    "Enchant land\nAt the beginning of the upkeep of enchanted land's controller, destroy that land unless that player pays {1} or 1 life."
   )
 
 -- | Reckless Air Strike's AST, and its Oracle text.

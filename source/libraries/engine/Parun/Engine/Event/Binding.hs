@@ -43,7 +43,6 @@ import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.Combat as Combat
@@ -73,6 +72,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeTrigger as LifeTrigger
@@ -91,6 +91,7 @@ import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.ProjectedCharacteristics as PC
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Revealed as Revealed
 import qualified Parun.Types.SlotName as SlotName
@@ -143,8 +144,8 @@ import qualified Parun.Types.ZoneChange as ZoneChange
 -- `ctrl`, delayedPending's `DelayedTrigger.source` and
 -- `DelayedTrigger.controller`). Most arms never read them; DamageToPlayerPrevented
 -- below reads "you", to re-ask the condition's relation of a record a wider
--- shield stamped for more than one player (#3079), and CardsLeaveZone reads
--- both, to re-ask its filter of each card that left.
+-- shield stamped for more than one player (#3079), and a batch LeavesZone reads
+-- both, to re-ask its subject of each card that left.
 eventBindings :: GameState -> Maybe ObjectId -> Map.Map ObjectId ObjectId -> ObjectId -> PlayerId -> TriggerCondition -> GameEvent -> Map.Map SlotName.SlotName Binding
 eventBindings = eventBindingsOver Map.empty
 
@@ -269,14 +270,11 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- card" acts on the one arrival its trigger matched, so this binds
   -- ZoneChange.object alone where the two arms above bind every arrival as a
   -- group. That is what makes a melded permanent's two triggers exile a card
-  -- each instead of both exiling both.
-  --
-  -- CR 400.7e's public-zone proviso holds by construction, matchesTrigger's arm
-  -- having required the graveyard.
-  (TriggerCondition.CardPutIntoGraveyard _, GameEvent.Moved m) ->
-    Binding.setBecame (ZoneChange.object (Moved.change m)) Map.empty
-  (TriggerCondition.CardPutIntoGraveyard _, GameEvent.CardArrived zc) ->
-    Binding.setBecame (ZoneChange.object zc) Map.empty
+  -- each instead of both exiling both. putIntoZoneSlots says which triggers.
+  (TriggerCondition.PutIntoZone t, GameEvent.Moved m)
+    | bindsArrival t -> Binding.setBecame (ZoneChange.object (Moved.change m)) Map.empty
+  (TriggerCondition.PutIntoZone t, GameEvent.CardArrived zc)
+    | bindsArrival t -> Binding.setBecame (ZoneChange.object zc) Map.empty
   -- CR 603.6a: entersSlots' slots, off the entry matched.
   (TriggerCondition.Enters t, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)) -> entersBindings gs t zc
   -- Pine Walker's "that creature" (CR 603.2): the permanent that was turned face
@@ -787,15 +785,17 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- is one event moving two (CR 701.42a); every other move, one. batchBindings
   -- sums the contributions across the group. Unconditional given a match, which
   -- admits a zone change only.
-  (TriggerCondition.CardsLeaveZone p, GameEvent.Moved m) ->
-    Binding.setEventAmount (Natural.length (admittedDepartures gs bearer you p m)) Map.empty
+  (TriggerCondition.LeavesZone t, GameEvent.Moved m)
+    | LeavesZoneTrigger.batching t == Batching.OneOrMore ->
+        Binding.setEventAmount (Natural.length (admittedDepartures gs bearer you t m)) Map.empty
   -- CR 729.4a's crossing moves one card, which the match arm has admitted.
-  (TriggerCondition.CardsLeaveZone _, GameEvent.LeftTheGame _) ->
-    Binding.setEventAmount 1 Map.empty
+  (TriggerCondition.LeavesZone t, GameEvent.LeftTheGame _)
+    | LeavesZoneTrigger.batching t == Batching.OneOrMore ->
+        Binding.setEventAmount 1 Map.empty
   -- The card a hand received, under Binding.handArrival rather than CR 400.7e's
   -- `became`, which a hidden destination withholds (CR 400.2). Kithkin
   -- Brinefarer, Volatile Rift and Veteran Ghoulcaller read it.
-  (TriggerCondition.CardLeavesZone _, GameEvent.Moved m)
+  (TriggerCondition.LeavesZone _, GameEvent.Moved m)
     | ZoneChange.to (Moved.change m) == Zone.Hand ->
         Binding.setHandArrival (ZoneChange.object (Moved.change m)) Map.empty
   -- CR 603.1b's multi-condition ability, bound as the UNION of what its branches
@@ -972,26 +972,30 @@ combatDamagerOn board victim event = case event of
 -- admits, read off CR 608.2h's last known information: by the time CR 603.10
 -- checks, each is gone from the zone it left. Every departure is asked, not
 -- only ZoneChange.departed, since a meld's entry is one event for several cards
--- (CR 701.42a). The zones and the turn are CardLeavesZone's match arm's
--- questions, not this one's.
-admittedDepartures :: GameState -> ObjectId -> PlayerId -> CardLeavesZone.CardLeavesZone -> Moved.Moved -> Seq.Seq ObjectId
-admittedDepartures gs bearer you p = Seq.filter (admitsDeparture gs bearer you p) . Moved.departures
+-- (CR 701.42a). The zones and the turn are Match.leavesZone's questions, not
+-- this one's.
+admittedDepartures :: GameState -> ObjectId -> PlayerId -> LeavesZoneTrigger.LeavesZoneTrigger -> Moved.Moved -> Seq.Seq ObjectId
+admittedDepartures gs bearer you t = Seq.filter (admitsDeparture gs bearer you t) . Moved.departures
 
--- Whether the condition's filter admits one departed card, read off CR 608.2h's
--- last known information.
-admitsDeparture :: GameState -> ObjectId -> PlayerId -> CardLeavesZone.CardLeavesZone -> ObjectId -> Bool
-admitsDeparture gs bearer you p departed = case Projection.viewWithLastKnown departed gs departed of
-  Nothing -> False
-  Just view ->
-    -- CR 400.1: "your graveyard" is the pile the card LEFT, off CR 608.2h's
-    -- record -- its owner's except between an ownership change and the move
-    -- that follows it (Tempest Efreet), where the owner names the wrong seat.
-    let fromWhose = case CardLeavesZone.whose p of
-          Nothing -> True
-          Just relation -> case Game.lastKnownOf departed gs >>= LastKnown.pile of
-            Just holder -> PlayerRelation.holds (Game.teams gs) relation you holder
-            Nothing -> False
-     in fromWhose && Filter.matches (Projection.sourceContext gs (Just you) bearer) view (CardLeavesZone.filter p)
+-- Whether the trigger's subject is one departed card, from the pile it names:
+-- the bearer by id, or a card its Filter admits off CR 608.2h's last known
+-- information.
+admitsDeparture :: GameState -> ObjectId -> PlayerId -> LeavesZoneTrigger.LeavesZoneTrigger -> ObjectId -> Bool
+admitsDeparture gs bearer you t departed =
+  -- CR 400.1: "your graveyard" is the pile the card LEFT, off CR 608.2h's
+  -- record -- its owner's except between an ownership change and the move that
+  -- follows it (Tempest Efreet), where the owner names the wrong seat.
+  let fromWhose = case LeavesZoneTrigger.whose t of
+        Nothing -> True
+        Just relation -> case Game.lastKnownOf departed gs >>= LastKnown.pile of
+          Just holder -> PlayerRelation.holds (Game.teams gs) relation you holder
+          Nothing -> False
+      watched = case LeavesZoneTrigger.card t of
+        ActingPermanent.Self -> departed == bearer
+        ActingPermanent.Matching f -> case Projection.viewWithLastKnown departed gs departed of
+          Nothing -> False
+          Just view -> Filter.matches (Projection.sourceContext gs (Just you) bearer) view f
+   in fromWhose && watched
 
 -- CR 615.13 / 120.1: the sources of one prevention that a SelfPreventsDamage
 -- Filter admits, each with its per-recipient share, read off CR 608.2h's last
@@ -1038,6 +1042,42 @@ attackSlots trigger = case trigger of
     Nothing -> Set.singleton Binding.attackingPlayer
     Just _ -> Set.fromList [Binding.attackingPlayer, Binding.attackingCreatures]
   AttackTrigger.Unblocked _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
+
+-- CR 400.7: what eventBindings stamps for a LeavesZone, as (guaranteed given
+-- a match, bound for some matches only). CR 400.7e's `became` is never bound:
+-- the trigger admits hidden destinations (CR 400.2), and no payload in the pool
+-- names the card. A batch binds CR 603.2c's "that many" (Rakshasa Vizier), each
+-- event's share summed by batchBindings. A single card that reached a hand is
+-- bound under Binding.handArrival (Kithkin Brinefarer's "that card"),
+-- guaranteed when the trigger pins the destination to a hand and bound only
+-- sometimes when it names none. A Self subject binds the same: the bearer is
+-- the card that left, which the source slot already names.
+leavesZoneSlots :: LeavesZoneTrigger.LeavesZoneTrigger -> (Set.Set SlotName.SlotName, Set.Set SlotName.SlotName)
+leavesZoneSlots t = case LeavesZoneTrigger.batching t of
+  Batching.OneOrMore -> (Set.singleton Binding.eventAmount, Set.empty)
+  Batching.EachOccurrence -> case LeavesZoneTrigger.to t of
+    Just Zone.Hand -> (Set.singleton Binding.handArrival, Set.empty)
+    Just _ -> (Set.empty, Set.empty)
+    Nothing -> (Set.empty, Set.singleton Binding.handArrival)
+
+-- CR 603.6: what eventBindings stamps for a PutIntoZone, each guaranteed given a
+-- match. CR 400.7e's arrival under `became` (Planar Void's "exile THAT CARD")
+-- where `bindsArrival` says so, and nothing otherwise.
+putIntoZoneSlots :: PutIntoZoneTrigger.PutIntoZoneTrigger -> Set.Set SlotName.SlotName
+putIntoZoneSlots t
+  | bindsArrival t = Set.singleton Binding.became
+  | otherwise = Set.empty
+
+-- Does a PutIntoZone bind CR 400.7e's arrival? Only a single Matching card's,
+-- and only into a public zone, which that rule's proviso asks (CR 400.2). A
+-- Self subject's bearer already IS the arriving incarnation, which the source
+-- slot names (Narcomoeba, Serra Avatar's "shuffle IT"); a batch names no one
+-- card (Dutiful Knowledge Seeker).
+bindsArrival :: PutIntoZoneTrigger.PutIntoZoneTrigger -> Bool
+bindsArrival t = case PutIntoZoneTrigger.card t of
+  ActingPermanent.Self -> False
+  ActingPermanent.Matching _ ->
+    PutIntoZoneTrigger.batching t == Batching.EachOccurrence && not (Game.isHiddenZone (PutIntoZoneTrigger.to t))
 
 -- CR 603.6a: the slots an entry trigger stamps, by subject: the floor, then
 -- those bound only sometimes.
@@ -1390,46 +1430,8 @@ eventBindingSlots cond = case cond of
   -- each guaranteed given a match -- every such event carries both ids, and
   -- matchesTrigger has already read the named creature's Filter.
   TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger role _ count) -> blockSlots role count
-  -- CR 113.6k: the bearer of a library-to-graveyard trigger IS the arriving
-  -- incarnation, so binding it again under `became` would be a second name for
-  -- one object. Narcomoeba reads the source slot instead.
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> Set.empty
-  -- The same answer for the same reason: with no look-back (CR 603.6c's last
-  -- sentence), this condition's bearer already IS the arriving incarnation, so
-  -- `became` would be a second name for one object. Serra Avatar's "shuffle IT"
-  -- reads the source slot.
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> Set.empty
-  -- The same answer for the same reason, CR 608.2n's narrowing changing only
-  -- WHICH move matches: the bearer already is the arriving incarnation, so rule
-  -- 702.55a's "exile IT" reads the source slot.
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> Set.empty
-  -- CR 400.7e's arrival, and here it is the CARD the condition matched on rather
-  -- than a second name for the bearer -- Planar Void's "exile THAT CARD". One
-  -- object and never a group: this condition sees one arrival per event, the
-  -- CardArrived events carrying the rest, which is what setBecameArrivals'
-  -- group binding is for on the conditions that read the whole move at once.
-  --
-  -- Guaranteed given a match, matchesTrigger having pinned the destination to
-  -- the graveyard, which CR 400.2 makes a public zone.
-  TriggerCondition.CardPutIntoGraveyard _ -> Set.singleton Binding.became
-  -- CR 400.7e's `became` is never bound: this condition admits hidden
-  -- destinations (CR 400.2), and Kishla Skimmer's payload names no card anyway.
-  -- Binding.handArrival is guaranteed when the condition pins the destination to
-  -- a hand; Kithkin Brinefarer's "that card" reads it.
-  TriggerCondition.CardLeavesZone p
-    | CardLeavesZone.to p == Just Zone.Hand -> Set.singleton Binding.handArrival
-    | otherwise -> Set.empty
-  -- The self form, empty for the same floor: the destination may be hidden. The
-  -- bearer is the card that left, which the source slot already names.
-  TriggerCondition.SelfLeavesGraveyard -> Set.empty
-  -- CR 603.2c's "that many" (Rakshasa Vizier): how many cards the whole batch
-  -- moved that the filter admits, each event's share stamped by eventBindings'
-  -- arm and summed by batchBindings. Guaranteed given a match, the one event
-  -- class this condition admits being a zone change.
-  TriggerCondition.CardsLeaveZone {} -> Set.singleton Binding.eventAmount
-  -- Nothing: Dutiful Knowledge Seeker's payload names neither the cards nor a
-  -- count, and CR 400.7e withholds the arrival in a hidden zone anyway.
-  TriggerCondition.CardsPutIntoZone {} -> Set.empty
+  TriggerCondition.LeavesZone t -> fst (leavesZoneSlots t)
+  TriggerCondition.PutIntoZone t -> putIntoZoneSlots t
   -- CR 701.6a's countering names two objects and a player and this binds none of
   -- them -- eventBindings has no arm for it. Empty by decision rather than
   -- default: both ids are dead by the time the trigger resolves, and CR 400.7e
@@ -1690,7 +1692,7 @@ eventBindingSlots cond = case cond of
 -- is where CR 400.7e's new object is not on the event at all and the arrival
 -- table may not carry it -- see that arm. CR 603.1b's AnyOf is where what parts
 -- the ceiling from the floor is the BRANCHES disagreeing rather than any one
--- event's shape. CardLeavesZone with no destination has a Binding.handArrival
+-- event's shape. LeavesZone with no destination has a Binding.handArrival
 -- that turns on the event's `to`. SelfTurnedFaceUp's X only a cost carrying one
 -- binds, and PlayerManifestsDread's cards CR 701.62b fires without. The
 -- conditional slots that turn on GAME STATE instead -- an Attached Leaves with a
@@ -1729,8 +1731,7 @@ eventBindingSlotsSometimes cond = case cond of
   TriggerCondition.DealsDamage watched -> snd (damageSlots watched)
   -- Binding.handArrival, bound when the move a destination-free condition
   -- matched reached a hand. Nothing in data/cards/ names it under one.
-  TriggerCondition.CardLeavesZone p
-    | Maybe.isNothing (CardLeavesZone.to p) -> Set.singleton Binding.handArrival
+  TriggerCondition.LeavesZone t -> snd (leavesZoneSlots t)
   -- CR 603.1b's branches disagreeing with each other, which is a fourth way for a
   -- slot to be bound for some of a condition's events and not all: eventBindings
   -- stamps whatever the MATCHED branch does, while the floor above intersects.

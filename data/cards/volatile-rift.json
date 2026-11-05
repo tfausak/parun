@@ -42,35 +42,35 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CardLeavesZone",
+            "type": "LeavesZone",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
-                  },
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Owner"
-                      },
-                      "relation": {
-                        "type": "You"
+              "card": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Owner"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
                       }
                     }
-                  }
-                ]
+                  ]
+                }
               },
               "from": {
                 "type": "Library"
-              },
-              "scope": {
-                "type": "EachTurn"
               },
               "to": {
                 "type": "Hand"

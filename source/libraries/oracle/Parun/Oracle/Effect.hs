@@ -355,17 +355,14 @@ condition context c = case c of
 -- | Instructions with a cost paid on resolution (CR 118.12): "You may pay
 -- {1}{U}. If you do, draw a card." (Merfolk Seer), "Counter target spell
 -- unless its controller pays {3}." (Mana Leak, CR 118.12a), "unless any
--- player pays {2}" (Nakaya Shade). A cost that is not one thing, one offered
+-- player pays {2}" (Nakaya Shade). A choice of more than two costs, one offered
 -- by an earlier clause or reckoned from an object's mana cost, or one the
 -- payer is not asked about, is not spelled out here.
 paid :: Target.Context -> PayGate.PayGate -> [Predicate] -> [(Text.Text, [SlotName.SlotName])]
 paid context g predicates
   | Maybe.isJust (PayGate.basis g) || Maybe.isJust (PayGate.offeredAt g) || PayGate.obligation g /= PayObligation.Optional = []
   | otherwise = do
-      one <- case CostChoice.unwrap (PayGate.cost g) of
-        only NonEmpty.:| [] -> [only]
-        _ -> []
-      (second, third) <- Cost.payment (Target.self context) (Target.keyword context) one
+      (second, third) <- Cost.paymentChoice (Target.self context) (Target.keyword context) (CostChoice.unwrap (PayGate.cost g))
       (each', counted) <- case PayGate.perEach g of
         Nothing -> [(Text.empty, [])]
         Just q -> do

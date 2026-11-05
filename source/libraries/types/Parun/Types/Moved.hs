@@ -50,7 +50,7 @@ data Moved = MkMoved
     -- battlefield instead (Desertion), which share their zone pairs. Written by
     -- Parun.Engine.Event.changeZoneResolvingReturning and Parun.Engine.Stack's
     -- CarryOver.Carried move; read by
-    -- TriggerCondition.SelfPutIntoGraveyardDuringResolution and by CR 400.7d's
+    -- PutIntoZoneTrigger.duringResolution and by CR 400.7d's
     -- look-backs at the cast (Quantity.WasCastFrom, Count's
     -- becamePermanents).
     duringResolution :: Bool,

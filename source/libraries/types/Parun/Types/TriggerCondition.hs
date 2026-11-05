@@ -5,10 +5,7 @@ import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.AttackTrigger as AttackTrigger
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.BlockTrigger as BlockTrigger
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
-import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
-import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.Condition as Condition
@@ -22,6 +19,7 @@ import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
@@ -36,6 +34,7 @@ import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.RevealedThisWay as RevealedThisWay
 import qualified Parun.Types.RoomIndex as RoomIndex
 import qualified Parun.Types.SlotName as SlotName
@@ -111,39 +110,12 @@ data TriggerCondition
     -- Parun.KeywordTriggerSpec's SelfBlocksOneOrMore and
     -- CreatureBecomesBlockedByAtLeast groups are the proof.
     Blocks BlockTrigger.BlockTrigger
-  | -- | CR 603.6: "when this card is put into your graveyard from your library"
-    -- (Narcomoeba). Self-scoped, and the bearer is CR 400.7's new incarnation.
-    SelfPutIntoGraveyardFromLibrary
-  | -- | CR 603.6: "when this card is put into a graveyard from anywhere" (Serra
-    -- Avatar). Self-scoped, and not a leaves-the-battlefield ability (CR 603.6c).
-    SelfPutIntoGraveyardFromAnywhere
-  | -- | CR 702.55a's second sentence: "when this spell is put into a graveyard
-    -- during its resolution" (Cry of Contrition), which CR 608.2n makes the last
-    -- step of an instant or sorcery spell's own resolution. Narrower than the arm
-    -- above by CAUSE: a countered spell (CR 701.6a) and a fizzled one (CR 608.2b)
-    -- reach the same graveyard from the same zone and do not match.
-    SelfPutIntoGraveyardDuringResolution
-  | -- | CR 603.6 read by a BYSTANDER: "whenever another card is put into a
-    -- graveyard from anywhere" (Planar Void), filtered over the arriving card and
-    -- narrowed by the zone it left (Oglor, Devoted Assistant).
-    -- CR 712.21's Example makes this the condition a melded permanent's death
-    -- fires TWICE.
-    CardPutIntoGraveyard CardPutIntoGraveyard.CardPutIntoGraveyard
   | -- | CR 603.6c: a permanent leaves the battlefield, a CR 603.10a look-back.
     Leaves LeavesTrigger.LeavesTrigger
-  | -- | CR 400.7: a card leaves a named zone, per card -- "whenever a card leaves
-    -- your graveyard during your turn" (Kishla Skimmer).
-    CardLeavesZone CardLeavesZone.CardLeavesZone
-  | -- | CR 603.2c's batch reading of the arm above: "whenever one or more cards
-    -- leave your graveyard" (Spirit Mascot), once however many left.
-    CardsLeaveZone CardLeavesZone.CardLeavesZone
-  | -- | CR 603.2c: "whenever one or more cards are put into a library from
-    -- anywhere" (Dutiful Knowledge Seeker), once however many arrived. A CR
-    -- 603.10a look-back for an object that all players could see.
-    CardsPutIntoZone CardsPutIntoZone.CardsPutIntoZone
-  | -- | CR 603.10a / 113.6k: "when this card leaves your graveyard" (Oglor,
-    -- Devoted Assistant's grant). Self-scoped, and a look-back.
-    SelfLeavesGraveyard
+  | -- | CR 400.7: a card leaves a zone other than the battlefield.
+    LeavesZone LeavesZoneTrigger.LeavesZoneTrigger
+  | -- | CR 603.6: a card is put into a zone other than the battlefield.
+    PutIntoZone PutIntoZoneTrigger.PutIntoZoneTrigger
   | -- | CR 701.26a / 701.26b: a permanent became tapped or untapped, once per
     -- permanent (City of Brass, Oreskos Sun Guide, Mesmeric Orb).
     BecomesTapState BecomesTapState.BecomesTapState

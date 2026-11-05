@@ -65,7 +65,12 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfPutIntoGraveyardFromAnywhere"
+            "type": "PutIntoZone",
+            "value": {
+              "to": {
+                "type": "Graveyard"
+              }
+            }
           },
           "modal": {
             "modes": [

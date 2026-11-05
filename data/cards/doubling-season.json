@@ -24,6 +24,7 @@
             "type": "TokenR",
             "value": {
               "matching": {
+                "effectsOnly": true,
                 "whose": {
                   "type": "You"
                 }

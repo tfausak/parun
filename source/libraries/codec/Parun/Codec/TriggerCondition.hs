@@ -5,10 +5,7 @@ import qualified Parun.Codec.ActingPermanent as ActingPermanent
 import qualified Parun.Codec.AttackTrigger as AttackTrigger
 import qualified Parun.Codec.BecomesTapState as BecomesTapState
 import qualified Parun.Codec.BlockTrigger as BlockTrigger
-import qualified Parun.Codec.CardLeavesZone as CardLeavesZone
 import qualified Parun.Codec.CardName as CardName
-import qualified Parun.Codec.CardPutIntoGraveyard as CardPutIntoGraveyard
-import qualified Parun.Codec.CardsPutIntoZone as CardsPutIntoZone
 import qualified Parun.Codec.CausedBy as CausedBy
 import qualified Parun.Codec.ClassLevel as ClassLevel
 import qualified Parun.Codec.Condition as Condition
@@ -22,6 +19,7 @@ import qualified Parun.Codec.EntersTrigger as EntersTrigger
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.LeavesTrigger as LeavesTrigger
+import qualified Parun.Codec.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Codec.LifeTrigger as LifeTrigger
 import qualified Parun.Codec.PermanentActed as PermanentActed
 import qualified Parun.Codec.PermanentBecomesDesignated as PermanentBecomesDesignated
@@ -36,6 +34,7 @@ import qualified Parun.Codec.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Codec.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Codec.PlayerRelation as PlayerRelation
 import qualified Parun.Codec.PlaysLand as PlaysLand
+import qualified Parun.Codec.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Codec.RevealedThisWay as RevealedThisWay
 import qualified Parun.Codec.RoomIndex as RoomIndex
 import qualified Parun.Codec.SlotName as SlotName
@@ -76,15 +75,9 @@ codec =
           Arm.payload "RevealedThisWay" RevealedThisWay.codec TriggerCondition.RevealedThisWay (\x -> case x of TriggerCondition.RevealedThisWay y -> Just y; _ -> Nothing),
           Arm.payload "Discards" DiscardTrigger.codec TriggerCondition.Discards (\x -> case x of TriggerCondition.Discards y -> Just y; _ -> Nothing),
           Arm.payload "PlayerDrawsNthCard" PlayerDrawsNthCard.codec TriggerCondition.PlayerDrawsNthCard (\x -> case x of TriggerCondition.PlayerDrawsNthCard y -> Just y; _ -> Nothing),
-          Arm.nullary "SelfPutIntoGraveyardFromLibrary" TriggerCondition.SelfPutIntoGraveyardFromLibrary,
-          Arm.nullary "SelfPutIntoGraveyardFromAnywhere" TriggerCondition.SelfPutIntoGraveyardFromAnywhere,
-          Arm.nullary "SelfPutIntoGraveyardDuringResolution" TriggerCondition.SelfPutIntoGraveyardDuringResolution,
-          Arm.nullary "SelfLeavesGraveyard" TriggerCondition.SelfLeavesGraveyard,
-          Arm.payload "CardPutIntoGraveyard" CardPutIntoGraveyard.codec TriggerCondition.CardPutIntoGraveyard (\x -> case x of TriggerCondition.CardPutIntoGraveyard y -> Just y; _ -> Nothing),
           Arm.payload "Leaves" LeavesTrigger.codec TriggerCondition.Leaves (\x -> case x of TriggerCondition.Leaves y -> Just y; _ -> Nothing),
-          Arm.payload "CardLeavesZone" CardLeavesZone.codec TriggerCondition.CardLeavesZone (\x -> case x of TriggerCondition.CardLeavesZone y -> Just y; _ -> Nothing),
-          Arm.payload "CardsLeaveZone" CardLeavesZone.codec TriggerCondition.CardsLeaveZone (\x -> case x of TriggerCondition.CardsLeaveZone y -> Just y; _ -> Nothing),
-          Arm.payload "CardsPutIntoZone" CardsPutIntoZone.codec TriggerCondition.CardsPutIntoZone (\x -> case x of TriggerCondition.CardsPutIntoZone y -> Just y; _ -> Nothing),
+          Arm.payload "LeavesZone" LeavesZoneTrigger.codec TriggerCondition.LeavesZone (\x -> case x of TriggerCondition.LeavesZone y -> Just y; _ -> Nothing),
+          Arm.payload "PutIntoZone" PutIntoZoneTrigger.codec TriggerCondition.PutIntoZone (\x -> case x of TriggerCondition.PutIntoZone y -> Just y; _ -> Nothing),
           Arm.payload "BecomesTapState" BecomesTapState.codec TriggerCondition.BecomesTapState (\x -> case x of TriggerCondition.BecomesTapState y -> Just y; _ -> Nothing),
           Arm.payload "PermanentsBecomeTapped" filterCodec TriggerCondition.PermanentsBecomeTapped (\x -> case x of TriggerCondition.PermanentsBecomeTapped y -> Just y; _ -> Nothing),
           Arm.nullary "AttachedPermanentTappedForMana" TriggerCondition.AttachedPermanentTappedForMana,
@@ -167,15 +160,9 @@ tagOf x = case x of
   TriggerCondition.RevealedThisWay {} -> "RevealedThisWay"
   TriggerCondition.Discards {} -> "Discards"
   TriggerCondition.PlayerDrawsNthCard {} -> "PlayerDrawsNthCard"
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary {} -> "SelfPutIntoGraveyardFromLibrary"
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere {} -> "SelfPutIntoGraveyardFromAnywhere"
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution {} -> "SelfPutIntoGraveyardDuringResolution"
-  TriggerCondition.SelfLeavesGraveyard {} -> "SelfLeavesGraveyard"
-  TriggerCondition.CardPutIntoGraveyard {} -> "CardPutIntoGraveyard"
   TriggerCondition.Leaves {} -> "Leaves"
-  TriggerCondition.CardLeavesZone {} -> "CardLeavesZone"
-  TriggerCondition.CardsLeaveZone {} -> "CardsLeaveZone"
-  TriggerCondition.CardsPutIntoZone {} -> "CardsPutIntoZone"
+  TriggerCondition.LeavesZone {} -> "LeavesZone"
+  TriggerCondition.PutIntoZone {} -> "PutIntoZone"
   TriggerCondition.BecomesTapState {} -> "BecomesTapState"
   TriggerCondition.PermanentsBecomeTapped {} -> "PermanentsBecomeTapped"
   TriggerCondition.AttachedPermanentTappedForMana {} -> "AttachedPermanentTappedForMana"

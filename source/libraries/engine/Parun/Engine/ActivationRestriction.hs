@@ -263,16 +263,14 @@ atInstantSpeed restriction = case restriction of
 -- Keyed by the ability as printed (Projection.printedActivatedAbility), since a
 -- text change rewrites an ability's words, not which ability it is (CR 612.1).
 --
--- Not implemented: the count cannot say WHICH copy spent, so when the spent
--- copy's grant goes and an unspent twin stays, the twin reads as spent (#4627).
---
--- Parun.ActivateSpec's "CR 602.5c two Gliding Licids give the Locus two
--- once-each-turn animate abilities" proves the per-turn record. The count is
--- a REGRESSION FENCE: abilities acquired from two exiled cards are unequal
--- (Binding.lentCardAbility), so only two equal grants of one ability
--- printing the rider reach it -- two Auras quoting one. No card in
--- data/cards/ carries both an OnlyOnce rider and a GainAbility (grep,
--- 2026-10-19).
+-- A grant of a rider ability is named for its granter (Binding.acquiredFrom),
+-- so a twin from another granter or card is unequal and counted apart;
+-- data/scenarios/touch-of-vitae-a-second-casting-grants-an-unspent-untap.json
+-- proves it. Parun.ActivateSpec's "CR 602.5c two Gliding Licids give the Locus
+-- two once-each-turn animate abilities" proves the per-turn record. The count
+-- is a REGRESSION FENCE: it is reached only by equal instances one granter or
+-- one printing repeats, and no card in data/cards/ grants a rider ability twice
+-- from one source.
 unspent :: Natural -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Map.Map (ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) Natural -> GameState -> Bool
 unspent limit srcId this spent gs = case Map.findWithDefault 0 (Projection.printedActivatedAbility srcId gs this) spent of
   n

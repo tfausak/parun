@@ -25,6 +25,7 @@ import qualified Parun.Engine.Interchangeable.Mentions as Mentions
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection.View
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
+import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActiveAttackProhibition as ActiveAttackProhibition
 import qualified Parun.Types.ActiveAttackRequirement as ActiveAttackRequirement
 import qualified Parun.Types.ActiveBlockRequirement as ActiveBlockRequirement
@@ -54,6 +55,7 @@ import qualified Parun.Types.ExileLink as ExileLink
 import qualified Parun.Types.GameEvent as GameEvent
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.IgnoredAbility as IgnoredAbility
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LoggedEvent as LoggedEvent
@@ -75,6 +77,7 @@ import qualified Parun.Types.ShownComponent as ShownComponent
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.TriggerSource as TriggerSource
+import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 
 -- | Whether choosing between these two objects is choosing between options the
 -- game cannot tell apart. Takes the projection rather than computing it, so a
@@ -258,6 +261,9 @@ representatives pcs gs candidates =
 --     compares, which is where a Filter's look-back atoms read it, and through
 --     actedOnBy, the relations those views hold from the other end; an event
 --     the choice itself writes names whichever object was chosen, alike.
+--     Its rider triggerings are read by namedByRelation too, for the granter
+--     their ability is named for (Binding.acquiredFrom), as are the counted
+--     activations of GameState.activatedThisTurn and Object.activatedOnce.
 --     GameState.couldAttackThisTurn and GameState.damageBeforeThisTurn are
 --     read through the same two views, and the latter through actedOnBy too.
 --     GameState.controlSample (CR 603.2's control diff) and
@@ -580,6 +586,9 @@ namedByRelation oid gs =
         || elem oid (GameState.revealedTops gs)
         || Set.member oid (GameState.outsideCopies gs)
         || any (triggeredNames oid) (GameState.triggeredThisGame gs)
+        || any (triggeredNames oid) [record | GameEvent.AbilityTriggered record <- fmap LoggedEvent.event (Foldable.toList (GameState.events gs))]
+        || any (any (spentActivationNames oid) . Map.keys) (Map.elems (GameState.activatedThisTurn gs))
+        || any (any (spentActivationNames oid) . Map.keys . Object.activatedOnce) (Map.elems (GameState.objects gs))
         || any (activationNames oid) (GameState.activationsThisTurn gs)
         || any (any (attackedLastTurnNames oid)) (Map.elems (GameState.attacksInOwnLastTurn gs))
 
@@ -613,12 +622,21 @@ pileNames stamp = case stamp of
   Timestamp.MkTimestamp _n -> Set.empty
 
 -- Whether a spent "triggers only once" triggering names this object as its
--- source. Positional for phasedOutNames' reason.
+-- source, or as the granter its ability is named for (Binding.acquiredFrom).
+-- Positional for phasedOutNames' reason. The granter read, and
+-- spentActivationNames below, are a REGRESSION FENCE: no rider granter in
+-- data/cards/ is itself a mana source, the one kind of candidate asked.
 triggeredNames :: ObjectId -> AbilityTriggered.AbilityTriggered -> Bool
 triggeredNames oid entry = case entry of
-  AbilityTriggered.MkAbilityTriggered source _controller _ability -> case source of
-    TriggerSource.OfObject object -> object == oid
-    TriggerSource.Sourceless -> False
+  AbilityTriggered.MkAbilityTriggered source _controller ability ->
+    any (Binding.isAcquiredFrom oid) (TriggeredAbility.name ability) || case source of
+      TriggerSource.OfObject object -> object == oid
+      TriggerSource.Sourceless -> False
+
+-- Whether a counted activation (CR 602.5b) spent an ability named for this
+-- object as its granter (Binding.acquiredFrom).
+spentActivationNames :: ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Bool
+spentActivationNames oid ability = any (Binding.isAcquiredFrom oid) (ActivatedAbility.name ability)
 
 -- Whether a CR 602.2 activation this turn names this object, as its source or
 -- among its targets. Positional for phasedOutNames' reason.

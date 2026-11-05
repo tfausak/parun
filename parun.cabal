@@ -327,17 +327,11 @@ library codec
     Parun.Codec.CardArrivedInSpec
     Parun.Codec.CardIdentity
     Parun.Codec.CardIdentitySpec
-    Parun.Codec.CardLeavesZone
-    Parun.Codec.CardLeavesZoneSpec
     Parun.Codec.CardName
     Parun.Codec.CardNameSpec
-    Parun.Codec.CardPutIntoGraveyard
-    Parun.Codec.CardPutIntoGraveyardSpec
     Parun.Codec.CardSelection
     Parun.Codec.CardSelectionSpec
     Parun.Codec.CardSpec
-    Parun.Codec.CardsPutIntoZone
-    Parun.Codec.CardsPutIntoZoneSpec
     Parun.Codec.CardType
     Parun.Codec.CardTypeSpec
     Parun.Codec.CastFrom
@@ -921,6 +915,8 @@ library codec
     Parun.Codec.LayoutSpec
     Parun.Codec.LeavesTrigger
     Parun.Codec.LeavesTriggerSpec
+    Parun.Codec.LeavesZoneTrigger
+    Parun.Codec.LeavesZoneTriggerSpec
     Parun.Codec.LeavingPermanent
     Parun.Codec.LeavingPermanentSpec
     Parun.Codec.LeftTheGame
@@ -1304,6 +1300,8 @@ library codec
     Parun.Codec.PutCountersFrom
     Parun.Codec.PutCountersFromSpec
     Parun.Codec.PutCountersSpec
+    Parun.Codec.PutIntoZoneTrigger
+    Parun.Codec.PutIntoZoneTriggerSpec
     Parun.Codec.PutSticker
     Parun.Codec.Quantity
     Parun.Codec.QuantitySpec
@@ -2528,11 +2526,8 @@ library types
     Parun.Types.CardAbilities
     Parun.Types.CardArrivedIn
     Parun.Types.CardIdentity
-    Parun.Types.CardLeavesZone
     Parun.Types.CardName
-    Parun.Types.CardPutIntoGraveyard
     Parun.Types.CardSelection
-    Parun.Types.CardsPutIntoZone
     Parun.Types.CardType
     Parun.Types.CarryOver
     Parun.Types.CastFrom
@@ -2866,6 +2861,7 @@ library types
     Parun.Types.Layout
     Parun.Types.LearnMode
     Parun.Types.LeavesTrigger
+    Parun.Types.LeavesZoneTrigger
     Parun.Types.LeavingPermanent
     Parun.Types.LeftTheGame
     Parun.Types.LentCards
@@ -3085,6 +3081,7 @@ library types
     Parun.Types.Prototype
     Parun.Types.PutCounters
     Parun.Types.PutCountersFrom
+    Parun.Types.PutIntoZoneTrigger
     Parun.Types.PutSticker
     Parun.Types.Quantity
     Parun.Types.Question

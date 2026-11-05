@@ -4,6 +4,7 @@ module Parun.Oracle.Cost where
 
 import qualified Control.Monad as Monad
 import qualified Data.Char as Char
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import qualified Parun.Oracle.Filter as Filter
 import qualified Parun.Oracle.Prose as Prose
@@ -130,8 +131,29 @@ payment self named c = case (Cost.mana c, Cost.components c) of
     text <- component self named one
     Monad.guard (maybe False (Char.isAlpha . fst) (Text.uncons text))
     let (verb, rest) = Text.breakOn (Text.pack " ") (Prose.decapitalise text)
-    [(verb <> rest, verb <> Text.pack "s" <> rest)]
+    -- Free: "sacrifices a creature", or "... of their choice" (Indulgent
+    -- Tormentor), the same payment.
+    tail' <- rest : [rest <> Text.pack " of their choice" | CostComponent.Sacrifice {} <- [one]]
+    [(verb <> tail', verb <> Text.pack "s" <> tail')]
   _ -> []
+
+-- | 'payment' of a cost offering a choice. Of two options, free in whether the
+-- second repeats a shared "pay": "pays {1} or 1 life" (Erosion), "sacrifices a
+-- creature of their choice or pays 3 life" (Indulgent Tormentor).
+paymentChoice :: Text.Text -> (k -> [Text.Text]) -> NonEmpty.NonEmpty (Cost.Cost k) -> [(Text.Text, Text.Text)]
+paymentChoice self named options = case options of
+  only NonEmpty.:| [] -> payment self named only
+  one NonEmpty.:| [other] -> do
+    (second, third) <- payment self named one
+    (second', third') <- payment self named other
+    let either' a b = a <> Text.pack " or " <> b
+    case (Text.stripPrefix verb second, Text.stripPrefix verb second') of
+      (Just _, Just rest) -> [(either' second rest, either' third rest)]
+      _ -> []
+      <> [(either' second second', either' third third')]
+  _ -> []
+  where
+    verb = Text.pack "pay "
 
 -- | A cost following a keyword: "Echo {1}{G}" for a cost of mana alone, and
 -- otherwise the cost as a sentence after a dash, "Ward--Pay 3 life." (CR

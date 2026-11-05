@@ -1,0 +1,49 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Anointed Procession",
+      "oracleText": "If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead.",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "TokenR",
+            "value": {
+              "matching": {
+                "effectsOnly": true,
+                "whose": {
+                  "type": "You"
+                }
+              },
+              "scaling": {
+                "type": "Multiply",
+                "value": 2
+              }
+            }
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

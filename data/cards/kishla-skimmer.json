@@ -39,12 +39,15 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CardLeavesZone",
+            "type": "LeavesZone",
             "value": {
-              "filter": {
-                "type": "Not",
+              "card": {
+                "type": "Matching",
                 "value": {
-                  "type": "IsToken"
+                  "type": "Not",
+                  "value": {
+                    "type": "IsToken"
+                  }
                 }
               },
               "from": {

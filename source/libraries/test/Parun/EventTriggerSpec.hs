@@ -54,6 +54,7 @@ import qualified Parun.Types.PendingTrigger as PendingTrigger
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Printing as Printing
+import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.SpellWasCast as SpellWasCast
@@ -1316,6 +1317,16 @@ wellRestedSpec s registry =
       Spec.assertEqWith s "both instances resolved: four +1/+1 counters" (countersOn rested1) (Just 4)
       Spec.assertEqWith s "and 4 life and two cards" (S.lifeOf S.alice rested1, S.handSize S.alice rested1) (Just 24, 2)
       Spec.assertEqWith s "a second untap that turn triggers neither" (length (GameState.stack rested2)) 0
+      -- Each grant is named for its Aura (Binding.acquiredFrom), but CR
+      -- 603.3b's ordering prompt shows the two as written (Engine.entryOf),
+      -- so its two entries are equal.
+      let granted = PC.triggeredAbilities (Projection.project pikerId stocked)
+          entryFor ability = Engine.entryOf (PendingTrigger.MkPendingTrigger (TriggerSource.OfObject pikerId) S.alice ability Map.empty Nothing Nothing 1 Map.empty)
+      case granted of
+        [one, other] -> do
+          Spec.assertBool s (one /= other) "each grant is named for its own Aura"
+          Spec.assertEqWith s "and the ordering prompt shows the two grants as one entry" (entryFor one) (entryFor other)
+        _ -> Spec.assertFailure s "the Piker should bear the two granted abilities"
     -- The per-GAME rider on the same tally. Engine.reactions writes one
     -- Acrobatic Cheerleader triggering to the turn's log AND to
     -- GameState.triggeredThisGame; it is one triggering, so a second instance

@@ -1186,13 +1186,16 @@ orderInert ability =
 
 -- What one pending trigger looks like to the player asked for CR 603.3b's order:
 -- its source and WHICH ABILITY it is. Passing the ability THROUGH is not the
--- rules core reading it -- nothing here cases on what the ability does.
+-- rules core reading it -- nothing here cases on what the ability does. Its
+-- name is shown as written (Binding.asWritten), so two granters' grants of one
+-- rider ability are equal entries, as their words are.
 entryOf :: PendingTrigger.PendingTrigger -> TriggerEntry.TriggerEntry
 entryOf pending =
-  TriggerEntry.MkTriggerEntry
-    { TriggerEntry.source = PendingTrigger.source pending,
-      TriggerEntry.ability = PendingTrigger.ability pending
-    }
+  let ability = PendingTrigger.ability pending
+   in TriggerEntry.MkTriggerEntry
+        { TriggerEntry.source = PendingTrigger.source pending,
+          TriggerEntry.ability = ability {TriggeredAbility.name = Binding.asWritten (TriggeredAbility.name ability)}
+        }
 
 -- CR 612.7 / 108.1: ask the interpreter, once per filter, for the reference
 -- face names each live name grant's filter admits (Projection.referenceQueries),

@@ -137,6 +137,7 @@ import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TextWord as TextWord
 import Parun.Types.Timestamp (Timestamp (MkTimestamp))
 import qualified Parun.Types.Trait as Trait
+import qualified Parun.Types.TriggerLimit as TriggerLimit
 import Parun.Types.TriggeredAbility (TriggeredAbility)
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
@@ -319,13 +320,28 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- static ability's is recorded here; grantedRuleAbilities reads both.
         -- A PLAYER ability, applied after the layers too (CR 613.10), is
         -- recorded here whoever grants it.
+        --
+        -- CR 113.2c: an ability printing a once-only rider is named for its
+        -- granter (Binding.acquiredFrom), so a new granter's is a different
+        -- ability, unspent, as the rulings on Tyvar the Bellicose say; one
+        -- regained from the same granter is the same ability, still spent
+        -- (docs/decisions.md, "A rider ability regained from one granter stays
+        -- spent"). The Well Rested, Tyvar, Aura Graft and Touch of Vitae files
+        -- in data/scenarios prove it.
         Modification.GainAbility g -> case g of
           -- The cost names its granter by id (Binding.grantingPermanent);
           -- data/scenarios' Fishing Pole files prove each names its own.
           GrantedAbility.Activated a ->
-            pc {PC.activatedAbilities = PC.activatedAbilities pc <> [a {ActivatedAbility.cost = Filter.bakeCost Binding.grantingPermanent src (ActivatedAbility.cost a)}]}
+            let named
+                  | Keyword.countsActivations a = a {ActivatedAbility.name = Just (Binding.acquiredFrom src (ActivatedAbility.name a))}
+                  | otherwise = a
+             in pc {PC.activatedAbilities = PC.activatedAbilities pc <> [named {ActivatedAbility.cost = Filter.bakeCost Binding.grantingPermanent src (ActivatedAbility.cost a)}]}
           GrantedAbility.Triggered t ->
-            pc {PC.triggeredAbilities = PC.triggeredAbilities pc <> [t]}
+            let named = case TriggeredAbility.limit t of
+                  TriggerLimit.Unlimited -> t
+                  TriggerLimit.OncePerTurn -> t {TriggeredAbility.name = Just (Binding.acquiredFrom src (TriggeredAbility.name t))}
+                  TriggerLimit.OncePerGame -> t {TriggeredAbility.name = Just (Binding.acquiredFrom src (TriggeredAbility.name t))}
+             in pc {PC.triggeredAbilities = PC.triggeredAbilities pc <> [named]}
           GrantedAbility.Static sa -> case affected of
             Affected.TheseObjects _ -> pc
             _ -> pc {PC.grantedStaticAbilities = PC.grantedStaticAbilities pc <> [(stamp, sa)]}
@@ -376,7 +392,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- 607.5 an acquired one only to its own pair.
         --
         -- CR 602.5c / 607.5: each is named for the card it came from and its
-        -- own name (Binding.lentCardAbility), so two identically worded
+        -- own name (Binding.acquiredFrom), so two identically worded
         -- abilities from two cards are two to a restriction on their use, and
         -- a named one is not the holder's own ability of that name. A name
         -- stated inside it means its twin from the same card
@@ -400,7 +416,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
                 LentCards.InExile -> (Zone.Exile, Set.toAscList (GameState.exile gs))
                 LentCards.TopOfYourLibrary -> (Zone.Library, foldMap (\you -> Maybe.maybeToList (Game.shownTop you gs)) (controllerOf src gs))
               cards = filter (maybe False (\view -> Filter.matches context view criterion) . viewOf) lenders
-              named card a = a {ActivatedAbility.name = Just (Binding.lentCardAbility card (ActivatedAbility.name a))}
+              named card a = a {ActivatedAbility.name = Just (Binding.acquiredFrom card (ActivatedAbility.name a))}
               -- CR 113.6 / 702.178b: a card has, where it is, only the "as long
               -- as" grants that function there (AbilityZone.grantFunctionsIn).
               lent card = let copied = copiableCharacteristics card gs in filter (AbilityZone.grantFunctionsIn Zone.Battlefield (PC.delayedAbilities copied) zone) (PC.activatedAbilities copied)

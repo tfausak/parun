@@ -1,0 +1,52 @@
+{
+  "description": "CR 602.5b / 113.2c: Touch of Vitae's granted \"{0}: Untap this creature. Activate only once.\" is spent once activated, and a second Touch of Vitae cast on the same creature next turn grants a different ability, which may be activated",
+  "note": "On turn 1 alice casts the first Touch of Vitae on her tapped Grizzly Bears and activates the ability; a second activation is refused. On turn 3 she casts the second on the same Bears and its ability is offered. A once-per-object record keyed by the ability's text alone would still read it as spent.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bears", "ready": true, "tapped": true },
+          { "card": "Forest", "label": "f1", "ready": true },
+          { "card": "Forest", "label": "f2", "ready": true },
+          { "card": "Forest", "label": "f3", "ready": true }
+        ],
+        "hand": [
+          { "card": "Touch of Vitae", "label": "first" },
+          { "card": "Touch of Vitae", "label": "second" }
+        ],
+        "library": [
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$first", "targets": ["$bears"], "mana": ["$f1", "$f2", "$f3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$bears", "ability": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$bears", "tapped": false } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "$bears", "ability": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$second", "targets": ["$bears"], "mana": ["$f1", "$f2", "$f3"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$bears", "ability": 0 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } }
+  ]
+}

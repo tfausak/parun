@@ -80,8 +80,7 @@ data PayGate = MkPayGate
     -- A CHOICE of whole costs, in printed order, because the "something else"
     -- may be a disjunction: Torment of Venom's "unless they sacrifice another
     -- nonland permanent of their choice or discard a card". The payer picks one
-    -- payable option or declines (Parun.Engine.Resolve.Common.payGateAgreed);
-    -- every other gate has one option.
+    -- payable option or declines (Parun.Engine.Resolve.Common.payGateAgreed).
     cost :: CostChoice.CostChoice,
     -- | CR 118.6's other kind of cost: one the card DESCRIBES in terms of
     -- another object rather than printing -- Flash's "unless you pay its mana

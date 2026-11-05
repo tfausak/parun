@@ -248,7 +248,7 @@ data LastKnown = MkLastKnown
     -- once the object is gone.
     home :: !Zone.Zone,
     -- | CR 400.1: whose library, hand or graveyard held it as it ceased --
-    -- Nothing off those zones. CardLeavesZone's `whose` reads it.
+    -- Nothing off those zones. LeavesZoneTrigger's `whose` reads it.
     pile :: !(Maybe PlayerId.PlayerId),
     -- | CR 611.3a / 608.2h: the "as long as" clauses of its granted activated
     -- abilities that did not hold as it left (Parun.Types.ActivatedAbility's

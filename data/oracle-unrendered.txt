@@ -114,6 +114,7 @@ animate-wall
 animists-awakening
 ankh-of-mishra
 annex
+anointed-procession
 aphotic-wisps
 apocalypse-chime
 approach-of-the-second-sun
@@ -1383,7 +1384,6 @@ indentured-djinn
 index
 indigo-faerie
 indomitable-might
-indulgent-tormentor
 infantry-shield
 infectious-bloodlust
 infernal-contract
@@ -2915,7 +2915,6 @@ tome-of-the-infinite
 too-greedily-too-deep
 toralfs-disciple
 torgaar-famine-incarnate
-torment-of-venom
 tormented-thoughts
 tormenting-voice
 tormods-crypt
@@ -2925,6 +2924,7 @@ total-war
 touch-of-death
 touch-of-moonglove
 touch-of-the-eternal
+touch-of-vitae
 tovolar-dire-overlord-tovolar-the-midnight-scourge
 tower-geist
 toxic-deluge
@@ -2963,6 +2963,7 @@ tsabos-web
 turn-the-tables
 turn-to-frog
 turn-to-slag
+turntimber-ranger
 turret-ogre
 tusk-and-whiskers
 twinblade-assassins
@@ -3278,7 +3279,6 @@ cavalier-of-night
 chrome-replicator
 conclave-mentor
 containment-priest
-crypt-lurker
 destructive-tampering
 discontinuity
 double-vision

@@ -896,9 +896,10 @@ matchesPrinted viewOf gs event candidate =
         -- And WHAT is being created (Queen Allenal of Ruadach's "creature
         -- tokens"): "one or more" is ANY lot matching, each judged off what the
         -- creating effect gives its token (CR 111.3) since none is minted yet.
+        -- An effects-only row skips a cost's lot (reachesLot).
         (ReplacementEffect.TokenR (TokenR.MkTokenR pat _ _), ProposedEvent.WouldCreateTokens pid lots) ->
           matchesPlayer gs candidate (TokenPattern.whose pat) pid
-            && any (matchesTokenLot gs (candidateContext gs candidate) (TokenPattern.whatToken pat) pid) lots
+            && any (\lot -> reachesLot pat lot && matchesTokenLot gs (candidateContext gs candidate) (TokenPattern.whatToken pat) pid lot) lots
         -- CR 614.1b / 500.11: a skip intercepts a step or phase BEGINNING, and
         -- names exactly which one -- and, for a player-scoped skip, whose.
         --
@@ -1888,6 +1889,13 @@ candidateContext gs candidate =
         (Projection.framedWith choices source gs (Projection.sourceContext gs (ReplacementCandidate.controller candidate) source))
           { Filter.carrierChosenPlayer = Game.currentChoice Chosen.Players source gs >>= Map.lookup PlayerChoice.AsEnters
           }
+
+-- CR 614.16: whether a token row's "an effect would create" reaches `lot`: a
+-- lot made as CR 118.12's cost is no effect's (docs/decisions.md, "What a spell
+-- or ability causes"), while one another replacement appended is. The
+-- turntimber-ranger-* scenarios prove both.
+reachesLot :: TokenPattern.TokenPattern -> TokenLot.TokenLot -> Bool
+reachesLot pat lot = not (TokenPattern.effectsOnly pat) || TokenLot.byEffect lot
 
 -- A lot's token is judged off the characteristics the creating effect gives it
 -- (CR 111.3) -- its given text, or for CR 707.1's copy token the copiable values

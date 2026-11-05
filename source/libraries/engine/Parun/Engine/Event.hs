@@ -95,7 +95,6 @@ import qualified Parun.Types.CandidateCost as CandidateCost
 import Parun.Types.CandidateId (CandidateId)
 import Parun.Types.Card (Card)
 import qualified Parun.Types.Card as Card.Type
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CarryOver as CarryOver
@@ -195,6 +194,7 @@ import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.LandOrNonland as LandOrNonland
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.Layout as Layout
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeDirection as LifeDirection
@@ -253,6 +253,7 @@ import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
 import Parun.Types.ProposedEvent (ProposedEvent)
 import qualified Parun.Types.ProposedEvent as ProposedEvent
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.Quantity as Quantity.Type
 import qualified Parun.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Parun.Types.Recipient as Recipient
@@ -4891,11 +4892,16 @@ apply settle batch applied candidate event =
     -- too, and the creating effect's riders reach it (Queen Allenal's ruling).
     -- Parun.ShieldCounterSpec's Queen Allenal and Chatterfang groups are the
     -- proof, both orders.
-    (ReplacementEffect.TokenR (TokenR.MkTokenR _ scaling plus), ProposedEvent.WouldCreateTokens pid lots) -> do
+    --
+    -- CR 614.16: an effects-only row scales only the lots an effect makes
+    -- (Replacement.reachesLot), and a lot this row appends is one.
+    (ReplacementEffect.TokenR (TokenR.MkTokenR pat scaling plus), ProposedEvent.WouldCreateTokens pid lots) -> do
       Replacement.consume (ReplacementCandidate.identity candidate)
-      let scaleLot factor lot = lot {TokenLot.count = Replacement.scale factor (TokenLot.count lot)}
+      let scaleLot factor lot
+            | Replacement.reachesLot pat lot = lot {TokenLot.count = Replacement.scale factor (TokenLot.count lot)}
+            | otherwise = lot
           scaled = maybe lots (\factor -> fmap (scaleLot factor) lots) scaling
-          lotOf card n = TokenLot.MkTokenLot {TokenLot.card = card, TokenLot.copy = Nothing, TokenLot.count = n}
+          lotOf card n = TokenLot.MkTokenLot {TokenLot.card = card, TokenLot.copy = Nothing, TokenLot.count = n, TokenLot.byEffect = True}
           appended = case plus of
             Nothing -> scaled
             Just (TokenPlus.One card) -> scaled Seq.|> lotOf card 1
@@ -9461,7 +9467,7 @@ createTokens settle controller card copy n tapped entering attached marks = do
   if List.notElem controller (Game.stillPlaying gs)
     then pure []
     else do
-      resolved <- resolveTokens controller (Seq.singleton TokenLot.MkTokenLot {TokenLot.card = card, TokenLot.copy = copy, TokenLot.count = n})
+      resolved <- resolveTokens controller (Seq.singleton TokenLot.MkTokenLot {TokenLot.card = card, TokenLot.copy = copy, TokenLot.count = n, TokenLot.byEffect = not (GameState.payingOnResolution gs)})
       case resolved of
         Nothing -> pure []
         Just (owner, lots) -> do
@@ -11070,32 +11076,11 @@ controllerTurnScoped cond = case cond of
   -- Whippoorwill's "this turn" is its delayed entry's CR 603.7b duration, not
   -- anything the condition states.
   TriggerCondition.Leaves _ -> False
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> False
-  -- CR 603.6c names no turn, so the bystander reading is unscoped like the
-  -- self-scoped one above.
-  TriggerCondition.CardPutIntoGraveyard _ -> False
-  -- The third arm carrying a TurnScope, and the classification follows the FIELD
-  -- rather than the constructor: Kishla Skimmer prints "during your turn" and a
-  -- printing of the same family without it would not.
-  TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.ControllersTurn _ _ _) -> True
-  TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.EachTurn _ _ _) -> False
-  -- No printing of this family says "during an opponent's turn", so this arm is
-  -- unreachable from card data; answering True would make the classification wrong
-  -- for the sake of that unreachable case.
-  TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.OpponentsTurn _ _ _) -> False
-  -- StepBegins' PlayersTurn answer, and for its reason.
-  TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone _ (TurnScope.PlayersTurn _) _ _ _) -> False
-  -- The batch reading of the same family, classified off the same field for the
-  -- same reason: Spirit Mascot prints no turn clause where Kishla Skimmer does.
-  TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.ControllersTurn _ _ _) -> True
-  TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.EachTurn _ _ _) -> False
-  TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.OpponentsTurn _ _ _) -> False
-  TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ (TurnScope.PlayersTurn _) _ _ _) -> False
-  -- Dutiful Knowledge Seeker's arrival names no turn.
-  TriggerCondition.CardsPutIntoZone {} -> False
-  TriggerCondition.SelfLeavesGraveyard -> False
+  -- The classification follows the FIELD rather than the constructor, LifeChanges'
+  -- reading: Kishla Skimmer and Stonebinder's Familiar print "during your turn",
+  -- and Spirit Mascot and Dutiful Knowledge Seeker print no turn.
+  TriggerCondition.LeavesZone t -> LeavesZoneTrigger.scope t == TurnScope.ControllersTurn
+  TriggerCondition.PutIntoZone t -> PutIntoZoneTrigger.scope t == TurnScope.ControllersTurn
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
   -- Damage can be prevented on anybody's turn.
@@ -11341,8 +11326,11 @@ triggeredSources boards gs =
 --
 -- COUNTED against PendingTrigger.copies, as stateTriggers counts CR 603.8's
 -- suppression: CR 113.2c makes two value-identical instances on one source two
--- abilities, each with its own allowance. Parun.EventTriggerSpec's "CR 113.2c two
--- Well Rested on one creature each trigger once that turn" proves it.
+-- abilities, each with its own allowance. Two granters' grants are unequal
+-- (Binding.acquiredFrom), so the count is reached only by instances one printing
+-- or one granter repeats; Parun.EventTriggerSpec's per-game rider case drives
+-- it directly, and its "CR 113.2c two Well Rested on one creature each trigger
+-- once that turn" proves the two granters' grants.
 withinTriggerLimit :: GameState -> [PendingTrigger.PendingTrigger] -> [PendingTrigger.PendingTrigger]
 withinTriggerLimit gs =
   let spentKey record = limitKey (AbilityTriggered.source record) (AbilityTriggered.controller record) (AbilityTriggered.ability record)
@@ -11374,10 +11362,9 @@ withinTriggerLimit gs =
 -- active teammate's speed rises once": under the shared team turns option two
 -- active players each spend their own instance of rule 702.179d's ability.
 --
--- Not implemented: value-identical instances on one source share a key and are
--- COUNTED rather than told apart, so when the instance that triggered goes and
--- an identical one that has not stays, the one that stays reads as spent
--- (#4627).
+-- A grant is told apart by its name, drawn from its granter
+-- (Binding.acquiredFrom), so a new granter's grant is unspent; the Well Rested
+-- and Tyvar the Bellicose files in data/scenarios prove it.
 type LimitKey = (TriggerSource.TriggerSource, Maybe PlayerId, TriggeredAbility.TriggeredAbility Card (GrantedAbility.Type.GrantedAbility Card))
 
 limitKey :: TriggerSource.TriggerSource -> PlayerId -> TriggeredAbility.TriggeredAbility Card (GrantedAbility.Type.GrantedAbility Card) -> LimitKey
