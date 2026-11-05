@@ -1,0 +1,13 @@
+{
+  "description": "CR 106.12a / 613.4c Gauntlet of Might gives red creatures +1/+1 and adds an additional {R} whenever a Mountain is tapped for mana",
+  "note": "alice controls Gauntlet of Might. Her red Goblin Piker is 3/2 and her green Grizzly Bears stay 2/2. Tapping her Mountain gives two red, the second from an artifact source; her Forest then adds its one green alone.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Gauntlet of Might"}, {"card": "Mountain", "label": "mountain"}, {"card": "Forest", "label": "forest"}, {"card": "Goblin Piker", "label": "piker"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$piker", "power": 3, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Take": {"action": "ActivateManaAbility $mountain"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "ManaPool", "player": "alice", "is": [{"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}, {"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [{"type": "Artifact"}], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Take": {"action": "ActivateManaAbility $forest"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "ManaPool", "player": "alice", "is": [{"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}, {"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [{"type": "Artifact"}], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}, {"manaType": {"type": "Colored", "value": {"type": "Green"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]}}}
+  ]
+}

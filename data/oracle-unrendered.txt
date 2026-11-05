@@ -283,6 +283,7 @@ blackmail
 blasphemous-edict
 blastfire-bolt
 blatant-thievery
+blaze-of-glory
 blazing-archon
 blessed-reversal
 blight
@@ -1097,6 +1098,7 @@ gate-colossus
 gatekeeper-of-malakir
 gather-specimens
 gather-the-pack
+gauntlet-of-might
 gauntlet-of-power
 gauntlets-of-chaos
 gauntlets-of-light
@@ -2899,6 +2901,7 @@ time-elemental
 time-reversal
 time-stop
 time-stretch
+time-walk
 time-warp
 timely-interference
 timely-reinforcements
@@ -2978,6 +2981,7 @@ twinflame-tyrant
 twisted-fealty
 twisted-image
 two-headed-dragon
+two-headed-giant-of-foriys
 tymna-the-weaver
 tyvar-the-bellicose
 ugin-the-spirit-dragon

@@ -7,14 +7,7 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 
 ## Expressible today
 
-These need no new capability, but `parun translate` does not translate them yet.
-Each names the mtgish node the translator stops at.
-
-- Blaze of Glory: `_Rule:CastEffect`. #6070 reads it as writable today.
-- Gauntlet of Might: `_Trigger:WhenAPermanentIsTappedForMana`
-- Psionic Blast: `_Action:SpellDealsMultipleDamage`
-- Time Walk: `_Action:TakeAnExtraTurn`
-- Two-Headed Giant of Foriys: `_PermanentRule:CanBlockAnAdditionalCreature`
+Every expressible Unlimited Edition card has been added to `data/cards/`.
 
 ## Needs a capability
 
