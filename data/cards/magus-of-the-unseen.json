@@ -114,8 +114,11 @@
       "delayedAbilities": {
         "tap it": {
           "condition": {
-            "type": "LoseControlOfBound",
-            "value": "target"
+            "type": "LosesControl",
+            "value": {
+              "type": "Bound",
+              "value": "target"
+            }
           },
           "modal": {
             "modes": [

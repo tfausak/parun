@@ -293,6 +293,7 @@ import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LimitUnless as LimitUnless
 import qualified Parun.Types.LookAt as LookAt
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.LoyaltyClause as LoyaltyClause
 import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.MadnessCost as MadnessCost
@@ -3142,8 +3143,9 @@ triggerConditionNames asking x = case x of
   TriggerCondition.PermanentSacrificed permanentSacrificed -> playerActsOnNames asking permanentSacrificed
   TriggerCondition.SagaFinalChapterTriggers _playerRelation -> mempty
   TriggerCondition.PlayerBecomesMonarch _playerRelation -> mempty
-  TriggerCondition.LoseControlOfBound slotName -> slotNames asking slotName
-  TriggerCondition.LoseControlOfSelf -> mempty
+  TriggerCondition.LosesControl subject -> case subject of
+    LostPermanent.Self -> mempty
+    LostPermanent.Bound slotName -> slotNames asking slotName
   TriggerCondition.RoomEntered _roomIndex -> mempty
   TriggerCondition.PlayerActs _playerActs -> mempty
   TriggerCondition.PlayerLosesGame _playerRelation -> mempty
