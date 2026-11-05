@@ -12,9 +12,11 @@
 module Parun.Interpreter where
 
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Maybe as Maybe
 import qualified Parun.Engine.Card as Card
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Interchangeable.Mentions as Mentions
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Parun.Registry as Registry
@@ -25,6 +27,7 @@ import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.Layout as Layout
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Prompt as Prompt
 
@@ -48,7 +51,8 @@ import qualified Parun.Types.Prompt as Prompt
 -- step: a split card's half and a double-faced card's back face are each keyed
 -- in Parun.Registry.index under their own name, and rule 201.4a is put to "only
 -- that half's" or "only the back face's" characteristics. The alternative names
--- CR 201.4c and CR 201.4f allow are judged the same way. Nothing here reaches the
+-- CR 201.4c and CR 201.4f allow are judged the same way, and so is CR 201.4e's
+-- combined back face, which chosenFace finds. Nothing here reaches the
 -- combined view's joined rendering, which is no name the card has (CR 709.4a) and
 -- so is not choosable at all (CR 201.4b's "but not both").
 --
@@ -69,17 +73,36 @@ legalCardName ::
   Filter.Type.Filter Keyword.Keyword ->
   CardName.CardName ->
   m Bool
-legalCardName registry failed gs chooser restriction name = do
-  found <- fetched failed (Registry.fetchCard registry name)
-  pure $ case found of
-    Nothing -> False
-    Just card -> case Card.faceNamed name card of
-      Nothing -> False
-      Just face ->
-        Filter.matches
-          (Filter.contextIn gs (Just chooser) Nothing)
-          (Projection.viewOfCard face)
-          restriction
+legalCardName registry failed gs chooser restriction name =
+  fmap (admitsName gs chooser restriction) (fetched failed (chosenFace registry name))
+
+-- CR 201.4a: whether the face a chosen name answers to (chosenFace) passes the
+-- restriction from the chooser's seat. No face is no card's name (CR 201.4).
+admitsName :: GameState.GameState -> PlayerId.PlayerId -> Filter.Type.Filter Keyword.Keyword -> Maybe (Face.Face Card.Type.Card) -> Bool
+admitsName gs chooser restriction found = case found of
+  Nothing -> False
+  Just face ->
+    Filter.matches
+      (Filter.contextIn gs (Just chooser) Nothing)
+      (Projection.viewOfCard face)
+      restriction
+
+-- CR 201.4: the face a chosen name answers to, which CR 201.4a's
+-- characteristics are read off. A face of the card the registry answers with,
+-- else CR 201.4e's combined back face of a meld pair. No card prints that face
+-- whole (CR 712.4b), so the registry never answers to it and a deck list or
+-- Prompt.LookUpCard never finds it: the reference's meld cards are walked for
+-- it instead, and only when the name is no face's.
+chosenFace :: (Monad m) => Registry.Registry m -> CardName.CardName -> m (Either InvalidCorpus.InvalidCorpus (Maybe (Face.Face Card.Type.Card)))
+chosenFace registry name = do
+  found <- Registry.fetchCard registry name
+  case fmap (>>= Card.faceNamed name) found of
+    Right Nothing -> fmap (fmap (Maybe.listToMaybe . concatMap (Maybe.mapMaybe (Card.faceNamed name) . melded))) (Registry.cards registry)
+    answer -> pure answer
+  where
+    melded card = case Card.Type.layout card of
+      Layout.Meld {} -> Mentions.combinedBackFaces card
+      _ -> []
 
 -- CR 201.4's "the player must choose the name of a card", enforced over an
 -- interpreter's own answerer: an illegal name is not recorded, the same question

@@ -2179,6 +2179,7 @@ library scenario
     parun:codec,
     parun:engine,
     parun:extra,
+    parun:interpreter,
     parun:json-codec,
     parun:registry,
     parun:types,
