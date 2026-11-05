@@ -117,7 +117,13 @@
                 }
               },
               "scope": {
-                "type": "EachTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                }
               }
             }
           },

@@ -242,7 +242,7 @@ necrologiaSpec s registry = Spec.describe s "Necrologia" $ do
     bolt <- S.printingOf s registry "Lightning Bolt"
     let (oid, boltId, board) = necrologiaBoard swamp mountain necrologia bolt (Phase.Ending EndingStep.EndStep)
         bobsTurn = board {GameState.activePlayer = S.bob}
-    Spec.assertBool s (not (S.castable S.alice oid bobsTurn)) "TurnScope.ControllersTurn refuses it"
+    Spec.assertBool s (not (S.castable S.alice oid bobsTurn)) "(TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)) refuses it"
     Spec.assertBool s (not (any (S.isCastOf oid) (Action.legalActions S.alice bobsTurn))) "and it is not offered"
     Spec.assertBool s (S.castable S.alice boltId bobsTurn) "though the control instant still is"
   -- CR 500.1: the WINDOW half, isolated. alice's own turn, wrong phase.

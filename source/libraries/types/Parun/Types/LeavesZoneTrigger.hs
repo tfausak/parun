@@ -2,6 +2,7 @@ module Parun.Types.LeavesZoneTrigger where
 
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Batching as Batching
+import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.Zone as Zone
@@ -38,6 +39,6 @@ self zone =
       from = zone,
       to = Nothing,
       whose = Nothing,
-      scope = TurnScope.EachTurn,
+      scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer),
       batching = Batching.EachOccurrence
     }

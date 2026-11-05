@@ -2065,8 +2065,8 @@ elkinLairSpec s registry =
         let (_, withLair) = S.addPermanent lair S.alice (Setup.emptyGame S.bothPlayers)
             withAlices = List.foldl' (\g q -> snd (S.addHandCard q S.alice g)) withLair (reverse mine)
          in List.foldl' (\g q -> snd (S.addHandCard q S.bob g)) withAlices (reverse theirs)
-      -- BOB's upkeep, stamped and recorded -- the half TurnScope.EachTurn buys,
-      -- since under ControllersTurn the trigger would not fire here at all.
+      -- BOB's upkeep, stamped and recorded -- the half @Relative AnyPlayer@ buys,
+      -- since under @Relative You@ the trigger would not fire here at all.
       runBobsUpkeep :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> GameState.GameState
       runBobsUpkeep answer gs = S.runPure answer (bobsStepBegins (Phase.Beginning BeginningStep.Upkeep) answer gs) Engine.priorityLoop
       -- A step of bob's begun and its triggers put on the stack, none resolved.

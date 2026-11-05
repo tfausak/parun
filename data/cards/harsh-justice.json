@@ -6,7 +6,13 @@
           "type": "DuringPhase",
           "value": {
             "scope": {
-              "type": "EachTurn"
+              "type": "PlayersTurn",
+              "value": {
+                "type": "Relative",
+                "value": {
+                  "type": "AnyPlayer"
+                }
+              }
             },
             "window": {
               "type": "Step",

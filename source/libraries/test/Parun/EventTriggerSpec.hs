@@ -926,7 +926,7 @@ clarionSpiritSpec s registry =
         -- second cast of the four, and never again.
         --
         -- Boil is an instant, so alice's two casts after the handoff are legal on
-        -- bob's turn, and TurnScope.EachTurn is what lets them fire at all.
+        -- bob's turn, and @Relative AnyPlayer@ is what lets them fire at all.
         Spec.it s "CR 601.2i the count is per turn: the handoff clears it and the next turn fires again" $ do
           mountain <- S.printingOf s registry "Mountain"
           clarion <- S.printingOf s registry "Clarion Spirit"
@@ -1160,7 +1160,7 @@ kambalSpec s registry =
 -- you cast a spell during an opponent's turn, put a +1/+1 counter on this
 -- creature." Two narrowings again, on two different axes -- "you cast" is
 -- Filter.HeldBy Holder.Controller You against CR 109.5's "you" (CR 603.3a), and "during an
--- opponent's turn" is TurnScope.OpponentsTurn read against the same player --
+-- opponent's turn" is @Relative Opponent@ read against the same player --
 -- and only the second is new here.
 --
 -- Fog, {G} Instant "Prevent all combat damage that would be dealt this turn", is

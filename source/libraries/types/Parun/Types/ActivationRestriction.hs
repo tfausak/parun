@@ -47,8 +47,8 @@ data ActivationRestriction
     SorcerySpeed
   | -- | CR 500.1: activatable only while the game is in this step or phase, on a
     -- turn the scope admits. Desert's "Activate only during the end of combat
-    -- step" (CR 511.1) is EachTurn; Llanowar Augur's "Activate only during your
-    -- upkeep" is ControllersTurn.
+    -- step" (CR 511.1) is @Relative AnyPlayer@; Llanowar Augur's "Activate only during your
+    -- upkeep" is @Relative You@.
     --
     -- TWO axes because CR 500.1 supplies only one: it breaks a turn into phases
     -- and steps and says nothing about whose turn it is, which CR 102.1 makes a
@@ -70,13 +70,13 @@ data ActivationRestriction
     -- already restricts activation to.
     --
     -- "An opponent's turn" (Trade Caravan, Nettling Imp) is sayable here --
-    -- TurnScope.OpponentsTurn -- beside the window this arm requires. A rider
+    -- @Relative Opponent@ -- beside the window this arm requires. A rider
     -- that names a turn and NO window is DuringTurn below.
     DuringPhase DuringPhase.DuringPhase
   | -- | CR 102.1 alone: activatable only on a turn the scope admits, in any phase
     -- or step of it. Lavinia, Foil to Conspiracy prints the whole rider as
     -- "Activate only during an opponent's turn"; Disrupting Scepter and
-    -- Gwendlyn Di Corci print the ControllersTurn half.
+    -- Gwendlyn Di Corci print the @Relative You@ half.
     --
     -- A SIBLING ARM rather than a Maybe PhaseSelector inside DuringPhase. CR
     -- 500.1's windows and CR 102.1's turn are separate facts, and an arm meaning

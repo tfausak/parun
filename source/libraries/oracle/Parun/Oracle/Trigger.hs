@@ -143,7 +143,7 @@ event context creature c = case c of
     [other ("At the beginning of " <> when) [(thatPlayer, "that player")]]
   -- CR 601.2i: who casts the spell is its controller (CR 112.2), which the
   -- filter names among the spell's other qualities.
-  TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching f) TurnScope.EachTurn Nothing Nothing Nothing False) -> do
+  TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching f) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) Nothing Nothing Nothing False) -> do
     let caster g = case g of
           Filter.Type.HeldBy Holder.Controller _ -> True
           _ -> False
@@ -297,24 +297,24 @@ step s = case (StepBegins.phase s, StepBegins.ordinal s, StepBegins.scope s) of
       BeginningStep.DrawStep -> ["draw step"]
       BeginningStep.Untap -> []
     case scope of
-      TurnScope.ControllersTurn -> ["your " <> name]
+      TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You) -> ["your " <> name]
       -- Free: "each player's upkeep" (Elkin Lair) or "each upkeep" (Worms
       -- of the Earth).
-      TurnScope.EachTurn -> ["each player's " <> name] <> ["each " <> name | b == BeginningStep.Upkeep]
-      TurnScope.OpponentsTurn -> ["each opponent's " <> name]
+      TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer) -> ["each player's " <> name] <> ["each " <> name | b == BeginningStep.Upkeep]
+      TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.Opponent) -> ["each opponent's " <> name]
       TurnScope.PlayersTurn ref -> namedPlayers name ref
   (Phase.Combat CombatStep.BeginningOfCombat, Nothing, scope) -> case scope of
-    TurnScope.ControllersTurn -> ["combat on your turn"]
-    TurnScope.EachTurn -> ["each combat"]
-    TurnScope.OpponentsTurn -> ["combat on each opponent's turn"]
+    TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You) -> ["combat on your turn"]
+    TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer) -> ["each combat"]
+    TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.Opponent) -> ["combat on each opponent's turn"]
     TurnScope.PlayersTurn _ -> []
   (Phase.Ending EndingStep.EndStep, Nothing, scope) -> case scope of
-    TurnScope.ControllersTurn -> ["your end step"]
-    TurnScope.EachTurn -> ["each end step", "the end step", "each player's end step"]
-    TurnScope.OpponentsTurn -> ["each opponent's end step"]
+    TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You) -> ["your end step"]
+    TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer) -> ["each end step", "the end step", "each player's end step"]
+    TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.Opponent) -> ["each opponent's end step"]
     TurnScope.PlayersTurn ref -> namedPlayers "end step" ref
-  (Phase.PostcombatMain, Just 2, TurnScope.ControllersTurn) -> ["your second main phase"]
-  (Phase.PostcombatMain, Nothing, TurnScope.ControllersTurn) -> ["each of your postcombat main phases"]
+  (Phase.PostcombatMain, Just 2, TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)) -> ["your second main phase"]
+  (Phase.PostcombatMain, Nothing, TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)) -> ["each of your postcombat main phases"]
   _ -> []
 
 -- | A step of a named player's turn: Soul Bleed's "the upkeep of enchanted

@@ -296,7 +296,6 @@ import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerLimit as TriggerLimit
 import qualified Parun.Types.TriggerSource as TriggerSource
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
-import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.TurnUpEvent as TurnUpEvent
 import qualified Parun.Types.TurnUpProcedure as TurnUpProcedure
 import qualified Parun.Types.TurnUpR as TurnUpR
@@ -11058,7 +11057,7 @@ matchesTrigger gs = matchesTriggerGiven Map.empty (battlefieldCandidates gs) gs
 --
 -- Its customer is the card lint. Onset.FromNextTurnOf over @Relative You@
 -- delivers both halves of "your next turn" on its own, so this no longer guards
--- the firing -- it guards the DATA: a card arming that onset over an EachTurn
+-- the firing -- it guards the DATA: a card arming that onset over an each-turn
 -- condition would have its printed "each" silently narrowed by the window.
 --
 -- Exhaustive with no wildcard, for eventBindingSlots' reason: a new condition must
@@ -11099,18 +11098,12 @@ controllerTurnScoped cond = case cond of
   -- move, the zone change or the state-based action happens.
   TriggerCondition.SelfBecomesUnattachedFrom _ -> False
   -- One of the two arms carrying a TurnScope, and the one the lint below this
-  -- was written for (CR 603.3a, CR 109.5).
-  TriggerCondition.StepBegins (StepBegins.MkStepBegins _ _ TurnScope.ControllersTurn) -> True
-  -- "Each <step>" admits every player's turn, the pairing the lint rejects.
-  TriggerCondition.StepBegins (StepBegins.MkStepBegins _ _ TurnScope.EachTurn) -> False
-  -- And "during an opponent's <step>" admits every turn but the controller's,
-  -- which is not the controller's turn either. No card prints it, so the lint
-  -- cannot reach this arm; answering it any other way would make the
-  -- classification wrong for the sake of an unreachable case.
-  TriggerCondition.StepBegins (StepBegins.MkStepBegins _ _ TurnScope.OpponentsTurn) -> False
-  -- A named player's step is not the controller's as such: Soul Bleed on an
-  -- opponent's creature fires on that opponent's upkeep.
-  TriggerCondition.StepBegins (StepBegins.MkStepBegins _ _ (TurnScope.PlayersTurn _)) -> False
+  -- was written for (CR 603.3a, CR 109.5): "your <step>" only. "Each <step>"
+  -- admits every player's turn, the pairing the lint rejects; "each opponent's"
+  -- every turn but the controller's; and a named player's step is not the
+  -- controller's as such -- Soul Bleed on an opponent's creature fires on that
+  -- opponent's upkeep.
+  TriggerCondition.StepBegins (StepBegins.MkStepBegins _ _ scope) -> Turn.isControllersTurn scope
   -- None of the rest is turn-scoped: each names an event that can happen on
   -- anybody's turn.
   TriggerCondition.Enters _ -> False
@@ -11200,8 +11193,8 @@ controllerTurnScoped cond = case cond of
   -- The classification follows the FIELD rather than the constructor, LifeChanges'
   -- reading: Kishla Skimmer and Stonebinder's Familiar print "during your turn",
   -- and Spirit Mascot and Dutiful Knowledge Seeker print no turn.
-  TriggerCondition.LeavesZone t -> LeavesZoneTrigger.scope t == TurnScope.ControllersTurn
-  TriggerCondition.PutIntoZone t -> PutIntoZoneTrigger.scope t == TurnScope.ControllersTurn
+  TriggerCondition.LeavesZone t -> Turn.isControllersTurn (LeavesZoneTrigger.scope t)
+  TriggerCondition.PutIntoZone t -> Turn.isControllersTurn (PutIntoZoneTrigger.scope t)
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
   -- Damage can be prevented on anybody's turn.
@@ -11209,8 +11202,8 @@ controllerTurnScoped cond = case cond of
   -- Damage can be prevented on anybody's turn, the arm above's reason.
   TriggerCondition.SelfPreventsDamage _ -> False
   -- StepBegins' TurnScope reading: CR 702.179d's "during YOUR turn" is
-  -- ControllersTurn, and no other scope is the controller's turn as such.
-  TriggerCondition.LifeChanges lifeTrigger -> LifeTrigger.scope lifeTrigger == TurnScope.ControllersTurn
+  -- @Relative You@, and no other scope is the controller's turn as such.
+  TriggerCondition.LifeChanges lifeTrigger -> Turn.isControllersTurn (LifeTrigger.scope lifeTrigger)
   -- CR 122.6 puts counters on at any time, and a Saga can receive one on an
   -- opponent's turn: CR 714.3a's entry replacement fires whenever the Saga enters,
   -- which a flash effect or an opponent's Sneak Attack could make happen. Only CR
@@ -11221,13 +11214,10 @@ controllerTurnScoped cond = case cond of
   -- CR 601.2i says nothing about whose turn it is and CR 117.1a lets an instant
   -- be cast on anybody's, so the answer is the condition's own TurnScope --
   -- StepBegins' arms one more time, and for its reason (CR 603.3a, CR 109.5).
-  -- Brineborn Cutthroat's OpponentsTurn is turn-scoped and is not the
+  -- Brineborn Cutthroat's "an opponent's turn" is turn-scoped and is not the
   -- CONTROLLER's turn, which is the only thing this classification asks. A
-  -- Self subject's is EachTurn: a spell can be cast on anybody's turn.
-  TriggerCondition.SpellCast (SpellCast.MkSpellCast _ TurnScope.ControllersTurn _ _ _ _) -> True
-  TriggerCondition.SpellCast (SpellCast.MkSpellCast _ TurnScope.EachTurn _ _ _ _) -> False
-  TriggerCondition.SpellCast (SpellCast.MkSpellCast _ TurnScope.OpponentsTurn _ _ _ _) -> False
-  TriggerCondition.SpellCast (SpellCast.MkSpellCast _ (TurnScope.PlayersTurn _) _ _ _ _) -> False
+  -- Self subject's is each turn: a spell can be cast on anybody's turn.
+  TriggerCondition.SpellCast (SpellCast.MkSpellCast _ scope _ _ _ _) -> Turn.isControllersTurn scope
   -- Nor an activation, which CR 117.1b allows on anybody's turn.
   TriggerCondition.AbilityActivated _ -> False
   -- The condition carries no TurnScope, and an opponent can target the bearer,

@@ -71,6 +71,8 @@ import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Quantity as Quantity.Type
 import qualified Parun.Types.Recipient as Recipient
@@ -363,7 +365,7 @@ vanishingSpec s registry =
         -- assertion written that way says only that two copies are two copies,
         -- and a mint that dropped one of the pair would repair it silently.
         Spec.it s "CR 702.63c each instance is its own three abilities" $ do
-          let counted = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.ControllersTurn)
+          let counted = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)))
               emptied = TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Time CounterMotion.Removed CounterHolder.Self (Just 0) CounterGrouping.EachPermanent)
           Spec.assertEqWith
             s
@@ -389,7 +391,7 @@ numberlessVanishingSpec s _ =
     -- states the SAME two triggers as rule 702.63a and no entry ability, so
     -- the absent number changes exactly one of the two lists.
     Spec.it s "CR 702.63b keeps both triggers and mints no entry rewrite" $ do
-      let counted = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.ControllersTurn)
+      let counted = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)))
           emptied = TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Time CounterMotion.Removed CounterHolder.Self (Just 0) CounterGrouping.EachPermanent)
       Spec.assertEqWith
         s
@@ -466,7 +468,7 @@ fadingSpec s registry =
             s
             "fading 2 held twice mints two upkeep triggers"
             (fmap TriggeredAbility.condition (Keyword.triggeredAbilitiesOf (Map.singleton (Keyword.Type.Fading 2) 2)))
-            (replicate 2 (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.ControllersTurn)))
+            (replicate 2 (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)))))
           Spec.assertEqWith
             s
             "and two entry rewrites of two FADE counters each, never rule 702.63a's time counters"

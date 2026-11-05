@@ -130,7 +130,7 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
     Spec.assertEq s (Right ()) (accepts disruptingScepter)
     Spec.assertEq s [[ActivationRestriction.TimesEachTurn 1]] (fmap ActivatedAbility.restrictions (Face.activatedAbilities (translated spittingDrake)))
     Spec.assertEq s [[ActivationRestriction.TimesEachTurn 2]] (fmap ActivatedAbility.restrictions (Face.activatedAbilities (translated vampireBats)))
-    Spec.assertEq s [[ActivationRestriction.DuringTurn TurnScope.ControllersTurn]] (fmap ActivatedAbility.restrictions (Face.activatedAbilities (translated disruptingScepter)))
+    Spec.assertEq s [[ActivationRestriction.DuringTurn (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))]] (fmap ActivatedAbility.restrictions (Face.activatedAbilities (translated disruptingScepter)))
 
   -- CR 701.23a: a search for a card of a description, revealed and put on
   -- top after the shuffle.
@@ -309,7 +309,7 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
   -- ability activated only during your turn, before attackers are declared.
   Spec.it s "reads a creature that can't be blocked this turn" $ do
     Spec.assertEq s (Right ()) (accepts zhugeJin)
-    Spec.assertEq s [[ActivationRestriction.DuringTurn TurnScope.ControllersTurn, ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers)]] (fmap ActivatedAbility.restrictions (Face.activatedAbilities (translated zhugeJin)))
+    Spec.assertEq s [[ActivationRestriction.DuringTurn (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)), ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers)]] (fmap ActivatedAbility.restrictions (Face.activatedAbilities (translated zhugeJin)))
     let bound f = case ForbidBeingBlocked.affected f of
           Filter.IsBound _ -> True
           _ -> False

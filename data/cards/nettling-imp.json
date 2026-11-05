@@ -78,7 +78,13 @@
             {
               "type": "DuringTurn",
               "value": {
-                "type": "OpponentsTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "Opponent"
+                  }
+                }
               }
             },
             {
@@ -105,7 +111,13 @@
                 }
               },
               "scope": {
-                "type": "EachTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                }
               }
             }
           },

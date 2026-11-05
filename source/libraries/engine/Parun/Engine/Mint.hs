@@ -99,10 +99,10 @@ triggerOf condition intervening modal =
       TriggeredAbility.functionsFrom = Set.empty
     }
 
--- | "At the beginning of your upkeep" (CR 503.1): ControllersTurn with the
+-- | "At the beginning of your upkeep" (CR 503.1): @Relative You@ with the
 -- ability's controller as "you".
 yourUpkeep :: TriggerCondition
-yourUpkeep = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.ControllersTurn)
+yourUpkeep = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)))
 
 -- | "Whenever ... casts a spell" (CR 601.2i), the filter naming whose and
 -- which: from any zone, on every occurrence rather than one counted one, and

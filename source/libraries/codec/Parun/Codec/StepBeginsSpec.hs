@@ -6,6 +6,8 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.TurnScope as TurnScope
 
@@ -19,10 +21,10 @@ spec s = Spec.describe s "Parun.Codec.StepBegins" $ do
       ( StepBegins.MkStepBegins
           { StepBegins.ordinal = Nothing,
             StepBegins.phase = Phase.Ending EndingStep.EndStep,
-            StepBegins.scope = TurnScope.EachTurn
+            StepBegins.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)
           }
       )
-      " {\"phase\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}},\"scope\":{\"type\":\"EachTurn\"}} "
+      " {\"phase\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}} "
   -- CR 603.2a's "your upkeep". The scope is REQUIRED, not defaulted: "at the
   -- beginning of the upkeep" and "at the beginning of YOUR upkeep" are
   -- different cards, so there is no default an absent key could mean.
@@ -33,10 +35,10 @@ spec s = Spec.describe s "Parun.Codec.StepBegins" $ do
       ( StepBegins.MkStepBegins
           { StepBegins.ordinal = Nothing,
             StepBegins.phase = Phase.Beginning BeginningStep.Upkeep,
-            StepBegins.scope = TurnScope.ControllersTurn
+            StepBegins.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)
           }
       )
-      " {\"phase\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}},\"scope\":{\"type\":\"ControllersTurn\"}} "
+      " {\"phase\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
   -- CR 505.1b's ordinal, which Acrobatic Cheerleader's "your second main phase"
   -- carries and no card that names its phase does.
   Spec.it s "MkStepBegins, the controller's second main phase" $
@@ -46,8 +48,8 @@ spec s = Spec.describe s "Parun.Codec.StepBegins" $ do
       ( StepBegins.MkStepBegins
           { StepBegins.ordinal = Just 2,
             StepBegins.phase = Phase.PostcombatMain,
-            StepBegins.scope = TurnScope.ControllersTurn
+            StepBegins.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)
           }
       )
-      " {\"ordinal\":2,\"phase\":{\"type\":\"PostcombatMain\"},\"scope\":{\"type\":\"ControllersTurn\"}} "
+      " {\"ordinal\":2,\"phase\":{\"type\":\"PostcombatMain\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s StepBegins.codec

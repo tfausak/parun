@@ -52,7 +52,7 @@ ventureIntoUndercity = Effect.Venture (Just Subtype.Undercity)
 
 -- CR 726.2, first: "at the beginning of the upkeep of the player who has the
 -- initiative, that player ventures into Undercity". Controller-scoped to the
--- holder, so ControllersTurn plus the holder as "you" is exactly the holder's own
+-- holder, so @Relative You@ plus the holder as "you" is exactly the holder's own
 -- upkeep.
 upkeepVenture :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 upkeepVenture =

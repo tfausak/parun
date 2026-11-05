@@ -108,7 +108,13 @@
                 "type": "PrecombatMain"
               },
               "scope": {
-                "type": "ControllersTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                }
               }
             }
           },
@@ -256,7 +262,13 @@
                                         }
                                       },
                                       "scope": {
-                                        "type": "EachTurn"
+                                        "type": "PlayersTurn",
+                                        "value": {
+                                          "type": "Relative",
+                                          "value": {
+                                            "type": "AnyPlayer"
+                                          }
+                                        }
                                       }
                                     }
                                   },
@@ -321,7 +333,13 @@
                 "type": "PrecombatMain"
               },
               "scope": {
-                "type": "ControllersTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                }
               }
             }
           },

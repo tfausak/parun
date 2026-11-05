@@ -7,29 +7,18 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.TurnScope as TurnScope
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.TurnScope" $ do
-  Spec.it s "EachTurn" $
+  Spec.it s "PlayersTurn Relative" $
     Common.assertCodec
       s
       TurnScope.codec
-      TurnScope.EachTurn
-      " {\"type\":\"EachTurn\"} "
-  Spec.it s "ControllersTurn" $
-    Common.assertCodec
-      s
-      TurnScope.codec
-      TurnScope.ControllersTurn
-      " {\"type\":\"ControllersTurn\"} "
-  Spec.it s "OpponentsTurn" $
-    Common.assertCodec
-      s
-      TurnScope.codec
-      TurnScope.OpponentsTurn
-      " {\"type\":\"OpponentsTurn\"} "
+      (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))
+      " {\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
   Spec.it s "PlayersTurn" $
     Common.assertCodec
       s

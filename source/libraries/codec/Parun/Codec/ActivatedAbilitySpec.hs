@@ -31,6 +31,7 @@ import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Optionality as Optionality
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhaseSelector as PhaseSelector
+import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Quantity as Quantity
@@ -106,7 +107,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           0
           Nothing
           (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
-          [ ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Combat CombatStep.DeclareAttackers)) TurnScope.EachTurn),
+          [ ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Combat CombatStep.DeclareAttackers)) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer))),
             ActivationRestriction.AttackedThisStep
           ]
           (Activator.Related PlayerRelation.You)
@@ -114,7 +115,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           Nothing
           Nothing
       )
-      " {\"cost\":{\"mana\":null,\"components\":[{\"type\":\"TapThis\"}]},\"modal\":{\"modes\":[{}]},\"restrictions\":[{\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"DeclareAttackers\"}}},\"scope\":{\"type\":\"EachTurn\"}}},{\"type\":\"AttackedThisStep\"}]} "
+      " {\"cost\":{\"mana\":null,\"components\":[{\"type\":\"TapThis\"}]},\"modal\":{\"modes\":[{}]},\"restrictions\":[{\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"DeclareAttackers\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}},{\"type\":\"AttackedThisStep\"}]} "
   -- CR 702.6a: the stamp Parun.Engine.Keyword.mintedBy writes, which is the one
   -- key no card in data/cards/ carries -- an ability already on the stack has to
   -- round-trip it, since Parun.Codec.GameState reaches this codec through
