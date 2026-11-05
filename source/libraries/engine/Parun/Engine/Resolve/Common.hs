@@ -3549,8 +3549,8 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
       -- randomCards' pool over a hand: Pillaging Horde's "unless you discard a
       -- card at random" over an empty hand (CR 118.3, 118.12a), which the
       -- scenario "CR 118.3 Pillaging Horde is sacrificed over an empty hand"
-      -- proves. A seek over an empty library answers False, as it did before
-      -- the two refs were one: no seek in the pool is a cost.
+      -- proves. A seek over an empty library falls through to False, its answer
+      -- before the hand and library refs were one.
       ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Hand player filter_ _) ->
         let holders = handChoosers legal resolving source controller gs player
          in not (null holders) && all (\pid -> null (handCardsOf context gs pid filter_)) holders
