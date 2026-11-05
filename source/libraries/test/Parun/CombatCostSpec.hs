@@ -318,7 +318,8 @@ attackCostSpec s registry = Spec.describe s "AttackCosts" $ do
 
   Spec.it s "CR 733.1 a card revealed to attack stays revealed when a later toll fails" $ do
     -- alice pays Synthetic Tithe of Omens' reveal, then Synthetic Tithe of
-    -- Memory's mill, then has no land for Exalted Dragon's sacrifice. The mill
+    -- Memory's mill, then has one land for two Exalted Dragons' sacrifices:
+    -- each Dragon's alone is payable, so both are offered. The mill
     -- makes the reversal compose around a kept stretch, which is the road that
     -- used to drop the reveal ahead of it. Pinned by index: the answerer names
     -- the order rather than searching for a legal one. Stateful so that the
@@ -328,7 +329,9 @@ attackCostSpec s registry = Spec.describe s "AttackCosts" $ do
     memory <- S.printingOf s registry "Synthetic Tithe of Memory"
     dragon <- S.printingOf s registry "Exalted Dragon"
     island <- S.printingOf s registry "Island"
-    let (gs, mine, _) = S.combatBoardOf [omens, memory, dragon] []
+    forest <- S.printingOf s registry "Forest"
+    let (gs0, mine, _) = S.combatBoardOf [omens, memory, dragon, dragon] []
+        (_, gs) = addForests forest 1 gs0
         (first, withFirst) = S.addLibraryCard island S.alice gs
         (second, board) = S.addLibraryCard island S.alice withFirst
         answer :: Prompt.Prompt r -> State.State Int r
@@ -2107,14 +2110,16 @@ tollReversalSpec s registry = Spec.describe s "Reversal at a combat toll" $ do
   -- Glory-Bound Initiate under Always Watching has vigilance, so CR 508.1f does
   -- not tap it and CR 508.1g exerts it untapped. The toll's window then taps it
   -- for Springleaf Drum's cost: the declaration and the window wrote two
-  -- different fields of one permanent.
+  -- different fields of one permanent. The Forest makes the {2} payable, so
+  -- the Initiate is offered; the window activates the Drum alone.
   Spec.it s "CR 733.1 the exert goes back with the declaration and the Drum's tap stands" $ do
     initiate <- S.printingOf s registry "Glory-Bound Initiate"
     watching <- S.printingOf s registry "Always Watching"
     drum <- S.printingOf s registry "Springleaf Drum"
     prison <- S.printingOf s registry "Ghostly Prison"
+    forest <- S.printingOf s registry "Forest"
     let (gs0, mine, _) = S.combatBoardOf [initiate] []
-        (drumId, gs1) = S.addPermanent drum S.alice (snd (S.addPermanent watching S.alice gs0))
+        (drumId, gs1) = S.addPermanent drum S.alice (snd (addForests forest 1 (snd (S.addPermanent watching S.alice gs0))))
         gs = snd (S.addPermanent prison S.bob gs1)
         answer :: OptionalDecision.OptionalDecision -> ObjectId.ObjectId -> Prompt.Prompt r -> State.State TollAsks r
         answer decision initiateId p = case p of

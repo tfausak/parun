@@ -1,6 +1,6 @@
 {
   "description": "CR 733.1 a card milled to attack stays milled when a later toll fails",
-  "note": "The control: the Dragon's toll is ordered first and refuses before anything is milled, so the Island stays on top of the library.",
+  "note": "The control: the Dragons' tolls are ordered first and the second refuses before anything is milled, so the Island stays on top of the library.",
   "board": {
     "active": "alice",
     "step": "DeclareAttackers",
@@ -14,9 +14,18 @@
             "ready": true
           },
           {
+            "card": "Exalted Dragon",
+            "label": "dragon2",
+            "ready": true
+          },
+          {
             "card": "Synthetic Tithe of Memory",
             "label": "tithe",
             "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "forest"
           }
         ],
         "library": [
@@ -42,6 +51,7 @@
       "do": {
         "Attack": [
           "$dragon",
+          "$dragon2",
           "$tithe"
         ]
       }
@@ -55,7 +65,8 @@
           "prompt": "OrderCombatTolls",
           "with": [
             0,
-            1
+            1,
+            2
           ]
         }
       }
