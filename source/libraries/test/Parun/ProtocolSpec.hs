@@ -172,18 +172,20 @@ spec s registry = Spec.describe s "Protocol" $ do
 
   Spec.it s "CR 509.1b an illegal block is refused naming the attacker, and asked again however often it is repeated" $ do
     drake <- S.printingOf s registry "Wind Drake"
+    piker <- S.printingOf s registry "Goblin Piker"
     barbarians <- S.printingOf s registry "Balduvian Barbarians"
-    case S.combatBoardOf [drake] [barbarians] of
-      (gs, [flier], [blocker]) -> do
-        let blocks = Protocol.encodeAnswer (Prompt.DeclareBlockers (Decider.MkDecider S.bob) S.bob [blocker] [flier])
+    -- The Piker gives the Barbarians a legal block, so bob is asked at all.
+    case S.combatBoardOf [drake, piker] [barbarians] of
+      (gs, [flier, walker], [blocker]) -> do
+        let blocks = Protocol.encodeAnswer (Prompt.DeclareBlockers (Decider.MkDecider S.bob) S.bob [blocker] [flier, walker])
             illegal = blocks (Map.singleton blocker (Set.singleton flier))
-            replies = [Protocol.encodeAnswer (Prompt.DeclareAttackers (Decider.MkDecider S.alice) S.alice [flier]) [flier], illegal, illegal, blocks Map.empty]
+            replies = [Protocol.encodeAnswer (Prompt.DeclareAttackers (Decider.MkDecider S.alice) S.alice [flier, walker]) [flier, walker], illegal, illegal, blocks Map.empty]
             (sent, after) = declaring replies gs
             refused = Just (Text.pack "the declaration of blockers is illegal: Balduvian Barbarians can't block Wind Drake")
         Spec.assertEqWith s "problems" (problemsOf "DeclareBlockers" sent) [Nothing, refused, refused]
-        Spec.assertEqWith s "the drake attacks" (Map.keys (Combat.Type.attackers (GameState.combat after))) [flier]
-        Spec.assertEqWith s "and is unblocked" (Combat.Type.blockers (GameState.combat after)) Map.empty
-      _ -> Spec.assertFailure s "fixture should have one creature a side"
+        Spec.assertEqWith s "the drake and the Piker attack" (Map.keys (Combat.Type.attackers (GameState.combat after))) [flier, walker]
+        Spec.assertEqWith s "and are unblocked" (Combat.Type.blockers (GameState.combat after)) Map.empty
+      _ -> Spec.assertFailure s "fixture should have two attackers and one blocker"
 
   Spec.it s "CR 508.1c an illegal attack is refused, and asked again however often it is repeated" $ do
     bondedConstruct <- S.printingOf s registry "Bonded Construct"
