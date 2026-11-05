@@ -1,0 +1,11 @@
+{
+  "description": "CR 701.24g Wrath of God destroys Gravebane Zombie and Progenitus together, Progenitus moving first: the library is shuffled except that the Zombie is on top",
+  "note": "The shuffle randomizes Progenitus and the Swamp, never the Zombie; its answer puts Progenitus at the bottom.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "WWWW", "hand": [{"card": "Wrath of God", "label": "wrath"}], "library": [{"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Progenitus", "label": "progenitus"}, {"card": "Gravebane Zombie", "label": "zombie"}], "library": [{"card": "Swamp"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$wrath"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Swamp", "Progenitus"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "bob", "zone": "Library", "is": ["Gravebane Zombie", "Swamp", "Progenitus"]}}}
+  ]
+}
