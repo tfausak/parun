@@ -1488,8 +1488,12 @@ declaredPairs declaration =
 -- maximum with a number that is not the maximum. The worst case is still
 -- exponential -- an unbounded arity against wanted menace attackers -- but it
 -- is now the worst case rather than every case.
-bestBlockDeclaration :: Requirement.Instances (ObjectId, ObjectId) -> CombatRestriction.Bounds -> Map ObjectId CombatRestriction.Bounds -> Map ObjectId [CombatRestriction.Company] -> (ObjectId -> Maybe Natural) -> Map ObjectId PC.ProjectedCharacteristics -> (ObjectId -> ObjectId -> Bool) -> [ObjectId] -> [ObjectId] -> GameState -> Map ObjectId (Set ObjectId)
-bestBlockDeclaration requirements limit most alone arity pcs able candidates attackers gs =
+--
+-- `payable` is a further test of each leaf: declarableBlockers' CR 509.1f
+-- payment, `const True` for the ceiling. Dropping a block never adds to CR
+-- 509.1d's total, so the drop argument keeps a payable leaf payable.
+bestBlockDeclaration :: Requirement.Instances (ObjectId, ObjectId) -> CombatRestriction.Bounds -> Map ObjectId CombatRestriction.Bounds -> Map ObjectId [CombatRestriction.Company] -> (ObjectId -> Maybe Natural) -> Map ObjectId PC.ProjectedCharacteristics -> (ObjectId -> ObjectId -> Bool) -> (Map ObjectId (Set ObjectId) -> Bool) -> [ObjectId] -> [ObjectId] -> GameState -> Map ObjectId (Set ObjectId)
+bestBlockDeclaration requirements limit most alone arity pcs able payable candidates attackers gs =
   let weights = Requirement.pairs requirements
       -- Every pair some requirement names, a GROUP's members included: a block
       -- of one of those is what obeys the group, so the same options walk
@@ -1544,7 +1548,7 @@ bestBlockDeclaration requirements limit most alone arity pcs able candidates att
           then best
           else case remaining of
             [] ->
-              if blockDeclarationAllowed limit most alone arity pcs able declaration gs
+              if blockDeclarationAllowed limit most alone arity pcs able declaration gs && payable declaration
                 then (declaration, met)
                 else best
             (blocker, options, _) : rest ->
@@ -1619,7 +1623,7 @@ blockCeilingGiven board pid gs =
    in ( requirements,
         if Requirement.vacuous requirements
           then Map.empty
-          else bestBlockDeclaration requirements limit most alone arity (Snapshot.projected board) freely candidates attackers gs
+          else bestBlockDeclaration requirements limit most alone arity (Snapshot.projected board) freely (const True) candidates attackers gs
       )
 
 -- CR 509.1a-c: the candidates some legal declaration contains, in
@@ -1628,19 +1632,18 @@ blockCeilingGiven board pid gs =
 -- twin.
 --
 -- CR 509.1's preamble makes a declaration whose CR 509.1f payment can't be
--- made illegal, and CR 509.1d charges a blocker at least its own share for
--- any one attacker it blocks, so a pair whose share alone its controller
--- can't pay (tollPayable) is in no legal declaration. Not implemented: a pair
--- payable alone whose every legal declaration owes more than can be paid
--- together is still offered (#6308).
+-- made illegal, so a witness counts only when its CR 509.1d total is payable
+-- (blockTollsPayable). A pair whose share alone its controller can't pay is
+-- in none, and is dropped first. The ceiling's declaration is drawn from free
+-- pairs, so it and it plus one affordable pair owe only that pair's share.
 --
 -- A candidate blocking in the ceiling's declaration is in one. Otherwise each
 -- pair it may block is first added to that declaration, which obeys no fewer
 -- requirements, so is legal when it breaks no restriction; failing that, the
 -- pair is put to bestBlockDeclaration as a requirement heavier than every
 -- other together, which reaches that weight plus CR 509.1c's maximum exactly
--- when a declaration containing the pair attains the maximum too (menace,
--- Mogg Flunkies).
+-- when a payable declaration containing the pair attains the maximum too
+-- (menace, Mogg Flunkies, Archangel of Tithes).
 declarableBlockers :: PlayerId -> GameState -> [ObjectId]
 declarableBlockers pid gs =
   let board = Snapshot.whole gs
@@ -1651,17 +1654,29 @@ declarableBlockers pid gs =
       (requirements, best) = blockCeilingGiven board pid gs
       obeyed = requirementsMet requirements best
       heavier = 1 + sum (Requirement.pairs requirements) + sum (Requirement.groups requirements)
+      payable declaration = blockTollsPayable pid declaration gs
       blocking blocker = maybe False (not . Set.null) (Map.lookup blocker best)
       added blocker attacker = blockDeclarationAllowed limit most alone arity pcs able (Map.insert blocker (Set.singleton attacker) best) gs
       reached blocker attacker =
         let boosted = requirements {Requirement.pairs = Map.insertWith (+) (blocker, attacker) heavier (Requirement.pairs requirements)}
-            witness = bestBlockDeclaration boosted limit most alone arity pcs able candidates attackers gs
+            witness = bestBlockDeclaration boosted limit most alone arity pcs able payable candidates attackers gs
          in requirementsMet boosted witness >= heavier + obeyed
-      affordable blocker attacker = tollPayable (Maybe.fromMaybe pid (Projection.controllerOf blocker gs)) (BlockCost.costsOn blocker (Set.singleton attacker) gs) gs
+      affordable blocker attacker = payable (Map.singleton blocker (Set.singleton attacker))
       declarable blocker =
         let pairs = filter (\attacker -> able blocker attacker && affordable blocker attacker) attackers
          in blocking blocker || any (added blocker) pairs || any (reached blocker) pairs
    in filter declarable candidates
+
+-- CR 509.1d: the total cost to block of `pid`'s side's declaration, one toll
+-- per defending player over the creatures they control.
+blockTolls :: PlayerId -> Map ObjectId (Set ObjectId) -> GameState -> [(PlayerId, [(ObjectId, Cost Keyword.Keyword)])]
+blockTolls pid declaration gs =
+  let blockerOf oid = Maybe.fromMaybe pid (Projection.controllerOf oid gs)
+   in fmap (\p -> (p, BlockCost.totalCost (Map.filterWithKey (\oid _ -> blockerOf oid == p) declaration) gs)) (sideOf pid gs)
+
+-- CR 509.1f: can each defending player pay their share of blockTolls?
+blockTollsPayable :: PlayerId -> Map ObjectId (Set ObjectId) -> GameState -> Bool
+blockTollsPayable pid declaration gs = all (\(payer, charges) -> tollPayable payer charges gs) (blockTolls pid declaration gs)
 
 -- CR 509.1: is this declaration one the defending player may make? Both checks
 -- the rule asks for, in the order it asks them: CR 509.1b's restrictions, then CR
@@ -3207,10 +3222,9 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
         -- for this prompt routes through here too, so the two cannot disagree.
         let legal = if allowed then chosen else forcedBlockDeclaration pid gs1
         -- CR 509.1d: the total cost to block is determined once and then LOCKED IN
-        -- -- this `let`. Asking BlockCost.totalCost a second time is what the rule
+        -- -- this `let`. Asking blockTolls a second time is what the rule
         -- forbids, which is why that function leaves locking to its caller.
-        -- One total per defending player, over the creatures they control.
-        let owed = fmap (\p -> (p, BlockCost.totalCost (Map.filterWithKey (\oid _ -> blockerOf oid == p) legal) gs1)) (sideOf pid gs1)
+        let owed = blockTolls pid legal gs1
         -- CR 509.1's preamble, captured here for the one thing this function does
         -- write ahead of the payment. Everything else it writes is below.
         before <- State.get
