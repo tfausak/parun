@@ -976,6 +976,8 @@ library codec
     Parun.Codec.LookedSpec
     Parun.Codec.LoopMembers
     Parun.Codec.LoopMembersSpec
+    Parun.Codec.LostPermanent
+    Parun.Codec.LostPermanentSpec
     Parun.Codec.Loyalty
     Parun.Codec.LoyaltyClause
     Parun.Codec.LoyaltyClauseSpec
@@ -2906,6 +2908,7 @@ library types
     Parun.Types.Looked
     Parun.Types.LoopMembers
     Parun.Types.LoopTrail
+    Parun.Types.LostPermanent
     Parun.Types.Loyalty
     Parun.Types.LoyaltyClause
     Parun.Types.LoyaltyGrant

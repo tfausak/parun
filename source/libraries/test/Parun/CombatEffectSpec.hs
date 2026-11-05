@@ -887,7 +887,7 @@ combatLegalitySpec s registry = Spec.describe s "CombatLegality" $ do
     Spec.assertEqWith s "clears" (Combat.Type.attackers (GameState.combat (Combat.clearCombat busy))) Map.empty
     -- CR 511.3 on the two CR 508.1a / 509.1a records too, which is what scopes
     -- Filter.DeclaredAttackerThisCombat to THIS combat rather than the turn:
-    -- CR 506.7c's second combat phase asks the question from empty.
+    -- CR 506.8c's second combat phase asks the question from empty.
     Spec.assertEqWith
       s
       "CR 511.3 clears the declared-attacker record"
@@ -898,9 +898,9 @@ combatLegalitySpec s registry = Spec.describe s "CombatLegality" $ do
       "CR 511.3 clears the declared-blocker record"
       (Combat.Type.declaredBlockers (GameState.combat (Combat.clearCombat busy {GameState.combat = (GameState.combat busy) {Combat.Type.declaredBlockers = Set.fromList mine}})))
       Set.empty
-    -- CR 506.7c: the CR 511.3 reset re-arms CR 506.7b's boundary, so a CR 500.8
+    -- CR 506.8c: the CR 511.3 reset re-arms CR 506.8b's boundary, so a CR 500.8
     -- second combat phase gets its own window rather than inheriting this one's.
-    Spec.assertBool s (Turn.afterBlockersDeclared busy) "CR 506.7b's boundary is up while combat is live"
+    Spec.assertBool s (Turn.afterBlockersDeclared busy) "CR 506.8b's boundary is up while combat is live"
     Spec.assertBool s (not (Turn.afterBlockersDeclared (Combat.clearCombat busy))) "and down again once combat clears"
 
 keywordSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()

@@ -3397,7 +3397,7 @@ printedActivationCombatPointSpec s registry = Spec.describe s "PrintedActivation
   --
   -- Its own control is the same combat under the same declined blocks with no
   -- activation, so what saves bob is the ability and not the fixture.
-  Spec.it s "CR 506.7b/g whole card: Trap Runner blocks the attacker in the declare blockers step" $ do
+  Spec.it s "CR 506.8b/g whole card: Trap Runner blocks the attacker in the declare blockers step" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     runner <- S.printingOf s registry "Trap Runner"
     let (gs0, ours, theirs) = S.combatBoardOf [piker] [runner]
@@ -3418,7 +3418,7 @@ printedActivationCombatPointSpec s registry = Spec.describe s "PrintedActivation
         Spec.assertEqWith s "control: and the Runner is untapped" (fmap Object.tapped (Game.lookupObject runnerId idle)) (Just TapState.Untapped)
       _ -> Spec.assertFailure s "fixture should have given alice an attacker and bob a Trap Runner"
 
-  -- CR 506.7's other point, printed on the same kind of rider: Save Point (an
+  -- CR 506.8's other point, printed on the same kind of rider: Save Point (an
   -- Unknown Event playtest card, {1}{W} Enchantment) says "Activate only during
   -- combat before combat damage has been dealt". CR 510.1 and CR 510.2 deal
   -- combat damage as turn-based actions at the START of the combat damage step
@@ -3437,7 +3437,7 @@ printedActivationCombatPointSpec s registry = Spec.describe s "PrintedActivation
   -- nothing at all. Save Point's own cost is a sacrifice with no mana and no
   -- target, so no leg can refuse it for a reason the rider has nothing to do
   -- with.
-  Spec.it s "CR 506.7/510.2 the rider runs to the combat damage step and shuts as it begins" $ do
+  Spec.it s "CR 506.8/510.2 the rider runs to the combat damage step and shuts as it begins" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     savePoint <- S.printingOf s registry "Save Point"
     prodigalSorcerer <- S.printingOf s registry "Prodigal Sorcerer"

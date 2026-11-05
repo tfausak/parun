@@ -727,7 +727,7 @@ blockerEnteredBlocking e = case e of
 -- becomes blocked. Draw a card."
 --
 -- Its window is CastingRestriction.AfterBlockersDeclared, read through
--- Turn.afterBlockersDeclared; castingWindowSpec below is where CR 506.7b's
+-- Turn.afterBlockersDeclared; castingWindowSpec below is where CR 506.8b's
 -- boundary is proved step by step.
 --
 -- Sacred Prey ("Whenever this creature becomes blocked, you gain 1 life") is the
@@ -1241,7 +1241,7 @@ putOntoBattlefieldBlockingSpec s registry = Spec.describe s "PutOntoBattlefieldB
         Spec.assertBool s (S.onBattlefield guard atEnd && S.onBattlefield brigade atEnd) "and both attackers survived their copy's damage, which is what keeps the tokens alive to be exiled"
       _ -> Spec.assertFailure s "fixture should have two attackers"
 
--- CR 506.7b's window, "only during combat after blockers are declared", proved
+-- CR 506.8b's window, "only during combat after blockers are declared", proved
 -- step by step on ONE board.
 --
 -- Every leg comes from the same curtainBoard: the same two seats, the same two
@@ -1249,7 +1249,7 @@ putOntoBattlefieldBlockingSpec s registry = Spec.describe s "PutOntoBattlefieldB
 -- attacking Prey standing as CR 601.2c's legal target. So no leg can refuse the
 -- cast for want of mana, of a target, or of a timing window -- the only thing
 -- that moves is where in the combat phase the board sits, which is exactly what
--- CR 506.7b is about.
+-- CR 506.8b is about.
 --
 -- The pair that carries the rule is `beforeDeclaration` against `declared`:
 -- identical states but for CR 509.1's turn-based action having run. Everything
@@ -1257,15 +1257,15 @@ putOntoBattlefieldBlockingSpec s registry = Spec.describe s "PutOntoBattlefieldB
 -- combat damage and end of combat steps -- the two the old transcription's
 -- declare-blockers-step window left out -- get read.
 --
--- What is NOT provable here is CR 506.7f, and by construction rather than by
+-- What is NOT provable here is CR 506.8f, and by construction rather than by
 -- omission: the pool's only route to a skipped declare blockers step is CR
 -- 508.8's empty attack, which leaves no attacking creature, and with no
 -- attacking creature Curtain of Light has no legal target -- so such a board
--- refuses the cast whatever the gate answers. The gate implements CR 506.7f
+-- refuses the cast whatever the gate answers. The gate implements CR 506.8f
 -- all the same, since it reads a record only the step itself writes.
 castingWindowSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 castingWindowSpec s registry = Spec.describe s "CastingWindow" $ do
-  Spec.it s "CR 506.7b the window opens at the declaration and runs to the end of the combat phase" $ do
+  Spec.it s "CR 506.8b the window opens at the declaration and runs to the end of the combat phase" $ do
     plains <- S.printingOf s registry "Plains"
     piker <- S.printingOf s registry "Goblin Piker"
     prey <- S.printingOf s registry "Sacred Prey"
@@ -1282,7 +1282,7 @@ castingWindowSpec s registry = Spec.describe s "CastingWindow" $ do
         -- same legal target.
         declared = S.runPure declineBlocks beforeDeclaration (Combat.declareBlockers S.manaPerformer)
         inStep step = declared {GameState.phase = Phase.Combat step}
-        -- The other side of CR 506.7b, on the board that has NOT declared: a
+        -- The other side of CR 506.8b, on the board that has NOT declared: a
         -- reachable priority window one step earlier.
         atAttackers = beforeDeclaration {GameState.phase = Phase.Combat CombatStep.DeclareAttackers}
     -- Anti-vacuity: bob's unrestricted instant is castable on every one of these
@@ -1290,7 +1290,7 @@ castingWindowSpec s registry = Spec.describe s "CastingWindow" $ do
     Spec.assertBool s (all (S.castable S.bob boltId) [beforeDeclaration, declared, inStep CombatStep.CombatDamage, inStep CombatStep.EndOfCombat, atAttackers]) "bob can pay for and legally cast an unrestricted instant on every leg"
     Spec.assertBool s (not (Turn.afterBlockersDeclared beforeDeclaration)) "the declaration has not happened yet"
     Spec.assertBool s (Turn.afterBlockersDeclared declared) "and it has after CR 509.1's turn-based action"
-    -- Before the point CR 506.7b names.
+    -- Before the point CR 506.8b names.
     Spec.assertBool s (not (S.castable S.bob curtainId atAttackers)) "refused in the declare attackers step"
     Spec.assertBool s (not (S.castable S.bob curtainId beforeDeclaration)) "refused in the declare blockers step before blockers are declared"
     -- After it. The first was already reachable under the declare-blockers-step

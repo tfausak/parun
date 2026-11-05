@@ -663,7 +663,7 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
         plan <- case targets of
           CopyTargets.Copied -> pure [Map.empty]
           CopyTargets.ChosenByController -> pure [Map.empty]
-          CopyTargets.ForEach candidateRefs -> Common.copyForEachTargets controller copier resolving source legal original candidateRefs
+          CopyTargets.ForEach candidates -> Common.copyForEachTargets controller copier resolving source legal original candidates
           CopyTargets.Stated newRef -> Common.copyStatedTargets controller copier resolving source legal original newRef
         Monad.forM_ plan $ \retarget -> do
           -- CR 707.10d / 707.10e with CR 115.7f: a target the effect re-aims

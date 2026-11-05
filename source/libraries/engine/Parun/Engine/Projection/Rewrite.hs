@@ -1333,7 +1333,7 @@ rewriteCopyTargets :: [(TextWord.TextWord, TextWord.TextWord)] -> CopyTargets.Co
 rewriteCopyTargets pairs targets = case targets of
   CopyTargets.Copied -> targets
   CopyTargets.ChosenByController -> targets
-  CopyTargets.ForEach refs -> CopyTargets.ForEach (fmap (rewriteObjectRef pairs) refs)
+  CopyTargets.ForEach ref -> CopyTargets.ForEach (rewriteObjectRef pairs ref)
   CopyTargets.Stated ref -> CopyTargets.Stated (rewriteObjectRef pairs ref)
 
 -- CR 612.1/612.2a through the CARD an Effect.Create or an Effect.CreateEmblem
@@ -2198,8 +2198,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SagaFinalChapterTriggers _ -> condition
   -- CR 603.7's slot name is card data but not card TEXT, so no CR 612.1 swap
   -- reaches it; what the slot holds is read off the projection instead.
-  TriggerCondition.LoseControlOfBound _ -> condition
-  TriggerCondition.LoseControlOfSelf -> condition
+  TriggerCondition.LosesControl _ -> condition
   TriggerCondition.RoomEntered _ -> condition
   TriggerCondition.PlayerActs _ -> condition
   TriggerCondition.PlayerLosesGame _ -> condition

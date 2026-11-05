@@ -51,6 +51,7 @@ import qualified Parun.Types.LeavesTrigger as LeavesTrigger
 import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTrigger as LifeTrigger
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.ManaSpecification as ManaSpecification
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
@@ -649,15 +650,15 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
   -- CR 603.7's slot-named condition. The slot is a bare string, as every other
   -- SlotName in card data is, and it is the whole payload: a codec that dropped it
   -- would leave the condition asking about no creature at all.
-  Spec.it s "LoseControlOfBound round-trips its slot" $
+  Spec.it s "LosesControl round-trips a Bound subject" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.LoseControlOfBound (SlotName.MkSlotName (Text.pack "target")))
-      " {\"type\":\"LoseControlOfBound\",\"value\":\"target\"} "
+      (TriggerCondition.LosesControl (LostPermanent.Bound (SlotName.MkSlotName (Text.pack "target"))))
+      " {\"type\":\"LosesControl\",\"value\":{\"type\":\"Bound\",\"value\":\"target\"}} "
   -- CR 603.10d's self-scoped twin, a bare tag.
-  Spec.it s "LoseControlOfSelf round-trips" $
-    Common.assertCodec s TriggerCondition.codec TriggerCondition.LoseControlOfSelf " {\"type\":\"LoseControlOfSelf\"} "
+  Spec.it s "LosesControl round-trips a Self subject" $
+    Common.assertCodec s TriggerCondition.codec (TriggerCondition.LosesControl LostPermanent.Self) " {\"type\":\"LosesControl\",\"value\":{\"type\":\"Self\"}} "
   -- CR 309.4c. No dungeon card prints this condition -- Parun.Engine.Dungeon mints
   -- one per room -- but it round-trips like every other arm.
   Spec.it s "RoomEntered round-trips its room" $
