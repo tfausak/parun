@@ -2,7 +2,7 @@
 
 The Fifth Edition (5ED) cards not yet in the pool, and which wait on a
 capability. Derived 2026-11-03 from MTGJSON's set list against `data/cards/`.
-The set list is `data/decks/sets/5ed.txt`, which the suite reads, so every card
+The set list is `data/decks/sets/5ed/all.txt`, which the suite reads, so every card
 of the set stays in the pool.
 
 ## Needs a capability

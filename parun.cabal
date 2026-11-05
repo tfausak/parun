@@ -14,8 +14,7 @@ license-file: LICENSE.txt
 data-dir: data
 data-files:
   cards/*.json
-  decks/*.txt
-  decks/sets/*.txt
+  decks/**/*.txt
   oracle-unrendered.txt
   scenarios/**/*.json
   sticker-sheets/*.json
