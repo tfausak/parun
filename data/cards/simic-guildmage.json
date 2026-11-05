@@ -74,6 +74,9 @@
                         {
                           "type": "ControllerRelatesToBound",
                           "value": {
+                            "hop": {
+                              "type": "Itself"
+                            },
                             "relation": {
                               "type": "You"
                             },
@@ -122,8 +125,16 @@
                             "type": "And",
                             "value": [
                               {
-                                "type": "SameControllerAsHostOfBound",
-                                "value": "target"
+                                "type": "ControllerRelatesToBound",
+                                "value": {
+                                  "hop": {
+                                    "type": "Host"
+                                  },
+                                  "relation": {
+                                    "type": "You"
+                                  },
+                                  "slot": "target"
+                                }
                               },
                               {
                                 "type": "CanHostSubject"

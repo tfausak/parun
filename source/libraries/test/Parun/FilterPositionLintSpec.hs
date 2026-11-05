@@ -114,6 +114,7 @@ import qualified Parun.Types.GainControl as GainControl
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.HandAction as HandAction
 import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
@@ -309,8 +310,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.IsPlayer _ -> leaf predicate
   Filter.Type.IsBound _ -> leaf predicate
   Filter.Type.IsTarget -> leaf predicate
-  Filter.Type.ControllerRelatesToBound _ _ -> leaf predicate
-  Filter.Type.SameControllerAsHostOfBound _ -> leaf predicate
+  Filter.Type.ControllerRelatesToBound {} -> leaf predicate
   Filter.Type.HasChosenName {} -> leaf predicate
   Filter.Type.HasChosenColor -> leaf predicate
   Filter.Type.HasChosenSubtype -> leaf predicate
@@ -1189,11 +1189,12 @@ ofBoundOffends card =
   let (framed, elsewhere) = ofBoundCounts card
    in elsewhere /= 0 || framed + elsewhere /= jsonAtoms ofBoundTag (Codec.encode (Face.Codec.codec Card.codec) card)
 
--- The CR 110.2 / 303.4b tag, spelled once.
-sameControllerAsHostOfBoundTag :: Text.Text
-sameControllerAsHostOfBoundTag = Text.pack "SameControllerAsHostOfBound"
+-- How many CR 110.2 shared-controller atoms under this hop an encoding holds:
+-- the tag is shared, and the hop is what tells the two lints' atoms apart.
+relatesToBoundAtoms :: Hop.Hop -> Value.Value -> Int
+relatesToBoundAtoms hop = decodedAtoms "ControllerRelatesToBound" (\atom -> case atom of Filter.Type.ControllerRelatesToBound _ h _ -> h == hop; _ -> False)
 
--- How many CR 110.2-of-the-host atoms this card carries in a resolution's own
+-- How many CR 110.2-of-the-host atoms (Hop.Host) this card carries in a resolution's own
 -- positions and how many anywhere else, ofBoundCounts' shape one
 -- Filter.Context field over -- Parun.Engine.Resolve.Slots.effectContext is the
 -- one filler of Filter.Context.slotHostControllers too. The ATTACH DESTINATION
@@ -1201,17 +1202,17 @@ sameControllerAsHostOfBoundTag = Text.pack "SameControllerAsHostOfBound"
 -- became a resolution's own when Parun.Engine.Attach.hostsFor started taking its
 -- Context from the caller, and it is the only one of these six a card writes
 -- this atom in (Simic Guildmage). The second number is the offence.
-sameControllerAsHostOfBoundCounts :: Face.Face Card.Type.Card -> (Int, Int)
-sameControllerAsHostOfBoundCounts card =
-  let total wanted = sum (fmap (\(_, f) -> filterAtoms sameControllerAsHostOfBoundTag f) (filter (\(framing, _) -> elem framing [AttachDestination, EntryAttachDestination, SourceHostFramed, ClauseGateFramed, SearchFramed, MillTallyFramed, HandSweepFramed] == wanted) (cardFilters card)))
+hostRelatesToBoundCounts :: Face.Face Card.Type.Card -> (Int, Int)
+hostRelatesToBoundCounts card =
+  let total wanted = sum (fmap (\(_, f) -> relatesToBoundAtoms Hop.Host (atomJson f)) (filter (\(framing, _) -> elem framing [AttachDestination, EntryAttachDestination, SourceHostFramed, ClauseGateFramed, SearchFramed, MillTallyFramed, HandSweepFramed] == wanted) (cardFilters card)))
    in (total True, total False)
 
 -- The atom outside those positions, or the traversal and the codec disagreeing
 -- about how many the card holds -- boundCreatureTypeOffends' two offences.
-sameControllerAsHostOfBoundOffends :: Face.Face Card.Type.Card -> Bool
-sameControllerAsHostOfBoundOffends card =
-  let (framed, elsewhere) = sameControllerAsHostOfBoundCounts card
-   in elsewhere /= 0 || framed + elsewhere /= jsonAtoms sameControllerAsHostOfBoundTag (Codec.encode (Face.Codec.codec Card.codec) card)
+hostRelatesToBoundOffends :: Face.Face Card.Type.Card -> Bool
+hostRelatesToBoundOffends card =
+  let (framed, elsewhere) = hostRelatesToBoundCounts card
+   in elsewhere /= 0 || framed + elsewhere /= relatesToBoundAtoms Hop.Host (Codec.encode (Face.Codec.codec Card.codec) card)
 
 -- How many CR 301.5a "attached to that creature" atoms this card carries in a
 -- mode's target slot, the position a joint check stands behind, and how many
@@ -1232,18 +1233,14 @@ attachedToBoundOffends card =
   let (admitted, elsewhere) = attachedToBoundCounts card
    in elsewhere /= 0 || admitted + elsewhere /= attachedToBoundAtoms (Codec.encode (Face.Codec.codec Card.codec) card)
 
--- The CR 110.2 tag, spelled once.
-controllerRelatesToBoundTag :: Text.Text
-controllerRelatesToBoundTag = Text.pack "ControllerRelatesToBound"
-
--- How many CR 110.2 shared-controller atoms this card carries inside a MODE's
+-- How many unhopped CR 110.2 shared-controller atoms (Hop.Itself) this card carries inside a MODE's
 -- target slot filter, an attach effect's destination, a stored combat
 -- restriction class or an effect's ObjectRef, and how many anywhere else. The
 -- second number is the offence; the first is what Bioshift and Glamer Spinners
 -- legitimately have one of.
 controllerRelatesToBoundCounts :: Face.Face Card.Type.Card -> (Int, Int)
 controllerRelatesToBoundCounts card =
-  let total wanted = sum (fmap (\(_, f) -> filterAtoms controllerRelatesToBoundTag f) (filter (\(framing, _) -> elem framing [InTargetSlot, AttachDestination, StoredClassFramed, SourceHostFramed] == wanted) (cardFilters card)))
+  let total wanted = sum (fmap (\(_, f) -> relatesToBoundAtoms Hop.Itself (atomJson f)) (filter (\(framing, _) -> elem framing [InTargetSlot, AttachDestination, StoredClassFramed, SourceHostFramed] == wanted) (cardFilters card)))
    in (total True, total False)
 
 -- CR 110.2's shared-controller comparison is answerable only where
@@ -1264,7 +1261,7 @@ controllerRelatesToBoundCounts card =
 controllerRelatesToBoundOffends :: Face.Face Card.Type.Card -> Bool
 controllerRelatesToBoundOffends card =
   let (slotted, elsewhere) = controllerRelatesToBoundCounts card
-   in elsewhere /= 0 || slotted + elsewhere /= jsonAtoms controllerRelatesToBoundTag (Codec.encode (Face.Codec.codec Card.codec) card)
+   in elsewhere /= 0 || slotted + elsewhere /= relatesToBoundAtoms Hop.Itself (Codec.encode (Face.Codec.codec Card.codec) card)
 
 -- The CR 303.4b tag, spelled once.
 hostOfSourceTag :: Text.Text
@@ -1824,21 +1821,21 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- one Filter.Context field over and one position wider: effectContext fills
   -- Filter.Context.slotHostControllers, and the attach destination is one of its
   -- positions now that Parun.Engine.Attach.hostsFor takes its Context from the
-  -- caller. See sameControllerAsHostOfBoundOffends for the two offences.
-  Spec.it s "CR 110.2 no card asks SameControllerAsHostOfBound outside a resolution's own positions" $ do
+  -- caller. See hostRelatesToBoundOffends for the two offences.
+  Spec.it s "CR 110.2 no card asks a hopped ControllerRelatesToBound outside a resolution's own positions" $ do
     ps <- S.allPrintings s corpus
-    let offenders = filter (anyFace sameControllerAsHostOfBoundOffends . Printing.card) ps
+    let offenders = filter (anyFace hostRelatesToBoundOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only where the resolution fills the hosts' controllers" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the atom, and the card that does is ACCEPTED.
     guildmage <- S.printingOf s registry "Simic Guildmage"
     let face = S.combinedFace guildmage
-        atom = Filter.Type.SameControllerAsHostOfBound (SlotName.MkSlotName (Text.pack "target"))
+        atom = Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Host (SlotName.MkSlotName (Text.pack "target"))
         restricted = face {Face.counterRestrictions = [CounterRestriction.MkCounterRestriction (Affected.Matching atom) Nothing]}
-    Spec.assertEqWith s "Simic Guildmage's one atom is in its attach destination" (sameControllerAsHostOfBoundCounts face) (1, 0)
+    Spec.assertEqWith s "Simic Guildmage's one atom is in its attach destination" (hostRelatesToBoundCounts face) (1, 0)
     -- The lint's own proof, the pair differing in one position: the same atom in
     -- a static restriction's affected set, read through a bare contextFor.
-    Spec.assertBool s (sameControllerAsHostOfBoundOffends restricted) "the atom in an affected set offends"
-    Spec.assertEqWith s "counted outside the admitted positions" (sameControllerAsHostOfBoundCounts restricted) (1, 1)
+    Spec.assertBool s (hostRelatesToBoundOffends restricted) "the atom in an affected set offends"
+    Spec.assertEqWith s "counted outside the admitted positions" (hostRelatesToBoundCounts restricted) (1, 1)
   -- CR 205.2a asked of the same host (CR 303.4b), the arm above one
   -- characteristic over and one position NARROWER: this atom reads
   -- Filter.Context.subjectHostCardTypes, which Parun.Engine.Attach.hostsFor fills
@@ -1859,7 +1856,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- a static restriction's affected set, read through a bare contextFor.
     Spec.assertBool s (hostOfSubjectCardTypeOffends restricted) "the atom in an affected set offends"
     Spec.assertEqWith s "counted outside the admitted positions" (hostOfSubjectCardTypeCounts restricted) (2, 1)
-  -- CR 110.2's Filter.ControllerRelatesToBound is CR 709.4a's atom one characteristic
+  -- CR 110.2's Filter.ControllerRelatesToBound under Hop.Itself is CR 709.4a's atom one characteristic
   -- over, in the same position and with the STAKES reversed: it is vacuously TRUE
   -- where Filter.Context.slotControllers has no key for its slot, so an atom
   -- outside the positions filling it admits every candidate the card meant to
@@ -1896,7 +1893,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- under all three combinators, so an implementation reading only the top of a
     -- Filter would accept it.
     piker <- S.printingOf s registry "Goblin Piker"
-    let atom = Filter.Type.ControllerRelatesToBound PlayerRelation.You (SlotName.MkSlotName (Text.pack "from"))
+    let atom = Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Itself (SlotName.MkSlotName (Text.pack "from"))
         buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]
         planted =
           (S.combinedFace piker)

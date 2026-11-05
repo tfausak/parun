@@ -579,8 +579,7 @@ filterNames asking criterion = case criterion of
   Filter.TargetsPlayer _relation -> mempty
   Filter.IsBound slot -> slotNames asking slot
   Filter.IsTarget -> slotNames asking Binding.Engine.announcedTargets
-  Filter.ControllerRelatesToBound _playerRelation slot -> slotNames asking slot
-  Filter.SameControllerAsHostOfBound slot -> slotNames asking slot
+  Filter.ControllerRelatesToBound _playerRelation _hop slot -> slotNames asking slot
   Filter.HasChosenName {} -> mempty
   Filter.HasChosenColor -> mempty
   Filter.HasChosenSubtype -> mempty

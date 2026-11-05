@@ -101,6 +101,9 @@
                           "value": {
                             "type": "ControllerRelatesToBound",
                             "value": {
+                              "hop": {
+                                "type": "Itself"
+                              },
                               "relation": {
                                 "type": "You"
                               },
