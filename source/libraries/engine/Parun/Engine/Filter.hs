@@ -1941,7 +1941,9 @@ matches context view predicate = case predicate of
   -- CR 709.4a's own test, said the way that rule says it: membership, so an
   -- object showing several names matches on any one of them.
   Filter.HasName n -> Set.member n (names view)
-  Filter.NameWordsAtLeast n -> any (\named -> NameWords.wordCount named >= n) (names view)
+  -- All its names together, by It Came from Planet Glurg's ruling of
+  -- 2022-10-07 ("six words in its name").
+  Filter.NameWordsAtLeast n -> sum (fmap NameWords.wordCount (Set.toList (names view))) >= n
   -- The same membership test, against the set CR 206.3 defines rather than one
   -- name the card gives. ANY of the candidate's names, which is CR 709.4a's
   -- reading exactly as HasName's is -- Parun.FilterSpec's "CR 709.4a matches an

@@ -97,6 +97,7 @@ import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.RestrictedCreatures as RestrictedCreatures
+import qualified Parun.Types.RoomHalf as RoomHalf
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Parun.Types.StepBegan as StepBegan
@@ -1015,6 +1016,23 @@ spec s registry = Spec.describe s "Sticker" $ do
         (_, after, _) = entersNaming harold (placingAt (Just bearsId) otter 1) g2
     Spec.assertEqWith s "CR 123.6a Grizzly Otter Bears is a 3/3" (Projection.powerOf bearsId after) (Just 3)
     Spec.assertEqWith s "CR 123.6a Trespasser, one word, is still a 2/1" (Projection.powerOf tId after) (Just 2)
+  -- Opalescence makes each Room a creature with power its mana value, a locked
+  -- door adding neither name nor cost (CR 709.4b, 709.5). Fully unlocked,
+  -- Spiked Corridor // Torture Pit has two two-word names, four words under It
+  -- Came from Planet Glurg's ruling of 2022-10-07; with one door open it has
+  -- only Spiked Corridor's two.
+  Spec.it s "CR 123.6a Angelic Harold counts a fully unlocked Room's words across both its names" $ do
+    harold <- S.printingOf s registry "Angelic Harold"
+    opalescence <- S.printingOf s registry "Opalescence"
+    corridor <- S.printingOf s registry "Spiked Corridor"
+    let (_, g1) = S.addPermanent opalescence S.alice (Setup.gameWith GameSettings.plain S.bothPlayers)
+        (_, g2) = S.addPermanent harold S.alice g1
+        (fullId, g3) = S.addPermanent corridor S.alice g2
+        (halfId, g4) = S.addPermanent corridor S.alice g3
+        open doors o = o {Object.unlockedHalves = Set.fromList doors}
+        board = g4 {GameState.objects = Map.adjust (open [RoomHalf.LeftHalf, RoomHalf.RightHalf]) fullId (Map.adjust (open [RoomHalf.LeftHalf]) halfId (GameState.objects g4))}
+    Spec.assertEqWith s "CR 709.5 one door open: Spiked Corridor, two words, stays a 4/4" (Projection.powerOf halfId board) (Just 4)
+    Spec.assertEqWith s "CR 123.6a both doors open: four words, an 8/8 pumped to 9/9" (Projection.powerOf fullId board) (Just 9)
   -- CR 613.7f gives the turned-up Tracker a new timestamp and CR 613.7k gives
   -- its sticker one right after it, now later than the Aura: the word shows.
   Spec.it s "CR 613.7k a turned-up permanent's name sticker restamps after an earlier Witness Protection" $ do

@@ -76,8 +76,8 @@ data Filter keyword
     -- of them. Parun.Types.Expansion.catalog is the set; an expansion it does not
     -- name cannot reach this atom, Parun.Codec.Expansion.make refusing the code.
     HasNameOriginallyPrintedIn Expansion.Expansion
-  | -- | CR 123.6a: one of the object's names has at least this many words, a
-    -- blank not being one (Angelic Harold).
+  | -- | CR 123.6a: the object's names together have at least this many words,
+    -- a blank not being one (Angelic Harold).
     NameWordsAtLeast Natural.Natural
   | -- | CR 702.1: the object HAS this keyword ability. Membership of the WRITTEN
     -- instance, so `HasKeyword (Toxic 2)` asks about toxic 2 specifically and
