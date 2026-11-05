@@ -107,6 +107,7 @@ import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Looked as Looked
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Types.ManaAdded as ManaAdded
 import qualified Parun.Types.ManifestedDread as ManifestedDread
@@ -459,8 +460,8 @@ participants event =
                 TriggerSource.Sourceless -> []
            in (source, [AbilityTriggered.controller t])
         -- CR 801.7a: read under the controller it had before the change, which
-        -- is what TriggerCondition.LoseControlOfBound and LoseControlOfSelf, the
-        -- two conditions this event matches, ask about.
+        -- is what TriggerCondition.LosesControl, the condition this event
+        -- matches, asks about under either subject.
         GameEvent.ControlChanged c -> player (ControlChanged.before c)
         GameEvent.VentureMarkerEntered v -> ([VentureMarkerEntered.dungeon v], [VentureMarkerEntered.player v])
         GameEvent.BecameTarget t -> ([BecameTarget.source t], []) <> recipient (BecameTarget.targeted t)
@@ -711,13 +712,12 @@ looksBack condition = case condition of
   -- CR 725.1's crowning names no zone change either -- it moves a DESIGNATION,
   -- not an object -- so none of CR 603.10a's four families reaches it.
   TriggerCondition.PlayerBecomesMonarch _ -> False
-  -- CR 603.10d names this condition too, but its subject is a
+  -- CR 603.10d: a Self subject's bearer stays, but under the controller it
+  -- had before. CR 603.10d names a Bound subject too, but its subject is a
   -- permanent still on the battlefield, Event.sampleControl sampling nowhere
   -- else, and its bearer is a CR 603.7 delayed entry the store keeps rather
   -- than the log.
-  TriggerCondition.LoseControlOfBound _ -> False
-  -- CR 603.10d: the bearer stays, but under the controller it had before.
-  TriggerCondition.LoseControlOfSelf -> True
+  TriggerCondition.LosesControl subject -> subject == LostPermanent.Self
   -- CR 603.10a's look-back is a question about which event fired the ability, and
   -- a reflexive is fired by none. Its bearer is a CR 603.7 delayed entry too.
   TriggerCondition.Reflexive -> False
@@ -942,8 +942,7 @@ batchScoped condition = case condition of
   TriggerCondition.RoomFullyUnlocked _ -> False
   TriggerCondition.SagaFinalChapterTriggers _ -> False
   TriggerCondition.PlayerBecomesMonarch _ -> False
-  TriggerCondition.LoseControlOfBound _ -> False
-  TriggerCondition.LoseControlOfSelf -> False
+  TriggerCondition.LosesControl _ -> False
   TriggerCondition.Reflexive -> False
 
 -- The log cut into its CR 704.3 / CR 608.2f events: one block per
@@ -2232,7 +2231,7 @@ eventTriggers events gs =
                     Maybe.fromMaybe sampled (Projection.controllerOf oid before)
               _ -> sampled
             -- The bearer's own slot environment, so a condition naming a slot
-            -- (TriggerCondition.LoseControlOfBound) is read the same way here as it
+            -- (a Bound TriggerCondition.LosesControl) is read the same way here as it
             -- is for a CR 603.7 delayed entry. Empty for a bearer that has since
             -- left, there being no object to ask -- whether it arrived here out of
             -- last known information or out of a sample taken while it stood.
@@ -2997,13 +2996,12 @@ zonesTriggeredFrom cond =
         -- CR 113.6's default once more: Custodi Lich is a creature and watches the
         -- crown from the battlefield, so the card sees no crowning from a graveyard.
         TriggerCondition.PlayerBecomesMonarch _ -> battlefield
-        -- CR 113.6's default, and never actually consulted: this condition's only carrier
-        -- is a CR 603.7 delayed entry, which Event.delayedPending gathers out of
-        -- GameState.delayedTriggers rather than out of a zone. The default is right
-        -- anyway -- the event it matches happens on the battlefield.
-        TriggerCondition.LoseControlOfBound _ -> battlefield
-        -- CR 113.6's default: the bearer stays on the battlefield.
-        TriggerCondition.LoseControlOfSelf -> battlefield
+        -- CR 113.6's default: a Self subject's bearer stays on the battlefield. A
+        -- Bound subject never actually consults it: its only carrier is a CR
+        -- 603.7 delayed entry, which Event.delayedPending gathers out of
+        -- GameState.delayedTriggers rather than out of a zone. The default is
+        -- right anyway -- the event it matches happens on the battlefield.
+        TriggerCondition.LosesControl _ -> battlefield
         -- Never consulted either, and for the same reason: CR 603.12 routes a
         -- reflexive through rule 603.7, so its only carrier is a delayed entry
         -- Event.delayedPending gathers out of GameState.delayedTriggers. EMPTY rather
@@ -3164,8 +3162,7 @@ stateTriggersOn gs
             -- CR 603.2 event trigger too, and not a state: it fires on control
             -- CHANGING, and a settle re-reading "somebody else controls it" would
             -- fire it again on every pass thereafter.
-            TriggerCondition.LoseControlOfBound _ -> False
-            TriggerCondition.LoseControlOfSelf -> False
+            TriggerCondition.LosesControl _ -> False
             -- CR 603.12 sends a reflexive through rule 603.7, and CR 603.8's
             -- state triggers are a different family: nothing about "when you
             -- do" is a state that could be standing true.
@@ -3397,7 +3394,7 @@ delayedPending grouped gs =
       matching entry =
         let cond = TriggeredAbility.condition (DelayedTrigger.ability entry)
          in -- The entry's own bindings, which is CR 603.7c's captured environment:
-            -- TriggerCondition.LoseControlOfBound asks about an object named as the
+            -- a Bound TriggerCondition.LosesControl asks about an object named as the
             -- arming spell resolved, and the store is the only thing that still
             -- remembers it.
             if delayedArmed gs entry

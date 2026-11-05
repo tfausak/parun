@@ -1675,13 +1675,12 @@ eventBindingSlots cond = case cond of
   --
   -- Unconditional: GameEvent.BecameMonarch carries a PlayerId outright.
   TriggerCondition.PlayerBecomesMonarch _ -> Set.singleton Binding.triggerPlayer
-  -- Empty by decision: the permanent the event names is the one the condition's own
-  -- SLOT already names, and Ray of Command's "tap it" reads that slot rather than
+  -- Empty by decision under either subject: the permanent the event names is the
+  -- bearer, which the ability already names, or the one the condition's own SLOT
+  -- already names, and Ray of Command's "tap it" reads that slot rather than
   -- anything the event bound. A slot for the player who GAINED control is what a
   -- card printing "that player" would earn; nothing prints one.
-  TriggerCondition.LoseControlOfBound _ -> Set.empty
-  -- Empty: "it" is the bearer, which the ability already names.
-  TriggerCondition.LoseControlOfSelf -> Set.empty
+  TriggerCondition.LosesControl _ -> Set.empty
   -- Empty NECESSARILY rather than by choice: this condition admits no event, so
   -- there is none to read a slot out of. What a reflexive knows about the
   -- resolution that made it comes from CR 603.7c's captured environment instead,

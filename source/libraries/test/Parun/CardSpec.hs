@@ -279,6 +279,7 @@ import qualified Parun.Types.LifeLossCause as LifeLossCause
 import qualified Parun.Types.LimitUnless as LimitUnless
 import qualified Parun.Types.LookAt as LookAt
 import qualified Parun.Types.LoopMembers as LoopMembers
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.Loyalty as Loyalty
 import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.MadnessCost as MadnessCost
@@ -1195,11 +1196,10 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PlayerDrawsNthCard {} -> []
   -- CR 725.1's crowning condition is a PlayerRelation too.
   TriggerCondition.PlayerBecomesMonarch _ -> []
-  -- CR 603.7's slot-named condition holds a SlotName, which is no Count.
-  TriggerCondition.LoseControlOfBound _ -> []
+  -- CR 603.7's slot-named subject holds a SlotName, which is no Count, and CR
+  -- 603.10d's self subject carries nothing at all.
+  TriggerCondition.LosesControl _ -> []
   TriggerCondition.RoomEntered _ -> []
-  -- CR 603.10d's self condition carries nothing at all.
-  TriggerCondition.LoseControlOfSelf -> []
   -- CR 603.2's PlayerActs carries a PlayerAction and a PlayerRelation, neither
   -- a Count.
   TriggerCondition.PlayerActs _ -> []
@@ -4679,12 +4679,11 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.PlayerDrawsNthCard {} -> []
   -- CR 725.1's crowning condition is a PlayerRelation, which holds no Filter.
   TriggerCondition.PlayerBecomesMonarch _ -> []
-  -- CR 603.7's slot-named condition holds a SlotName, which is no Filter -- what
-  -- the slot holds was selected by the arming spell's own target slot.
-  TriggerCondition.LoseControlOfBound _ -> []
+  -- CR 603.7's slot-named subject holds a SlotName, which is no Filter -- what
+  -- the slot holds was selected by the arming spell's own target slot -- and CR
+  -- 603.10d's self subject carries nothing at all.
+  TriggerCondition.LosesControl _ -> []
   TriggerCondition.RoomEntered _ -> []
-  -- CR 603.10d's self condition carries nothing at all.
-  TriggerCondition.LoseControlOfSelf -> []
   -- CR 603.2's PlayerActs carries a PlayerAction and a PlayerRelation, neither
   -- a Filter.
   TriggerCondition.PlayerActs _ -> []
@@ -4823,10 +4822,10 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.PlayerBecomesMonarch _ -> []
   -- CR 603.7's slot-named condition, the first of the three arms with an answer:
   -- Ray of Command's "when you lose control of the creature" watches the
-  -- permanent its own spell targeted.
-  TriggerCondition.LoseControlOfBound slot -> [slot]
-  -- CR 603.10d's self condition names no slot.
-  TriggerCondition.LoseControlOfSelf -> []
+  -- permanent its own spell targeted; CR 603.10d's self subject names no slot.
+  TriggerCondition.LosesControl subject -> case subject of
+    LostPermanent.Bound slot -> [slot]
+    LostPermanent.Self -> []
   TriggerCondition.RoomEntered _ -> []
   TriggerCondition.PlayerActs _ -> []
   TriggerCondition.PlayerLosesGame _ -> []

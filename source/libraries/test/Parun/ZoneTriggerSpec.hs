@@ -132,6 +132,7 @@ import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LoggedEvent as LoggedEvent
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.MadnessCost as MadnessCost
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Types.ManaAdded as ManaAdded
@@ -2197,9 +2198,9 @@ representativeEvents cond =
         -- same-player shape for the floor to come apart on. The ids and seats are
         -- arbitrary -- this condition binds nothing from the log, which is what
         -- Event.eventBindingSlots claims for it.
-        TriggerCondition.LoseControlOfBound _ -> one (GameEvent.ControlChanged (ControlChanged.MkControlChanged departed S.alice S.bob))
-        -- The same event, the bearer's own: it too binds nothing.
-        TriggerCondition.LoseControlOfSelf -> one (GameEvent.ControlChanged (ControlChanged.MkControlChanged departed S.alice S.bob))
+        -- The same event for a Self subject, the bearer's own: it too binds
+        -- nothing.
+        TriggerCondition.LosesControl _ -> one (GameEvent.ControlChanged (ControlChanged.MkControlChanged departed S.alice S.bob))
         -- CR 309.4c's own event. The dungeon id and the room are arbitrary: this
         -- condition binds nothing from the log, which is what
         -- Event.eventBindingSlots claims for it.
@@ -2511,8 +2512,8 @@ everyTriggerCondition =
     -- player -- which is the claim this list exists to keep honest.
     TriggerCondition.PlayerBecomesMonarch PlayerRelation.You,
     TriggerCondition.PlayerBecomesMonarch PlayerRelation.Opponent,
-    TriggerCondition.LoseControlOfBound (SlotName.MkSlotName (Text.pack "target")),
-    TriggerCondition.LoseControlOfSelf,
+    TriggerCondition.LosesControl (LostPermanent.Bound (SlotName.MkSlotName (Text.pack "target"))),
+    TriggerCondition.LosesControl LostPermanent.Self,
     TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.permanent = LeavingPermanent.Bound (SlotName.MkSlotName (Text.pack "target")), LeavesTrigger.destinations = Set.fromList [OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.AnyPlayer, OwnedZone.MkOwnedZone Zone.Exile PlayerRelation.AnyPlayer]},
     TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Bound (SlotName.MkSlotName (Text.pack "target")))),
     TriggerCondition.RoomEntered RoomIndex.topmost,

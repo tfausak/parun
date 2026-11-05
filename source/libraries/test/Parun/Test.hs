@@ -459,6 +459,7 @@ import qualified Parun.Codec.LookAtSpec
 import qualified Parun.Codec.LookbackSpec
 import qualified Parun.Codec.LookedSpec
 import qualified Parun.Codec.LoopMembersSpec
+import qualified Parun.Codec.LostPermanentSpec
 import qualified Parun.Codec.LoyaltyClauseSpec
 import qualified Parun.Codec.LoyaltyGrantSpec
 import qualified Parun.Codec.LoyaltyKindSpec
@@ -1078,6 +1079,7 @@ spec s registry corpus = do
   Parun.Codec.EntersTriggerSpec.spec s
   Parun.Codec.LeavesTriggerSpec.spec s
   Parun.Codec.LeavingPermanentSpec.spec s
+  Parun.Codec.LostPermanentSpec.spec s
   Parun.Codec.AttackedSubjectSpec.spec s
   Parun.Codec.AttackedTriggerSpec.spec s
   Parun.Codec.AttackerTargetSpec.spec s

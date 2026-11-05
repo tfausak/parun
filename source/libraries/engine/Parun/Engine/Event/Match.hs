@@ -111,6 +111,7 @@ import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LoggedEvent as LoggedEvent
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Types.ManaAdded as ManaAdded
 import qualified Parun.Types.ManaSpecification as ManaSpecification
@@ -848,7 +849,7 @@ anyTriggerReads event = case event of
 
 -- The same question against a slot environment, for the conditions whose subject
 -- is an object named EARLIER rather than the bearer or a class of objects
--- (TriggerCondition.LoseControlOfBound, and Leaves of LeavingPermanent.Bound).
+-- (a Bound TriggerCondition.LosesControl, and Leaves of LeavingPermanent.Bound).
 -- Projection.controllerOf's `-Given` shape: the plain name above defaults the extra
 -- argument, so a caller with nothing to say says nothing.
 --
@@ -1904,8 +1905,8 @@ armMatches bindings board gs bearer you cond event = case cond of
                 in Saga.tracksLore pc && Saga.chapterOf (AbilityTriggered.ability record) == Just (Saga.finalChapterOf pc)
              )
     _ -> False
-  -- CR 603.7: "when you lose control of the creature" -- Ray of Command's third
-  -- sentence. The slot is read out of CR 603.7c's captured environment, so the
+  -- CR 603.7: a Bound subject is "when you lose control of the creature" -- Ray
+  -- of Command's third sentence. The slot is read out of CR 603.7c's captured environment, so the
   -- creature this asks about is the one the spell targeted rather than whatever
   -- creature happens to change hands.
   --
@@ -1925,14 +1926,15 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- whichever of them matched -- CR 603.7b spending the one shot either way. A card
   -- whose controller can lose control of a DIFFERENT permanent while this entry is
   -- armed is what would observe it.
-  TriggerCondition.LoseControlOfBound slot -> case event of
+  --
+  -- A Self subject (CR 603.10d) is the bearer itself changing hands away from
+  -- `you`, the controller the scan offers it under for this event
+  -- (Event.Trigger.lostControlOf).
+  TriggerCondition.LosesControl subject -> case event of
     GameEvent.ControlChanged (ControlChanged.MkControlChanged oid before _) ->
-      Map.lookup slot (Binding.objectSlots bindings) == Just oid && before == you
-    _ -> False
-  -- CR 603.10d: the bearer itself changed hands away from `you`, the controller
-  -- the scan offers it under for this event (Event.Trigger.lostControlOf).
-  TriggerCondition.LoseControlOfSelf -> case event of
-    GameEvent.ControlChanged (ControlChanged.MkControlChanged oid before _) -> oid == bearer && before == you
+      before == you && case subject of
+        LostPermanent.Self -> oid == bearer
+        LostPermanent.Bound slot -> Map.lookup slot (Binding.objectSlots bindings) == Just oid
     _ -> False
   -- CR 309.4c: "when YOU move your venture marker into THIS room", so the
   -- mover must be the ability's controller, the dungeon card the marker is on
