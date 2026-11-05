@@ -314,7 +314,7 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
     Spec.assertEq s [Filter.HasSubtype Subtype.Wall] (blockers (translated bogRats))
     Spec.assertEq s [Filter.Not (Filter.HasSubtype Subtype.Wall)] (blockers (translated invisibility))
 
-  -- CR 509.1b / 506.7a: a creature that can't be blocked this turn, by an
+  -- CR 509.1b / 506.8a: a creature that can't be blocked this turn, by an
   -- ability activated only during your turn, before attackers are declared.
   Spec.it s "reads a creature that can't be blocked this turn" $ do
     Spec.assertEq s (Right ()) (accepts zhugeJin)

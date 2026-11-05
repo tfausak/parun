@@ -89,26 +89,29 @@
                           },
                           "targets": {
                             "type": "ForEach",
-                            "value": [
-                              {
-                                "type": "EachMatching",
-                                "value": {
-                                  "type": "And",
-                                  "value": []
-                                }
-                              },
-                              {
-                                "type": "Players",
-                                "value": {
-                                  "players": {
-                                    "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
+                            "value": {
+                              "type": "AllOf",
+                              "value": [
+                                {
+                                  "type": "EachMatching",
+                                  "value": {
+                                    "type": "And",
+                                    "value": []
+                                  }
+                                },
+                                {
+                                  "type": "Players",
+                                  "value": {
+                                    "players": {
+                                      "type": "Relative",
+                                      "value": {
+                                        "type": "AnyPlayer"
+                                      }
                                     }
                                   }
                                 }
-                              }
-                            ]
+                              ]
+                            }
                           }
                         }
                       }

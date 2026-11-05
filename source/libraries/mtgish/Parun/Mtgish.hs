@@ -430,7 +430,7 @@ triggeredAbility condition m =
 -- | The clauses of an activated ability's "Activate only ..." rider (CR
 -- 602.5): its timing (CR 307.5, CR 602.5e), how often (CR 602.5b), your
 -- turn or upkeep (CR 102.1, CR 503), or before attackers are declared (CR
--- 506.7a).
+-- 506.8a).
 activationRestrictions :: Node.Node -> Translated [ActivationRestriction.ActivationRestriction]
 activationRestrictions n = case Node.tag n of
   "And" -> fmap concat (Node.arguments n >>= traverse (Node.node Monad.>=> activationRestrictions))
@@ -446,7 +446,7 @@ activationRestrictions n = case Node.tag n of
   where
     onlyIf c = case Node.tag c of
       "And" -> fmap concat (Node.arguments c >>= traverse (Node.node Monad.>=> onlyIf))
-      -- CR 506.7a.
+      -- CR 506.8a.
       "IsBeforeAttackersDeclared" | Maybe.isNothing (Node.args c) -> Right [ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers)]
       "PlayerPassesFilter" -> do
         (who, test) <- pair c

@@ -197,12 +197,12 @@ necrologiaBoard swamp mountain necrologia bolt ph =
       stocked = List.foldl' (\gs _ -> snd (S.addLibraryCard swamp S.alice gs)) withBolt [1 :: Int, 2, 3]
    in (necrologiaId, boltId, stocked)
 
--- Panic's "only during combat before blockers are declared" (CR 506.7b, 506.7c):
+-- Panic's "only during combat before blockers are declared" (CR 506.8b, 506.8c):
 -- the one test asking the window over every step of a turn. The Bolt is the
 -- control, as on necrologiaBoard, and the Bears a legal target on every step.
 duringCombatBeforeSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 duringCombatBeforeSpec s registry = Spec.describe s "DuringCombatBefore" $ do
-  Spec.it s "CR 506.7b/506.7c castable exactly from beginning of combat through declare attackers" $ do
+  Spec.it s "CR 506.8b/506.8c castable exactly from beginning of combat through declare attackers" $ do
     mountain <- S.printingOf s registry "Mountain"
     panic <- S.printingOf s registry "Panic"
     bolt <- S.printingOf s registry "Lightning Bolt"

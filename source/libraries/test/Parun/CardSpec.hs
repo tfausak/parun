@@ -279,6 +279,7 @@ import qualified Parun.Types.LifeLossCause as LifeLossCause
 import qualified Parun.Types.LimitUnless as LimitUnless
 import qualified Parun.Types.LookAt as LookAt
 import qualified Parun.Types.LoopMembers as LoopMembers
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.Loyalty as Loyalty
 import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.MadnessCost as MadnessCost
@@ -726,7 +727,7 @@ objectRefPositions =
         -- CR 707.10d names a SECOND ref, the candidates', which the sweep must
         -- reach: a copy effect whose candidate description reads a slot no clause
         -- binds is a dangling read like any other.
-        ("copy-spell-for-each", Effect.CopyStackObject (CopyStackObject.MkCopyStackObject (plantedRef "cs-ref") (CopyTargets.ForEach (plantedRef "cs-each" NonEmpty.:| [])) CopyStackObject.defaultQuantity CopyStackObject.defaultCopier []), [plantedRef "cs-ref", plantedRef "cs-each"]),
+        ("copy-spell-for-each", Effect.CopyStackObject (CopyStackObject.MkCopyStackObject (plantedRef "cs-ref") (CopyTargets.ForEach (plantedRef "cs-each")) CopyStackObject.defaultQuantity CopyStackObject.defaultCopier []), [plantedRef "cs-ref", plantedRef "cs-each"]),
         ("later-payment", Effect.LaterPayment (LaterPayment.MkLaterPayment Duration.UntilEndOfTurn (Cost.Type.MkCost Nothing []) (Seq.singleton (Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage Duration.UntilEndOfTurn Nothing (Just (plantedRef "lp")) Nothing Nothing Nothing (Quantity.Type.Literal 1) Seq.empty)))), [plantedRef "lp"]),
         ("prevent-next-damage", Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage Duration.UntilEndOfTurn Nothing (Just (plantedRef "pn")) Nothing Nothing Nothing (Quantity.Type.Literal 1) Seq.empty), [plantedRef "pn"]),
         ("prevent-all-damage", Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage Duration.UntilEndOfTurn Nothing (Just (plantedRef "pa")) Nothing Nothing DamageDirection.DealtTo Nothing (Filter.Type.And []) Seq.empty), [plantedRef "pa"]),
@@ -1194,11 +1195,10 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PlayerDrawsNthCard {} -> []
   -- CR 725.1's crowning condition is a PlayerRelation too.
   TriggerCondition.PlayerBecomesMonarch _ -> []
-  -- CR 603.7's slot-named condition holds a SlotName, which is no Count.
-  TriggerCondition.LoseControlOfBound _ -> []
+  -- CR 603.7's slot-named subject holds a SlotName, which is no Count, and CR
+  -- 603.10d's self subject carries nothing at all.
+  TriggerCondition.LosesControl _ -> []
   TriggerCondition.RoomEntered _ -> []
-  -- CR 603.10d's self condition carries nothing at all.
-  TriggerCondition.LoseControlOfSelf -> []
   -- CR 603.2's PlayerActs carries a PlayerAction and a PlayerRelation, neither
   -- a Count.
   TriggerCondition.PlayerActs _ -> []
@@ -4108,7 +4108,7 @@ copyTargetsRefs :: CopyTargets.CopyTargets -> [ObjectRef.ObjectRef]
 copyTargetsRefs targets = case targets of
   CopyTargets.Copied -> []
   CopyTargets.ChosenByController -> []
-  CopyTargets.ForEach refs -> NonEmpty.toList refs
+  CopyTargets.ForEach ref -> [ref]
   CopyTargets.Stated ref -> [ref]
 
 copyTargetsFilters :: CopyTargets.CopyTargets -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
@@ -4671,12 +4671,11 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.PlayerDrawsNthCard {} -> []
   -- CR 725.1's crowning condition is a PlayerRelation, which holds no Filter.
   TriggerCondition.PlayerBecomesMonarch _ -> []
-  -- CR 603.7's slot-named condition holds a SlotName, which is no Filter -- what
-  -- the slot holds was selected by the arming spell's own target slot.
-  TriggerCondition.LoseControlOfBound _ -> []
+  -- CR 603.7's slot-named subject holds a SlotName, which is no Filter -- what
+  -- the slot holds was selected by the arming spell's own target slot -- and CR
+  -- 603.10d's self subject carries nothing at all.
+  TriggerCondition.LosesControl _ -> []
   TriggerCondition.RoomEntered _ -> []
-  -- CR 603.10d's self condition carries nothing at all.
-  TriggerCondition.LoseControlOfSelf -> []
   -- CR 603.2's PlayerActs carries a PlayerAction and a PlayerRelation, neither
   -- a Filter.
   TriggerCondition.PlayerActs _ -> []
@@ -4814,10 +4813,10 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.PlayerBecomesMonarch _ -> []
   -- CR 603.7's slot-named condition, the first of the three arms with an answer:
   -- Ray of Command's "when you lose control of the creature" watches the
-  -- permanent its own spell targeted.
-  TriggerCondition.LoseControlOfBound slot -> [slot]
-  -- CR 603.10d's self condition names no slot.
-  TriggerCondition.LoseControlOfSelf -> []
+  -- permanent its own spell targeted; CR 603.10d's self subject names no slot.
+  TriggerCondition.LosesControl subject -> case subject of
+    LostPermanent.Bound slot -> [slot]
+    LostPermanent.Self -> []
   TriggerCondition.RoomEntered _ -> []
   TriggerCondition.PlayerActs _ -> []
   TriggerCondition.PlayerLosesGame _ -> []

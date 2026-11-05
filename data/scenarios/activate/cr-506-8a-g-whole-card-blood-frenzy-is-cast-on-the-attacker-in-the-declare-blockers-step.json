@@ -1,6 +1,5 @@
 {
-  "description": "CR 506.7a/g Blood Frenzy is offered in the declare blockers step and not in the combat damage step, though its target is still attacking",
-  "note": "Giant Growth is the instant-speed control, castable with the same lands in both steps.",
+  "description": "CR 506.8a/g whole card: Blood Frenzy is cast on the attacking Piker in the declare blockers step, which deals 6, and the Piker is destroyed at the next end step",
   "board": {
     "seats": [
       {
@@ -86,36 +85,72 @@
       "turn": 1,
       "step": "DeclareBlockers",
       "player": "alice",
-      "check": {
-        "View": {
-          "of": "Offered",
-          "player": "alice",
-          "is": [
-            "Pass",
-            "Cast $frenzy",
-            "Cast $growth",
-            "ActivateManaAbility $m1",
-            "ActivateManaAbility $m2",
-            "ActivateManaAbility $f1"
+      "do": {
+        "Cast": {
+          "object": "$frenzy",
+          "targets": [
+            "$piker"
+          ],
+          "mana": [
+            "$m1",
+            "$m2",
+            null
           ]
         }
       }
     },
     {
       "turn": 1,
-      "step": "CombatDamage",
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
       "player": "alice",
       "check": {
-        "View": {
-          "of": "Offered",
+        "PowerToughness": {
+          "object": "$piker",
+          "power": 6,
+          "toughness": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 14
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
           "player": "alice",
-          "is": [
-            "Pass",
-            "Cast $growth",
-            "ActivateManaAbility $m1",
-            "ActivateManaAbility $m2",
-            "ActivateManaAbility $f1"
-          ]
+          "zone": "Battlefield",
+          "card": "Goblin Piker",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Graveyard",
+          "card": "Goblin Piker",
+          "count": 1
         }
       }
     }

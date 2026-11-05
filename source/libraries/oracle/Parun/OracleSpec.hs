@@ -964,7 +964,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "Target creature can't be blocked this turn except by Walls.")) (Oracle.render (unblocked Duration.UntilEndOfTurn (Filter.Not (Filter.HasSubtype Subtype.Wall))))
     Spec.assertEq s Nothing (Oracle.render (unblocked Duration.UntilEndOfCombat (Filter.And [])))
 
-  -- CR 506.7a: a time before attackers are declared follows the turn it is
+  -- CR 506.8a: a time before attackers are declared follows the turn it is
   -- in after a comma.
   Spec.it s "render prints an ability activated only before attackers are declared" $ do
     let restricted rs = withFace (\f -> f {Face.activatedAbilities = [(activated (mana [green]) (gainLife 1)) {ActivatedAbility.restrictions = rs}]})

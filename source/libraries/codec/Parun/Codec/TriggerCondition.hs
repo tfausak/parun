@@ -23,6 +23,7 @@ import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.LeavesTrigger as LeavesTrigger
 import qualified Parun.Codec.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Codec.LifeTrigger as LifeTrigger
+import qualified Parun.Codec.LostPermanent as LostPermanent
 import qualified Parun.Codec.PermanentActed as PermanentActed
 import qualified Parun.Codec.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Codec.PermanentIsDealtDamage as PermanentIsDealtDamage
@@ -38,7 +39,6 @@ import qualified Parun.Codec.PlaysLand as PlaysLand
 import qualified Parun.Codec.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Codec.RevealedThisWay as RevealedThisWay
 import qualified Parun.Codec.RoomIndex as RoomIndex
-import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.Codec.SpellCast as SpellCast
 import qualified Parun.Codec.StepBegins as StepBegins
 import qualified Parun.Codec.TransformTrigger as TransformTrigger
@@ -112,8 +112,7 @@ codec =
           Arm.payload "PermanentSacrificed" PlayerActsOn.codec TriggerCondition.PermanentSacrificed (\x -> case x of TriggerCondition.PermanentSacrificed y -> Just y; _ -> Nothing),
           Arm.payload "SagaFinalChapterTriggers" PlayerRelation.codec TriggerCondition.SagaFinalChapterTriggers (\x -> case x of TriggerCondition.SagaFinalChapterTriggers y -> Just y; _ -> Nothing),
           Arm.payload "PlayerBecomesMonarch" PlayerRelation.codec TriggerCondition.PlayerBecomesMonarch (\x -> case x of TriggerCondition.PlayerBecomesMonarch y -> Just y; _ -> Nothing),
-          Arm.payload "LoseControlOfBound" SlotName.codec TriggerCondition.LoseControlOfBound (\x -> case x of TriggerCondition.LoseControlOfBound y -> Just y; _ -> Nothing),
-          Arm.nullary "LoseControlOfSelf" TriggerCondition.LoseControlOfSelf,
+          Arm.payload "LosesControl" LostPermanent.codec TriggerCondition.LosesControl (\x -> case x of TriggerCondition.LosesControl y -> Just y; _ -> Nothing),
           Arm.payload "RoomEntered" RoomIndex.codec TriggerCondition.RoomEntered (\x -> case x of TriggerCondition.RoomEntered y -> Just y; _ -> Nothing),
           Arm.payload "PlayerActs" (PlayerActed.codec PlayerRelation.codec) TriggerCondition.PlayerActs (\x -> case x of TriggerCondition.PlayerActs y -> Just y; _ -> Nothing),
           Arm.payload "PlayerLosesGame" PlayerRelation.codec TriggerCondition.PlayerLosesGame (\x -> case x of TriggerCondition.PlayerLosesGame y -> Just y; _ -> Nothing),
@@ -189,8 +188,7 @@ tagOf x = case x of
   TriggerCondition.PermanentSacrificed {} -> "PermanentSacrificed"
   TriggerCondition.SagaFinalChapterTriggers {} -> "SagaFinalChapterTriggers"
   TriggerCondition.PlayerBecomesMonarch {} -> "PlayerBecomesMonarch"
-  TriggerCondition.LoseControlOfBound {} -> "LoseControlOfBound"
-  TriggerCondition.LoseControlOfSelf {} -> "LoseControlOfSelf"
+  TriggerCondition.LosesControl {} -> "LosesControl"
   TriggerCondition.RoomEntered {} -> "RoomEntered"
   TriggerCondition.PlayerActs {} -> "PlayerActs"
   TriggerCondition.PlayerLosesGame {} -> "PlayerLosesGame"

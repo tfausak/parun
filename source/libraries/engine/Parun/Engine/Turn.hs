@@ -420,10 +420,10 @@ attackedThisStep :: PlayerId -> GameState -> Bool
 attackedThisStep pid gs =
   Set.member (AttackTarget.OfPlayer pid) (Combat.declaredAttackedThisStep (GameState.combat gs))
 
--- CR 506.7b: is the game past the point "only during combat after blockers are
+-- CR 506.8b: is the game past the point "only during combat after blockers are
 -- declared" names? Shared by CastingRestriction.AfterBlockersDeclared and
--- ActivationRestriction.AfterBlockersDeclared, which CR 506.7g makes one rule.
--- Asked of the game and not of a player, CR 506.7 describing a point in the turn.
+-- ActivationRestriction.AfterBlockersDeclared, which CR 506.8g makes one rule.
+-- Asked of the game and not of a player, CR 506.8 describing a point in the turn.
 --
 -- No conjunct about the current phase, which is CR 511.3 rather than an omission:
 -- Parun.Engine.Combat.declareBlockers is the only writer and Combat.clearCombat
@@ -433,9 +433,9 @@ attackedThisStep pid gs =
 afterBlockersDeclared :: GameState -> Bool
 afterBlockersDeclared = Combat.blockersDeclared . GameState.combat
 
--- CR 506.7c: is the game inside a combat phase and short of `target`? Panic's
--- "during combat before blockers are declared" (CR 506.7b) and, through CR
--- 506.7g, Save Point's "before combat damage has been dealt".
+-- CR 506.8c: is the game inside a combat phase and short of `target`? Panic's
+-- "during combat before blockers are declared" (CR 506.8b) and, through CR
+-- 506.8g, Save Point's "before combat damage has been dealt".
 --
 -- The PHASE and not the combat record, unlike afterBlockersDeclared above. CR
 -- 510.1 and CR 510.2 assign and deal combat damage as turn-based actions at the
@@ -443,10 +443,10 @@ afterBlockersDeclared = Combat.blockersDeclared . GameState.combat
 -- no priority window of the combat damage step precedes the damage; CR 510.4's
 -- first-strike damage step needs nothing further for the same reason. CR 509.1
 -- likewise opens the declare blockers step, so that step is past Panic's point
--- even before its turn-based action runs (CR 506.7b says "begins").
+-- even before its turn-based action runs (CR 506.8b says "begins").
 --
--- CR 506.7c: an extra combat phase (CR 500.8) reopens the window, and no CR 506.7d
--- first-phase-only reading applies. CR 506.7e: with the declare blockers and
+-- CR 506.8c: an extra combat phase (CR 500.8) reopens the window, and no CR 506.8d
+-- first-phase-only reading applies. CR 506.8e: with the declare blockers and
 -- combat damage steps skipped (CR 508.8), the end of combat step is past both
 -- points, which CombatStep's CR 506.1 order gives.
 duringCombatBefore :: CombatStep.CombatStep -> Phase -> Bool
@@ -457,14 +457,14 @@ duringCombatBefore target phase = case phase of
   Phase.PostcombatMain -> False
   Phase.Ending _ -> False
 
--- CR 506.7a / 506.7g: is the game short of the first time this turn that
+-- CR 506.8a / 506.8g: is the game short of the first time this turn that
 -- `target` begins? Every step begun this turn, the current one among them,
 -- precedes it in CR 500.1's order, which Phase's Ord follows.
 --
--- The turn's LOG and not the phase alone, for CR 506.7d: a clause printing no
+-- The turn's LOG and not the phase alone, for CR 506.8d: a clause printing no
 -- "during combat" names the FIRST combat phase, so a later combat's beginning
 -- step is past the point although it precedes the step named. The same question
--- answers CR 506.7e: a skipped step or phase records no beginning (CR 500.11),
+-- answers CR 506.8e: a skipped step or phase records no beginning (CR 500.11),
 -- but the next one to begin does and is past the point. GameState.events is
 -- cleared at the turn handoff, so it holds this turn's beginnings and no other.
 beforeStep :: Phase -> GameState -> Bool

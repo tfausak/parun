@@ -1,6 +1,6 @@
 Magic: The Gathering Comprehensive Rules
 
-These rules are effective as of August 7, 2026.
+These rules are effective as of September 25, 2026.
 
 Introduction
 
@@ -707,6 +707,8 @@ Example: Spitting Image is a sorcery that says, in part, “Create a token that�
 111.10v A Mutagen token is a colorless Mutagen artifact token with “{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery.”
 
 111.10w A Vibranium token is a colorless Vibranium artifact token with indestructible and “{T}: Add {C}. This mana can’t be spent to cast a nonartifact spell.”
+
+111.10x A Heartwood token is a red and green Heartwood artifact token with “{T}: Add {R} or {G}.”
 
 111.11. If an effect instructs a player to create a token by name, doesn’t define any other characteristics for that token, and the name is not one of the types in the list of predefined tokens above, that player uses the card with that name in the Oracle card reference to determine the characteristics of that token.
 Example: Disa the Restless has the ability “Whenever one or more creatures you control deal combat damage to a player, create a Tarmogoyf token.” As that ability resolves, its controller creates a token with the same characteristics as the card named Tarmogoyf, as determined by the Oracle card reference.
@@ -1428,7 +1430,7 @@ Example: When choosing a creature type, “Merfolk” or “Wizard” is accepta
 
 205.3f Many cards were printed with subtypes that are now obsolete. Many cards have retroactively received subtypes. Use the Oracle card reference to determine what a card’s subtypes are. (See rule 108.1.)
 
-205.3g Artifacts have their own unique set of subtypes; these subtypes are called artifact types. The artifact types are Attraction (see rule 717), Blood, Bobblehead, Book, Clue, Contraption, Equipment (see rule 301.5), Food, Fortification (see rule 301.6), Gold, Incubator, Infinity, Junk, Lander, Map, Mutagen, Powerstone, Spacecraft, Stone, Treasure, Vehicle (see rule 301.7), and Vibranium.
+205.3g Artifacts have their own unique set of subtypes; these subtypes are called artifact types. The artifact types are Attraction (see rule 717), Blood, Bobblehead, Book, Clue, Contraption, Equipment (see rule 301.5), Food, Fortification (see rule 301.6), Gold, Heartwood, Incubator, Infinity, Junk, Lander, Map, Mutagen, Powerstone, Spacecraft, Stone, Treasure, Vehicle (see rule 301.7), and Vibranium.
 
 205.3h Enchantments have their own unique set of subtypes; these subtypes are called enchantment types. The enchantment types are Aura (see rule 303.4), Background, Cartouche, Case (see rule 719), Class (see rule 716), Curse, Plan, Role (see rule 303.7), Room, Rune, Saga (see rule 714), Shard, and Shrine.
 
@@ -1455,8 +1457,7 @@ Example: When choosing a creature type, “Merfolk” or “Wizard” is accepta
 205.4b An object’s supertype is independent of its card type and subtype, even though some supertypes are closely identified with specific card types. Changing an object’s card types or subtypes won’t change its supertypes. Changing an object’s supertypes won’t change its card types or subtypes. When an object gains or loses a supertype, it retains any other supertypes it had.
 Example: An ability reads, “All lands are 1/1 creatures that are still lands.” If any of the affected lands were legendary, they are still legendary.
 
-205.4c Any land with the supertype “basic” is a basic land. Any land that doesn’t have this supertype is a nonbasic land, even if it has a basic land type.
-     Cards printed in sets prior to the Eighth Edition core set didn’t use the word “basic” to indicate a basic land. Cards from those sets with the following names are basic lands and have received errata in the Oracle card reference accordingly: Forest, Island, Mountain, Plains, Swamp, Snow-Covered Forest, Snow-Covered Island, Snow-Covered Mountain, Snow-Covered Plains, and Snow-Covered Swamp.
+205.4c Any land with the supertype “basic” is a basic land. Any land that doesn’t have this supertype is a nonbasic land, even if it has a basic land type.      Cards printed in sets prior to the Eighth Edition core set didn’t use the word “basic” to indicate a basic land. Cards from those sets with the following names are basic lands and have received errata in the Oracle card reference accordingly: Forest, Island, Mountain, Plains, Swamp, Snow-Covered Forest, Snow-Covered Island, Snow-Covered Mountain, Snow-Covered Plains, and Snow-Covered Swamp.
 
 205.4d Any permanent with the supertype “legendary” is subject to the state-based action for legendary permanents, also called the “legend rule” (see rule 704.5j).
 
@@ -2235,23 +2236,25 @@ Example: Obeka, Splitter of Seconds says, in part, “Whenever Obeka deals comba
 
 506.5. A creature attacks alone if it’s the only creature declared as an attacker during the declare attackers step. A creature is attacking alone if it’s attacking but no other creatures are. A creature blocks alone if it’s the only creature declared as a blocker during the declare blockers step. A creature is blocking alone if it’s blocking but no other creatures are.
 
-506.6. Some abilities check to see whether or not a creature “had to attack” during a particular combat phase. A creature had to attack if one or more effects were requiring that creature to attack at the time attackers were declared in that combat. A creature did not “have to attack” if there were no such effects that required it to attack, even if there were no other legal attacks that could have been declared. (See rule 508.)
+506.6. A creature attacks a player alone if it’s declared as an attacker attacking a player during the declare attackers step and no other creature is declared as an attacker attacking that player. A creature is attacking a player alone if it’s attacking a player and no other creatures are attacking that player.
 
-506.7. Some spells state that they may be cast “only [before/after] [a particular point in the combat phase],” in which that point may be “attackers are declared,” “blockers are declared,” “the combat damage step,” “the end of combat step,” “the combat phase,” or “combat.”
+506.7. Some abilities check to see whether or not a creature “had to attack” during a particular combat phase. A creature had to attack if one or more effects were requiring that creature to attack at the time attackers were declared in that combat. A creature did not “have to attack” if there were no such effects that required it to attack, even if there were no other legal attacks that could have been declared. (See rule 508.)
 
-506.7a A spell that states it may be cast “only before (or after) attackers are declared” is referring to the turn-based action of declaring attackers. It may be cast only before (or after) the declare attackers step begins, regardless of whether any attackers are actually declared. (See rule 508.)
+506.8. Some spells state that they may be cast “only [before/after] [a particular point in the combat phase],” in which that point may be “attackers are declared,” “blockers are declared,” “the combat damage step,” “the end of combat step,” “the combat phase,” or “combat.”
 
-506.7b A spell that states it may be cast “only before (or after) blockers are declared” is referring to the turn-based action of declaring blockers. It may be cast only before (or after) the declare blockers step begins, regardless of whether any blockers are actually declared. (See rule 509.)
+506.8a A spell that states it may be cast “only before (or after) attackers are declared” is referring to the turn-based action of declaring attackers. It may be cast only before (or after) the declare attackers step begins, regardless of whether any attackers are actually declared. (See rule 508.)
 
-506.7c Some spells state that they may be cast only “during combat” or “during a certain player’s combat phase” in addition to the criteria described in rule 506.7. If a turn has multiple combat phases, such spells may be cast at an appropriate time during any of them.
+506.8b A spell that states it may be cast “only before (or after) blockers are declared” is referring to the turn-based action of declaring blockers. It may be cast only before (or after) the declare blockers step begins, regardless of whether any blockers are actually declared. (See rule 509.)
 
-506.7d Some spells state that they may be cast “only before (or after) [a particular point in the combat phase],” but don’t meet the additional criteria described in rule 506.7c. If a turn has multiple combat phases, such spells may be cast that turn only before (or after) the stated point of the first combat phase.
+506.8c Some spells state that they may be cast only “during combat” or “during a certain player’s combat phase” in addition to the criteria described in rule 506.8. If a turn has multiple combat phases, such spells may be cast at an appropriate time during any of them.
 
-506.7e If a spell states that it may be cast “only before [a particular point in the combat phase],” but the stated point doesn’t exist within the relevant combat phase because the declare blockers step and the combat damage step are skipped (see rule 508.8), then the spell may be cast only before the declare attackers step ends. If the stated point doesn’t exist because the relevant combat phase has been skipped, then the spell may be cast only before the precombat main phase ends.
+506.8d Some spells state that they may be cast “only before (or after) [a particular point in the combat phase],” but don’t meet the additional criteria described in rule 506.8c. If a turn has multiple combat phases, such spells may be cast that turn only before (or after) the stated point of the first combat phase.
 
-506.7f If a spell states that it may be cast “only during combat after blockers are declared,” but the declare blockers step is skipped that combat phase (see rule 508.8), then the spell may not be cast during that combat phase.
+506.8e If a spell states that it may be cast “only before [a particular point in the combat phase],” but the stated point doesn’t exist within the relevant combat phase because the declare blockers step and the combat damage step are skipped (see rule 508.8), then the spell may be cast only before the declare attackers step ends. If the stated point doesn’t exist because the relevant combat phase has been skipped, then the spell may be cast only before the precombat main phase ends.
 
-506.7g Rules 506.7 and 506.7a–f apply to abilities that state that they may be activated only at certain times with respect to combat just as they apply to spells that state that they may be cast only at certain times with respect to combat.
+506.8f If a spell states that it may be cast “only during combat after blockers are declared,” but the declare blockers step is skipped that combat phase (see rule 508.8), then the spell may not be cast during that combat phase.
+
+506.8g Rules 506.8 and 506.8a–f apply to abilities that state that they may be activated only at certain times with respect to combat just as they apply to spells that state that they may be cast only at certain times with respect to combat.
 
 507. Beginning of Combat Step
 
@@ -2346,8 +2349,7 @@ Example: A permanent has the ability “Whenever a green creature attacks, destr
 
 509.1a The defending player chooses which creatures they control, if any, will block. The chosen creatures must be untapped and they can’t also be battles. For each of the chosen creatures, the defending player chooses one creature for it to block that’s attacking that player, a planeswalker they control, or a battle they protect.
 
-509.1b The defending player checks each creature they control to see whether it’s affected by any restrictions (effects that say a creature can’t block, or that it can’t block unless some condition is met). If any restrictions are being disobeyed, the declaration of blockers is illegal.
-     A restriction may be created by an evasion ability (a static ability an attacking creature has that restricts what can block it). If an attacking creature gains or loses an evasion ability after a legal block has been declared, it doesn’t affect that block. Different evasion abilities are cumulative.
+509.1b The defending player checks each creature they control to see whether it’s affected by any restrictions (effects that say a creature can’t block, or that it can’t block unless some condition is met). If any restrictions are being disobeyed, the declaration of blockers is illegal.      A restriction may be created by an evasion ability (a static ability an attacking creature has that restricts what can block it). If an attacking creature gains or loses an evasion ability after a legal block has been declared, it doesn’t affect that block. Different evasion abilities are cumulative.
 Example: An attacking creature with flying and shadow can’t be blocked by a creature with flying but without shadow.
 
 509.1c The defending player checks each creature they control to see whether it’s affected by any requirements (effects that say a creature must block, or that it must block if some condition is met). If the number of requirements that are being obeyed is fewer than the maximum possible number of requirements that could be obeyed without disobeying any restrictions, the declaration of blockers is illegal. If a creature can’t block unless a player pays a cost, that player is not required to pay that cost, even if blocking with that creature would increase the number of requirements being obeyed. If a requirement that says a creature blocks if able during a certain turn refers to a turn with multiple combat phases, the creature blocks if able during each declare blockers step in that turn.
@@ -3855,7 +3857,6 @@ Example: A player owns and controls Midnight Scavengers and a token that’s a c
 701.67a “Waterbend [cost]” means “Pay [cost]. For each generic mana in that cost, you may tap an untapped artifact or creature you control rather than pay that mana.”
 
 701.67b If a waterbend cost is part of the total cost to cast a spell or activate an ability (usually because the waterbend cost itself is an additional cost), the alternate method to pay for mana described in rule 701.67a may be used only to pay for the amount of generic mana in the waterbend cost, even if the total cost to cast that spell or activate that ability includes other generic mana components.
-
 Example: Spirit Water Revival is a spell that costs {1}{U}{U} and says, in part, “As an additional cost to cast this spell, waterbend {6}.” As you cast it, you may tap up to six artifacts and/or creatures you control to pay the for the {6} in its waterbend cost, but you can’t tap any artifacts or creatures to pay for any part of the {1}{U}{U} mana cost.
 
 701.67c An ability that triggers whenever a player waterbends triggers whenever that player pays a waterbend cost, regardless of how they paid that cost.
@@ -3877,6 +3878,10 @@ Example: Spirit Water Revival is a spell that costs {1}{U}{U} and says, in part,
 701.70. Recruit
 
 701.70a “Recruit” means “Draw a card, then discard a card. If you discarded a nonland card this way, create a 1/1 white Human Soldier creature token.”
+
+701.71. Empower Jace
+
+701.71a To empower Jace N means “If you don’t control a Jace planeswalker token, create a blue Jace planeswalker token with 0 loyalty, ‘[−1]: Surveil 1,’ and ‘[−3]: Draw a card.’ Choose a Jace planeswalker token you control. Put N loyalty counters on it.”
 
 702. Keyword Abilities
 
@@ -7105,9 +7110,7 @@ Abandon
 To turn a face-up ongoing scheme card face down and put it on the bottom of its owner’s scheme deck. See rule 701.33, “Abandon.”
 
 Ability
-1. Text on an object that explains what that object does or can do.
-2. An activated or triggered ability on the stack. This kind of ability is an object.
-See rule 113, “Abilities,” and section 6, “Spells, Abilities, and Effects.”
+1. Text on an object that explains what that object does or can do. 2. An activated or triggered ability on the stack. This kind of ability is an object. See rule 113, “Abilities,” and section 6, “Spells, Abilities, and Effects.”
 
 Ability Word
 An italicized word with no rules meaning that ties together abilities on different cards that have similar functionality. See rule 207.2c.
@@ -7179,9 +7182,7 @@ Annihilator
 A keyword ability that can make a creature particularly brutal when it attacks. See rule 702.86, “Annihilator.”
 
 Ante
-1. A zone used only when playing “for keeps.”
-2. To put a card into the ante zone.
-See rule 407, “Ante.”
+1. A zone used only when playing “for keeps.” 2. To put a card into the ante zone. See rule 407, “Ante.”
 
 Any Target
 A spell or ability may require “any target.” “Any target” is the same as “target creature, player, planeswalker, or battle.” See rule 115.4.
@@ -7190,8 +7191,7 @@ APNAP Order
 See Active Player, Nonactive Player Order.
 
 Archenemy
-1. A casual variant in which a team of players faces off against a single opponent strengthened with powerful scheme cards. See rule 904, “Archenemy.”
-2. A player in an Archenemy game who is playing with a scheme deck.
+1. A casual variant in which a team of players faces off against a single opponent strengthened with powerful scheme cards. See rule 904, “Archenemy.” 2. A player in an Archenemy game who is playing with a scheme deck.
 
 Archenemy Commander
 A Commander game that follows a modified version of the Archenemy rules. See rule 903, “Commander,” and rule 904, “Archenemy.”
@@ -7443,8 +7443,7 @@ Collector Number
 A number printed on most cards that has no effect on game play. See rule 213, “Information Below the Text Box.”
 
 Color
-1. A characteristic of an object. See rule 105, “Colors,” and rule 202, “Mana Cost and Color.”
-2. An attribute mana may have. See rule 106, “Mana.”
+1. A characteristic of an object. See rule 105, “Colors,” and rule 202, “Mana Cost and Color.” 2. An attribute mana may have. See rule 106, “Mana.”
 
 Color Identity
 A set of colors that determines what cards may be included in a deck for the Commander casual variant. See rule 903.4.
@@ -7453,8 +7452,7 @@ Color Indicator
 A characteristic of an object. See rule 105, “Colors,” and rule 204, “Color Indicator.”
 
 Colorless
-1. An object with no color is colorless. Colorless is not a color. See rule 105, “Colors,” and rule 202, “Mana Cost and Color.”
-2. A type of mana. See rule 106, “Mana,” and rule 107.4c.
+1. An object with no color is colorless. Colorless is not a color. See rule 105, “Colors,” and rule 202, “Mana Cost and Color.” 2. A type of mana. See rule 106, “Mana,” and rule 107.4c.
 
 Combat Damage
 Damage dealt during the combat damage step by attacking creatures and blocking creatures as a consequence of combat. See rule 510, “Combat Damage Step.”
@@ -7469,8 +7467,7 @@ Command
 A zone for certain specialized objects that have an overarching effect on the game, yet are not permanents and cannot be destroyed. See rule 408, “Command.”
 
 Commander
-1. A casual variant in which each deck is led by a legendary card (usually a creature). See rule 903, “Commander.”
-2. A designation given to one legendary card in each player’s deck in the Commander casual variant.
+1. A casual variant in which each deck is led by a legendary card (usually a creature). See rule 903, “Commander.” 2. A designation given to one legendary card in each player’s deck in the Commander casual variant.
 
 Commander Draft
 A casual variant in which players participate in a booster draft and then play multiplayer games. See rule 903.13, “Commander Draft.”
@@ -7533,16 +7530,13 @@ Copiable Values
 Values of an object’s characteristics that are checked by copy effects. See rules 613.2, 707.2, and 707.3.
 
 Copy
-1. To create a new object whose copiable values have been set to those of another object.
-2. An object whose copiable values have been set to those of another object.
-See rule 707, “Copying Objects.”
+1. To create a new object whose copiable values have been set to those of another object. 2. An object whose copiable values have been set to those of another object. See rule 707, “Copying Objects.”
 
 Cost
 An action or payment necessary to take another action or to stop another action from taking place. See rule 118, “Costs.”
 
 Counter
-1. To cancel a spell or ability so it doesn’t resolve and none of its effects occur. See rule 701.6, “Counter.”
-2. A marker placed on an object or player that modifies its characteristics or interacts with a rule or ability. See rule 122, “Counters.”
+1. To cancel a spell or ability so it doesn’t resolve and none of its effects occur. See rule 701.6, “Counter.” 2. A marker placed on an object or player that modifies its characteristics or interacts with a rule or ability. See rule 122, “Counters.”
 
 Counts As (Obsolete)
 Some older cards were printed with text stating that the card “counts as” something. Cards printed with this text have received errata in the Oracle card reference to state that the card actually is that thing.
@@ -7697,8 +7691,7 @@ Draft Round
 Part of a draft in which each player opens an unopened booster pack and the cards in those booster packs are drafted. See rules 905.1a and 905.1b.
 
 Draw
-1. To put the top card of a player’s library into their hand as a turn-based action or as the result of an effect that uses the word “draw.” See rule 121, “Drawing a Card.”
-2. The result of a game in which neither player wins or loses. See rule 104.4.
+1. To put the top card of a player’s library into their hand as a turn-based action or as the result of an effect that uses the word “draw.” See rule 121, “Drawing a Card.” 2. The result of a game in which neither player wins or loses. See rule 104.4.
 
 Draw Step
 Part of the turn. This step is the third and final step of the beginning phase. See rule 504, “Draw Step.”
@@ -7738,6 +7731,9 @@ The middle player on each team in an Emperor game. See rule 809, “Emperor Vari
 
 Emperor Variant
 A multiplayer variant played among three-player teams. See rule 809, “Emperor Variant.”
+
+Empower Jace
+A keyword action that gives you a Jace planeswalker token and/or puts loyalty counters on a Jace token you already have. See rule 701.71, “Empower Jace.”
 
 Enchant
 A keyword ability that defines what an Aura spell can target and what an Aura permanent can be attached to. See rule 303, “Enchantments,” and rule 702.5, “Enchant.”
@@ -7839,9 +7835,7 @@ Exhaust
 An activated ability that may be activated only once. See rule 702.177, “Exhaust.”
 
 Exile
-1. A zone. Exile is essentially a holding area for cards. It used to be known as the “removed-from-the-game” zone.
-2. To put an object into the exile zone from whatever zone it’s currently in. An “exiled” card is one that’s been put into the exile zone.
-See rule 406, “Exile.”
+1. A zone. Exile is essentially a holding area for cards. It used to be known as the “removed-from-the-game” zone. 2. To put an object into the exile zone from whatever zone it’s currently in. An “exiled” card is one that’s been put into the exile zone. See rule 406, “Exile.”
 
 Expansion Symbol
 A card’s expansion symbol is a small icon normally printed below the right edge of the illustration that has no effect on game play. See rule 206, “Expansion Symbol.”
@@ -7868,13 +7862,10 @@ Face a Villainous Choice
 A keyword action that causes a player to choose one of two listed choices. See rule 701.55, “Face a Villainous Choice.”
 
 Face Down
-1. A card is “face down” if it’s physically positioned so the card back is showing. Cards in some zones are normally kept face down. See section 4, “Zones.”
-2. A status a permanent may have. See rule 110.5 and rule 702.37, “Morph.”
-3. Face-down spells have additional rules. See rule 708, “Face-Down Spells and Permanents,” and rule 702.37, “Morph.”
+1. A card is “face down” if it’s physically positioned so the card back is showing. Cards in some zones are normally kept face down. See section 4, “Zones.” 2. A status a permanent may have. See rule 110.5 and rule 702.37, “Morph.” 3. Face-down spells have additional rules. See rule 708, “Face-Down Spells and Permanents,” and rule 702.37, “Morph.”
 
 Face Up
-1. A card is “face up” if it’s physically positioned so the card front is showing. Cards in some zones are normally kept face up. See section 4, “Zones.”
-2. A default status a permanent may have. See rule 110.5 and rule 702.37, “Morph.”
+1. A card is “face up” if it’s physically positioned so the card front is showing. Cards in some zones are normally kept face up. See section 4, “Zones.” 2. A default status a permanent may have. See rule 110.5 and rule 702.37, “Morph.”
 
 Fading
 A keyword ability that limits how long a permanent remains on the battlefield. See rule 702.32, “Fading.”
@@ -8006,14 +7997,10 @@ Gravestorm
 A keyword ability that creates copies of a spell. See rule 702.69, “Gravestorm.”
 
 Graveyard
-1. A zone. A player’s graveyard is their discard pile.
-2. All the cards in a player’s graveyard.
-See rule 404, “Graveyard.”
+1. A zone. A player’s graveyard is their discard pile. 2. All the cards in a player’s graveyard. See rule 404, “Graveyard.”
 
 Hand
-1. A zone. A player’s hand is where that player holds cards they have drawn but not played yet.
-2. All the cards in a player’s hand.
-See rule 402, “Hand.”
+1. A zone. A player’s hand is where that player holds cards they have drawn but not played yet. 2. All the cards in a player’s hand. See rule 402, “Hand.”
 
 Hand Modifier
 A characteristic that only vanguards have. See rule 211, “Hand Modifier.”
@@ -8035,6 +8022,9 @@ A keyword ability that exiles cards. A card exiled this way “haunts” a creat
 
 Heal
 To remove damage marked on a permanent. See rule 701.69, “Heal.”
+
+Heartwood Token
+A Heartwood token is a red and green artifact token with “{T}: Add {R} or {G}.” For more information about predefined tokens, see rule 111.10.
 
 Hexproof
 A keyword ability that precludes a permanent or player from being targeted by an opponent. See rule 702.11, “Hexproof.”
@@ -8121,8 +8111,7 @@ Infect
 A keyword ability that affects how an object deals damage to creatures and players. See rule 702.90, “Infect.”
 
 Infinity
-1. An artifact subtype.
-2. ∞ is a keyword found on Infinity cards that grants an ability as long as that permanent is harnessed. See rule 702.186, “∞ (Infinity),” and rule 701.64, “Harness.”
+1. An artifact subtype. 2. ∞ is a keyword found on Infinity cards that grants an ability as long as that permanent is harnessed. See rule 702.186, “∞ (Infinity),” and rule 701.64, “Harness.”
 
 Ingest
 A keyword ability that can exile the top card of a player’s library. See rule 702.115, “Ingest.”
@@ -8230,9 +8219,7 @@ Leveler Cards
 Cards with striated text boxes and three power/toughness boxes. See rule 711, “Leveler Cards.”
 
 Library
-1. A zone. A player’s library is where that player draws cards from.
-2. All the cards in a player’s library.
-See rule 401, “Library.”
+1. A zone. A player’s library is where that player draws cards from. 2. All the cards in a player’s library. See rule 401, “Library.”
 
 Life, Life Total
 Each player has an amount of “life,” represented by that player’s “life total.” Life may be gained or lost. See rule 119, “Life.”
@@ -8277,8 +8264,7 @@ Lose the Game
 There are several ways to lose the game. See rule 104, “Ending the Game,” rule 810.8 (for additional rules for Two-Headed Giant games), rule 809.5 (for additional rules for Emperor games), and rule 903.10 (for an additional rule for Commander games).
 
 Loyalty
-1. Part of a card that only planeswalker cards have. A planeswalker card’s loyalty is printed in its lower right corner. See rule 209, “Loyalty.”
-2. A characteristic that only planeswalkers have. See rule 306.5.
+1. Part of a card that only planeswalker cards have. A planeswalker card’s loyalty is printed in its lower right corner. See rule 209, “Loyalty.” 2. A characteristic that only planeswalkers have. See rule 306.5.
 
 Loyalty Ability
 An activated ability with a loyalty symbol in its cost. See rule 606, “Loyalty Abilities.”
@@ -8329,8 +8315,7 @@ Match
 A multiplayer game or a two-player series of games (usually best-two-of-three) played in a tournament. See rule 100.6.
 
 Max Speed
-1. A player has max speed if their speed is 4. See rule 702.179, “Start Your Engines!”
-2. A keyword ability that grants an ability to the permanent or card it’s on only if that permanent’s controller (or that card’s owner, if it isn’t on the battlefield) has a speed of 4. See rule 702.178, “Max Speed.”
+1. A player has max speed if their speed is 4. See rule 702.179, “Start Your Engines!” 2. A keyword ability that grants an ability to the permanent or card it’s on only if that permanent’s controller (or that card’s owner, if it isn’t on the battlefield) has a speed of 4. See rule 702.178, “Max Speed.”
 
 Maximum Hand Size
 The number of cards in hand a player must discard down to during their cleanup step. See rule 402.2 and 514.1.
@@ -8544,8 +8529,7 @@ Persist
 A keyword ability that can return a creature from the graveyard to the battlefield. See rule 702.79, “Persist.”
 
 Phase
-1. A subsection of a turn. See section 5, “Turn Structure.”
-2. A permanent “phases in” when its status changes from phased out to phased in. A permanent “phases out” when its status changes from phased in to phased out. See rule 702.26, “Phasing.”
+1. A subsection of a turn. See section 5, “Turn Structure.” 2. A permanent “phases in” when its status changes from phased out to phased in. A permanent “phases out” when its status changes from phased in to phased out. See rule 702.26, “Phasing.”
 
 Phased In, Phased Out
 A status a permanent may have. Phased-in is the default status. Phased-out permanents are treated as though they do not exist. See rule 110.5 and rule 702.26, “Phasing.” (“Phased-out” was a zone in older versions of the rules.)
@@ -8605,11 +8589,7 @@ Planeswalker Uniqueness Rule (Obsolete)
 Older versions of the rules stated that a player who controlled two or more planeswalkers with the same planeswalker type would put all but one of those planeswalkers into their owners’ graveyards. This rule was called the “planeswalker uniqueness rule” and no longer exists.
 
 Play
-1. To play a land is to put a land onto the battlefield as a special action. See rule 116, “Special Actions,” and rule 305, “Lands.”
-2. To play a card is to play that card as a land or cast that card as a spell, whichever is appropriate. See rule 601, “Casting Spells.”
-3. (Obsolete) Casting a spell used to be known as playing a spell. Cards with that text have received errata in the Oracle card reference. See Cast.
-4. (Obsolete) Activating an activated ability used to be known as playing an activated ability. Cards with that text have received errata in the Oracle card reference. See Activate.
-5. (Obsolete) The battlefield used to be known as the in-play zone. Cards that were printed with text that contains the phrases “in play,” “from play,” “into play,” or the like are referring to the battlefield and have received errata in the Oracle card reference. See Battlefield.
+1. To play a land is to put a land onto the battlefield as a special action. See rule 116, “Special Actions,” and rule 305, “Lands.” 2. To play a card is to play that card as a land or cast that card as a spell, whichever is appropriate. See rule 601, “Casting Spells.” 3. (Obsolete) Casting a spell used to be known as playing a spell. Cards with that text have received errata in the Oracle card reference. See Cast. 4. (Obsolete) Activating an activated ability used to be known as playing an activated ability. Cards with that text have received errata in the Oracle card reference. See Activate. 5. (Obsolete) The battlefield used to be known as the in-play zone. Cards that were printed with text that contains the phrases “in play,” “from play,” “into play,” or the like are referring to the battlefield and have received errata in the Oracle card reference. See Battlefield.
 
 Player
 One of the people in the game. See rule 102, “Players.”
@@ -8639,8 +8619,7 @@ Postcombat Main Phase
 A main phase that occurs after a combat phase. See Main Phase.
 
 Power
-1. Part of a card that only creature cards have. A creature card’s power is printed before the slash in its lower right corner. See rule 208, “Power/Toughness.”
-2. A characteristic that only creatures have. See rule 302.4.
+1. Part of a card that only creature cards have. A creature card’s power is printed before the slash in its lower right corner. See rule 208, “Power/Toughness.” 2. A characteristic that only creatures have. See rule 302.4.
 
 Powerstone Token
 A Powerstone token is a colorless artifact token with “{T}: Add {C}. This mana can’t be spent to cast a nonartifact spell.” For more information about predefined tokens, see rule 111.10.
@@ -8908,8 +8887,7 @@ Snow-Covered (Obsolete)
 Some older cards were printed with the term “snow-covered” in their rules text. Except when referencing card names, such cards have received errata in the Oracle card reference to reference the supertype “snow” instead. See Snow.
 
 Solved
-1. A designation a Case may have, allowing its last ability to affect the game. See rule 719, “Case Cards.”
-2. A keyword ability of Case cards that affects the game only if the Case has the solved designation. See rule 702.169, “Solved.”
+1. A designation a Case may have, allowing its last ability to affect the game. See rule 719, “Case Cards.” 2. A keyword ability of Case cards that affects the game only if the Case has the solved designation. See rule 702.169, “Solved.”
 
 Sorcery
 A card type. A sorcery is not a permanent. See rule 307, “Sorceries.”
@@ -9134,8 +9112,7 @@ Totem Armor (Obsolete)
 An obsolete keyword ability that has been renamed. See rule 702.89, “Umbra Armor.”
 
 Toughness
-1. Part of a card that only creature cards have. A creature card’s toughness is printed after the slash in its lower right corner. See rule 208, “Power/Toughness.”
-2. A characteristic that only creatures have. See rule 302.4.
+1. Part of a card that only creature cards have. A creature card’s toughness is printed after the slash in its lower right corner. See rule 208, “Power/Toughness.” 2. A characteristic that only creatures have. See rule 302.4.
 
 Tournament
 An organized play activity where players compete against other players. See rule 100.6.
@@ -9204,8 +9181,7 @@ Two-Headed Giant Variant
 A multiplayer variant played among two-player teams that each have a shared life total and take a simultaneous turn. See rule 810, “Two-Headed Giant Variant.”
 
 Type
-1. An object’s card type or, more broadly, its card type, subtype, and/or supertype. See rule 205, “Type Line,” and section 3, “Card Types.”
-2. An attribute mana has. See rule 106, “Mana.”
+1. An object’s card type or, more broadly, its card type, subtype, and/or supertype. See rule 205, “Type Line,” and section 3, “Card Types.” 2. An attribute mana has. See rule 106, “Mana.”
 
 Type Icon
 An icon that appears in the upper left of some Future Sight cards that has no effect on game play. See rule 107.10.
@@ -9274,8 +9250,7 @@ Upkeep Step
 Part of the turn. This step is the second step of the beginning phase. See rule 503, “Upkeep Step.”
 
 Vanguard
-1. A casual variant in which each player plays the role of a famous character. See rule 902, “Vanguard.”
-2. A card type seen only on nontraditional Magic cards in the Vanguard casual variant. A vanguard card is not a permanent. See rule 313, “Vanguards.”
+1. A casual variant in which each player plays the role of a famous character. See rule 902, “Vanguard.” 2. A card type seen only on nontraditional Magic cards in the Vanguard casual variant. A vanguard card is not a permanent. See rule 313, “Vanguards.”
 
 Vanishing
 A keyword ability that limits how long a permanent remains on the battlefield. See rule 702.63, “Vanishing.”
@@ -9378,7 +9353,7 @@ Thanks to all our project team members and the many others too numerous to menti
 
 
 
-These rules are effective as of August 7, 2026.
+These rules are effective as of September 25, 2026.
 
 Published by Wizards of the Coast LLC, PO Box 707, Renton, WA 98057-0707, USA. Wizards of the Coast, Magic: The Gathering, Magic, their respective logos, Mirrodin, Kamigawa, Lorwyn, Zendikar, Innistrad, Ravnica, Khans of Tarkir, Magic Origins, Magic: The Gathering—Conspiracy, Ixalan, Unfinity, Dominaria, Ikoria, Kaldheim, Baldur’s Gate, The Brothers’ War, and Planeswalker Decks are trademarks of Wizards of the Coast LLC in the USA and other countries. ©2026 Wizards. U.S. Pat. No. RE 37,957.
 
