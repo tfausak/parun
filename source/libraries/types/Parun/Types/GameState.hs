@@ -141,7 +141,8 @@ data GameState = MkGameState
     payingOnResolution :: Bool,
     -- | CR 609.1: the controller of the spell or ability whose effect is being
     -- performed (Event.causedBy), which Moved and Discarded record as their
-    -- cause. Nothing outside one, and inside a cost's payment.
+    -- cause. Nothing outside one, and inside a cost's payment outside a
+    -- resolution (Parun.Engine.Cost.payComponent).
     causing :: Maybe PlayerId.PlayerId,
     -- | CR 608.2h / 113.7a: last known information, keyed by the id an object
     -- had before it left a zone (CR 400.7). Grows for the whole game.

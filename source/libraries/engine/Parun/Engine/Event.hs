@@ -8448,7 +8448,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                   Monad.when (fromZone == Zone.Battlefield) $
                     Monad.forM_ (Object.attachedTo obj) (unattach lki oid)
                   seenArriving <- State.gets (Visibility.seenByEveryone newId)
-                  causer <- State.gets Game.causeNow
+                  causer <- State.gets GameState.causing
                   Monad.when (fromZone == Zone.Battlefield) (State.modify' (fileBoardBefore lki))
                   State.modify'
                     . recordEvent
@@ -9794,7 +9794,7 @@ recordMintedArrival zone newId = do
   -- Moved.revealed is read by no look-back here: none reaches a battlefield
   -- destination (Event.Trigger.looksBack), and every battlefield-bound redirect
   -- in data/cards/ exiles, a public zone, so the public origin answers.
-  State.modify' (recordEvent (GameEvent.Moved ((Moved.moved (ZoneChange.MkZoneChange newId newId zone zone) snapshot) {Moved.revealed = True, Moved.seenArriving = Visibility.seenByEveryone newId placed, Moved.causedBy = Game.causeNow placed})))
+  State.modify' (recordEvent (GameEvent.Moved ((Moved.moved (ZoneChange.MkZoneChange newId newId zone zone) snapshot) {Moved.revealed = True, Moved.seenArriving = Visibility.seenByEveryone newId placed, Moved.causedBy = GameState.causing placed})))
 
 -- CR 701.42a: meld these cards -- "put them onto the battlefield with their back
 -- faces up and combined. The resulting permanent is a single object represented by
@@ -9935,7 +9935,7 @@ meld settle controller victims resultCard = do
           -- Moved.revealed is read by no look-back here: none reaches a
           -- battlefield destination (Event.Trigger.looksBack), so the origin's
           -- zone answers.
-          entry = (Moved.moved (ZoneChange.MkZoneChange (fst (NonEmpty.head melding)) newId origin Zone.Battlefield) snapshot) {Moved.otherDepartures = Seq.fromList (fmap fst (NonEmpty.tail melding)), Moved.revealed = not (Game.isHiddenZone origin), Moved.seenArriving = Visibility.seenByEveryone newId placed, Moved.causedBy = Game.causeNow placed}
+          entry = (Moved.moved (ZoneChange.MkZoneChange (fst (NonEmpty.head melding)) newId origin Zone.Battlefield) snapshot) {Moved.otherDepartures = Seq.fromList (fmap fst (NonEmpty.tail melding)), Moved.revealed = not (Game.isHiddenZone origin), Moved.seenArriving = Visibility.seenByEveryone newId placed, Moved.causedBy = GameState.causing placed}
       State.modify' (recordEvent (GameEvent.Moved entry))
       pure (Just newId)
 
@@ -10851,7 +10851,7 @@ discardReturning settle cause pid oid = do
   -- the sequence never holds two here.
   Monad.forM_ moved $ \newId -> do
     applied <- madnessChoice pid newId (madnessOf newId)
-    causer <- State.gets Game.causeNow
+    causer <- State.gets GameState.causing
     State.modify' (recordEvent (GameEvent.Discarded (Discarded.MkDiscarded pid newId cause applied causer)))
   pure moved
 
