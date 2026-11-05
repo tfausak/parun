@@ -261,6 +261,7 @@ import qualified Parun.Types.ReplacementBucket as ReplacementBucket
 import Parun.Types.ReplacementCandidate (ReplacementCandidate)
 import qualified Parun.Types.ReplacementCandidate as ReplacementCandidate
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
+import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Parun.Types.RevealCause as RevealCause
 import qualified Parun.Types.RevealObligation as RevealObligation
 import qualified Parun.Types.RevealTiming as RevealTiming
@@ -2405,10 +2406,8 @@ applyChosen settle asOf batch diverting allowances applied prevented exiledBy sh
   -- rule's middle clause, "any additional effects they have will take
   -- place", which is `applyInertly`'s whole job.
   --
-  -- CR 615.3's use count is skipped too, which no card notices: every
-  -- prevention row parun installs is Uses.Unlimited (Resolve.installDamageRow
-  -- says why, and Fog's authored row says Unlimited as well), so the
-  -- `consume` this bypasses would have been a no-op anyway.
+  -- A shield's use count is skipped too, so CR 615.8's "next time" waits for
+  -- damage it can prevent. A self-replacement's is spent, in `applyInertly`.
   --
   -- A SEPARATE fold rather than a flag inside `apply`, because CR 615.12 is
   -- a fact about the (effect, event) PAIR and not about any one rewrite:
@@ -2535,8 +2534,10 @@ shufflesAfter candidate = case ReplacementCandidate.effect candidate of
 --
 -- No `consume` and no `setShield` in any arm, which is CR 615.12's last sentence:
 -- "existing damage prevention shields won't be reduced by damage that can't be
--- prevented". CR 615.3's use count is skipped with it, which no card notices --
--- `loop` above says why.
+-- prevented". A use count is skipped with it, but for a CR 614.15
+-- self-replacement: its one event is this one, and it stands as no shield for the
+-- next. The scenario power-leak-leaves-no-shield-when-damage-cant-be-prevented
+-- proves it.
 --
 -- One arm per DamageRewrite constructor, `apply`'s discipline for `apply`'s
 -- reason: a new prevention rewrite carrying an additional effect must break the
@@ -2545,6 +2546,7 @@ shufflesAfter candidate = case ReplacementCandidate.effect candidate of
 -- for a rewrite that prevents.
 applyInertly :: ReplacementCandidate -> DamageRewrite.DamageRewrite (Effect.Type.Effect Card (GrantedAbility.Type.GrantedAbility Card)) -> ProposedEvent -> Game (Maybe ProposedEvent)
 applyInertly candidate rewrite event = do
+  Monad.when (ReplacementCandidate.origin candidate == ReplacementOrigin.SelfReplacement) (Replacement.consume (ReplacementCandidate.identity candidate))
   case rewrite of
     -- CR 122.1c's "prevent that damage and remove a shield counter from it". The
     -- removal is the additional effect, and it is AMOUNT-INDEPENDENT -- the rule

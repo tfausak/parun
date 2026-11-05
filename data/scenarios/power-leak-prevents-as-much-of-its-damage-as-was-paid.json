@@ -1,0 +1,28 @@
+{
+  "description": "Power Leak: the enchanted enchantment's controller pays any amount of mana and takes 2 damage less that amount",
+  "note": "alice's Aura on bob's Crusade, so the choice and the payment are bob's. He pays 1, then 2; then names 1 and declines, then names more than he can pay, which is no offer. Neither of the last two prevents anything.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Power Leak", "label": "leak", "attached": "crusade"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Crusade", "label": "crusade"}, {"card": "Island", "label": "i1", "ready": true}, {"card": "Island", "label": "i2", "ready": true}, {"card": "Island", "label": "i3", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 2, "step": "Upkeep", "player": "bob", "do": {"Answer": {"prompt": "ChooseNumber", "with": 1}}, "source": "$leak"},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$i1", null]}}, "source": "$leak"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Tapped": {"object": "$i1", "tapped": true}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Tapped": {"object": "$i2", "tapped": false}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 19}}},
+    {"turn": 4, "step": "Upkeep", "player": "bob", "do": {"Answer": {"prompt": "ChooseNumber", "with": 2}}, "source": "$leak"},
+    {"turn": 4, "step": "Upkeep", "player": "bob", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$i1", "$i2", null]}}, "source": "$leak"},
+    {"turn": 4, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 19}}},
+    {"turn": 6, "step": "Upkeep", "player": "bob", "do": {"Answer": {"prompt": "ChooseNumber", "with": 1}}, "source": "$leak"},
+    {"turn": 6, "step": "Upkeep", "player": "bob", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}, "source": "$leak"},
+    {"turn": 6, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 8, "step": "Upkeep", "player": "bob", "do": {"Answer": {"prompt": "ChooseNumber", "with": 4}}, "source": "$leak"},
+    {"turn": 8, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 15}}},
+    {"turn": 8, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

@@ -36,6 +36,7 @@ import qualified Parun.Engine.Prepare as Prepare
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
+import qualified Parun.Engine.QuantitySlot as QuantitySlot
 import qualified Parun.Engine.Replacement as Replacement
 import qualified Parun.Engine.Resolve.Common as Common
 import Parun.Engine.Resolve.Slots (battlefieldMatching, conditionSlots, effectContext, effectViewOf, legalOne, objectRefObjects, overRelations, playerRefPlayers, replacementRowSlots, resolvingAbilityName, slotBindings, slotGroup)
@@ -87,6 +88,7 @@ import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
 import qualified Parun.Types.CreateEmblem as CreateEmblem
 import qualified Parun.Types.DamageDirection as DamageDirection
+import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.Daytime as Daytime
 import qualified Parun.Types.Designate as Designate
@@ -133,6 +135,7 @@ import qualified Parun.Types.PreventNextDamage as PreventNextDamage
 import qualified Parun.Types.Prohibit as Prohibit
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
+import qualified Parun.Types.Quantity as Quantity.Type
 import Parun.Types.Recipient (Recipient)
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.RedirectDamage as RedirectDamage
@@ -930,7 +933,7 @@ replace resolving source controller legal (Replace.MkReplace duration uses origi
                     { -- CR 601.2c / 608.2b: "target player" is the player this
                       -- resolution's slot names now, BAKED for `controller`'s
                       -- reason below.
-                      ActiveReplacement.effect = Functor.runIdentity (overRelations (pure . Common.bakeRelation (Filter.slotPlayers context)) re),
+                      ActiveReplacement.effect = bakeCeiling (Quantity.evaluateFor (effectViewOf resolving source legal gs) context gs resolving source) (Functor.runIdentity (overRelations (pure . Common.bakeRelation (Filter.slotPlayers context)) re)),
                       ActiveReplacement.source = source,
                       -- CR 109.5: the resolution's controller, BAKED now --
                       -- the source is a spell CR 608.2n is about to put in a
@@ -971,6 +974,20 @@ replace resolving source controller legal (Replace.MkReplace duration uses origi
                       ActiveReplacement.choices = SourceContext.choicesOf (Game.readingAcquisition resolving source gs source) source gs
                     }
              in gs1 {GameState.replacements = active : GameState.replacements gs1}
+
+-- CR 608.2h: a prevention ceiling naming a slot is the number this resolution
+-- settled, Power Leak's "where X is the amount of mana that player paid this
+-- way", so it is written down as the row is installed: the slot dies with the
+-- resolution, and a source that already left never held it (CR 113.7a,
+-- Common.bindAmountSlot). The scenario
+-- power-leak-still-prevents-when-the-aura-has-left proves it.
+bakeCeiling :: (Quantity.Type.Quantity -> Maybe Integer) -> ReplacementEffect.ReplacementEffect card ability effect -> ReplacementEffect.ReplacementEffect card ability effect
+bakeCeiling evaluate re = case re of
+  ReplacementEffect.DamageR damage@DamageR.MkDamageR {DamageR.rewrite = DamageRewrite.PreventUpTo quantity}
+    | not (Set.null (QuantitySlot.slots quantity)),
+      Just n <- evaluate quantity ->
+        ReplacementEffect.DamageR damage {DamageR.rewrite = DamageRewrite.PreventUpTo (Quantity.Type.Literal n)}
+  _ -> re
 
 preventNextDamage :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> PreventNextDamage.PreventNextDamage (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
 preventNextDamage resolving source controller legal chosen (PreventNextDamage.MkPreventNextDamage duration kind ref whatRecipient whoRecipient sourceFilter quantity riderEffects) = do
