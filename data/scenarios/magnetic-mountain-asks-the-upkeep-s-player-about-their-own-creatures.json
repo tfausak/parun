@@ -1,5 +1,5 @@
 {
-  "description": "CR 109.5 Magnetic Mountain in bob's upkeep has bob choose among and pay for his own creatures",
+  "description": "CR 608.2d Magnetic Mountain in bob's upkeep has bob choose among and pay for his own creatures",
   "note": "Alice controls the Mountain, and on her upkeep chooses nothing. On bob's upkeep bob is asked: alice's tapped Merfolk is no candidate, his own is, and his Islands pay, not hers.",
   "board": {
     "active": "alice",
