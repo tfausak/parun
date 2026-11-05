@@ -144,7 +144,8 @@
       "do": {
         "Cast": {
           "mana": [
-            "$m1"
+            "$m1",
+            null
           ],
           "object": "$ashock",
           "targets": [
@@ -279,7 +280,8 @@
       "do": {
         "Cast": {
           "mana": [
-            "$b1"
+            "$b1",
+            null
           ],
           "object": "$bshock1",
           "targets": [
