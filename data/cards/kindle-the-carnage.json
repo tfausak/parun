@@ -43,13 +43,16 @@
                             "type": "These",
                             "value": {
                               "cards": {
-                                "type": "RandomCardInHand",
+                                "type": "RandomCard",
                                 "value": {
                                   "player": {
                                     "type": "Relative",
                                     "value": {
                                       "type": "You"
                                     }
+                                  },
+                                  "zone": {
+                                    "type": "Hand"
                                   }
                                 }
                               },

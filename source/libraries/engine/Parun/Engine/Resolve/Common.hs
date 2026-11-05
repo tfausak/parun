@@ -47,7 +47,7 @@ import qualified Parun.Engine.Projection.Rewrite as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
 import qualified Parun.Engine.Replacement as Replacement
-import Parun.Engine.Resolve.Slots (attackedBy, boundSlots, chosenCandidates, effectContext, effectObjectRefs, effectPlayerRefs, effectViewOf, graveyardCardsOf, handCardsOf, legalMany, legalOne, libraryCardsOf, matchingFromAmong, objectRefObjects, playerRefPlayers, playerRefSlots, replacementRowSlots, resolutionReads, resolvingAbilityName, resolvingKind, slotBindings, slotGroup)
+import Parun.Engine.Resolve.Slots (attackedBy, boundSlots, chosenCandidates, effectContext, effectObjectRefs, effectPlayerRefs, effectViewOf, graveyardCardsOf, handCardsOf, hiddenCardsOf, legalMany, legalOne, matchingFromAmong, objectRefObjects, playerRefPlayers, playerRefSlots, replacementRowSlots, resolutionReads, resolvingAbilityName, resolvingKind, slotBindings, slotGroup)
 import qualified Parun.Engine.Restamp as Restamp
 import qualified Parun.Engine.Room as Room
 import qualified Parun.Engine.Sba as Sba
@@ -124,6 +124,7 @@ import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Guess as Guess
+import qualified Parun.Types.HiddenZone as HiddenZone
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InherentTriggerSource as InherentTriggerSource
 import qualified Parun.Types.Keyword as Keyword.Type
@@ -180,9 +181,8 @@ import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.ProposedEvent as ProposedEvent
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity.Type
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
-import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
 import qualified Parun.Types.RangeOfInfluence as RangeOfInfluence
 import Parun.Types.Recipient (Recipient)
 import qualified Parun.Types.Recipient as Recipient
@@ -764,9 +764,8 @@ askingObjects resolving source controller legal chosen ref = case ref of
   -- The printed "from among them".
   ObjectRef.ChosenCardFromAmong from -> chooseCardFromAmong resolving source controller legal chosen from
   -- Randomness, asked of the interpreter.
-  ObjectRef.RandomCardInHand random -> randomCardsInHand resolving source controller legal random
+  ObjectRef.RandomCard random -> randomCards resolving source controller legal random
   ObjectRef.RandomCardInGraveyard random -> randomCardsInGraveyard resolving source controller legal random
-  ObjectRef.RandomCardInLibrary random -> randomCardsInLibrary resolving source controller legal random
   -- Capricious Efreet's "one of them": the pool read or asked first, then one
   -- drawn from it. The pool's InSlot reads `legal`, so a target CR 608.2b made
   -- illegal is not among them.
@@ -1047,7 +1046,7 @@ chosenCardsInGraveyard legal resolving controller source (ChosenCardInGraveyard.
         _ -> pure []
 
 -- The seats an ObjectRef.ChosenCardInHand asks -- and an
--- ObjectRef.RandomCardInHand reads -- in APNAP order. One list, not a chooser
+-- ObjectRef.RandomCard reads -- in APNAP order. One list, not a chooser
 -- plus a scope: CR 402.3 lets a player look only at their own hand. Through
 -- playerRefPlayers, so an unfilled, illegal or non-player slot names nobody and
 -- CR 101.3 ignores that share (CR 608.2b).
@@ -1195,9 +1194,8 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   -- only, a group never holding a player.
   ObjectRef.EachCardFromAmong {} -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
   -- No recipients, for the same reason.
-  ObjectRef.RandomCardInHand _ -> []
+  ObjectRef.RandomCard _ -> []
   ObjectRef.RandomCardInGraveyard _ -> []
-  ObjectRef.RandomCardInLibrary _ -> []
   ObjectRef.AtRandom _ -> []
   ObjectRef.ChosenPermanents _ -> []
   -- A read, so the sweep answers it.
@@ -2209,8 +2207,8 @@ takePile resolving source controller legal pileRef matching split = do
   pure (foldMap Set.toList taken)
 
 -- CR 701.20a / 701.9b: the cards randomness names out of each hand the ref
--- reaches -- askingObjects' RandomCardInHand arm (Fall, Hymn to Tourach, Elkin
--- Lair).
+-- reaches (Fall, Hymn to Tourach, Elkin Lair), or out of each library (Alchemy's
+-- seek) -- askingObjects' RandomCard arm.
 --
 -- The question goes to the INTERPRETER: the engine does not roll and no player
 -- picks. Filtered rather than trusted, so an answer naming a card never offered
@@ -2218,33 +2216,37 @@ takePile resolving source controller legal pileRef matching split = do
 -- randomness is not CR 104.4b's optional action.
 --
 -- Elided at one candidate and skipped at none (CR 101.3, CR 609.3). Candidates
--- are the hand as CR 608.2c reaches it in the zone's own order (CR 402.3)
--- narrowed by the ref's own Filter, and the seats come from handChoosers so the
--- asks run in CR 608.2e's APNAP order.
+-- are the zone as CR 608.2c reaches it (Slots.hiddenCardsOf's order) narrowed by
+-- the ref's own Filter, and the seats come from handChoosers so the asks run in
+-- CR 608.2e's APNAP order.
+--
+-- What seek's Arena text leaves out over a library is the point: nobody looks at
+-- it, nothing is revealed and nothing is shuffled, so this asks the interpreter
+-- and nothing else.
 --
 -- The count names DISTINCT cards -- "two cards at random" is two cards and not
 -- two picks that may coincide -- so each card named is dropped from the
--- candidates before the next ask. CR 609.3 caps the run at the hand's matching
+-- candidates before the next ask. CR 609.3 caps the run at the zone's matching
 -- size.
-randomCardsInHand ::
+randomCards ::
   ObjectId ->
   ObjectId ->
   PlayerId ->
   Map.Map SlotName (Set Recipient) ->
-  RandomCardInHand.RandomCardInHand ->
+  RandomCard.RandomCard ->
   Game [ObjectId]
-randomCardsInHand resolving source controller legal (RandomCardInHand.MkRandomCardInHand player filter_ count) = do
+randomCards resolving source controller legal (RandomCard.MkRandomCard zone player filter_ count) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
-  fmap concat . Monad.mapM (\pid -> Game.drawDistinct Prompt.RandomObject wanted (handCardsOf context gs pid filter_)) $
+  fmap concat . Monad.mapM (\pid -> Game.drawDistinct Prompt.RandomObject wanted (hiddenCardsOf zone context gs pid filter_)) $
     handChoosers legal resolving source controller gs player
 
 -- CR 404.1 / 608.2c: the cards randomness names out of each graveyard the ref
 -- reaches -- askingObjects' RandomCardInGraveyard arm.
 --
--- randomCardsInHand's posture over a PUBLIC zone (CR 400.2), and the differences
+-- randomCards' posture over a PUBLIC zone (CR 400.2), and the differences
 -- all follow from that: the graveyards come from a ZoneScope rather than from
 -- handChoosers, since CR 402.3's bar on looking at another player's hand has no
 -- counterpart over a graveyard.
@@ -2269,28 +2271,6 @@ randomCardsInGraveyard resolving source controller legal (RandomCardInGraveyard.
       wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
   fmap concat . Monad.mapM (\pid -> Game.drawDistinct Prompt.RandomObject wanted (graveyardCardsOf context gs pid filter_)) $
     Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs
-
--- Alchemy's seek: the cards randomness names out of each library the ref
--- reaches -- askingObjects' RandomCardInLibrary arm.
---
--- randomCardsInHand's posture one hidden zone over, seats and all
--- (handChoosers). What seek's Arena text leaves out is the point: nobody
--- looks at the library, nothing is revealed and nothing is shuffled, so this
--- asks the interpreter and nothing else.
-randomCardsInLibrary ::
-  ObjectId ->
-  ObjectId ->
-  PlayerId ->
-  Map.Map SlotName (Set Recipient) ->
-  RandomCardInLibrary.RandomCardInLibrary ->
-  Game [ObjectId]
-randomCardsInLibrary resolving source controller legal (RandomCardInLibrary.MkRandomCardInLibrary player filter_ count) = do
-  gs <- State.get
-  let viewOf = effectViewOf resolving source legal gs
-      context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-      wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
-  fmap concat . Monad.mapM (\pid -> Game.drawDistinct Prompt.RandomObject wanted (libraryCardsOf context gs pid filter_)) $
-    handChoosers legal resolving source controller gs player
 
 -- CR 702.167c: the cards exiled to pay the cost of the craft ability resolving
 -- as `resolving` (Binding.craftMaterials), linked to the permanent it put onto
@@ -3566,10 +3546,12 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
       ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand player filter_ count) ->
         let choosers = handChoosers legal resolving source controller gs player
          in mustPick count && not (null choosers) && all (\pid -> null (handCardsOf context gs pid filter_)) choosers
-      -- randomCardsInHand's pool: Pillaging Horde's "unless you discard a card
-      -- at random" over an empty hand (CR 118.3, 118.12a), which the scenario
-      -- "CR 118.3 Pillaging Horde is sacrificed over an empty hand" proves.
-      ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand player filter_ _) ->
+      -- randomCards' pool over a hand: Pillaging Horde's "unless you discard a
+      -- card at random" over an empty hand (CR 118.3, 118.12a), which the
+      -- scenario "CR 118.3 Pillaging Horde is sacrificed over an empty hand"
+      -- proves. A seek over an empty library answers False, as it did before
+      -- the two refs were one: no seek in the pool is a cost.
+      ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Hand player filter_ _) ->
         let holders = handChoosers legal resolving source controller gs player
          in not (null holders) && all (\pid -> null (handCardsOf context gs pid filter_)) holders
       ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope filter_ count) ->

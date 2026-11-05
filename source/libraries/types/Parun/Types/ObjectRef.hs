@@ -15,9 +15,8 @@ import qualified Parun.Types.FromAnywhere as FromAnywhere
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayersWho as PlayersWho
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
-import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.TopOfLibrary as TopOfLibrary
 import qualified Parun.Types.TopOfLibraryUntil as TopOfLibraryUntil
@@ -143,21 +142,17 @@ data ObjectRef
     -- matches -- the printed "all land cards revealed this way", the arm above's
     -- plural and a read rather than a question.
     EachCardFromAmong EachCardFromAmong.EachCardFromAmong
-  | -- | CR 701.20a / 701.9b / Merfolk Spy, Fall, Hymn to Tourach: the cards
-    -- randomness names out of the hands the PlayerRef names, asked of the
-    -- interpreter through Prompt.RandomObject and filtered back against the
-    -- candidates.
-    RandomCardInHand RandomCardInHand.RandomCardInHand
+  | -- | CR 701.20a / 701.9b / Merfolk Spy, Fall, Hymn to Tourach, and Alchemy's
+    -- seek / Gate to Seatower: the cards randomness names out of the hidden
+    -- zones the PlayerRef names, asked of the interpreter through
+    -- Prompt.RandomObject and filtered back against the candidates.
+    RandomCard RandomCard.RandomCard
   | -- | CR 404.1 / 608.2c / Ghoulraiser, Make a Wish: the cards randomness names
     -- out of the graveyards the ZoneScope names, asked of the interpreter through
     -- Prompt.RandomObject and filtered back against the candidates. The arm above
     -- over a PUBLIC zone (CR 400.2), which is why a ZoneScope stands where that
     -- arm's single PlayerRef does.
     RandomCardInGraveyard RandomCardInGraveyard.RandomCardInGraveyard
-  | -- | Alchemy's seek / Gate to Seatower: the cards randomness names out of the
-    -- library the PlayerRef names, asked of the interpreter through
-    -- Prompt.RandomObject -- no search, no reveal, no shuffle.
-    RandomCardInLibrary RandomCardInLibrary.RandomCardInLibrary
   | -- | CR 608.2b / Capricious Efreet: one object randomness names out of what the
     -- inner ref names as the effect runs -- a target slot's still-legal members.
     AtRandom ObjectRef

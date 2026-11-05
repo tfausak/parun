@@ -42,7 +42,7 @@
                         "type": "Reveal",
                         "value": {
                           "ref": {
-                            "type": "RandomCardInHand",
+                            "type": "RandomCard",
                             "value": {
                               "filter": {
                                 "type": "Not",
@@ -56,6 +56,9 @@
                               "player": {
                                 "type": "InSlot",
                                 "value": "opponent"
+                              },
+                              "zone": {
+                                "type": "Hand"
                               }
                             }
                           },

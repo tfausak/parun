@@ -140,6 +140,7 @@ import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Guess as Guess
+import qualified Parun.Types.HiddenZone as HiddenZone
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.HowMany as HowMany
@@ -201,9 +202,8 @@ import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.PutCountersFrom as PutCountersFrom
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity.Type
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
-import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.RedirectDamage as RedirectDamage
 import qualified Parun.Types.Regenerability as Regenerability
@@ -1431,9 +1431,10 @@ questionOf ref = case ref of
     _ | Maybe.isJust (ChosenCardFromAmong.pileChooser choice) -> Just PileFromAmong
     HowMany.UpTo Nothing -> Just AnyCardsFromAmong
     _ -> Just CardFromAmong
-  ObjectRef.RandomCardInHand {} -> Just RandomInHand
+  ObjectRef.RandomCard random -> case RandomCard.zone random of
+    HiddenZone.Hand -> Just RandomInHand
+    HiddenZone.Library -> Just RandomInLibrary
   ObjectRef.RandomCardInGraveyard {} -> Just RandomInGraveyard
-  ObjectRef.RandomCardInLibrary {} -> Just RandomInLibrary
   ObjectRef.AtRandom {} -> Just RandomAmong
   ObjectRef.ChosenPermanents choice -> case ChosenPermanents.count choice of
     _ | ChosenPermanents.zone choice /= Zone.Battlefield -> Just OffBattlefield
@@ -2173,7 +2174,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           -- and Fall's printed two makes the same seat plural. A COMPUTED count
           -- is plural whatever the board would make it, ChosenCardFromAmong's
           -- reading above and for its reason.
-          ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand player _ count) -> case count of
+          ObjectRef.RandomCard (RandomCard.MkRandomCard _ player _ count) -> case count of
             Quantity.Type.Literal n -> n <= 1 && namesOneSeat player
             _ -> False
           -- One card per GRAVEYARD, the arm above one zone over: randomness picks
@@ -2184,11 +2185,6 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           -- and for its reason.
           ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard scope _ count) -> case count of
             Quantity.Type.Literal n -> n <= 1 && namesOneGraveyard scope
-            _ -> False
-          -- One card per SEAT, RandomCardInHand's answer one hidden zone over
-          -- and for its reason.
-          ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary player _ count) -> case count of
-            Quantity.Type.Literal n -> n <= 1 && namesOneSeat player
             _ -> False
           -- TRUE for one permanent however many match, and for a printed ceiling
           -- of one, TopOfLibrary's answer; FALSE, EachCardFromAmong's answer
@@ -2784,9 +2780,9 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
         inGraveyard = ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard Chooser.TheController (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) anyCard HowMany.one)
         inHand = ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) anyCard HowMany.one)
         fromAmong = ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong group anyCard HowMany.one (PlayerRef.Relative PlayerRelation.You) Nothing False)
-        atRandom = ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
+        atRandom = ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Hand (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
         atRandomInGraveyard = ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) anyCard (Quantity.Type.Literal 1))
-        sought = ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
+        sought = ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Library (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
         anyNumber = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo Nothing) Zone.Battlefield)
         onePermanent = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) HowMany.one Zone.Battlefield)
         sourceAndOne = ObjectRef.AllOf (onePermanent NonEmpty.:| [ObjectRef.EachMatching Filter.Type.IsSource])

@@ -14,9 +14,8 @@ import qualified Parun.Codec.FromAnywhere as FromAnywhere
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.PlayerRef as PlayerRef
 import qualified Parun.Codec.PlayersWho as PlayersWho
+import qualified Parun.Codec.RandomCard as RandomCard
 import qualified Parun.Codec.RandomCardInGraveyard as RandomCardInGraveyard
-import qualified Parun.Codec.RandomCardInHand as RandomCardInHand
-import qualified Parun.Codec.RandomCardInLibrary as RandomCardInLibrary
 import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.Codec.TopOfLibrary as TopOfLibrary
 import qualified Parun.Codec.TopOfLibraryUntil as TopOfLibraryUntil
@@ -37,7 +36,7 @@ import qualified Parun.Types.ObjectRef as ObjectRef
 -- tags, emitted identically -- and what it adds is the schema.
 --
 -- 'EachCardInGraveyard', 'EachCardInHand', 'EachCardInExiledPile', 'TopOfLibrary', 'TopOfLibraryUntil', 'ChosenCardInGraveyard',
--- 'ChosenCardInHand', 'ChosenCardFromAmong', 'EachCardFromAmong', 'RandomCardInHand', 'RandomCardInGraveyard', 'RandomCardInLibrary',
+-- 'ChosenCardInHand', 'ChosenCardFromAmong', 'EachCardFromAmong', 'RandomCard', 'RandomCardInGraveyard',
 -- 'FromAnywhere', 'ChosenPermanents' and 'Players' each carry a payload record of their own (#1464), so no arm here writes a
 -- positional array.
 --
@@ -78,9 +77,8 @@ codec =
           Arm.payload "ChosenCardInHand" ChosenCardInHand.codec ObjectRef.ChosenCardInHand (\x -> case x of ObjectRef.ChosenCardInHand y -> Just y; _ -> Nothing),
           Arm.payload "ChosenCardFromAmong" ChosenCardFromAmong.codec ObjectRef.ChosenCardFromAmong (\x -> case x of ObjectRef.ChosenCardFromAmong y -> Just y; _ -> Nothing),
           Arm.payload "EachCardFromAmong" EachCardFromAmong.codec ObjectRef.EachCardFromAmong (\x -> case x of ObjectRef.EachCardFromAmong y -> Just y; _ -> Nothing),
-          Arm.payload "RandomCardInHand" RandomCardInHand.codec ObjectRef.RandomCardInHand (\x -> case x of ObjectRef.RandomCardInHand y -> Just y; _ -> Nothing),
+          Arm.payload "RandomCard" RandomCard.codec ObjectRef.RandomCard (\x -> case x of ObjectRef.RandomCard y -> Just y; _ -> Nothing),
           Arm.payload "RandomCardInGraveyard" RandomCardInGraveyard.codec ObjectRef.RandomCardInGraveyard (\x -> case x of ObjectRef.RandomCardInGraveyard y -> Just y; _ -> Nothing),
-          Arm.payload "RandomCardInLibrary" RandomCardInLibrary.codec ObjectRef.RandomCardInLibrary (\x -> case x of ObjectRef.RandomCardInLibrary y -> Just y; _ -> Nothing),
           Arm.payload "AtRandom" codec ObjectRef.AtRandom (\x -> case x of ObjectRef.AtRandom y -> Just y; _ -> Nothing),
           Arm.payload "ChosenPermanents" ChosenPermanents.codec ObjectRef.ChosenPermanents (\x -> case x of ObjectRef.ChosenPermanents y -> Just y; _ -> Nothing),
           Arm.payload "AttachedToBound" AttachedToBound.codec ObjectRef.AttachedToBound (\x -> case x of ObjectRef.AttachedToBound y -> Just y; _ -> Nothing),
@@ -114,9 +112,8 @@ tagOf x = case x of
   ObjectRef.ChosenCardInHand {} -> "ChosenCardInHand"
   ObjectRef.ChosenCardFromAmong {} -> "ChosenCardFromAmong"
   ObjectRef.EachCardFromAmong {} -> "EachCardFromAmong"
-  ObjectRef.RandomCardInHand {} -> "RandomCardInHand"
+  ObjectRef.RandomCard {} -> "RandomCard"
   ObjectRef.RandomCardInGraveyard {} -> "RandomCardInGraveyard"
-  ObjectRef.RandomCardInLibrary {} -> "RandomCardInLibrary"
   ObjectRef.AtRandom {} -> "AtRandom"
   ObjectRef.ChosenPermanents {} -> "ChosenPermanents"
   ObjectRef.AttachedToBound {} -> "AttachedToBound"

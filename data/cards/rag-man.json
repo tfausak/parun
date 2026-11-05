@@ -66,7 +66,7 @@
                           "type": "These",
                           "value": {
                             "cards": {
-                              "type": "RandomCardInHand",
+                              "type": "RandomCard",
                               "value": {
                                 "filter": {
                                   "type": "HasCardType",
@@ -77,6 +77,9 @@
                                 "player": {
                                   "type": "InSlot",
                                   "value": "target"
+                                },
+                                "zone": {
+                                  "type": "Hand"
                                 }
                               }
                             }

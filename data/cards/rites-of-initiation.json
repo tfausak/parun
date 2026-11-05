@@ -32,7 +32,7 @@
                       "type": "These",
                       "value": {
                         "cards": {
-                          "type": "RandomCardInHand",
+                          "type": "RandomCard",
                           "value": {
                             "count": {
                               "type": "InSlot",
@@ -43,6 +43,9 @@
                               "value": {
                                 "type": "You"
                               }
+                            },
+                            "zone": {
+                              "type": "Hand"
                             }
                           }
                         },

@@ -138,9 +138,8 @@ zonesFunctionedAgainst itself delayed effect = case effect of
     ObjectRef.ChosenCardInHand {} -> Set.empty
     ObjectRef.ChosenCardFromAmong {} -> Set.empty
     ObjectRef.EachCardFromAmong {} -> Set.empty
-    ObjectRef.RandomCardInHand _ -> Set.empty
+    ObjectRef.RandomCard _ -> Set.empty
     ObjectRef.RandomCardInGraveyard _ -> Set.empty
-    ObjectRef.RandomCardInLibrary _ -> Set.empty
     -- Randomness's pick among many, a chosen card's reason.
     ObjectRef.AtRandom _ -> Set.empty
     ObjectRef.ChosenPermanents _ -> Set.empty
