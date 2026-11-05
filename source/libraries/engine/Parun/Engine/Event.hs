@@ -2356,7 +2356,8 @@ chooseAndApply settle asOf batch diverting allowances applied prevented exiledBy
     --
     -- The two halves may end up on the SAME recipient, which docs/decisions.md's
     -- "Whether one instruction naming a recipient twice deals one damage event"
-    -- makes one event; resolveDamageBatch rejoins them once the batch is done
+    -- makes one event; settleThreads rejoins halves moved there before their
+    -- next loop, and resolveDamageBatch the rest once the batch is done
     -- (Replacement.oneEventPerRecipient), rather than here, because a later
     -- iteration can still move either half.
     Just candidate
@@ -5788,6 +5789,8 @@ resolveDamage allowances spent earlier de = do
 -- lands both halves on that one permanent, and docs/decisions.md's "Whether one
 -- instruction naming a recipient twice deals one damage event" makes it one
 -- event. Run over the whole batch because a half can come back as a DamageThread;
+-- settleThreads joins those halves already, before their loop, so a flat bonus
+-- applies once (Replacement.oneThreadPerRecipient);
 -- the key's source component keeps a CR 510.2 batch's separate dealers apart.
 --
 -- Each event still runs its OWN CR 616.1 loop and the loop's unit is still one
@@ -5819,6 +5822,11 @@ resolveDamageBatch events = do
 --
 -- `earlier` is every prevention the batch has made so far, threaded through
 -- each thread in turn and answered extended (applyReplacementsReporting).
+--
+-- What waits is joined per recipient first (Replacement.oneThreadPerRecipient):
+-- two redirects landing parts of one source's damage on one recipient make one
+-- event there, so Pyromancer's Gauntlet adds 2 to it once (CR 614.5). Proved by
+-- the scenario harms-way-twice-onto-one-recipient-takes-pyromancers-gauntlet-once.
 settleThreads :: [Prevention] -> [Replacement.DamageThread] -> Game ([DamageEvent.DamageEvent], [Prevention])
 settleThreads earlier threads = do
   gs <- State.get
@@ -5829,7 +5837,7 @@ settleThreads earlier threads = do
         (survivors, added, prevented1) <- resolveDamage allowance spent prevented0 de
         pure (dealt0 <> survivors, added0 <> added, prevented1)
   (dealt, added, prevented) <- Monad.foldM step ([], [], earlier) now
-  let waiting = added <> fmap fst later
+  let waiting = Replacement.oneThreadPerRecipient (added <> fmap fst later)
   if null waiting
     then pure (dealt, prevented)
     else do
