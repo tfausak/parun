@@ -1164,7 +1164,7 @@ springBoard spring bolt =
 -- Parun.ActivateSpec: CR 605.3b keeps it off the stack, so both of CR 605.3a's
 -- windows are where the rider is asked.
 --
--- THREE SEATS, and both opponents exercised. At two seats TurnScope.OpponentsTurn
+-- THREE SEATS, and both opponents exercised. At two seats @Relative Opponent@
 -- and "not the controller's turn" are the same predicate (CR 102.2); at three
 -- they are still the same predicate but the board can now tell an enumeration of
 -- ONE opponent from "every seat that is not yours" (CR 806.1), which is what

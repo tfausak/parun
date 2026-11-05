@@ -24,7 +24,13 @@
             "type": "SpellCast",
             "value": {
               "scope": {
-                "type": "EachTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                }
               },
               "spell": {
                 "type": "Matching",
@@ -125,7 +131,13 @@
             "type": "SpellCast",
             "value": {
               "scope": {
-                "type": "EachTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                }
               },
               "spell": {
                 "type": "Matching",
@@ -185,7 +197,15 @@
                                 "value": 4
                               },
                               "ref": {
-                                "type": "EachOpponent"
+                                "type": "Players",
+                                "value": {
+                                  "players": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "Opponent"
+                                    }
+                                  }
+                                }
                               }
                             },
                             {

@@ -30,6 +30,9 @@ import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActingPermanent as ActingPermanent
+import qualified Parun.Types.AttachDirection as AttachDirection
+import qualified Parun.Types.AttachmentEnd as AttachmentEnd
+import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
 import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackCount as AttackCount
 import qualified Parun.Types.AttackTarget as AttackTarget
@@ -158,7 +161,6 @@ import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TappedForMana as TappedForMana
 import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
 import qualified Parun.Types.TappedPermanent as TappedPermanent
-import qualified Parun.Types.Teams as Teams
 import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.Transformed as Transformed
 import Parun.Types.TriggerCondition (TriggerCondition)
@@ -429,19 +431,15 @@ castOrdinal context predicate fromZone caster spell gs =
    in fmap ((1 +) . Natural.length . filter counted) (Game.castsBefore spell gs)
 
 -- CR 805.4d: the players whose step this is, among those the scope names, read
--- against `own` as turnScopeAdmits reads it. Every active player for "each
--- player's", each active opponent for "each opponent's", `own` alone for
--- "your", and the active players a PlayersTurn reference names off `bearer` --
--- one seat outside the shared team turns option, where Turn.activePlayers is
--- the active player alone.
+-- against `own` as turnScopeAdmits reads it (Turn.scopeNames). Every active
+-- player for "each player's", each active opponent for "each opponent's", `own`
+-- alone for "your", and the active players any other reference names off
+-- `bearer` -- one seat outside the shared team turns option, where
+-- Turn.activePlayers is the active player alone.
 stepPlayers :: GameState -> ObjectId -> TurnScope.TurnScope -> PlayerId -> [PlayerId]
 stepPlayers gs bearer scope own =
-  let admits player = case scope of
-        TurnScope.EachTurn -> True
-        TurnScope.ControllersTurn -> player == own
-        TurnScope.OpponentsTurn -> Teams.areOpponents (Game.teams gs) own player
-        TurnScope.PlayersTurn ref -> maybe False (elem player) (Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) (Projection.sourceContext gs (Just own) bearer) gs ref)
-   in filter admits (Turn.activePlayers gs)
+  let named = Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) (Projection.sourceContext gs (Just own) bearer) gs
+   in filter (Turn.scopeNames named gs scope own) (Turn.activePlayers gs)
 
 -- CR 505.1b: how many main phases have begun this turn, counting the one whose
 -- beginning is being matched. GameState.events is cleared at the turn handoff
@@ -1407,7 +1405,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- reachable. The bearer is the STACK object, which is the same id
   -- GameEvent.SpellCast carries: CR 601.2a puts the card on the stack as it is
   -- cast and leaves it there, so eventTriggers' `spellCast` source offers
-  -- exactly that incarnation. Its scope is EachTurn (CR 601.2i says nothing
+  -- exactly that incarnation. Its scope is @Relative AnyPlayer@ (CR 601.2i says nothing
   -- about whose turn it is, and no printing narrows its own cast by one), and a
   -- spell's own cast is the first of its kind, so its ordinal is one.
   TriggerCondition.SpellCast (SpellCast.MkSpellCast subject scope fromZone ordinal window copies) ->
@@ -2047,11 +2045,11 @@ armMatches bindings board gs bearer you cond event = case cond of
   TriggerCondition.SelfBecomesPlotted -> case event of
     GameEvent.Plotted plotted -> plotted == bearer
     _ -> False
-  -- CR 701.3a read from the HOST: something became attached to the BEARER, and
-  -- the Filter narrows WHAT. Two questions, and the split is the condition's
+  -- CR 701.3a read from the HOST (a Host end): something became attached to the
+  -- BEARER, and the Filter narrows WHAT. Two questions, and the split is the condition's
   -- shape -- a bare id comparison for the host (a Self Enters) and a Filter
   -- read for the attachment (a Matching TurnedFaceUp's arm), which is why the
-  -- constructor carries one payload and matches on two objects.
+  -- condition carries one Filter and matches on two objects.
   --
   -- Recipient.objectOf and not equality on the whole Recipient: CR 701.3a's
   -- destination is tagged by the attaching permanent's own rules text
@@ -2063,20 +2061,12 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- viewWithLastKnown for a Matching TurnedFaceUp's reason -- an attachment that
   -- is gone by the CR 117.5 boundary is still read as it was (CR 608.2h)
   -- instead of vanishing from the match.
-  TriggerCondition.SelfBecomesAttachedBy f -> case event of
-    GameEvent.BecameAttached a ->
-      Recipient.objectOf (BecameAttached.host a) == Just bearer
-        && ( case Projection.viewWithLastKnown (BecameAttached.attachment a) gs (BecameAttached.attachment a) of
-               Nothing -> False
-               Just view -> Filter.matches bearerContext view f
-           )
-    _ -> False
-  -- CR 701.3a read from the ATTACHMENT: the BEARER became attached, and the
-  -- Filter narrows what it went ONTO. The arm above's mirror, and the two
-  -- questions swap sides -- a bare id comparison for the attachment, a Filter
+  -- CR 701.3a read from the ATTACHMENT (an Attachment end): the BEARER became
+  -- attached, and the Filter narrows what it went ONTO. The Host end's mirror,
+  -- and the two questions swap sides -- a bare id comparison for the attachment, a Filter
   -- read for the host.
   --
-  -- Recipient.objectOf and not equality on the whole Recipient, the arm above's
+  -- Recipient.objectOf and not equality on the whole Recipient, the Host end's
   -- reason. A ToPlayer host declines here: CR 702.5a's enchanted player is no
   -- object for the Filter to read, and Enormous Energy Blade's "a creature" would
   -- not admit one anyway. That decline is what makes the host binding guaranteed
@@ -2084,34 +2074,28 @@ armMatches bindings board gs bearer you cond event = case cond of
   --
   -- viewWithLastKnown with the host as its OWN source, so CR 608.2h answers for a
   -- host that is already gone by the CR 117.5 boundary.
-  TriggerCondition.SelfBecomesAttachedTo f -> case event of
-    GameEvent.BecameAttached a ->
-      BecameAttached.attachment a == bearer
-        && ( case Recipient.objectOf (BecameAttached.host a) of
-               Nothing -> False
-               Just host -> case Projection.viewWithLastKnown host gs host of
-                 Nothing -> False
-                 Just view -> Filter.matches bearerContext view f
-           )
-    _ -> False
-  -- CR 701.3d read from the attachment: the BEARER became unattached, and the
-  -- Filter narrows what it came OFF. Structurally the arm above with the other
-  -- event, which is what the two rules are.
+  -- CR 701.3d read from the attachment (Unattaches): the BEARER became
+  -- unattached, and the Filter narrows what it came OFF. Structurally the
+  -- Attachment end with the other event, which is what the two rules are.
   --
   -- viewWithLastKnown is load-bearing here rather than defensive: CR 701.3d
   -- counts the HOST leaving its zone as becoming unattached, so the ordinary case
   -- is a host that no longer exists, and CR 603.10c is the rule that says this
   -- ability looks back at it.
-  TriggerCondition.SelfBecomesUnattachedFrom f -> case event of
-    GameEvent.BecameUnattached a ->
-      BecameUnattached.attachment a == bearer
-        && ( case Recipient.objectOf (BecameUnattached.host a) of
-               Nothing -> False
-               Just host -> case Projection.viewWithLastKnown host gs host of
-                 Nothing -> False
-                 Just view -> Filter.matches bearerContext view f
-           )
-    _ -> False
+  --
+  -- A Host bearer becoming UNattached (CR 701.3d read from the host) is the
+  -- same comparison over the other event; no card prints it.
+  TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger end direction f) ->
+    let link = case (direction, event) of
+          (AttachDirection.Attaches, GameEvent.BecameAttached a) -> Just (BecameAttached.attachment a, BecameAttached.host a)
+          (AttachDirection.Unattaches, GameEvent.BecameUnattached a) -> Just (BecameUnattached.attachment a, BecameUnattached.host a)
+          _ -> Nothing
+        admits oid = maybe False (\view -> Filter.matches bearerContext view f) (Projection.viewWithLastKnown oid gs oid)
+     in case link of
+          Nothing -> False
+          Just (attachment, host) -> case end of
+            AttachmentEnd.Host -> Recipient.objectOf host == Just bearer && admits attachment
+            AttachmentEnd.Attachment -> attachment == bearer && maybe False admits (Recipient.objectOf host)
   -- CR 123.3: a player the relation names put a sticker of one of these kinds
   -- on an object the filter admits, read as it is or as it last was.
   TriggerCondition.PlacesSticker (PlacesSticker.MkPlacesSticker relation kinds onto) -> case event of

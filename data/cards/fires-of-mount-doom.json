@@ -85,7 +85,13 @@
                 "type": "SpellCast",
                 "value": {
                   "scope": {
-                    "type": "EachTurn"
+                    "type": "PlayersTurn",
+                    "value": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "AnyPlayer"
+                      }
+                    }
                   },
                   "spell": {
                     "type": "Matching",
@@ -145,7 +151,15 @@
                                 "value": 2
                               },
                               "ref": {
-                                "type": "EachPlayer"
+                                "type": "Players",
+                                "value": {
+                                  "players": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "AnyPlayer"
+                                    }
+                                  }
+                                }
                               }
                             }
                           ]

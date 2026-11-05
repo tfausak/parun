@@ -130,6 +130,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerScope as PlayerScope
 import qualified Parun.Types.PlayerStaticAbility as PlayerStaticAbility
+import qualified Parun.Types.PlayersWho as PlayersWho
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Power as Power
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
@@ -302,7 +303,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s [[Text.pack "Spark deals 1 damage to any target and 1 damage to you."]] (Oracle.abilities brothers)
     let tomb = ring {ActivatedAbility.modal = payload [clause [addMana 1, damage [(you, 2)]]] []}
     Spec.assertEq s [[Text.pack "{T}: Add {G}. Spark deals 2 damage to you.", Text.pack "{T}: Add {G}. Then Spark deals 2 damage to you."]] (Oracle.abilities (withFace (\f -> f {Face.activatedAbilities = [tomb]})))
-    let earthquake = spell [clause [Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList [DamagePart.MkDamagePart (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature)) (Quantity.Literal 2), DamagePart.MkDamagePart ObjectRef.EachPlayer (Quantity.Literal 2)]) Nothing Nothing Nothing Nothing Nothing)]] []
+    let earthquake = spell [clause [Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList [DamagePart.MkDamagePart (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature)) (Quantity.Literal 2), DamagePart.MkDamagePart (ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing)) (Quantity.Literal 2)]) Nothing Nothing Nothing Nothing Nothing)]] []
     Spec.assertEq s [[Text.pack "Spark deals 2 damage to each creature and each player."]] (Oracle.abilities earthquake)
     let jagged = spell [clause [damage [(target, 3)]]] [(target, (TargetSlot.required Pool.Creatures Nothing) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2))})]
     Spec.assertEq s (Just (Text.pack "Spark deals 3 damage to each of two target creatures.")) (Oracle.render jagged)
@@ -331,11 +332,11 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let at phase scope effects = withFace (\f -> f {Face.triggeredAbilities = [triggered (TriggerCondition.StepBegins (StepBegins.MkStepBegins phase Nothing scope)) [clause effects] []]})
         upkeep = Phase.Beginning BeginningStep.Upkeep
         end = Phase.Ending EndingStep.EndStep
-    Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, you gain 1 life.")) (Oracle.render (at upkeep TurnScope.ControllersTurn [gainLife 1]))
-    Spec.assertEq s [[Text.pack "At the beginning of each player's upkeep, that player draws a card.", Text.pack "At the beginning of each upkeep, that player draws a card."]] (Oracle.abilities (at upkeep TurnScope.EachTurn [draw (PlayerRef.InSlot thatPlayer) 1]))
-    Spec.assertEq s (Just (Text.pack "At the beginning of combat on your turn, you gain 1 life.")) (Oracle.render (at (Phase.Combat CombatStep.BeginningOfCombat) TurnScope.ControllersTurn [gainLife 1]))
-    Spec.assertEq s [[Text.pack "At the beginning of each end step, sacrifice Spark.", Text.pack "At the beginning of the end step, sacrifice Spark.", Text.pack "At the beginning of each player's end step, sacrifice Spark."]] (Oracle.abilities (at end TurnScope.EachTurn [sacrifice]))
-    Spec.assertEq s (Just (Text.pack "At the beginning of each opponent's end step, Spark deals 1 damage to that player.")) (Oracle.render (at end TurnScope.OpponentsTurn [damage [(thatPlayer, 1)]]))
+    Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, you gain 1 life.")) (Oracle.render (at upkeep (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)) [gainLife 1]))
+    Spec.assertEq s [[Text.pack "At the beginning of each player's upkeep, that player draws a card.", Text.pack "At the beginning of each upkeep, that player draws a card."]] (Oracle.abilities (at upkeep (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) [draw (PlayerRef.InSlot thatPlayer) 1]))
+    Spec.assertEq s (Just (Text.pack "At the beginning of combat on your turn, you gain 1 life.")) (Oracle.render (at (Phase.Combat CombatStep.BeginningOfCombat) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)) [gainLife 1]))
+    Spec.assertEq s [[Text.pack "At the beginning of each end step, sacrifice Spark.", Text.pack "At the beginning of the end step, sacrifice Spark.", Text.pack "At the beginning of each player's end step, sacrifice Spark."]] (Oracle.abilities (at end (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) [sacrifice]))
+    Spec.assertEq s (Just (Text.pack "At the beginning of each opponent's end step, Spark deals 1 damage to that player.")) (Oracle.render (at end (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.Opponent)) [damage [(thatPlayer, 1)]]))
     -- Soul Bleed's named player, read off the source slot.
     let hostController = TurnScope.PlayersTurn (PlayerRef.HolderOfBound Holder.Controller Hop.Host (SlotName.MkSlotName (Text.pack "self")))
     Spec.assertEq s (Just (Text.pack "At the beginning of the upkeep of enchanted creature's controller, that player draws a card.")) (Oracle.render (at upkeep hostController [draw (PlayerRef.InSlot thatPlayer) 1]))
@@ -402,7 +403,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- status, or a player's life; hellbent's and raid's ability words (CR
   -- 207.2c) free.
   Spec.it s "render prints an intervening if clause" $ do
-    let endStep = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.ControllersTurn)
+    let endStep = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)))
         upkeeps scope = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing scope)
         gated event condition effects = withFace (\f -> f {Face.triggeredAbilities = [(triggered event [clause effects] []) {TriggeredAbility.intervening = Just condition}]})
         compares q c k = Condition.Compares (Compares.MkCompares q c (Quantity.Literal k))
@@ -411,11 +412,11 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s [[Text.pack "At the beginning of your end step, if you have no cards in hand, draw a card.", Text.pack "At the beginning of your end step, if you have no cards in hand, you draw a card.", Text.pack "Hellbent \8212 At the beginning of your end step, if you have no cards in hand, draw a card.", Text.pack "Hellbent \8212 At the beginning of your end step, if you have no cards in hand, you draw a card."]] (Oracle.abilities academy)
     let raided = gated endStep (compares (Quantity.AttackersDeclaredThisTurn (PlayerRef.Relative PlayerRelation.You)) Comparison.AtLeast 1) [draw (PlayerRef.Relative PlayerRelation.You) 1]
     Spec.assertEq s [[Text.pack "At the beginning of your end step, if you attacked this turn, draw a card.", Text.pack "At the beginning of your end step, if you attacked this turn, you draw a card.", Text.pack "Raid \8212 At the beginning of your end step, if you attacked this turn, draw a card.", Text.pack "Raid \8212 At the beginning of your end step, if you attacked this turn, you draw a card."]] (Oracle.abilities raided)
-    Spec.assertEq s (Just (Text.pack "At the beginning of each opponent's upkeep, if that player has seven or more cards in hand, Spark deals 4 damage to that player.")) (Oracle.render (gated (upkeeps TurnScope.OpponentsTurn) (compares (hand (PlayerRef.InSlot thatPlayer)) Comparison.AtLeast 7) [damage [(thatPlayer, 4)]]))
-    Spec.assertEq s [[Text.pack "At the beginning of your upkeep, if there are no Zombies on the battlefield, you gain 1 life.", Text.pack "At the beginning of your upkeep, if no Zombies are on the battlefield, you gain 1 life."]] (Oracle.abilities (gated (upkeeps TurnScope.ControllersTurn) (compares (countOf (Filter.HasSubtype Subtype.Zombie) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.Exactly 0) [gainLife 1]))
-    Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, if you control no other creatures, you gain 1 life.")) (Oracle.render (gated (upkeeps TurnScope.ControllersTurn) (compares (countOf (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsSource]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.Exactly 0) [gainLife 1]))
-    Spec.assertEq s (Just (Text.pack "At the beginning of each player's upkeep, if Spark is untapped, that player draws a card.")) (Oracle.render (gated (upkeeps TurnScope.EachTurn) (compares (countOf (Filter.And [Filter.IsSource, Filter.Not Filter.IsTapped]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.AtLeast 1) [draw (PlayerRef.InSlot thatPlayer) 1]))
-    Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, if you have 40 or more life, you gain 1 life.")) (Oracle.render (gated (upkeeps TurnScope.ControllersTurn) (compares (Quantity.LifeTotal (PlayerRef.Relative PlayerRelation.You)) Comparison.AtLeast 40) [gainLife 1]))
+    Spec.assertEq s (Just (Text.pack "At the beginning of each opponent's upkeep, if that player has seven or more cards in hand, Spark deals 4 damage to that player.")) (Oracle.render (gated (upkeeps (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.Opponent))) (compares (hand (PlayerRef.InSlot thatPlayer)) Comparison.AtLeast 7) [damage [(thatPlayer, 4)]]))
+    Spec.assertEq s [[Text.pack "At the beginning of your upkeep, if there are no Zombies on the battlefield, you gain 1 life.", Text.pack "At the beginning of your upkeep, if no Zombies are on the battlefield, you gain 1 life."]] (Oracle.abilities (gated (upkeeps (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))) (compares (countOf (Filter.HasSubtype Subtype.Zombie) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.Exactly 0) [gainLife 1]))
+    Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, if you control no other creatures, you gain 1 life.")) (Oracle.render (gated (upkeeps (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))) (compares (countOf (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsSource]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.Exactly 0) [gainLife 1]))
+    Spec.assertEq s (Just (Text.pack "At the beginning of each player's upkeep, if Spark is untapped, that player draws a card.")) (Oracle.render (gated (upkeeps (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer))) (compares (countOf (Filter.And [Filter.IsSource, Filter.Not Filter.IsTapped]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.AtLeast 1) [draw (PlayerRef.InSlot thatPlayer) 1]))
+    Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, if you have 40 or more life, you gain 1 life.")) (Oracle.render (gated (upkeeps (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))) (compares (Quantity.LifeTotal (PlayerRef.Relative PlayerRelation.You)) Comparison.AtLeast 40) [gainLife 1]))
 
   -- A creature type names creatures alone ("target attacking Goblin you
   -- control", Boggart Prankster); a change to each of several objects reads
@@ -653,7 +654,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
         ambush = spell [clause [damageBy [(ObjectRef.InSlot target, mountains)]]] [(target, TargetSlot.required Pool.Creatures Nothing)]
     Spec.assertEq s [[Text.pack "Spark deals damage to target creature equal to the number of Mountains you control.", Text.pack "Spark deals damage equal to the number of Mountains you control to target creature.", Text.pack "Spark deals X damage to target creature, where X is the number of Mountains you control."]] (Oracle.abilities ambush)
     let theirs = countOf (Filter.And [Filter.HasCardType CardType.Land, Filter.HeldByRecipient Holder.Controller]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
-    Spec.assertEq s (Just (Text.pack "Spark deals damage to each player equal to the number of lands they control.")) (Oracle.render (spell [clause [damageBy [(ObjectRef.EachPlayer, theirs)]]] []))
+    Spec.assertEq s (Just (Text.pack "Spark deals damage to each player equal to the number of lands they control.")) (Oracle.render (spell [clause [damageBy [(ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing), theirs)]]] []))
     let dealer = SlotName.MkSlotName (Text.pack "dealer")
         fire = Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot target) (powerOf dealer))) (Just dealer) Nothing Nothing Nothing Nothing)
         slots = [(dealer, TargetSlot.required Pool.Creatures (Just (Filter.HeldBy Holder.Controller PlayerRelation.You))), (target, TargetSlot.required Pool.AnyTarget Nothing)]
@@ -744,7 +745,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let seer = triggered (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) [(clause [draw (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.payGate = Just (gate PayBranch.IfPaid (PlayerRef.InSlot you) (mana [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Blue)]))}] []
     Spec.assertEq s [[Text.pack "When Spark dies, you may pay {1}{U}. If you do, draw a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [seer]})))
     let mountain = Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.HasSubtype Subtype.Mountain))]
-        upkeep = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.ControllersTurn)
+        upkeep = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)))
         lithophage = triggered upkeep [(clause [sacrifice]) {Clause.payGate = Just (gate PayBranch.IfNotPaid (PlayerRef.InSlot you) mountain)}] []
     Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, sacrifice Spark unless you sacrifice a Mountain.")) (Oracle.render (withFace (\f -> f {Face.triggeredAbilities = [lithophage]})))
     let shade = activated (mana [ManaSymbol.OfType (ManaType.Colored Color.Black)]) (modify (ObjectRef.InSlot self) Duration.UntilEndOfTurn (pt 1 1))
@@ -867,10 +868,10 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- CR 602.5: the clauses restricting an activation, joined by "and only".
   Spec.it s "render prints the restrictions on activating an ability" $ do
     let restricted rs = withFace (\f -> f {Face.activatedAbilities = [(activated (mana [green]) (gainLife 1)) {ActivatedAbility.restrictions = rs}]})
-        upkeep = ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)) TurnScope.ControllersTurn)
+        upkeep = ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)))
     Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only once each turn.")) (Oracle.render (restricted [ActivationRestriction.TimesEachTurn 1]))
     Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only as a sorcery.")) (Oracle.render (restricted [ActivationRestriction.SorcerySpeed]))
-    Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only during your turn.")) (Oracle.render (restricted [ActivationRestriction.DuringTurn TurnScope.ControllersTurn]))
+    Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only during your turn.")) (Oracle.render (restricted [ActivationRestriction.DuringTurn (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))]))
     Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only during your upkeep and only once each turn.")) (Oracle.render (restricted [upkeep, ActivationRestriction.TimesEachTurn 1]))
     Spec.assertEq s Nothing (Oracle.render (restricted [ActivationRestriction.DuringDieRoll]))
     -- CR 602.5b counted past once is a sentence of its own (Vampire Bats).
@@ -968,7 +969,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- in after a comma.
   Spec.it s "render prints an ability activated only before attackers are declared" $ do
     let restricted rs = withFace (\f -> f {Face.activatedAbilities = [(activated (mana [green]) (gainLife 1)) {ActivatedAbility.restrictions = rs}]})
-    Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only during your turn, before attackers are declared.")) (Oracle.render (restricted [ActivationRestriction.DuringTurn TurnScope.ControllersTurn, ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers)]))
+    Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only during your turn, before attackers are declared.")) (Oracle.render (restricted [ActivationRestriction.DuringTurn (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)), ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers)]))
 
 -- A cost paid on resolution, offered to the payer, of which the instructions
 -- are this branch.

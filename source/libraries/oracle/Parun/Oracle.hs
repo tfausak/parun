@@ -41,6 +41,7 @@ import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.Layout as Layout
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhaseSelector as PhaseSelector
+import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.StepBegins as StepBegins
@@ -232,8 +233,8 @@ restriction r = case r of
   ActivationRestriction.InstantSpeed -> [Text.pack "as an instant"]
   ActivationRestriction.TimesEachTurn 1 -> [Text.pack "once each turn"]
   ActivationRestriction.OnlyOnce -> [Text.pack "once"]
-  ActivationRestriction.DuringTurn TurnScope.ControllersTurn -> [Text.pack "during your turn"]
-  ActivationRestriction.DuringTurn TurnScope.OpponentsTurn -> [Text.pack "during an opponent's turn"]
+  ActivationRestriction.DuringTurn (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)) -> [Text.pack "during your turn"]
+  ActivationRestriction.DuringTurn (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.Opponent)) -> [Text.pack "during an opponent's turn"]
   ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers) -> [Text.pack "before attackers are declared"]
   ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step phase) scope) ->
     fmap (Text.pack . ("during " <>)) (Trigger.step (StepBegins.MkStepBegins phase Nothing scope))

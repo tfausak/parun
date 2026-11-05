@@ -62,7 +62,15 @@
                                 "value": "time"
                               },
                               "ref": {
-                                "type": "EachPlayer"
+                                "type": "Players",
+                                "value": {
+                                  "players": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "AnyPlayer"
+                                    }
+                                  }
+                                }
                               }
                             }
                           ]
@@ -96,7 +104,13 @@
                 }
               },
               "scope": {
-                "type": "ControllersTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                }
               }
             }
           },

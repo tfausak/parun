@@ -1591,7 +1591,7 @@ unearthExileName :: AbilityName
 unearthExileName = AbilityName.MkAbilityName (Text.pack "unearth")
 
 -- CR 702.84a's "Exile it at the beginning of the next end step", as CR 513.2
--- states the timing. TurnScope.EachTurn, rule 702.84a naming no player's turn --
+-- states the timing. @Relative AnyPlayer@, rule 702.84a naming no player's turn --
 -- a creature unearthed on an opponent's turn is exiled at the end of THAT turn.
 --
 -- `origin` is Nothing and not the battlefield: rule 702.84a's companion redirect
@@ -1611,7 +1611,7 @@ unearthExile =
               MoveToZone.placement = LibraryPlacement.defaultValue,
               MoveToZone.duration = Nothing
             }
-   in Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.EachTurn)) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)))) (Seq.singleton effect)
 
 -- CR 702.128a: embalm's token copy is white, has no mana cost, and is a Zombie
 -- in addition to its other types.
@@ -1743,10 +1743,9 @@ scavengeTarget = SlotName.MkSlotName (Text.pack "scavenged onto")
 --
 -- THE EXILE and the sorcery-speed restriction are scavenge's, one rule over.
 --
--- THE LOOP is myriad's, over ObjectRef.EachOpponent rather than rule 702.116a's
+-- THE LOOP is myriad's, over PlayerRelation.Opponent rather than rule 702.116a's
 -- PlayerRef.EachOpponentExcept: rule 702.141a names every opponent outright,
--- where myriad's excludes the defending player its trigger bound -- so this is
--- the printed NOUN where myriad needs the indirection.
+-- where myriad's excludes the defending player its trigger bound.
 --
 -- THE COPY names Binding.triggerSource, graveyardTokenCopy's reason: the card the
 -- cost exiled is gone by resolution (CR 400.7), so CreateCopy reads CR 707.2's
@@ -1796,7 +1795,7 @@ encore cost =
       loop =
         Effect.ForEach
           ForEach.MkForEach
-            { ForEach.ref = ObjectRef.EachOpponent,
+            { ForEach.ref = ObjectRef.Players PlayersWho.MkPlayersWho {PlayersWho.players = PlayerRef.Relative PlayerRelation.Opponent, PlayersWho.who = Nothing},
               ForEach.members = LoopMembers.Every,
               ForEach.slot = encoreOpponentSlot,
               ForEach.body = Seq.fromList [copied, required],
@@ -5514,7 +5513,7 @@ addsRulesToPrintedAbility keyword = case keyword of
 
 -- CR 602.5b: the riders rule 702 adds to the printed ability a keyword is
 -- written on. Forecast's are CR 702.57b's "only during the upkeep step of the
--- card's owner and only once each turn"; ControllersTurn reads the activator, who
+-- card's owner and only once each turn"; @Relative You@ reads the activator, who
 -- for a card in a hand is its owner (CR 602.2, CR 108.4a). Exhaust's and
 -- power-up's is CR 702.177a's and CR 702.193a's "activate only once"; boast's
 -- are CR 702.142a's two. Power-up's cost reduction is no rider, and
@@ -5524,7 +5523,7 @@ addsRulesToPrintedAbility keyword = case keyword of
 printedRiders :: Keyword -> [ActivationRestriction.ActivationRestriction]
 printedRiders keyword = case keyword of
   Keyword.Forecast ->
-    [ ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)) TurnScope.ControllersTurn),
+    [ ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))),
       ActivationRestriction.TimesEachTurn 1
     ]
   Keyword.Exhaust -> [ActivationRestriction.OnlyOnce]
@@ -6211,7 +6210,7 @@ myriadExile =
               MoveToZone.placement = LibraryPlacement.defaultValue,
               MoveToZone.duration = Nothing
             }
-   in Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Combat CombatStep.EndOfCombat) Nothing TurnScope.EachTurn)) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Combat CombatStep.EndOfCombat) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)))) (Seq.singleton effect)
 
 -- CR 702.116a. Battle cry's AttackerTrigger.defaultValue condition (CR 508.3a), over CR
 -- 608.2f's loop: one iteration per opponent other than the defending player,
@@ -6629,7 +6628,7 @@ evolve =
 -- the event, so the condition is TriggerCondition.SpellCast. "You cast" is
 -- Filter.HeldBy Holder.Controller You against CR 109.5's "you", the ability's controller (CR
 -- 603.3a); "a noncreature spell" is Filter.Not of the card type, the printed word
--- rather than a disjunction of the other types. TurnScope.EachTurn because rule
+-- rather than a disjunction of the other types. @Relative AnyPlayer@ because rule
 -- 702.108a names no turn.
 --
 -- "THIS CREATURE" is the bearer, so the payload is battle cry's with
@@ -7117,7 +7116,7 @@ warpExileName = AbilityName.MkAbilityName (Text.pack "warp")
 
 -- CR 702.109a's "return the permanent this spell becomes to its owner's hand at
 -- the beginning of the next end step", unearthExile's shape with the hand for
--- exile: CR 513.2's timing, TurnScope.EachTurn, and no `origin`.
+-- exile: CR 513.2's timing, @Relative AnyPlayer@, and no `origin`.
 dashReturn :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 dashReturn =
   let effect =
@@ -7153,7 +7152,7 @@ atNextEndStep = atNextEndStepAll . Seq.singleton
 -- bound, which a second clause would not see.
 atNextEndStepAll :: Seq.Seq (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 atNextEndStepAll =
-  Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.EachTurn))
+  Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer))))
 
 -- CR 702.185a's second static ability: "if this spell's warp cost was paid, exile
 -- the permanent this spell becomes at the beginning of the next end step. Its
@@ -7199,7 +7198,7 @@ decayedSacrificeName = AbilityName.MkAbilityName (Text.pack "decayed")
 
 -- CR 702.147a's "sacrifice it at end of combat", as CR 511.2 states the timing:
 -- abilities that trigger "at end of combat" trigger as the end of combat step
--- begins. TurnScope.EachTurn, rule 702.147a naming no player's turn.
+-- begins. @Relative AnyPlayer@, rule 702.147a naming no player's turn.
 --
 -- Effect.Sacrifice against Binding.triggerSource: rule 702.147a says "it", and CR
 -- 603.7c makes that the environment captured as the ability was armed rather than
@@ -7208,7 +7207,7 @@ decayedSacrificeName = AbilityName.MkAbilityName (Text.pack "decayed")
 decayedSacrifice :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 decayedSacrifice =
   let effect = Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.triggerSource, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}
-   in Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Combat CombatStep.EndOfCombat) Nothing TurnScope.EachTurn)) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Combat CombatStep.EndOfCombat) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)))) (Seq.singleton effect)
 
 -- CR 702.39a's provoke, the first minted payload that creates a CR 509.1c blocking
 -- REQUIREMENT rather than changing a characteristic.
@@ -8934,7 +8933,7 @@ stillExiled =
 --
 -- Onset.Immediately: rule 702.88a names no turn, and the upkeep the arming
 -- resolution is itself in has already begun, so the first upkeep this can see is
--- the next one. TurnScope.ControllersTurn is rule 702.88a's "YOUR", which CR
+-- the next one. @Relative You@ is rule 702.88a's "YOUR", which CR
 -- 603.7d makes the spell's controller.
 --
 -- ONE MANDATORY clause, suspendLastCounter's reading of the "may": the option
@@ -9052,7 +9051,7 @@ epicCopyName = AbilityName.MkAbilityName (Text.pack "epic")
 -- upkeeps for the rest of the game, copy this spell except for its epic ability.
 -- If the spell has any targets, you may choose new targets for the copy."
 --
--- reboundUpkeep's condition exactly -- TurnScope.ControllersTurn is rule 702.50a's
+-- reboundUpkeep's condition exactly -- @Relative You@ is rule 702.50a's
 -- "YOUR", which CR 603.7d makes the spell's controller -- and TriggerLimit.Unlimited
 -- with it. What makes this one REPEAT where rebound's fires once is the expiry
 -- Parun.Engine.Resolve.finishSpell arms it with: a delayed entry carrying one is
@@ -9121,7 +9120,7 @@ paradigmCopy =
               OfferCast.controlWhileResolving = False,
               OfferCast.slot = Nothing
             }
-   in Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins Phase.PrecombatMain Nothing TurnScope.ControllersTurn)) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins Phase.PrecombatMain Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)))) (Seq.singleton effect)
 
 -- CR 702.35a's SECOND ability: "when this card is exiled this way, its owner may
 -- cast it by paying [cost] rather than paying its mana cost. If that player
@@ -9270,7 +9269,7 @@ vanishing = [timeCounterUpkeep, vanishingLastCounter]
 -- for word on a card in exile, rule 702.62a's suspend upkeep ("if this card is
 -- suspended"). One ability for both.
 --
--- TurnScope.ControllersTurn is "YOUR upkeep" (CR 603.3a). For a suspended card
+-- @Relative You@ is "YOUR upkeep" (CR 603.3a). For a suspended card
 -- in exile that is its OWNER's: CR 108.4 gives such a card no controller and CR
 -- 108.4a substitutes the owner, which is what Parun.Engine.Event.Trigger's exile
 -- scan hands over.
@@ -9314,7 +9313,7 @@ impendingEndStep :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 impendingEndStep =
   let effect = Effect.RemoveCounters (RemoveCounters.MkRemoveCounters CounterKind.Time (Quantity.Literal 1) Binding.triggerSource Nothing)
    in Mint.triggerIf
-        (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.ControllersTurn))
+        (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))))
         impendingHolds
         (Seq.singleton effect)
 
@@ -9352,7 +9351,7 @@ fading =
 -- permanent is on the battlefield, put an age counter on this permanent. Then
 -- you may pay [cost] for each age counter on it. If you don't, sacrifice it."
 --
--- TurnScope.ControllersTurn is rule 702.24a's "YOUR upkeep" (CR 603.3a),
+-- @Relative You@ is rule 702.24a's "YOUR upkeep" (CR 603.3a),
 -- timeCounterUpkeep's scope.
 --
 -- THE INTERVENING "IF" is rule 702.24a's own, and timeCounterUpkeep's shape one
@@ -9411,7 +9410,7 @@ cumulativeUpkeep cost =
 -- sacrifice it unless you pay [cost]."
 --
 -- `cumulativeUpkeep` above's shape, one clause and one clock over: the same
--- upkeep trigger under TurnScope.ControllersTurn for rule 702.30a's "your" (CR
+-- upkeep trigger under @Relative You@ for rule 702.30a's "your" (CR
 -- 603.3a), the same CR 118.12a rewriting of "unless" into the IfNotPaid branch
 -- of an Optional offer, and Effect.Sacrifice rather than Destroy because CR
 -- 701.21a says a sacrifice is not a destruction. No PayGate.perEach: rule

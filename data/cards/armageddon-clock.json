@@ -45,7 +45,13 @@
               "type": "DuringPhase",
               "value": {
                 "scope": {
-                  "type": "EachTurn"
+                  "type": "PlayersTurn",
+                  "value": {
+                    "type": "Relative",
+                    "value": {
+                      "type": "AnyPlayer"
+                    }
+                  }
                 },
                 "window": {
                   "type": "Step",
@@ -81,7 +87,13 @@
                 }
               },
               "scope": {
-                "type": "ControllersTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                }
               }
             }
           },
@@ -126,7 +138,13 @@
                 }
               },
               "scope": {
-                "type": "ControllersTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                }
               }
             }
           },
@@ -149,7 +167,15 @@
                                 }
                               },
                               "ref": {
-                                "type": "EachPlayer"
+                                "type": "Players",
+                                "value": {
+                                  "players": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "AnyPlayer"
+                                    }
+                                  }
+                                }
                               }
                             }
                           ]

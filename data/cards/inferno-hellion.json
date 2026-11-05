@@ -43,7 +43,13 @@
                 }
               },
               "scope": {
-                "type": "EachTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                }
               }
             }
           },
@@ -115,12 +121,10 @@
                       {
                         "type": "ShuffleIntoLibrary",
                         "value": {
-                          "refs": [
-                            {
-                              "type": "InSlot",
-                              "value": "self"
-                            }
-                          ]
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          }
                         }
                       }
                     ]

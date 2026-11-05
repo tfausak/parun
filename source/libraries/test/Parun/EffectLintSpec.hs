@@ -192,6 +192,7 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerSacrifices as PlayerSacrifices
 import qualified Parun.Types.PlayerScope as PlayerScope
 import qualified Parun.Types.PlayerStaticAbility as PlayerStaticAbility
+import qualified Parun.Types.PlayersWho as PlayersWho
 import qualified Parun.Types.Plus as Plus
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Power as Power
@@ -1393,10 +1394,8 @@ data Question
 
 -- Which question an ObjectRef arm puts, if any.
 --
--- ObjectRef.ChosenPlayer is NOT one, despite the name: the seat was chosen on
--- entry and is read out of stored state here. ObjectRef.EachCardFromAmong is not
--- one either -- "all" states no count and hands out no choice, so CR 608.2d has
--- nobody to ask.
+-- ObjectRef.EachCardFromAmong is NOT one: "all" states no count and hands out no
+-- choice, so CR 608.2d has nobody to ask.
 --
 -- Exhaustive with no `_`, so a new arm has to be classified rather than
 -- defaulting to "a read".
@@ -1414,9 +1413,6 @@ questionOf ref = case ref of
   ObjectRef.EachSpell {} -> Nothing
   ObjectRef.EachAbility {} -> Nothing
   ObjectRef.EachOnStack {} -> Nothing
-  ObjectRef.EachPlayer -> Nothing
-  ObjectRef.EachOpponent -> Nothing
-  ObjectRef.ChosenPlayer -> Nothing
   -- Nor is an indirection to a seat: every PlayerRef arm is a read.
   ObjectRef.Players _ -> Nothing
   ObjectRef.TopOfLibrary {} -> Nothing
@@ -1715,7 +1711,7 @@ effectObjectRefs effect =
         Effect.RollDie {} -> []
         Effect.FlipCoin {} -> []
         Effect.TakeExtraTurn {} -> []
-        Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary _ refs _) -> read_ (NonEmpty.toList refs)
+        Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary _ ref _) -> read_ [ref]
         Effect.Ante (Ante.MkAnte _ ref _) -> read_ [ref]
         -- Proficient Pyrodancer's "a nonland permanent you own" and Scampire's "a
         -- creature card in your graveyard".
@@ -1750,7 +1746,8 @@ inertChoosers effect =
   [ref | (allowed, ref) <- effectObjectRefs effect, Just question <- [questionOf ref], question `notElem` allowed]
 
 -- An ObjectRef.AllOf written anywhere but a move's ref, a play grant's, a
--- loop's, a damage instruction's, a destruction's or a copy's candidates'. MoveToZone gathers it
+-- loop's, a damage instruction's, a destruction's, a shuffle-in's or a copy's
+-- candidates'. MoveToZone gathers it
 -- member by member (Parun.Engine.Resolve.Arms.Zones's gather), and
 -- GrantPlayFromExile reads its ref
 -- through
@@ -1766,6 +1763,9 @@ inertChoosers effect =
 -- Destroy reads its ref through askingObjects, whose AllOf arm is the union
 -- too -- Loyal Sentry's "that creature and this creature" in one batch, proved
 -- by the scenario loyal-sentry-destroys-both-creatures-at-once.
+-- ShuffleIntoLibrary reads its ref through objectRefObjects too -- Timetwister's
+-- "their hand and graveyard" as one move and one shuffle, proved by
+-- Parun.MassEffectSpec's Timetwister group.
 -- CopyStackObject's CopyTargets.ForEach reads its candidates through
 -- objectRefRecipients too (Resolve.Common.copyForEachTargets) -- Radiate's
 -- "each other permanent or player", proved by the scenario
@@ -1780,6 +1780,7 @@ strayAllOf effect = case effect of
   Effect.ForEach {} -> False
   Effect.DealDamage {} -> False
   Effect.Destroy {} -> False
+  Effect.ShuffleIntoLibrary {} -> False
   Effect.CopyStackObject x -> case CopyStackObject.targets x of
     CopyTargets.ForEach _ -> holdsAllOf (CopyStackObject.ref x)
     _ -> any (holdsAllOf . snd) (effectObjectRefs effect)
@@ -2129,10 +2130,6 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           ObjectRef.EachSpell _ -> False
           ObjectRef.EachAbility _ -> False
           ObjectRef.EachOnStack _ -> False
-          ObjectRef.EachPlayer -> False
-          ObjectRef.EachOpponent -> False
-          -- Names a player and so moves no object at all, the arm above's answer.
-          ObjectRef.ChosenPlayer -> False
           ObjectRef.Players _ -> False
           ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary player depth) -> case depth of
             Quantity.Type.Literal n -> n <= 1 && namesOneSeat player
@@ -2761,7 +2758,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- Exhume, Elvish Piper, Commune with the Gods and Merfolk Spy print them.
     Spec.assertBool s asks "the pool has a card asking a player to pick a card"
     Spec.assertEqWith s "a chosen card under an opcode that cannot ask (CR 608.2d)" (fmap (S.nameOf . Printing.card) offenders) []
-  Spec.it s "no AllOf outside a move, a play grant, a loop, a damage instruction, a destruction or a copy's candidates" $ do
+  Spec.it s "no AllOf outside a move, a play grant, a loop, a damage instruction, a destruction, a shuffle-in or a copy's candidates" $ do
     ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (any strayAllOf . cardAuthoredEffects) . Printing.card) ps
         moved = any (anyFace (any (any (isAllOf . snd) . effectObjectRefs) . cardAuthoredEffects) . Printing.card) ps
@@ -2857,7 +2854,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
       [False, True, True, True]
     -- Hanweir Battlements' "exile them": the source beside one chosen
     -- permanent, fenced by its member's question, and refused outside a move, a
-    -- play grant or a loop by strayAllOf.
+    -- play grant, a loop or a shuffle-in by strayAllOf.
     Spec.assertEqWith
       s
       "the source with one chosen permanent is allowed where one chosen permanent is"
@@ -2865,12 +2862,12 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
       [False, False, True, True]
     Spec.assertEqWith
       s
-      "AllOf is refused outside a move, a play grant or a loop"
-      (fmap strayAllOf [moves sourceAndOne, Effect.Transform sourceAndOne, Effect.Tap (Tap.plain (ObjectRef.AllOf (ObjectRef.EachMatching anyCard NonEmpty.:| [])))])
-      [False, True, True]
+      "AllOf is refused outside a move, a play grant, a loop or a shuffle-in"
+      (fmap strayAllOf [moves sourceAndOne, Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary Nothing sourceAndOne Nothing), Effect.Transform sourceAndOne, Effect.Tap (Tap.plain (ObjectRef.AllOf (ObjectRef.EachMatching anyCard NonEmpty.:| [])))])
+      [False, False, True, True]
     -- A copy's per-candidate ref may be an AllOf (Radiate); its own ref and a
     -- stated target may not.
-    let both = ObjectRef.AllOf (ObjectRef.EachMatching anyCard NonEmpty.:| [ObjectRef.EachPlayer])
+    let both = ObjectRef.AllOf (ObjectRef.EachMatching anyCard NonEmpty.:| [ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing)])
         copies ref targets = Effect.CopyStackObject (CopyStackObject.MkCopyStackObject ref targets CopyStackObject.defaultQuantity CopyStackObject.defaultCopier [])
         spell = ObjectRef.EachMatching anyCard
     Spec.assertEqWith

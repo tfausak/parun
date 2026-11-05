@@ -42,6 +42,7 @@ import qualified Parun.Types.AttachRestriction as AttachRestriction
 import qualified Parun.Types.AttachRewrite as AttachRewrite
 import qualified Parun.Types.AttachTarget as AttachTarget
 import qualified Parun.Types.AttachedToBound as AttachedToBound
+import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
 import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackCost as AttackCost
 import qualified Parun.Types.AttackCount as AttackCount
@@ -1107,7 +1108,7 @@ rewriteEffect pairs effect = case effect of
   -- The number of turns is the Quantity, FlipCoin's descent above; the
   -- PlayerRef and the skips no word rule 612 can swap.
   Effect.TakeExtraTurn x -> Effect.TakeExtraTurn x {TakeExtraTurn.count = rewriteQuantity pairs (TakeExtraTurn.count x)}
-  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named refs mSlot) -> Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named (fmap (rewriteObjectRef pairs) refs) mSlot)
+  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named ref mSlot) -> Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named (rewriteObjectRef pairs ref) mSlot)
   -- ShuffleIntoLibrary's descent: the ref's filters are card text.
   Effect.Ante (Ante.MkAnte player ref mSlot) -> Effect.Ante (Ante.MkAnte player (rewriteObjectRef pairs ref) mSlot)
   Effect.PutSticker (PutSticker.MkPutSticker player ref kinds cap free bound) -> Effect.PutSticker (PutSticker.MkPutSticker player (rewriteObjectRef pairs ref) kinds (fmap (rewriteQuantity pairs) cap) free bound)
@@ -1281,9 +1282,6 @@ rewriteObjectRef pairs ref = case ref of
   ObjectRef.EachSpell f -> ObjectRef.EachSpell (Filter.rewrite pairs f)
   ObjectRef.EachAbility f -> ObjectRef.EachAbility (Filter.rewrite pairs f)
   ObjectRef.EachOnStack f -> ObjectRef.EachOnStack (Filter.rewrite pairs f)
-  ObjectRef.EachPlayer -> ref
-  ObjectRef.EachOpponent -> ref
-  ObjectRef.ChosenPlayer -> ref
   -- Proved by the scenario
   -- cr-612-2-a-sleighted-disorder-burns-each-player-who-controls-a-green-creature.
   ObjectRef.Players p -> ObjectRef.Players p {PlayersWho.who = fmap (Filter.rewrite pairs) (PlayersWho.who p)}
@@ -2214,9 +2212,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SelfPlaneswalkedAwayFrom -> condition
   TriggerCondition.FlipsCoin _ -> condition
   TriggerCondition.SelfBecomesPlotted -> condition
-  TriggerCondition.SelfBecomesAttachedBy f -> TriggerCondition.SelfBecomesAttachedBy (Filter.rewrite pairs f)
-  TriggerCondition.SelfBecomesAttachedTo f -> TriggerCondition.SelfBecomesAttachedTo (Filter.rewrite pairs f)
-  TriggerCondition.SelfBecomesUnattachedFrom f -> TriggerCondition.SelfBecomesUnattachedFrom (Filter.rewrite pairs f)
+  TriggerCondition.AttachmentChanges t -> TriggerCondition.AttachmentChanges t {AttachmentTrigger.other = Filter.rewrite pairs (AttachmentTrigger.other t)}
   -- CR 603.12's reflexive carries nothing at all, so there is no subtype to swap.
   TriggerCondition.Reflexive -> condition
   where

@@ -88,6 +88,7 @@ import qualified Parun.Types.AttachRestriction as AttachRestriction
 import qualified Parun.Types.AttachRewrite as AttachRewrite
 import qualified Parun.Types.AttachTarget as AttachTarget
 import qualified Parun.Types.AttachedToBound as AttachedToBound
+import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
 import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackCost as AttackCost
 import qualified Parun.Types.AttackCount as AttackCount
@@ -759,7 +760,7 @@ objectRefPositions =
         ("require-attack-permanent", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "rp-attacker")) (Just (AttackTargetRef.Permanents (plantedRef "rp-defender")))), [plantedRef "rp-attacker", plantedRef "rp-defender"]),
         ("forbid-attack", Effect.ForbidAttack (ForbidAttack.MkForbidAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "fa")) Nothing), [plantedRef "fa"]),
         ("unsuspect", Effect.Unsuspect (plantedRef "us"), [plantedRef "us"]),
-        ("shuffle-into-library", Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary Nothing (NonEmpty.singleton (plantedRef "sl")) Nothing), [plantedRef "sl"]),
+        ("shuffle-into-library", Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary Nothing (plantedRef "sl") Nothing), [plantedRef "sl"]),
         ("ante", Effect.Ante (Ante.MkAnte (PlayerRef.Relative PlayerRelation.You) (plantedRef "an") Nothing), [plantedRef "an"]),
         ("put-sticker", Effect.PutSticker (PutSticker.MkPutSticker (PlayerRef.Relative PlayerRelation.You) (plantedRef "ps") (Set.singleton StickerKind.Art) Nothing False Nothing), [plantedRef "ps"]),
         ("set-owner", Effect.SetOwner (SetOwner.MkSetOwner (PlayerRef.Relative PlayerRelation.You) (plantedRef "so")), [plantedRef "so"]),
@@ -825,7 +826,7 @@ playerRefPositions =
         ("gain-control", Effect.GainControl (GainControl.MkGainControl Duration.Indefinite (plantedRef "gc") (plantedPlayer "gc")), [plantedPlayer "gc"]),
         ("blight", Effect.Blight (Blight.MkBlight (plantedPlayer "bl") one Nothing), [plantedPlayer "bl"]),
         ("take-extra-turn", Effect.TakeExtraTurn TakeExtraTurn.MkTakeExtraTurn {TakeExtraTurn.player = plantedPlayer "te", TakeExtraTurn.skips = Set.empty, TakeExtraTurn.count = Quantity.Type.Literal 1}, [plantedPlayer "te"]),
-        ("shuffle-into-library", Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary (Just (plantedPlayer "si")) (NonEmpty.singleton (plantedRef "si")) Nothing), [plantedPlayer "si"]),
+        ("shuffle-into-library", Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary (Just (plantedPlayer "si")) (plantedRef "si") Nothing), [plantedPlayer "si"]),
         ("ante", Effect.Ante (Ante.MkAnte (plantedPlayer "ap") (plantedRef "ap") Nothing), [plantedPlayer "ap"]),
         ("put-sticker", Effect.PutSticker (PutSticker.MkPutSticker (plantedPlayer "pp") (plantedRef "pp") (Set.singleton StickerKind.Art) Nothing False Nothing), [plantedPlayer "pp"]),
         ("set-owner", Effect.SetOwner (SetOwner.MkSetOwner (plantedPlayer "sp") (plantedRef "sp")), [plantedPlayer "sp"]),
@@ -839,7 +840,7 @@ playerRefPositions =
         ("player-sacrifices", Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (plantedPlayer "ps") (Filter.Type.And []) one Nothing), [plantedPlayer "ps"]),
         ("flip-coin", Effect.FlipCoin FlipCoin.MkFlipCoin {FlipCoin.count = one, FlipCoin.reading = CoinReading.Heads, FlipCoin.slot = SlotName.MkSlotName (Text.pack "fc"), FlipCoin.misses = Nothing, FlipCoin.flipper = plantedPlayer "fc"}, [plantedPlayer "fc"]),
         ("choose-card-name", Effect.ChooseCardName (ChooseCardName.MkChooseCardName (plantedPlayer "cn") (Filter.Type.And []) Nothing), [plantedPlayer "cn"]),
-        ("for-each-starting-with", Effect.ForEach (ForEach.MkForEach ObjectRef.EachPlayer LoopMembers.Every (SlotName.MkSlotName (Text.pack "each")) Seq.empty False Nothing (Just (plantedPlayer "fe-start"))), [plantedPlayer "fe-start"]),
+        ("for-each-starting-with", Effect.ForEach (ForEach.MkForEach (ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing)) LoopMembers.Every (SlotName.MkSlotName (Text.pack "each")) Seq.empty False Nothing (Just (plantedPlayer "fe-start"))), [plantedPlayer "fe-start"]),
         ("repeat", Effect.Repeat (Repeat.MkRepeat (plantedPlayer "rp-chooser") Seq.empty Nothing (Just (plantedPlayer "rp-other")) Seq.empty), [plantedPlayer "rp-chooser", plantedPlayer "rp-other"]),
         ("choose-number", Effect.ChooseNumber (ChooseNumber.MkChooseNumber (SlotName.MkSlotName (Text.pack "number")) Nothing (plantedPlayer "cn-chooser")), [plantedPlayer "cn-chooser"]),
         ("offer-cast", Effect.OfferCast (OfferCast.MkOfferCast (plantedRef "oc-ref") (plantedPlayer "oc-caster") CastObligation.Optional PermissionVerb.Cast CastOffer.defaultValue CastRepetition.Once False False Nothing), [plantedPlayer "oc-caster"]),
@@ -1215,10 +1216,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PlacesSticker _ -> []
   -- CR 701.3a's carries a Filter, and a Filter holds no Count for a Matching
   -- TurnedFaceUp's reason.
-  TriggerCondition.SelfBecomesAttachedBy _ -> []
-  -- And so do the attachment-scoped pair, whose Filters are over the host.
-  TriggerCondition.SelfBecomesAttachedTo _ -> []
-  TriggerCondition.SelfBecomesUnattachedFrom _ -> []
+  TriggerCondition.AttachmentChanges _ -> []
   -- CR 603.12's carries nothing at all, so no Count.
   TriggerCondition.Reflexive -> []
   -- CR 701.6a's countering condition is a PlayerRelation, which holds no Count,
@@ -4186,12 +4184,6 @@ objectRefFilters ref = case ref of
   -- Glen Elendra's Answer's "all spells your opponents control and all
   -- abilities your opponents control" states its own too, for the same reason.
   ObjectRef.EachOnStack f -> unframed [f]
-  -- Molten Disaster's "each player" holds no Filter to lint.
-  ObjectRef.EachPlayer -> []
-  ObjectRef.EachOpponent -> []
-  -- Stuffy Doll's "the chosen player" holds none either: the seat was named by a
-  -- choice made on entry, never by characteristics.
-  ObjectRef.ChosenPlayer -> []
   -- The PlayerRef names players by relation, by slot or through CR 108.4's
   -- controller, never by characteristics; Disorder's "who controls a white
   -- creature" is the narrowing Filter, matched against each player.
@@ -4692,13 +4684,10 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.FlipsCoin _ -> []
   TriggerCondition.SelfBecomesPlotted -> []
   TriggerCondition.PlacesSticker placesSticker -> unframed [PlacesSticker.object placesSticker]
-  -- CR 701.3a's carries one over the ATTACHMENT -- Bramble Elemental's "an
-  -- Aura" -- which this sweep must see for a Matching TurnedFaceUp's reason.
-  TriggerCondition.SelfBecomesAttachedBy f -> unframed [f]
-  -- CR 701.3a and CR 701.3d read from the attachment carry one over the HOST --
-  -- Enormous Energy Blade's "a creature" -- and it needs the same sweep.
-  TriggerCondition.SelfBecomesAttachedTo f -> unframed [f]
-  TriggerCondition.SelfBecomesUnattachedFrom f -> unframed [f]
+  -- CR 701.3a's carries one over the other end -- Bramble Elemental's "an
+  -- Aura", Enormous Energy Blade's "a creature" -- which this sweep must see for
+  -- a Matching TurnedFaceUp's reason.
+  TriggerCondition.AttachmentChanges t -> unframed [AttachmentTrigger.other t]
   -- CR 603.12's carries nothing, so no Filter either.
   TriggerCondition.Reflexive -> []
   TriggerCondition.SpellOrAbilityCounters _ -> []
@@ -4829,11 +4818,9 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SelfPlaneswalkedAwayFrom -> []
   TriggerCondition.FlipsCoin _ -> []
   TriggerCondition.SelfBecomesPlotted -> []
-  TriggerCondition.SelfBecomesAttachedBy _ -> []
-  -- Neither attachment-scoped condition names a slot OUTRIGHT either: each binds
-  -- one (Parun.Engine.Event.Binding.eventBindingSlots) rather than reading one.
-  TriggerCondition.SelfBecomesAttachedTo _ -> []
-  TriggerCondition.SelfBecomesUnattachedFrom _ -> []
+  -- No attachment condition names a slot OUTRIGHT: an Attachment end binds one
+  -- (Parun.Engine.Event.Binding.eventBindingSlots) rather than reading one.
+  TriggerCondition.AttachmentChanges _ -> []
   -- CR 603.7c's captured environment is what a reflexive trigger knows, but the
   -- condition itself admits no event and names nothing.
   TriggerCondition.Reflexive -> []
@@ -6212,7 +6199,7 @@ effectFilters effect = case effect of
   Effect.FlipCoin flipCoin -> frame Unframed (quantityFilters (FlipCoin.count flipCoin))
   -- CR 500.7's number of turns is a Quantity, so its filters are reachable here.
   Effect.TakeExtraTurn takeExtraTurn -> frame Unframed (quantityFilters (TakeExtraTurn.count takeExtraTurn))
-  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary _ refs _) -> frame SourceHostFramed (foldMap objectRefFilters refs)
+  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary _ ref _) -> frame SourceHostFramed (objectRefFilters ref)
   Effect.Ante (Ante.MkAnte _ ref _) -> frame SourceHostFramed (objectRefFilters ref)
   Effect.PutSticker (PutSticker.MkPutSticker _ ref _ cap _ _) -> frame SourceHostFramed (objectRefFilters ref) <> frame Unframed (foldMap quantityFilters cap)
   Effect.SetOwner (SetOwner.MkSetOwner _ ref) -> frame SourceHostFramed (objectRefFilters ref)
@@ -7434,7 +7421,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
      in Spec.assertEqWith
           s
           "the dealer slot is read"
-          (Map.keysSet (Resolve.slotsOf (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart ObjectRef.EachPlayer (Quantity.Type.Literal 3))) (Just ghost) Nothing Nothing Nothing Nothing))))
+          (Map.keysSet (Resolve.slotsOf (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing)) (Quantity.Type.Literal 3))) (Just ghost) Nothing Nothing Nothing Nothing))))
           (Set.singleton ghost)
   -- The SPELL half of CR 601.2b's contract: what a card's own modes read is
   -- announced against the card's own cost -- mana cost, additional costs and

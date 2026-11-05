@@ -5,6 +5,8 @@ import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.PhaseSelector as PhaseSelector
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.Zone as Zone
 
@@ -87,7 +89,7 @@ self :: SpellCast
 self =
   MkSpellCast
     { spell = ActingPermanent.Self,
-      scope = TurnScope.EachTurn,
+      scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer),
       zone = Nothing,
       ordinal = Nothing,
       phase = Nothing,

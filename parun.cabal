@@ -201,8 +201,14 @@ library codec
     Parun.Codec.AttachAllSpec
     Parun.Codec.AttachBound
     Parun.Codec.AttachBoundSpec
+    Parun.Codec.AttachDirection
+    Parun.Codec.AttachDirectionSpec
     Parun.Codec.AttachedToBound
     Parun.Codec.AttachedToBoundSpec
+    Parun.Codec.AttachmentEnd
+    Parun.Codec.AttachmentEndSpec
+    Parun.Codec.AttachmentTrigger
+    Parun.Codec.AttachmentTriggerSpec
     Parun.Codec.AttachR
     Parun.Codec.AttachRestriction
     Parun.Codec.AttachRestrictionSpec
@@ -2476,7 +2482,10 @@ library types
     Parun.Types.AtMost
     Parun.Types.AttachAll
     Parun.Types.AttachBound
+    Parun.Types.AttachDirection
     Parun.Types.AttachedToBound
+    Parun.Types.AttachmentEnd
+    Parun.Types.AttachmentTrigger
     Parun.Types.AttachR
     Parun.Types.AttachRestriction
     Parun.Types.AttachRewrite

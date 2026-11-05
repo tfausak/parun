@@ -53,7 +53,6 @@ import Parun.Types.PlayerId (PlayerId)
 import Parun.Types.Recipient (Recipient)
 import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.TriggerCondition as TriggerCondition
-import qualified Parun.Types.TurnScope as TurnScope
 
 holds :: Count.ViewOf -> Filter.Context -> GameState -> ObjectId -> Condition.Type.Condition -> Bool
 holds viewOf context gs oid condition =
@@ -81,7 +80,7 @@ holds viewOf context gs oid condition =
         -- perspective only a scope naming no player can hold.
         Condition.Type.During (DuringPhase.MkDuringPhase window scope) ->
           Turn.inWindow window (GameState.phase gs)
-            && maybe (scope == TurnScope.EachTurn) (Turn.turnScopeAdmits (Count.scopePlayers viewOf context gs) gs scope (GameState.activePlayer gs)) (Filter.perspective context)
+            && maybe (Turn.perspectiveFree scope) (Turn.turnScopeAdmits (Count.scopePlayers viewOf context gs) gs scope (GameState.activePlayer gs)) (Filter.perspective context)
 
 -- CR 107.3m: the amounts a triggered ability's condition may read off the spell
 -- that became its source. Seeded into Filter.Context's boundAmounts by CR 603.4's

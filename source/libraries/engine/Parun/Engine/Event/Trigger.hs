@@ -42,6 +42,8 @@ import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
+import qualified Parun.Types.AttachDirection as AttachDirection
+import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackTrigger as AttackTrigger
 import qualified Parun.Types.AttackedTrigger as AttackedTrigger
@@ -553,16 +555,13 @@ looksBack condition = case condition of
   -- CR 603.10a's list does not reach an attachment either. CR 701.3a moves a
   -- permanent ONTO another one without changing its zone, and the one route that
   -- is a zone change -- CR 608.3c's Aura spell arriving attached -- leaves both
-  -- objects on the battlefield for a live read.
-  TriggerCondition.SelfBecomesAttachedBy _ -> False
-  -- The attachment's own scope on the same event, for the same reason: CR 701.3a
-  -- moves it onto the host without changing its zone.
-  TriggerCondition.SelfBecomesAttachedTo _ -> False
-  -- CR 603.10c NAMES this one: "abilities that trigger specifically when an
+  -- objects on the battlefield for a live read, whichever end the bearer is.
+  --
+  -- CR 603.10c NAMES the Unattaches direction: "abilities that trigger specifically when an
   -- object becomes unattached look back in time". The rule earns it -- CR 701.3d
   -- counts the attachment leaving the battlefield as becoming unattached, so the
   -- bearer is routinely gone by the CR 117.5 boundary.
-  TriggerCondition.SelfBecomesUnattachedFrom _ -> True
+  TriggerCondition.AttachmentChanges t -> AttachmentTrigger.direction t == AttachDirection.Unattaches
   -- CR 603.10f names this one too, and CR 800.4a is why: the loser's
   -- permanents leave the game in the departure's own event group. Kept because
   -- the rule states it; nothing in data/cards/ observes it, Withengar Unbound's
@@ -769,11 +768,9 @@ batchScoped condition = case condition of
   TriggerCondition.SelfTurnedUpOffDeck -> False
   TriggerCondition.SelfPlaneswalkedAwayFrom -> False
   TriggerCondition.FlipsCoin _ -> False
-  TriggerCondition.SelfBecomesAttachedBy _ -> False
-  TriggerCondition.SelfBecomesAttachedTo _ -> False
-  -- Per-occurrence too: CR 701.3d's routes each unattach one permanent from one
-  -- host, and no printing reads a batch of them.
-  TriggerCondition.SelfBecomesUnattachedFrom _ -> False
+  -- Per-occurrence, either direction: CR 701.3d's routes each unattach one
+  -- permanent from one host, and no printing reads a batch of them.
+  TriggerCondition.AttachmentChanges _ -> False
   -- CR 603.2c, off the field, a Leaves' answer one zone over: Kishla Skimmer's
   -- "whenever a card leaves your graveyard" is the rule's second sentence, so a
   -- resolution that moved two cards out of one graveyard fires it twice, while
@@ -2750,12 +2747,12 @@ zonesTriggeredFrom cond =
         -- CR 113.6's default, and CR 701.3a makes it the only possible answer, for
         -- the exert's reason in PermanentActs' arm: the host of an attachment is a
         -- permanent, so the bearer is on the battlefield whenever this can match.
-        TriggerCondition.SelfBecomesAttachedBy _ -> battlefield
-        TriggerCondition.SelfBecomesAttachedTo _ -> battlefield
-        -- The battlefield too, even though CR 701.3d's own routes include the bearer
-        -- leaving it: this names where the ability FUNCTIONS (CR 113.6), and CR 603.10c
-        -- is what lets a bearer that has left be offered anyway.
-        TriggerCondition.SelfBecomesUnattachedFrom _ -> battlefield
+        --
+        -- The battlefield for Unattaches too, even though CR 701.3d's own routes
+        -- include the bearer leaving it: this names where the ability FUNCTIONS (CR
+        -- 113.6), and CR 603.10c is what lets a bearer that has left be offered
+        -- anyway.
+        TriggerCondition.AttachmentChanges _ -> battlefield
         -- EXILE, and this arm is CR 113.6k's exception rather than its default:
         -- CR 702.170b's special action exiles the card as it becomes plotted, so
         -- the object bearing Aloe Alchemist's "when this card becomes plotted" is
@@ -3110,12 +3107,10 @@ stateTriggersOn gs
             -- CR 603.2 once more: becoming attached is something that HAPPENS,
             -- with its own log entry. Standing attached is a state, but no
             -- condition here asks about it.
-            TriggerCondition.SelfBecomesAttachedBy _ -> False
-            TriggerCondition.SelfBecomesAttachedTo _ -> False
             -- And becoming unattached likewise. Standing UNattached is a state
             -- CR 704.5m acts on, but it is a state-based action rather than a
             -- CR 603.8 trigger, and no condition here asks about it.
-            TriggerCondition.SelfBecomesUnattachedFrom _ -> False
+            TriggerCondition.AttachmentChanges _ -> False
             TriggerCondition.StepBegins {} -> False
             TriggerCondition.DealsDamage _ -> False
             TriggerCondition.IsDealtDamage _ -> False

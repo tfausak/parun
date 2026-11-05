@@ -23,16 +23,19 @@
                   {
                     "type": "ShuffleIntoLibrary",
                     "value": {
-                      "refs": [
-                        {
-                          "type": "InSlot",
-                          "value": "self"
-                        },
-                        {
-                          "type": "InSlot",
-                          "value": "cards"
-                        }
-                      ]
+                      "ref": {
+                        "type": "AllOf",
+                        "value": [
+                          {
+                            "type": "InSlot",
+                            "value": "self"
+                          },
+                          {
+                            "type": "InSlot",
+                            "value": "cards"
+                          }
+                        ]
+                      }
                     }
                   }
                 ]

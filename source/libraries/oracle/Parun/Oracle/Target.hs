@@ -27,6 +27,7 @@ import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerScope as PlayerScope
+import qualified Parun.Types.PlayersWho as PlayersWho
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Scope as Scope
@@ -367,8 +368,8 @@ object context determiner ref = case ref of
     r : rs <- traverse (object context determiner) (NonEmpty.toList refs)
     Monad.guard (all (== r) rs && null (mentions r) && number r == Filter.Singular)
     [r]
-  ObjectRef.EachPlayer -> [MkReference (Text.pack "each player") [] Filter.Plural]
-  ObjectRef.EachOpponent -> [MkReference (Text.pack "each opponent") [] Filter.Plural]
+  ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing) -> [MkReference (Text.pack "each player") [] Filter.Plural]
+  ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.Opponent) Nothing) -> [MkReference (Text.pack "each opponent") [] Filter.Plural]
   _ -> []
 
 -- | A player as the subject of a sentence, and whether the verb takes the

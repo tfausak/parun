@@ -42,34 +42,37 @@
                           "type": "AnyPlayer"
                         }
                       },
-                      "refs": [
-                        {
-                          "type": "EachCardInHand",
-                          "value": {
-                            "hands": {
-                              "type": "Scoped",
-                              "value": {
-                                "type": "AnyPlayer"
+                      "ref": {
+                        "type": "AllOf",
+                        "value": [
+                          {
+                            "type": "EachCardInHand",
+                            "value": {
+                              "hands": {
+                                "type": "Scoped",
+                                "value": {
+                                  "type": "AnyPlayer"
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "type": "EachCardInGraveyard",
+                            "value": {
+                              "filter": {
+                                "type": "And",
+                                "value": []
+                              },
+                              "graveyards": {
+                                "type": "Scoped",
+                                "value": {
+                                  "type": "AnyPlayer"
+                                }
                               }
                             }
                           }
-                        },
-                        {
-                          "type": "EachCardInGraveyard",
-                          "value": {
-                            "filter": {
-                              "type": "And",
-                              "value": []
-                            },
-                            "graveyards": {
-                              "type": "Scoped",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
-                            }
-                          }
-                        }
-                      ]
+                        ]
+                      }
                     }
                   }
                 ]
@@ -137,7 +140,15 @@
                       ],
                       "individually": true,
                       "ref": {
-                        "type": "EachPlayer"
+                        "type": "Players",
+                        "value": {
+                          "players": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "AnyPlayer"
+                            }
+                          }
+                        }
                       },
                       "slot": "player"
                     }

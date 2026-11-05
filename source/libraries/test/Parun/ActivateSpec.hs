@@ -1426,11 +1426,11 @@ printedActivationWholePhaseSpec s registry = Spec.describe s "PrintedActivationW
       "but alice's unrestricted ability is offered in the same phase"
 
   -- CR 102.1's axis, unchanged by the widening: Jade Statue prints no "your", so
-  -- its TurnScope is EachTurn and bob's combat phase is a window for it too.
+  -- its TurnScope is @Relative AnyPlayer@ and bob's combat phase is a window for it too.
   -- Asked of alice, who controls it: the Statue prints no "any player may
   -- activate" clause, so CR 602.2's default keeps the activation hers -- on a
   -- turn that is not.
-  Spec.it s "CR 102.1 the window is EachTurn, so an opponent's combat phase qualifies" $ do
+  Spec.it s "CR 102.1 the window is each turn, so an opponent's combat phase qualifies" $ do
     statue <- S.printingOf s registry "Jade Statue"
     mountain <- S.printingOf s registry "Mountain"
     let (statueId, board) = statueBoard statue mountain

@@ -72,6 +72,7 @@ import qualified Parun.Types.AttachRestriction as AttachRestriction
 import qualified Parun.Types.AttachRewrite as AttachRewrite
 import qualified Parun.Types.AttachTarget as AttachTarget
 import qualified Parun.Types.AttachedToBound as AttachedToBound
+import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
 import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackCost as AttackCost
 import qualified Parun.Types.AttackCount as AttackCount
@@ -2320,9 +2321,6 @@ objectRefNames asking x = case x of
   ObjectRef.EachSpell filter_ -> filterNames asking filter_
   ObjectRef.EachAbility filter_ -> filterNames asking filter_
   ObjectRef.EachOnStack filter_ -> filterNames asking filter_
-  ObjectRef.EachPlayer -> mempty
-  ObjectRef.EachOpponent -> mempty
-  ObjectRef.ChosenPlayer -> mempty
   ObjectRef.Players (PlayersWho.MkPlayersWho playerRef who) -> playerRefNames asking playerRef <> foldMap (filterNames asking) who
   ObjectRef.TopOfLibrary topOfLibrary -> topOfLibraryNames asking topOfLibrary
   ObjectRef.TopOfLibraryUntil topOfLibraryUntil -> topOfLibraryUntilNames asking topOfLibraryUntil
@@ -2890,7 +2888,7 @@ putStickerNames asking x = case x of
 
 shuffleIntoLibraryNames :: (Monoid r) => Asking r -> ShuffleIntoLibrary.ShuffleIntoLibrary -> r
 shuffleIntoLibraryNames asking x = case x of
-  ShuffleIntoLibrary.MkShuffleIntoLibrary library refs slot -> foldMap (playerRefNames asking) library <> foldMap (objectRefNames asking) refs <> foldMap (slotNames asking) slot
+  ShuffleIntoLibrary.MkShuffleIntoLibrary library ref slot -> foldMap (playerRefNames asking) library <> objectRefNames asking ref <> foldMap (slotNames asking) slot
 
 skipPhaseNames :: (Monoid r) => Asking r -> SkipPhase.SkipPhase -> r
 skipPhaseNames asking x = case x of
@@ -2935,9 +2933,6 @@ stepBeginsNames asking x = case x of
 -- CR 102.1: a named player's turn reads whatever its reference reads.
 turnScopeNames :: (Monoid r) => Asking r -> TurnScope.TurnScope -> r
 turnScopeNames asking x = case x of
-  TurnScope.EachTurn -> mempty
-  TurnScope.ControllersTurn -> mempty
-  TurnScope.OpponentsTurn -> mempty
   TurnScope.PlayersTurn playerRef -> playerRefNames asking playerRef
 
 duringPhaseNames :: (Monoid r) => Asking r -> DuringPhase.DuringPhase -> r
@@ -3156,9 +3151,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.Visit -> mempty
   TriggerCondition.FlipsCoin _ -> mempty
   TriggerCondition.SelfBecomesPlotted -> mempty
-  TriggerCondition.SelfBecomesAttachedBy filter_ -> filterNames asking filter_
-  TriggerCondition.SelfBecomesAttachedTo filter_ -> filterNames asking filter_
-  TriggerCondition.SelfBecomesUnattachedFrom filter_ -> filterNames asking filter_
+  TriggerCondition.AttachmentChanges t -> filterNames asking (AttachmentTrigger.other t)
   TriggerCondition.Reflexive -> mempty
   TriggerCondition.PlacesSticker placesSticker -> filterNames asking (PlacesSticker.object placesSticker)
 

@@ -47,7 +47,13 @@
                 }
               },
               "scope": {
-                "type": "ControllersTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                }
               }
             }
           },
@@ -227,12 +233,10 @@
                       {
                         "type": "ShuffleIntoLibrary",
                         "value": {
-                          "refs": [
-                            {
-                              "type": "InSlot",
-                              "value": "duplicates"
-                            }
-                          ]
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "duplicates"
+                          }
                         }
                       }
                     ]

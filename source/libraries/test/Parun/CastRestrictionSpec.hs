@@ -242,7 +242,7 @@ necrologiaSpec s registry = Spec.describe s "Necrologia" $ do
     bolt <- S.printingOf s registry "Lightning Bolt"
     let (oid, boltId, board) = necrologiaBoard swamp mountain necrologia bolt (Phase.Ending EndingStep.EndStep)
         bobsTurn = board {GameState.activePlayer = S.bob}
-    Spec.assertBool s (not (S.castable S.alice oid bobsTurn)) "TurnScope.ControllersTurn refuses it"
+    Spec.assertBool s (not (S.castable S.alice oid bobsTurn)) "(TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)) refuses it"
     Spec.assertBool s (not (any (S.isCastOf oid) (Action.legalActions S.alice bobsTurn))) "and it is not offered"
     Spec.assertBool s (S.castable S.alice boltId bobsTurn) "though the control instant still is"
   -- CR 500.1: the WINDOW half, isolated. alice's own turn, wrong phase.
@@ -845,7 +845,7 @@ bountyName = CardName.MkCardName (Text.pack "Synthetic Bounded Bounty")
 boundedFusedName = CardName.MkCardName (Text.pack "Synthetic Bounded Blaze//Synthetic Bounded Bounty")
 
 -- Three seats, so "each opponent" is not the same set as "each player": an
--- ObjectRef.EachPlayer in the left half's place would take life from alice too.
+-- PlayerRelation.AnyPlayer in the left half's place would take life from alice too.
 --
 -- Alice controls three Goblin Pikers -- the left half's ceiling, 3 -- and
 -- `artifacts` Chromatic Spheres, which is the right half's. Eight lands, four of

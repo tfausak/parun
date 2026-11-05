@@ -596,8 +596,8 @@ exchangeCardZones settle resolving source controller legal chosen (ExchangeCardZ
 -- the named player need not be one of them. Each library is shuffled ONCE (CR
 -- 608.2f), and CR 701.24a makes WHO shuffles unobservable.
 --
--- Every ref's objects move as ONE event (CR 608.2f / 603.2c), so Timetwister's
--- hand and graveyard are one arrival and one shuffle -- proved by
+-- Every object the ref names moves as ONE event (CR 608.2f / 603.2c), so
+-- Timetwister's hand and graveyard are one arrival and one shuffle -- proved by
 -- Parun.MassEffectSpec's Timetwister group.
 --
 -- The slot binds the library incarnations (CR 400.7), for a later count:
@@ -608,9 +608,9 @@ exchangeCardZones settle resolving source controller legal chosen (ExchangeCardZ
 -- once -- proved by the scenario
 -- the-great-aurora-counts-a-melded-permanent-once.
 shuffleIntoLibrary :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ShuffleIntoLibrary.ShuffleIntoLibrary -> Game ()
-shuffleIntoLibrary settle resolving source controller legal (ShuffleIntoLibrary.MkShuffleIntoLibrary named refs mSlot) = do
+shuffleIntoLibrary settle resolving source controller legal (ShuffleIntoLibrary.MkShuffleIntoLibrary named ref mSlot) = do
   gs <- State.get
-  let targets = ListUtils.nubOrd (foldMap (objectRefObjects legal resolving controller source gs) refs)
+  let targets = ListUtils.nubOrd (objectRefObjects legal resolving controller source gs ref)
       -- The owners are read from the PRE-MOVE objects (CR 701.24c); an id that
       -- no longer resolves contributes no owner.
       owners =

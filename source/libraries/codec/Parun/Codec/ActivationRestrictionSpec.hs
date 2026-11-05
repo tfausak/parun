@@ -41,10 +41,10 @@ spec s = Spec.describe s "Parun.Codec.ActivationRestriction" $ do
       ( ActivationRestriction.DuringPhase
           DuringPhase.MkDuringPhase
             { DuringPhase.window = PhaseSelector.Step (Phase.Combat CombatStep.EndOfCombat),
-              DuringPhase.scope = TurnScope.EachTurn
+              DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)
             }
       )
-      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"EndOfCombat\"}}},\"scope\":{\"type\":\"EachTurn\"}}} "
+      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"EndOfCombat\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}} "
   -- The arm's second axis: the SAME window under each scope, so a codec that
   -- dropped the scope would collapse this and the previous case into one.
   Spec.it s "DuringPhase, Llanowar Augur's controller's-turn upkeep" $
@@ -54,10 +54,10 @@ spec s = Spec.describe s "Parun.Codec.ActivationRestriction" $ do
       ( ActivationRestriction.DuringPhase
           DuringPhase.MkDuringPhase
             { DuringPhase.window = PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep),
-              DuringPhase.scope = TurnScope.ControllersTurn
+              DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)
             }
       )
-      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}}},\"scope\":{\"type\":\"ControllersTurn\"}}} "
+      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}}} "
   -- The PhaseSelector's stepless arm: a phase that HAS steps, named whole.
   Spec.it s "DuringPhase, Jade Statue's combat-phase rider" $
     Common.assertCodec
@@ -66,10 +66,10 @@ spec s = Spec.describe s "Parun.Codec.ActivationRestriction" $ do
       ( ActivationRestriction.DuringPhase
           DuringPhase.MkDuringPhase
             { DuringPhase.window = PhaseSelector.CombatPhase,
-              DuringPhase.scope = TurnScope.EachTurn
+              DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)
             }
       )
-      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"CombatPhase\"},\"scope\":{\"type\":\"EachTurn\"}}} "
+      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"CombatPhase\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}} "
   -- CR 102.1 with no window beside it, which is the arm DuringPhase above cannot
   -- reach: Lavinia, Foil to Conspiracy's "Activate only during an opponent's
   -- turn". Rendered payload-tagged, so a decoder cannot confuse it with the
@@ -78,8 +78,8 @@ spec s = Spec.describe s "Parun.Codec.ActivationRestriction" $ do
     Common.assertCodec
       s
       ActivationRestriction.codec
-      (ActivationRestriction.DuringTurn TurnScope.OpponentsTurn)
-      " {\"type\":\"DuringTurn\",\"value\":{\"type\":\"OpponentsTurn\"}} "
+      (ActivationRestriction.DuringTurn (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.Opponent)))
+      " {\"type\":\"DuringTurn\",\"value\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
   -- CR 602.5's second clause, and the arm that made this type a list: Kongming's
   -- Contraptions prints it beside the DuringPhase above.
   Spec.it s "AttackedThisStep" $

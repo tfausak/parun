@@ -7,6 +7,9 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.ActingPermanent as ActingPermanent
+import qualified Parun.Types.AttachDirection as AttachDirection
+import qualified Parun.Types.AttachmentEnd as AttachmentEnd
+import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
 import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackTrigger as AttackTrigger
 import qualified Parun.Types.AttackerTarget as AttackerTarget
@@ -66,6 +69,7 @@ import qualified Parun.Types.PlayerAction as PlayerAction
 import qualified Parun.Types.PlayerActsOn as PlayerActsOn
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
+import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
@@ -104,8 +108,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.EachTurn))
-      " {\"type\":\"StepBegins\",\"value\":{\"phase\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}},\"scope\":{\"type\":\"EachTurn\"}}} "
+      (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer))))
+      " {\"type\":\"StepBegins\",\"value\":{\"phase\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}} "
   -- CR 603.8: a STATE trigger, carrying its Condition.
   Spec.it s "StateIs round-trips" $
     Common.assertCodec
@@ -355,22 +359,22 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Gained PlayerRelation.You TurnScope.EachTurn Batching.EachOccurrence TriggerFrequency.EveryTime))
+      (TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Gained PlayerRelation.You (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) Batching.EachOccurrence TriggerFrequency.EveryTime))
       " {\"type\":\"LifeChanges\",\"value\":{\"direction\":{\"type\":\"Gained\"},\"player\":{\"type\":\"You\"}}} "
   -- Vengeful Warchief.
   Spec.it s "LifeChanges carries a frequency" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.You TurnScope.EachTurn Batching.EachOccurrence TriggerFrequency.FirstTimeEachTurn))
+      (TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.You (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) Batching.EachOccurrence TriggerFrequency.FirstTimeEachTurn))
       " {\"type\":\"LifeChanges\",\"value\":{\"direction\":{\"type\":\"Lost\"},\"player\":{\"type\":\"You\"},\"frequency\":{\"type\":\"FirstTimeEachTurn\"}}} "
   -- CR 702.179d's speed trigger: a batch, on the controller's turn.
   Spec.it s "LifeChanges carries a scope and a batching" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.Opponent TurnScope.ControllersTurn Batching.OneOrMore TriggerFrequency.EveryTime))
-      " {\"type\":\"LifeChanges\",\"value\":{\"direction\":{\"type\":\"Lost\"},\"player\":{\"type\":\"Opponent\"},\"scope\":{\"type\":\"ControllersTurn\"},\"batching\":{\"type\":\"OneOrMore\"}}} "
+      (TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.Opponent (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)) Batching.OneOrMore TriggerFrequency.EveryTime))
+      " {\"type\":\"LifeChanges\",\"value\":{\"direction\":{\"type\":\"Lost\"},\"player\":{\"type\":\"Opponent\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"batching\":{\"type\":\"OneOrMore\"}}} "
   -- CR 714.2b's chapter III; Parun.Codec.CounterTriggerSpec covers the
   -- payload's other keys.
   Spec.it s "CountersChange round-trips its payload" $
@@ -391,21 +395,21 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
   -- CR 601.2i. A PAIR: a Filter over the SPELL, holding Young Pyromancer's two
   -- printed narrowings -- who cast it and what it was -- plus the TurnScope,
   -- which is the axis the Filter cannot carry. Young Pyromancer prints no turn,
-  -- so EachTurn is its half.
+  -- so @Relative AnyPlayer@ is its half.
   Spec.it s "SpellCast round-trips with its Filter" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching (Filter.And [Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery]])) TurnScope.EachTurn Nothing Nothing Nothing False))
-      " {\"type\":\"SpellCast\",\"value\":{\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Sorcery\"}}]}]}},\"scope\":{\"type\":\"EachTurn\"}}} "
+      (TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching (Filter.And [Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery]])) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) Nothing Nothing Nothing False))
+      " {\"type\":\"SpellCast\",\"value\":{\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Sorcery\"}}]}]}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}} "
   -- The other half moved on its own, over the plainest Filter there is: Brineborn
   -- Cutthroat's "during an opponent's turn", which no Filter could have said.
   Spec.it s "SpellCast round-trips an opponent's-turn scope" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You)) TurnScope.OpponentsTurn Nothing Nothing Nothing False))
-      " {\"type\":\"SpellCast\",\"value\":{\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"OpponentsTurn\"}}} "
+      (TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You)) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.Opponent)) Nothing Nothing Nothing False))
+      " {\"type\":\"SpellCast\",\"value\":{\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}}} "
   -- CR 702.21a's ward: a Self subject, the relation on the TARGETING side.
   -- Parun.Codec.BecomesTargetedTriggerSpec has the fields.
   Spec.it s "BecomesTargeted round-trips ward's opponent relation" $
@@ -452,7 +456,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       s
       TriggerCondition.codec
       (TriggerCondition.SpellCast SpellCast.self)
-      " {\"type\":\"SpellCast\",\"value\":{\"spell\":{\"type\":\"Self\"},\"scope\":{\"type\":\"EachTurn\"}}} "
+      " {\"type\":\"SpellCast\",\"value\":{\"spell\":{\"type\":\"Self\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}} "
   Spec.it s "AbilityActivated round-trips its Filter" $
     Common.assertCodec
       s
@@ -777,32 +781,29 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.Reflexive
       " {\"type\":\"Reflexive\"} "
-  -- CR 701.3a read from the host. The Filter is over the ATTACHMENT, and Bramble
-  -- Elemental's narrows to Auras, so the payload is a real HasSubtype rather than
-  -- the trivial `And []`.
-  Spec.it s "SelfBecomesAttachedBy round-trips" $
+  -- CR 701.3a read from the host, Bramble Elemental's: the Filter is over the
+  -- ATTACHMENT. Parun.Codec.AttachmentTriggerSpec has the fields.
+  Spec.it s "AttachmentChanges round-trips a host's attach" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfBecomesAttachedBy (Filter.HasSubtype Subtype.Aura))
-      " {\"type\":\"SelfBecomesAttachedBy\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}} "
-  -- CR 701.3a read from the ATTACHMENT, the mirror of the arm above: the tag is
-  -- the only thing that separates the two, so both are round-tripped rather than
-  -- one standing in for the other.
-  Spec.it s "SelfBecomesAttachedTo round-trips" $
+      (TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Host AttachDirection.Attaches (Filter.HasSubtype Subtype.Aura)))
+      " {\"type\":\"AttachmentChanges\",\"value\":{\"end\":{\"type\":\"Host\"},\"direction\":{\"type\":\"Attaches\"},\"other\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}}} "
+  -- CR 701.3a read from the ATTACHMENT, Enormous Energy Blade's: the Filter is
+  -- over the host.
+  Spec.it s "AttachmentChanges round-trips an attachment's attach" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfBecomesAttachedTo (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"SelfBecomesAttachedTo\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
-  -- CR 701.3d. Grafted Wargear says "from a permanent" and narrows nothing, so
-  -- the trivial `And []` is the payload the card actually prints.
-  Spec.it s "SelfBecomesUnattachedFrom round-trips" $
+      (TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Attachment AttachDirection.Attaches (Filter.HasCardType CardType.Creature)))
+      " {\"type\":\"AttachmentChanges\",\"value\":{\"end\":{\"type\":\"Attachment\"},\"direction\":{\"type\":\"Attaches\"},\"other\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+  -- CR 701.3d, Grafted Wargear's "from a permanent": the trivial `And []`.
+  Spec.it s "AttachmentChanges round-trips an attachment's unattach" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfBecomesUnattachedFrom (Filter.And []))
-      " {\"type\":\"SelfBecomesUnattachedFrom\",\"value\":{\"type\":\"And\",\"value\":[]}} "
+      (TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Attachment AttachDirection.Unattaches (Filter.And [])))
+      " {\"type\":\"AttachmentChanges\",\"value\":{\"end\":{\"type\":\"Attachment\"},\"direction\":{\"type\":\"Unattaches\"},\"other\":{\"type\":\"And\",\"value\":[]}}} "
   Spec.it s "PlacesSticker round-trips" $
     Common.assertCodec
       s

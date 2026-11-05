@@ -7,6 +7,8 @@ import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhaseSelector as PhaseSelector
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.TurnScope as TurnScope
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -19,21 +21,21 @@ spec s = Spec.describe s "Parun.Codec.DuringPhase" $ do
       DuringPhase.codec
       ( DuringPhase.MkDuringPhase
           { DuringPhase.window = PhaseSelector.Step (Phase.Combat CombatStep.EndOfCombat),
-            DuringPhase.scope = TurnScope.EachTurn
+            DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)
           }
       )
-      " {\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"EndOfCombat\"}}},\"scope\":{\"type\":\"EachTurn\"}} "
+      " {\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"EndOfCombat\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}} "
   -- Jade Statue's whole-phase window, and the other turn scope. BOTH keys are
   -- required: there is no scope-less form, so a payload naming only a window is
-  -- a decode failure rather than a silent EachTurn.
+  -- a decode failure rather than a silent @Relative AnyPlayer@.
   Spec.it s "MkDuringPhase, a whole-phase window on the controller's turns" $
     Common.assertCodec
       s
       DuringPhase.codec
       ( DuringPhase.MkDuringPhase
           { DuringPhase.window = PhaseSelector.CombatPhase,
-            DuringPhase.scope = TurnScope.ControllersTurn
+            DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)
           }
       )
-      " {\"window\":{\"type\":\"CombatPhase\"},\"scope\":{\"type\":\"ControllersTurn\"}} "
+      " {\"window\":{\"type\":\"CombatPhase\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DuringPhase.codec

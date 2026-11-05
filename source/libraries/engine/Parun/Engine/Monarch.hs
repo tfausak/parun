@@ -33,12 +33,12 @@ import Parun.Types.TriggeredAbility (TriggeredAbility)
 import qualified Parun.Types.TurnScope as TurnScope
 
 -- CR 725.2's end step draw. Controller-scoped to the monarch, so
--- ControllersTurn plus the monarch as "you" is exactly the monarch's own end
+-- @Relative You@ plus the monarch as "you" is exactly the monarch's own end
 -- step.
 endStepDraw :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 endStepDraw =
   Mint.trigger
-    (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.ControllersTurn))
+    (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))))
     (Seq.singleton (Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 1) Nothing)))
 
 -- CR 725.2's crown steal. Controlled by the current monarch; makes a DIFFERENT

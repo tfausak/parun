@@ -84,6 +84,8 @@ import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.PendingTrigger as PendingTrigger
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
@@ -217,7 +219,7 @@ scanSpec s registry =
       Spec.assertEqWith s "the end step's beginning is recorded exactly once" (Maybe.mapMaybe began (S.eventsOf after)) [(Phase.Ending EndingStep.EndStep, S.alice)]
     Spec.it s "CR 603.2b StepBegins matches its own step and no other" $ do
       let bearer = ObjectId.MkObjectId 1
-          cond = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.EachTurn)
+          cond = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)))
       Spec.assertBool s (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice cond (GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Ending EndingStep.EndStep) S.alice))) "the end step matches"
       Spec.assertBool s (not (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice cond (GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Beginning BeginningStep.Upkeep) S.alice)))) "the upkeep does not"
     -- CR 603.2b's "that player": the step's own turn names the active player,
@@ -228,7 +230,7 @@ scanSpec s registry =
     -- back to CR 109.5's "you".
     Spec.it s "CR 603.2b the active player rides a step trigger in the reserved slot" $ do
       let upkeepOf pid = GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Beginning BeginningStep.Upkeep) pid)
-          cond = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.EachTurn)
+          cond = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)))
           boundOf pid = Binding.targetsOf (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) pid cond (upkeepOf pid))
       Spec.assertEqWith s "carol's upkeep binds carol under thatPlayer" (boundOf S.carol) (Map.singleton Binding.triggerPlayer (Set.singleton (Recipient.ToPlayer S.carol)))
       Spec.assertEqWith s "and bob's binds bob" (boundOf S.bob) (Map.singleton Binding.triggerPlayer (Set.singleton (Recipient.ToPlayer S.bob)))
@@ -237,15 +239,15 @@ scanSpec s registry =
       -- "you", but the classification claims it unconditionally.
       Spec.assertEqWith
         s
-        "a ControllersTurn step binds it too"
-        (Binding.targetsOf (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.ControllersTurn)) (upkeepOf S.alice)))
+        "a your-turn step binds it too"
+        (Binding.targetsOf (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)))) (upkeepOf S.alice)))
         (Map.singleton Binding.triggerPlayer (Set.singleton (Recipient.ToPlayer S.alice)))
     -- CR 603.3a / 109.5: "your upkeep" is the ABILITY CONTROLLER's (603.3a
     -- controls the ability; 109.5 makes "your" mean that controller), so the
     -- scope is read against the bearer's controller, not the card.
-    Spec.it s "CR 603.3a ControllersTurn matches only the bearer's controller's turn" $ do
+    Spec.it s "CR 603.3a a your-turn scope matches only the bearer's controller's turn" $ do
       let bearer = ObjectId.MkObjectId 1
-          cond = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.ControllersTurn)
+          cond = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)))
       Spec.assertBool s (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice cond (GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Beginning BeginningStep.Upkeep) S.alice))) "alice's upkeep matches for alice"
       Spec.assertBool s (not (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice cond (GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Beginning BeginningStep.Upkeep) S.bob)))) "bob's upkeep does not"
     -- The widening falsifier: the scan now visits every battlefield permanent,
@@ -2573,7 +2575,7 @@ chaptersOnStackFrom oid gs =
 maulerSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 maulerSpec s registry =
   let endStep = Phase.Ending EndingStep.EndStep
-      -- alice's own end step: the trigger's scope is TurnScope.ControllersTurn
+      -- alice's own end step: the trigger's scope is @Relative You@
       -- and she controls the Mauler.
       beginEndStep gs = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan endStep S.alice)) (gs {GameState.phase = endStep, GameState.activePlayer = S.alice})
       settle gs = snd (Engine.runGamePure S.identityAnswer gs Engine.settleForPriority)

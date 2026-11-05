@@ -37,6 +37,9 @@ import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActingPermanent as ActingPermanent
+import qualified Parun.Types.AttachDirection as AttachDirection
+import qualified Parun.Types.AttachmentEnd as AttachmentEnd
+import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
 import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackCount as AttackCount
 import qualified Parun.Types.AttackTarget as AttackTarget
@@ -168,6 +171,7 @@ import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
+import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -1084,7 +1088,7 @@ permanentDiesSpec s registry =
             "two triggered abilities, the first with that condition"
             (fmap TriggeredAbility.condition (Face.triggeredAbilities (S.combinedFace meren)))
             [ TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching anotherCreatureYouControl)),
-              TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.ControllersTurn)
+              TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)))
             ]
 
 -- CR 603.2c's two sentences, and the fork they force on the written form
@@ -2250,14 +2254,17 @@ representativeEvents cond =
         -- attachment is `arrived`, and the Filter this condition is instantiated
         -- with below is the trivial one, which admits whatever that id resolves
         -- to.
-        TriggerCondition.SelfBecomesAttachedBy _ -> one (GameEvent.BecameAttached (BecameAttached.MkBecameAttached arrived (Recipient.ToCreature departed)))
-        -- The same event read from the other end: here `departed` is the
-        -- ATTACHMENT, the bearer position, and `arrived` is the host the slot
-        -- names.
-        TriggerCondition.SelfBecomesAttachedTo _ -> one (GameEvent.BecameAttached (BecameAttached.MkBecameAttached departed (Recipient.ToCreature arrived)))
-        -- CR 701.3d's own event, the arm above's mirror and the only one this
-        -- condition admits.
-        TriggerCondition.SelfBecomesUnattachedFrom _ -> one (GameEvent.BecameUnattached (BecameUnattached.MkBecameUnattached departed (Recipient.ToCreature arrived)))
+        --
+        -- An Attachment end reads the same event from the other end: there
+        -- `departed` is the ATTACHMENT, the bearer position, and `arrived` is the
+        -- host the slot names. CR 701.3d's own event is the mirror for Unattaches.
+        TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger end direction _) ->
+          let (attachment, host) = case end of
+                AttachmentEnd.Host -> (arrived, departed)
+                AttachmentEnd.Attachment -> (departed, arrived)
+           in one $ case direction of
+                AttachDirection.Attaches -> GameEvent.BecameAttached (BecameAttached.MkBecameAttached attachment (Recipient.ToCreature host))
+                AttachDirection.Unattaches -> GameEvent.BecameUnattached (BecameUnattached.MkBecameUnattached attachment (Recipient.ToCreature host))
         -- CR 603.12: a reflexive matches no log entry at all
         -- (Event.matchesTrigger's Reflexive arm answers False for every event),
         -- so any event is as representative as any other -- StateIs' arm above.
@@ -2274,7 +2281,7 @@ everyTriggerCondition =
     TriggerCondition.Enters (EntersTrigger.matching Filter.Type.IsSource) {EntersTrigger.batching = Batching.OneOrMore},
     TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching Filter.Type.IsSource)),
     TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching Filter.Type.IsSource)) {LeavesTrigger.batching = Batching.OneOrMore},
-    TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.EachTurn),
+    TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer))),
     TriggerCondition.StateIs (Condition.Type.Compares (Compares.MkCompares (Quantity.Type.Literal 0) Comparison.Exactly (Quantity.Type.Literal 0))),
     TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self (Just DamageKind.Combat) (Set.singleton (DamageRecipient.Player PlayerRelation.AnyPlayer))),
     TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self (Just DamageKind.Combat) (Set.fromList [DamageRecipient.Player PlayerRelation.AnyPlayer, DamageRecipient.Permanent CardType.Battle])),
@@ -2371,7 +2378,7 @@ everyTriggerCondition =
     -- batch out of a graveyard and out of exile.
     TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Graveyard),
     TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Graveyard) {LeavesZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource},
-    TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Graveyard) {LeavesZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource, LeavesZoneTrigger.whose = Just PlayerRelation.You, LeavesZoneTrigger.scope = TurnScope.ControllersTurn},
+    TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Graveyard) {LeavesZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource, LeavesZoneTrigger.whose = Just PlayerRelation.You, LeavesZoneTrigger.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)},
     TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Library) {LeavesZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource, LeavesZoneTrigger.to = Just Zone.Hand},
     TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Graveyard) {LeavesZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource, LeavesZoneTrigger.batching = Batching.OneOrMore},
     TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Exile) {LeavesZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource, LeavesZoneTrigger.batching = Batching.OneOrMore},
@@ -2388,10 +2395,10 @@ everyTriggerCondition =
     TriggerCondition.AbilityIsCountered,
     TriggerCondition.DamageToPlayerPrevented PlayerRelation.You,
     TriggerCondition.SelfPreventsDamage (Filter.Type.And []),
-    TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Gained PlayerRelation.You TurnScope.EachTurn Batching.EachOccurrence TriggerFrequency.EveryTime),
-    TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Gained PlayerRelation.AnyPlayer TurnScope.EachTurn Batching.OneOrMore TriggerFrequency.EveryTime),
-    TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.Opponent TurnScope.EachTurn Batching.EachOccurrence TriggerFrequency.EveryTime),
-    TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.Opponent TurnScope.ControllersTurn Batching.OneOrMore TriggerFrequency.EveryTime),
+    TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Gained PlayerRelation.You (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) Batching.EachOccurrence TriggerFrequency.EveryTime),
+    TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Gained PlayerRelation.AnyPlayer (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) Batching.OneOrMore TriggerFrequency.EveryTime),
+    TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.Opponent (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) Batching.EachOccurrence TriggerFrequency.EveryTime),
+    TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.Opponent (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)) Batching.OneOrMore TriggerFrequency.EveryTime),
     -- One per grouping, holder and threshold the pool prints, plus a
     -- per-counter Permanent holder, whose `became` no printing claims yet.
     TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Lore (CounterMotion.Put PlayerRelation.AnyPlayer) CounterHolder.Self (Just 1) CounterGrouping.EachPermanent),
@@ -2407,20 +2414,20 @@ everyTriggerCondition =
     -- eventBindings stamps for every event -- so an arm that had cased on the
     -- scope and stamped nothing under one of them would go unseen if only one
     -- were listed.
-    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) TurnScope.EachTurn Nothing Nothing Nothing False),
-    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) TurnScope.OpponentsTurn Nothing Nothing Nothing False),
+    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) Nothing Nothing Nothing False),
+    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.Opponent)) Nothing Nothing Nothing False),
     -- And the zone axis, listed for the TurnScope pair's reason one field over:
     -- an arm that cased on the zone and stamped nothing when one was named would
     -- go unseen if every entry here left it Nothing.
-    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) TurnScope.EachTurn (Just Zone.Hand) Nothing Nothing False),
+    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) (Just Zone.Hand) Nothing Nothing False),
     -- And the ordinal axis, for the same reason again: Clarion Spirit's "your
     -- second spell each turn" narrows which cast fires the ability and stamps
     -- nothing of its own, which an entry leaving it Nothing could not show.
-    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) TurnScope.EachTurn Nothing (Just 2) Nothing False),
+    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) Nothing (Just 2) Nothing False),
     -- And the phase axis, Zuko, Firebending Master's "during combat".
-    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) TurnScope.EachTurn Nothing Nothing (Just PhaseSelector.CombatPhase) False),
+    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) Nothing Nothing (Just PhaseSelector.CombatPhase) False),
     -- And magecraft's "or copy", whose second event binds the same pair.
-    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) TurnScope.EachTurn Nothing Nothing Nothing True),
+    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) Nothing Nothing Nothing True),
     TriggerCondition.SpellCast SpellCast.self,
     TriggerCondition.AbilityActivated (Filter.Type.And []),
     -- BOTH relations, for the SpellCast pair's reason just above: the arm cases
@@ -2538,9 +2545,9 @@ everyTriggerCondition =
     TriggerCondition.FlipsCoin (CoinFlipTrigger.MkCoinFlipTrigger PlayerRelation.You FlipOutcome.Lost),
     TriggerCondition.FlipsCoin (CoinFlipTrigger.MkCoinFlipTrigger PlayerRelation.Opponent FlipOutcome.Lost),
     TriggerCondition.SelfBecomesPlotted,
-    TriggerCondition.SelfBecomesAttachedBy (Filter.Type.And []),
-    TriggerCondition.SelfBecomesAttachedTo (Filter.Type.And []),
-    TriggerCondition.SelfBecomesUnattachedFrom (Filter.Type.And []),
+    TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Host AttachDirection.Attaches (Filter.Type.And [])),
+    TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Attachment AttachDirection.Attaches (Filter.Type.And [])),
+    TriggerCondition.AttachmentChanges (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Attachment AttachDirection.Unattaches (Filter.Type.And [])),
     TriggerCondition.Reflexive,
     TriggerCondition.PlacesSticker (PlacesSticker.MkPlacesSticker PlayerRelation.You (Set.singleton StickerKind.Art) (Filter.Type.And []))
   ]

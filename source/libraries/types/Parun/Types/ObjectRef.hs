@@ -74,29 +74,12 @@ data ObjectRef
   | -- | CR 405.1 / Glen Elendra's Answer: every object on the stack matching the
     -- Filter, without either arm above's kind test.
     EachOnStack (Filter.Filter Keyword.Keyword)
-  | -- | CR 120.3a / Molten Disaster: every player in the game, an ObjectRef because
-    -- a damage clause's ref is one. Parun.ReplacementSpec's Molten Disaster case
-    -- proves that a clause naming this arm beside an EachMatching is one CR 608.2f
-    -- batch.
-    EachPlayer
-  | -- | CR 102.2 / 102.3 / 120.3a / Soul Immolation: every opponent of the resolving
-    -- controller, the arm above narrowed by CR 109.5's perspective.
-    EachOpponent
-  | -- | CR 614.12a / 120.3a / Stuffy Doll: the player this effect's source chose as
-    -- it entered the battlefield, read off Object.chosenPlayers there, or off
-    -- CR 608.2h's last known information once it has left.
-    ChosenPlayer
   | -- | CR 120.3a: the players a PlayerRef names, narrowed by an optional
-    -- player Filter -- Deflecting Palm's "that source's controller", where the
-    -- seat is identified by an object a slot holds rather than by a noun a card
-    -- can print, and Disorder's "each player who controls a white creature".
-    --
-    -- The three arms above are the printed NOUNS ("each player", "each
-    -- opponent", the seat Stuffy Doll chose) and this one is the INDIRECTION,
-    -- which is why it is a fourth arm rather than a widening that swallows them:
-    -- Parun.Types.PlayerRef can spell every one of those too, and rewriting the
-    -- pool onto this arm would trade three names a reader recognises for one
-    -- that has to be unfolded.
+    -- player Filter -- Molten Disaster's "each player", Soul Immolation's "each
+    -- opponent", the seat Stuffy Doll chose, Deflecting Palm's "that source's
+    -- controller" and Disorder's "each player who controls a white creature".
+    -- Parun.ReplacementSpec's Molten Disaster case proves that a clause naming
+    -- this arm beside an EachMatching is one CR 608.2f batch.
     Players PlayersWho.PlayersWho
   | -- | CR 401.2 / 121.1 / Count on Luck, Act on Impulse: the cards on top of the
     -- libraries the payload's PlayerRef names, as deep as its Quantity, deepest

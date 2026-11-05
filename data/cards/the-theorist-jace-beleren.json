@@ -298,7 +298,13 @@
                 }
               },
               "scope": {
-                "type": "OpponentsTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "Opponent"
+                  }
+                }
               }
             }
           },

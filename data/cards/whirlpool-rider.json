@@ -47,19 +47,17 @@
                               "type": "You"
                             }
                           },
-                          "refs": [
-                            {
-                              "type": "EachCardInHand",
-                              "value": {
-                                "hands": {
-                                  "type": "Scoped",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                          "ref": {
+                            "type": "EachCardInHand",
+                            "value": {
+                              "hands": {
+                                "type": "Scoped",
+                                "value": {
+                                  "type": "You"
                                 }
                               }
                             }
-                          ],
+                          },
                           "slot": "shuffled"
                         }
                       },

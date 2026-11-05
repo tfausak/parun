@@ -63,9 +63,6 @@ codec =
           Arm.payload "EachSpell" filterCodec ObjectRef.EachSpell (\x -> case x of ObjectRef.EachSpell y -> Just y; _ -> Nothing),
           Arm.payload "EachAbility" filterCodec ObjectRef.EachAbility (\x -> case x of ObjectRef.EachAbility y -> Just y; _ -> Nothing),
           Arm.payload "EachOnStack" filterCodec ObjectRef.EachOnStack (\x -> case x of ObjectRef.EachOnStack y -> Just y; _ -> Nothing),
-          Arm.nullary "EachPlayer" ObjectRef.EachPlayer,
-          Arm.nullary "EachOpponent" ObjectRef.EachOpponent,
-          Arm.nullary "ChosenPlayer" ObjectRef.ChosenPlayer,
           Arm.payload "Players" PlayersWho.codec ObjectRef.Players (\x -> case x of ObjectRef.Players y -> Just y; _ -> Nothing),
           Arm.payload "TopOfLibrary" TopOfLibrary.codec ObjectRef.TopOfLibrary (\x -> case x of ObjectRef.TopOfLibrary y -> Just y; _ -> Nothing),
           Arm.payload "TopOfLibraryUntil" TopOfLibraryUntil.codec ObjectRef.TopOfLibraryUntil (\x -> case x of ObjectRef.TopOfLibraryUntil y -> Just y; _ -> Nothing),
@@ -101,9 +98,6 @@ tagOf x = case x of
   ObjectRef.EachSpell {} -> "EachSpell"
   ObjectRef.EachAbility {} -> "EachAbility"
   ObjectRef.EachOnStack {} -> "EachOnStack"
-  ObjectRef.EachPlayer {} -> "EachPlayer"
-  ObjectRef.EachOpponent {} -> "EachOpponent"
-  ObjectRef.ChosenPlayer {} -> "ChosenPlayer"
   ObjectRef.Players {} -> "Players"
   ObjectRef.TopOfLibrary {} -> "TopOfLibrary"
   ObjectRef.TopOfLibraryUntil {} -> "TopOfLibraryUntil"

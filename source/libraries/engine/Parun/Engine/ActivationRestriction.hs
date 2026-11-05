@@ -114,7 +114,7 @@ restrictionMet pid srcId ability gs restriction = case restriction of
   -- what else they may read.
   --
   -- CR 102.1 supplies the second conjunct, a genuinely separate fact: Desert's
-  -- rider names no turn (EachTurn, and the step alone decides), while Llanowar
+  -- rider names no turn (@Relative AnyPlayer@, and the step alone decides), while Llanowar
   -- Augur's "only during your upkeep" names alice's upkeep and not bob's. CR
   -- 109.5 is why `pid` answers "your" -- for an activated ability that is the
   -- player who activated it, which Activatable.activatable has already pinned to

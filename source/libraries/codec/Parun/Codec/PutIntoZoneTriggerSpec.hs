@@ -7,6 +7,8 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.Zone as Zone
@@ -41,8 +43,8 @@ spec s = Spec.describe s "Parun.Codec.PutIntoZoneTrigger" $ do
       PutIntoZoneTrigger.codec
       (PutIntoZoneTrigger.self Zone.Exile)
         { PutIntoZoneTrigger.card = ActingPermanent.Matching (Filter.Not Filter.IsToken),
-          PutIntoZoneTrigger.scope = TurnScope.ControllersTurn,
+          PutIntoZoneTrigger.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You),
           PutIntoZoneTrigger.batching = Batching.OneOrMore
         }
-      " {\"card\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"to\":{\"type\":\"Exile\"},\"scope\":{\"type\":\"ControllersTurn\"},\"batching\":{\"type\":\"OneOrMore\"}} "
+      " {\"card\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"to\":{\"type\":\"Exile\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"batching\":{\"type\":\"OneOrMore\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PutIntoZoneTrigger.codec

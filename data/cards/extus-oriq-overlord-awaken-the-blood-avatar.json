@@ -56,7 +56,13 @@
             "value": {
               "copies": true,
               "scope": {
-                "type": "EachTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                }
               },
               "spell": {
                 "type": "Matching",
@@ -330,7 +336,15 @@
                                                       "value": 3
                                                     },
                                                     "ref": {
-                                                      "type": "EachOpponent"
+                                                      "type": "Players",
+                                                      "value": {
+                                                        "players": {
+                                                          "type": "Relative",
+                                                          "value": {
+                                                            "type": "Opponent"
+                                                          }
+                                                        }
+                                                      }
                                                     }
                                                   }
                                                 ]

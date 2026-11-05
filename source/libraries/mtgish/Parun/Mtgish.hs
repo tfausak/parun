@@ -139,6 +139,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerScope as PlayerScope
 import qualified Parun.Types.PlayerStaticAbility as PlayerStaticAbility
+import qualified Parun.Types.PlayersWho as PlayersWho
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Power as Power
 import qualified Parun.Types.PrintedReplacement as PrintedReplacement
@@ -454,8 +455,8 @@ activationRestrictions n = case Node.tag n of
         Monad.unless (Node.tag p == "You") (Node.untranslated p)
         t <- Node.node test
         case Node.tag t of
-          "IsTheirTurn" -> Right [ActivationRestriction.DuringTurn TurnScope.ControllersTurn]
-          "IsTheirUpkeep" -> Right [ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)) TurnScope.ControllersTurn)]
+          "IsTheirTurn" -> Right [ActivationRestriction.DuringTurn (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))]
+          "IsTheirUpkeep" -> Right [ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)))]
           _ -> Node.untranslated t
       _ -> Node.untranslated c
 
@@ -766,7 +767,7 @@ trigger n = case Node.tag n of
     let caster = [Filter.HeldBy Holder.Controller relation | relation /= PlayerRelation.AnyPlayer]
         spellCast = SpellCast.matching (conjoined (foldMap conjuncts f <> caster))
     Right (TriggerCondition.SpellCast spellCast, bound [("Trigger_ThatPlayer", Oracle.Trigger.thatPlayer), ("Trigger_ThatSpell", Oracle.Trigger.castSpell)])
-  "AtTheBeginningOfTheEndStep" -> Right (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.EachTurn), outermost)
+  "AtTheBeginningOfTheEndStep" -> Right (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer))), outermost)
   _ -> Node.untranslated n
   where
     bound pairs = outermost {bindings = Map.fromList pairs}
@@ -797,9 +798,9 @@ trigger n = case Node.tag n of
         Just "HostController" -> Right (TurnScope.PlayersTurn (PlayerRef.HolderOfBound Holder.Controller Hop.Host Oracle.Target.selfSlot))
         _ ->
           players whose >>= \relation -> case relation of
-            PlayerRelation.You -> Right TurnScope.ControllersTurn
-            PlayerRelation.AnyPlayer -> Right TurnScope.EachTurn
-            PlayerRelation.Opponent -> Right TurnScope.OpponentsTurn
+            PlayerRelation.You -> Right (TurnScope.PlayersTurn (PlayerRef.Relative relation))
+            PlayerRelation.AnyPlayer -> Right (TurnScope.PlayersTurn (PlayerRef.Relative relation))
+            PlayerRelation.Opponent -> Right (TurnScope.PlayersTurn (PlayerRef.Relative relation))
             _ -> Node.untranslated n
       -- Erosion's "that player" is the AST's HostController, where Soul Bleed's
       -- is Trigger_ThatPlayer.
@@ -1516,8 +1517,8 @@ damageRecipient context value = do
     "EachPlayer" -> do
       relation <- Node.argument n >>= players
       case relation of
-        PlayerRelation.AnyPlayer -> Right ObjectRef.EachPlayer
-        PlayerRelation.Opponent -> Right ObjectRef.EachOpponent
+        PlayerRelation.AnyPlayer -> Right (ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative relation) Nothing))
+        PlayerRelation.Opponent -> Right (ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative relation) Nothing))
         _ -> Node.untranslated n
     t | Just s <- Map.lookup t (references context) -> Right (ObjectRef.InSlot s)
     _ -> Node.untranslated n
