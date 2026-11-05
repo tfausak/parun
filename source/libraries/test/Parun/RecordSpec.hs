@@ -27,6 +27,7 @@ import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.Deck as Deck
 import qualified Parun.Types.Entry as Entry
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GraveyardOrder as GraveyardOrder
 import qualified Parun.Types.Hotseat as Hotseat
 import qualified Parun.Types.Label as Label
 import qualified Parun.Types.Move as Move
@@ -53,12 +54,24 @@ spec s registry = Spec.describe s "Record" $ do
   Spec.it s "a game cut short replays to where it stopped" $ do
     matchup <- BotSpec.bears s registry
     let seats = Map.fromList [(S.alice, Game.human (lifted (ClientSpec.screen 40 ClientSpec.plays)) (const (Right Nothing))), (S.bob, Bot.bot)]
-        (outcome, (timeline, cut)) = watched seats matchup
+        (outcome, (timeline, cut)) = watched seats Map.empty matchup
     replayed <- Scenario.run registry (saved matchup timeline)
     Spec.assertEqWith s "cut" (fmap fst outcome) (Left (Text.pack "end of input"))
     case replayed of
       Right final -> Spec.assertBool s (Just final == cut) "stopped where it was cut"
       Left failure -> Spec.assertFailure s (Text.unpack (Scenario.render failure))
+
+  Spec.it s "CR 404.3: a seat arranging its graveyard is asked again on replay" $ do
+    matchup <- BotSpec.bears s registry
+    let orders = Map.singleton S.alice GraveyardOrder.Matters
+        (outcome, (timeline, _)) = watched bots orders matchup
+        arranged = Seq.filter ((== Just (Text.pack "ArrangeGraveyardArrivals")) . answered) timeline
+    Spec.assertBool s (not (Seq.null arranged)) "alice arranged a batch"
+    replayed <- Scenario.run registry (savedWith orders matchup timeline)
+    case (outcome, replayed) of
+      (Right (result, _), Right final) -> Spec.assertEqWith s "same result" (GameState.result final) (Just result)
+      (_, Left failure) -> Spec.assertFailure s (Text.unpack (Scenario.render failure))
+      (Left reason, _) -> Spec.assertFailure s (Text.unpack reason)
 
   Spec.it s "a timeline missing an answer fails to replay" $ do
     matchup <- BotSpec.bears s registry
@@ -69,6 +82,12 @@ spec s registry = Spec.describe s "Record" $ do
     missing <- maybe (Spec.assertFailure s "no attack to leave out") (pure . (+ half)) (Seq.findIndexL attacks (Seq.drop half timeline))
     replayed <- Scenario.run registry (saved matchup (Seq.deleteAt missing timeline))
     Spec.assertBool s (Either.isLeft replayed) "desync"
+
+-- The prompt an entry answers, if it answers one.
+answered :: Timed.Timed -> Maybe Text.Text
+answered timed = case Timed.entry timed of
+  Entry.Do (Move.Answer answer) -> Just (Answer.prompt answer)
+  _ -> Nothing
 
 -- Whether an entry declares attackers, any at all.
 attacks :: Timed.Timed -> Bool
@@ -83,11 +102,11 @@ type Base = State.StateT (Seq.Seq Timed.Timed, Maybe GameState.GameState) (State
 -- A seeded game between these seats, and every entry its answers recorded,
 -- however it ended.
 recorded :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Game.Play Base)) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), Seq.Seq Timed.Timed)
-recorded seats matchup = fmap fst (watched seats matchup)
+recorded seats matchup = fmap fst (watched seats Map.empty matchup)
 
-watched :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Game.Play Base)) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), (Seq.Seq Timed.Timed, Maybe GameState.GameState))
-watched seats matchup =
-  let played = Game.run [Record.recording labels sink, lastAsked] seats Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) matchup
+watched :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Game.Play Base)) -> Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), (Seq.Seq Timed.Timed, Maybe GameState.GameState))
+watched seats orders matchup =
+  let played = Game.run [Record.recording labels sink, lastAsked] seats Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) orders matchup
    in State.evalState (State.runStateT played (Seq.empty, Nothing)) ClientSpec.blank
 
 lastAsked :: Observer.Observer (Game.Play Base)
@@ -108,8 +127,12 @@ lifted terminal =
     }
 
 saved :: NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> Seq.Seq Timed.Timed -> Scenario.Type.Scenario
-saved matchup timeline =
-  let scenario = Record.scenario Text.empty (fmap (Bifunctor.first (Record.labelOf labels)) matchup) timeline
+saved = savedWith Map.empty
+
+-- The scenario a game recorded at these graveyard orders saves as, read back.
+savedWith :: Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> Seq.Seq Timed.Timed -> Scenario.Type.Scenario
+savedWith orders matchup timeline =
+  let scenario = Record.scenario Text.empty (fmap (\(pid, deck) -> (Record.labelOf labels pid, Map.findWithDefault GraveyardOrder.Indifferent pid orders, deck)) matchup) timeline
    in Either.either (error . Text.unpack) id (Codec.decode Codec.Scenario.codec (Codec.encode Codec.Scenario.codec scenario))
 
 labels :: Map.Map PlayerId.PlayerId Label.Label

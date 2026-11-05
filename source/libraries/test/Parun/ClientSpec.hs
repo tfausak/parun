@@ -61,6 +61,7 @@ import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GraveyardArrangement as GraveyardArrangement
 import qualified Parun.Types.Hotseat as Hotseat
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.LoggedEvent as LoggedEvent
@@ -112,7 +113,7 @@ spec s registry = Spec.describe s "Client" $ do
   Spec.it s "a change of seat waits for the seat leaving to finish reading, clears the screen, and waits before showing the next seat" $ do
     matchup <- BotSpec.bears s registry
     let people = Map.fromList [(S.alice, Game.human (screen 300 plays) (const (Right Nothing))), (S.bob, Game.human (screen 300 plays) (const (Right Nothing)))]
-        shown = reverse (written (State.execState (Game.run [] people Hotseat.fresh (SplitMix.MkSplitMix 1) matchup) blank))
+        shown = reverse (written (State.execState (Game.run [] people Hotseat.fresh (SplitMix.MkSplitMix 1) Map.empty matchup) blank))
         handOffs = [i | (i, l) <- zip [0 :: Int ..] shown, Text.isPrefixOf (Text.pack "Pass to ") l]
         at i = Maybe.listToMaybe (drop i shown)
         -- The last hand-off may be cut short by the end of input.
@@ -528,6 +529,24 @@ spec s registry = Spec.describe s "Client" $ do
       ]
     Spec.assertEqWith s "the number picks the one shown" picked (Right (Map.singleton slot (Set.singleton (Recipient.ToObject bobTapped))))
 
+  Spec.it s "CR 404.3 a graveyard batch is listed top first; numbers rearrange it, Enter keeps it, and a repeat is refused" $ do
+    bears <- S.printingOf s registry "Grizzly Bears"
+    giant <- S.printingOf s registry "Hill Giant"
+    let (bear, g1) = S.addObjectIn Zone.Graveyard bears S.alice (Setup.emptyGame S.bothPlayers)
+        (top, gs) = S.addObjectIn Zone.Graveyard giant S.alice g1
+        facing = Hotseat.fresh {Hotseat.facing = Just S.alice}
+        prompt = Prompt.ArrangeGraveyardArrivals (Decider.MkDecider S.alice) S.alice [top, bear]
+        (rearranged, shown) = asking facing ["2 1"] gs prompt
+    Spec.assertEqWith
+      s
+      "listed"
+      (takeWhile (Text.isPrefixOf (Text.pack "  ")) (drop 1 (dropWhile (not . Text.isPrefixOf (Text.pack "These cards go to your graveyard together.")) shown)))
+      [Text.pack "  1. Your Hill Giant, in a graveyard", Text.pack "  2. Your Grizzly Bears, in a graveyard"]
+    Spec.assertEqWith s "numbers rearrange" rearranged (Right (GraveyardArrangement.InOrder [1, 0]))
+    Spec.assertEqWith s "Enter keeps" (fst (asking facing [""] gs prompt)) (Right GraveyardArrangement.AnyOrder)
+    Spec.assertEqWith s "a repeat is refused" (fst (asking facing ["1 1"] gs prompt)) (Left (Text.pack "end of input"))
+    Spec.assertEqWith s "a card left out is refused" (fst (asking facing ["2"] gs prompt)) (Left (Text.pack "end of input"))
+
   -- `parun play`'s answer to card data it cannot read: play stops, saying why,
   -- rather than showing the card as one with no text.
   Spec.it s "card stops play, saying why, when the card data cannot be read" $ do
@@ -608,7 +627,7 @@ screen budget typist =
 against :: (Screen -> Maybe Text.Text) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), [Text.Text])
 against typist matchup =
   let seats = Map.fromList [(S.alice, Game.human (screen 3000 typist) (const (Right Nothing))), (S.bob, Bot.bot)]
-      (outcome, sc) = State.runState (Game.run [] seats Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) matchup) blank
+      (outcome, sc) = State.runState (Game.run [] seats Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) Map.empty matchup) blank
    in (outcome, reverse (written sc))
 
 -- Since the last line typed.

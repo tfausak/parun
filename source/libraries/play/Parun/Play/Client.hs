@@ -165,6 +165,18 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
         fmap (\i -> R.Text (Text.pack (if i == 1 then "Keep" else "Mulligan"))) . one 2
       )
   "Bottom" -> pickCount "to put on the bottom of your library"
+  -- CR 404.3: every card of the batch, top first; Enter keeps the order shown.
+  "ArrangeGraveyardArrivals" -> do
+    from <- field "from" offer >>= arrayOf
+    let size = Natural.length from
+        wrong = Text.pack ("Type each number from 1 to " <> show size <> " once, or press Enter.")
+    pure
+      ( Text.pack "These cards go to your graveyard together. Type their numbers from the new top down, separated by spaces, or press Enter to keep this order (top first):" : numbered (fmap (listedName view) from),
+        \typed -> case numbers typed of
+          Right [] -> Right R.Null
+          Right picked | List.sort picked == [1 .. size] -> Right (R.Array (fmap (R.Number . toInteger . subtract 1) picked))
+          _ -> Left wrong
+      )
   "ChooseDiscard" -> pickCount "to discard"
   "DeclareAttackers" -> do
     attackers <- arrayOf offer

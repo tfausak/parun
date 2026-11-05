@@ -46,6 +46,7 @@ import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.Game as Game.Type
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GraveyardArrangement as GraveyardArrangement
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Measures as Measures
 import qualified Parun.Types.ModeIndex as ModeIndex
@@ -135,6 +136,15 @@ spec s registry = Spec.describe s "Protocol" $ do
         decodedCost offer = fmap (\c -> Common.parse (Common.render (Codec.Reply.toValue c)) >>= Codec.decode (Codec.Cost.codec Codec.Keyword.codec)) (field "cost" offer)
     Spec.assertEqWith s "cost" (fmap decodedCost offers) (fmap (Just . Right) costs)
     Spec.assertEqWith s "source" (fmap (field "source") offers) (fmap (const (Just (Protocol.object oid))) costs)
+
+  Spec.it s "CR 404.3 a graveyard batch offers its cards top first, and an arrangement reads back" $ do
+    let o5 = ObjectId.MkObjectId 5
+        o7 = ObjectId.MkObjectId 7
+        prompt = Prompt.ArrangeGraveyardArrivals (Decider.MkDecider S.alice) S.alice [o7, o5]
+        offer = Protocol.offerOf (Setup.emptyGame S.bothPlayers) prompt
+    Spec.assertEqWith s "from" (field "from" offer) (Just (Protocol.objects [o7, o5]))
+    Spec.assertEqWith s "in order" (Protocol.decodeAnswer prompt (R.Array [R.Number 1, R.Number 0])) (Right (GraveyardArrangement.InOrder [1, 0]))
+    Spec.assertEqWith s "any order" (Protocol.decodeAnswer prompt R.Null) (Right GraveyardArrangement.AnyOrder)
 
   Spec.it s "a hidden card reaches no line sent to the other seat" $ do
     gs <- started s registry

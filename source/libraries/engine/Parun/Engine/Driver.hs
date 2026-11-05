@@ -11,6 +11,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import Numeric.Natural (Natural)
 import qualified Parun.Engine.Engine as Engine
+import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
@@ -18,6 +19,7 @@ import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Deck as Deck
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GraveyardOrder as GraveyardOrder
 import qualified Parun.Types.Observer as Observer
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Prompt as Prompt
@@ -39,10 +41,11 @@ ask observers answerer asked = do
   mapM_ (\observer -> Observer.after observer asked answer) observers
   pure answer
 
--- | A whole game, from setup to its result.
-match :: (Monad m) => [Observer.Observer m] -> Answerer.Answerer m -> GameSettings.GameSettings -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> m (Result.Result, GameState.GameState)
-match observers answerer settings matchup =
-  Engine.runGameAsked (ask observers answerer) (Setup.gameWith settings (fmap fst matchup)) (Engine.playFrom matchup)
+-- | A whole game, from setup to its result, each player in `orders` starting
+-- at that graveyard order (CR 404.3) and every other at Indifferent.
+match :: (Monad m) => [Observer.Observer m] -> Answerer.Answerer m -> GameSettings.GameSettings -> Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> m (Result.Result, GameState.GameState)
+match observers answerer settings orders matchup =
+  Engine.runGameAsked (ask observers answerer) (Map.foldrWithKey Game.setGraveyardOrder (Setup.gameWith settings (fmap fst matchup)) orders) (Engine.playFrom matchup)
 
 -- | Whole steps (CR 500.1) from a state, until the game has a result, the
 -- budget is spent, or the predicate holds.

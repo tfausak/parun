@@ -5,7 +5,6 @@ module Parun.Play.Command where
 import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
-import qualified Data.Bifunctor as Bifunctor
 import qualified Data.ByteString as ByteString
 import qualified Data.Functor.Identity as Identity
 import qualified Data.IORef as IORef
@@ -35,6 +34,7 @@ import qualified Parun.Registry as Registry
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Deck as Deck
+import qualified Parun.Types.GraveyardOrder as GraveyardOrder
 import qualified Parun.Types.Hotseat as Hotseat
 import qualified Parun.Types.Label as Label
 import qualified Parun.Types.PlayOptions as PlayOptions
@@ -63,7 +63,8 @@ flags =
     GetOpt.Option [] ["bot"] (GetOpt.ReqArg (\s o -> fmap (\n -> o {PlayOptions.bots = Set.insert n (PlayOptions.bots o)}) (seat s)) "1|2") "a seat the random bot plays",
     GetOpt.Option [] ["json"] (GetOpt.NoArg (\o -> Right o {PlayOptions.json = True})) "speak the line protocol on standard input and output",
     GetOpt.Option [] ["save"] (GetOpt.ReqArg (\s o -> Right o {PlayOptions.save = Just s}) "FILE") "save the game as a scenario, even one cut short",
-    GetOpt.Option [] ["no-auto-pass"] (GetOpt.NoArg (\o -> Right o {PlayOptions.autoPass = False})) "ask at every priority, even when passing and mana abilities are all there is"
+    GetOpt.Option [] ["no-auto-pass"] (GetOpt.NoArg (\o -> Right o {PlayOptions.autoPass = False})) "ask at every priority, even when passing and mana abilities are all there is",
+    GetOpt.Option [] ["arrange-graveyard"] (GetOpt.ReqArg (\s o -> fmap (\n -> o {PlayOptions.arrangesGraveyard = Set.insert n (PlayOptions.arrangesGraveyard o)}) (seat s)) "1|2") "a seat asked to order cards put into its graveyard at the same time"
   ]
   where
     seat s = case Read.readMaybe s of
@@ -117,15 +118,16 @@ play options lookUp (one, two) = do
         [only] -> screen {Hotseat.facing = Just (idOf only)}
         _ -> screen
   entries <- IORef.newIORef Seq.empty
-  let labels = Map.fromList [(idOf n, Label.MkLabel (Text.pack ("player" <> show n))) | n <- [1, 2 :: Natural]]
+  let orders = Map.fromList [(idOf n, GraveyardOrder.Matters) | n <- Set.toList (PlayOptions.arrangesGraveyard options)]
+      labels = Map.fromList [(idOf n, Label.MkLabel (Text.pack ("player" <> show n))) | n <- [1, 2 :: Natural]]
       observers = [Record.recording labels (Game.underneath . IORef.modifyIORef' entries . flip (Seq.|>)) | Maybe.isJust (PlayOptions.save options)]
       interrupted e = case e of
         Exception.UserInterrupt -> pure (Left (Text.pack "interrupted"))
         _ -> Exception.throwIO e
-  outcome <- Exception.catch (Game.run observers seats hotseat generator matchup) interrupted
+  outcome <- Exception.catch (Game.run observers seats hotseat generator orders matchup) interrupted
   Monad.forM_ (PlayOptions.save options) $ \path -> do
     timeline <- IORef.readIORef entries
-    let entrants = fmap (Bifunctor.first (Record.labelOf labels)) matchup
+    let entrants = fmap (\(pid, deck) -> (Record.labelOf labels pid, Map.findWithDefault GraveyardOrder.Indifferent pid orders, deck)) matchup
         saved = Record.scenario (Text.pack ("Played with parun play, seed " <> show seed <> ".")) entrants timeline
     ByteString.writeFile path (Encoding.encodeUtf8 (Common.render (Codec.encode Codec.Scenario.codec saved) <> Text.pack "\n"))
     IO.hPutStrLn IO.stderr ("Saved " <> path <> ".")

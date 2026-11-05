@@ -10,6 +10,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.AttackOption as AttackOption.Type
 import qualified Parun.Types.Board as Board.Type
 import qualified Parun.Types.CombatStep as CombatStep.Type
+import qualified Parun.Types.GraveyardOrder as GraveyardOrder.Type
 import qualified Parun.Types.Label as Label.Type
 import qualified Parun.Types.Phase as Phase.Type
 import qualified Parun.Types.Seat as Seat.Type
@@ -147,6 +148,7 @@ seat name =
       Seat.Type.team = Nothing,
       Seat.Type.range = Nothing,
       Seat.Type.emperor = False,
+      Seat.Type.graveyardOrder = GraveyardOrder.Type.Indifferent,
       Seat.Type.manaPool = [],
       Seat.Type.battlefield = Seq.empty,
       Seat.Type.hand = Seq.empty,

@@ -12,6 +12,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.AttackOption as AttackOption.Type
 import qualified Parun.Types.Board as Board.Type
 import qualified Parun.Types.Entrant as Entrant.Type
+import qualified Parun.Types.GraveyardOrder as GraveyardOrder.Type
 import qualified Parun.Types.Label as Label.Type
 import qualified Parun.Types.Phase as Phase.Type
 import qualified Parun.Types.Scenario as Scenario.Type
@@ -29,7 +30,7 @@ spec s = Spec.describe s "Parun.Codec.Scenario" $ do
           Scenario.Type.start =
             Start.Type.FromBoard
               Board.Type.MkBoard
-                { Board.Type.seats = Seat.Type.MkSeat (Label.Type.MkLabel (Text.pack "alice")) 20 Map.empty Nothing Nothing False [] Seq.empty Seq.empty Seq.empty Seq.empty Seq.empty Seq.empty Seq.empty NonEmpty.:| [],
+                { Board.Type.seats = Seat.Type.MkSeat (Label.Type.MkLabel (Text.pack "alice")) 20 Map.empty Nothing Nothing False GraveyardOrder.Type.Indifferent [] Seq.empty Seq.empty Seq.empty Seq.empty Seq.empty Seq.empty Seq.empty NonEmpty.:| [],
                   Board.Type.active = Label.Type.MkLabel (Text.pack "alice"),
                   Board.Type.turn = 1,
                   Board.Type.phase = Phase.Type.PrecombatMain,
@@ -53,7 +54,7 @@ spec s = Spec.describe s "Parun.Codec.Scenario" $ do
       Scenario.codec
       Scenario.Type.MkScenario
         { Scenario.Type.description = Text.pack "a game",
-          Scenario.Type.start = Start.Type.FromDecks (Entrant.Type.MkEntrant (Label.Type.MkLabel (Text.pack "alice")) [Text.pack "20 Forest"] NonEmpty.:| []),
+          Scenario.Type.start = Start.Type.FromDecks (Entrant.Type.MkEntrant (Label.Type.MkLabel (Text.pack "alice")) [Text.pack "20 Forest"] GraveyardOrder.Type.Indifferent NonEmpty.:| []),
           Scenario.Type.timeline = Seq.empty,
           Scenario.Type.final = Seq.empty
         }

@@ -10,6 +10,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.CardName as CardName.Type
 import qualified Parun.Types.Color as Color.Type
+import qualified Parun.Types.GraveyardOrder as GraveyardOrder.Type
 import qualified Parun.Types.Label as Label.Type
 import qualified Parun.Types.ManaType as ManaType.Type
 import qualified Parun.Types.Placement as Placement.Type
@@ -33,6 +34,7 @@ spec s = Spec.describe s "Parun.Codec.Seat" $ do
           Seat.Type.team = Just (TeamId.Type.MkTeamId 1),
           Seat.Type.range = Just 2,
           Seat.Type.emperor = True,
+          Seat.Type.graveyardOrder = GraveyardOrder.Type.Matters,
           Seat.Type.manaPool = [ManaType.Type.Colored Color.Type.Red, ManaType.Type.Colorless],
           Seat.Type.battlefield = Seq.singleton (card "Mountain"),
           Seat.Type.hand = Seq.singleton (card "Lightning Bolt"),
@@ -42,7 +44,7 @@ spec s = Spec.describe s "Parun.Codec.Seat" $ do
           Seat.Type.command = Seq.singleton (card "Shimatsu the Bloodcloaked"),
           Seat.Type.ante = Seq.singleton (card "Contract from Below")
         }
-      " {\"name\":\"alice\",\"life\":7,\"counters\":[{\"key\":{\"type\":\"Energy\"},\"value\":3}],\"team\":1,\"range\":2,\"emperor\":true,\"manaPool\":\"RC\",\"battlefield\":[{\"card\":\"Mountain\"}],\"hand\":[{\"card\":\"Lightning Bolt\"}],\"graveyard\":[{\"card\":\"Goblin Piker\"}],\"library\":[{\"card\":\"Island\"}],\"exile\":[{\"card\":\"Bad Moon\"}],\"command\":[{\"card\":\"Shimatsu the Bloodcloaked\"}],\"ante\":[{\"card\":\"Contract from Below\"}]} "
+      " {\"name\":\"alice\",\"life\":7,\"counters\":[{\"key\":{\"type\":\"Energy\"},\"value\":3}],\"team\":1,\"range\":2,\"emperor\":true,\"graveyardOrder\":\"Matters\",\"manaPool\":\"RC\",\"battlefield\":[{\"card\":\"Mountain\"}],\"hand\":[{\"card\":\"Lightning Bolt\"}],\"graveyard\":[{\"card\":\"Goblin Piker\"}],\"library\":[{\"card\":\"Island\"}],\"exile\":[{\"card\":\"Bad Moon\"}],\"command\":[{\"card\":\"Shimatsu the Bloodcloaked\"}],\"ante\":[{\"card\":\"Contract from Below\"}]} "
   Spec.it s "an unknown mana symbol is refused" $
     Spec.assertBool
       s
@@ -60,6 +62,7 @@ empty name =
       Seat.Type.team = Nothing,
       Seat.Type.range = Nothing,
       Seat.Type.emperor = False,
+      Seat.Type.graveyardOrder = GraveyardOrder.Type.Indifferent,
       Seat.Type.manaPool = [],
       Seat.Type.battlefield = Seq.empty,
       Seat.Type.hand = Seq.empty,
