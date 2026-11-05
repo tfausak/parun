@@ -708,8 +708,10 @@ Entries are ordered by the first rule each cites.
   "a spell or ability an opponent controls causes" a move or a discard. Does a
   cost paid for it count, a CR 118.12 cost paid as it resolves (Professor
   Onyx's "each opponent may discard a card. If they don't, ..."), or the
-  state-based action that follows its damage?
-- **Rules**: CR 609.1, 118.12, 601.2h, 602.2b, 704.3; CR of 2026-08-07.
+  state-based action that follows its damage? Does Doubling Season's "if an
+  effect would create" reach a token made as such a cost?
+- **Rules**: CR 609.1, 118.12, 601.2h, 602.2b, 614.16, 704.3; CR of
+  2026-08-07.
 - **Decision**: Only an effect (CR 609.1) of a spell or ability counts, with
   that spell or ability's controller as the effect is performed. A cost,
   CR 118.12's included, a state-based action, a turn-based action and the
@@ -729,10 +731,10 @@ Entries are ordered by the first rule each cites.
   `Parun.Engine.Resolve.Effect.applyEffectWith` and
   `Parun.Engine.Cost.payComponent`, proved by the `sacred-ground-*` and
   `spiritual-focus-*` scenarios. The `obstinate-baloth-*` scenarios prove
-  only whose spell or ability caused the discard. A token made as that cost
-  is no effect either: `Parun.Engine.Replacement`'s `TokenR` arm reads
-  `TokenPattern.effectsOnly`, proved by the
-  `turntimber-ranger-wolf-is-not-doubled-by-anointed-procession` scenario.
+  only whose spell or ability caused the discard. A token lot made as that
+  cost is no effect's either, while one another replacement appends is (CR
+  614.16): `Parun.Engine.Replacement.reachesLot` reads `TokenLot.byEffect`,
+  proved by the `turntimber-ranger-*` scenarios.
 - **Issue**: #5530, #6114.
 
 ## Whether "if you can't" holds after doing part of an instruction

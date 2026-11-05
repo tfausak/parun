@@ -4890,11 +4890,16 @@ apply settle batch applied candidate event =
     -- too, and the creating effect's riders reach it (Queen Allenal's ruling).
     -- Parun.ShieldCounterSpec's Queen Allenal and Chatterfang groups are the
     -- proof, both orders.
-    (ReplacementEffect.TokenR (TokenR.MkTokenR _ scaling plus), ProposedEvent.WouldCreateTokens pid lots) -> do
+    --
+    -- CR 614.16: an effects-only row scales only the lots an effect makes
+    -- (Replacement.reachesLot), and a lot this row appends is one.
+    (ReplacementEffect.TokenR (TokenR.MkTokenR pat scaling plus), ProposedEvent.WouldCreateTokens pid lots) -> do
       Replacement.consume (ReplacementCandidate.identity candidate)
-      let scaleLot factor lot = lot {TokenLot.count = Replacement.scale factor (TokenLot.count lot)}
+      let scaleLot factor lot
+            | Replacement.reachesLot pat lot = lot {TokenLot.count = Replacement.scale factor (TokenLot.count lot)}
+            | otherwise = lot
           scaled = maybe lots (\factor -> fmap (scaleLot factor) lots) scaling
-          lotOf card n = TokenLot.MkTokenLot {TokenLot.card = card, TokenLot.copy = Nothing, TokenLot.count = n}
+          lotOf card n = TokenLot.MkTokenLot {TokenLot.card = card, TokenLot.copy = Nothing, TokenLot.count = n, TokenLot.byEffect = True}
           appended = case plus of
             Nothing -> scaled
             Just (TokenPlus.One card) -> scaled Seq.|> lotOf card 1
@@ -9461,7 +9466,7 @@ createTokens settle controller card copy n tapped entering attached marks = do
   if List.notElem controller (Game.stillPlaying gs)
     then pure []
     else do
-      resolved <- resolveTokens controller (Seq.singleton TokenLot.MkTokenLot {TokenLot.card = card, TokenLot.copy = copy, TokenLot.count = n})
+      resolved <- resolveTokens controller (Seq.singleton TokenLot.MkTokenLot {TokenLot.card = card, TokenLot.copy = copy, TokenLot.count = n, TokenLot.byEffect = not (GameState.payingOnResolution gs)})
       case resolved of
         Nothing -> pure []
         Just (owner, lots) -> do

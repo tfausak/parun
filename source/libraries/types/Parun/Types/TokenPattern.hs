@@ -13,10 +13,9 @@ data TokenPattern = MkTokenPattern
     -- creating effect gives it (CR 111.3). A creation of several lots matches
     -- when any lot does.
     whatToken :: Filter.Filter Keyword.Keyword,
-    -- | CR 614.16: Doubling Season's "if an EFFECT would create". False for
-    -- "if one or more tokens would be created", which also reaches a token
-    -- made as a CR 118.12 cost, "costs aren't effects" (docs/decisions.md,
-    -- "What a spell or ability causes").
+    -- | CR 614.16: Doubling Season's "if an EFFECT would create", reaching only
+    -- a lot TokenLot.byEffect marks. False for "if one or more tokens would be
+    -- created", which reaches every lot.
     effectsOnly :: Bool
   }
   deriving (Eq, Ord, Show)
