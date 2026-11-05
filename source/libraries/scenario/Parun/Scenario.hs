@@ -45,6 +45,7 @@ import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Event.Trigger as Event.Trigger
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Ledger as Ledger
 import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.Projection as Projection
@@ -93,6 +94,7 @@ import qualified Parun.Types.DamageIs as DamageIs
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Deck as Deck
 import qualified Parun.Types.DefendersAre as DefendersAre
+import qualified Parun.Types.Discrepancy as Discrepancy
 import qualified Parun.Types.Emperors as Emperors
 import qualified Parun.Types.Entrant as Entrant
 import qualified Parun.Types.Entry as Entry
@@ -182,6 +184,9 @@ data Rehearsal = MkRehearsal
     -- priority prompt shows the engine made it. The engine's priority loop asks
     -- again after reversing one; a run ending first had no engine acting on it.
     awaiting :: Maybe (When.When, Move.Move, GameState.GameState),
+    -- | The state the last priority prompt was asked in, which the next one's
+    -- log must account for (Parun.Engine.Ledger).
+    audited :: Maybe GameState.GameState,
     -- | CR 108.1: the Oracle card reference, as far as the run has asked it,
     -- a name it lacks mapped to Nothing; Nothing for a run holding none, whose
     -- every lookup answers Nothing.
@@ -297,6 +302,7 @@ rehearsalOf timeline board =
           refusing = Nothing,
           reversing = Nothing,
           awaiting = Nothing,
+          audited = Nothing,
           reference = Nothing,
           replaying = False,
           ended = Nothing
@@ -1193,13 +1199,20 @@ answerActionPrompt gs pid actions prompt = do
 -- and its player is asked again (CR 733.2). A cast is asked whether it became
 -- cast (CR 601.2i) instead: a reversed cast can still leave its card turned up
 -- (CR 406.3a) and the mana abilities its payer chose to keep (CR 733.1).
+--
+-- The log between the two prompts must also account for the board they leave
+-- (Parun.Engine.Ledger), whatever was taken.
 made :: GameState.GameState -> Run ()
 made gs = do
   previous <- State.gets awaiting
-  State.modify' (\rehearsal -> rehearsal {awaiting = Nothing})
+  earlier <- State.gets audited
+  State.modify' (\rehearsal -> rehearsal {awaiting = Nothing, audited = Just gs})
   case previous of
     Just (key, verb, before) | not (happened verb before gs) -> failWith (Failure.MkUnmadeMove key verb)
     _ -> pure ()
+  case NonEmpty.nonEmpty (foldMap (`Ledger.discrepancies` gs) earlier) of
+    Just found -> failWith (Failure.MkUnloggedChanges (GameState.turnNumber gs) (GameState.phase gs) found)
+    Nothing -> pure ()
 
 -- | Whether a move taken on one state shows in another.
 happened :: Move.Move -> GameState.GameState -> GameState.GameState -> Bool
@@ -2006,6 +2019,8 @@ render failure = case failure of
     renderWhen key <> Text.pack ": " <> renderMove verb <> Text.pack " was taken, but the engine reversed it"
   Failure.MkUnrefusedMove key verb next ->
     renderWhen key <> Text.pack ": " <> renderMove verb <> Text.pack " stood; " <> maybe (Text.pack "nothing was asked again") (\k -> Text.pack "the next prompt was " <> k) next
+  Failure.MkUnloggedChanges turn step found ->
+    renderLocation turn step Nothing <> Text.pack ": the event log does not account for the board: " <> Text.intercalate (Text.pack "; ") (fmap renderDiscrepancy (NonEmpty.toList found))
   Failure.MkUnreachedEntries turn step timed ->
     renderTimeds timed <> Text.pack " never came; the game stopped at " <> renderLocation turn step Nothing
   Failure.MkUnrunChecks turn step timed ->
@@ -2016,6 +2031,12 @@ render failure = case failure of
       <> Common.render (Codec.encode Codec.Check.codec check)
       <> Text.pack " failed; it was "
       <> observed
+
+renderDiscrepancy :: Discrepancy.Discrepancy -> Text.Text
+renderDiscrepancy discrepancy = case discrepancy of
+  Discrepancy.MkIdleEvent event -> Text.pack ("logged a change that did not happen, " <> show event)
+  Discrepancy.MkTapState oid expected actual -> Text.pack ("object " <> show (ObjectId.unwrap oid) <> " is " <> show actual <> ", the log says " <> show expected)
+  Discrepancy.MkLife pid expected actual -> Text.pack ("player " <> show (PlayerId.unwrap pid) <> " has " <> show actual <> " life, the log says " <> show expected)
 
 renderWhen :: When.When -> Text.Text
 renderWhen key = renderLocation (When.turn key) (When.phase key) (Just (When.player key))

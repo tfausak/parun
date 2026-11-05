@@ -886,6 +886,7 @@ import qualified Parun.JsonSchema.ValidateSpec
 import qualified Parun.KeywordTriggerSpec
 import qualified Parun.LearnSpec
 import qualified Parun.LeavesTriggerSpec
+import qualified Parun.LedgerSpec
 import qualified Parun.LibraryOrderSpec
 import qualified Parun.LifeReplacementSpec
 import qualified Parun.LifeTriggerSpec
@@ -1892,6 +1893,7 @@ spec s registry corpus = do
   Parun.KeywordTriggerSpec.spec s registry
   Parun.LearnSpec.spec s registry
   Parun.LeavesTriggerSpec.spec s registry
+  Parun.LedgerSpec.spec s registry
   Parun.LibraryOrderSpec.spec s registry
   Parun.LifeReplacementSpec.spec s registry
   Parun.LifeTriggerSpec.spec s registry

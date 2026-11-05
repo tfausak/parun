@@ -17,6 +17,7 @@ import qualified Data.Text.Encoding as Encoding
 import qualified Parun.Codec.Scenario as Codec.Scenario
 import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Engine as Engine
+import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Parun.JsonCodec.Codec as Codec
@@ -37,13 +38,16 @@ import qualified Parun.Types.Choices as Choices
 import qualified Parun.Types.Concession as Concession
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.Decider as Decider
+import qualified Parun.Types.Discrepancy as Discrepancy
 import qualified Parun.Types.Facing as Facing
+import qualified Parun.Types.Game as Game.Type
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Label as Label
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Move as Move
+import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.Placement as Placement
 import qualified Parun.Types.Prompt as Prompt
@@ -557,6 +561,29 @@ spec s registry = Spec.describe s "Scenario" $ do
     case result of
       Left failure -> Spec.assertFailure s (S.renderFailure failure)
       Right final -> Spec.assertEqWith s "the Raven resolved" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Augury Raven")) S.alice final) 1
+
+  -- Parun.Engine.Ledger between two priority prompts: a tap written with no
+  -- record fails the run, naming the permanent; the same tap through
+  -- Event.tap runs clean.
+  Spec.it s "CR 701.26a a tap with no event between two priority prompts fails the run" $ do
+    let setup = S.duel S.precombatMain [S.settled "land" "Plains"] []
+    built <- S.buildBoardOrFail s registry setup
+    case Map.lookup (Label.MkLabel (Text.pack "land")) (Staged.objects built) of
+      Nothing -> Spec.assertFailure s "the board omitted an alias"
+      Just land -> do
+        let prompt = Prompt.ChooseAction (Decider.MkDecider S.alice) S.alice [A.Pass]
+            bare :: Game.Type.Game ()
+            bare = State.modify' (\gs -> gs {GameState.objects = Map.adjust (\o -> o {Object.tapped = TapState.Tapped}) land (GameState.objects gs)})
+            between :: Game.Type.Game () -> Game.Type.Game A.Action
+            between write = Game.ask prompt >> write >> Game.ask prompt
+        case Scenario.rehearse Seq.empty built (between bare) of
+          Left (ScenarioFailure.MkUnloggedChanges _ _ found) ->
+            Spec.assertEqWith s "the unlogged tap" (NonEmpty.toList found) [Discrepancy.MkTapState land TapState.Untapped TapState.Tapped]
+          Left failure -> Spec.assertFailure s (S.renderFailure failure)
+          Right _ -> Spec.assertFailure s "a tap with no event passed"
+        case Scenario.rehearse Seq.empty built (between (Event.tap land)) of
+          Left failure -> Spec.assertFailure s (S.renderFailure failure)
+          Right _ -> pure ()
 
   -- CR 702.122a / 733.1: a crew activation whose taps fall short of crew 6 is
   -- reversed, which leaves the game as the move found it.

@@ -98,7 +98,10 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   asked again takes the next entry at that key. A `do` at priority the engine
   reverses fails the scenario: the next priority prompt must find the move
   made, a cast recorded as cast (CR 601.2i) and any other move a changed
-  game. Elsewhere an illegal `do` is asked again, so a `refuse` is proven by
+  game. Whatever was taken, the event log between two priority prompts must
+  account for the board: replayed over the earlier prompt's state, its taps,
+  untaps and life changes give the later one, each a real change
+  (`Parun.Engine.Ledger`). Elsewhere an illegal `do` is asked again, so a `refuse` is proven by
   changing the board until the move is legal. At priority, a refused
   `Cast`, `PlayLand` or `Activate` the engine does not offer is refused
   already; one it offers is taken, its targets and `x` sent to the engine whether
