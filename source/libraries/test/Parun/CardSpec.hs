@@ -268,6 +268,7 @@ import qualified Parun.Types.Impending as Impending
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordCount as KeywordCount
+import qualified Parun.Types.KeywordRiderGrant as KeywordRiderGrant
 import qualified Parun.Types.KeywordTally as KeywordTally
 import qualified Parun.Types.LaterPayment as LaterPayment
 import qualified Parun.Types.Layout as Layout
@@ -4907,8 +4908,9 @@ playerEffectFilters playerEffect = case playerEffect of
   -- CR 601.1a / 601.3b's play-scoped sibling, the same shape (Scout's Warning's
   -- is HasCardType Creature).
   PlayerEffect.MayPlayAsThoughItHadFlash f -> [f]
-  -- CR 602.5d's timing permission names a rule-702 keyword, not an object.
-  PlayerEffect.ActivateKeywordAtInstantSpeed _ -> []
+  -- CR 602.5's rider grant names the permanents it reaches (Birgi's are
+  -- creatures you control).
+  PlayerEffect.KeywordRiderGrant grant -> [KeywordRiderGrant.permanents grant]
   -- CR 606.3's names the permanent whose loyalty abilities it reaches (The
   -- Wandering Emperor's is `IsSource`).
   PlayerEffect.LoyaltyGrant grant -> [LoyaltyGrant.permanents grant]

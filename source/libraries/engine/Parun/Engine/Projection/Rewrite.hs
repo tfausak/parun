@@ -182,6 +182,7 @@ import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HexproofExemption as HexproofExemption
 import qualified Parun.Types.HowMany as HowMany
+import qualified Parun.Types.KeywordRiderGrant as KeywordRiderGrant
 import qualified Parun.Types.LaterPayment as LaterPayment
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
 import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
@@ -543,9 +544,9 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.AlternativeActivationCost _ -> effect
   PlayerEffect.CastAsThoughItHadFlash f -> PlayerEffect.CastAsThoughItHadFlash (Filter.rewrite pairs f)
   PlayerEffect.MayPlayAsThoughItHadFlash f -> PlayerEffect.MayPlayAsThoughItHadFlash (Filter.rewrite pairs f)
-  -- A rule-702 designator is no word CR 612.1 swaps; the loyalty arm's Filter
-  -- names the permanent, so it descends as CastAsThoughItHadFlash's does.
-  PlayerEffect.ActivateKeywordAtInstantSpeed _ -> effect
+  -- A rule-702 designator is no word CR 612.1 swaps; the two grants' Filters
+  -- name the permanent, so they descend as CastAsThoughItHadFlash's does.
+  PlayerEffect.KeywordRiderGrant grant -> PlayerEffect.KeywordRiderGrant grant {KeywordRiderGrant.permanents = Filter.rewrite pairs (KeywordRiderGrant.permanents grant)}
   PlayerEffect.LoyaltyGrant grant -> PlayerEffect.LoyaltyGrant grant {LoyaltyGrant.permanents = Filter.rewrite pairs (LoyaltyGrant.permanents grant)}
   PlayerEffect.MayTapForMana grant -> PlayerEffect.MayTapForMana (TapForMana.MkTapForMana (Filter.rewrite pairs (TapForMana.permanents grant)) (fmap (rewriteManaRestriction pairs) (TapForMana.restriction grant)))
   PlayerEffect.CantBeCountered (CounterProhibition.MkCounterProhibition countered counterers) -> PlayerEffect.CantBeCountered (CounterProhibition.MkCounterProhibition (Filter.rewrite pairs countered) (Filter.rewrite pairs counterers))

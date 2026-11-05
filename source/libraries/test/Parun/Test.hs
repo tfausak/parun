@@ -430,6 +430,7 @@ import qualified Parun.Codec.KeywordCountSpec
 import qualified Parun.Codec.KeywordDesignatorSpec
 import qualified Parun.Codec.KeywordFamilySpec
 import qualified Parun.Codec.KeywordInstanceSpec
+import qualified Parun.Codec.KeywordRiderGrantSpec
 import qualified Parun.Codec.KeywordSpec
 import qualified Parun.Codec.KeywordsAreSpec
 import qualified Parun.Codec.LabelSpec
@@ -664,6 +665,7 @@ import qualified Parun.Codec.RevealTimingSpec
 import qualified Parun.Codec.RevealWindowSpec
 import qualified Parun.Codec.RevealedSpec
 import qualified Parun.Codec.RevealedThisWaySpec
+import qualified Parun.Codec.RiderClauseSpec
 import qualified Parun.Codec.RollDieSpec
 import qualified Parun.Codec.RollModifierSpec
 import qualified Parun.Codec.RoomHalfSpec
@@ -1422,6 +1424,7 @@ spec s registry corpus = do
   Parun.Codec.InstructionRewriteSpec.spec s
   Parun.Codec.KeywordCountSpec.spec s
   Parun.Codec.KeywordDesignatorSpec.spec s
+  Parun.Codec.KeywordRiderGrantSpec.spec s
   Parun.Codec.KeywordFamilySpec.spec s
   Parun.Codec.KeywordInstanceSpec.spec s
   Parun.Codec.KeywordsAreSpec.spec s
@@ -1666,6 +1669,7 @@ spec s registry corpus = do
   Parun.Codec.RollModifierSpec.spec s
   Parun.Codec.RoomHalfSpec.spec s
   Parun.Codec.RoomIndexSpec.spec s
+  Parun.Codec.RiderClauseSpec.spec s
   Parun.Codec.RoundingSpec.spec s
   Parun.Codec.RuleAbilitiesSpec.spec s
   Parun.Codec.SacrificeAnyNumberSpec.spec s
