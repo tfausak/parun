@@ -1,0 +1,47 @@
+{
+  "description": "CR 805.9 Arcum's Whistle asks the target's controller to pay, the active player its target names",
+  "note": "A shared team turn: carol's Whistle targets bob's Piker, a creature of one of the two active players. The target names which active player \"that player\" is (docs/decisions.md, \"Which active player a targeting ability names under shared team turns\"), so bob, not alice, is asked to pay; he declines and the Piker must attack.",
+  "board": {
+    "active": "alice",
+    "step": "Upkeep",
+    "sharedTeamTurns": true,
+    "seats": [
+      {
+        "name": "alice",
+        "team": 1,
+        "battlefield": [{ "card": "Mountain", "ready": true }, { "card": "Mountain", "ready": true }],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "team": 1,
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Mountain", "ready": true },
+          { "card": "Mountain", "ready": true }
+        ],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "team": 2,
+        "battlefield": [
+          { "card": "Arcum's Whistle", "label": "whistle", "ready": true },
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Island", "label": "i2", "ready": true },
+          { "card": "Island", "label": "i3", "ready": true }
+        ],
+        "library": [{ "card": "Island" }]
+      },
+      { "name": "dave", "team": 2, "library": [{ "card": "Island" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "Upkeep", "player": "carol", "do": { "Activate": { "object": "$whistle", "ability": 0, "targets": ["$piker"], "mana": ["$i1", "$i2", "$i3"] } } },
+    { "turn": 1, "step": "Upkeep", "player": "bob", "source": "$whistle", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": [] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$piker"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$piker", "do": { "ChooseAttackTarget": "$dave" } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Attackers": { "attackers": { "$piker": "$dave" } } } }
+  ]
+}
