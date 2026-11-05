@@ -2784,11 +2784,11 @@ bystanderSpec s registry =
       Spec.assertBool s (Event.looksBack (TriggerCondition.PermanentSacrificed (PlayerActsOn.MkPlayerActsOn PlayerRelation.AnyPlayer (Filter.Type.And [])))) "a sacrifice trigger is named outright"
       Spec.assertBool s (not (Event.looksBack (TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Graveyard)))) "CR 603.6c says put-into-a-graveyard-from-anywhere is not one"
       Spec.assertBool s (Event.looksBack (TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Exile) {PutIntoZoneTrigger.from = Set.singleton Zone.Battlefield})) "but CR 603.6c makes put-into-a-zone-from-the-battlefield one"
-      Spec.assertBool s (not (Event.looksBack (TriggerCondition.PermanentTurnedFaceUp (Filter.Type.And [])))) "and CR 708.8 leaves a turned-up permanent on the battlefield"
+      Spec.assertBool s (not (Event.looksBack (TriggerCondition.TurnedFaceUp (ActingPermanent.Matching (Filter.Type.And []))))) "and CR 708.8 leaves a turned-up permanent on the battlefield"
       -- CR 603.1b: one ability, several conditions -- it looks back if any of
       -- them does, and the pair below differ only in whether one does.
       Spec.assertBool s (Event.looksBack (TriggerCondition.AnyOf [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)])) "an AnyOf containing one looks back"
-      Spec.assertBool s (not (Event.looksBack (TriggerCondition.AnyOf [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.SelfTurnedFaceUp]))) "and one containing none does not"
+      Spec.assertBool s (not (Event.looksBack (TriggerCondition.AnyOf [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.TurnedFaceUp ActingPermanent.Self]))) "and one containing none does not"
     -- The OTHER shape the rule reaches, at the gather rather than through a
     -- whole turn: a CR 603.2b step trigger whose bearer is gone by the
     -- boundary. Khabál Ghoul ("At the beginning of each end step, put a +1/+1

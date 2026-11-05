@@ -511,34 +511,27 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.AnyOf [TriggerCondition.Enters (EntersTrigger.matching (Filter.HasCardType CardType.Enchantment)), TriggerCondition.RoomFullyUnlocked PlayerRelation.You])
       " {\"type\":\"AnyOf\",\"value\":[{\"type\":\"Enters\",\"value\":{\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Enchantment\"}}}}},{\"type\":\"RoomFullyUnlocked\",\"value\":{\"type\":\"You\"}}]} "
-  -- CR 708.7 through CR 603.2. Nullary: the bearer is CR 113.7a's source and the
-  -- rule leaves nothing else for the condition to name.
-  Spec.it s "SelfTurnedFaceUp" $
+  -- CR 708.7 through CR 603.2: Skirk Marauder's "this creature", the bearer.
+  Spec.it s "TurnedFaceUp round-trips a Self subject" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.SelfTurnedFaceUp
-      " {\"type\":\"SelfTurnedFaceUp\"} "
-  -- CR 708.7 through CR 603.2, the other written form. Aven Farseer says only
-  -- "a permanent", which is
-  -- Filter's trivial `And []` -- so the encoded value carries an EMPTY filter
-  -- rather than no filter at all, which is what keeps the narrowed printings
-  -- below spellable in the same constructor.
-  Spec.it s "PermanentTurnedFaceUp round-trips with the trivial Filter" $
+      (TriggerCondition.TurnedFaceUp ActingPermanent.Self)
+      " {\"type\":\"TurnedFaceUp\",\"value\":{\"type\":\"Self\"}} "
+  -- Aven Farseer's "a permanent", the trivial Filter.
+  Spec.it s "TurnedFaceUp round-trips a Matching subject with the trivial Filter" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentTurnedFaceUp (Filter.And []))
-      " {\"type\":\"PermanentTurnedFaceUp\",\"value\":{\"type\":\"And\",\"value\":[]}} "
-  -- The same condition NARROWED, which is Deathmist Raptor's "whenever a permanent
-  -- you control is turned face up": the Filter is the whole difference between the
-  -- two printings, so it has to survive both directions.
-  Spec.it s "PermanentTurnedFaceUp round-trips with a narrowing Filter" $
+      (TriggerCondition.TurnedFaceUp (ActingPermanent.Matching (Filter.And [])))
+      " {\"type\":\"TurnedFaceUp\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[]}}} "
+  -- Deathmist Raptor's "a permanent you control": the Filter survives the trip.
+  Spec.it s "TurnedFaceUp round-trips a Matching subject with a narrowing Filter" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentTurnedFaceUp (Filter.HeldBy Holder.Controller PlayerRelation.You))
-      " {\"type\":\"PermanentTurnedFaceUp\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
+      (TriggerCondition.TurnedFaceUp (ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You)))
+      " {\"type\":\"TurnedFaceUp\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}}} "
   -- CR 603.2: both fields ride on the wire. Renegade Krasis' self-scoped
   -- "whenever this creature evolves", and Wildgrowth Walker's bystander "whenever
   -- a creature you control explores", whose Filter must survive the trip.

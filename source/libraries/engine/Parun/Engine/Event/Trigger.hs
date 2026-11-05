@@ -621,9 +621,8 @@ looksBack condition = case condition of
   TriggerCondition.CausedBy narrowed -> looksBack (CausedBy.condition narrowed)
   -- CR 708.8 leaves the permanent on the battlefield, so there is no departure
   -- for a look-back to recover and the live read is what CR 603.10's first
-  -- sentence asks for. Both written forms.
-  TriggerCondition.SelfTurnedFaceUp -> False
-  TriggerCondition.PermanentTurnedFaceUp _ -> False
+  -- sentence asks for. Either subject.
+  TriggerCondition.TurnedFaceUp _ -> False
   -- CR 712.18 is the same claim about transforming, and states it outright: the
   -- permanent "doesn't become a new object", so there is no departure for CR
   -- 603.10a to look back at.
@@ -819,8 +818,7 @@ batchScoped condition = case condition of
   TriggerCondition.PermanentSacrificed {} -> False
   TriggerCondition.AnyOf conditions -> any batchScoped conditions
   TriggerCondition.CausedBy narrowed -> batchScoped (CausedBy.condition narrowed)
-  TriggerCondition.SelfTurnedFaceUp -> False
-  TriggerCondition.PermanentTurnedFaceUp _ -> False
+  TriggerCondition.TurnedFaceUp _ -> False
   TriggerCondition.FaceDownPermanentLeavesRevealed -> False
   TriggerCondition.SelfTransformedInto _ -> False
   TriggerCondition.PermanentTransforms _ -> False
@@ -2808,19 +2806,19 @@ zonesTriggeredFrom cond =
         -- event, never where the watcher is.
         TriggerCondition.CausedBy narrowed -> zonesTriggeredFrom (CausedBy.condition narrowed)
         -- CR 708.7 is about a PERMANENT being turned face up, and CR 110.1 puts
-        -- permanents on the battlefield alone, so CR 113.6k never reaches this.
-        TriggerCondition.SelfTurnedFaceUp -> battlefield
+        -- permanents on the battlefield alone, so CR 113.6k never reaches a Self
+        -- subject. A Matching subject's WATCHER is an ordinary permanent doing
+        -- its watching from the battlefield -- Aven Farseer is a creature -- so
+        -- CR 113.6k's exception, which is for a condition that cannot trigger
+        -- from the battlefield at all, does not apply: CR 113.6's default.
+        TriggerCondition.TurnedFaceUp _ -> battlefield
         -- CR 701.27a transforms a PERMANENT, which CR 110.1 puts on the battlefield
         -- alone, so CR 113.6k never reaches this either.
         TriggerCondition.SelfTransformedInto _ -> battlefield
-        -- CR 113.6's default for the watcher's side, PermanentTurnedFaceUp's reason
-        -- below: Cult of the Waxing Moon is a creature watching from the battlefield.
+        -- CR 113.6's default for the watcher's side, a Matching TurnedFaceUp's
+        -- reason above: Cult of the Waxing Moon is a creature watching from the
+        -- battlefield.
         TriggerCondition.PermanentTransforms _ -> battlefield
-        -- CR 113.6's default, one object over: the WATCHER is an ordinary permanent
-        -- doing its watching from the battlefield -- Aven Farseer is a creature -- so CR
-        -- 113.6k's exception, which is for a condition that cannot trigger from the
-        -- battlefield at all, does not apply.
-        TriggerCondition.PermanentTurnedFaceUp _ -> battlefield
         TriggerCondition.FaceDownPermanentLeavesRevealed -> battlefield
         -- The same default: CR 702.112b's "only permanents can be or become renowned"
         -- keeps the subject on the battlefield, and Valeron Wardens watches from it.
@@ -3189,8 +3187,11 @@ stateTriggersOn gs
             -- reason: it fires on the
             -- permanent BEING turned face up, and CR 708.8 leaves it face up
             -- thereafter -- so a state read would fire it again every settle,
-            -- for as long as the permanent stayed on the battlefield.
-            TriggerCondition.SelfTurnedFaceUp -> False
+            -- for as long as the permanent stayed on the battlefield. The
+            -- watcher's form more plainly still: a board on which some
+            -- permanent is face up says nothing about which of them was ever
+            -- TURNED over, so there is no state here to read at all.
+            TriggerCondition.TurnedFaceUp _ -> False
             -- CR 701.27a is an EVENT trigger for that reason exactly: CR
             -- 712.18 leaves the permanent on its new face thereafter, so a
             -- state read would fire it again on every settle.
@@ -3199,11 +3200,6 @@ stateTriggersOn gs
             -- same reason: a board showing a permanent on its back face
             -- says nothing about when it turned over.
             TriggerCondition.PermanentTransforms _ -> False
-            -- And the watcher's form is an EVENT trigger for the same reason,
-            -- more plainly still: a board on which some permanent is face up
-            -- says nothing about which of them was ever TURNED over, so there
-            -- is no state here to read at all.
-            TriggerCondition.PermanentTurnedFaceUp _ -> False
             TriggerCondition.FaceDownPermanentLeavesRevealed -> False
             -- CR 702.112b's designation is exactly that shape once more: the
             -- permanent keeps it, so a state read would fire every settle.

@@ -3124,10 +3124,9 @@ triggerConditionNames asking x = case x of
   TriggerCondition.RoomFullyUnlocked _playerRelation -> mempty
   TriggerCondition.AnyOf items -> foldMap (triggerConditionNames asking) items
   TriggerCondition.CausedBy narrowed -> triggerConditionNames asking (CausedBy.condition narrowed)
-  TriggerCondition.SelfTurnedFaceUp -> mempty
+  TriggerCondition.TurnedFaceUp actingPermanent -> actingPermanentNames asking actingPermanent
   TriggerCondition.SelfTransformedInto _cardName -> mempty
   TriggerCondition.PermanentTransforms filter_ -> filterNames asking filter_
-  TriggerCondition.PermanentTurnedFaceUp filter_ -> filterNames asking filter_
   TriggerCondition.FaceDownPermanentLeavesRevealed -> mempty
   TriggerCondition.PermanentBecomesDesignated permanentBecomesDesignated -> permanentBecomesDesignatedNames asking permanentBecomesDesignated
   TriggerCondition.PermanentActs permanentActs -> permanentActedNames asking (actingPermanentNames asking) permanentActs

@@ -34,10 +34,13 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentTurnedFaceUp",
+            "type": "TurnedFaceUp",
             "value": {
-              "type": "And",
-              "value": []
+              "type": "Matching",
+              "value": {
+                "type": "And",
+                "value": []
+              }
             }
           },
           "modal": {
