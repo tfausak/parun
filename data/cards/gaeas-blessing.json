@@ -31,12 +31,10 @@
                         "type": "InSlot",
                         "value": "player"
                       },
-                      "refs": [
-                        {
-                          "type": "InSlot",
-                          "value": "cards"
-                        }
-                      ]
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "cards"
+                      }
                     }
                   }
                 ]
@@ -117,23 +115,21 @@
                               "type": "You"
                             }
                           },
-                          "refs": [
-                            {
-                              "type": "EachCardInGraveyard",
-                              "value": {
-                                "filter": {
-                                  "type": "And",
-                                  "value": []
-                                },
-                                "graveyards": {
-                                  "type": "Scoped",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                          "ref": {
+                            "type": "EachCardInGraveyard",
+                            "value": {
+                              "filter": {
+                                "type": "And",
+                                "value": []
+                              },
+                              "graveyards": {
+                                "type": "Scoped",
+                                "value": {
+                                  "type": "You"
                                 }
                               }
                             }
-                          ]
+                          }
                         }
                       }
                     ]
