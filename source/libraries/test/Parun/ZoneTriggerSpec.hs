@@ -56,6 +56,7 @@ import qualified Parun.Types.BecameDesignated as BecameDesignated
 import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.BecomesTapState as BecomesTapState
+import qualified Parun.Types.BecomesTargetedTrigger as BecomesTargetedTrigger
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockProducer as BlockProducer
@@ -151,7 +152,6 @@ import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesig
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
-import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhaseSelector as PhaseSelector
@@ -1830,8 +1830,8 @@ representativeEvents cond =
       noTable e = (Map.empty, e)
       one e = noTable e NonEmpty.:| []
       becameTargetEvents c =
-        let targeting recipient = noTable (GameEvent.BecameTarget (BecameTarget.MkBecameTarget recipient arrived (Maybe.fromMaybe StackObjectKind.Spell (PermanentsBecomeTargeted.kind c)) S.bob))
-         in targeting (Recipient.ToObject departed) NonEmpty.:| [targeting (Recipient.ToPlayer S.alice) | PermanentsBecomeTargeted.includesYou c]
+        let targeting recipient = noTable (GameEvent.BecameTarget (BecameTarget.MkBecameTarget recipient arrived (Maybe.fromMaybe StackObjectKind.Spell (BecomesTargetedTrigger.kind c)) S.bob))
+         in targeting (Recipient.ToObject departed) NonEmpty.:| [targeting (Recipient.ToPlayer S.alice) | BecomesTargetedTrigger.includesYou c]
       -- The batch's CR 400.7e table, with the sacrificed permanent's graveyard
       -- arrival in it -- Event.eventTriggers' `becameInGraveyard` for a sacrifice
       -- that reached a graveyard.
@@ -2051,26 +2051,27 @@ representativeEvents cond =
         TriggerCondition.SelfCast -> one (GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice arrived S.emptyCharacteristics (Just Zone.Hand) Nothing Set.empty))
         -- CR 602.2b's activation, binding the ability and its activator.
         TriggerCondition.AbilityActivated _ -> one (GameEvent.AbilityActivated (AbilityWasActivated.MkAbilityWasActivated S.alice arrived departed False))
-        -- CR 601.2c's event, with the bearer as the targeted object and alice as
-        -- the targeting object's controller -- an event BOTH relations admit,
-        -- since matchesTrigger reads `you` from the bearer's side and this list
-        -- pins the binding rather than the match.
-        TriggerCondition.SelfBecomesTargeted _ -> one (GameEvent.BecameTarget (BecameTarget.MkBecameTarget (Recipient.ToObject departed) arrived StackObjectKind.ActivatedAbility S.alice))
+        -- CR 601.2c's event. Under a Self subject, the bearer is the targeted
+        -- object and alice the targeting object's controller -- an event BOTH
+        -- relations admit, since matchesTrigger reads `you` from the bearer's
+        -- side and this list pins the binding rather than the match.
+        --
+        -- Under a Matching subject, the kind is taken from the condition for
+        -- ControllerBecomesTarget's reason below: Professor Hojo's Just
+        -- ActivatedAbility. A batch binds only the targeting player, CR 603.2c's
+        -- batch naming no one permanent, and the floor below pins that. With
+        -- "you" included, alice herself is a recipient too, so the floor is read
+        -- on the path where no permanent is named as well.
+        TriggerCondition.BecomesTargeted c -> case BecomesTargetedTrigger.permanent c of
+          ActingPermanent.Self -> one (GameEvent.BecameTarget (BecameTarget.MkBecameTarget (Recipient.ToObject departed) arrived StackObjectKind.ActivatedAbility S.alice))
+          ActingPermanent.Matching _ -> becameTargetEvents c
         -- The same event one recipient over: a targeted PLAYER, which is the axis
-        -- separating this condition from the arm above. The kind is taken FROM
+        -- separating this condition from a Self BecomesTargeted. The kind is taken FROM
         -- the condition so each inhabitant listed below gets an event it
         -- genuinely admits -- Dormant Gomazoa's Just Spell and Amulet of
         -- Safekeeping's Nothing, for which Spell is as representative as Ability.
         -- The controller is bob, an opponent of the targeted alice.
         TriggerCondition.ControllerBecomesTarget c -> one (GameEvent.BecameTarget (BecameTarget.MkBecameTarget (Recipient.ToPlayer S.alice) arrived (Maybe.fromMaybe StackObjectKind.Spell (ControllerBecomesTarget.kind c)) S.bob))
-        -- The same event back on the OBJECT axis, the kind taken from the
-        -- condition for the sibling's reason: Professor Hojo's Just
-        -- ActivatedAbility. It binds only the targeting player, CR 603.2c's
-        -- batch naming no one permanent, and the floor below pins that.
-        -- With "you" included, alice herself is a recipient too, so the floor
-        -- is read on the path where no permanent is named as well.
-        TriggerCondition.PermanentsBecomeTargeted c -> becameTargetEvents c
-        TriggerCondition.PermanentBecomesTargeted c -> becameTargetEvents c
         -- CR 709.5h's own event, on the BEARER and naming the same door the
         -- condition does, so the pair really matches -- the door below is the one
         -- everyTriggerCondition names.
@@ -2428,9 +2429,9 @@ everyTriggerCondition =
     -- BOTH relations, for the SpellCast pair's reason just above: the arm cases
     -- on the relation, and one that stamped nothing under the other half would go
     -- unseen if only rule 702.21a's own Opponent were listed.
-    TriggerCondition.SelfBecomesTargeted PlayerRelation.Opponent,
-    TriggerCondition.SelfBecomesTargeted PlayerRelation.You,
-    -- BOTH inhabitants, for the SelfBecomesTargeted pair's reason just above and
+    TriggerCondition.BecomesTargeted BecomesTargetedTrigger.defaultValue {BecomesTargetedTrigger.relation = PlayerRelation.Opponent},
+    TriggerCondition.BecomesTargeted BecomesTargetedTrigger.defaultValue {BecomesTargetedTrigger.relation = PlayerRelation.You},
+    -- BOTH inhabitants, for the Self BecomesTargeted pair's reason just above and
     -- one axis more: the payload narrows on a relation AND on a kind, and the
     -- arity change alone would leave a single entry compiling. Amulet of
     -- Safekeeping's pair first, then Dormant Gomazoa's.
@@ -2438,15 +2439,15 @@ everyTriggerCondition =
     TriggerCondition.ControllerBecomesTarget (ControllerBecomesTarget.MkControllerBecomesTarget PlayerRelation.AnyPlayer (Just StackObjectKind.Spell)),
     -- Professor Hojo's own: a Filter beside the sibling above's relation and
     -- kind.
-    TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.AnyPlayer (Just StackObjectKind.ActivatedAbility) False),
+    TriggerCondition.BecomesTargeted (BecomesTargetedTrigger.MkBecomesTargetedTrigger (ActingPermanent.Matching Filter.Type.IsSource) PlayerRelation.AnyPlayer (Just StackObjectKind.ActivatedAbility) False Batching.OneOrMore),
     -- Venerated Rotpriest's per-creature twin, and Diffusion Sliver's: both
-    -- relations, for the SelfBecomesTargeted pair's reason.
-    TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.AnyPlayer (Just StackObjectKind.Spell) False),
-    TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.Opponent Nothing False),
+    -- relations, for the Self BecomesTargeted pair's reason.
+    TriggerCondition.BecomesTargeted (BecomesTargetedTrigger.MkBecomesTargetedTrigger (ActingPermanent.Matching Filter.Type.IsSource) PlayerRelation.AnyPlayer (Just StackObjectKind.Spell) False Batching.EachOccurrence),
+    TriggerCondition.BecomesTargeted (BecomesTargetedTrigger.MkBecomesTargetedTrigger (ActingPermanent.Matching Filter.Type.IsSource) PlayerRelation.Opponent Nothing False Batching.EachOccurrence),
     -- Leyline of Combustion's and Unsettled Mariner's, "you" included: their
     -- representative events name alice as well, the path only these admit.
-    TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.Opponent Nothing True),
-    TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.Opponent Nothing True),
+    TriggerCondition.BecomesTargeted (BecomesTargetedTrigger.MkBecomesTargetedTrigger (ActingPermanent.Matching Filter.Type.IsSource) PlayerRelation.Opponent Nothing True Batching.OneOrMore),
+    TriggerCondition.BecomesTargeted (BecomesTargetedTrigger.MkBecomesTargetedTrigger (ActingPermanent.Matching Filter.Type.IsSource) PlayerRelation.Opponent Nothing True Batching.EachOccurrence),
     TriggerCondition.SelfHalfUnlocked (CardName.MkCardName (Text.pack "Steaming Sauna")),
     TriggerCondition.RoomFullyUnlocked PlayerRelation.You,
     -- Balemurk Leech's own pair, and not an arbitrary one: a Matching Enters binds

@@ -28,35 +28,38 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentsBecomeTargeted",
+            "type": "BecomesTargeted",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
-                  },
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
-                    }
-                  }
-                ]
+              "batching": {
+                "type": "OneOrMore"
               },
               "kind": {
                 "type": "ActivatedAbility"
               },
-              "relation": {
-                "type": "AnyPlayer"
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
+                    }
+                  ]
+                }
               }
             }
           },

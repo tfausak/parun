@@ -134,16 +134,16 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentBecomesTargeted",
+            "type": "BecomesTargeted",
             "value": {
-              "filter": {
-                "type": "IsSource"
-              },
               "kind": {
                 "type": "Spell"
               },
-              "relation": {
-                "type": "AnyPlayer"
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "IsSource"
+                }
               }
             }
           },

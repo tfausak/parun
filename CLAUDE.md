@@ -83,6 +83,8 @@ to agents as written. What it doesn't say:
 - Derive against `origin/main`, not the working checkout: `git fetch`, then
   `git show origin/main:<path>` or a worktree cut from it. Grep for
   identifiers; line numbers in issue bodies are stale.
+  A merged PR's branch is deleted on GitHub, so a branch restarted from
+  `origin/main` under the same name pushes plainly; never force-push it.
 
 - Self-review the branch before opening the PR and fix the findings there. At
   minimum re-check every CR citation against `docs/rules.txt` and re-read

@@ -275,6 +275,8 @@ library codec
     Parun.Codec.BecomeCopySpec
     Parun.Codec.BecomesTapState
     Parun.Codec.BecomesTapStateSpec
+    Parun.Codec.BecomesTargetedTrigger
+    Parun.Codec.BecomesTargetedTriggerSpec
     Parun.Codec.BeginningStep
     Parun.Codec.BeginningStepSpec
     Parun.Codec.Behold
@@ -1160,8 +1162,6 @@ library codec
     Parun.Codec.PermanentCandidateSpec
     Parun.Codec.PermanentIsDealtDamage
     Parun.Codec.PermanentIsDealtDamageSpec
-    Parun.Codec.PermanentsBecomeTargeted
-    Parun.Codec.PermanentsBecomeTargetedSpec
     Parun.Codec.PermanentsDealCombatDamageToPlayer
     Parun.Codec.PermanentsDealCombatDamageToPlayerSpec
     Parun.Codec.PermanentTappedForMana
@@ -2496,6 +2496,7 @@ library types
     Parun.Types.BecameUnattached
     Parun.Types.BecomeCopy
     Parun.Types.BecomesTapState
+    Parun.Types.BecomesTargetedTrigger
     Parun.Types.BeginningStep
     Parun.Types.Behold
     Parun.Types.Bid
@@ -3004,7 +3005,6 @@ library types
     Parun.Types.PermanentBecomesDesignated
     Parun.Types.PermanentCandidate
     Parun.Types.PermanentIsDealtDamage
-    Parun.Types.PermanentsBecomeTargeted
     Parun.Types.PermanentsDealCombatDamageToPlayer
     Parun.Types.PermanentTappedForMana
     Parun.Types.PermanentWasSacrificed

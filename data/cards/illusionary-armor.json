@@ -67,16 +67,16 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentBecomesTargeted",
+            "type": "BecomesTargeted",
             "value": {
-              "filter": {
-                "type": "HasAttached",
+              "permanent": {
+                "type": "Matching",
                 "value": {
-                  "type": "IsSource"
+                  "type": "HasAttached",
+                  "value": {
+                    "type": "IsSource"
+                  }
                 }
-              },
-              "relation": {
-                "type": "AnyPlayer"
               }
             }
           },

@@ -49,6 +49,7 @@ import qualified Parun.Types.BecameDesignated as BecameDesignated
 import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.BecomesTapState as BecomesTapState
+import qualified Parun.Types.BecomesTargetedTrigger as BecomesTargetedTrigger
 import Parun.Types.Binding (Binding)
 import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockProducer as BlockProducer
@@ -123,7 +124,6 @@ import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesig
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
-import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlacesSticker as PlacesSticker
@@ -1460,26 +1460,9 @@ armMatches bindings board gs bearer you cond event = case cond of
       Maybe.isJust (Game.lookupObject (AbilityWasActivated.ability activated) gs)
         && Filter.matches bearerContext (Projection.viewOfSpell (AbilityWasActivated.player activated) (AbilityWasActivated.ability activated) gs) f
     _ -> False
-  -- CR 601.2c, self-scoped: the object that became a target IS the bearer, a bare
-  -- comparison of ids in SelfCast's shape and for its reason -- nothing about the
-  -- targeting spell is read, so no projection can come up empty.
-  --
-  -- The RELATION is read off the event's own controller field rather than off the
-  -- board, which is what CR 405.4 asks for: the answer wanted is who controlled
-  -- the targeting object as it was announced, and by the time a ward trigger is
-  -- gathered that object may already have changed hands or left.
-  --
-  -- Rule 702.21a's own relation is Opponent; You is admitted because the
-  -- condition is stated over a PlayerRelation, and a card printing the other half
-  -- would read the same field.
-  TriggerCondition.SelfBecomesTargeted relation -> case event of
-    GameEvent.BecameTarget t ->
-      Recipient.objectOf (BecameTarget.targeted t) == Just bearer
-        && PlayerRelation.holds (Game.teams gs) relation you (BecameTarget.controller t)
-    _ -> False
-  -- CR 601.2c from the PLAYER's side, the sibling above one recipient over:
-  -- Dormant Gomazoa's "whenever you become the target of a spell" and Amulet of
-  -- Safekeeping's "whenever you become the target of a spell or ability an
+  -- CR 601.2c from the PLAYER's side, BecomesTargeted's Self subject one
+  -- recipient over: Dormant Gomazoa's "whenever you become the target of a
+  -- spell" and Amulet of Safekeeping's "whenever you become the target of a spell or ability an
   -- opponent controls". The recipient is compared with CR 109.5's "you" -- CR
   -- 603.3a's controller of the bearer as the ability triggered -- rather than
   -- with the bearer, which is the whole of what separates this from ward.
@@ -1500,17 +1483,30 @@ armMatches bindings board gs bearer you cond event = case cond of
         && maybe True (== BecameTarget.kind t) (ControllerBecomesTarget.kind c)
         && PlayerRelation.holds (Game.teams gs) (ControllerBecomesTarget.relation c) you (BecameTarget.controller t)
     _ -> False
-  -- CR 603.2c's batch reading of the same rule from a BYSTANDER's side, and the
-  -- one of the three arms with a Filter: Professor Hojo asks nothing of the
-  -- targeting object's controller and everything of the permanents it named.
-  -- Diffusion Sliver, through the per-permanent arm below, asks both; the
-  -- relation is read off the event's controller field for SelfBecomesTargeted's
-  -- CR 405.4 reason.
+  -- CR 601.2c / 603.2c: a permanent became the target of a spell or ability. A
+  -- Self subject is the bearer, a bare comparison of ids in SelfCast's shape and
+  -- for its reason -- nothing about the targeting spell is read, so no
+  -- projection can come up empty.
   --
-  -- The KIND conjunct is the sibling's one limb narrower. "An ACTIVATED
-  -- ability" is CR 113.3b alone, where CR 603.3d brings CR 113.3c's to the same
-  -- rule 601.2c step, so a condition that did not ask would draw off a triggered
-  -- ability too. Parun.LeavesTriggerSpec's activated-against-triggered pair is
+  -- The RELATION is read off the event's own controller field rather than off the
+  -- board, which is what CR 405.4 asks for: the answer wanted is who controlled
+  -- the targeting object as it was announced, and by the time a ward trigger is
+  -- gathered that object may already have changed hands or left.
+  --
+  -- Rule 702.21a's own relation is Opponent; You is admitted because the
+  -- condition is stated over a PlayerRelation, and a card printing the other half
+  -- would read the same field. The kind and the relation are read the same way
+  -- under either subject.
+  --
+  -- A Matching subject is the same rule from a BYSTANDER's side: Professor Hojo
+  -- asks nothing of the targeting object's controller and everything of the
+  -- permanents it named, and Diffusion Sliver asks both; the relation is read
+  -- off the event's controller field for the Self subject's CR 405.4 reason.
+  --
+  -- The KIND conjunct is ControllerBecomesTarget's one limb narrower. "An
+  -- ACTIVATED ability" is CR 113.3b alone, where CR 603.3d brings CR 113.3c's to
+  -- the same rule 601.2c step, so a condition that did not ask would draw off a
+  -- triggered ability too. Parun.LeavesTriggerSpec's activated-against-triggered pair is
   -- what proves it.
   --
   -- CR 109.2 scopes the Filter to the BATTLEFIELD, which is the arm's other
@@ -1524,27 +1520,27 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- to pay for it was a target while it stood. Parun.LeavesTriggerSpec's
   -- "Professor Hojo sees a target its own cost sacrificed" proves it.
   --
-  -- Firing ONCE for the whole announcement is Event.Trigger.batchScoped's
-  -- answer and not this function's: matchesTriggerGiven sees one event at a
-  -- time and answers the same for both readings, which is its contract.
+  -- Firing ONCE for the whole announcement under OneOrMore is
+  -- Event.Trigger.batchScoped's answer and not this function's:
+  -- matchesTriggerGiven sees one event at a time and answers the same for both
+  -- batchings, which is its contract.
   --
   -- With includesYou, CR 109.5's "you" named as a target is a member too, the
   -- ControllerBecomesTarget arm's test: Leyline of Combustion's "you and/or at
   -- least one permanent you control".
-  TriggerCondition.PermanentsBecomeTargeted c -> case event of
+  TriggerCondition.BecomesTargeted c -> case event of
     GameEvent.BecameTarget t ->
-      maybe True (== BecameTarget.kind t) (PermanentsBecomeTargeted.kind c)
-        && PlayerRelation.holds (Game.teams gs) (PermanentsBecomeTargeted.relation c) you (BecameTarget.controller t)
+      maybe True (== BecameTarget.kind t) (BecomesTargetedTrigger.kind c)
+        && PlayerRelation.holds (Game.teams gs) (BecomesTargetedTrigger.relation c) you (BecameTarget.controller t)
         && case (Recipient.playerOf (BecameTarget.targeted t), Recipient.objectOf (BecameTarget.targeted t)) of
-          (Just player, _) -> PermanentsBecomeTargeted.includesYou c && player == you
+          (Just player, _) -> BecomesTargetedTrigger.includesYou c && player == you
           (Nothing, Nothing) -> False
-          (Nothing, Just oid) -> case Map.lookup oid board of
-            Nothing -> False
-            Just candidate -> Filter.matches bearerContext (Projection.sampledView board oid candidate gs) (PermanentsBecomeTargeted.filter c)
+          (Nothing, Just oid) -> case BecomesTargetedTrigger.permanent c of
+            ActingPermanent.Self -> oid == bearer
+            ActingPermanent.Matching f -> case Map.lookup oid board of
+              Nothing -> False
+              Just candidate -> Filter.matches bearerContext (Projection.sampledView board oid candidate gs) f
     _ -> False
-  -- The same question per targeted permanent; only Event.Trigger.batchScoped
-  -- tells the two apart.
-  TriggerCondition.PermanentBecomesTargeted c -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentsBecomeTargeted c) event
   -- CR 709.5h: the bearer is the permanent that was given the designation, and
   -- the door named is the one it was given for. A bare comparison of an id and a
   -- name, in a Self Enters' shape and for its reason -- nothing about the entrant's

@@ -37,6 +37,7 @@ import qualified Parun.Types.AttackerTarget as AttackerTarget
 import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.Batching as Batching
+import qualified Parun.Types.BecomesTargetedTrigger as BecomesTargetedTrigger
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockRole as BlockRole
@@ -7036,7 +7037,7 @@ ward w =
           }
       effect = Effect.Counter (Counter.MkCounter (ObjectRef.InSlot Binding.targetingObject) Nothing Nothing Nothing)
    in Mint.triggerOf
-        (TriggerCondition.SelfBecomesTargeted PlayerRelation.Opponent)
+        (TriggerCondition.BecomesTargeted BecomesTargetedTrigger.defaultValue {BecomesTargetedTrigger.relation = PlayerRelation.Opponent})
         Nothing
         (Mint.oneModeOf Map.empty (Seq.singleton clause))
 

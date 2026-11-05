@@ -64,9 +64,11 @@
                 "value": {}
               },
               {
-                "type": "SelfBecomesTargeted",
+                "type": "BecomesTargeted",
                 "value": {
-                  "type": "Opponent"
+                  "relation": {
+                    "type": "Opponent"
+                  }
                 }
               }
             ]

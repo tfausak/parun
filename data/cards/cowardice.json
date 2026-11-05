@@ -30,16 +30,16 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentBecomesTargeted",
+            "type": "BecomesTargeted",
             "value": {
-              "filter": {
-                "type": "HasCardType",
+              "permanent": {
+                "type": "Matching",
                 "value": {
-                  "type": "Creature"
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
                 }
-              },
-              "relation": {
-                "type": "AnyPlayer"
               }
             }
           },

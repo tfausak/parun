@@ -37,6 +37,7 @@ import qualified Parun.Types.BecameBlocking as BecameBlocking
 import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.BecomesTapState as BecomesTapState
+import qualified Parun.Types.BecomesTargetedTrigger as BecomesTargetedTrigger
 import Parun.Types.Binding (Binding)
 import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.BlockCount as BlockCount
@@ -84,7 +85,6 @@ import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
-import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PlayerActed as PlayerActed
 import Parun.Types.PlayerId (PlayerId)
@@ -465,43 +465,20 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- searcher. Unconditional given a match.
   (TriggerCondition.PlayerActs _, GameEvent.PlayerActed acted) ->
     Binding.setTriggerPlayer (PlayerActed.player acted) Map.empty
-  -- CR 702.21a's "that spell or ability": the object whose announcement fired
-  -- this, which ward counters and whose controller ward offers the cost to.
-  -- Unconditional given a match, which is what eventBindingSlots' per-condition
-  -- promise needs: every GameEvent.BecameTarget carries a source.
-  --
-  -- The TARGETED object is the bearer, already bound as CR 113.7a's source, so it
-  -- gets no second name. Nor does the controller: Resolve.payerOf reads this very
-  -- slot as "whoever controls that object", which is the whole of rule 702.21a's
-  -- "unless that player pays".
-  (TriggerCondition.SelfBecomesTargeted _, GameEvent.BecameTarget t) ->
-    Binding.setTargetingObject (BecameTarget.source t) Map.empty
+  -- CR 601.2c / 603.2c: becomesTargetedSlots' slots, off the announcement
+  -- matched.
+  (TriggerCondition.BecomesTargeted c, GameEvent.BecameTarget t) -> becomesTargetedBindings c t
   -- The same slot off the same field, one recipient over: Amulet of Safekeeping's
   -- "counter THAT SPELL OR ABILITY unless its controller pays {1}" names the
   -- object that did the targeting, and here the targeted party is a player rather
   -- than the bearer, so nothing else on the ability reaches it.
   --
-  -- Unconditional in the same sense as the arm above, and its controller likewise
-  -- takes no slot of its own: Resolve.payerOf reads this slot as "whoever
-  -- controls that object", which is CR 405.4's answer to "its controller".
+  -- Unconditional in the same sense as a Self BecomesTargeted's
+  -- (becomesTargetedSlots), and its controller likewise takes no slot of its
+  -- own: Resolve.payerOf reads this slot as "whoever controls that object",
+  -- which is CR 405.4's answer to "its controller".
   (TriggerCondition.ControllerBecomesTarget {}, GameEvent.BecameTarget t) ->
     Binding.setTargetingObject (BecameTarget.source t) Map.empty
-  -- The batch's "that player": the targeting object's controller, whom Leyline
-  -- of Combustion deals 2 damage to. The event's player rather than the object's
-  -- holder, so a spell countered or stolen before the trigger resolves changes
-  -- nothing; the Leyline scenario's Aethersnatch proves it. Beside it the
-  -- targeting object, which batchPartition splits a group by.
-  (TriggerCondition.PermanentsBecomeTargeted _, GameEvent.BecameTarget t) ->
-    Binding.setTargetingObject (BecameTarget.source t) (Binding.setTriggerPlayer (BecameTarget.controller t) Map.empty)
-  -- CR 601.2c's "that creature" read by a bystander: the permanent that became
-  -- the target, which Cowardice returns to its owner's hand, unbound when
-  -- includesYou admitted the player instead (Unsettled Mariner).
-  --
-  -- Beside it the targeting object, the ControllerBecomesTarget arm's slot:
-  -- Diffusion Sliver's "counter that spell or ability unless its controller
-  -- pays {2}".
-  (TriggerCondition.PermanentBecomesTargeted _, GameEvent.BecameTarget t) ->
-    Binding.setTargetingObject (BecameTarget.source t) (maybe Map.empty (`Binding.setBecame` Map.empty) (Recipient.objectOf (BecameTarget.targeted t)))
   -- CR 509.3a / 509.3e on the blocking side: Super-Soldier Serum's "it" is the
   -- blocker. The attackers ride the event but go unbound: no printing names them.
   --
@@ -882,7 +859,7 @@ batchPartition cond bindings = case cond of
   -- even where several land in one group -- Hive Mind's copies, made inside its
   -- ForEach's bracket. data/scenarios/leyline-of-combustion-burns-once-per-hive-mind-copy.json
   -- proves the split.
-  TriggerCondition.PermanentsBecomeTargeted _ -> object Binding.targetingObject
+  TriggerCondition.BecomesTargeted c | BecomesTargetedTrigger.batching c == Batching.OneOrMore -> object Binding.targetingObject
   -- The branch that matched is the one that stamped, eventBindings' AnyOf arm's
   -- reading.
   TriggerCondition.AnyOf conditions -> Maybe.fromMaybe Seq.empty (List.find (not . Seq.null) (fmap (`batchPartition` bindings) conditions))
@@ -1127,6 +1104,48 @@ entersBindings gs t zc = case EntersTrigger.permanent t of
     Batching.OneOrMore -> Binding.setBecameGroup (Seq.singleton entrant) Map.empty
   where
     entrant = ZoneChange.object zc
+
+-- CR 601.2c / 603.2c: which slots a becomes-targeted trigger binds on every
+-- match (eventBindingSlots' floor) and which only sometimes. Every one binds the
+-- targeting object, guaranteed given a match: every GameEvent.BecameTarget
+-- carries a source, so unlike a departure's `became` there is no shape of the
+-- event that withholds it.
+--
+-- A Self subject binds nothing else: CR 702.21a's "that spell or ability" is
+-- the object ward counters and whose controller ward offers the cost to. The
+-- TARGETED object is the bearer, already bound as CR 113.7a's source, so it gets
+-- no second name. Nor does the controller: Resolve.payerOf reads a slot bound to
+-- an object as that object's controller, which is the whole of rule 702.21a's
+-- "unless that player pays".
+--
+-- A Matching subject per permanent adds CR 601.2c's "that creature" read by a
+-- bystander: the permanent that became the target, which Cowardice returns to
+-- its owner's hand, and only sometimes when includesYou may admit the player
+-- instead (Unsettled Mariner). The targeting object beside it is Diffusion
+-- Sliver's "counter that spell or ability unless its controller pays {2}".
+--
+-- A OneOrMore batch adds the targeting object's controller, Leyline of
+-- Combustion's "that player", and nothing else: CR 603.2c makes the whole
+-- announcement the trigger event, so no one permanent it named is the thing the
+-- condition is about. The event's player rather than the object's holder, so a
+-- spell countered or stolen before the trigger resolves changes nothing; the
+-- Leyline scenario's Aethersnatch proves it. The targeting object is what
+-- batchPartition splits a group by.
+becomesTargetedSlots :: BecomesTargetedTrigger.BecomesTargetedTrigger -> (Set.Set SlotName.SlotName, Set.Set SlotName.SlotName)
+becomesTargetedSlots c = case (BecomesTargetedTrigger.batching c, BecomesTargetedTrigger.permanent c) of
+  (Batching.OneOrMore, _) -> (Set.fromList [Binding.targetingObject, Binding.triggerPlayer], Set.empty)
+  (Batching.EachOccurrence, ActingPermanent.Self) -> (Set.singleton Binding.targetingObject, Set.empty)
+  (Batching.EachOccurrence, ActingPermanent.Matching _)
+    | BecomesTargetedTrigger.includesYou c -> (Set.singleton Binding.targetingObject, Set.singleton Binding.became)
+    | otherwise -> (Set.fromList [Binding.became, Binding.targetingObject], Set.empty)
+
+-- CR 601.2c / 603.2c: becomesTargetedSlots, stamped off the announcement
+-- eventBindings was reached past.
+becomesTargetedBindings :: BecomesTargetedTrigger.BecomesTargetedTrigger -> BecameTarget.BecameTarget -> Map.Map SlotName.SlotName Binding
+becomesTargetedBindings c t = Binding.setTargetingObject (BecameTarget.source t) $ case (BecomesTargetedTrigger.batching c, BecomesTargetedTrigger.permanent c) of
+  (Batching.OneOrMore, _) -> Binding.setTriggerPlayer (BecameTarget.controller t) Map.empty
+  (Batching.EachOccurrence, ActingPermanent.Self) -> Map.empty
+  (Batching.EachOccurrence, ActingPermanent.Matching _) -> maybe Map.empty (`Binding.setBecame` Map.empty) (Recipient.objectOf (BecameTarget.targeted t))
 
 -- CR 708.7 through CR 603.2: which slots a turned-face-up trigger binds on
 -- every match (eventBindingSlots' floor) and which only sometimes.
@@ -1620,14 +1639,8 @@ eventBindingSlots cond = case cond of
   -- be a second name for each. eventBindings has no arm for this condition and
   -- its fallthrough answers the same.
   TriggerCondition.SelfCast -> Set.empty
-  -- CR 601.2c's targeting object, guaranteed given a match: every
-  -- GameEvent.BecameTarget carries a source, so unlike a departure's
-  -- `became` there is no shape of the event that withholds it. The CONTROLLER
-  -- rule 702.21a offers the cost to takes no slot of its own -- Resolve.payerOf
-  -- reads a slot bound to an object as that object's controller, which is what
-  -- "unless that player pays" asks for.
-  TriggerCondition.SelfBecomesTargeted _ -> Set.singleton Binding.targetingObject
-  -- CR 601.2c's targeting object again, the sibling directly above one recipient
+  TriggerCondition.BecomesTargeted c -> fst (becomesTargetedSlots c)
+  -- CR 601.2c's targeting object again, a Self BecomesTargeted's one recipient
   -- over: Amulet of Safekeeping's "counter that spell or ability" reads it, and
   -- with a PLAYER targeted there is no bearer-shaped slot that would already
   -- name it. Guaranteed for the sibling's reason -- every GameEvent.BecameTarget
@@ -1638,17 +1651,6 @@ eventBindingSlots cond = case cond of
   -- reads the bearer and never this slot, and a slot promised but unread is
   -- harmless where the reverse is the failure this lint exists to catch.
   TriggerCondition.ControllerBecomesTarget {} -> Set.singleton Binding.targetingObject
-  -- The targeting object and its controller, Leyline of Combustion's "that
-  -- player", and nothing else: CR 603.2c makes the whole announcement the
-  -- trigger event, so no one permanent it named is the thing the condition is
-  -- about.
-  TriggerCondition.PermanentsBecomeTargeted {} -> Set.fromList [Binding.targetingObject, Binding.triggerPlayer]
-  -- The one permanent each occurrence names and the object that targeted it,
-  -- guaranteed for the reasons eventBindings' arm gives; the permanent only
-  -- sometimes when the occurrence may name "you" instead.
-  TriggerCondition.PermanentBecomesTargeted c
-    | PermanentsBecomeTargeted.includesYou c -> Set.singleton Binding.targetingObject
-    | otherwise -> Set.fromList [Binding.became, Binding.targetingObject]
   -- CR 603.3b's second class names two things and binds both: CR 113.7's Saga,
   -- which the chapter ability hangs on, under CR 400.7e's slot for the reason
   -- eventBindings' arm gives, and CR 603.3a's controller of that chapter ability
@@ -1766,9 +1768,7 @@ eventBindingSlotsSometimes cond = case cond of
   -- data/cards/paranormal-analyst.json is the reader, and finding nothing there
   -- is the rule's own answer.
   TriggerCondition.PlayerManifestsDread _ -> Set.singleton Binding.became
-  -- The permanent an occurrence names, absent when it named "you" (Unsettled
-  -- Mariner).
-  TriggerCondition.PermanentBecomesTargeted c | PermanentsBecomeTargeted.includesYou c -> Set.singleton Binding.became
+  TriggerCondition.BecomesTargeted c -> snd (becomesTargetedSlots c)
   _ -> Set.empty
 
 -- CR 603.2 / 120.1: the slots a DealsDamage trigger's eventBindings arm binds,

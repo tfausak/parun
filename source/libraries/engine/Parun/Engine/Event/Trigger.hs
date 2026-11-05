@@ -58,6 +58,7 @@ import qualified Parun.Types.BecameBlocking as BecameBlocking
 import qualified Parun.Types.BecameDesignated as BecameDesignated
 import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
+import qualified Parun.Types.BecomesTargetedTrigger as BecomesTargetedTrigger
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import Parun.Types.Card (Card)
 import qualified Parun.Types.CausedBy as CausedBy
@@ -699,13 +700,11 @@ looksBack condition = case condition of
   TriggerCondition.SpellCast {} -> False
   TriggerCondition.AbilityActivated _ -> False
   TriggerCondition.SelfCast -> False
-  TriggerCondition.SelfBecomesTargeted _ -> False
+  -- CR 601.2c makes a permanent a target while it is still on the battlefield,
+  -- so there is nothing gone for CR 603.10a to look back at, whatever the
+  -- subject or batching.
+  TriggerCondition.BecomesTargeted {} -> False
   TriggerCondition.ControllerBecomesTarget {} -> False
-  -- Nor does the batch reading of the same rule: CR 601.2c makes a permanent a
-  -- target while it is still on the battlefield, so there is nothing gone for CR
-  -- 603.10a to look back at.
-  TriggerCondition.PermanentsBecomeTargeted {} -> False
-  TriggerCondition.PermanentBecomesTargeted {} -> False
   TriggerCondition.SelfHalfUnlocked _ -> False
   TriggerCondition.RoomFullyUnlocked _ -> False
   -- CR 603.3b's second class names no zone change at all -- its event is another
@@ -925,7 +924,6 @@ batchScoped condition = case condition of
   TriggerCondition.SpellCast {} -> False
   TriggerCondition.AbilityActivated _ -> False
   TriggerCondition.SelfCast -> False
-  TriggerCondition.SelfBecomesTargeted _ -> False
   TriggerCondition.ControllerBecomesTarget {} -> False
   -- A True beside a OneOrMore Leaves and a OneOrMore LifeChanges, and the whole of
   -- what separates this constructor from the two singular arms above: CR 603.2c's
@@ -944,9 +942,9 @@ batchScoped condition = case condition of
   -- prints "this ability triggers only once each turn", and
   -- Engine.withinTurnLimit collapses a second firing whatever this answers, so
   -- the printed card cannot separate CR 603.2c's two sentences.
-  TriggerCondition.PermanentsBecomeTargeted {} -> True
-  -- Its per-occurrence twin: "a creature" is CR 603.2c's second sentence.
-  TriggerCondition.PermanentBecomesTargeted {} -> False
+  -- The per-occurrence reading, ward's and "a creature", is CR 603.2c's second
+  -- sentence.
+  TriggerCondition.BecomesTargeted c -> BecomesTargetedTrigger.batching c == Batching.OneOrMore
   TriggerCondition.SelfHalfUnlocked _ -> False
   TriggerCondition.RoomFullyUnlocked _ -> False
   TriggerCondition.SagaFinalChapterTriggers _ -> False
@@ -2992,15 +2990,14 @@ zonesTriggeredFrom cond =
         -- CR 113.6's default, unlike SelfCast just above: rule 702.21a prints ward on a
         -- permanent, so the bearer watches the announcement from the battlefield. A
         -- spell on the stack can become a target too, and no card in the pool is one.
-        TriggerCondition.SelfBecomesTargeted _ -> battlefield
+        --
+        -- And for a Matching subject: Professor Hojo is a creature, watching the
+        -- creatures beside it from the battlefield.
+        TriggerCondition.BecomesTargeted {} -> battlefield
         -- CR 113.6's default again: Dormant Gomazoa is a creature and Amulet of
         -- Safekeeping an artifact, both watching their controller from the
         -- battlefield. Nothing on the stack reads its controller becoming a target.
         TriggerCondition.ControllerBecomesTarget {} -> battlefield
-        -- CR 113.6's default once again: Professor Hojo is a creature, watching the
-        -- creatures beside it from the battlefield.
-        TriggerCondition.PermanentsBecomeTargeted {} -> battlefield
-        TriggerCondition.PermanentBecomesTargeted {} -> battlefield
         -- CR 113.6's default a last time: Historian's Boon is an enchantment watching
         -- the battlefield's Sagas, and a card in a graveyard sees no chapter fire.
         TriggerCondition.SagaFinalChapterTriggers _ -> battlefield
@@ -3256,10 +3253,8 @@ stateTriggersOn gs
             TriggerCondition.SpellCast {} -> False
             TriggerCondition.AbilityActivated _ -> False
             TriggerCondition.SelfCast -> False
-            TriggerCondition.SelfBecomesTargeted _ -> False
+            TriggerCondition.BecomesTargeted {} -> False
             TriggerCondition.ControllerBecomesTarget {} -> False
-            TriggerCondition.PermanentsBecomeTargeted {} -> False
-            TriggerCondition.PermanentBecomesTargeted {} -> False
             -- CR 709.5i is an EVENT trigger, for CR 709.5h's reason one arm up:
             -- it fires on the LAST designation arriving, and CR 709.5c leaves
             -- the permanent holding both thereafter, so a state read would fire

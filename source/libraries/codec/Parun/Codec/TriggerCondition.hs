@@ -4,6 +4,7 @@ import qualified Parun.Codec.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Codec.ActingPermanent as ActingPermanent
 import qualified Parun.Codec.AttackTrigger as AttackTrigger
 import qualified Parun.Codec.BecomesTapState as BecomesTapState
+import qualified Parun.Codec.BecomesTargetedTrigger as BecomesTargetedTrigger
 import qualified Parun.Codec.BlockTrigger as BlockTrigger
 import qualified Parun.Codec.CardName as CardName
 import qualified Parun.Codec.CausedBy as CausedBy
@@ -25,7 +26,6 @@ import qualified Parun.Codec.PermanentActed as PermanentActed
 import qualified Parun.Codec.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Codec.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Codec.PermanentTappedForMana as PermanentTappedForMana
-import qualified Parun.Codec.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Codec.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Codec.PlacesSticker as PlacesSticker
 import qualified Parun.Codec.PlayerActed as PlayerActed
@@ -94,10 +94,8 @@ codec =
           Arm.payload "SpellCast" SpellCast.codec TriggerCondition.SpellCast (\x -> case x of TriggerCondition.SpellCast y -> Just y; _ -> Nothing),
           Arm.nullary "SelfCast" TriggerCondition.SelfCast,
           Arm.payload "AbilityActivated" filterCodec TriggerCondition.AbilityActivated (\x -> case x of TriggerCondition.AbilityActivated y -> Just y; _ -> Nothing),
-          Arm.payload "SelfBecomesTargeted" PlayerRelation.codec TriggerCondition.SelfBecomesTargeted (\x -> case x of TriggerCondition.SelfBecomesTargeted y -> Just y; _ -> Nothing),
+          Arm.payload "BecomesTargeted" BecomesTargetedTrigger.codec TriggerCondition.BecomesTargeted (\x -> case x of TriggerCondition.BecomesTargeted y -> Just y; _ -> Nothing),
           Arm.payload "ControllerBecomesTarget" ControllerBecomesTarget.codec TriggerCondition.ControllerBecomesTarget (\x -> case x of TriggerCondition.ControllerBecomesTarget y -> Just y; _ -> Nothing),
-          Arm.payload "PermanentsBecomeTargeted" PermanentsBecomeTargeted.codec TriggerCondition.PermanentsBecomeTargeted (\x -> case x of TriggerCondition.PermanentsBecomeTargeted y -> Just y; _ -> Nothing),
-          Arm.payload "PermanentBecomesTargeted" PermanentsBecomeTargeted.codec TriggerCondition.PermanentBecomesTargeted (\x -> case x of TriggerCondition.PermanentBecomesTargeted y -> Just y; _ -> Nothing),
           Arm.payload "SelfHalfUnlocked" CardName.codec TriggerCondition.SelfHalfUnlocked (\x -> case x of TriggerCondition.SelfHalfUnlocked y -> Just y; _ -> Nothing),
           Arm.payload "RoomFullyUnlocked" PlayerRelation.codec TriggerCondition.RoomFullyUnlocked (\x -> case x of TriggerCondition.RoomFullyUnlocked y -> Just y; _ -> Nothing),
           Arm.payload "AnyOf" (Common.list codec) TriggerCondition.AnyOf (\x -> case x of TriggerCondition.AnyOf y -> Just y; _ -> Nothing),
@@ -177,10 +175,8 @@ tagOf x = case x of
   TriggerCondition.SpellCast {} -> "SpellCast"
   TriggerCondition.SelfCast {} -> "SelfCast"
   TriggerCondition.AbilityActivated {} -> "AbilityActivated"
-  TriggerCondition.SelfBecomesTargeted {} -> "SelfBecomesTargeted"
+  TriggerCondition.BecomesTargeted {} -> "BecomesTargeted"
   TriggerCondition.ControllerBecomesTarget {} -> "ControllerBecomesTarget"
-  TriggerCondition.PermanentsBecomeTargeted {} -> "PermanentsBecomeTargeted"
-  TriggerCondition.PermanentBecomesTargeted {} -> "PermanentBecomesTargeted"
   TriggerCondition.SelfHalfUnlocked {} -> "SelfHalfUnlocked"
   TriggerCondition.RoomFullyUnlocked {} -> "RoomFullyUnlocked"
   TriggerCondition.AnyOf {} -> "AnyOf"

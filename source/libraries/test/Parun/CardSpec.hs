@@ -101,6 +101,7 @@ import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.BecomesTapState as BecomesTapState
+import qualified Parun.Types.BecomesTargetedTrigger as BecomesTargetedTrigger
 import qualified Parun.Types.Behold as Behold
 import qualified Parun.Types.Bid as Bid
 import qualified Parun.Types.BindAmount as BindAmount
@@ -323,7 +324,6 @@ import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
-import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PermissionLimit as PermissionLimit
 import qualified Parun.Types.PermissionPool as PermissionPool
@@ -1245,15 +1245,12 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfCast -> []
   -- CR 602.2b's activation carries a Filter, which holds no Count.
   TriggerCondition.AbilityActivated _ -> []
-  -- CR 702.21a's condition carries a PlayerRelation and no Count.
-  TriggerCondition.SelfBecomesTargeted _ -> []
+  -- CR 601.2c's carries a subject, a PlayerRelation, a StackObjectKind and a
+  -- Batching, and no Count.
+  TriggerCondition.BecomesTargeted {} -> []
   -- Its player-side sibling carries a PlayerRelation and a StackObjectKind, and
   -- no Count either.
   TriggerCondition.ControllerBecomesTarget {} -> []
-  -- Nor does the bystander batch reading, which carries a Filter, a
-  -- PlayerRelation and a StackObjectKind.
-  TriggerCondition.PermanentsBecomeTargeted {} -> []
-  TriggerCondition.PermanentBecomesTargeted {} -> []
 
 -- Every Count reachable from one effect: the Quantities nested in its
 -- ObjectRefs, its own Quantity/Duration fields, and -- for Create/CreateEmblem
@@ -4736,17 +4733,14 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- "This spell" names the bearer and needs no Filter to say so.
   TriggerCondition.SelfCast -> []
   TriggerCondition.AbilityActivated f -> unframed [f]
-  -- Rule 702.21a names the bearer as well, and asks only a relation of the
-  -- targeting object's controller -- no Filter over the object itself.
-  TriggerCondition.SelfBecomesTargeted _ -> []
+  -- Rule 702.21a's Self subject names the bearer and carries no Filter; a
+  -- Matching one's is card text like any other: Professor Hojo's "creatures you
+  -- control".
+  TriggerCondition.BecomesTargeted c -> actingFilters (BecomesTargetedTrigger.permanent c)
   -- CR 601.2c from the player's side names CR 109.5's "you", a relation over the
   -- targeting object's controller and a kind read off the event, so there is no
   -- Filter here either.
   TriggerCondition.ControllerBecomesTarget {} -> []
-  -- The bystander batch reading DOES carry one, and it is card text like any
-  -- other: Professor Hojo's "creatures you control".
-  TriggerCondition.PermanentsBecomeTargeted payload -> unframed [PermanentsBecomeTargeted.filter payload]
-  TriggerCondition.PermanentBecomesTargeted payload -> unframed [PermanentsBecomeTargeted.filter payload]
   where
     actingFilters watched = case watched of
       ActingPermanent.Self -> []
@@ -4808,10 +4802,8 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SpellCast _ -> []
   TriggerCondition.SelfCast -> []
   TriggerCondition.AbilityActivated _ -> []
-  TriggerCondition.SelfBecomesTargeted _ -> []
+  TriggerCondition.BecomesTargeted _ -> []
   TriggerCondition.ControllerBecomesTarget _ -> []
-  TriggerCondition.PermanentsBecomeTargeted _ -> []
-  TriggerCondition.PermanentBecomesTargeted _ -> []
   TriggerCondition.SelfHalfUnlocked _ -> []
   TriggerCondition.RoomFullyUnlocked _ -> []
   -- Recursive, for triggerConditionCounts' reason: a branch of an AnyOf may be

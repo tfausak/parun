@@ -54,6 +54,7 @@ import qualified Parun.Types.AttackerTarget as AttackerTarget
 import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.BecomesTapState as BecomesTapState
+import qualified Parun.Types.BecomesTargetedTrigger as BecomesTargetedTrigger
 import qualified Parun.Types.Bid as Bid
 import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Blight as Blight
@@ -219,7 +220,6 @@ import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
-import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
@@ -2139,10 +2139,8 @@ rewriteTriggerCondition pairs condition = case condition of
     DiscardSubject.Discarder payload -> TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger (DiscardSubject.Discarder payload {PlayerActsOn.filter = Filter.rewrite pairs (PlayerActsOn.filter payload)}) way batching)
   TriggerCondition.SelfCast -> condition
   TriggerCondition.AbilityActivated f -> TriggerCondition.AbilityActivated (Filter.rewrite pairs f)
-  TriggerCondition.SelfBecomesTargeted _ -> condition
+  TriggerCondition.BecomesTargeted c -> TriggerCondition.BecomesTargeted c {BecomesTargetedTrigger.permanent = acting (BecomesTargetedTrigger.permanent c)}
   TriggerCondition.ControllerBecomesTarget {} -> condition
-  TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f relation kind includesYou) -> TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) relation kind includesYou)
-  TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f relation kind includesYou) -> TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) relation kind includesYou)
   TriggerCondition.PlayerDrawsNthCard {} -> condition
   TriggerCondition.PlayerBecomesMonarch _ -> condition
   TriggerCondition.Attacks t -> TriggerCondition.Attacks (rewriteAttackTrigger pairs t)
