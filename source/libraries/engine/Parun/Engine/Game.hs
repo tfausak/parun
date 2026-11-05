@@ -272,11 +272,16 @@ restampStickers :: ObjectId -> GameState -> GameState
 restampStickers oid gs = case lookupObject oid gs of
   Nothing -> gs
   Just obj ->
-    let step (acc, g) placement =
-          let (ts, g') = freshTimestamp g
-           in (acc Seq.|> placement {StickerPlacement.timestamp = ts}, g')
-        (restamped, stamped) = Foldable.foldl' step (Seq.empty, gs) (Object.stickers obj)
+    let (restamped, stamped) = restampPlacements (Object.stickers obj) gs
      in stamped {GameState.objects = Map.adjust (\o -> o {Object.stickers = restamped}) oid (GameState.objects stamped)}
+
+-- | CR 613.7k: each placement takes a new timestamp, in their order.
+restampPlacements :: Seq.Seq StickerPlacement.StickerPlacement -> GameState -> (Seq.Seq StickerPlacement.StickerPlacement, GameState)
+restampPlacements placements gs =
+  let step (acc, g) placement =
+        let (ts, g') = freshTimestamp g
+         in (acc Seq.|> placement {StickerPlacement.timestamp = ts}, g')
+   in Foldable.foldl' step (Seq.empty, gs) placements
 
 -- | CR 123.2: the sheet a sticker is printed on, among its owner's brought
 -- sheets.

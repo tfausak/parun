@@ -1688,10 +1688,9 @@ spec s registry = Spec.describe s "Sticker" $ do
         merged = S.runPure answer board (S.cast S.alice card >> drain)
         stickerNumbers = (Just 5, Just 1) :: (Maybe Integer, Maybe Integer)
     Spec.assertEqWith s "CR 123.5b the merged Bears has the spell's sticker and its P/T" (stickerKindsOn bearsId merged, (Projection.powerOf bearsId merged, Projection.toughnessOf bearsId merged)) ([StickerKind.PowerToughness], stickerNumbers)
-  -- The spell's 5/1 goes on before the host's 2/3, so old timestamp order has
-  -- the host's last, where the host's stickers then the spell's would have the
-  -- spell's last.
-  Spec.it s "CR 613.7k a host's and a merging spell's stickers keep their old timestamp order" $ do
+  -- The spell's 5/1 goes on before the host's 2/3; the merge restamps only the
+  -- spell's, so it ends up later.
+  Spec.it s "CR 613.7k a merging spell's stickers restamp at the merge, after the host's" $ do
     sheets <- committedSheets
     picker <- S.printingOf s registry "Wicker Picker"
     cubwarden <- S.printingOf s registry "Cubwarden"
@@ -1708,10 +1707,10 @@ spec s registry = Spec.describe s "Sticker" $ do
         cast = S.runPure answer board (S.cast S.alice card)
         merged = S.runPure answer (Sticker.put S.alice bearsId nightTwoThree Nothing cast) drain
     Spec.assertEqWith s "both stickers are on the merged Bears" (stickerKindsOn bearsId merged) [StickerKind.PowerToughness, StickerKind.PowerToughness]
-    Spec.assertEqWith s "CR 613.7k the host's sticker, the later, wins" (Projection.powerOf bearsId merged, Projection.toughnessOf bearsId merged) (Just 2, Just 3)
+    Spec.assertEqWith s "CR 613.7k the spell's sticker, restamped, wins" (Projection.powerOf bearsId merged, Projection.toughnessOf bearsId merged) (Just 5, Just 1)
   -- The Bears takes Otter's 5/1; Turn to Frog makes it 1/1 later; then
   -- Cubwarden mutates onto it.
-  Spec.it s "CR 613.7k a host's P/T sticker restamps at the merge and beats Turn to Frog" $ do
+  Spec.it s "CR 613.7k/730.2c a host's P/T sticker keeps its timestamp at the merge under Turn to Frog" $ do
     sheets <- committedSheets
     cubwarden <- S.printingOf s registry "Cubwarden"
     frog <- S.printingOf s registry "Turn to Frog"
@@ -1725,9 +1724,8 @@ spec s registry = Spec.describe s "Sticker" $ do
         frogged = S.runPure (namingTarget bearsId) g3 (S.cast S.alice frogId >> drain)
         merged = S.runPure (MutateSpec.mutatingAt MutateSide.Over bearsId) frogged (S.cast S.alice cubId >> drain)
         pt g = (Projection.powerOf bearsId g, Projection.toughnessOf bearsId g)
-        stickerNumbers = (Just 5, Just 1) :: (Maybe Integer, Maybe Integer)
     Spec.assertEqWith s "before the merge, Turn to Frog's 1/1 wins" (pt frogged) (Just 1, Just 1)
-    Spec.assertEqWith s "CR 613.7k after it, the restamped sticker's P/T wins" (pt merged) stickerNumbers
+    Spec.assertEqWith s "CR 730.2c after it, Turn to Frog's 1/1 still wins" (pt merged) (Just 1, Just 1)
     Spec.assertEqWith s "the Bears is merged" (fmap (Seq.length . Game.componentsOf . Object.source) (Game.lookupObject bearsId merged)) (Just 2)
   -- Chittering Host takes an art sticker and is destroyed; two boards differing
   -- in the owner's answer alone.
