@@ -116,6 +116,7 @@ import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PendingTrigger as PendingTrigger
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhaseSelector as PhaseSelector
+import qualified Parun.Types.PhasedOut as PhasedOut
 import qualified Parun.Types.PlayerControl as PlayerControl
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.Program as Program
@@ -366,19 +367,34 @@ determineUntap pid = do
     _ -> pure allowed
   pure (untapping, held)
 
--- CR 302.6: permanents the active player has controlled since their turn began
--- are no longer summoning sick. Written in the untap step alone, so a skipped one
--- (CR 500.11) writes nothing (gap #6241).
+-- CR 302.6: permanents the active player controls as their turn begins are no
+-- longer summoning sick (`openTurn`).
 -- The record names `pid`, so it answers CR 302.6 only for `pid`, and it iterates
 -- `Projection.controls`, so it settles for whoever CURRENTLY controls the
 -- permanent: Control Magic grants control indefinitely, so the creature can still
--- be the thief's at their own untap step.
+-- be the thief's at their own turn. A phased-out permanent `pid` controlled as it
+-- phased out is settled too, CR 702.26d keeping it under that control.
 settleAll :: PlayerId -> Game ()
 settleAll pid = do
   gs <- State.get
   let settle obj = obj {Object.sickness = Sickness.Settled pid}
-      ids = Projection.controls pid gs
+      phasedOut = Map.keys (Map.filter ((== pid) . PhasedOut.under) (GameState.phasedOut gs))
+      ids = Projection.controls pid gs <> phasedOut
   State.put gs {GameState.objects = foldr (Map.adjust settle) (GameState.objects gs) ids}
+
+-- CR 302.6 / 305.2: what the turn's beginning owes each active player still
+-- playing (CR 800.4j), run as its first untap step is reached and before CR
+-- 500.11 is asked, so a skipped untap step or beginning phase owes it too, and a
+-- CR 500.8 additional untap step does not repeat it.
+openTurn :: Game ()
+openTurn = do
+  live <- State.gets (\gs -> filter (\pid -> List.elem pid (Game.stillPlaying gs)) (Turn.activePlayers gs))
+  Monad.forM_ live $ \pid -> do
+    settleAll pid
+    State.modify' $ \gs ->
+      -- CR 305.2: the allowance is per TURN. DELETED rather than set to 0, so
+      -- "has played none" has one representation.
+      gs {GameState.landsPlayed = Map.delete pid (GameState.landsPlayed gs)}
 
 -- CR 302.6 asks for control held CONTINUOUSLY, so a settle must not outlive the
 -- control it was made about. This drops any `Settled p` on the battlefield whose
@@ -538,12 +554,6 @@ runTurnBasedActions phase = do
       -- making it the GAME's action.
       _ <- Daytime.untapCheck Event.recordTransformed
       untapAll live
-      Monad.forM_ live $ \pid -> do
-        settleAll pid
-        State.modify' $ \gs ->
-          -- CR 305.2: the allowance is per TURN. DELETED rather than set to 0, so
-          -- "has played none" has one representation.
-          gs {GameState.landsPlayed = Map.delete pid (GameState.landsPlayed gs)}
     -- CR 805.4b: each player on the active team draws.
     -- CR 503.1 gives the upkeep no turn-based action; the Unstable FAQ adds the
     -- crank (CR 701.45a leaving it out of the rules), the active player's, so
@@ -1911,6 +1921,10 @@ advance = do
 -- state-based actions, then move on. Bails out as soon as the game has a result.
 runStep :: Game ()
 runStep = do
+  -- The turn's first untap step is the one reached before fileTurnBegan files
+  -- the turn below.
+  opening <- State.gets (\gs -> GameState.phase gs == Phase.Beginning BeginningStep.Untap && Maybe.isNothing (GameState.permanentsAsTurnBegan gs))
+  Monad.when opening openTurn
   -- CR 500.12: nothing happens between turns, so the board this turn's first
   -- step opens on is the board as the turn began, whatever skips that step (CR
   -- 500.11) and however many untap steps CR 500.8 adds to the turn.

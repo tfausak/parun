@@ -2379,7 +2379,7 @@ matches context view predicate = case predicate of
     Nothing -> False
   -- CR 302.6: not a look-back over the log at all, unlike DeclaredThisTurn,
   -- LeftLibraryThisTurn and DealtDamageThisTurn -- the engine keeps the answer as
-  -- Object.sickness, written at the untap step and cleared whenever control
+  -- Object.sickness, written as the turn begins and cleared whenever control
   -- moves.
   Filter.ControlledSinceTurnBegan -> controlledSinceTurnBegan view
   -- CR 701.3a: a live read of Object.attachedTo and of the host's own projection,
