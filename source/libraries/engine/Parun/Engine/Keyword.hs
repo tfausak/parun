@@ -8514,7 +8514,7 @@ copiesOf quantity =
 paidSpellCopies :: Keyword -> Quantity.Quantity -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 paidSpellCopies keyword quantity ordinal =
   Mint.triggerOf
-    TriggerCondition.SelfCast
+    Mint.selfCast
     (Just (Condition.Compares (Compares.MkCompares (Quantity.TimesPaid (KeywordDesignator.OfInstance keyword ordinal)) Comparison.AtLeast (Quantity.Literal 1))))
     (copiesOf quantity)
 
@@ -8527,7 +8527,7 @@ paidSpellCopies keyword quantity ordinal =
 storm :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 storm =
   Mint.triggerOf
-    TriggerCondition.SelfCast
+    Mint.selfCast
     Nothing
     (copiesOf (Quantity.Count (Count.MkCount (Scope.InHistory (EventShape.SpellCast CastWindow.BeforeEvaluated)) (Filter.And []) Aggregation.Members)))
 
@@ -8542,7 +8542,7 @@ storm =
 gravestorm :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 gravestorm =
   Mint.triggerOf
-    TriggerCondition.SelfCast
+    Mint.selfCast
     Nothing
     (copiesOf Quantity.PermanentsDiedThisTurn)
 
@@ -8603,7 +8603,7 @@ demonstrate =
               ]
           )
    in Mint.triggerOf
-        TriggerCondition.SelfCast
+        Mint.selfCast
         Nothing
         (Mint.oneModeOf Map.empty (Seq.fromList [yours, theirs]))
 
@@ -8706,7 +8706,7 @@ cascade =
           )
       clause effect = Mint.mandatory (Seq.singleton effect)
    in Mint.triggerOf
-        TriggerCondition.SelfCast
+        Mint.selfCast
         Nothing
         (Mint.oneModeOf Map.empty (Seq.fromList [clause exile, clause (Effect.AsYouCascade cascadeExiled), clause offer, clause rest]))
 
@@ -8750,7 +8750,8 @@ cascadeExiled = SlotName.MkSlotName (Text.pack "cascaded")
 -- EachCardFromAmong filter already asks.
 --
 -- Filter.Shares Name Source and not a slot comparison, because
--- TriggerCondition.SelfCast binds nothing: "this spell" is CR 113.7's source.
+-- a Self TriggerCondition.SpellCast binds nothing: "this spell" is CR 113.7's
+-- source.
 -- Written ONCE where cascade writes its filter twice, since the reveal above is a
 -- COUNT: nothing here asks the filter to end a walk, so its only job is picking
 -- the offer's cards back out of the revealed batch.
@@ -8804,7 +8805,7 @@ ripple n =
           )
       clause optionality effect = Mint.clause optionality (Seq.singleton effect)
    in Mint.triggerOf
-        TriggerCondition.SelfCast
+        Mint.selfCast
         Nothing
         ( Mint.oneModeOf
             Map.empty

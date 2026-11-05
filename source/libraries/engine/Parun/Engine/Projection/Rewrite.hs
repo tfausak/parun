@@ -2121,7 +2121,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger kind motion holder threshold grouping) -> TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger kind motion (rewriteCounterHolder pairs holder) threshold grouping)
   -- The TurnScope is carried through untouched, not dropped: a rebuild that
   -- forgot the field would reset a text-changed trigger to firing every turn.
-  TriggerCondition.SpellCast (SpellCast.MkSpellCast f scope fromZone ordinal window copies) -> TriggerCondition.SpellCast (SpellCast.MkSpellCast (Filter.rewrite pairs f) scope fromZone ordinal window copies)
+  TriggerCondition.SpellCast (SpellCast.MkSpellCast subject scope fromZone ordinal window copies) -> TriggerCondition.SpellCast (SpellCast.MkSpellCast (acting subject) scope fromZone ordinal window copies)
   TriggerCondition.StepBegins {} -> condition
   -- Positional, so a field the record gains stops the build here: a kind and a
   -- card type name no word for Parun.Types.ChangeText's pairs to swap.
@@ -2137,7 +2137,6 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger subject way batching) -> case subject of
     DiscardSubject.Self -> condition
     DiscardSubject.Discarder payload -> TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger (DiscardSubject.Discarder payload {PlayerActsOn.filter = Filter.rewrite pairs (PlayerActsOn.filter payload)}) way batching)
-  TriggerCondition.SelfCast -> condition
   TriggerCondition.AbilityActivated f -> TriggerCondition.AbilityActivated (Filter.rewrite pairs f)
   TriggerCondition.BecomesTargeted c -> TriggerCondition.BecomesTargeted c {BecomesTargetedTrigger.permanent = acting (BecomesTargetedTrigger.permanent c)}
   TriggerCondition.ControllerBecomesTarget {} -> condition

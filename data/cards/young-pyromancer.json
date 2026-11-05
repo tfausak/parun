@@ -31,41 +31,44 @@
           "condition": {
             "type": "SpellCast",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
-                    }
-                  },
-                  {
-                    "type": "Or",
-                    "value": [
-                      {
-                        "type": "HasCardType",
-                        "value": {
-                          "type": "Instant"
-                        }
-                      },
-                      {
-                        "type": "HasCardType",
-                        "value": {
-                          "type": "Sorcery"
-                        }
-                      }
-                    ]
-                  }
-                ]
-              },
               "scope": {
                 "type": "EachTurn"
+              },
+              "spell": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
+                    },
+                    {
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Instant"
+                          }
+                        },
+                        {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Sorcery"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
               }
             }
           },

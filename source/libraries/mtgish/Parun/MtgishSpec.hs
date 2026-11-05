@@ -16,6 +16,7 @@ import qualified Parun.Mtgish.Node as Node
 import qualified Parun.Oracle.Keyword as Oracle.Keyword
 import qualified Parun.Oracle.Trigger as Oracle.Trigger
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationRestriction as ActivationRestriction
 import qualified Parun.Types.Affected as Affected
@@ -354,7 +355,7 @@ spellEffects face = [e | m <- Foldable.toList (Modal.modes (Face.spell face)), c
 -- | The filters of the cast triggers of the AST's face, which the test has
 -- already accepted.
 castFilters :: (String, String) -> [Filter.Filter Keyword.Keyword]
-castFilters card = [SpellCast.filter c | t <- Face.triggeredAbilities (translated card), TriggerCondition.SpellCast c <- [TriggeredAbility.condition t]]
+castFilters card = [f | t <- Face.triggeredAbilities (translated card), TriggerCondition.SpellCast c <- [TriggeredAbility.condition t], ActingPermanent.Matching f <- [SpellCast.spell c]]
 
 -- | A vanilla creature's AST with one keyword rule, named as mtgish names
 -- it: the printed name's words run together ("FirstStrike", "JumpStart").

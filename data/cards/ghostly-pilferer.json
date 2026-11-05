@@ -138,41 +138,44 @@
           "condition": {
             "type": "SpellCast",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "Opponent"
-                      }
-                    }
-                  },
-                  {
-                    "type": "Not",
-                    "value": {
-                      "type": "And",
-                      "value": [
-                        {
-                          "type": "WasCastFrom",
-                          "value": {
-                            "type": "Hand"
-                          }
-                        },
-                        {
-                          "type": "ControllerIsOwner"
-                        }
-                      ]
-                    }
-                  }
-                ]
-              },
               "scope": {
                 "type": "EachTurn"
+              },
+              "spell": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "Opponent"
+                        }
+                      }
+                    },
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "And",
+                        "value": [
+                          {
+                            "type": "WasCastFrom",
+                            "value": {
+                              "type": "Hand"
+                            }
+                          },
+                          {
+                            "type": "ControllerIsOwner"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
               }
             }
           },

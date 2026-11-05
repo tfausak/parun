@@ -137,6 +137,7 @@ import qualified Parun.Types.Revealed as Revealed
 import qualified Parun.Types.Saddling as Saddling
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Source as Source
+import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Parun.Types.SpellWasCopied as SpellWasCopied
 import qualified Parun.Types.StepBegan as StepBegan
@@ -699,7 +700,6 @@ looksBack condition = case condition of
   TriggerCondition.SelfBecomesClassLevel _ -> False
   TriggerCondition.SpellCast {} -> False
   TriggerCondition.AbilityActivated _ -> False
-  TriggerCondition.SelfCast -> False
   -- CR 601.2c makes a permanent a target while it is still on the battlefield,
   -- so there is nothing gone for CR 603.10a to look back at, whatever the
   -- subject or batching.
@@ -923,7 +923,6 @@ batchScoped condition = case condition of
   TriggerCondition.SelfBecomesClassLevel _ -> False
   TriggerCondition.SpellCast {} -> False
   TriggerCondition.AbilityActivated _ -> False
-  TriggerCondition.SelfCast -> False
   TriggerCondition.ControllerBecomesTarget {} -> False
   -- A True beside a OneOrMore Leaves and a OneOrMore LifeChanges, and the whole of
   -- what separates this constructor from the two singular arms above: CR 603.2c's
@@ -1961,7 +1960,7 @@ eventTriggers events gs =
       -- caster is stamped into Object.enteredUnder by changeZoneCasting, and
       -- Projection.defaultControllerOf reads it back, so a standing scan would
       -- find the caster rather than falling back to the owner. The narrower scope
-      -- is what the WORK asks for -- SelfCast is the only condition
+      -- is what the WORK asks for -- a Self SpellCast is the only condition
       -- zonesTriggeredFrom puts on the stack and it matches no other event, so a
       -- standing scan of every spell would answer alike at more cost. An
       -- ability that states it functions on the stack (CR 113.6b) and watches
@@ -2978,16 +2977,19 @@ zonesTriggeredFrom cond =
         -- Commander proves the exile answer.
         TriggerCondition.CountersChange _ -> battlefield
         TriggerCondition.SelfBecomesClassLevel _ -> battlefield
-        -- CR 113.6's default: Young Pyromancer watches the stack from the battlefield,
-        -- and a card in a graveyard sees nothing cast.
-        TriggerCondition.SpellCast {} -> battlefield
+        -- CR 113.6's default for a Matching subject: Young Pyromancer watches the
+        -- stack from the battlefield, and a card in a graveyard sees nothing cast.
+        --
+        -- CR 113.6k for a Self subject, the second zone it reaches: CR 601.2a moves
+        -- the object to the stack to cast it and leaves it there, so at CR 601.2i it
+        -- is on the stack and not on the battlefield -- the condition cannot trigger
+        -- from there at all. The stack is the one zone it can, and eventTriggers'
+        -- `spellCast` is what serves it.
+        TriggerCondition.SpellCast c -> case SpellCast.spell c of
+          ActingPermanent.Self -> Set.singleton Zone.Stack
+          ActingPermanent.Matching _ -> battlefield
         TriggerCondition.AbilityActivated _ -> battlefield
-        -- CR 113.6k, the second zone it reaches: CR 601.2a moves the object to the stack
-        -- to cast it and leaves it there, so at CR 601.2i it is on the stack and not on
-        -- the battlefield -- this condition cannot trigger from there at all. The stack
-        -- is the one zone it can, and eventTriggers' `spellCast` is what serves it.
-        TriggerCondition.SelfCast -> Set.singleton Zone.Stack
-        -- CR 113.6's default, unlike SelfCast just above: rule 702.21a prints ward on a
+        -- CR 113.6's default, unlike a Self SpellCast just above: rule 702.21a prints ward on a
         -- permanent, so the bearer watches the announcement from the battlefield. A
         -- spell on the stack can become a target too, and no card in the pool is one.
         --
@@ -3252,7 +3254,6 @@ stateTriggersOn gs
             TriggerCondition.SelfBecomesClassLevel _ -> False
             TriggerCondition.SpellCast {} -> False
             TriggerCondition.AbilityActivated _ -> False
-            TriggerCondition.SelfCast -> False
             TriggerCondition.BecomesTargeted {} -> False
             TriggerCondition.ControllerBecomesTarget {} -> False
             -- CR 709.5i is an EVENT trigger, for CR 709.5h's reason one arm up:

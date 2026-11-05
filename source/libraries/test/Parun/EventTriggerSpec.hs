@@ -990,7 +990,7 @@ desolationTwinSpec s registry =
                 GameState.priority = Just S.alice
               }
       castAndResolve caster oid gs = S.runPure S.identityAnswer (S.runPure S.identityAnswer gs (S.cast caster oid)) Engine.priorityLoop
-   in Spec.describe s "SelfCast" $ do
+   in Spec.describe s "SpellCast, a Self subject" $ do
         -- THE case: an ability borne by an object on the stack fires at all.
         Spec.it s "CR 113.6k Desolation Twin's cast trigger fires from the stack" $ do
           mountain <- S.printingOf s registry "Mountain"

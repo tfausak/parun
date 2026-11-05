@@ -839,7 +839,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- CR 601.2i: a cast trigger names the caster as the controller the spell's
   -- filter gives it (CR 112.2), and no controller as "a player".
   Spec.it s "render prints a trigger on casting a spell" $ do
-    let cast f = withFace (\g -> g {Face.triggeredAbilities = [triggered (TriggerCondition.SpellCast (SpellCast.MkSpellCast f TurnScope.EachTurn Nothing Nothing Nothing False)) [clause [gainLife 1]] []]})
+    let cast f = withFace (\g -> g {Face.triggeredAbilities = [triggered (TriggerCondition.SpellCast (SpellCast.matching f)) [clause [gainLife 1]] []]})
     Spec.assertEq s (Just (Text.pack "Whenever a player casts a blue spell, you gain 1 life.")) (Oracle.render (cast (Filter.HasColor Color.Blue)))
     Spec.assertEq s (Just (Text.pack "Whenever you cast an enchantment spell, you gain 1 life.")) (Oracle.render (cast (Filter.And [Filter.HasCardType CardType.Enchantment, Filter.HeldBy Holder.Controller PlayerRelation.You])))
     Spec.assertEq s (Just (Text.pack "Whenever an opponent casts a spell, you gain 1 life.")) (Oracle.render (cast (Filter.And [Filter.HeldBy Holder.Controller PlayerRelation.Opponent])))

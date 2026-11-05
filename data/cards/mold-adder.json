@@ -27,41 +27,44 @@
           "condition": {
             "type": "SpellCast",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "Or",
-                    "value": [
-                      {
-                        "type": "HasColor",
-                        "value": {
-                          "type": "Blue"
-                        }
-                      },
-                      {
-                        "type": "HasColor",
-                        "value": {
-                          "type": "Black"
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "Opponent"
-                      }
-                    }
-                  }
-                ]
-              },
               "scope": {
                 "type": "EachTurn"
+              },
+              "spell": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Blue"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Black"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "Opponent"
+                        }
+                      }
+                    }
+                  ]
+                }
               }
             }
           },

@@ -92,19 +92,22 @@
           "condition": {
             "type": "SpellCast",
             "value": {
-              "filter": {
-                "type": "HeldBy",
-                "value": {
-                  "holder": {
-                    "type": "Controller"
-                  },
-                  "relation": {
-                    "type": "You"
-                  }
-                }
-              },
               "scope": {
                 "type": "EachTurn"
+              },
+              "spell": {
+                "type": "Matching",
+                "value": {
+                  "type": "HeldBy",
+                  "value": {
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "You"
+                    }
+                  }
+                }
               }
             }
           },

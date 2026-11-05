@@ -2910,7 +2910,7 @@ speedDecreaseNames asking x = case x of
 
 spellCastNames :: (Monoid r) => Asking r -> SpellCast.SpellCast -> r
 spellCastNames asking x = case x of
-  SpellCast.MkSpellCast filter_ scope _zone ordinal _phase _copies -> filterNames asking filter_ <> turnScopeNames asking scope <> foldMap (const (history asking HistoryRead.Casts)) ordinal
+  SpellCast.MkSpellCast subject scope _zone ordinal _phase _copies -> actingPermanentNames asking subject <> turnScopeNames asking scope <> foldMap (const (history asking HistoryRead.Casts)) ordinal
 
 spliceNames :: (Monoid r) => Asking r -> (keyword -> r) -> Splice.Splice keyword -> r
 spliceNames asking onKeyword x = case x of
@@ -3114,7 +3114,6 @@ triggerConditionNames asking x = case x of
   TriggerCondition.CountersChange counterTrigger -> counterTriggerNames asking counterTrigger
   TriggerCondition.SelfBecomesClassLevel _classLevel -> mempty
   TriggerCondition.SpellCast spellCast -> spellCastNames asking spellCast
-  TriggerCondition.SelfCast -> mempty
   TriggerCondition.AbilityActivated filter_ -> filterNames asking filter_
   TriggerCondition.BecomesTargeted becomesTargetedTrigger -> becomesTargetedTriggerNames asking becomesTargetedTrigger
   TriggerCondition.ControllerBecomesTarget _controllerBecomesTarget -> mempty

@@ -2042,13 +2042,11 @@ representativeEvents cond =
         -- CR 601.2i's own event, and CR 707.10's copy where the condition
         -- watches copies too. Both halves are bound whichever ids the event
         -- names -- the spell under `thatSpell`, the caster or copier under
-        -- `thatPlayer` -- so the two sides agree on the pair.
+        -- `thatPlayer` -- so the two sides agree on the pair. A Self subject binds
+        -- nothing whichever ids the event names, since the spell IS the bearer.
         TriggerCondition.SpellCast (SpellCast.MkSpellCast _ _ _ _ _ copies) ->
           noTable (GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice arrived S.emptyCharacteristics (Just Zone.Hand) Nothing Set.empty))
             NonEmpty.:| [noTable (GameEvent.SpellCopied (SpellWasCopied.MkSpellWasCopied S.alice arrived)) | copies]
-        -- The same event, and the only one this condition admits either. It binds
-        -- nothing whichever ids the event names, since the spell IS the bearer.
-        TriggerCondition.SelfCast -> one (GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice arrived S.emptyCharacteristics (Just Zone.Hand) Nothing Set.empty))
         -- CR 602.2b's activation, binding the ability and its activator.
         TriggerCondition.AbilityActivated _ -> one (GameEvent.AbilityActivated (AbilityWasActivated.MkAbilityWasActivated S.alice arrived departed False))
         -- CR 601.2c's event. Under a Self subject, the bearer is the targeted
@@ -2410,21 +2408,21 @@ everyTriggerCondition =
     -- eventBindings stamps for every event -- so an arm that had cased on the
     -- scope and stamped nothing under one of them would go unseen if only one
     -- were listed.
-    TriggerCondition.SpellCast (SpellCast.MkSpellCast Filter.Type.IsSource TurnScope.EachTurn Nothing Nothing Nothing False),
-    TriggerCondition.SpellCast (SpellCast.MkSpellCast Filter.Type.IsSource TurnScope.OpponentsTurn Nothing Nothing Nothing False),
+    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) TurnScope.EachTurn Nothing Nothing Nothing False),
+    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) TurnScope.OpponentsTurn Nothing Nothing Nothing False),
     -- And the zone axis, listed for the TurnScope pair's reason one field over:
     -- an arm that cased on the zone and stamped nothing when one was named would
     -- go unseen if every entry here left it Nothing.
-    TriggerCondition.SpellCast (SpellCast.MkSpellCast Filter.Type.IsSource TurnScope.EachTurn (Just Zone.Hand) Nothing Nothing False),
+    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) TurnScope.EachTurn (Just Zone.Hand) Nothing Nothing False),
     -- And the ordinal axis, for the same reason again: Clarion Spirit's "your
     -- second spell each turn" narrows which cast fires the ability and stamps
     -- nothing of its own, which an entry leaving it Nothing could not show.
-    TriggerCondition.SpellCast (SpellCast.MkSpellCast Filter.Type.IsSource TurnScope.EachTurn Nothing (Just 2) Nothing False),
+    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) TurnScope.EachTurn Nothing (Just 2) Nothing False),
     -- And the phase axis, Zuko, Firebending Master's "during combat".
-    TriggerCondition.SpellCast (SpellCast.MkSpellCast Filter.Type.IsSource TurnScope.EachTurn Nothing Nothing (Just PhaseSelector.CombatPhase) False),
+    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) TurnScope.EachTurn Nothing Nothing (Just PhaseSelector.CombatPhase) False),
     -- And magecraft's "or copy", whose second event binds the same pair.
-    TriggerCondition.SpellCast (SpellCast.MkSpellCast Filter.Type.IsSource TurnScope.EachTurn Nothing Nothing Nothing True),
-    TriggerCondition.SelfCast,
+    TriggerCondition.SpellCast (SpellCast.MkSpellCast (ActingPermanent.Matching Filter.Type.IsSource) TurnScope.EachTurn Nothing Nothing Nothing True),
+    TriggerCondition.SpellCast SpellCast.self,
     TriggerCondition.AbilityActivated (Filter.Type.And []),
     -- BOTH relations, for the SpellCast pair's reason just above: the arm cases
     -- on the relation, and one that stamped nothing under the other half would go

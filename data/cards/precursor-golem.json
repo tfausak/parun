@@ -79,39 +79,42 @@
           "condition": {
             "type": "SpellCast",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "Or",
-                    "value": [
-                      {
-                        "type": "HasCardType",
-                        "value": {
-                          "type": "Instant"
-                        }
-                      },
-                      {
-                        "type": "HasCardType",
-                        "value": {
-                          "type": "Sorcery"
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "type": "TargetsOnlyOne",
-                    "value": {
-                      "type": "HasSubtype",
-                      "value": {
-                        "type": "Golem"
-                      }
-                    }
-                  }
-                ]
-              },
               "scope": {
                 "type": "EachTurn"
+              },
+              "spell": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Instant"
+                          }
+                        },
+                        {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Sorcery"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "TargetsOnlyOne",
+                      "value": {
+                        "type": "HasSubtype",
+                        "value": {
+                          "type": "Golem"
+                        }
+                      }
+                    }
+                  ]
+                }
               }
             }
           },
