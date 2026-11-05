@@ -43,6 +43,7 @@ import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Deck as Deck
 import qualified Parun.Types.Filter as Filter.Type
+import qualified Parun.Types.Game as Game.Type
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Measure as Measure
@@ -59,6 +60,7 @@ import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Reply as R
 import qualified Parun.Types.Request as Request
 import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -170,6 +172,18 @@ spec s registry = Spec.describe s "Protocol" $ do
         Spec.assertBool s (Maybe.isJust second) "second"
       _ -> Spec.assertFailure s "fewer than two discard lines"
 
+  Spec.it s "CR 205.3e a subtype of the wrong kind is refused and asked again" $ do
+    gs <- started s registry
+    let oid = ObjectId.MkObjectId 1
+        creature = Prompt.ChooseCreatureType (Decider.MkDecider S.alice) S.alice oid
+        basicLand = Prompt.ChooseBasicLandType (Decider.MkDecider S.alice) S.alice oid
+        replies = [Protocol.encodeAnswer creature Subtype.Island, Protocol.encodeAnswer creature Subtype.Goblin, Protocol.encodeAnswer basicLand Subtype.Goblin, Protocol.encodeAnswer basicLand Subtype.Swamp]
+        ((chosen, _), sent) = overTheLine replies gs ((,) <$> Game.choose creature <*> Game.choose basicLand)
+        refused = Just (Text.pack "not an answer the prompt offers")
+    Spec.assertEqWith s "CR 205.3m creature type problems" (problemsOf "ChooseCreatureType" sent) [Nothing, refused]
+    Spec.assertEqWith s "CR 305.6 basic land type problems" (problemsOf "ChooseBasicLandType" sent) [Nothing, refused]
+    Spec.assertEqWith s "the second answers stand" chosen (Subtype.Goblin, Subtype.Swamp)
+
   Spec.it s "CR 509.1b an illegal block is refused naming the attacker, and asked again however often it is repeated" $ do
     drake <- S.printingOf s registry "Wind Drake"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -205,13 +219,20 @@ spec s registry = Spec.describe s "Protocol" $ do
 -- with the next of `replies`; the lines sent and the state after.
 declaring :: [R.Reply] -> GameState.GameState -> ([String], GameState.GameState)
 declaring replies gs =
+  let ((_, after), sent) = overTheLine replies gs (Combat.declareAttackers S.manaPerformer S.alice >> Combat.declareBlockers S.manaPerformer)
+   in (sent, after)
+
+-- Runs `game` over the line, answering each line sent with the next of
+-- `replies`; its result and state after, and the lines sent.
+overTheLine :: [R.Reply] -> GameState.GameState -> Game.Type.Game a -> ((a, GameState.GameState), [String])
+overTheLine replies gs game =
   let send line = State.state $ \(out, rest) -> case rest of
         reply : more -> (Common.render (Codec.Reply.toValue reply), (out <> [Text.unpack line], more))
         [] -> error ("no reply left for " <> Text.unpack line)
       fallback :: Answerer.Answerer (State.State ([String], [R.Reply]))
       fallback = Answerer.MkAnswerer (pure . Replay.defaultAnswer . Asked.prompt)
-      ((_, after), (sent, _)) = State.runState (Engine.runGameAsked (Answerer.unwrap (Protocol.over send fallback)) gs (Combat.declareAttackers S.manaPerformer S.alice >> Combat.declareBlockers S.manaPerformer)) ([], replies)
-   in (sent, after)
+      (ran, (sent, _)) = State.runState (Engine.runGameAsked (Answerer.unwrap (Protocol.over send fallback)) gs game) ([], replies)
+   in (ran, sent)
 
 -- The problem each line of this kind was sent with.
 problemsOf :: String -> [String] -> [Maybe Text.Text]
