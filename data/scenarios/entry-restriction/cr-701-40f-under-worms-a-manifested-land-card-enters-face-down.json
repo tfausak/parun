@@ -1,0 +1,113 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "plains",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains-2",
+            "ready": true
+          },
+          {
+            "card": "Worms of the Earth",
+            "label": "worms",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Soul Summons",
+            "label": "soul-summons",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest",
+            "label": "top"
+          },
+          {
+            "card": "Goblin Piker"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 701.40f under Worms a manifested land card enters face down",
+  "final": [
+    {
+      "Count": {
+        "card": "Soul Summons",
+        "count": 1,
+        "player": "alice",
+        "zone": "Graveyard"
+      }
+    },
+    {
+      "Count": {
+        "card": "Forest",
+        "count": 0,
+        "player": "alice",
+        "zone": "Library"
+      }
+    },
+    {
+      "PowerToughness": {
+        "object": "Forest",
+        "power": 2,
+        "toughness": 2
+      }
+    },
+    {
+      "View": {
+        "is": [
+          "$plains",
+          "$plains-2",
+          "$worms",
+          "Forest"
+        ],
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Battlefield"
+      }
+    },
+    {
+      "View": {
+        "is": [
+          "Goblin Piker"
+        ],
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Library"
+      }
+    }
+  ],
+  "note": "Soul Summons manifests the top card of alice's library, a Forest. As it would exist on the battlefield it is a face-down 2/2 creature (CR 701.40a, 614.17d), not a land, so Worms of the Earth's \"lands can't enter the battlefield\" does not stop it.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$plains",
+            "$plains-2"
+          ],
+          "object": "$soul-summons"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

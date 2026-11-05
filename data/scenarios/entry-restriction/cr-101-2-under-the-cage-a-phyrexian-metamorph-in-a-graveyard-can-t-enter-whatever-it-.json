@@ -1,0 +1,96 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Grafdigger's Cage",
+            "label": "cage",
+            "ready": true
+          },
+          {
+            "card": "Ornithopter",
+            "label": "ornithopter",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Grasping Tentacles",
+            "label": "tentacles"
+          }
+        ],
+        "manaPool": "UBB",
+        "name": "alice"
+      },
+      {
+        "graveyard": [
+          {
+            "card": "Phyrexian Metamorph",
+            "label": "returned"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 101.2 under the Cage a Phyrexian Metamorph in a graveyard can't enter whatever it would copy",
+  "final": [
+    {
+      "View": {
+        "is": [
+          "$returned",
+          "Island",
+          "Island#2"
+        ],
+        "of": "Zone",
+        "player": "bob",
+        "zone": "Graveyard"
+      }
+    },
+    {
+      "View": {
+        "is": [],
+        "of": "Zone",
+        "player": "bob",
+        "zone": "Battlefield"
+      }
+    }
+  ],
+  "note": "The Sculpting Steel case's pair: Phyrexian Metamorph is an artifact creature card in bob's graveyard, so the Cage refuses it as the card exists there (its ruling), before any copy is offered, though a copy of a noncreature artifact would not be a creature.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "object": "$tentacles",
+          "targets": [
+            "$bob"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

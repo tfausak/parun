@@ -12,6 +12,8 @@ data EntryRefusal
     Unpaid
   | -- | CR 303.4g: it became an Aura as it entered and has nothing legal to enchant.
     Unhosted
+  | -- | CR 614.17d: an entry prohibition names it as it would exist on the battlefield.
+    Prohibited
   | -- | CR 614.6: a zone-change redirect sends it to this zone and end instead.
     Diverted Zone.Zone LibraryPosition.LibraryPosition
   deriving (Eq, Ord, Show)

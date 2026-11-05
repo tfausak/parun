@@ -5569,15 +5569,41 @@ runEntry settle diverting origin given oid = do
   -- below for the reason `before` is.
   beforeSubjects <- State.gets GameState.enteringSubjects
   State.modify' (\gs -> gs {GameState.enteringBeside = batch, GameState.enteringSubjects = Map.insert oid origin beforeSubjects})
-  (outcome, _, _, _, _, _) <- loop settle Nothing batch diverting Map.empty Set.empty mempty Nothing False Nothing (ProposedEvent.WouldEnter oid)
+  -- The entry undone before it happened: its pending counters dropped, and the
+  -- "when you do" a copy entry rewrite armed (becomeCopyAs) disarmed (CR 614.6
+  -- / 707.9g; the scenario hallowed-moonlight-stops-a-diverted-copy-s-when-you-do
+  -- proves it), so a minted object's caller has nothing left to unwind.
+  let abandon :: Game ()
+      abandon = do
+        Monad.void (takeEnteringCounters oid)
+        State.modify' (\gs -> gs {GameState.delayedTriggers = Seq.filter (\entry -> not (DelayedTrigger.source entry == oid && isReflexive entry)) (GameState.delayedTriggers gs)})
+        State.modify' (\gs -> gs {GameState.enteringBeside = before, GameState.enteringSubjects = beforeSubjects})
+      -- CR 614.17d: which entry prohibitions apply is read off the permanent as
+      -- it would exist on the battlefield, which is where it is materialized;
+      -- changeZoneAttaching's gate reads the card in its previous zone instead.
+      -- Asked BEFORE the loop too, since CR 614.17c lets no other replacement
+      -- modify an entry that can't happen, and again AFTER it, since what the
+      -- loop applied (Clone's copy, CR 707.5) counts. Each road's `diverting` is
+      -- the zone the move is from; a meld passes none and is asked nothing.
+      -- data/scenarios/entry-restriction's Worms of the Earth scenarios prove
+      -- it: the Ashaya one the first ask, the Dryad Arbor ones the second.
+      barred :: Game Bool
+      barred = maybe (pure False) (State.gets . EntryRestriction.prohibited oid) diverting
+  barredBefore <- barred
+  outcome <-
+    if barredBefore
+      then pure Nothing
+      else (\(settled, _, _, _, _, _) -> settled) <$> loop settle Nothing batch diverting Map.empty Set.empty mempty Nothing False Nothing (ProposedEvent.WouldEnter oid)
+  barredAfter <- case outcome of
+    Just (ProposedEvent.WouldChangeZone {}) -> pure False
+    Just _ -> barred
+    Nothing -> pure barredBefore
   case outcome of
+    _ | barredAfter -> do
+      abandon
+      pure (Just EntryRefusal.Prohibited)
     Just (ProposedEvent.WouldChangeZone zc _ position _) -> do
-      Monad.void (takeEnteringCounters oid)
-      -- CR 614.6 / 707.9g: the entry never happened, so the "when you do" a
-      -- copy entry rewrite armed (becomeCopyAs) does not fire. Proved by the
-      -- scenario hallowed-moonlight-stops-a-diverted-copy-s-when-you-do.
-      State.modify' (\gs -> gs {GameState.delayedTriggers = Seq.filter (\entry -> not (DelayedTrigger.source entry == oid && isReflexive entry)) (GameState.delayedTriggers gs)})
-      State.modify' (\gs -> gs {GameState.enteringBeside = before, GameState.enteringSubjects = beforeSubjects})
+      abandon
       Monad.when (diverting == Just Zone.Battlefield) (placeDiverted oid (ZoneChange.to zc) position)
       pure (Just (EntryRefusal.Diverted (ZoneChange.to zc) position))
     _ -> do
@@ -7447,6 +7473,12 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
         -- manifest. Grafdigger's Cage is the pool's printing, and CR 613.11 is
         -- why the prohibition is asked here rather than in Parun.Engine.Projection.
         --
+        -- THE CARD IN ITS PREVIOUS ZONE, the Cage's ruling (2019-07-12): "look at
+        -- the card as it exists in your graveyard". A prohibition naming
+        -- permanents (Worms of the Earth) reads the permanent as it would exist
+        -- instead (CR 614.17d), which runEntry asks; each Affected arm's own zone
+        -- gate is what keeps either from answering the other's question.
+        --
         -- Nothing for every origin but the stack, this funnel's CR 614.6 cancel
         -- arm one case up and CR 303.4g's answer one case down: for those the
         -- object is never deleted and never re-minted
@@ -7481,7 +7513,8 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
         -- it was, and the two rules are told apart by `fromZone` alone -- a zone
         -- read, never the resolving card's identity. Two roads reach this arm
         -- from the stack: a resolving permanent spell (Parun.Engine.Stack), and
-        -- the one below.
+        -- the one below. No printing reaches either here, since the Cage names no
+        -- stack origin; runEntry's EntryRefusal.Prohibited reaches both.
         --
         -- The other road here from the stack is a countered card some effect
         -- puts onto the battlefield instead of into its owner's graveyard
@@ -7490,8 +7523,9 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
         -- spell is countered and removed from the stack whatever, CR 614.6
         -- ignores the replaced move's impossible instruction, and what remains
         -- is the countering's own "put into its owner's graveyard".
-        -- The counterspell scenario "Desertion under Sealed Horizon still counters
-        -- the Bears into bob's graveyard" proves it.
+        -- The counterspell scenario "Desertion under Worms still counters a Clone
+        -- copying Dryad Arbor into bob's graveyard" proves it, through
+        -- EntryRefusal.Prohibited's arm, which answers alike.
         --
         -- Through the funnel again rather than by hand, because CR 608.3e's "puts
         -- it into its owner's graveyard" is an ordinary zone change: a
@@ -8350,6 +8384,12 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                       -- Parun.CopySpec's Betrayal pair proves the stack branch, and
                       -- no test drives another origin.
                       Just EntryRefusal.Unhosted -> do
+                        State.put unentered
+                        if fromZone == Zone.Stack then changeZoneReturning settle oid Zone.Graveyard else pure Seq.empty
+                      -- CR 614.17d with CR 608.3e and CR 400.4a: the
+                      -- EntryRestriction branch above's answer, for a permanent
+                      -- that can't enter as it would exist.
+                      Just EntryRefusal.Prohibited -> do
                         State.put unentered
                         if fromZone == Zone.Stack then changeZoneReturning settle oid Zone.Graveyard else pure Seq.empty
                       -- CR 614.6 / 614.12: a battlefield-bound redirect, asked inside
@@ -9791,6 +9831,7 @@ isDiverted refusal = case refusal of
   EntryRefusal.Diverted _ _ -> True
   EntryRefusal.Unpaid -> False
   EntryRefusal.Unhosted -> False
+  EntryRefusal.Prohibited -> False
 
 -- A minted object a redirect took is put straight into the redirect's zone. CR
 -- 614.6: the modified event occurs, so the arrival is logged as

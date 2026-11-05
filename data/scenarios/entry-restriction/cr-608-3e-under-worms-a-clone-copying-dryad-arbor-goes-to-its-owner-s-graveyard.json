@@ -1,0 +1,123 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "island-1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-2",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-3",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-4",
+            "ready": true
+          },
+          {
+            "card": "Worms of the Earth",
+            "label": "worms",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Clone",
+            "label": "clone"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Dryad Arbor",
+            "label": "arbor",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 608.3e under Worms a Clone copying Dryad Arbor goes to its owner's graveyard",
+  "final": [
+    {
+      "Count": {
+        "card": "Clone",
+        "count": 1,
+        "player": "alice",
+        "zone": "Graveyard"
+      }
+    },
+    {
+      "View": {
+        "is": [
+          "$island-1",
+          "$island-2",
+          "$island-3",
+          "$island-4",
+          "$worms"
+        ],
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Battlefield"
+      }
+    },
+    {
+      "View": {
+        "is": [],
+        "of": "Stack"
+      }
+    }
+  ],
+  "note": "Clone is no land in alice's hand or on the stack; CR 614.17d reads it as it would exist, a copy of Dryad Arbor, so Worms of the Earth's \"lands can't enter the battlefield\" refuses it and the resolving spell is put into its owner's graveyard (CR 608.3e's Example).",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$island-1",
+            "$island-2",
+            "$island-3",
+            "$island-4"
+          ],
+          "object": "$clone"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseCopyTarget": "$arbor"
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

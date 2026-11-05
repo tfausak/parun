@@ -1,0 +1,116 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "island-1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-2",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-3",
+            "ready": true
+          },
+          {
+            "card": "Worms of the Earth",
+            "label": "worms",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Sculpting Steel",
+            "label": "steel"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Darksteel Citadel",
+            "label": "citadel",
+            "ready": true
+          },
+          {
+            "card": "Ornithopter",
+            "label": "ornithopter",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 608.3e under Worms a Sculpting Steel copying Darksteel Citadel goes to its owner's graveyard",
+  "final": [
+    {
+      "Count": {
+        "card": "Sculpting Steel",
+        "count": 1,
+        "player": "alice",
+        "zone": "Graveyard"
+      }
+    },
+    {
+      "View": {
+        "is": [
+          "$island-1",
+          "$island-2",
+          "$island-3",
+          "$worms"
+        ],
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Battlefield"
+      }
+    },
+    {
+      "View": {
+        "is": [],
+        "of": "Stack"
+      }
+    }
+  ],
+  "note": "Sculpting Steel would enter as a copy of bob's Darksteel Citadel, an artifact land, so Worms of the Earth refuses it (CR 614.17d) and the resolving spell goes to alice's graveyard; bob's Ornithopter makes the copy choice a real one.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$island-1",
+            "$island-2",
+            "$island-3"
+          ],
+          "object": "$steel"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseCopyTarget": "$citadel"
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
