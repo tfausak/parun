@@ -196,7 +196,8 @@ data Combat = MkCombat
     -- GameEvent.AttackerDeclared: CR 508.1k records the attack after the toll is
     -- paid, so an event-log reading is False for exactly the creatures being
     -- declared alongside the one paying. An unpayable toll rewinds the write
-    -- with everything else.
+    -- with everything else, and a creature the paid toll took off the
+    -- battlefield is dropped from it (CR 508.1k).
     --
     -- NOT written by putOntoBattlefieldAttacking: CR 508.4 says such a creature
     -- was never declared as an attacker, the split `declaredAttacked` above
@@ -214,7 +215,8 @@ data Combat = MkCombat
     -- makes the chosen creatures blocking only after that payment, and CR 509
     -- has no analogue of CR 508.1f's tapping, so a fellow chosen blocker looks
     -- untapped and unblocking to a toll being paid for another. Rewound if the
-    -- toll cannot be paid.
+    -- toll cannot be paid, and a creature the paid toll took off the
+    -- battlefield is dropped from it (CR 509.1g).
     --
     -- NOT written by putOntoBattlefieldBlocking, for CR 509.4's twin of the
     -- CR 508.4 reason above.

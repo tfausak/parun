@@ -1105,7 +1105,8 @@ landFaces card =
 -- 712.14b names the modal double-faced card and nothing else; a nonmodal one is
 -- covered by CR 712.14's default (front face up) and by CR 712.14a's
 -- "transformed" wording, whose own refusal -- a card that isn't double-faced
--- stays put -- is the same door's, read off `backFace` rather than off this.
+-- stays put -- is the same door's, read off `backFace` and `isDoubleFaced`
+-- rather than off this.
 staysWhenPutOntoBattlefield :: Card.Card -> Bool
 staysWhenPutOntoBattlefield card = case Card.layout card of
   Layout.Normal -> False
@@ -1213,10 +1214,10 @@ backFace card =
         -- what CR 712.4c asks for there too: a meld card IS a double-faced card
         -- (CR 712.1), so 712.14a's second sentence is not what excludes it --
         -- "unlike other double-faced cards, meld cards cannot be transformed or
-        -- converted. Any instructions to do so are ignored" is. Such a card would
-        -- enter showing its front face under CR 712.14's default, but
-        -- Parun.Engine.Event's `refused` reads this Nothing and leaves it in its zone
-        -- (gap #6257).
+        -- converted. Any instructions to do so are ignored" is. Such a card
+        -- enters showing its front face under CR 712.14's default, and
+        -- Parun.Engine.Event's `refused` reads `isDoubleFaced` beside this
+        -- Nothing to let it; Parun.MeldSpec's Biolume Egg case is the proof.
         Layout.Meld {} -> Nothing
 
 -- CR 701.27a: "To transform a permanent, turn it over so that its other face is

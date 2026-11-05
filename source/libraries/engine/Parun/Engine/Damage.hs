@@ -1581,10 +1581,9 @@ dealCombatDamage :: Game () -> Game Bool
 dealCombatDamage settle = do
   gs <- State.get
   let combat = GameState.combat gs
-      participants =
-        Set.union
-          (Map.keysSet (Combat.Type.attackers combat))
-          (Set.unions (Map.elems (Combat.Type.blockers combat)))
+      -- CR 510.4's "attacking or blocking creature": Combat.blockingNothing's
+      -- count (CR 509.1g).
+      participants = Combat.combatants combat
       striking oid = Projection.hasKeyword Keyword.FirstStrike oid gs || Projection.hasKeyword Keyword.DoubleStrike oid gs
       strikers = Set.filter striking participants
       alive oid = onBattlefield oid gs

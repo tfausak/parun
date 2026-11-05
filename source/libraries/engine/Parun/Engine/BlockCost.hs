@@ -23,6 +23,7 @@ import qualified Data.Set as Set
 import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.Rewrite as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
 import qualified Parun.Extra.Integer as Integer
@@ -84,7 +85,11 @@ costsOn blocker blocked gs =
           -- guard lives.
           if (null setEffs || Projection.liveAfterLayers setEffs source gs)
             && not (removed source)
-            then concatMap (fromCost source) costs
+            then
+              -- CR 612.1 over the source's own text, CombatRestriction.gathered's
+              -- reading: the swap is the source's, as the cost is printed there.
+              let changes = Projection.readerTextChanges source gs
+               in concatMap (fromCost source) (if null changes then costs else fmap (Projection.rewriteBlockCost changes) costs)
             else []
       -- CR 509.1d reads the share LIVE, here, from the board the caller handed
       -- this function; the lock-in belongs to Parun.Engine.Combat.declareBlockers,
@@ -108,8 +113,7 @@ costsOn blocker blocked gs =
         Nothing -> True
         Just wanted -> any (\attacker -> Filter.matches blockerContext (Projection.viewOfObject attacker gs) wanted) (Set.toList blocked)
       -- CR 611.3a: an "as long as" is asked live, once per cost, with CR
-      -- 109.5's "you" the source's controller. No CR 612.1 word swap, as the
-      -- rest of the cost gets none (Projection.Rewrite.rewriteRuleAbilities).
+      -- 109.5's "you" the source's controller.
       inForce source bc = case BlockCost.while bc of
         Nothing -> True
         Just condition ->

@@ -5132,8 +5132,15 @@ paySubstitutingReadingThen refuses slots perform began earlier moment subject an
 -- The mana window (CR 508.1i, 509.1e) precedes payment, and the pooled MANA is
 -- paid first by parun's choice, since CR 508.1j and 509.1f take any order, and
 -- `pay` above takes the same posture for CR 601.2g.
-payToll :: ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> [ManaWindow.ManaWindow] -> PlayerId -> [(ObjectId, Cost Keyword.Type.Keyword)] -> Game (Maybe [ManaWindow.ManaWindow])
-payToll perform began earlier pid charges =
+--
+-- `held` is the permanents CR 508.1g's optional costs already tapped or exerted
+-- at the choice, ahead of the window rather than among CR 508.1j's payments. A
+-- window that takes one off the battlefield leaves that cost unpayable (CR
+-- 118.3), so the toll is refused. The combat-cost scenarios
+-- cr-508-1i-the-enlisted-creature-sacrificed-for-the-toll-reverses-the-attack
+-- and its exerted sibling, each feeding Ashnod's Altar, are the proof.
+payToll :: ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> Set.Set ObjectId -> [ManaWindow.ManaWindow] -> PlayerId -> [(ObjectId, Cost Keyword.Type.Keyword)] -> Game (Maybe [ManaWindow.ManaWindow])
+payToll perform began held earlier pid charges =
   -- CR 118.6: a toll one of whose parts is unpayable is unpayable whole.
   --
   -- `earlier` rides along here as it does below, a FENCE rather than proven
@@ -5154,7 +5161,8 @@ payToll perform began earlier pid charges =
           else do
             (paid, _, window) <- payManaWindow perform Set.empty Nothing PaymentSubject.ForNeither ManaSpending.AsProduced pid (\mc -> pure (mc, [])) pooled
             pure (paid, [window])
-      if not paidMana
+      standing <- State.gets (Set.isSubsetOf held . GameState.battlefield)
+      if not (paidMana && standing)
         then refused (earlier <> windows)
         else do
           let tagged = fmap (fmap Cost.components) announced

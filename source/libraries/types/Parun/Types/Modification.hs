@@ -151,10 +151,9 @@ data Modification ability
     --
     -- The copiable values and not the printed face, which is CR 702.165b and CR
     -- 702.165c together: a permanent that entered as a COPY of a card with
-    -- backup grants what it copied, and an ability a layer-6 effect afterwards
-    -- gave the creature with backup is not granted. Parun.KeywordTriggerSpec's Backup group
-    -- proves the first half. Not implemented: leaving out a copy exception's abilities
-    -- (#6253).
+    -- backup grants what it copied, and an ability any effect gave the
+    -- creature with backup, a CR 707.9a copy exception included, is not
+    -- granted. Parun.KeywordTriggerSpec's Backup group proves both halves.
     GainAbilitiesOfSource (Set.Set Keyword.Keyword)
   | -- | layer 6, CR 613.1f: this object has each activated ability of each
     -- card the payload names, in exile (Locus of Enlightenment, Mairsil, the

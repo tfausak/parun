@@ -121,7 +121,9 @@ Entries are ordered by the first rule each cites.
 - **Site**: `Parun.Engine.Replacement.oneEventPerRecipient`, proved by
   `Parun.DamageReplacementSpec`'s "CR 120.4 one sentence naming alice twice
   deals her ONE event, of 6" and the scenario
-  `harms-way-onto-another-recipient-of-its-source-is-one-event`.
+  `harms-way-onto-another-recipient-of-its-source-is-one-event`; absorb's
+  ceiling spans the event at `Parun.Engine.Replacement.ceilingLeft`, proved by
+  `lymph-sliver-absorbs-1-of-earthquake-once-though-pariah-adds-to-it`.
 - **Issue**: #2586.
 
 ## Whether damage a replacement adds joins a division already owed
@@ -388,6 +390,28 @@ Entries are ordered by the first rule each cites.
   only ITS controller may block the creature attacking nothing".
 - **Issue**: #2899.
 
+## Attacks alone after a sacrificed co-attacker
+
+- **Question**: CR 506.5 and CR 508.3a/508.3d read "declared as an attacker",
+  and CR 508.1k makes attacking only a chosen creature still controlled once
+  the costs are paid. Is a chosen creature sacrificed to pay a cost to attack
+  (Exalted Dragon's land, an Ashnod's Altar under Ghostly Prison) declared? Its
+  co-attacker attacks alone, exalted triggers, and "whenever you attack" fires,
+  or not.
+- **Rules**: CR 506.5, 508.1a, 508.1k, 508.3a, 508.3d, 509.1g; CR of
+  2026-08-07.
+- **Decision**: No. A creature is declared as an attacker when the declaration
+  makes it attacking at CR 508.1k, so it is left out of the count, the
+  attack triggers and Combat.declaredAttackers. The blocking side reads CR
+  509.1g the same way, the attacker staying blocked by CR 509.1h's own text.
+- **Rejected**: Counting every creature chosen at CR 508.1a: a creature that
+  never attacked would trigger "whenever a creature attacks" from the
+  graveyard and make its co-attacker share an attack it never made.
+- **Site**: `Parun.Engine.Combat.attemptAttackDeclaration`'s `survivors`,
+  proved by data/scenarios/combat-cost's "CR 506.5 / 508.1k a co-attacker
+  sacrificed to Exalted Dragon leaves the Dragon attacking alone".
+- **Issue**: #6245.
+
 ## Which defending player Cunning Giant attacking nothing reads
 
 - **Question**: With several defending players, whose creature may Cunning Giant
@@ -636,6 +660,26 @@ Entries are ordered by the first rule each cites.
 - **Site**: `data/cards/power-leak.json`'s `origin`, proved by the scenario
   "power-leak-prevents-before-furnace-of-rath-doubles".
 - **Issue**: #6128.
+
+## Whether a phased-out permanent a subgame takes leaves visibly
+
+- **Question**: A wish brings a phased-out permanent into a Shahrazad
+  subgame. CR 729.4a fires main-game leave triggers; CR 702.26b treats the
+  permanent as though it doesn't exist. The same question arises, by analogy,
+  when CR 800.4a or 800.4c exiles a phased-out permanent (CR 702.26n).
+- **Rules**: CR 702.26b, 702.26d, 702.26k, 702.26n, 729.1a, 729.4, 729.4a,
+  800.4a, 800.4c; CR of 2026-08-07.
+- **Decision**: It crosses, or is exiled, but no event is recorded and nothing
+  triggers.
+- **Rejected**: Recording the leave: CR 702.26b overrides rules that don't
+  name phasing. Leaving it unreachable: the wish belongs to a separate game
+  (CR 729.1a), and CR 702.26n names the exiles.
+- **Site**: `Parun.Engine.Setup.applyCrossings`, proved by `Parun.SetupSpec`'s
+  "CR 702.26b a phased-out permanent a subgame takes leaves the main game and
+  triggers nothing"; `Parun.Engine.Departure.exilePhasedOut`, proved by
+  `Parun.PhasingSpec`'s "CR 702.26n a phased-out permanent its departed
+  controller doesn't own is exiled at once".
+- **Issue**: #2468, #6254.
 
 ## Which component of a merged permanent answers for day and night
 
