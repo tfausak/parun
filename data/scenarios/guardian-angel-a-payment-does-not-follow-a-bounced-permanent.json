@@ -5,8 +5,8 @@
       {
         "battlefield": [
           {
-            "card": "Savannah Lions",
-            "label": "lions",
+            "card": "Grizzly Bears",
+            "label": "bears",
             "ready": true
           },
           {
@@ -32,6 +32,10 @@
           {
             "card": "Mountain",
             "label": "q"
+          },
+          {
+            "card": "Forest",
+            "label": "f"
           }
         ],
         "hand": [
@@ -93,7 +97,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 400.7 Guardian Angel: 'that permanent' is the object it targeted, so a payment after the creature was bounced and replayed does not shield the new object",
-  "note": "The payment stays offered, the row naming a gone object, and shields nothing: Savannah Lions dies to Shock. The control is guardian-angel-at-x-0's Hill Giant, shielded while it stays.",
+  "note": "The payment stays offered, the row naming a gone object, and shields nothing: the new Grizzly Bears dies to Shock's 2, where 1 prevented would leave it alive. The control is guardian-angel-at-x-0's Hill Giant, shielded while it stays.",
   "timeline": [
     {
       "do": {
@@ -104,7 +108,7 @@
           ],
           "object": "$angel",
           "targets": [
-            "$lions"
+            "$bears"
           ],
           "x": 0
         }
@@ -128,7 +132,7 @@
           ],
           "object": "$unsummon",
           "targets": [
-            "$lions"
+            "$bears"
           ]
         }
       },
@@ -146,10 +150,11 @@
       "do": {
         "Cast": {
           "mana": [
+            "$f",
             "$l",
             null
           ],
-          "object": "Savannah Lions"
+          "object": "Grizzly Bears"
         }
       },
       "player": "alice",
@@ -185,7 +190,7 @@
           ],
           "object": "$shock",
           "targets": [
-            "Savannah Lions"
+            "Grizzly Bears"
           ]
         }
       },
@@ -202,7 +207,7 @@
     {
       "check": {
         "Count": {
-          "card": "Savannah Lions",
+          "card": "Grizzly Bears",
           "count": 1,
           "player": "alice",
           "zone": "Graveyard"

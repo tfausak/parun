@@ -34,6 +34,10 @@
           },
           {
             "card": "Mountain",
+            "label": "r6"
+          },
+          {
+            "card": "Mountain",
             "label": "p1"
           },
           {
@@ -47,8 +51,8 @@
             "label": "angel"
           },
           {
-            "card": "Lava Axe",
-            "label": "axe"
+            "card": "Earthquake",
+            "label": "quake"
           }
         ],
         "library": [
@@ -95,8 +99,8 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "CR 116.2c / 116.1 Guardian Angel: each {1} paid, with Lava Axe on the stack and that stack untouched, prevents 1 more damage to the target player, on top of X",
-  "note": "X 1 and two payments leave Lava Axe's 5 dealing 2: each number discriminates. Bob's and alice's life show the shields surround only carol, the target, in a three-seat game. With no mana left the offer is not made, an action the player cannot take being no offer.",
+  "description": "CR 116.2c / 116.1 Guardian Angel: each {1} paid, with Earthquake on the stack and that stack untouched, prevents 1 more damage to the target player, on top of X",
+  "note": "X 1 and two payments leave Earthquake's 5 dealing 2 to carol: each number discriminates. It deals 5 to bob and alice too, so a shield around anyone but the target moves their life. With no mana left the offer is not made, an action the player cannot take being no offer.",
   "timeline": [
     {
       "do": {
@@ -132,12 +136,11 @@
             "$r3",
             "$r4",
             "$r5",
+            "$r6",
             null
           ],
-          "object": "$axe",
-          "targets": [
-            "$carol"
-          ]
+          "object": "$quake",
+          "x": 5
         }
       },
       "player": "alice",
@@ -162,7 +165,7 @@
       "check": {
         "View": {
           "is": [
-            "Lava Axe"
+            "Earthquake"
           ],
           "of": "Stack"
         }
@@ -202,7 +205,7 @@
       "check": {
         "View": {
           "is": [
-            "Lava Axe"
+            "Earthquake"
           ],
           "of": "Stack"
         }
@@ -231,7 +234,7 @@
     {
       "check": {
         "Life": {
-          "life": 20,
+          "life": 15,
           "player": "bob"
         }
       },
@@ -242,7 +245,7 @@
     {
       "check": {
         "Life": {
-          "life": 20,
+          "life": 15,
           "player": "alice"
         }
       },
