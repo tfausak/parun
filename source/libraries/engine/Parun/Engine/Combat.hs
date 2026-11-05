@@ -737,8 +737,8 @@ attackCeilingGiven limits alone barred candidates gs =
     gs
 
 -- attackCeilingGiven's search over the announcements `freely` admits and the
--- requirement instances given, so couldAttack can ask it with costs ignored
--- and a requirement of its own added.
+-- requirement instances given, so couldAttack can ask it with costs left to
+-- its own check and a requirement of its own added.
 ceilingUnder :: (ObjectId -> AttackTarget.AttackTarget -> Bool) -> Requirement.Instances (ObjectId, AttackTarget.AttackTarget) -> CombatRestriction.AttackLimits -> Map (ObjectId, AttackTarget.AttackTarget) [CombatRestriction.Company] -> Set (ObjectId, AttackTarget.AttackTarget) -> [ObjectId] -> GameState -> (Requirement.Instances (ObjectId, AttackTarget.AttackTarget), Map ObjectId AttackTarget.AttackTarget)
 ceilingUnder freely required limits alone barred candidates gs =
   let targets = declarableTargets gs
@@ -2235,9 +2235,15 @@ attackProposalAllowedGiven limits alone bound proposal gs =
 -- Witch's ruling's "could have been declared as an attacker during that turn's
 -- Declare Attackers Step", so over every such step of the turn.
 --
--- Not implemented: CR 508.1's preamble makes a declaration whose CR 508.1j
--- payment can't be made illegal, so a creature only in such declarations could
--- not have attacked; costs are ignored here (#6178).
+-- CR 508.1's preamble makes a declaration whose CR 508.1j payment can't be made
+-- illegal, so where some announcement is taxed a candidate also needs a legal
+-- declaration containing it whose CR 508.1h total its payers can pay once CR
+-- 508.1f has tapped its creatures (`affordable`). The witness, per
+-- announcement: the ceiling's free declaration plus it where nothing bounds the
+-- set, otherwise ceilingUnder's declaration holding it with every announcement
+-- admitted. Not implemented: a cheaper declaration than the witness, such as
+-- one leaving a requirement's mana creature untapped or picking a cheaper
+-- companion (#6324).
 --
 -- With no set-shaped restriction in force every candidate is in one: the
 -- ceiling's declaration plus the candidate obeys no fewer requirements and
@@ -2253,12 +2259,38 @@ couldAttack pid gs =
       (required, best) = attackCeilingGiven limits alone barred candidates gs
       most = Requirement.met required (Set.fromList (Map.toList best))
       heavier = 1 + sum (Requirement.pairs required) + sum (Requirement.groups required)
-      declarable oid =
-        let boosted = required {Requirement.pairs = Map.unionWith (+) (Map.fromList [((oid, target), heavier) | target <- declarableTargets gs]) (Requirement.pairs required)}
+      targets = declarableTargets gs
+      -- The legal declaration ceilingUnder settles on, costs aside, holding one
+      -- of `announcements`, if there is one.
+      witnessOf announcements =
+        let boosted = required {Requirement.pairs = Map.unionWith (+) (Map.fromList (fmap (\announcement -> (announcement, heavier)) announcements)) (Requirement.pairs required)}
             (_, witness) = ceilingUnder (\_ _ -> True) boosted limits alone barred candidates gs
-         in Requirement.met boosted (Set.fromList (Map.toList witness)) >= heavier + most
+         in if Requirement.met boosted (Set.fromList (Map.toList witness)) >= heavier + most then Just witness else Nothing
       unbounded = Map.null alone && Map.null (CombatRestriction.whole limits) && Map.null (CombatRestriction.perDefender limits)
-   in Set.fromList (if unbounded then candidates else filter declarable candidates)
+      declarable oid = Maybe.isJust (witnessOf (fmap ((,) oid) targets))
+      taxed = Set.fromList [(oid, target) | oid <- candidates, target <- targets, not (null (AttackCost.costsOn oid target gs))]
+      -- CR 508.1f-j over a declaration: tapped, then each attacking player's
+      -- total paid. Declared too, for a toll that asks (Hollow Warrior).
+      attackerOf oid = Maybe.fromMaybe pid (Projection.controllerOf oid gs)
+      affordable declaration =
+        let tapped = filter (\oid -> not (Projection.hasKeyword Keyword.Vigilance oid gs)) (Map.keys declaration)
+            after =
+              gs
+                { GameState.objects = List.foldl' (flip (Map.adjust (\o -> o {Object.tapped = TapState.Tapped}))) (GameState.objects gs) tapped,
+                  GameState.combat = (GameState.combat gs) {Combat.declaredAttackers = Set.union (Map.keysSet declaration) (Combat.declaredAttackers (GameState.combat gs))}
+                }
+            owes p = AttackCost.totalCost (Map.filterWithKey (\oid _ -> attackerOf oid == p) declaration) after
+         in all (\p -> tollPayable p (owes p) after) (sideOf pid gs)
+      payableAt oid target
+        | unbounded = affordable (Map.insert oid target best)
+        | otherwise = Maybe.maybe False affordable (witnessOf [(oid, target)])
+      -- `best` is legal and free, so a creature in it needs no other witness.
+      payable oid = Map.member oid best || any (payableAt oid) (filter (attackTargetAllowed barred oid) targets)
+   in Set.fromList
+        ( if Set.null taxed
+            then if unbounded then candidates else filter declarable candidates
+            else filter payable candidates
+        )
 
 -- One attempt at CR 508.1's declaration, plus the preamble's retry. Two steps can
 -- make the attempt fail: CR 508.1c/508.1d judge the declaration illegal, and CR

@@ -816,7 +816,7 @@ matchesPrinted viewOf gs event candidate =
         -- naming a DISCARD cause admits only a CR 701.9a discard of that cause
         -- (Library of Leng's "if an effect causes you to discard"). A pattern
         -- naming a CAUSE admits only a move made as CR 609.1's effect of a
-        -- spell or ability, its controller read live (Game.causeNow) since the
+        -- spell or ability, its controller read live (GameState.causing) since the
         -- move has not happened yet -- the one Moved.causedBy will record.
         --
         -- CR 614.12 / 616.1c: a pattern naming the battlefield judges the card as
@@ -839,7 +839,7 @@ matchesPrinted viewOf gs event candidate =
            in namesBattlefield == entering
                 && maybe True (== ZoneChange.to zc) (ZoneChangePattern.whenDestination pat)
                 && maybe True ((== discarded) . Just) (ZoneChangePattern.whenDiscarded pat)
-                && all (\relation -> maybe False (PlayerRelation.holdsFor (Game.teams gs) relation (ReplacementCandidate.controller candidate) . Just) (Game.causeNow gs)) (ZoneChangePattern.causedBy pat)
+                && all (\relation -> maybe False (PlayerRelation.holdsFor (Game.teams gs) relation (ReplacementCandidate.controller candidate) . Just) (GameState.causing gs)) (ZoneChangePattern.causedBy pat)
                 && (resolving || not (ZoneChangePattern.duringResolution pat))
                 && matchesZoneOwner gs candidate (ZoneChangePattern.whoseObject pat) oid
                 && matchesFiltered judgedView gs candidate (ZoneChangePattern.whatObject pat) oid

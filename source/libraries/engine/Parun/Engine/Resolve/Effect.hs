@@ -834,7 +834,7 @@ runReplacementEffects runSubgame = do
 -- runPreventionRider's posture. Every slot the row carries is treated as a LEGAL
 -- target, CR 608.2b having been applied when the installing ability resolved.
 -- An effect (CR 609.1) even when drained inside CR 118.12's cost, so the
--- paying flag is cleared (Game.causeNow).
+-- paying flag is cleared (Event.resolvingDiscardCause).
 runDamageRewriteEffect :: Game Result -> PendingReplacementEffect.PendingReplacementEffect -> Game ()
 runDamageRewriteEffect runSubgame pending =
   let targets = PendingReplacementEffect.targets pending
@@ -1441,8 +1441,13 @@ applyLoopBody runSubgame resolving source controller legal chosen bodyDefined bo
 --
 -- A player the reference names who has LEFT the game stays in this list and is
 -- answered unpaid by payGatePaidBy, CR 800.4f.
+--
+-- CR 118.12 / 118.12a: the payment is caused by the spell or ability resolving
+-- (Event.causedBy; Tamiyo, Collector of Tales' ruling of 2019-05-03). The
+-- scenario ajanis-last-stand-makes-an-avatar-discarded-to-an-opponents-painful-quandary
+-- proves it.
 payGatePaid :: Game Result -> ObjectId -> ObjectId -> PlayerId -> ModeIndex -> ClauseIndex -> Map.Map SlotName (Set Recipient) -> Maybe (Set PlayerId) -> Set PlayerId -> PayGate.PayGate -> Game (Map.Map PlayerId Bool)
-payGatePaid runSubgame resolving source controller idx cIdx legal announced committed gate = do
+payGatePaid runSubgame resolving source controller idx cIdx legal announced committed gate = Event.causedBy (Just controller) $ do
   gs <- State.get
   -- A COMMITTED payer (Parun.Engine.Resolve.chosenBranch) already chose to pay
   -- when they announced the branch, so their offer is CR 118.12's mandatory

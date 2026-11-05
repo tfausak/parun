@@ -279,6 +279,7 @@ import qualified Parun.Types.LifeLossCause as LifeLossCause
 import qualified Parun.Types.LimitUnless as LimitUnless
 import qualified Parun.Types.LookAt as LookAt
 import qualified Parun.Types.LoopMembers as LoopMembers
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.Loyalty as Loyalty
 import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.MadnessCost as MadnessCost
@@ -1194,11 +1195,10 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PlayerDrawsNthCard {} -> []
   -- CR 725.1's crowning condition is a PlayerRelation too.
   TriggerCondition.PlayerBecomesMonarch _ -> []
-  -- CR 603.7's slot-named condition holds a SlotName, which is no Count.
-  TriggerCondition.LoseControlOfBound _ -> []
+  -- CR 603.7's slot-named subject holds a SlotName, which is no Count, and CR
+  -- 603.10d's self subject carries nothing at all.
+  TriggerCondition.LosesControl _ -> []
   TriggerCondition.RoomEntered _ -> []
-  -- CR 603.10d's self condition carries nothing at all.
-  TriggerCondition.LoseControlOfSelf -> []
   -- CR 603.2's PlayerActs carries a PlayerAction and a PlayerRelation, neither
   -- a Count.
   TriggerCondition.PlayerActs _ -> []
@@ -4677,12 +4677,11 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.PlayerDrawsNthCard {} -> []
   -- CR 725.1's crowning condition is a PlayerRelation, which holds no Filter.
   TriggerCondition.PlayerBecomesMonarch _ -> []
-  -- CR 603.7's slot-named condition holds a SlotName, which is no Filter -- what
-  -- the slot holds was selected by the arming spell's own target slot.
-  TriggerCondition.LoseControlOfBound _ -> []
+  -- CR 603.7's slot-named subject holds a SlotName, which is no Filter -- what
+  -- the slot holds was selected by the arming spell's own target slot -- and CR
+  -- 603.10d's self subject carries nothing at all.
+  TriggerCondition.LosesControl _ -> []
   TriggerCondition.RoomEntered _ -> []
-  -- CR 603.10d's self condition carries nothing at all.
-  TriggerCondition.LoseControlOfSelf -> []
   -- CR 603.2's PlayerActs carries a PlayerAction and a PlayerRelation, neither
   -- a Filter.
   TriggerCondition.PlayerActs _ -> []
@@ -4820,10 +4819,10 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.PlayerBecomesMonarch _ -> []
   -- CR 603.7's slot-named condition, the first of the three arms with an answer:
   -- Ray of Command's "when you lose control of the creature" watches the
-  -- permanent its own spell targeted.
-  TriggerCondition.LoseControlOfBound slot -> [slot]
-  -- CR 603.10d's self condition names no slot.
-  TriggerCondition.LoseControlOfSelf -> []
+  -- permanent its own spell targeted; CR 603.10d's self subject names no slot.
+  TriggerCondition.LosesControl subject -> case subject of
+    LostPermanent.Bound slot -> [slot]
+    LostPermanent.Self -> []
   TriggerCondition.RoomEntered _ -> []
   TriggerCondition.PlayerActs _ -> []
   TriggerCondition.PlayerLosesGame _ -> []
@@ -5457,6 +5456,10 @@ blockPermissionFilters permission =
 --     Parun.Engine.Resolve.gateHolds through Resolve.Slots.effectContext, so
 --     CR 205.3m's Filter.Shares CreatureType Bound answers there (Mudbutton
 --     Clanger).
+--   * RepeatGateFramed -- a RepeatIf's condition, read by
+--     Parun.Engine.Resolve.Arms.Zones.repeatIf through Resolve.Slots.effectContext
+--     and a view filling Filter.View.hasEntryHost, which no other position does
+--     (Thieves' Auction).
 --   * LifeLossAmountFramed -- CR 119.3's amount, which the Effect.LoseLife arm
 --     reads per recipient through Resolve.Slots.effectContext, so
 --     Filter.Context.slotNames is filled and CR 709.4a's
@@ -5647,6 +5650,9 @@ data Framing
   | -- | CR 608.2c's clause "if", evaluated in the resolution's own context. See
     -- the overview above.
     ClauseGateFramed
+  | -- | A RepeatIf's condition, evaluated in the resolution's own context. See
+    -- the overview above.
+    RepeatGateFramed
   | -- | CR 119.3's per-recipient amount, evaluated in the resolution's own
     -- context. See the overview above.
     LifeLossAmountFramed
@@ -5736,6 +5742,8 @@ sweptForSingularSlots framing = case framing of
   HandSweepFramed -> True
   -- SWEPT for MillTallyFramed's reason: gateHolds' context carries the slots.
   ClauseGateFramed -> True
+  -- SWEPT for MillTallyFramed's reason: repeatIf's context carries the slots.
+  RepeatGateFramed -> True
   -- SWEPT for MillTallyFramed's reason: the LoseLife arm reads effectContext.
   LifeLossAmountFramed -> True
   -- SWEPT, as all three were while they were Unframed: the split is about CR
@@ -6257,7 +6265,7 @@ effectFilters effect = case effect of
   Effect.ForEach (ForEach.MkForEach ref _ _ body _ gate _) -> frame SourceHostFramed (objectRefFilters ref) <> concatMap effectFilters body <> concatMap payGateFilters (Maybe.maybeToList gate)
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ _ body) -> concatMap effectFilters body
   Effect.Repeat (Repeat.MkRepeat _ body gate _ ifAgain) -> foldMap (frame Unframed . conditionFilters) gate <> concatMap effectFilters (body <> ifAgain)
-  Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> frame Unframed (conditionFilters condition) <> concatMap effectFilters (process <> ifHolds)
+  Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> frame RepeatGateFramed (conditionFilters condition) <> concatMap effectFilters (process <> ifHolds)
   Effect.Heal ref -> frame SourceHostFramed (objectRefFilters ref)
   Effect.ChooseNewTargets ref -> frame SourceHostFramed (objectRefFilters ref)
   Effect.ChangeTargets x -> frame SourceHostFramed (objectRefFilters (ChangeTargets.objects x) <> foldMap objectRefFilters (ChangeTargets.onto x))

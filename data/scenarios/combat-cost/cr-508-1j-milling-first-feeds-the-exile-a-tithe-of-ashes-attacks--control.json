@@ -1,6 +1,6 @@
 {
   "description": "CR 508.1j milling first feeds the exile: a Tithe of Ashes attacks",
-  "note": "The control: the exile is ordered first and refuses on an empty graveyard, so nothing is milled and the attack is reversed.",
+  "note": "The control: the exile is ordered first, when the Plains is the only card it can take, and the Island is milled after it, so the Island stays in the graveyard.",
   "board": {
     "active": "alice",
     "step": "DeclareAttackers",
@@ -20,6 +20,12 @@
           },
           {
             "card": "Swamp"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Plains",
+            "label": "old"
           }
         ]
       },
@@ -57,30 +63,11 @@
       "turn": 1,
       "step": "DeclareAttackers",
       "player": "alice",
-      "do": {
-        "Attack": []
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareAttackers",
-      "player": "alice",
       "check": {
         "Attackers": {
-          "attackers": {}
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareAttackers",
-      "player": "alice",
-      "check": {
-        "Count": {
-          "player": "alice",
-          "zone": "Library",
-          "card": "Island",
-          "count": 1
+          "attackers": {
+            "$tithe": "$bob"
+          }
         }
       }
     },
@@ -92,8 +79,21 @@
         "Count": {
           "player": "alice",
           "zone": "Exile",
+          "card": "Plains",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Graveyard",
           "card": "Island",
-          "count": 0
+          "count": 1
         }
       }
     },

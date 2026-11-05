@@ -86,7 +86,8 @@ import qualified Text.Read as Read
 -- object is the same game state".
 --
 -- Dropped as bookkeeping no card reads: the id, timestamp, printing and event
--- group supplies; CR 104.4b's `lastChoice` and `loopInvolvement`; the
+-- group supplies; CR 104.4b's `lastChoice` and `loopInvolvement`; CR 732.3's
+-- own `repeatPicks`, which a RepeatIf's runs compare digests to fill; the
 -- grow-only printing interning; and the scan state keyed off the log
 -- (`scannedThrough`, `damageScannedThrough`, `battlefieldWhenTriggered`,
 -- `controlSample`, `stackedIn`). `lastKnown` and `stackArchive` are keyed by
@@ -113,6 +114,7 @@ digest gs =
             GameState.eventGroupDepth = 0,
             GameState.lastChoice = Timestamp.MkTimestamp 0,
             GameState.loopInvolvement = Map.empty,
+            GameState.repeatPicks = Nothing,
             GameState.printings = Map.empty,
             GameState.printingIds = Map.empty,
             GameState.scannedThrough = 0,

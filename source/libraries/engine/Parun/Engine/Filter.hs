@@ -550,6 +550,13 @@ data View = MkView
     -- rejects the atom in every Filter position but a search's, the treatment
     -- `canHostSubject` already gets.
     canAttachToSubject :: Bool,
+    -- CR 303.4f / 303.4g: would this Aura candidate have a legal object or player
+    -- to enchant, entering the battlefield under some player still in the game?
+    -- LAZY, for canAttachToSubject's cost reason. Parun.Engine.Resolve.Arms.Zones'
+    -- repeatIf is the only site that fills it, from
+    -- Parun.Engine.Attach.hasEntryHost; False everywhere else, and
+    -- Parun.FilterPositionLintSpec keeps a card from asking it anywhere else.
+    hasEntryHost :: Bool,
     -- CR 111.1 / 111.6: is this candidate a token rather than a card? Read from
     -- Object.source (Parun.Engine.Game.isToken), never from a projection -- CR 111.3 makes
     -- a token's effect-defined characteristics equivalent to printed ones, so no
@@ -1000,6 +1007,7 @@ playerView pid =
       -- Effect.Search arm, whose candidates are cards in a library, a graveyard
       -- or a hand.
       canAttachToSubject = False,
+      hasEntryHost = False,
       -- CR 111.1: a token represents a PERMANENT, and a player is not one.
       token = False,
       activatedAbility = Nothing,
@@ -2438,6 +2446,8 @@ matches context view predicate = case predicate of
   -- CR 701.3a read from the candidate's side, computed by the caller that knows
   -- which host the instruction fixed. Vacuously False outside a search.
   Filter.CanAttachToSubject -> canAttachToSubject view
+  -- CR 303.4f, computed by the RepeatIf arm. Vacuously False outside one.
+  Filter.HasEntryHost -> hasEntryHost view
   -- CR 205.2a read of the attach SUBJECT's host rather than of the candidate,
   -- filled by the caller that knows what is moving. Vacuously False outside an
   -- attach, where the set is empty.
@@ -2723,6 +2733,7 @@ rewrite pairs predicate = case predicate of
   Filter.AttachedNoLaterThanSource -> predicate
   Filter.CanHostSubject -> predicate
   Filter.CanAttachToSubject -> predicate
+  Filter.HasEntryHost -> predicate
   Filter.HostOfSubjectHasCardType _ -> predicate
   Filter.IsCommander -> predicate
   Filter.IsToken -> predicate
@@ -3493,6 +3504,7 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.AttachedNoLaterThanSource -> predicate
   Filter.CanHostSubject -> predicate
   Filter.CanAttachToSubject -> predicate
+  Filter.HasEntryHost -> predicate
   Filter.HostOfSubjectHasCardType _ -> predicate
   Filter.IsCommander -> predicate
   Filter.IsToken -> predicate
@@ -3664,6 +3676,7 @@ manaValueThresholds predicate = case predicate of
   Filter.AttachedNoLaterThanSource -> []
   Filter.CanHostSubject -> []
   Filter.CanAttachToSubject -> []
+  Filter.HasEntryHost -> []
   Filter.HostOfSubjectHasCardType _ -> []
   Filter.IsCommander -> []
   Filter.IsToken -> []
@@ -3831,6 +3844,7 @@ statesAQuality predicate = case predicate of
   Filter.AttachedNoLaterThanSource -> True
   Filter.CanHostSubject -> True
   Filter.CanAttachToSubject -> True
+  Filter.HasEntryHost -> True
   -- True for the two atoms above's reason and not because it describes the
   -- candidate: it does not, and what CR 701.23b asks is only whether the
   -- predicate is trivially true, which no atom is. Unreachable from a search
@@ -3986,6 +4000,7 @@ readsSourceValues predicate = case predicate of
   Filter.AttachedNoLaterThanSource -> False
   Filter.CanHostSubject -> False
   Filter.CanAttachToSubject -> False
+  Filter.HasEntryHost -> False
   Filter.HostOfSubjectHasCardType _ -> False
   Filter.IsCommander -> False
   Filter.IsToken -> False
@@ -4160,6 +4175,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.AttachedNoLaterThanSource -> pure predicate
   Filter.CanHostSubject -> pure predicate
   Filter.CanAttachToSubject -> pure predicate
+  Filter.HasEntryHost -> pure predicate
   Filter.HostOfSubjectHasCardType _ -> pure predicate
   Filter.IsCommander -> pure predicate
   Filter.IsToken -> pure predicate

@@ -1861,6 +1861,7 @@ stubView table oid =
                 Filter.attachedTo = Nothing,
                 Filter.canHostSubject = False,
                 Filter.canAttachToSubject = False,
+                Filter.hasEntryHost = False,
                 Filter.token = False,
                 Filter.commander = False,
                 Filter.activatedAbility = Nothing,

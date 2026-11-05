@@ -6561,20 +6561,22 @@ nextPromise oid printed gs =
 --
 -- CR 609.1: a cost to cast or activate causes nothing (Guerrilla Tactics'
 -- ruling of 2004-10-04), so nothing a component moves records a cause
--- (Event.causedBy Nothing).
---
--- Not implemented: a cost paid as a spell or ability resolves counts as caused
--- by it (Tamiyo, Collector of Tales' rulings of 2019-05-03); this clears that
--- too (#6180).
+-- (Event.causedBy Nothing). A CR 118.12 cost paid on resolution keeps the
+-- resolving spell's or ability's cause (Tamiyo, Collector of Tales' ruling of
+-- 2019-05-03; Ajani's Last Stand's of 2018-07-13).
 --
 -- A fence rather than a proof: no test pays a cost that moves a card inside an effect's scope, such
 -- as a sacrificing mana ability activated to pay a resolving pay gate.
 payComponent :: ManaAbilityPerformer.ManaAbilityPerformer -> PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> CostComponent.CostComponent Keyword.Type.Keyword -> Game Payment.Payment
-payComponent perform moment paidFor slots pid oid component = Event.causedBy Nothing $ do
+payComponent perform moment paidFor slots pid oid component = uncaused $ do
   gs <- State.get
   if canPayComponent slots pid oid component gs
     then payPayable perform moment paidFor slots pid oid component
     else pure Payment.Unpaid
+  where
+    uncaused = case moment of
+      PaymentMoment.OutsideResolution -> Event.causedBy Nothing
+      PaymentMoment.DuringResolution -> id
 
 -- `payComponent`'s arms, each reached only once CR 118.3 holds.
 payPayable :: ManaAbilityPerformer.ManaAbilityPerformer -> PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> CostComponent.CostComponent Keyword.Type.Keyword -> Game Payment.Payment

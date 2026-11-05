@@ -23,6 +23,7 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
 import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LifeTrigger as LifeTrigger
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
@@ -38,7 +39,6 @@ import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.RevealedThisWay as RevealedThisWay
 import qualified Parun.Types.RoomIndex as RoomIndex
-import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.TransformTrigger as TransformTrigger
@@ -254,12 +254,9 @@ data TriggerCondition
   | -- | CR 725.1: "whenever [a player] becomes the monarch" (Custodi Lich),
     -- however the crown was won.
     PlayerBecomesMonarch PlayerRelation.PlayerRelation
-  | -- | CR 603.7: "when you lose control of the creature" (Ray of Command) --
-    -- its subject an object CR 603.7c's captured environment chose earlier.
-    LoseControlOfBound SlotName.SlotName
-  | -- | CR 603.10d: "when you lose control of [this permanent]" (Khârn the
-    -- Betrayer), against GameEvent.ControlChanged.
-    LoseControlOfSelf
+  | -- | CR 603.10d / 603.7: "when you lose control of" the bearer (Khârn, the
+    -- Betrayer) or an object bound earlier (Ray of Command).
+    LosesControl LostPermanent.LostPermanent
   | -- | CR 309.4c: "when you move your venture marker into this room".
     -- Self-scoped through the bearer and the room index; minted by
     -- Parun.Engine.Dungeon rather than written by card data.

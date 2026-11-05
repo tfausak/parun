@@ -61,6 +61,7 @@ import qualified Parun.Types.Prevention as Prevention
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.PrintingId as PrintingId
 import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristics
+import qualified Parun.Types.RepeatPicks as RepeatPicks
 import qualified Parun.Types.RestartSignal as RestartSignal
 import qualified Parun.Types.Result as Result
 import qualified Parun.Types.ReturnWatch as ReturnWatch
@@ -141,7 +142,8 @@ data GameState = MkGameState
     payingOnResolution :: Bool,
     -- | CR 609.1: the controller of the spell or ability whose effect is being
     -- performed (Event.causedBy), which Moved and Discarded record as their
-    -- cause. Nothing outside one, and inside a cost's payment.
+    -- cause. Nothing outside one, and inside a cost's payment outside a
+    -- resolution (Parun.Engine.Cost.payComponent).
     causing :: Maybe PlayerId.PlayerId,
     -- | CR 608.2h / 113.7a: last known information, keyed by the id an object
     -- had before it left a zone (CR 400.7). Grows for the whole game.
@@ -436,6 +438,9 @@ data GameState = MkGameState
     -- picked them, which a later pick's prompt carries
     -- (Parun.Engine.Resolve.Arms.Zones.forEach).
     loopPicks :: Maybe (Seq.Seq (PlayerId.PlayerId, Set.Set ObjectId.ObjectId)),
+    -- | CR 732.3: Nothing outside a Parun.Types.RepeatIf; inside one, its run's
+    -- picks and refusals (Parun.Engine.Resolve.Arms.Zones.repeatIf).
+    repeatPicks :: Maybe RepeatPicks.RepeatPicks,
     -- | CR 401.6: each library's top card as the last settle found it revealed
     -- to every player by a player effect (Event.settleRevealedTops).
     revealedTops :: Map.Map PlayerId.PlayerId ObjectId.ObjectId,

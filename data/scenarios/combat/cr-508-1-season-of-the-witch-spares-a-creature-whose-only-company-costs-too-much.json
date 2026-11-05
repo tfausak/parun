@@ -1,0 +1,86 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Season of the Witch",
+            "ready": true
+          },
+          {
+            "card": "Bonded Construct",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f1"
+          },
+          {
+            "card": "Forest",
+            "label": "f2"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Ghostly Prison",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "DeclareAttackers"
+  },
+  "description": "CR 508.1 Season of the Witch spares a creature that can't attack alone when its company makes the toll unpayable",
+  "note": "Two Forests pay the Bears' {2} under bob's Ghostly Prison, so the Bears could have attacked and die. The Bonded Construct can't attack alone (CR 506.5), and beside the Bears it owes {4}, so it couldn't have and survives.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": []
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Grizzly Bears",
+          "count": 1,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Bonded Construct",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 1
+    }
+  ]
+}

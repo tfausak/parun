@@ -29,6 +29,7 @@ import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Expiry as Expiry
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Foretell as Foretell
+import qualified Parun.Engine.Fragmented as Fragmented
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.MoveDuration as MoveDuration
@@ -146,6 +147,7 @@ import Parun.Types.Recipient (Recipient)
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Repeat as Repeat
 import qualified Parun.Types.RepeatIf as RepeatIf
+import qualified Parun.Types.RepeatPicks as RepeatPicks
 import Parun.Types.Result (Result)
 import qualified Parun.Types.ReturnWatch as ReturnWatch
 import qualified Parun.Types.Reveal as Reveal
@@ -1099,26 +1101,52 @@ repeatArm applyLoopBody runSubgame resolving source controller legal chosen (Rep
 -- prompt: no player chooses, which is Effect.Repeat's CR 608.2d difference.
 -- Rescoped and unbracketed per run for Effect.Repeat's reasons.
 --
--- Parun.PlaneswalkerSpec's GristLoyalty group proves the run count.
+-- The condition's views carry Filter.View.hasEntryHost, which no other reader
+-- fills (Attach.hasEntryHost).
+--
+-- CR 732.3: a run that begins in the state the previous run began in
+-- (Fragmented.digest) closes a fragmented loop, and the first player in APNAP
+-- order who picked in that run (Common.pickByChooser) may not pick the same
+-- again while the state recurs (GameState.repeatPicks). A run that changes the
+-- state lifts every refusal. Each refusal removes an option, so the runs end.
+-- docs/decisions.md, "Who a fragmented loop inside a resolution refuses".
+--
+-- Parun.PlaneswalkerSpec's GristLoyalty group proves the run count, and the
+-- Thieves' Auction scenarios with a stranded Aura the condition and the
+-- refusal.
 repeatIf :: (Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Set SlotName -> Seq.Seq (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> RepeatIf.RepeatIf (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
 repeatIf applyLoopBody runSubgame resolving source controller legal chosen (RepeatIf.MkRepeatIf process condition ifHolds) = do
   let bound = foldMap boundSlots (process <> ifHolds)
   rescope <- State.gets (Common.rescopeRun resolving bound)
+  outer <- State.gets GameState.repeatPicks
   let apply = applyLoopBody runSubgame resolving source controller legal chosen bound
-      run = do
+      run previous = do
         State.modify' rescope
+        here <- State.gets Fragmented.digest
+        before <- State.get
+        let refused = case previous of
+              Just (began, RepeatPicks.MkRepeatPicks picked earlier)
+                | began == here ->
+                    case List.find (`Map.member` picked) (Game.apnapOrder before) of
+                      Just first -> Map.insertWith Set.union first (Map.findWithDefault Set.empty first picked) earlier
+                      Nothing -> earlier
+              _ -> Map.empty
+        State.put before {GameState.repeatPicks = Just (RepeatPicks.MkRepeatPicks Map.empty refused)}
         apply process
         gs <- State.get
         -- The ONE object a run's instruction bound sits in its binding's
         -- `targets`, which effectContext reads only through the map it is
         -- handed, so the run's own names join it here, as Effect.ForEach's
-        -- `defined` does for its body: Thieves' Auction's "chosen".
+        -- `defined` does for its body.
         let seen = Map.union legal (Map.restrictKeys (Binding.targetsOf (slotBindings resolving gs)) bound)
             context = effectContext gs resolving controller source seen (slotBindings resolving gs)
-        Monad.when (Condition.holds (effectViewOf resolving source seen gs) context gs source condition) $ do
+            viewOf oid = fmap (\view -> view {Filter.hasEntryHost = Attach.hasEntryHost oid gs}) (effectViewOf resolving source seen gs oid)
+        Monad.when (Condition.holds viewOf context gs source condition) $ do
           apply ifHolds
-          run
-  run
+          lap <- State.gets GameState.repeatPicks
+          run (fmap ((,) here) lap)
+  run Nothing
+  State.modify' (\gs -> gs {GameState.repeatPicks = outer})
 
 draw :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Draw.Draw -> Game ()
 draw settle resolving source controller legal (Draw.MkDraw ref quantity mSlot) = do

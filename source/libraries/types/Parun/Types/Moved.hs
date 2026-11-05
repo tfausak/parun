@@ -69,11 +69,9 @@ data Moved = MkMoved
     -- move, read off GameState.causing as the move happens. Nothing for a move
     -- no effect made: a cost to cast or activate (CR 601.2h; Guerrilla Tactics'
     -- ruling of 2004-10-04), a state-based action (CR 704.1), a turn-based
-    -- action, a cast.
-    --
-    -- Not implemented: a cost paid as a spell or ability resolves counts as
-    -- caused by it (Tamiyo, Collector of Tales' rulings of 2019-05-03); it records
-    -- Nothing here (#6180).
+    -- action, a cast. A CR 118.12 cost paid on resolution records the
+    -- resolving spell's or ability's controller (Tamiyo, Collector of Tales'
+    -- ruling of 2019-05-03).
     causedBy :: Maybe PlayerId.PlayerId
   }
   deriving (Eq, Ord, Show)

@@ -462,6 +462,9 @@ data Filter keyword
     -- (Auratouched Mage) or a slot the resolution bound (Sovereigns of Lost
     -- Alara's "that creature").
     CanAttachToSubject
+  | -- | CR 303.4f / 303.4g: the candidate is an Aura that would have a legal object
+    -- or player to enchant were it put onto the battlefield under some player.
+    HasEntryHost
   | -- | CR 205.2a with CR 303.4b: the permanent the SUBJECT of the surrounding
     -- attach is currently attached to has this card type -- Enchantment
     -- Alteration's "attached to a creature or land . . . another permanent of

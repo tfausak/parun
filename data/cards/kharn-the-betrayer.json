@@ -95,7 +95,10 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "LoseControlOfSelf"
+            "type": "LosesControl",
+            "value": {
+              "type": "Self"
+            }
           },
           "modal": {
             "modes": [

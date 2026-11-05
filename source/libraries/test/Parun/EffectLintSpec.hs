@@ -154,6 +154,7 @@ import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LifeLoss as LifeLoss
 import qualified Parun.Types.LookAt as LookAt
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.MakeForetold as MakeForetold
 import qualified Parun.Types.ManaAddition as ManaAddition
 import qualified Parun.Types.ManaRestriction as ManaRestriction
@@ -2617,8 +2618,8 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- environment to a delayed ability, whose condition names a slot and reads
     -- it through Binding.objectSlots. Paired with the same condition over a slot
     -- the destruction never bound.
-    Spec.assertBool s (clashesIn [destruction] [TriggerCondition.LoseControlOfBound destroyedSlot] []) "a delayed condition naming a plurally bound slot is caught"
-    Spec.assertBool s (not (clashesIn [destruction] [TriggerCondition.LoseControlOfBound elsewhereSlot] [])) "a delayed condition naming another slot is left alone"
+    Spec.assertBool s (clashesIn [destruction] [TriggerCondition.LosesControl (LostPermanent.Bound destroyedSlot)] []) "a delayed condition naming a plurally bound slot is caught"
+    Spec.assertBool s (not (clashesIn [destruction] [TriggerCondition.LosesControl (LostPermanent.Bound elsewhereSlot)] [])) "a delayed condition naming another slot is left alone"
     -- The reading side's third carrier: a Filter an effect carries, where CR
     -- 608.2h's Filter.IsControllerOfBound reads the slot through
     -- Parun.Engine.Filter.slotOneObject rather than through Resolve. Three boards

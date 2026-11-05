@@ -1,0 +1,57 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Season of the Witch",
+            "ready": true
+          },
+          {
+            "card": "Llanowar Elves",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f1"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Ghostly Prison",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "DeclareAttackers"
+  },
+  "description": "CR 508.1f Season of the Witch spares a mana creature that could pay its toll only with its own mana",
+  "note": "Llanowar Elves and a Forest make {2}, the toll bob's Ghostly Prison charges, but CR 508.1f taps the Elves before CR 508.1i's window, so alice can't pay, isn't asked, and the Elves survive.",
+  "timeline": [
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Llanowar Elves",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 1
+    }
+  ]
+}

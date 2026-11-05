@@ -459,6 +459,7 @@ import qualified Parun.Codec.LookAtSpec
 import qualified Parun.Codec.LookbackSpec
 import qualified Parun.Codec.LookedSpec
 import qualified Parun.Codec.LoopMembersSpec
+import qualified Parun.Codec.LostPermanentSpec
 import qualified Parun.Codec.LoyaltyClauseSpec
 import qualified Parun.Codec.LoyaltyGrantSpec
 import qualified Parun.Codec.LoyaltyKindSpec
@@ -635,6 +636,7 @@ import qualified Parun.Codec.ReinforceSpec
 import qualified Parun.Codec.RemoveCountersSpec
 import qualified Parun.Codec.RemovePlayerCountersSpec
 import qualified Parun.Codec.RepeatIfSpec
+import qualified Parun.Codec.RepeatPicksSpec
 import qualified Parun.Codec.RepeatSpec
 import qualified Parun.Codec.ReplaceSpec
 import qualified Parun.Codec.ReplacementEffectSpec
@@ -1078,6 +1080,7 @@ spec s registry corpus = do
   Parun.Codec.EntersTriggerSpec.spec s
   Parun.Codec.LeavesTriggerSpec.spec s
   Parun.Codec.LeavingPermanentSpec.spec s
+  Parun.Codec.LostPermanentSpec.spec s
   Parun.Codec.AttackedSubjectSpec.spec s
   Parun.Codec.AttackedTriggerSpec.spec s
   Parun.Codec.AttackerTargetSpec.spec s
@@ -1621,6 +1624,7 @@ spec s registry corpus = do
   Parun.Codec.RemoveCountersSpec.spec s
   Parun.Codec.RemovePlayerCountersSpec.spec s
   Parun.Codec.RepeatIfSpec.spec s
+  Parun.Codec.RepeatPicksSpec.spec s
   Parun.Codec.RepeatSpec.spec s
   Parun.Codec.ReplacementEffectSpec.spec s
   Parun.Codec.ReplacementOriginSpec.spec s

@@ -2198,8 +2198,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SagaFinalChapterTriggers _ -> condition
   -- CR 603.7's slot name is card data but not card TEXT, so no CR 612.1 swap
   -- reaches it; what the slot holds is read off the projection instead.
-  TriggerCondition.LoseControlOfBound _ -> condition
-  TriggerCondition.LoseControlOfSelf -> condition
+  TriggerCondition.LosesControl _ -> condition
   TriggerCondition.RoomEntered _ -> condition
   TriggerCondition.PlayerActs _ -> condition
   TriggerCondition.PlayerLosesGame _ -> condition

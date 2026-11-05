@@ -1,13 +1,11 @@
 {
   "description": "CR 612.1 whole card: a Leviathan hacked from Island to Swamp can't attack by sacrificing two Islands",
-  "note": "Alice controls three Islands and no Swamp, so the printed cost would be payable and the rewritten one is not.",
+  "note": "Alice controls three Islands and no Swamp, so the printed cost would be payable and the rewritten one is not: the Leviathan could attack in no legal declaration, and alice isn't asked.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Leviathan", "ready": true, "label": "lev"}, {"card": "Island", "label": "u"}, {"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}], "hand": [{"card": "Magical Hack", "label": "hack"}], "library": [{"card": "Plains"}, {"card": "Plains"}]}, {"name": "bob", "library": [{"card": "Plains"}, {"card": "Plains"}]}]},
   "timeline": [
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$hack", "targets": ["$lev"], "mana": ["$u", null]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack", "do": {"ChooseWordSwap": {"from": {"type": "Island"}, "to": {"type": "Swamp"}}}},
-    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Attack": ["$lev"]}},
-    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}},
     {"turn": 1, "step": "PostcombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Island", "count": 3}}}
   ]
 }

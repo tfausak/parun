@@ -533,6 +533,12 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       Filter.CanAttachToSubject
       " {\"type\":\"CanAttachToSubject\"} "
+  Spec.it s "HasEntryHost" $
+    Common.assertCodec
+      s
+      codec
+      Filter.HasEntryHost
+      " {\"type\":\"HasEntryHost\"} "
   Spec.it s "HostOfSubjectHasCardType" $ do
     Common.assertCodec
       s
