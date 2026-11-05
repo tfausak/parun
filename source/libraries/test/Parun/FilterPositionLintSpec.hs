@@ -2764,6 +2764,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         (MillTallyFramed, [bound]),
         (HandSweepFramed, [bound]),
         (ClauseGateFramed, [bound]),
+        (RepeatGateFramed, [bound]),
         (LifeLossAmountFramed, [bound]),
         (AffectedSetFramed, [bound]),
         (ActivationCostFramed, [bound]),
