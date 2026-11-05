@@ -4,6 +4,7 @@ import qualified Parun.Codec.BecomesTapState as BecomesTapState
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.ActingPermanent as ActingPermanent
+import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
@@ -18,8 +19,16 @@ spec s = Spec.describe s "Parun.Codec.BecomesTapState" $ do
       BecomesTapState.codec
       ( BecomesTapState.MkBecomesTapState
           { BecomesTapState.status = TapState.Untapped,
-            BecomesTapState.actor = ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You)
+            BecomesTapState.actor = ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You),
+            BecomesTapState.batching = Batching.EachOccurrence
           }
       )
       " {\"actor\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"status\":{\"type\":\"Untapped\"}} "
+  -- Deeproot Pilgrimage's "one or more", the batching key written.
+  Spec.it s "MkBecomesTapState, a batch" $
+    Common.assertCodec
+      s
+      BecomesTapState.codec
+      (BecomesTapState.MkBecomesTapState TapState.Tapped (ActingPermanent.Matching (Filter.Not Filter.IsToken)) Batching.OneOrMore)
+      " {\"actor\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"status\":{\"type\":\"Tapped\"},\"batching\":{\"type\":\"OneOrMore\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s BecomesTapState.codec

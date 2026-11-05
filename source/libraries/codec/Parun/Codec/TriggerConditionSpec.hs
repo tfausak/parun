@@ -248,22 +248,22 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped ActingPermanent.Self))
+      (TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped ActingPermanent.Self Batching.EachOccurrence))
       " {\"type\":\"BecomesTapState\",\"value\":{\"actor\":{\"type\":\"Self\"},\"status\":{\"type\":\"Tapped\"}}} "
   -- CR 701.26b's untap of a permanent the Filter admits.
   Spec.it s "BecomesTapState round-trips a Filter" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Untapped (ActingPermanent.Matching (Filter.HasSubtype Subtype.Island))))
+      (TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Untapped (ActingPermanent.Matching (Filter.HasSubtype Subtype.Island)) Batching.EachOccurrence))
       " {\"type\":\"BecomesTapState\",\"value\":{\"actor\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Island\"}}},\"status\":{\"type\":\"Untapped\"}}} "
   -- CR 701.26a's tap by a bystander, batch-read (CR 603.2c).
-  Spec.it s "PermanentsBecomeTapped round-trips with its Filter" $
+  Spec.it s "BecomesTapState round-trips a batch over a Filter" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentsBecomeTapped (Filter.Not Filter.IsToken))
-      " {\"type\":\"PermanentsBecomeTapped\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}} "
+      (TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped (ActingPermanent.Matching (Filter.Not Filter.IsToken)) Batching.OneOrMore))
+      " {\"type\":\"BecomesTapState\",\"value\":{\"actor\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"status\":{\"type\":\"Tapped\"},\"batching\":{\"type\":\"OneOrMore\"}}} "
   -- CR 106.12a's tap for mana read off the attachment link. Nullary: that link is
   -- board state, so nothing about it rides the condition.
   Spec.it s "AttachedPermanentTappedForMana" $

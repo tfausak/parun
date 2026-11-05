@@ -117,13 +117,9 @@ data TriggerCondition
     LeavesZone LeavesZoneTrigger.LeavesZoneTrigger
   | -- | CR 603.6: a card is put into a zone other than the battlefield.
     PutIntoZone PutIntoZoneTrigger.PutIntoZoneTrigger
-  | -- | CR 701.26a / 701.26b: a permanent became tapped or untapped, once per
-    -- permanent (City of Brass, Oreskos Sun Guide, Mesmeric Orb).
+  | -- | CR 701.26a / 701.26b / 603.2c: a permanent became tapped or untapped, per
+    -- permanent or per tapping (City of Brass, Mesmeric Orb, Deeproot Pilgrimage).
     BecomesTapState BecomesTapState.BecomesTapState
-  | -- | CR 701.26a's batch reading, by a bystander: "whenever one or more
-    -- nontoken Merfolk you control become tapped" (Deeproot Pilgrimage), once
-    -- per tapping event (CR 603.2c).
-    PermanentsBecomeTapped (Filter.Filter Keyword.Keyword)
   | -- | CR 106.12a's "is tapped for mana" read off the permanent the bearer is
     -- attached to (Wild Growth), live rather than through last known
     -- information.

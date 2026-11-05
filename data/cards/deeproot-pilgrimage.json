@@ -21,34 +21,45 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentsBecomeTapped",
+            "type": "BecomesTapState",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "Not",
-                  "value": {
-                    "type": "IsToken"
-                  }
-                },
-                {
-                  "type": "HasSubtype",
-                  "value": {
-                    "type": "Merfolk"
-                  }
-                },
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
+              "actor": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "IsToken"
+                      }
                     },
-                    "relation": {
-                      "type": "You"
+                    {
+                      "type": "HasSubtype",
+                      "value": {
+                        "type": "Merfolk"
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
-              ]
+              },
+              "batching": {
+                "type": "OneOrMore"
+              },
+              "status": {
+                "type": "Tapped"
+              }
             }
           },
           "modal": {

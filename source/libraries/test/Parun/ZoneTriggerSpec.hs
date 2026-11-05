@@ -2130,7 +2130,6 @@ representativeEvents cond =
         TriggerCondition.BecomesTapState watched -> case BecomesTapState.status watched of
           TapState.Tapped -> one (GameEvent.BecameTapped departed)
           TapState.Untapped -> one (GameEvent.BecameUntapped departed)
-        TriggerCondition.PermanentsBecomeTapped _ -> one (GameEvent.BecameTapped departed)
         TriggerCondition.AttachedPermanentTappedForMana -> one (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = departed, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = S.alice}))
         -- The same event for the bystander reading, on `departed` for the arm
         -- above's reason: the arm stamps the tapped permanent under every
@@ -2468,11 +2467,11 @@ everyTriggerCondition =
     TriggerCondition.AttachedCreatureMentors,
     TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.permanent = LeavingPermanent.Attached},
     TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.permanent = LeavingPermanent.Attached, LeavesTrigger.destinations = Set.singleton (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.AnyPlayer)},
-    TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped ActingPermanent.Self),
-    TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped (ActingPermanent.Matching (Filter.Type.HasAttached Filter.Type.IsSource))),
-    TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Untapped ActingPermanent.Self),
-    TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Untapped (ActingPermanent.Matching (Filter.Type.And []))),
-    TriggerCondition.PermanentsBecomeTapped (Filter.Type.And []),
+    TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped ActingPermanent.Self Batching.EachOccurrence),
+    TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped (ActingPermanent.Matching (Filter.Type.HasAttached Filter.Type.IsSource)) Batching.EachOccurrence),
+    TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Untapped ActingPermanent.Self Batching.EachOccurrence),
+    TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Untapped (ActingPermanent.Matching (Filter.Type.And [])) Batching.EachOccurrence),
+    TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped (ActingPermanent.Matching (Filter.Type.And [])) Batching.OneOrMore),
     TriggerCondition.AttachedPermanentTappedForMana,
     -- ALL THREE relations, on the PermanentSacrificed rows' reasoning below:
     -- an eventBindings arm that had cased on the relation and stamped nothing
