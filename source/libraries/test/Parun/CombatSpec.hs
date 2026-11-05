@@ -1023,6 +1023,15 @@ blockOfferSpec s registry = Spec.describe s "BlockOffer" $ do
     case luring lure [drake, brute] [crow, barbarians] of
       (gs, _, [crowId, _]) -> Spec.assertEqWith s "only the Crow is offered" (take 1 (blockOffers gs)) [[crowId]]
       _ -> Spec.assertFailure s "fixture should give bob two creatures"
+  Spec.it s "CR 509.1d a creature whose every block costs more than its controller can pay is not offered" $ do
+    archangel <- S.printingOf s registry "Archangel of Tithes"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    piker <- S.printingOf s registry "Goblin Piker"
+    forest <- S.printingOf s registry "Forest"
+    let (broke, _, _) = attacking [archangel, bears] [piker]
+    Spec.assertEqWith s "no mana for the Archangel's {1}: no prompt" (blockOffers broke) []
+    case attacking [archangel, bears] [piker] of
+      (gs, _, pikers) -> Spec.assertEqWith s "with a Forest the Piker is offered" (take 1 (blockOffers (withPermanents S.bob [forest] gs))) [pikers]
 
 -- Declare attackers with everything, then put a Lure on the first attacker.
 -- Attaching directly is S.attach's state-fixture posture -- Parun.Engine.Cast can cast

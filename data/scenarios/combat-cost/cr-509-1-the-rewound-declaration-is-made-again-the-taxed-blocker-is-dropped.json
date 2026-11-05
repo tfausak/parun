@@ -1,11 +1,8 @@
 {
-  "description": "CR 509.1 the rewound declaration is made again: the taxed blocker is dropped and the free one blocks",
   "board": {
     "active": "alice",
-    "step": "BeginningOfCombat",
     "seats": [
       {
-        "name": "alice",
         "battlefield": [
           {
             "card": "Goblin Piker",
@@ -13,17 +10,26 @@
             "ready": true
           },
           {
-            "card": "Oppressive Rays",
-            "attached": "taxed"
+            "attached": "taxed",
+            "card": "Oppressive Rays"
+          },
+          {
+            "attached": "taxed-2",
+            "card": "Oppressive Rays"
           }
-        ]
+        ],
+        "name": "alice"
       },
       {
-        "name": "bob",
         "battlefield": [
           {
             "card": "Goblin Piker",
             "label": "taxed",
+            "ready": true
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "taxed-2",
             "ready": true
           },
           {
@@ -38,101 +44,60 @@
           {
             "card": "Forest",
             "label": "forest-2"
+          },
+          {
+            "card": "Forest",
+            "label": "forest-3"
           }
-        ]
+        ],
+        "name": "bob"
       }
-    ]
+    ],
+    "step": "BeginningOfCombat"
   },
+  "description": "CR 509.1 the rewound declaration is made again: the taxed blockers are dropped and the free one blocks",
   "timeline": [
     {
-      "turn": 1,
-      "step": "DeclareAttackers",
-      "player": "alice",
       "do": {
         "Attack": [
           "$attacker"
         ]
-      }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
       "do": {
         "Block": {
+          "$free": [
+            "$attacker"
+          ],
           "$taxed": [
             "$attacker"
           ],
-          "$free": [
+          "$taxed-2": [
             "$attacker"
           ]
         }
-      }
+      },
+      "player": "bob",
+      "step": "DeclareBlockers",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Answer": {
-          "prompt": "ChooseManaSource",
-          "with": "$forest-1"
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Answer": {
-          "prompt": "ChooseManaSource",
-          "with": "$forest-2"
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Answer": {
-          "prompt": "ReverseManaAbilities",
-          "with": {
-            "type": "Exercises"
-          }
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Answer": {
-          "prompt": "ReverseManaAbilities",
-          "with": {
-            "type": "Exercises"
-          }
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
       "do": {
         "Block": {
           "$free": [
             "$attacker"
           ]
         }
-      }
+      },
+      "player": "bob",
+      "step": "DeclareBlockers",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "alice",
       "check": {
         "Blockers": {
           "attacker": "$attacker",
@@ -140,29 +105,32 @@
             "$free"
           ]
         }
-      }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "alice",
       "check": {
         "Tapped": {
           "object": "$forest-1",
           "tapped": false
         }
-      }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "alice",
       "check": {
         "Tapped": {
           "object": "$forest-2",
           "tapped": false
         }
-      }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
     }
   ]
 }
