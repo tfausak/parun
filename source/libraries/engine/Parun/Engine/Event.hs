@@ -658,7 +658,7 @@ together body = do
       batch <- State.gets (Maybe.fromMaybe EnteringTogether.empty . GameState.enteringTogether)
       State.modify' (\g -> g {GameState.enteringTogether = Nothing})
       Restamp.settle (GameState.nextTimestamp before) (Foldable.toList (EnteringTogether.arrivals batch))
-      Monad.mapM_ recordMintedEntry (EnteringTogether.minted batch)
+      Monad.mapM_ (recordMintedArrival Zone.Battlefield) (EnteringTogether.minted batch)
       pure result
 
 -- `simultaneously` for a body that is a pure function of the board rather than a
@@ -9729,18 +9729,22 @@ isDiverted refusal = case refusal of
   EntryRefusal.Unpaid -> False
   EntryRefusal.Unhosted -> False
 
--- A minted object a redirect took is put straight into the redirect's zone, with
--- no zone change logged. A token there ceases to exist by CR 111.7.
---
--- Not implemented: a trigger naming no origin seeing a conjured card arrive this
--- way, CR 614.6's modified event having put it into exile (#6182).
+-- A minted object a redirect took is put straight into the redirect's zone. CR
+-- 614.6: the modified event occurs, so the arrival is logged as
+-- recordMintedArrival's pseudo-move, which a trigger naming an origin does not
+-- see (Ketramose, the New Dawn) and one naming none does (Stonebinder's
+-- Familiar). Proved by the scenario
+-- hallowed-moonlight-exiles-a-card-conjured-onto-the-battlefield. A token there
+-- ceases to exist by CR 111.7.
 placeDiverted :: ObjectId -> Zone.Zone -> LibraryPosition.LibraryPosition -> Game ()
-placeDiverted oid zone position = State.modify' $ \g -> case Game.lookupObject oid g of
-  Nothing -> g
-  Just obj ->
-    let g1 = Game.removeFromZones oid g
-        arrived = (Object.newIncarnation obj) {Object.zone = zone}
-     in Game.insertIntoZone zone position (Object.owner obj) oid g1 {GameState.objects = Map.insert oid arrived (GameState.objects g1)}
+placeDiverted oid zone position = do
+  placed <- State.gets (Game.lookupObject oid)
+  Foldable.for_ placed $ \obj -> do
+    State.modify' $ \g ->
+      let g1 = Game.removeFromZones oid g
+          arrived = (Object.newIncarnation obj) {Object.zone = zone}
+       in Game.insertIntoZone zone position (Object.owner obj) oid g1 {GameState.objects = Map.insert oid arrived (GameState.objects g1)}
+    recordMintedArrival zone oid
 
 -- CR 614.1a on the two roads that MINT onto the battlefield: an object whose
 -- EntryRewrite.SacrificeToEnter went unpaid, or whose ExileFromGraveyard with
@@ -9774,20 +9778,23 @@ settleMinted start ids = do
   deferred <- State.gets GameState.enteringTogether
   case deferred of
     Just batch -> State.modify' (\g -> g {GameState.enteringTogether = Just batch {EnteringTogether.minted = EnteringTogether.minted batch <> Seq.fromList ids}})
-    Nothing -> Monad.mapM_ recordMintedEntry ids
+    Nothing -> Monad.mapM_ (recordMintedArrival Zone.Battlefield) ids
 
--- Nothing departed, so `departed` is the arrival's own id. Harmless rather than a
--- fiction readers must know about: from == to == Battlefield already fails every
--- departure test (CR 603.6c), and neither road that reaches this has a
+-- Nothing departed, so `departed` is the arrival's own id and `from` is `zone`
+-- itself. Harmless rather than a fiction readers must know about: from == to
+-- in a shared zone fails every departure test (CR 603.6c, Game.leftOrigin) and
+-- every trigger naming an origin, and neither road that reaches this has a
 -- `lastKnown` entry to find -- a token has no prior incarnation (CR 111.2), and a
--- conjured card was in no zone.
-recordMintedEntry :: ObjectId -> Game ()
-recordMintedEntry newId = do
+-- conjured card was in no zone. `zone` is the battlefield but for placeDiverted's
+-- redirect.
+recordMintedArrival :: Zone -> ObjectId -> Game ()
+recordMintedArrival zone newId = do
   placed <- State.get
   let snapshot = Projection.project newId placed
   -- Moved.revealed is read by no look-back here: none reaches a battlefield
-  -- destination (Event.Trigger.looksBack), so the public origin answers.
-  State.modify' (recordEvent (GameEvent.Moved ((Moved.moved (ZoneChange.MkZoneChange newId newId Zone.Battlefield Zone.Battlefield) snapshot) {Moved.revealed = True, Moved.seenArriving = Visibility.seenByEveryone newId placed, Moved.causedBy = Game.causeNow placed})))
+  -- destination (Event.Trigger.looksBack), and every battlefield-bound redirect
+  -- in data/cards/ exiles, a public zone, so the public origin answers.
+  State.modify' (recordEvent (GameEvent.Moved ((Moved.moved (ZoneChange.MkZoneChange newId newId zone zone) snapshot) {Moved.revealed = True, Moved.seenArriving = Visibility.seenByEveryone newId placed, Moved.causedBy = Game.causeNow placed})))
 
 -- CR 701.42a: meld these cards -- "put them onto the battlefield with their back
 -- faces up and combined. The resulting permanent is a single object represented by
@@ -9915,7 +9922,7 @@ meld settle controller victims resultCard = do
       Monad.void (runEntry settle Nothing Nothing Set.empty newId)
       -- CR 603.6a's enters-the-battlefield triggers scan this, and it is recorded
       -- after the entry loop so the snapshot describes a settled permanent --
-      -- recordMintedEntry's reasons, one zone over. `from` is where the cards were,
+      -- recordMintedArrival's reasons, one zone over. `from` is where the cards were,
       -- so an "enters from exile" read sees the truth of rule 701.42a.
       --
       -- EVERY card that left is named, the first in the ZoneChange and the rest

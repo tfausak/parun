@@ -513,7 +513,7 @@ enters context board gs bearer you t event = case Game.enteredBattlefieldChange 
 -- admits, and it is the permanent the trigger watches. An empty destination set
 -- admits any zone and CR 603.6c's leaving-the-game form too (CR 800.4a, 729.4a);
 -- a named one admits neither, since leaving the game reaches no zone. The `/=
--- Battlefield` guard is against recordMintedEntry's pseudo-move.
+-- Battlefield` guard is against recordMintedArrival's pseudo-move.
 --
 -- Matched on ZoneChange.departed, never the CR 400.7 incarnation the card
 -- became: CR 603.10a makes leaves-the-battlefield abilities look back in time,
