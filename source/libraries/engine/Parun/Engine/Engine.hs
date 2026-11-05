@@ -41,6 +41,7 @@ import qualified Parun.Engine.Fragmented as Fragmented
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Ignore as Ignore
 import qualified Parun.Engine.Initiative as Initiative
+import qualified Parun.Engine.LaterPayment as LaterPayment
 import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.ManaAbility as ManaAbility
 import qualified Parun.Engine.Modal as Modal
@@ -1602,6 +1603,14 @@ priorityLoop = do
                               -- what makes the ending visible; nothing is undone.
                               Action.Type.EndEffect _ resolution -> do
                                 EndEffect.endEffect performManaAbility p resolution
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 116.2c: a special action too, whose payment
+                              -- leaves the offer in place.
+                              Action.Type.MakeLaterPayment _ createdAt -> do
+                                paid <- LaterPayment.pay performManaAbility p createdAt
+                                Foldable.for_ paid (Resolve.runLaterPayment playSubgame)
                                 State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
                                 settleForPriority
                                 loop trail'

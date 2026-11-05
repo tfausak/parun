@@ -13,6 +13,7 @@ import qualified Parun.Codec.ActiveAttackRequirement as ActiveAttackRequirement
 import qualified Parun.Codec.ActiveBlockRequirement as ActiveBlockRequirement
 import qualified Parun.Codec.ActiveCopy as ActiveCopy
 import qualified Parun.Codec.ActiveEvasion as ActiveEvasion
+import qualified Parun.Codec.ActiveLaterPayment as ActiveLaterPayment
 import qualified Parun.Codec.ActiveObjectProhibition as ActiveObjectProhibition
 import qualified Parun.Codec.ActivePlayerEffect as ActivePlayerEffect
 import qualified Parun.Codec.ActiveReplacement as ActiveReplacement
@@ -153,6 +154,7 @@ codec resolve = Fields.object $ do
   continuousEffects <- Fields.defaulted "continuousEffects" [] (Common.list (ContinuousEffect.codec Card.codec)) GameState.continuousEffects
   copyEffects <- Fields.defaulted "copyEffects" [] (Common.list ActiveCopy.codec) GameState.copyEffects
   replacements <- Fields.defaulted "replacements" [] (Common.list ActiveReplacement.codec) GameState.replacements
+  laterPayments <- Fields.defaulted "laterPayments" [] (Common.list ActiveLaterPayment.codec) GameState.laterPayments
   pendingPreventionRiders <- Fields.defaulted "pendingPreventionRiders" Seq.empty (Common.seq Prevention.codec) GameState.pendingPreventionRiders
   pendingReplacementEffects <- Fields.defaulted "pendingReplacementEffects" Seq.empty (Common.seq PendingReplacementEffect.codec) GameState.pendingReplacementEffects
   contested <- Fields.defaulted "contested" Map.empty (Common.naturalMap ObjectId.codec (Common.maybe ObjectId.codec)) GameState.contested
@@ -281,6 +283,7 @@ codec resolve = Fields.object $ do
         GameState.continuousEffects = continuousEffects,
         GameState.copyEffects = copyEffects,
         GameState.replacements = replacements,
+        GameState.laterPayments = laterPayments,
         GameState.pendingPreventionRiders = pendingPreventionRiders,
         GameState.pendingReplacementEffects = pendingReplacementEffects,
         GameState.contested = contested,

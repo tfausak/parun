@@ -170,6 +170,7 @@ isPlay action = case action of
   Action.Type.RollPlanarDie -> False
   Action.Type.Ignore _ _ -> False
   Action.Type.EndEffect {} -> False
+  Action.Type.MakeLaterPayment {} -> False
   Action.Type.PayLifeForMana _ _ -> False
   Action.Type.ActivateManaAbility _ -> False
 
@@ -265,6 +266,7 @@ playing wanted action = case action of
   Action.Type.RollPlanarDie -> False
   Action.Type.Ignore _ _ -> False
   Action.Type.EndEffect {} -> False
+  Action.Type.MakeLaterPayment {} -> False
   Action.Type.PayLifeForMana _ _ -> False
   Action.Type.ActivateManaAbility _ -> False
 
@@ -286,6 +288,7 @@ casting wanted action = case action of
   Action.Type.RollPlanarDie -> False
   Action.Type.Ignore _ _ -> False
   Action.Type.EndEffect {} -> False
+  Action.Type.MakeLaterPayment {} -> False
   Action.Type.PayLifeForMana _ _ -> False
   Action.Type.ActivateManaAbility _ -> False
 
@@ -2118,6 +2121,7 @@ activating wanted action = case action of
   Action.Type.RollPlanarDie -> False
   Action.Type.Ignore _ _ -> False
   Action.Type.EndEffect {} -> False
+  Action.Type.MakeLaterPayment {} -> False
   Action.Type.PayLifeForMana _ _ -> False
   Action.Type.ActivateManaAbility _ -> False
 

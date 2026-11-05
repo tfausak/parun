@@ -62,6 +62,7 @@ import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.InitiativeTarget as InitiativeTarget
+import qualified Parun.Types.LaterPayment as LaterPayment
 import qualified Parun.Types.LifeLoss as LifeLoss
 import qualified Parun.Types.LookAt as LookAt
 import qualified Parun.Types.MakeForetold as MakeForetold
@@ -391,6 +392,10 @@ data Effect card ability
     -- duration (Mending Hands). PreventNextDamage.riders is CR 615.5's
     -- additional effect.
     PreventNextDamage (PreventNextDamage.PreventNextDamage (Effect card ability))
+  | -- | CR 116.2c: for a duration, its controller may pay a cost, any time they
+    -- have priority and however many times, to run effects without the stack
+    -- (Guardian Angel).
+    LaterPayment (LaterPayment.LaterPayment (Effect card ability))
   | -- | CR 615.1 / 615.3: install an unbounded prevention shield over the same
     -- recipients (Selfless Squire) -- PreventNextDamage with the Quantity
     -- removed, so it ends only when its duration does.

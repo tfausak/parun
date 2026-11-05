@@ -42,6 +42,7 @@ import qualified Parun.Types.ActiveAttackRequirement as ActiveAttackRequirement
 import qualified Parun.Types.ActiveBlockRequirement as ActiveBlockRequirement
 import qualified Parun.Types.ActiveCopy as ActiveCopy
 import qualified Parun.Types.ActiveEvasion as ActiveEvasion
+import qualified Parun.Types.ActiveLaterPayment as ActiveLaterPayment
 import qualified Parun.Types.ActiveObjectProhibition as ActiveObjectProhibition
 import qualified Parun.Types.ActivePlayerEffect as ActivePlayerEffect
 import qualified Parun.Types.ActiveReplacement as ActiveReplacement
@@ -76,6 +77,7 @@ import Parun.Types.PhaseSelector (PhaseSelector)
 import qualified Parun.Types.PhaseSelector as PhaseSelector
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PreventionRider as PreventionRider
 import Parun.Types.Recipient (Recipient)
 import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.StepBegan as StepBegan
@@ -706,6 +708,7 @@ traverseExpiries edit gs =
           (\xs g -> g {GameState.attackProhibitions = xs}) <$> rows edit ActiveAttackProhibition.source ActiveAttackProhibition.expiry (\x e -> x {ActiveAttackProhibition.expiry = e}) (GameState.attackProhibitions gs),
           (\xs g -> g {GameState.evasions = xs}) <$> rows edit ActiveEvasion.source ActiveEvasion.expiry (\x e -> x {ActiveEvasion.expiry = e}) (GameState.evasions gs),
           (\xs g -> g {GameState.ignoredAbilities = xs}) <$> rows edit IgnoredAbility.source IgnoredAbility.expiry (\x e -> x {IgnoredAbility.expiry = e}) (GameState.ignoredAbilities gs),
+          (\xs g -> g {GameState.laterPayments = xs}) <$> rows edit (PreventionRider.source . ActiveLaterPayment.payoff) ActiveLaterPayment.expiry (\x e -> x {ActiveLaterPayment.expiry = e}) (GameState.laterPayments gs),
           (\xs g -> g {GameState.delayedTriggers = xs}) . Seq.fromList . Maybe.catMaybes <$> traverse delayed (Foldable.toList (GameState.delayedTriggers gs)),
           (\xs g -> g {GameState.objects = xs}) <$> traverse object (GameState.objects gs)
         ]

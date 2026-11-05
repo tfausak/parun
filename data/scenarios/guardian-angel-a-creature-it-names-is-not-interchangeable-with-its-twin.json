@@ -1,0 +1,147 @@
+{
+  "description": "CR 116.2c: a mana creature an offer names is not interchangeable with its twin, so paying for a spell still asks which of two Llanowar Elves to tap",
+  "note": "X 0 leaves the later payment as the only row naming $b, and a payment would shield $b and not $a, so the mana prompt must offer both. $a is first, so eliding would offer only it.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Guardian Angel",
+            "label": "angel"
+          },
+          {
+            "card": "Giant Growth",
+            "label": "growth"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "w"
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "a",
+            "ready": true
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "b",
+            "ready": true
+          },
+          {
+            "card": "Savannah Lions",
+            "label": "lions"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$angel",
+          "x": 0,
+          "targets": [
+            "$b"
+          ],
+          "mana": [
+            "$w",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$growth",
+          "targets": [
+            "$lions"
+          ],
+          "mana": [
+            "$b",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$b",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$a",
+          "tapped": false
+        }
+      }
+    }
+  ]
+}

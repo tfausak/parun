@@ -20,7 +20,7 @@ import qualified Parun.Types.Keyword as Keyword
 -- companion, foretell, plot), so they belong to Parun.Types.Keyword rather than
 -- here; and CR 116.2c's permission is created by a
 -- RESOLUTION rather than printed, so it rides the stored effect it ends (Parun.Types.Expiry's WhenPaid)
--- rather than a face's text; see #875.
+-- or its own stored row (Parun.Types.LaterPayment) rather than a face's text; see #875.
 data SpecialAction
   = -- | CR 116.2e: "You may discard this card any time you could cast an
     -- instant." Circling Vultures is the card the rule names.

@@ -330,15 +330,16 @@ quiet gs =
 --
 -- The trees a row holds -- an effect, an ability, a condition, a cost -- are
 -- read through Parun.Engine.Interchangeable.Mentions. A replacement, a delayed
--- trigger and the three pending queues store the environment their slots read
--- (a pending entry effect reads none), which the same traversal searches, so
--- they are asked as `searched`;
+-- trigger, a later payment and the three pending queues store the environment
+-- their slots read (a pending entry effect reads none), which the same traversal
+-- searches, so they are asked as `searched`;
 -- every other row stores none, so a slot it reads might name anything
 -- (`unread`).
 --
 -- Parun.ManaSourceSpec proves the replacement arm (Mending Hands, through
 -- DamagePattern's recipient) and the delayed-trigger arm (Salt Road Skirmish,
--- through its bindings). The pending queues are regression fences: no board
+-- through its bindings); guardian-angel-a-creature-it-names-is-not-interchangeable
+-- proves the later payment's. The pending queues are regression fences: no board
 -- in the suite reaches a mana-source window with one non-empty.
 namedByStored :: ObjectId -> GameState -> Bool
 namedByStored oid gs =
@@ -354,6 +355,7 @@ namedByStored oid gs =
     || any (ignoredNames oid) (GameState.ignoredAbilities gs)
     || any (Monoid.getAny . Mentions.activeReplacementNames (searched oid)) (GameState.replacements gs)
     || any (Monoid.getAny . Mentions.delayedTriggerNames (searched oid)) (GameState.delayedTriggers gs)
+    || any (Monoid.getAny . Mentions.activeLaterPaymentNames (searched oid)) (GameState.laterPayments gs)
     || any (Monoid.getAny . Mentions.preventionNames (searched oid)) (GameState.pendingPreventionRiders gs)
     || any (Monoid.getAny . Mentions.pendingDamageEffectNames (searched oid)) (GameState.pendingReplacementEffects gs)
     || any (Monoid.getAny . Mentions.pendingEntryEffectNames (searched oid)) (GameState.pendingEntryEffects gs)

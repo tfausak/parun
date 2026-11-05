@@ -39,6 +39,7 @@ import qualified Parun.Types.ActivationCriteria as ActivationCriteria
 import qualified Parun.Types.ActivationProhibition as ActivationProhibition
 import qualified Parun.Types.ActivationRestriction as ActivationRestriction
 import qualified Parun.Types.ActivationsThisTurn as ActivationsThisTurn
+import qualified Parun.Types.ActiveLaterPayment as ActiveLaterPayment
 import qualified Parun.Types.ActiveReplacement as ActiveReplacement
 import qualified Parun.Types.AffectPlayers as AffectPlayers
 import qualified Parun.Types.Affected as Affected
@@ -277,6 +278,7 @@ import qualified Parun.Types.KeywordCount as KeywordCount
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.KeywordTally as KeywordTally
+import qualified Parun.Types.LaterPayment as LaterPayment
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
 import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LeavingPermanent as LeavingPermanent
@@ -1286,6 +1288,10 @@ dealDamageNames :: (Monoid r) => Asking r -> DealDamage.DealDamage -> r
 dealDamageNames asking x = case x of
   DealDamage.MkDealDamage parts dealer _excess tally damaged excessTally -> foldMap (damagePartNames asking) parts <> foldMap (slotNames asking) dealer <> foldMap (slotNames asking) tally <> foldMap (slotNames asking) damaged <> foldMap (slotNames asking) excessTally
 
+activeLaterPaymentNames :: (Monoid r) => Asking r -> ActiveLaterPayment.ActiveLaterPayment -> r
+activeLaterPaymentNames asking x = case x of
+  ActiveLaterPayment.MkActiveLaterPayment cost payoff _createdAt expiry -> costNames asking (keywordNames asking) cost <> preventionRiderNames asking payoff <> expiryNames asking expiry
+
 delayedTriggerNames :: (Monoid r) => Asking r -> DelayedTrigger.DelayedTrigger -> r
 delayedTriggerNames asking x = case x of
   DelayedTrigger.MkDelayedTrigger ability source _controller bindings _window expiry _createdAt -> triggeredAbilityNames asking (const mempty) (grantedAbilityNames asking (const mempty)) ability <> names asking (== source) <> foldMap (slotNames asking) (Map.keys bindings) <> foldMap (bindingNames asking) bindings <> foldMap (expiryNames asking) expiry
@@ -1485,6 +1491,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.Replace replace -> replaceNames asking onCard onAbility (effectNames asking onCard onAbility) replace
   Effect.SkipPhase skipPhase -> skipPhaseNames asking skipPhase
   Effect.PreventNextDamage preventNextDamage -> preventNextDamageNames asking (effectNames asking onCard onAbility) preventNextDamage
+  Effect.LaterPayment (LaterPayment.MkLaterPayment duration cost effects) -> durationNames asking duration <> costNames asking (keywordNames asking) cost <> foldMap (effectNames asking onCard onAbility) effects
   Effect.PreventAllDamage preventAllDamage -> preventAllDamageNames asking (effectNames asking onCard onAbility) preventAllDamage
   Effect.NextDamageInstance nextDamageInstance -> nextDamageInstanceNames asking (effectNames asking onCard onAbility) nextDamageInstance
   Effect.RedirectDamage redirectDamage -> redirectDamageNames asking redirectDamage

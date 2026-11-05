@@ -3278,6 +3278,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.Replace {} -> False
   Effect.SkipPhase {} -> False
   Effect.PreventNextDamage {} -> False
+  Effect.LaterPayment {} -> False
   Effect.PreventAllDamage {} -> False
   Effect.NextDamageInstance {} -> False
   Effect.RedirectDamage {} -> False

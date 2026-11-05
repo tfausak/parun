@@ -251,6 +251,7 @@ zonesFunctionedAgainst itself delayed effect = case effect of
   -- Parun.Engine.Resolve.Effect.runPreventionRider against the effect's own source, so
   -- nothing it does can be this ability moving "the object it's on".
   Effect.PreventNextDamage {} -> Set.empty
+  Effect.LaterPayment {} -> Set.empty
   Effect.PreventAllDamage {} -> Set.empty
   Effect.NextDamageInstance {} -> Set.empty
   Effect.RedirectDamage {} -> Set.empty

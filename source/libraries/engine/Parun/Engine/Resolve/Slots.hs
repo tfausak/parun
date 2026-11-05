@@ -165,6 +165,7 @@ import qualified Parun.Types.InitiativeTarget as InitiativeTarget
 import qualified Parun.Types.InstructionR as InstructionR
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LastKnown as LastKnown
+import qualified Parun.Types.LaterPayment as LaterPayment
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LifeGainR as LifeGainR
 import qualified Parun.Types.LifeLoss as LifeLoss
@@ -819,6 +820,7 @@ effectObjectRefs effect = case effect of
   Effect.SkipPhase {} -> []
   -- Absent where the shield's recipients are described rather than named.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ ref _ _ _ _ _) -> Maybe.maybeToList ref
+  Effect.LaterPayment x -> foldMap effectObjectRefs (LaterPayment.effects x)
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ ref _ _ _ _ _ _) -> Maybe.maybeToList ref
   -- One ref, and never optional: this opcode has no described recipient side.
   Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ ref _ _ _) -> [ref]
@@ -1053,6 +1055,7 @@ effectPlayerRefs effect = case effect of
   Effect.Replace x -> durationPlayerRefs (Replace.duration x)
   Effect.SkipPhase (SkipPhase.MkSkipPhase ref _ _ duration) -> ref : durationPlayerRefs duration
   Effect.PreventNextDamage x -> durationPlayerRefs (PreventNextDamage.duration x)
+  Effect.LaterPayment x -> durationPlayerRefs (LaterPayment.duration x) <> foldMap effectPlayerRefs (LaterPayment.effects x)
   Effect.PreventAllDamage x -> durationPlayerRefs (PreventAllDamage.duration x)
   Effect.NextDamageInstance x -> durationPlayerRefs (NextDamageInstance.duration x)
   Effect.RedirectDamage x -> durationPlayerRefs (RedirectDamage.duration x)
@@ -1457,6 +1460,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- printed source properties are not among them -- this opcode has no such
   -- field, and its installDamageRow call passes the trivial predicate. A
   -- Filter.IsBound in either names a slot of this resolution.
+  Effect.LaterPayment (LaterPayment.MkLaterPayment duration _ effects) -> joinSlots [durationSlots duration, riderSlotsOf effects]
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ whatRecipient _ chosenSource quantity rider) ->
     joinSlots
       [ durationSlots duration,
@@ -2283,6 +2287,7 @@ ownSlotsAreExhaustive effect = case effect of
       && all Quantity.slotsAreExhaustive (snd (replacementRowReads re))
       && all slotsAreExhaustive (replacementRowEffects re)
   Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration) -> durationSlotsAreExhaustive duration
+  Effect.LaterPayment (LaterPayment.MkLaterPayment duration _ effects) -> durationSlotsAreExhaustive duration && all slotsAreExhaustive effects
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity rider) ->
     durationSlotsAreExhaustive duration && Quantity.slotsAreExhaustive quantity && all slotsAreExhaustive rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ rider) ->
@@ -2567,6 +2572,7 @@ readsX =
         Effect.SkipPhase {} -> False
         -- CR 601.2b's X reaches the rider too.
         Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ quantity rider) -> Quantity.readsX quantity || readsX (Foldable.toList rider)
+        Effect.LaterPayment (LaterPayment.MkLaterPayment _ _ effects) -> readsX (Foldable.toList effects)
         Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> readsX (Foldable.toList rider)
         Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ rider _) -> readsX (Foldable.toList rider)
         Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ amount _ _ _ _ _ _ _) -> any Quantity.readsX amount
@@ -2850,6 +2856,7 @@ boundSlots effect = case effect of
   -- The shield itself binds nothing; CR 615.5's rider is an effect list, so a
   -- name IT authors is a name this card authors. All three shields.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ rider) -> foldMap boundSlots rider
+  Effect.LaterPayment (LaterPayment.MkLaterPayment _ _ effects) -> foldMap boundSlots effects
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> foldMap boundSlots rider
   Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ rider _) -> foldMap boundSlots rider
   Effect.RedirectDamage {} -> Set.empty

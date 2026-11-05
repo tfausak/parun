@@ -54,6 +54,7 @@ import qualified Parun.Codec.ActiveAttackRequirementSpec
 import qualified Parun.Codec.ActiveBlockRequirementSpec
 import qualified Parun.Codec.ActiveCopySpec
 import qualified Parun.Codec.ActiveEvasionSpec
+import qualified Parun.Codec.ActiveLaterPaymentSpec
 import qualified Parun.Codec.ActiveObjectProhibitionSpec
 import qualified Parun.Codec.ActivePlayerEffectSpec
 import qualified Parun.Codec.ActiveReplacementSpec
@@ -428,6 +429,7 @@ import qualified Parun.Codec.LabelSpec
 import qualified Parun.Codec.LandAllowanceSpec
 import qualified Parun.Codec.LandPlayedSpec
 import qualified Parun.Codec.LastKnownSpec
+import qualified Parun.Codec.LaterPaymentSpec
 import qualified Parun.Codec.LayoutSpec
 import qualified Parun.Codec.LeavesTriggerSpec
 import qualified Parun.Codec.LeavesZoneTriggerSpec
@@ -1033,6 +1035,7 @@ spec s registry corpus = do
   Parun.Codec.ActiveBlockRequirementSpec.spec s
   Parun.Codec.ActiveCopySpec.spec s
   Parun.Codec.ActiveEvasionSpec.spec s
+  Parun.Codec.ActiveLaterPaymentSpec.spec s
   Parun.Codec.ActiveObjectProhibitionSpec.spec s
   Parun.Codec.ActivePlayerEffectSpec.spec s
   Parun.Codec.ActiveReplacementSpec.spec s
@@ -1587,6 +1590,7 @@ spec s registry corpus = do
   Parun.Codec.NextDamageOutcomeSpec.spec s
   Parun.Codec.PreventionRiderSpec.spec s
   Parun.Codec.PreventionSpec.spec s
+  Parun.Codec.LaterPaymentSpec.spec s
   Parun.Codec.PreventNextDamageSpec.spec s
   Parun.Codec.PrintedReplacementSpec.spec s
   Parun.Codec.PrintingIdSpec.spec s
