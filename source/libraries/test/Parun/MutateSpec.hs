@@ -73,6 +73,7 @@ import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Engine.Stack as Stack
+import qualified Parun.Extra.Int as Int
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
@@ -100,8 +101,8 @@ import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.MeldSource as MeldSource
 import qualified Parun.Types.MergeComponent as MergeComponent
-import qualified Parun.Types.MutateSide as MutateSide
 import qualified Parun.Types.Moved as Moved
+import qualified Parun.Types.MutateSide as MutateSide
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
@@ -114,8 +115,8 @@ import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Protection as Protection
 import qualified Parun.Types.Recipient as Recipient
-import qualified Parun.Types.ReplacementEntry as ReplacementEntry
 import qualified Parun.Types.Regenerability as Regenerability
+import qualified Parun.Types.ReplacementEntry as ReplacementEntry
 import qualified Parun.Types.RevealCause as RevealCause
 import qualified Parun.Types.Revealed as Revealed
 import qualified Parun.Types.RoomHalf as RoomHalf
@@ -125,8 +126,8 @@ import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Transformed as Transformed
 import qualified Parun.Types.TurnUpProcedure as TurnUpProcedure
-import qualified Parun.Types.ZoneChange as ZoneChange
 import qualified Parun.Types.Zone as Zone
+import qualified Parun.Types.ZoneChange as ZoneChange
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Mutate" $ do
@@ -1220,15 +1221,14 @@ spec s registry = Spec.describe s "Mutate" $ do
         (thirdBoard, thirdSpell) = S.handOne cubwarden once
         twice = merging MutateSide.Under cat thirdBoard thirdSpell
         (_, withLeyline) = S.addPermanent leyline S.bob twice
-        reversingFor :: PlayerId.PlayerId -> Prompt.Prompt r -> r
+        reversingFor :: Maybe PlayerId.PlayerId -> Prompt.Prompt r -> r
         reversingFor who p = case p of
-          Prompt.OrderTimestamps _ pid oids | pid == who -> reverse (zipWith const [0 ..] oids)
+          Prompt.OrderTimestamps _ pid oids | Just pid == who -> reverse (zipWith const [0 ..] oids)
           _ -> S.identityAnswer p
         dead who = S.runPure (reversingFor who) withLeyline (Event.destroy (pure ()) Regenerability.Regenerable [cat] >> Engine.settleForPriority)
         stamps gs = fmap Object.timestamp (Maybe.mapMaybe (`Game.lookupObject` gs) (Set.toAscList (GameState.exile gs)))
-        -- alice is asked nothing here, so reversing for her is the canonical run.
-        canonical = dead S.alice
-        reversed = dead S.bob
+        canonical = dead Nothing
+        reversed = dead (Just S.bob)
     Spec.assertEqWith s "setup: both Cubwardens sit under the Cat" (length (filter (== CardName.MkCardName (Text.pack "Cubwarden")) (componentNames cat withLeyline))) 2
     Spec.assertEqWith s "setup: CR 730.3e both are exiled" (fmap length [stamps canonical, stamps reversed]) [2, 2]
     Spec.assertEqWith s "CR 730.3b bob's order is the one their timestamps take" (stamps reversed) (reverse (stamps canonical))
@@ -1257,7 +1257,7 @@ spec s registry = Spec.describe s "Mutate" $ do
         plainsName = CardName.MkCardName (Text.pack "Plains")
         picking :: ObjectId.ObjectId -> Prompt.Prompt r -> r
         picking chosen p = case p of
-          Prompt.ChooseReplacement _ _ entries -> maybe 0 fromIntegral (List.findIndex ((== chosen) . ReplacementEntry.source) entries)
+          Prompt.ChooseReplacement _ _ entries -> maybe 0 Int.toNaturalSaturating (List.findIndex ((== chosen) . ReplacementEntry.source) entries)
           _ -> S.identityAnswer p
         dead chosen = S.runPure (picking chosen) enchanting (Event.destroy (pure ()) Regenerability.Regenerable [cat] >> Engine.settleForPriority)
         exiledNames gs = Maybe.mapMaybe (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Set.toList (GameState.exile gs))

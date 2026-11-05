@@ -2284,9 +2284,9 @@ applyReplacementsReporting asOf batch allowances spent earlier event = do
 applyReplacementsFully :: Game () -> Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, ComponentSplit)
 applyReplacementsFully settle asOf batch allowances spent = loop settle asOf batch Nothing allowances spent mempty Nothing False Map.empty
 
--- The last accumulator is CR 903.9c's split, taken when the owner accepted CR
--- 903.9b's offer for a melded or merged commander inside the loop -- see
--- `offerCommandZoneFirst`.
+-- The last accumulator is the component split: CR 903.9c's, taken when the
+-- owner accepted CR 903.9b's offer for a melded or merged commander inside the
+-- loop (`offerCommandZoneFirst`), and CR 730.3e's (`chooseAndApply`).
 loop :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> ComponentSplit -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, ComponentSplit)
 loop settle asOf batch diverting allowances applied prevented exiledBy shuffling split event = do
   gs <- State.get

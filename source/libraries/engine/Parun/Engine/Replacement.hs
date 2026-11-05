@@ -805,7 +805,8 @@ confinedToSource pat = case pat of
 -- 730.2d), still reach the cards among its components? It does when it fails
 -- the permanent only for being a token: the rest of what it names is read off
 -- the permanent, whose components have no characteristics apart from it until
--- they arrive. The rule's first sentence needs nothing here, since a filter
+-- they arrive (docs/decisions.md's "Which rows CR 730.3e counts as reaching
+-- only cards"). The rule's first sentence needs nothing here, since a filter
 -- that excludes tokens already admits a merged permanent that is no token.
 reachesCardComponents :: (ObjectId -> Filter.View) -> GameState -> ReplacementCandidate -> Filter.Type.Filter Keyword.Type.Keyword -> ObjectId -> Bool
 reachesCardComponents viewOf gs candidate filter_ oid =
