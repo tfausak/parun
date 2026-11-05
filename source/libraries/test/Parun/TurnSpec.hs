@@ -1383,7 +1383,7 @@ skippedEndOfCombatSpec s registry = Spec.describe s "SkippedEndOfCombat" $ do
     Spec.assertEqWith s "the end of combat step began once" (began after) 1
     Spec.assertEqWith s "and the postcombat main phase followed it" (GameState.phase after) Phase.PostcombatMain
     Spec.assertEqWith s "nothing is attacking" (Map.keys (Combat.Type.attackers (GameState.combat after))) []
-    Spec.assertBool s (not (Turn.afterBlockersDeclared after)) "CR 506.7b and the game is no longer past the point blockers were declared"
+    Spec.assertBool s (not (Turn.afterBlockersDeclared after)) "CR 506.8b and the game is no longer past the point blockers were declared"
     Spec.assertBool s (not (Projection.isCreatureOf jade after)) "and the animation expired with the phase"
   -- The skip itself, in its own case so no sweep assertion below can absorb a
   -- mutation to it. CR 614.6: a replaced event never happens, and the CR 603.2b
@@ -1404,10 +1404,10 @@ skippedEndOfCombatSpec s registry = Spec.describe s "SkippedEndOfCombat" $ do
         damage = S.runToStep (Phase.Combat CombatStep.CombatDamage) S.aggressiveAnswer staged
         after = atPostcombatMain S.aggressiveAnswer staged
     Spec.assertEqWith s "the fixture really did attack and block" (Map.keys (Combat.Type.attackers (GameState.combat damage)), Map.lookup attacker (Combat.Type.blockers (GameState.combat damage))) ([attacker], Just (Set.singleton blocker))
-    Spec.assertBool s (Turn.afterBlockersDeclared damage) "CR 506.7b and the game is past the point blockers were declared"
+    Spec.assertBool s (Turn.afterBlockersDeclared damage) "CR 506.8b and the game is past the point blockers were declared"
     Spec.assertEqWith s "no creature is attacking in the postcombat main phase" (Map.keys (Combat.Type.attackers (GameState.combat after))) []
     Spec.assertEqWith s "and none is blocking" (Map.keys (Combat.Type.blockers (GameState.combat after))) []
-    Spec.assertBool s (not (Turn.afterBlockersDeclared after)) "CR 506.7b so a card castable only after blockers are declared is out of its window again"
+    Spec.assertBool s (not (Turn.afterBlockersDeclared after)) "CR 506.8b so a card castable only after blockers are declared is out of its window again"
     Spec.assertBool s (S.onBattlefield attacker after && S.onBattlefield blocker after) "and both creatures are still on the battlefield, so nothing was emptied by CR 506.4"
   -- CR 500.5 / CR 500.5a's expiry, in its own case; see #2126. The animation is
   -- STILL live in the combat damage step, which is what keeps this from passing

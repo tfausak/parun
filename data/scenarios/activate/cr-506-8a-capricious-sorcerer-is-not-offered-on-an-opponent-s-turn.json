@@ -1,13 +1,18 @@
 {
-  "description": "CR 506.7a/g, 113.7a whole card: Fire Bowman sacrificed in the precombat main phase still deals its 1 damage",
+  "description": "CR 506.8a/g, 102.1 Capricious Sorcerer is not offered before attackers are declared on bob's turn",
   "board": {
     "seats": [
       {
         "name": "alice",
         "battlefield": [
           {
-            "card": "Fire Bowman",
-            "label": "bowman",
+            "card": "Capricious Sorcerer",
+            "label": "capricious",
+            "ready": true
+          },
+          {
+            "card": "Prodigal Sorcerer",
+            "label": "prodigal",
             "ready": true
           }
         ],
@@ -45,19 +50,36 @@
         ]
       }
     ],
-    "active": "alice",
-    "step": "PrecombatMain"
+    "active": "bob",
+    "step": "Upkeep"
   },
   "timeline": [
     {
       "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Offered",
+          "player": "alice",
+          "is": [
+            "Pass",
+            "Activate $prodigal"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
-        "Activate": {
-          "object": "$bowman",
-          "targets": [
-            "$bob"
+      "check": {
+        "View": {
+          "of": "Offered",
+          "player": "alice",
+          "is": [
+            "Pass",
+            "Activate $prodigal"
           ]
         }
       }
@@ -67,22 +89,13 @@
       "step": "BeginningOfCombat",
       "player": "alice",
       "check": {
-        "Life": {
-          "player": "bob",
-          "life": 19
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "BeginningOfCombat",
-      "player": "alice",
-      "check": {
-        "Count": {
+        "View": {
+          "of": "Offered",
           "player": "alice",
-          "zone": "Graveyard",
-          "card": "Fire Bowman",
-          "count": 1
+          "is": [
+            "Pass",
+            "Activate $prodigal"
+          ]
         }
       }
     }
