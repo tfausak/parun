@@ -73,7 +73,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 108.2 / 111.7: Zur's Weirding reveals the card a draw would take, so bob's payment bins the card under the token Lich's Mirror shuffled in",
-  "note": "Bob owns the Weirding, so the reset leaves it. A reveal of the top object would bin the token and let alice draw the Swamp.",
+  "note": "Bob owns the Weirding, so the reset leaves it. A reveal of the top object would find the token, bin nothing (CR 111.8) and let alice draw the Swamp.",
   "timeline": [
     {
       "do": {

@@ -73,7 +73,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 108.2 / 111.7: an empty-handed draw under Chains of Mephistopheles mills a card, so it mills past the token Lich's Mirror shuffled in",
-  "note": "Bob owns the Chains, so the reset leaves it. Every one of the seven draws finds alice's hand empty and mills. A mill of the top object would take the token first and leave the Swamp in the library.",
+  "note": "Bob owns the Chains, so the reset leaves it. Every one of the seven draws finds alice's hand empty and mills. A mill of the top object would find the token each time, move nothing (CR 111.8) and leave all seven in the library.",
   "timeline": [
     {
       "do": {
