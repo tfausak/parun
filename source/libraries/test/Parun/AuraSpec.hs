@@ -13,7 +13,7 @@
 -- onto the battlefield: CR 303.4f's Aura entering from anywhere else has its host
 -- chosen inside Parun.Engine.Event.changeZoneAttaching, which is replenishSpec's,
 -- and a search whose destination NAMES the host seeds that same funnel instead,
--- which is couldEnchantSpec's.
+-- which data/scenarios/aura's Sovereigns of Lost Alara scenario proves.
 -- Rule 701.3's OTHER caller, CR 303.4k's attachment as an Aura is turned face up,
 -- is Parun.FaceDownSpec's: CR 708.11 puts it inside the turning-over rather than in
 -- a resolution.
@@ -35,7 +35,6 @@ import qualified Data.Text as Text
 import qualified Parun.Engine.Action as Action
 import qualified Parun.Engine.Activatable as Activatable
 import qualified Parun.Engine.Activate as Activate
-import qualified Parun.Engine.Attach as Attach
 import qualified Parun.Engine.Card as Card
 import qualified Parun.Engine.Cast as Cast
 import qualified Parun.Engine.Combat as Combat
@@ -70,12 +69,10 @@ import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Color as Color
-import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.Departure as Departure.Type
 import qualified Parun.Types.Effect as Effect
-import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.Filter as Filter.Type
@@ -100,7 +97,6 @@ import qualified Parun.Types.Protection as Protection
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.Response as Response
-import qualified Parun.Types.Sickness as Sickness
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.StepBegan as StepBegan
@@ -129,27 +125,6 @@ aimedAtObject oid p = case p of
 -- permanent the effect TARGETS rather than at its own source.
 equipmentSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 equipmentSpec s registry = Spec.describe s "Equipment" $ do
-  -- CR 702.6a: "Equip [cost]" means "[Cost]: Attach this permanent to target
-  -- creature you control." The Equipment is the ability's SOURCE; the slot is
-  -- what it attaches to.
-  Spec.it s "CR 702.6a equipping attaches the Equipment to the target creature" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    bonesplitter <- S.printingOf s registry "Bonesplitter"
-    let base = Setup.emptyGame S.bothPlayers
-        (creature, withCreature) = S.addPermanent piker S.alice base
-        (equip, gs) = S.addPermanent bonesplitter S.alice withCreature
-        slot = SlotName.MkSlotName (Text.pack "target")
-        run =
-          Resolve.applyEffect
-            equip
-            equip
-            S.alice
-            (Map.singleton slot (Set.singleton (Recipient.ToCreature creature)))
-            (Map.singleton slot (Set.singleton (Recipient.ToCreature creature)))
-            (Effect.Attach slot)
-        after = S.runPure S.identityAnswer gs run
-    Spec.assertEqWith s "the Equipment is attached to the creature" (fmap Object.attachedTo (Game.lookupObject equip after)) (Just (Just (Recipient.ToCreature creature)))
-    Spec.assertBool s (Set.member equip (GameState.battlefield after)) "and is still on the battlefield"
   -- CR 301.5a: "The creature an Equipment is attached to is called the
   -- 'equipped creature'." CR 301.5f makes the phrase name a creature and not
   -- merely a host, so Bonesplitter's affected set spells the type out beside the
@@ -165,30 +140,6 @@ equipmentSpec s registry = Spec.describe s "Equipment" $ do
     Spec.assertEqWith s "unequipped, the Piker is 2/1" (Projection.powerOf creature gs) (Just 2)
     Spec.assertEqWith s "equipped, it is 4/1" (Projection.powerOf creature attached) (Just 4)
     Spec.assertEqWith s "toughness is untouched by +2/+0" (Projection.toughnessOf creature attached) (Just 1)
-  -- CR 701.3a: attaching a permanent that is already attached MOVES it --
-  -- "take it from where it currently is and put it onto that object".
-  Spec.it s "CR 701.3a equipping again moves the Equipment off the first creature" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    warMammoth <- S.printingOf s registry "War Mammoth"
-    bonesplitter <- S.printingOf s registry "Bonesplitter"
-    let base = Setup.emptyGame S.bothPlayers
-        (first, g1) = S.addPermanent piker S.alice base
-        (second, g2) = S.addPermanent warMammoth S.alice g1
-        (equip, g3) = S.addPermanent bonesplitter S.alice g2
-        gs = S.attach equip first g3
-        slot = SlotName.MkSlotName (Text.pack "target")
-        run =
-          Resolve.applyEffect
-            equip
-            equip
-            S.alice
-            (Map.singleton slot (Set.singleton (Recipient.ToCreature second)))
-            (Map.singleton slot (Set.singleton (Recipient.ToCreature second)))
-            (Effect.Attach slot)
-        after = S.runPure S.identityAnswer gs run
-    Spec.assertEqWith s "it moved to the second creature" (fmap Object.attachedTo (Game.lookupObject equip after)) (Just (Just (Recipient.ToCreature second)))
-    Spec.assertEqWith s "the first creature is back to 2 power" (Projection.powerOf first after) (Just 2)
-    Spec.assertEqWith s "the second is 3+2" (Projection.powerOf second after) (Just 5)
   -- The gameplay-level proof design.md section 4 asks for: cast Bonesplitter,
   -- activate the equip ability rule 702.6a mints from its keyword through the
   -- real activation path, let
@@ -396,35 +347,6 @@ equipmentSpec s registry = Spec.describe s "Equipment" $ do
         attachOn g = S.runPure S.identityAnswer g (Resolve.applyEffect batteryId batteryId S.alice recipients recipients (Effect.Attach slot))
     Spec.assertEqWith s "with reconfigure the Equipment creature equips" (fmap Object.attachedTo (Game.lookupObject batteryId (attachOn plain))) (Just (Just (Recipient.ToCreature creature)))
     Spec.assertEqWith s "CR 301.5c without it the same move does nothing" (fmap Object.attachedTo (Game.lookupObject batteryId (attachOn humbled))) (Just Nothing)
-  -- CR 701.3c: "Attaching an Aura, Equipment, or Fortification on the
-  -- battlefield to a different object or player causes [it] to receive a new
-  -- timestamp." That feeds CR 613.7's layer ordering, so it is not cosmetic.
-  -- CR 701.3b's second sentence is the other half: re-attaching to the object
-  -- it is ALREADY attached to "does nothing", so no new timestamp there.
-  Spec.it s "CR 701.3c attaching to a different creature restamps; re-attaching to the same one does not" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    warMammoth <- S.printingOf s registry "War Mammoth"
-    bonesplitter <- S.printingOf s registry "Bonesplitter"
-    let base = Setup.emptyGame S.bothPlayers
-        (first, g1) = S.addPermanent piker S.alice base
-        (second, g2) = S.addPermanent warMammoth S.alice g1
-        (equip, g3) = S.addPermanent bonesplitter S.alice g2
-        gs = S.attach equip first g3
-        slot = SlotName.MkSlotName (Text.pack "target")
-        attachTo t g =
-          S.runPure S.identityAnswer g $
-            Resolve.applyEffect
-              equip
-              equip
-              S.alice
-              (Map.singleton slot (Set.singleton (Recipient.ToCreature t)))
-              (Map.singleton slot (Set.singleton (Recipient.ToCreature t)))
-              (Effect.Attach slot)
-        stampOf g = fmap Object.timestamp (Game.lookupObject equip g)
-        moved = attachTo second gs
-        again = attachTo second moved
-    Spec.assertBool s (stampOf moved /= stampOf gs) "moving it to a different creature restamps"
-    Spec.assertEqWith s "re-attaching to the same creature does nothing" (stampOf again) (stampOf moved)
   -- CR 704.5n: "If an Equipment or Fortification is attached to an illegal
   -- permanent or to a player, it becomes unattached from that permanent or
   -- player. It REMAINS ON THE BATTLEFIELD." The shape difference from an
@@ -703,30 +625,6 @@ unattachableSpec s registry = Spec.describe s "Unattachable" $ do
 -- reached THROUGH the enchanted player (Affected.AttachedPlayerControls).
 enchantPlayerSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 enchantPlayerSpec s registry = Spec.describe s "EnchantPlayer" $ do
-  -- The gameplay proof design.md section 4 asks for: cast the real card at a
-  -- real player, let it resolve, and see the creatures on the other side of
-  -- the table get smaller. CR 303.4: an Aura "enters the battlefield attached
-  -- to an object or player", so the attachment is asserted on the incarnation
-  -- that entered, not written by a later step.
-  Spec.it s "CR 702.5d whole card: Curse of Death's Hold enters attached to the player it targeted and shrinks that player's creatures" $ do
-    swamp <- S.printingOf s registry "Swamp"
-    piker <- S.printingOf s registry "Goblin Piker"
-    curse <- S.printingOf s registry "Curse of Death's Hold"
-    let base = S.landsInPlay swamp 5
-        (his, withHis) = S.addPermanent piker S.bob base
-        (hers, withBoth) = S.addPermanent piker S.alice withHis
-        (gs, spellId) = S.handOne curse withBoth
-        answer = aimRecipient (Recipient.ToPlayer S.bob)
-        cast = snd (Engine.runGamePure answer gs (S.cast S.alice spellId))
-        after = snd (Engine.runGamePure answer cast Stack.resolveTop)
-        settled = S.settleSba after
-    Spec.assertEqWith s "one attached permanent, and it is attached to bob himself" (attachments after) [Just (Recipient.ToPlayer S.bob)]
-    Spec.assertEqWith s "bob's Goblin Piker is a 1/0" (S.powerToughnessOf his after) (Just (1, 0))
-    Spec.assertEqWith s "alice's is untouched -- she is not the enchanted player" (S.powerToughnessOf hers after) (Just (2, 1))
-    -- CR 704.5f: the shrunk creature has toughness 0, so the pass that judges
-    -- the Curse legal buries the Piker.
-    Spec.assertEqWith s "so his Piker dies on the next SBA pass" (Game.lookupObject his settled) Nothing
-    Spec.assertEqWith s "and the Curse is still attached to him -- he is still in the game" (attachments settled) [Just (Recipient.ToPlayer S.bob)]
   -- The affected set is DYNAMIC in its controller half, which is what makes it
   -- a set rather than a list of ids: CR 613.1b applies control changes in
   -- layer 2, before the layer 7c this ability lands in, so a creature the
@@ -787,45 +685,6 @@ enchantPlayerSpec s registry = Spec.describe s "EnchantPlayer" $ do
     Spec.assertBool s (Combat.canAttack S.alice creature settled) "alice attacks with the creature the enchanted player owns"
     Spec.assertEqWith s "his Forest is hers too -- permanents, not creatures -- and carol's Piker is nobody's business" (fmap (\oid -> Projection.controllerOf oid settled) [land, hers]) [Just S.alice, Just S.carol]
     Spec.assertEqWith s "CR 604.2: the Yoke leaves and bob has his Piker back" (Projection.controllerOf creature gone) (Just S.bob)
-  -- CR 613.8a/613.8b: the Yoke's set is what the enchanted player controls read
-  -- AFTER every layer-2 effect it depends on. Applying Control Magic changes
-  -- what the Yoke applies to, and the Yoke changes nothing about Control Magic
-  -- -- it enchants bob, not carol -- so the Yoke is the dependent effect and
-  -- waits. Both timestamp orders are built, and both are FENCES: Control Magic
-  -- names the Piker itself, so it wins whichever order the two apply in. The
-  -- next case is the board where the dependency decides.
-  --
-  -- THREE SEATS: carol holds the Control Magic, and on two seats she would
-  -- collapse onto the Yoke's controller, leaving the Piker alice's however the
-  -- fold ordered the two effects. The Forest is the control -- nothing else
-  -- reaches it, so it still moves, and the Yoke is granting rather than inert.
-  --
-  -- Gameplay-level on carol's own turn: whoever the fold hands the Piker to is
-  -- the player Parun.Engine.Combat.canAttack lets attack with it.
-  Spec.it s "CR 613.8a/613.8b a permanent already stolen from the enchanted player is not handed over again" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    forest <- S.printingOf s registry "Forest"
-    yoke <- S.printingOf s registry "Synthetic Puppeteer's Yoke"
-    controlMagic <- S.printingOf s registry "Control Magic"
-    -- CR 613.7d: each permanent takes a fresh timestamp as it is placed, so the
-    -- order these two go down in IS the order CR 613.7 would apply them in. The
-    -- fixture's attach does not re-stamp the Aura (CR 613.7e), which changes
-    -- nothing here: each Aura is attached in the same breath it is placed.
-    let (creature, withCreature) = S.addPermanent piker S.bob S.threePlayerGame
-        (land, withLand) = S.addPermanent forest S.bob withCreature
-        steal gs = let (m, g) = S.addPermanent controlMagic S.carol gs in S.attach m creature g
-        yoked gs = let (a, g) = S.addPermanent yoke S.alice gs in S.attachTo a (Recipient.ToPlayer S.bob) g
-        stealFirst = yoked (steal withLand)
-        yokeFirst = steal (yoked withLand)
-        carolsTurn = stealFirst {GameState.activePlayer = S.carol}
-        settled = S.runPure S.identityAnswer carolsTurn (Engine.settleAll S.carol)
-    Spec.assertBool s (Combat.canAttack S.carol creature settled) "carol, who took the Piker before the Yoke was attached at all, is the one who may attack with it"
-    Spec.assertEqWith s "CR 613.8b the Yoke waits on the earlier Control Magic, so only the Forest moves" (fmap (\oid -> Projection.controllerOf oid stealFirst) [creature, land]) [Just S.carol, Just S.alice]
-    -- A FENCE rather than a second proof: with the Yoke stamped first, CR 613.7
-    -- alone already puts Control Magic last, so this reads carol whether the
-    -- fold honours the dependency or only the timestamps. It is here to fail a
-    -- future fix that reorders by timestamp and calls that CR 613.8b.
-    Spec.assertEqWith s "CR 613.7 the other timestamp order leaves the Piker carol's too" (Projection.controllerOf creature yokeFirst) (Just S.carol)
   -- CR 613.8a/613.8b the other way round: a steal that hands carol's Piker TO
   -- the enchanted player changes what the Yoke applies to, so the Yoke waits
   -- for it even though it is older, and then takes the Piker. In timestamp
@@ -841,46 +700,6 @@ enchantPlayerSpec s registry = Spec.describe s "EnchantPlayer" $ do
         (aura, withAura) = S.addPermanent yoke S.alice withLand
         stolen = S.giveControl creature S.bob (S.attachTo aura (Recipient.ToPlayer S.bob) withAura)
     Spec.assertEqWith s "alice controls carol's Piker" (Projection.controllerOf creature stolen) (Just S.alice)
-  -- CR 613.1b's Attached arm reads only whether the source IS attached, never
-  -- the host's own projected type (Parun.Types.Affected's Attached haddock):
-  -- CR 613.8a's dependency system is same-layer only, so a layer-2 control
-  -- grant cannot formally depend on the layer-4 crew effect that makes a
-  -- Vehicle a creature at all (#3159). So Control Magic keeps controlling a
-  -- crewed Vehicle for exactly as long as the crew lasts -- CR 704.5m's own
-  -- host-legality check reads the FULL projection instead, so it buries the
-  -- Aura, handing control back, the instant cleanup lets the crew wear off.
-  -- One board, one turn apart (#3150).
-  --
-  -- Consulate Dreadnought {1} Artifact -- Vehicle 7/11 "Crew 6" is
-  -- Parun.CrewSpec's fixture too; Hill Giant (3/3) and Blind-Spot Giant (4/3)
-  -- together clear the threshold the same way that module's board does.
-  Spec.it s "CR 613.1b/704.5m Control Magic keeps a crewed Vehicle and loses it the instant the crew wears off" $ do
-    dreadnought <- S.printingOf s registry "Consulate Dreadnought"
-    hillGiant <- S.printingOf s registry "Hill Giant"
-    blindSpot <- S.printingOf s registry "Blind-Spot Giant"
-    controlMagic <- S.printingOf s registry "Control Magic"
-    let base = Setup.emptyGame S.bothPlayers
-        (vehicleId, g1) = S.addPermanent dreadnought S.bob base
-        (giantId, g2) = S.addPermanent hillGiant S.bob g1
-        (blindId, g3) = S.addPermanent blindSpot S.bob g2
-        ready = g3 {GameState.priority = Just S.bob}
-        crewed = case Projection.abilitiesOf vehicleId ready of
-          ability : _ ->
-            let activated = S.runPure S.identityAnswer ready (Activate.activateAbility S.bob vehicleId ability)
-             in S.runPure S.identityAnswer activated Stack.resolveTop
-          [] -> ready
-        (aura, withAura) = S.addPermanent controlMagic S.alice crewed
-        stolen = S.attach aura vehicleId withAura
-        afterCleanup = S.runPure S.identityAnswer stolen (Engine.runTurnBasedActions (Phase.Ending EndingStep.Cleanup))
-        settled = S.settleSba afterCleanup
-    Spec.assertEqWith s "both crewers really tapped, so the crew ability actually resolved" (fmap (\oid -> fmap Object.tapped (Game.lookupObject oid crewed)) [giantId, blindId]) [Just TapState.Tapped, Just TapState.Tapped]
-    Spec.assertBool s (Set.member CardType.Creature (Projection.cardTypesOf vehicleId crewed)) "crewed: the Vehicle is a creature"
-    Spec.assertEqWith s "the Aura landed on the crewed Vehicle and CR 704.3 has not swept yet" (fmap Object.attachedTo (Game.lookupObject aura stolen)) (Just (Just (Recipient.ToCreature vehicleId)))
-    Spec.assertEqWith s "CR 613.1b: while it is a creature, Control Magic controls it" (Projection.controllerOf vehicleId stolen) (Just S.alice)
-    Spec.assertBool s (not (Set.member CardType.Creature (Projection.cardTypesOf vehicleId afterCleanup))) "CR 514.2/301.7b: cleanup ends the crew, so it is no creature"
-    Spec.assertBool s (not (S.onBattlefield aura settled)) "CR 704.5m: 'enchant creature' no longer admits a noncreature host, so the Aura is buried"
-    Spec.assertEqWith s "in its OWNER's graveyard, not destroyed" (length (Game.zoneMembers Zone.Graveyard S.alice settled)) 1
-    Spec.assertEqWith s "CR 611.3b: with the source off the battlefield, control reverts to bob" (Projection.controllerOf vehicleId settled) (Just S.bob)
   -- CR 704.5m's remaining clause, and the one only an enchant-player Aura can
   -- reach: CR 303.4c spells it out as "the player it was attached to has left
   -- the game". Three seats, because CR 104.2a ends a two-player game the
@@ -1260,16 +1079,12 @@ spec s registry = Spec.describe s "Parun.Engine.Aura" $ do
   fortificationSpec s registry
   unattachableSpec s registry
   reattachSpec s registry
-  simicGuildmageSpec s registry
   auraGraftSpec s registry
-  enchantmentAlterationSpec s registry
   miracleWorkerSpec s registry
   enchantPlayerSpec s registry
   replenishSpec s registry
   crimeSpec s registry
   attachRestrictionSpec s registry
-  couldEnchantSpec s registry
-  grantedEnchantSpec s registry
   bestowSpec s registry
   licidSpec s registry
   auraTextChangeSpec s registry
@@ -1298,16 +1113,6 @@ aimRecipient recipient p = case p of
 destination :: ObjectId.ObjectId -> Prompt.Prompt r -> r
 destination oid p = case p of
   Prompt.ChooseAttachment {} -> oid
-  _ -> S.identityAnswer p
-
--- Both of Crown of the Ages' prompts at once: its "target Aura" slot with a fixed
--- Aura, and its CR 701.3a destination choice with a fixed creature. aimRecipient
--- and destination each answer one of the two, and driving the printed activated
--- ability needs both.
-moveAura :: ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt.Prompt r -> r
-moveAura aura dest p = case p of
-  Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToObject aura))) sets
-  Prompt.ChooseAttachment {} -> dest
   _ -> S.identityAnswer p
 
 -- What every attached battlefield permanent is attached to. The whole-board read
@@ -1390,60 +1195,6 @@ reattachSpec s registry = Spec.describe s "Reattach" $ do
     -- Not vacuous for a second reason: the slot rejects the Crown itself on
     -- the very board where it accepts the Aura.
     Spec.assertEqWith s "and the Crown is never a candidate" (admits crownObj onCreature) (Just False)
-  -- CR 701.3c: "Attaching an Aura, Equipment, or Fortification on the
-  -- battlefield to a different object or player causes [it] to receive a new
-  -- timestamp." Feeds CR 613.7's layer ordering, so it is not cosmetic.
-  Spec.it s "CR 701.3c moving an Aura to a different creature restamps it" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    warMammoth <- S.printingOf s registry "War Mammoth"
-    unholyStrength <- S.printingOf s registry "Unholy Strength"
-    crown <- S.printingOf s registry "Crown of the Ages"
-    let base = Setup.emptyGame S.bothPlayers
-        (first, g1) = S.addPermanent piker S.alice base
-        (second, g2) = S.addPermanent warMammoth S.alice g1
-        (aura, g3) = S.addPermanent unholyStrength S.alice g2
-        (crownObj, g4) = S.addPermanent crown S.alice g3
-        gs = S.attach aura first g4
-        slot = SlotName.MkSlotName (Text.pack "target")
-        after =
-          S.runPure (destination second) gs $
-            Resolve.applyEffect
-              crownObj
-              crownObj
-              S.alice
-              (Map.singleton slot (Set.singleton (Recipient.ToObject aura)))
-              (Map.singleton slot (Set.singleton (Recipient.ToObject aura)))
-              (Effect.AttachTarget (AttachTarget.MkAttachTarget slot (Filter.Type.HasCardType CardType.Creature)))
-        stampOf g = fmap Object.timestamp (Game.lookupObject aura g)
-    Spec.assertEqWith s "it moved" (fmap Object.attachedTo (Game.lookupObject aura after)) (Just (Just (Recipient.ToCreature second)))
-    Spec.assertBool s (stampOf after /= stampOf gs) "and was restamped"
-  -- CR 701.3b, second sentence: "If an effect tries to attach an Aura,
-  -- Equipment, or Fortification to the object or player it's already attached
-  -- to, the effect does nothing." Crown of the Ages spells the same exclusion
-  -- as "ANOTHER creature", so with no other creature on the battlefield there
-  -- is nothing to choose and nothing happens -- in particular no restamp.
-  Spec.it s "CR 701.3b with only its own host available the Aura does not move and is not restamped" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    unholyStrength <- S.printingOf s registry "Unholy Strength"
-    crown <- S.printingOf s registry "Crown of the Ages"
-    let base = Setup.emptyGame S.bothPlayers
-        (first, g1) = S.addPermanent piker S.alice base
-        (aura, g2) = S.addPermanent unholyStrength S.alice g1
-        (crownObj, g3) = S.addPermanent crown S.alice g2
-        gs = S.attach aura first g3
-        slot = SlotName.MkSlotName (Text.pack "target")
-        after =
-          S.runPure S.identityAnswer gs $
-            Resolve.applyEffect
-              crownObj
-              crownObj
-              S.alice
-              (Map.singleton slot (Set.singleton (Recipient.ToObject aura)))
-              (Map.singleton slot (Set.singleton (Recipient.ToObject aura)))
-              (Effect.AttachTarget (AttachTarget.MkAttachTarget slot (Filter.Type.HasCardType CardType.Creature)))
-        stampOf g = fmap Object.timestamp (Game.lookupObject aura g)
-    Spec.assertEqWith s "still on the Piker" (fmap Object.attachedTo (Game.lookupObject aura after)) (Just (Just (Recipient.ToCreature first)))
-    Spec.assertEqWith s "and not restamped" (stampOf after) (stampOf gs)
   -- CR 303.4j: "If an effect attempts to attach an Aura on the battlefield to
   -- an object or player it can't legally enchant, the Aura doesn't move." A
   -- FAILURE MODE, not a fizzle: the ability resolved, and the only thing that
@@ -1458,7 +1209,7 @@ reattachSpec s registry = Spec.describe s "Reattach" $ do
   -- same way the Effect.Attach cases in the Equipment group above drive that
   -- opcode -- and that synthetic filter is the labeled crutch (#431). The
   -- rule's other case, a destination the Aura's own enchant restriction
-  -- rejects, is the whole-cards test right below.
+  -- rejects, is data/scenarios/aura's Setessan Training pair.
   Spec.it s "CR 303.4j attaching an Aura to something it cannot enchant leaves it where it was" $ do
     mountain <- S.printingOf s registry "Mountain"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -1490,152 +1241,6 @@ reattachSpec s registry = Spec.describe s "Reattach" $ do
     -- CR 704.5m: a failed move must not leave the Aura in a state the
     -- state-based actions then punish -- it is still on a legal host.
     Spec.assertBool s (Set.member aura (GameState.battlefield settled)) "and the Aura is not buried afterwards"
-  -- CR 303.4j through two printed cards. Setessan Training's "Enchant creature
-  -- you control" is the first Face.enchant in the pool that narrows past
-  -- "creature" (CR 702.5a: the enchant ability "restricts what an Aura spell can
-  -- target and what an Aura can enchant"), and Crown of the Ages' destination
-  -- filter is the bare "another creature" -- so the Crown really does offer a
-  -- destination the Aura may not legally enchant, which is the situation CR
-  -- 303.4j is about and which no pair of cards could produce before.
-  --
-  -- CR 109.5 fixes whose "you" that is: the AURA's controller, not the moving
-  -- effect's. Parun.Engine.Attach.attachmentFor asks Target.legalRecipients with
-  -- Projection.controllerOf on the Aura for exactly that reason. Alice controls
-  -- both cards here, so this board cannot tell the two readings apart -- nothing
-  -- in the pool takes control of a noncreature artifact -- but attachmentFor is
-  -- never handed the moving effect's source at all, so there is no second
-  -- controller for it to read by mistake.
-  --
-  -- BOTH branches off one board and one activation, so the refusal cannot be
-  -- the machinery declining to move anything: aimed at alice's own Mammoth the
-  -- very same ability moves the Aura.
-  Spec.it s "CR 303.4j whole cards: Crown of the Ages cannot move Setessan Training onto an opponent's creature" $ do
-    forest <- S.printingOf s registry "Forest"
-    piker <- S.printingOf s registry "Goblin Piker"
-    warMammoth <- S.printingOf s registry "War Mammoth"
-    setessanTraining <- S.printingOf s registry "Setessan Training"
-    crown <- S.printingOf s registry "Crown of the Ages"
-    -- {1}{G} for the Aura, {2} to cast the Crown, {4} to activate it.
-    let base0 = S.landsInPlay forest 8
-        (host, base1) = S.addPermanent piker S.alice base0
-        (mine, base2) = S.addPermanent warMammoth S.alice base1
-        (theirs, base3) = S.addPermanent piker S.bob base2
-        (withAura, auraSpell) = S.handOne setessanTraining base3
-        castAura = snd (Engine.runGamePure (aimRecipient (Recipient.ToCreature host)) withAura (S.cast S.alice auraSpell))
-        enchanted = snd (Engine.runGamePure S.identityAnswer castAura Stack.resolveTop)
-        (withCrown, crownSpell) = S.handOne crown enchanted
-        castCrown = snd (Engine.runGamePure S.identityAnswer withCrown (S.cast S.alice crownSpell))
-        settledIn = snd (Engine.runGamePure S.identityAnswer castCrown Stack.resolveTop)
-        crowns = filter (\oid -> Game.cardOf oid settledIn == Just (Printing.card crown)) (Set.toList (GameState.battlefield settledIn))
-    case (attachedTo host enchanted, crowns, Face.activatedAbilities (S.combinedFace crown)) of
-      ([aura], [crownObj], [move]) -> do
-        let ready = settledIn {GameState.priority = Just S.alice}
-            run dest =
-              let activated = snd (Engine.runGamePure (moveAura aura dest) ready (Activate.activateAbility S.alice crownObj move))
-               in snd (Engine.runGamePure (moveAura aura dest) activated Stack.resolveTop)
-            refused = run theirs
-            moved = run mine
-            stampOf g = fmap Object.timestamp (Game.lookupObject aura g)
-        Spec.assertEqWith s "before either activation the Piker is 2/1 + 1/+0" (S.powerToughnessOf host ready) (Just (3, 1))
-        -- A FAILURE MODE, not a fizzle: the ability resolved, and the only
-        -- thing that did not happen is the move.
-        Spec.assertEqWith s "the Aura did not move onto bob's creature" (fmap Object.attachedTo (Game.lookupObject aura refused)) (Just (Just (Recipient.ToCreature host)))
-        Spec.assertEqWith s "and was not restamped (CR 701.3c)" (stampOf refused) (stampOf ready)
-        Spec.assertEqWith s "alice's Piker keeps the +1/+0" (S.powerToughnessOf host refused) (Just (3, 1))
-        Spec.assertEqWith s "bob's Piker gains nothing" (S.powerToughnessOf theirs refused) (Just (2, 1))
-        Spec.assertBool s (not (Projection.hasKeyword Keyword.Trample theirs refused)) "and no trample"
-        -- CR 704.5m: a refused move must not leave the Aura somewhere the
-        -- state-based actions then punish.
-        Spec.assertBool s (Set.member aura (GameState.battlefield (S.settleSba (S.settleSba refused)))) "the Aura survives the state-based actions"
-        -- The control case, which is what stops the assertions above from
-        -- passing for the wrong reason.
-        Spec.assertEqWith s "onto a creature alice DOES control it moves" (fmap Object.attachedTo (Game.lookupObject aura moved)) (Just (Just (Recipient.ToCreature mine)))
-        Spec.assertBool s (stampOf ready /= stampOf moved) "and was restamped"
-        Spec.assertEqWith s "so the Mammoth is 3/3 + 1/+0" (S.powerToughnessOf mine moved) (Just (4, 3))
-        Spec.assertBool s (Projection.hasKeyword Keyword.Trample mine moved) "with trample (CR 702.19)"
-        Spec.assertEqWith s "and the Piker is a plain 2/1" (S.powerToughnessOf host moved) (Just (2, 1))
-      _ -> Spec.assertFailure s "the fixture wanted one Aura on the Piker, one Crown on the battlefield, and one printed ability"
-
--- Simic Guildmage {G/U}{G/U} Creature -- Elf Wizard 2/2. Second ability, Oracle
--- text and rulings re-fetched from Scryfall this session: "{1}{U}: Attach target
--- Aura attached to a permanent to another permanent with the same controller."
---
--- CR 110.2 through CR 303.4b: the 2006-05-01 ruling settles the antecedent --
--- the destination "must be controlled by the player who controls the permanent
--- the Aura is attached to", and "it doesn't matter who controls the Aura". So
--- the atom is Filter.ControllerRelatesToBound You Host over the target slot, answered
--- off Filter.Context.slotHostControllers, which
--- Parun.Engine.Resolve.Slots.effectContext fills and which reaches the
--- destination filter only because Parun.Engine.Attach.hostsFor takes its Context
--- from the caller.
---
--- THE BOARD, and why each element. The Aura is ALICE's and its host is BOB's, so
--- the ruled-out reading (the Aura's own controller) and the right one name
--- disjoint sets -- one seat holding both would collapse them. TWO of bob's
--- creatures are legal destinations, since Attach.chooseHost elides the prompt at
--- one candidate and the offered set would then be unreadable. Alice keeps a
--- creature of her own beside the Guildmage, so the vacuously-TRUE reading has
--- something to offer that the right one does not. Bob keeps an ISLAND, which is
--- what CR 608.2d's "can't choose an option that's illegal" excludes through the
--- destination's own Filter.CanHostSubject conjunct -- the ruling's third clause,
--- "it must be able to be enchanted by the Aura".
---
--- What each reading offers: correct, bob's Hill Giant and Berserkers; the
--- Aura's controller, alice's Guildmage and Piker; a vacuously TRUE atom, those
--- two as well; a bare Filter.contextFor, nothing at all, and the Aura does not
--- move.
---
--- Four distinct power/toughness pairs, so no numeric coincidence can hide a
--- wrong host: 2/4 under the Aura is 4/5, 3/3 is 5/4, 4/4 is 6/5, and the Piker
--- stays 2/1.
-simicGuildmageSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
-simicGuildmageSpec s registry =
-  let -- The destination choice by INDEX into what was offered, never by naming
-      -- an object: an answerer that searched for a legal option would find the
-      -- right one again after a mutation.
-      pickBy :: (NonEmpty.NonEmpty ObjectId.ObjectId -> ObjectId.ObjectId) -> ObjectId.ObjectId -> Prompt.Prompt r -> r
-      pickBy choose aura p = case p of
-        Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToObject aura))) sets
-        Prompt.ChooseAttachment _ _ _ offered -> choose offered
-        _ -> S.identityAnswer p
-      -- The printed second ability, which is the one this unit is about; the
-      -- first is Bioshift's counter move.
-      secondAbility printing = case Face.activatedAbilities (S.combinedFace printing) of
-        [_, ability] -> Just ability
-        _ -> Nothing
-   in Spec.describe s "Simic Guildmage" $ do
-        -- CR 613.8b's loop clause through two Confiscates. Alice's enchants bob's
-        -- Forest; bob's enchants alice's, so bob controls it and the Forest.
-        -- The Guildmage then moves alice's onto bob's -- bob controls both hosts,
-        -- which is the ability's destination test -- and CR 701.3c restamps it.
-        -- Each grant now names the other's source, so each depends on the other
-        -- (CR 613.8a) and the two apply in timestamp order: bob's older one first,
-        -- handing him alice's Confiscate, whose grant then hands its own
-        -- controller, bob, the Confiscate it enchants. Reversing the order gives
-        -- alice both; falling back to each Aura's owner gives each player their
-        -- own.
-        Spec.it s "CR 613.8b two Confiscates enchanting each other apply in timestamp order" $ do
-          island <- S.printingOf s registry "Island"
-          forest <- S.printingOf s registry "Forest"
-          guildmage <- S.printingOf s registry "Simic Guildmage"
-          confiscate <- S.printingOf s registry "Confiscate"
-          let base = S.landsFor island S.alice 2 (Setup.emptyGame S.bothPlayers)
-              (mage, g1) = S.addPermanent guildmage S.alice base
-              (land, g2) = S.addPermanent forest S.bob g1
-              (alices, g3) = S.addPermanent confiscate S.alice g2
-              (bobs, g4) = S.addPermanent confiscate S.bob g3
-              gs = (S.attach bobs alices (S.attach alices land g4)) {GameState.priority = Just S.alice}
-          case secondAbility guildmage of
-            Nothing -> Spec.assertFailure s "Simic Guildmage should print two activated abilities"
-            Just ability -> do
-              let answer :: Prompt.Prompt r -> r
-                  answer = pickBy NonEmpty.head alices
-                  activated = S.runPure answer gs (Activate.activateAbility S.alice mage ability)
-                  after = S.runPure answer activated Stack.resolveTop
-                  hostIn o = Game.lookupObject o after >>= Object.attachedTo >>= Recipient.objectOf
-              Spec.assertEqWith s "bob controls alice's Confiscate" (Projection.controllerOf alices after) (Just S.bob)
-              Spec.assertEqWith s "and his own" (Projection.controllerOf bobs after) (Just S.bob)
-              Spec.assertEqWith s "the two Confiscates enchant each other" (hostIn alices, hostIn bobs) (Just bobs, Just alices)
 
 -- CR 303.4e's half of the CR 701.3 Attach work: an effect that changes the AURA's
 -- own controller and moves it in one resolution. Aura Graft is the proving card --
@@ -1655,55 +1260,6 @@ simicGuildmageSpec s registry =
 -- not offer one at all. The pair of cards is what keeps the two apart.
 auraGraftSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 auraGraftSpec s registry = Spec.describe s "AuraGraft" $ do
-  -- The gameplay-level proof design.md section 4 asks for, and the one the
-  -- control clause exists for: CR 303.4e says an Aura's controller is separate
-  -- from the enchanted object's, so gaining the Aura and moving it are two
-  -- changes -- and Control Magic's own static ability then hands the NEW host
-  -- to the Aura's new controller. Three permanents change hands off one spell:
-  -- alice takes the Aura, takes the Mammoth it lands on, and gets her own
-  -- Piker back because the Aura left it.
-  Spec.it s "CR 303.4e whole cards: Aura Graft takes bob's Control Magic and the creature it moves onto" $ do
-    island <- S.printingOf s registry "Island"
-    piker <- S.printingOf s registry "Goblin Piker"
-    warMammoth <- S.printingOf s registry "War Mammoth"
-    controlMagic <- S.printingOf s registry "Control Magic"
-    auraGraft <- S.printingOf s registry "Aura Graft"
-    -- {1}{U} for the Graft.
-    let base0 = S.landsInPlay island 2
-        (host, base1) = S.addPermanent piker S.alice base0
-        (prize, base2) = S.addPermanent warMammoth S.bob base1
-        -- A second candidate, so the destination is a real Prompt.ChooseAttachment
-        -- choice rather than the single-candidate elision.
-        (decoy, base3) = S.addPermanent piker S.bob base2
-        (aura, base4) = S.addPermanent controlMagic S.bob base3
-        stolen = S.attach aura host base4
-        (gs, graft) = S.handOne auraGraft stolen
-        cast = snd (Engine.runGamePure (moveAura aura prize) gs (S.cast S.alice graft))
-        after = snd (Engine.runGamePure (moveAura aura prize) cast Stack.resolveTop)
-        settled = S.settleSba (S.settleSba after)
-    Spec.assertEqWith s "before: bob's Control Magic holds alice's Piker" (Projection.controllerOf host stolen) (Just S.bob)
-    Spec.assertEqWith s "before: bob controls the Mammoth too" (Projection.controllerOf prize stolen) (Just S.bob)
-    Spec.assertEqWith s "before: and the Aura itself" (Projection.controllerOf aura stolen) (Just S.bob)
-    -- CR 303.4e: the Aura's controller changed, and it is the thing the spell
-    -- gained -- not the permanent it was attached to.
-    Spec.assertEqWith s "alice controls the Aura now" (Projection.controllerOf aura after) (Just S.alice)
-    Spec.assertEqWith s "and it sits on the Mammoth (CR 701.3a)" (fmap Object.attachedTo (Game.lookupObject aura after)) (Just (Just (Recipient.ToCreature prize)))
-    -- CR 613.1b: Control Magic's SetControllerToSource reads the AURA's
-    -- controller, so the creature follows the Aura to alice.
-    Spec.assertEqWith s "so alice controls the Mammoth" (Projection.controllerOf prize after) (Just S.alice)
-    Spec.assertEqWith s "and her own Piker is hers again" (Projection.controllerOf host after) (Just S.alice)
-    Spec.assertEqWith s "the creature nobody chose stays bob's" (Projection.controllerOf decoy after) (Just S.bob)
-    -- CR 302.6: alice has not controlled the Mammoth continuously since her
-    -- turn began. Nothing re-Sicks it -- the control came from a static
-    -- ability, not from the GainControl opcode -- but Object.sickness names
-    -- the player it settled under, so the answer is right anyway.
-    Spec.assertBool s (not (Combat.canAttack S.alice prize after)) "the Mammoth cannot attack for her yet"
-    -- CR 302.6 speaks only of creatures, so the re-Sick the GainControl arm
-    -- applies to the Aura is inert -- pinned here because an enchantment is the
-    -- first thing that opcode has been aimed at.
-    Spec.assertEqWith s "the Aura is re-Sicked all the same" (fmap Object.sickness (Game.lookupObject aura after)) (Just Sickness.Sick)
-    -- CR 704.5m: it landed on a creature, which its enchant ability admits.
-    Spec.assertBool s (Set.member aura (GameState.battlefield settled)) "and it survives the state-based actions"
   -- "target Aura THAT'S ATTACHED TO A PERMANENT" (CR 601.2c), spelled
   -- `And [HasSubtype Aura, AttachedTo (And [])]` -- the TRIVIAL nest, which is
   -- what makes "attached to a permanent" fall out of the general atom: the host
@@ -1774,32 +1330,6 @@ auraGraftSpec s registry = Spec.describe s "AuraGraft" $ do
     -- still holds names an id nothing on the battlefield answers to.
     Spec.assertBool s (Maybe.isJust (Game.lookupObject aura bounced >>= Object.attachedTo)) "the Aura is still attached to the old id"
     Spec.assertEqWith s "but it is no longer attached to a PERMANENT" (offers bounced) (Just False)
-  -- Gatherer, 2004-10-04: "If there is no legal place to move the enchantment,
-  -- then it doesn't move but you still control it." CR 609.3 -- "if an effect
-  -- attempts to do something impossible, it does only as much as possible" --
-  -- for the move half, with the control half unaffected, so the two clauses
-  -- really are independent, which is the point of CR 303.4e's "an Aura's
-  -- controller is separate".
-  Spec.it s "with no permanent it can enchant the Aura does not move, and alice still gains it" $ do
-    island <- S.printingOf s registry "Island"
-    mountain <- S.printingOf s registry "Mountain"
-    piker <- S.printingOf s registry "Goblin Piker"
-    controlMagic <- S.printingOf s registry "Control Magic"
-    auraGraft <- S.printingOf s registry "Aura Graft"
-    let base0 = S.landsInPlay island 2
-        (host, base1) = S.addPermanent piker S.alice base0
-        (_, base2) = S.addPermanent mountain S.alice base1
-        (aura, base3) = S.addPermanent controlMagic S.bob base2
-        stolen = S.attach aura host base3
-        (gs, graft) = S.handOne auraGraft stolen
-        cast = snd (Engine.runGamePure (aimRecipient (Recipient.ToObject aura)) gs (S.cast S.alice graft))
-        after = snd (Engine.runGamePure (aimRecipient (Recipient.ToObject aura)) cast Stack.resolveTop)
-        stampOf g = fmap Object.timestamp (Game.lookupObject aura g)
-    Spec.assertEqWith s "it is still on the only creature there is" (fmap Object.attachedTo (Game.lookupObject aura after)) (Just (Just (Recipient.ToCreature host)))
-    -- CR 701.3c restamps only a permanent that actually moved.
-    Spec.assertEqWith s "and was not restamped" (stampOf after) (stampOf stolen)
-    Spec.assertEqWith s "but alice controls it" (Projection.controllerOf aura after) (Just S.alice)
-    Spec.assertEqWith s "so the creature it holds is hers" (Projection.controllerOf host after) (Just S.alice)
 
 -- Miracle Worker, "{T}: Destroy target Aura attached to a creature you control",
 -- which is the first card in the pool whose attachment narrowing COMPOSES with a
@@ -2251,257 +1781,11 @@ attachRestrictionSpec s registry = Spec.describe s "AttachRestriction" $ do
     Spec.assertBool s (Projection.hasKeyword (Keyword.Protection Protection.MkProtection {Protection.quality = Filter.Type.HasColor Color.Black, Protection.spares = Nothing}) shifter after) "the copy is what gave the Shapeshifter protection from black"
     Spec.assertEqWith s "so it is the Apostle's printed 2/1, with neither bonus left" (S.powerToughnessOf shifter after) (Just (2, 1))
 
--- The one battlefield object of alice's whose card carries this name. Every
--- object here reaches the battlefield through CR 400.7, which mints a fresh id,
--- so a fixture id taken before the move names nothing afterwards.
-battlefieldNamed :: CardName.CardName -> GameState.GameState -> Maybe ObjectId.ObjectId
-battlefieldNamed wanted gs =
-  List.find
-    (\oid -> fmap Face.name (Game.faceOf oid gs) == Just wanted)
-    (Game.zoneMembers Zone.Battlefield S.alice gs)
-
 -- The names of the cards in a player's HAND. Where a destination assertion has to
 -- go, because S.countByName sums the hand with the library and a search that
 -- moves a card from one to the other leaves that sum unchanged.
 handNames :: PlayerId.PlayerId -> GameState.GameState -> [CardName.CardName]
 handNames pid gs = Maybe.mapMaybe (fmap S.nameOf . flip Game.cardOf gs) (Game.zoneMembers Zone.Hand pid gs)
-
--- Records every search's candidate list, takes what the search offers off the
--- HEAD of it, and would put a CR 303.4f host choice on `other`.
---
--- The head and not a pinned card: the offer is what this case is about, so an
--- answerer that went looking for the legal Aura would find it again after a
--- mutation that widened the offer, and the board would come out identical. The
--- fixture stocks the library so that the Aura the filter must REJECT sits at the
--- head, which is what makes a widened offer change the board rather than only
--- the recording.
---
--- `other` is a creature the Aura could equally well enchant. Nothing should ever
--- ask: Parun.Engine.Resolve.Common.putFound seeds the entry with the host the effect
--- named, so CR 303.4f's choice is not this move's. An answer of `other` is how a
--- seed that went missing shows up as a wrong board rather than as a silence.
-mageAnswer :: ObjectId.ObjectId -> Prompt.Prompt r -> State.State [[ObjectId.ObjectId]] r
-mageAnswer other p = case p of
-  Prompt.Search _ _ matches cap -> do
-    State.modify' (<> [matches])
-    pure (List.genericTake cap matches)
-  Prompt.Shuffle library -> pure library
-  Prompt.ChooseAttachment {} -> pure other
-  _ -> pure (S.identityAnswer p)
-
--- mageAnswer with CR 506.5's declaration and CR 603.5's "you may" added: the lone
--- attacker is named rather than left to S.aggressiveAnswer, since which creature
--- attacks is what the case is about, and the optional clause is exercised.
-sovereignsAnswer :: ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt.Prompt r -> State.State [[ObjectId.ObjectId]] r
-sovereignsAnswer attacker other p = case p of
-  Prompt.DeclareAttackers _ _ ids -> pure (filter (== attacker) ids)
-  Prompt.ChooseOptional {} -> pure OptionalDecision.Exercises
-  _ -> mageAnswer other p
-
--- CR 701.3a asked from the CANDIDATE's side -- "an Aura card that could enchant
--- it", where the host is fixed for the whole evaluation and the Aura varies per
--- candidate. Filter.CanHostSubject is the same rule with the two roles swapped,
--- and auraGraftSpec above is its case.
-couldEnchantSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
-couldEnchantSpec s registry = Spec.describe s "CouldEnchant" $ do
-  -- THE PROVING CASE for #2028: the object CR 701.3a's question is about is the
-  -- one the resolution BOUND, not the searching ability's source. Sovereigns of
-  -- Lost Alara's trigger says "an Aura card that could enchant THAT CREATURE" of
-  -- CR 506.5's lone attacker, and puts what it finds onto the battlefield
-  -- attached to that same creature.
-  --
-  -- The board tells the two readings apart in both directions, and each Aura is
-  -- legal for exactly one of the two objects:
-  --
-  --   * Entangling Vines enchants a TAPPED creature (CR 702.5a), which the
-  --     attacker is (CR 508.1f) and the untapped Sovereigns is not;
-  --   * Banewasp Affliction is a black Aura and enchants any creature, which the
-  --     Sovereigns is and the attacker -- Apostle of Purifying Light, protection
-  --     from black -- is not (CR 702.16c).
-  --
-  -- So an engine asking rule 701.3a about the SOURCE finds Banewasp Affliction
-  -- and attaches it to nothing, and one asking about the bound creature finds
-  -- Entangling Vines. Banewasp Affliction is stocked LAST, so it sits at the head
-  -- of the library the search reads and is what the wrong reading hands back.
-  Spec.it s "CR 701.3a whole card: Sovereigns of Lost Alara finds the Aura that could enchant the creature its trigger bound" $ do
-    sovereigns <- S.printingOf s registry "Sovereigns of Lost Alara"
-    apostle <- S.printingOf s registry "Apostle of Purifying Light"
-    vines <- S.printingOf s registry "Entangling Vines"
-    banewasp <- S.printingOf s registry "Banewasp Affliction"
-    let (base0, ours, _) = S.combatBoardOf [sovereigns, apostle] []
-        (_, base1) = S.addLibraryCard vines S.alice base0
-        (banewaspId, gs) = S.addLibraryCard banewasp S.alice base1
-        vinesName = S.nameOf (Printing.card vines)
-        banewaspName = S.nameOf (Printing.card banewasp)
-        -- Read off `gs`, the PRE-run board, for the Auratouched Mage case's
-        -- reason: a candidate a library search offers has not moved, so its id
-        -- still names it.
-        named = fmap (Maybe.mapMaybe (fmap Face.name . flip Game.faceOf gs))
-    case ours of
-      [sovereignsId, apostleId] -> do
-        let ((_, after), searches) = State.runState (Engine.runGame (sovereignsAnswer apostleId sovereignsId) gs Engine.runStep) []
-        -- THE gameplay-level assertion, and FIRST: the Aura that could enchant
-        -- the ATTACKING creature is the one on the battlefield, and it is on THAT
-        -- creature. Both halves of the sentence in one read, so neither the
-        -- filter's host nor the destination's can be right while the other is
-        -- wrong -- an engine reading either off the source produces Nothing here,
-        -- rule 303.4i leaving its find in the library.
-        Spec.assertEqWith
-          s
-          "CR 701.3a / 303.4: Entangling Vines entered attached to the attacking creature"
-          (fmap (\auraId -> Game.lookupObject auraId after >>= Object.attachedTo) (battlefieldNamed vinesName after))
-          (Just (Just (Recipient.ToCreature apostleId)))
-        -- The OFFER, which is where the rejected Aura is visible: the search never
-        -- showed the one only the SOURCE could have hosted.
-        Spec.assertEqWith s "the search offered exactly the Aura that could enchant the attacker" (named searches) [[vinesName]]
-        -- CR 701.23b: a search stating a quality may find fewer, so the rejected
-        -- Aura stayed where it was rather than being found and refused at the
-        -- move -- and it is not in the hand either, which is the half
-        -- S.countByName cannot see.
-        Spec.assertEqWith s "and the Aura it rejected is still in the library" (S.countByName banewaspName S.alice after) 1
-        Spec.assertEqWith s "and it is not in alice's hand" (filter (== banewaspName) (handNames S.alice after)) []
-        -- The preconditions the assertions above rest on. Without the first pair
-        -- the two Auras would not tell the two objects apart, and without the
-        -- second the trigger would not have fired at all.
-        Spec.assertEqWith s "the attacker was tapped by CR 508.1f, which is what Entangling Vines' enchant ability reads" (fmap Object.tapped (Game.lookupObject apostleId after)) (Just TapState.Tapped)
-        Spec.assertEqWith s "and the Sovereigns stayed untapped, so that Aura could not have gone on it" (fmap Object.tapped (Game.lookupObject sovereignsId after)) (Just TapState.Untapped)
-        Spec.assertBool s (Map.keys (Combat.Type.attackers (GameState.combat after)) == [apostleId]) "the attacker really was attacking alone (CR 506.5)"
-        -- And the rejected Aura is one the SOURCE could have hosted, which is what
-        -- makes its absence from the offer a fact about WHICH object rule 701.3a
-        -- asked about rather than about the Aura being unplayable anywhere.
-        Spec.assertBool s (Attach.attachableWithLastKnown S.alice banewaspId sovereignsId gs) "Banewasp Affliction could have enchanted the Sovereigns"
-        Spec.assertBool s (not (Attach.attachableWithLastKnown S.alice banewaspId apostleId gs)) "but not the attacker, which has protection from black (CR 702.16c)"
-      _ -> Spec.assertFailure s "fixture should give alice the Sovereigns and the Apostle"
-
--- CR 613.1f / 702.5a: an enchant ability that arrives from an EFFECT rather than
--- from a printing (Modification.GainEnchant), which is what a "becomes an Aura
--- with enchant creature" clause needs. The two jobs CR 702.5a gives that ability
--- are split across the two cases below: what the permanent may be ATTACHED to
--- (Parun.Engine.Attach.attachmentFor) and CR 303.4c's state-based re-check of
--- whether it still is (Parun.Engine.Sba.fallsOff).
---
--- Cloudform is the producer, and the whole card: the grant, CR 701.40a's manifest,
--- the CR 701.3a attach onto the object its own move produced, and the CR 303.4m
--- static ability riding that attachment. Its two siblings Lightform and Rageform
--- are the same card with a different keyword pair.
---
--- What the rest of the pool needs BESIDES this arm, from Scryfall o:"with enchant"
--- and o:"becomes an Aura", 2026-08-23: the twelve Licids are covered by licidSpec
--- below, Gliding Licid being the one in data/cards/; Bronzehide Lion, Old-Growth
--- Troll and Harold and Bob, First Numens choose their host AS THEY RETURN,
--- CR 611.2e's entry rider, proved by their scenarios under
--- data/scenarios/aura; Necromancy's enchant filter names the Aura that put the creature onto
--- the battlefield; and Last Voyage of the _____ is an un-set card.
-grantedEnchantSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
-grantedEnchantSpec s registry = Spec.describe s "GrantedEnchant" $ do
-  -- One resolution, four effects: CR 205.1b's Aura subtype, CR 702.5a's enchant
-  -- ability, CR 701.40a's manifest, and CR 701.3a's attach onto what the manifest
-  -- just produced. Cloudform is already an Enchantment, so no card type moves --
-  -- what it lacks is the SUBTYPE and the ability, which is exactly the pair this
-  -- unit's arm and #2078's supply.
-  --
-  -- CR 704.3 never runs between the effects of one resolution, so the moment
-  -- Cloudform is an unattached Aura is not a moment CR 704.5m sees.
-  Spec.it s "CR 702.5a whole card: Cloudform becomes an Aura with a granted enchant ability and attaches to what it manifests" $ do
-    island <- S.printingOf s registry "Island"
-    piker <- S.printingOf s registry "Goblin Piker"
-    cloudform <- S.printingOf s registry "Cloudform"
-    case cloudformBoard island piker cloudform of
-      Nothing -> Spec.assertFailure s "Cloudform and the card it manifests should both be on the battlefield"
-      Just (cloud, manifested, after) -> do
-        -- FIRST, and the gameplay-level pair: the manifested permanent has the two
-        -- keywords Cloudform's CR 303.4m static ability grants, neither of which a
-        -- face-down permanent has any way to get on its own (CR 708.2a leaves it a
-        -- 2/2 with no abilities). So this reads through the attachment.
-        Spec.assertBool s (Projection.hasKeyword Keyword.Flying manifested after) "CR 303.4m: the manifested creature has flying"
-        Spec.assertBool s (Projection.hasKeyword (Keyword.Hexproof Nothing) manifested after) "and hexproof"
-        -- Then the attachment itself. A lookup on CLOUDFORM rather than a scan for
-        -- what the manifested creature wears: a refused attach leaves an unattached
-        -- Aura that CR 704.5m bins, and a scan would then compare two empty answers.
-        Spec.assertEqWith
-          s
-          "and Cloudform is attached to it"
-          (fmap Object.attachedTo (Game.lookupObject cloud after))
-          (Just (Just (Recipient.ToCreature manifested)))
-        -- CR 701.40a: what the move put onto the battlefield is a 2/2 creature,
-        -- which is also why "enchant creature" admits it at all.
-        Spec.assertEqWith s "CR 701.40a: the manifested card is a 2/2 creature" (S.powerToughnessOf manifested after) (Just (2, 2))
-        -- The two layer reads the attach went through, after the behaviour rather
-        -- than before, so neither absorbs a mutation to it.
-        Spec.assertBool s (Set.member Subtype.Aura (Projection.subtypesOf cloud after)) "CR 205.1b: Cloudform gained the Aura subtype"
-        Spec.assertEqWith
-          s
-          "CR 702.5a: the projected enchant ability is the granted 'enchant creature'"
-          (Card.foldEnchant (Projection.enchantOf cloud after))
-          (Just (TargetSlot.required Pool.Creatures Nothing))
-        Spec.assertBool s (Set.member cloud (GameState.battlefield after)) "and CR 704.5m leaves Cloudform alone: its host is one its enchant ability admits"
-  -- CR 704.5m through a GRANTED enchant ability, which is the clause
-  -- Parun.Engine.Sba.fallsOff could not see while it read the printed face:
-  -- Cloudform's card declares no enchant at all, so a printed-face read answers
-  -- Nothing and leaves it on the battlefield attached to an id that is no longer
-  -- a permanent.
-  --
-  -- The pair differs in exactly one thing -- the lethal damage marked on the
-  -- manifested creature -- and the quantity asserted is the SIZE of alice's
-  -- graveyard: two under the projected read (the manifested card and Cloudform),
-  -- one under the printed-face read. CR 704.5n needs an Equipment and CR 704.5p
-  -- sees an Aura that is not a creature, so neither of the other two attachment
-  -- state-based actions absorbs the difference.
-  --
-  -- Two passes, per CR 704.3: the pass that buries the creature judged Cloudform
-  -- against a state the creature was still on.
-  Spec.it s "CR 704.5m: Cloudform is buried with the creature its granted enchant ability let it hold" $ do
-    island <- S.printingOf s registry "Island"
-    piker <- S.printingOf s registry "Goblin Piker"
-    cloudform <- S.printingOf s registry "Cloudform"
-    case cloudformBoard island piker cloudform of
-      Nothing -> Spec.assertFailure s "Cloudform and the card it manifests should both be on the battlefield"
-      Just (cloud, manifested, attached) -> do
-        -- A manifested permanent is a 2/2 whatever it prints (CR 701.40a), so two
-        -- damage is lethal (CR 704.5g).
-        let pass1 = S.settleSba (S.markDamage manifested 2 attached)
-            pass2 = S.settleSba pass1
-            control = S.settleSba attached
-        -- The control FIRST, so the assertions below cannot pass because Cloudform
-        -- was never on the battlefield.
-        Spec.assertBool s (Set.member cloud (GameState.battlefield control)) "control: with its host alive Cloudform is still there"
-        Spec.assertEqWith s "and alice's graveyard is empty" (length (Game.zoneMembers Zone.Graveyard S.alice control)) 0
-        -- THE discriminating assertion: two cards, not one.
-        Spec.assertEqWith s "alice's graveyard holds the host AND the Aura that was on it" (length (Game.zoneMembers Zone.Graveyard S.alice pass2)) 2
-        Spec.assertBool s (not (Set.member cloud (GameState.battlefield pass2))) "so Cloudform is off the battlefield"
-        Spec.assertEqWith s "the host died on the first pass" (Game.lookupObject manifested pass1) Nothing
-        Spec.assertBool s (Set.member cloud (GameState.battlefield pass1)) "and CR 704.3 kept Cloudform through that pass, since it judged a board the host was still on"
-
--- The board grantedEnchantSpec's two cases share: alice casts Cloudform off three
--- Islands with one card in her library for it to manifest, and its CR 603.2 enters
--- trigger resolves. No answerer beyond the identity one: the card names no target
--- and CR 701.40a's manifest is not a choice, so there is no prompt to pin.
---
--- Nothing is added to the battlefield by hand, which is what lets the manifested
--- permanent be found WITHOUT reading the attachment that is under test: it is the
--- one nonland battlefield object that is not Cloudform.
-cloudformBoard ::
-  Printing.Printing ->
-  Printing.Printing ->
-  Printing.Printing ->
-  Maybe (ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
-cloudformBoard island piker cloudform =
-  let base0 = S.landsInPlay island 3
-      (_, base1) = S.addLibraryCard piker S.alice base0
-      (gs, spellId) = S.handOne cloudform base1
-      cast = snd (Engine.runGamePure S.identityAnswer gs (S.cast S.alice spellId))
-      entered = snd (Engine.runGamePure S.identityAnswer cast Stack.resolveTop)
-      -- CR 704.3: the enters trigger waits until a player would get priority,
-      -- which resolveTop alone never reaches.
-      placed = snd (Engine.runGamePure S.identityAnswer entered (Engine.placePendingTriggers []))
-      after = snd (Engine.runGamePure S.identityAnswer placed Stack.resolveTop)
-      nonLand oid = not (Set.member CardType.Land (Projection.cardTypesOf oid after))
-   in case battlefieldNamed (S.nameOf (Printing.card cloudform)) after of
-        Nothing -> Nothing
-        Just cloud ->
-          fmap
-            (\manifested -> (cloud, manifested, after))
-            (List.find (\oid -> oid /= cloud && nonLand oid) (Game.zoneMembers Zone.Battlefield S.alice after))
 
 -- CR 613.1f's NAMED ability removal and CR 116.2c's pay-to-end, which are one
 -- printed sentence: "This creature loses this ability and becomes an Aura
@@ -2522,8 +1806,8 @@ cloudformBoard island piker cloudform =
 -- see the first case.
 --
 -- CR 704.3 never runs between the effects of one resolution, so the moment the
--- Licid is an unattached Aura is not a moment CR 704.5m sees, exactly as
--- grantedEnchantSpec's header says for Cloudform.
+-- Licid is an unattached Aura is not a moment CR 704.5m sees, exactly as for
+-- Cloudform.
 -- CR 702.103: bestow. The one thing a choice made while casting could not do
 -- before this group -- change what the spell IS. Nyxborn Rollicker is the
 -- producer: {R} 1/1 Enchantment Creature -- Satyr, "Bestow {1}{R}", "Enchanted
@@ -2657,50 +1941,6 @@ bestowSpec s registry = Spec.describe s "Bestow" $ do
       (fmap (\oid -> Object.attachedTo =<< Game.lookupObject oid printed) (rollickerOn rollicker printed))
       (Just Nothing)
     Spec.assertEqWith s "as a 1/1 Satyr creature of its own" (rollickerOn rollicker printed >>= \oid -> S.powerToughnessOf oid printed) (Just (1, 1))
-  -- CR 702.103f, "an exception to rule 704.5m": the bestowed Aura is NOT buried
-  -- with its host. It becomes unattached, ceases to be bestowed, and is a creature
-  -- again.
-  --
-  -- Asserting the zone alone would not discriminate: an implementation that
-  -- suppressed Parun.Engine.Sba.fallsOff and never ended CR 702.103b's effect
-  -- leaves an Enchantment Aura with no P/T on the battlefield, which CR 704.5f
-  -- does not bury either. So the card types and the P/T are read as well.
-  Spec.it s "CR 702.103f: when its host dies the bestowed Aura stays, unattached, and is a 1/1 Satyr creature again" $ do
-    mountain <- S.printingOf s registry "Mountain"
-    piker <- S.printingOf s registry "Goblin Piker"
-    mammoth <- S.printingOf s registry "War Mammoth"
-    rollicker <- S.printingOf s registry "Nyxborn Rollicker"
-    let base = S.landsInPlay mountain 4
-        (_, gs1) = S.addPermanent piker S.alice base
-        (host, gs2) = S.addPermanent mammoth S.alice gs1
-        (board, spellId) = S.handOne rollicker gs2
-        attached = S.settleSba (S.runPure (bestowing host) (S.runPure (bestowing host) board (S.cast S.alice spellId)) Stack.resolveTop)
-        -- The enchanted War Mammoth is a 4/4, so four damage is lethal (CR 704.5g).
-        pass1 = S.settleSba (S.markDamage host 4 attached)
-        pass2 = S.settleSba pass1
-        pass3 = S.settleSba pass2
-    -- The control first, so nothing below passes because the Rollicker was never
-    -- on the battlefield at all.
-    Spec.assertBool s (Maybe.isJust (rollickerOn rollicker attached)) "control: with its host alive the bestowed Rollicker is on the battlefield"
-    Spec.assertEqWith s "and it is an Enchantment with no P/T of its own" (rollickerOn rollicker attached >>= \oid -> S.powerToughnessOf oid attached) Nothing
-    -- THE discriminating trio, after the host has gone.
-    Spec.assertEqWith s "the host died" (Game.lookupObject host pass1) Nothing
-    Spec.assertEqWith
-      s
-      "CR 702.103f: the Rollicker is a 1/1 creature again rather than buried by CR 704.5m"
-      (rollickerOn rollicker pass3 >>= \oid -> S.powerToughnessOf oid pass3)
-      (Just (1, 1))
-    Spec.assertEqWith
-      s
-      "and its card types and subtypes are the printed ones again"
-      (fmap (\oid -> (Projection.cardTypesOf oid pass3, Projection.subtypesOf oid pass3)) (rollickerOn rollicker pass3))
-      (Just (Set.fromList [CardType.Creature, CardType.Enchantment], Set.singleton Subtype.Satyr))
-    Spec.assertEqWith
-      s
-      "attached to nothing"
-      (fmap (\oid -> Object.attachedTo =<< Game.lookupObject oid pass3) (rollickerOn rollicker pass3))
-      (Just Nothing)
-    Spec.assertEqWith s "and alice's graveyard holds the host alone" (length (Game.zoneMembers Zone.Graveyard S.alice pass3)) 1
   -- CR 702.103d's COST half, through CR 601.2f and CR 118.9d: Thalia taxes
   -- noncreature spells, and a bestowed Rollicker is an enchantment spell. Three
   -- boards off one fixture, differing in one thing each -- Thalia present or
@@ -2976,8 +2216,9 @@ licidSpec s registry = Spec.describe s "Licid" $ do
         -- CR 109.5: "you may pay" is the player who ACTIVATED the ability, and
         -- bob is not them. Asked on the SAME board, and bob holds the same three
         -- Islands alice does (licidBoard stocks both seats), so the only
-        -- difference between the two reads is the seat rather than the mana. The
-        -- case below is what parts "activator" from "current controller".
+        -- difference between the two reads is the seat rather than the mana.
+        -- data/scenarios/aura's Confiscate case is what parts "activator" from
+        -- "current controller".
         Spec.assertBool s (not (offersEnding lic (Action.legalActions S.bob (ready {GameState.priority = Just S.bob})))) "and bob, who did not activate the ability, is not"
         -- FIRST after the payment, and the gameplay-level read: the creature the
         -- Licid was enchanting has lost the keyword, which is the whole of what
@@ -2992,35 +2233,6 @@ licidSpec s registry = Spec.describe s "Licid" $ do
         Spec.assertEqWith s "with the ability the removal took back again" (length (Projection.abilitiesOf lic paid)) 1
         -- And the offer is gone with the effect: paying twice is not on the menu.
         Spec.assertBool s (not (offersEnding lic (Action.legalActions S.alice (paid {GameState.priority = Just S.alice})))) "and the offer is gone with the effect it ended"
-  -- CR 109.5's two sentences, told apart. The clause is part of an ACTIVATED
-  -- ability, so its "you" is the player who activated it -- not the current
-  -- controller of the object it is on, which is what the STATIC-ability sentence
-  -- would say. The two readings differ only once control of the source moves
-  -- after the ability resolved, and Confiscate is what moves it: the animated
-  -- Licid is an Enchantment -- Aura and no longer a Creature, so "enchant
-  -- permanent" is the only steal in the pool that reaches it.
-  --
-  -- Both seats hold three Islands (licidBoard), so neither leg can be reading
-  -- Cost.canPay rather than the seat.
-  Spec.it s "CR 109.5: the activator keeps the pay-to-end offer after Confiscate steals the animated Licid" $ do
-    island <- S.printingOf s registry "Island"
-    piker <- S.printingOf s registry "Goblin Piker"
-    licid <- S.printingOf s registry "Gliding Licid"
-    confiscate <- S.printingOf s registry "Confiscate"
-    case licidBoard island piker licid of
-      Nothing -> Spec.assertFailure s "Gliding Licid should print one activated ability"
-      Just (lic, _, after) -> do
-        let (aura, withAura) = S.addPermanent confiscate S.bob after
-            stolen = S.settleSba (S.attachTo aura (Recipient.ToObject lic) withAura)
-        -- THE pair, gameplay level and first: the offer stayed with alice and
-        -- never reached bob, whose control of the Licid the leg below confirms.
-        Spec.assertBool s (offersEnding lic (Action.legalActions S.alice (stolen {GameState.priority = Just S.alice}))) "CR 116.2c: alice activated it, so she is still offered the payment"
-        Spec.assertBool s (not (offersEnding lic (Action.legalActions S.bob (stolen {GameState.priority = Just S.bob})))) "and bob, who merely controls it now, is not"
-        -- The anti-vacuity leg, after the pair: control really did move, so the
-        -- two seats above are genuinely a different answer to the two readings.
-        Spec.assertEqWith s "CR 613.1b: Confiscate moved control of the Licid" (Projection.controllerOf lic stolen) (Just S.bob)
-        Spec.assertEqWith s "because the Aura is on it" (fmap Object.attachedTo (Game.lookupObject aura stolen)) (Just (Just (Recipient.ToObject lic)))
-        Spec.assertBool s (Set.member lic (GameState.battlefield stolen)) "and the Licid is still on the battlefield for the offer to name"
 
 -- The board licidSpec's cases share: alice's Gliding Licid animates itself onto
 -- her own Goblin Piker off three Islands -- one for the activation, one for the
@@ -3362,125 +2574,6 @@ auraTokenSpec s registry =
           Spec.assertEqWith s "so nothing was minted at all, before any state-based action could bury it" (S.tokensOf resolved) []
           Spec.assertEqWith s "and neither land gained the token's ability" (length (Projection.abilitiesOf mountainId resolved), length (Projection.abilitiesOf forestId resolved)) (length (Projection.abilitiesOf mountainId staged), length (Projection.abilitiesOf forestId staged))
 
--- CR 205.2a with CR 303.4b: a destination filter that reads the SUBJECT's host
--- rather than the candidate. Enchantment Alteration {U} Instant, Oracle text
--- re-fetched from Scryfall this session: "Attach target Aura attached to a
--- creature or land to another permanent of that type."
---
--- "OF THAT TYPE" is two reads and not one comparison: the candidate's card types
--- (Filter.HasCardType) and the host's (Filter.HostOfSubjectHasCardType, answered
--- off Filter.Context.subjectHostCardTypes, which Parun.Engine.Attach.hostsFor
--- fills). The card pairs them per type rather than intersecting the two sets,
--- which would let an artifact land stand in for an artifact creature on the
--- Artifact they share -- a type the card never named.
---
--- THE AURA IS CONFISCATE, and that choice is what makes the atom observable at
--- all: its enchant ability is "enchant permanent", so CR 701.3a admits every
--- candidate on these boards and the card-type conjunct is the only thing
--- excluding any. An "enchant creature" Aura would pass both legs vacuously. Its
--- "you control enchanted permanent" (CR 613.1b) is also how the move is read a
--- second way, beside Object.attachedTo.
---
--- TWO LEGS, because the card states two types and a board showing one proves
--- nothing about the other: a land host with a creature among the candidates, and
--- a creature host with lands among them. Two destinations of the right type in
--- each, since Attach.chooseHost elides the prompt at one candidate and the
--- offered set would then be unreadable.
---
--- The card does NOT write Filter.CanHostSubject: its text says nothing like "it
--- can enchant", so CR 303.4j is the backstop for a destination the Aura could
--- not legally enchant -- Crown of the Ages' treatment rather than Aura Graft's.
-enchantmentAlterationSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
-enchantmentAlterationSpec s registry =
-  let -- The destination by INDEX into what was offered, never by naming an
-      -- object: an answerer that searched for a legal destination would find the
-      -- right one again after a mutation. simicGuildmageSpec's posture.
-      pickBy :: (NonEmpty.NonEmpty ObjectId.ObjectId -> ObjectId.ObjectId) -> ObjectId.ObjectId -> Prompt.Prompt r -> r
-      pickBy choose aura p = case p of
-        Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToObject aura))) sets
-        Prompt.ChooseAttachment _ _ _ offered -> choose offered
-        _ -> S.identityAnswer p
-      hostOf aura gs = Game.lookupObject aura gs >>= Object.attachedTo >>= Recipient.objectOf
-   in Spec.describe s "EnchantmentAlteration" $ do
-        -- The LAND leg. Alice's own Island pays for the spell and is a legal
-        -- destination besides -- the contrast with Simic Guildmage, whose
-        -- destination filter names a controller where this one does not -- and
-        -- it holds the lowest id, so it is what the FIRST offered destination
-        -- is. Bob's Goblin Piker holds the highest, so it is what the LAST
-        -- becomes if the host's card type stops being read.
-        Spec.it s "CR 205.2a an Aura on a land moves only to another land" $ do
-          island <- S.printingOf s registry "Island"
-          forest <- S.printingOf s registry "Forest"
-          mountain <- S.printingOf s registry "Mountain"
-          plains <- S.printingOf s registry "Plains"
-          piker <- S.printingOf s registry "Goblin Piker"
-          confiscate <- S.printingOf s registry "Confiscate"
-          alteration <- S.printingOf s registry "Enchantment Alteration"
-          let (mana, base0) = S.addPermanent island S.alice (Setup.emptyGame S.bothPlayers)
-              (host, base1) = S.addPermanent forest S.bob base0
-              (middleLand, base2) = S.addPermanent mountain S.bob base1
-              (lastLand, base3) = S.addPermanent plains S.bob base2
-              (aura, base4) = S.addPermanent confiscate S.alice base3
-              (creature, base5) = S.addPermanent piker S.bob base4
-              enchanted = (S.attach aura host base5) {GameState.priority = Just S.alice}
-              (gs, spell) = S.handOne alteration enchanted
-              run choose =
-                let answer :: Prompt.Prompt r -> r
-                    answer = pickBy choose aura
-                    cast = S.runPure answer gs (S.cast S.alice spell)
-                 in S.runPure answer cast Stack.resolveTop
-              taking = run NonEmpty.head
-              takingLast = run NonEmpty.last
-          Spec.assertEqWith s "before, alice's Confiscate holds bob's Forest" (Projection.controllerOf host gs) (Just S.alice)
-          -- THE gameplay-level assertion, ahead of every proxy: the LAST
-          -- destination offered is bob's Plains. Without the host's card type
-          -- being read it would be bob's Goblin Piker, which Confiscate's
-          -- "enchant permanent" admits and rule 205.2a's "that type" does not.
-          Spec.assertEqWith s "the last destination offered is bob's Plains" (hostOf aura takingLast) (Just lastLand)
-          Spec.assertEqWith s "and the first is alice's own Island, the destination filter naming no controller" (hostOf aura taking) (Just mana)
-          -- CR 613.1b read through the move: Confiscate's static follows the
-          -- Aura, so the land it landed on is alice's and the old host is bob's
-          -- again.
-          Spec.assertEqWith s "alice controls the Plains now" (Projection.controllerOf lastLand takingLast) (Just S.alice)
-          Spec.assertEqWith s "and bob has his Forest back" (Projection.controllerOf host takingLast) (Just S.bob)
-          Spec.assertEqWith s "the Mountain in the middle of the offer is untouched" (Projection.controllerOf middleLand takingLast) (Just S.bob)
-          Spec.assertEqWith s "and the creature stayed bob's in both legs" (Projection.controllerOf creature taking, Projection.controllerOf creature takingLast) (Just S.bob, Just S.bob)
-        -- The CREATURE leg, the board above with the two card types swapped:
-        -- the host is a creature, two creatures are legal destinations, and the
-        -- lands -- alice's Island at the bottom of the id order and bob's Forest
-        -- at the top -- are what the atom excludes at both ends of the offer.
-        Spec.it s "CR 205.2a an Aura on a creature moves only to another creature" $ do
-          island <- S.printingOf s registry "Island"
-          forest <- S.printingOf s registry "Forest"
-          piker <- S.printingOf s registry "Goblin Piker"
-          giant <- S.printingOf s registry "Hill Giant"
-          mammoth <- S.printingOf s registry "War Mammoth"
-          confiscate <- S.printingOf s registry "Confiscate"
-          alteration <- S.printingOf s registry "Enchantment Alteration"
-          let (_, base0) = S.addPermanent island S.alice (Setup.emptyGame S.bothPlayers)
-              (host, base1) = S.addPermanent piker S.bob base0
-              (firstCreature, base2) = S.addPermanent giant S.bob base1
-              (lastCreature, base3) = S.addPermanent mammoth S.bob base2
-              (aura, base4) = S.addPermanent confiscate S.alice base3
-              (land, base5) = S.addPermanent forest S.bob base4
-              enchanted = (S.attach aura host base5) {GameState.priority = Just S.alice}
-              (gs, spell) = S.handOne alteration enchanted
-              run choose =
-                let answer :: Prompt.Prompt r -> r
-                    answer = pickBy choose aura
-                    cast = S.runPure answer gs (S.cast S.alice spell)
-                 in S.runPure answer cast Stack.resolveTop
-              taking = run NonEmpty.head
-              takingLast = run NonEmpty.last
-          -- Both ends of the offer, and both move under a filter that stopped
-          -- reading the host's card type: the first would be alice's Island and
-          -- the last bob's Forest.
-          Spec.assertEqWith s "the first destination offered is bob's Hill Giant" (hostOf aura taking) (Just firstCreature)
-          Spec.assertEqWith s "and the last is bob's War Mammoth" (hostOf aura takingLast) (Just lastCreature)
-          Spec.assertEqWith s "alice controls the Mammoth now" (Projection.controllerOf lastCreature takingLast) (Just S.alice)
-          Spec.assertEqWith s "bob keeps his Forest, which was never offered" (Projection.controllerOf land takingLast) (Just S.bob)
-          Spec.assertEqWith s "and his Piker, which the Aura left" (Projection.controllerOf host takingLast) (Just S.bob)
-
 -- Animate Dead {1}{B} Enchantment -- Aura -- "Enchant creature card in a
 -- graveyard / When this Aura enters, if it's on the battlefield, it loses
 -- 'enchant creature card in a graveyard' and gains 'enchant creature put onto the
@@ -3527,34 +2620,6 @@ animateDeadSpec s registry = Spec.describe s "Animate Dead" $ do
       "the leaves trigger sacrifices it into bob's graveyard"
       (named pikerName Zone.Battlefield S.bob sacrificed, length (named pikerName Zone.Graveyard S.bob sacrificed))
       ([], 1)
-  -- CR 702.5c: a copy of the trigger (Lithoform Engine, CR 707.10) returns the
-  -- Piker, and the original then grants a second "enchant creature put onto the
-  -- battlefield with this Aura" -- which the Piker satisfies too.
-  Spec.it s "CR 702.5c: a copied trigger's second granted enchant still admits the returned creature" $ do
-    (_, cast0) <- setUp
-    engine <- S.printingOf s registry "Lithoform Engine"
-    swamp <- S.printingOf s registry "Swamp"
-    let (engineId, cast1) = S.addPermanent engine S.alice cast0
-        cast = S.landsFor swamp S.alice 2 cast1
-        entered = S.settleSba (step Stack.resolveTop cast)
-        placed = step (Engine.placePendingTriggers []) entered
-        copier = List.find ((== Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) . Cost.Type.mana . ActivatedAbility.cost) (Projection.abilitiesOf engineId placed)
-        settle g = S.settleSba (step (Stack.resolveTop >> Engine.settleForPriority) g)
-    case (GameState.stack placed, copier) of
-      (etb : _, Just ability) -> do
-        let staged = S.runPure (aimedAtObject etb) placed {GameState.priority = Just S.alice} (Activate.activateAbility S.alice engineId ability)
-            returned = settle (settle (settle staged))
-            creatures = named pikerName Zone.Battlefield S.bob returned
-            enchantedBy creature = fmap (\aura -> fmap Face.name (Game.faceOf aura returned)) (attachedTo creature returned)
-        Spec.assertEqWith
-          s
-          "the Piker stays, Animate Dead on it"
-          (fmap (\creature -> (Projection.controllerOf creature returned, enchantedBy creature)) creatures)
-          [(Just S.alice, [Just animateName])]
-        Spec.assertEqWith s "and every trigger resolved" (GameState.stack returned) []
-        -- The copy really ran: two granted instances, one per resolution.
-        Spec.assertEqWith s "and the Aura holds two granted enchant instances" (fmap (length . (`Projection.enchantOf` returned)) (concatMap (`attachedTo` returned) creatures)) [2]
-      _ -> Spec.assertFailure s "Animate Dead's trigger should be on the stack, and Lithoform Engine should have its {2} ability"
   Spec.it s "CR 608.3b: the Aura spell whose graveyard target left does not resolve" $ do
     (pikerCard, cast) <- setUp
     let exiled = step (Event.changeZone (pure ()) pikerCard Zone.Exile) cast
@@ -3653,24 +2718,6 @@ groupAttachSpec s registry =
           Spec.assertEqWith s "both Auras stay on the Brigade" (hostOf strength after, hostOf pacified after) (Just victim, Just victim)
           Spec.assertEqWith s "the Apostle took nothing" (S.powerToughnessOf warded after) (Just (2, 1))
           Spec.assertEqWith s "and the trigger did resolve" (length (GameState.stack after)) 0
-        -- Vulshok Battlemaster {4}{R} 2/2 haste: "When this creature enters,
-        -- attach all Equipment on the battlefield to it. (Control of the
-        -- Equipment doesn't change.)" Bob's Batterfist on bob's Giant comes too,
-        -- and stays bob's (CR 301.5d).
-        Spec.it s "CR 301.5d Vulshok Battlemaster takes every Equipment, and bob keeps control of his" $ do
-          battlemaster <- S.printingOf s registry "Vulshok Battlemaster"
-          giant <- S.printingOf s registry "Hill Giant"
-          bonesplitter <- S.printingOf s registry "Bonesplitter"
-          batterfist <- S.printingOf s registry "Barbed Batterfist"
-          let (bobs, g1) = S.addPermanent giant S.bob (Setup.emptyGame S.bothPlayers)
-              (split, g2) = S.addPermanent bonesplitter S.alice g1
-              (bobsGear, g3) = S.addPermanent batterfist S.bob g2
-              (master, entered) = S.entersWithTrigger battlemaster S.alice (S.attach bobsGear bobs g3)
-              after = S.runPure S.identityAnswer (settle S.identityAnswer entered) Stack.resolveTop
-          Spec.assertEqWith s "both Equipment are on the Battlemaster" (hostOf split after, hostOf bobsGear after) (Just master, Just master)
-          Spec.assertEqWith s "which is 2/2 + 2/+0 + 1/-1" (S.powerToughnessOf master after) (Just (5, 1))
-          Spec.assertEqWith s "bob still controls his Batterfist" (Projection.controllerOf bobsGear after) (Just S.bob)
-          Spec.assertEqWith s "and his Giant is a plain 3/3" (S.powerToughnessOf bobs after) (Just (3, 3))
         -- Heavenly Blademaster {5}{W} 3/6: "When this creature enters, you may
         -- attach any number of Auras and Equipment you control to it. Other
         -- creatures you control get +1/+1 for each Aura and Equipment attached to
@@ -3891,50 +2938,6 @@ groupAttachCardsSpec s registry =
               after = S.runPure answer (settle answer staged) Stack.resolveTop
           Spec.assertEqWith s "both Equipment moved from the Piker to Rhuk" (hostOf split after, hostOf worn after) (Just nabber, Just nabber)
           Spec.assertEqWith s "the Piker is a plain 2/1" (S.powerToughnessOf carrier after) (Just (2, 1))
-        -- Fumble {1}{U} instant: "Return target creature to its owner's hand.
-        -- Gain control of all Auras and Equipment that were attached to it, then
-        -- attach them to another creature." Its 2018-06-08 rulings: they "must
-        -- all be attached to one creature that they can all legally be attached
-        -- to", and if none can take them all "they all remain on the battlefield
-        -- unattached (and Auras among them will be put into their owners'
-        -- graveyards)". Bob's Giant wears his Unholy Strength and Bonesplitter;
-        -- alice's Apostle of Purifying Light (protection from black) cannot take
-        -- the black Aura. The other leg differs only in lacking alice's Piker.
-        Spec.it s "CR 608.2h Fumble takes the Auras and Equipment that were attached to the bounced creature" $ do
-          island <- S.printingOf s registry "Island"
-          fumble <- S.printingOf s registry "Fumble"
-          piker <- S.printingOf s registry "Goblin Piker"
-          apostle <- S.printingOf s registry "Apostle of Purifying Light"
-          giant <- S.printingOf s registry "Hill Giant"
-          unholy <- S.printingOf s registry "Unholy Strength"
-          bonesplitter <- S.printingOf s registry "Bonesplitter"
-          let board withPiker =
-                let g0 = S.landsFor island S.alice 2 (Setup.emptyGame S.bothPlayers)
-                    (warded, g1) = S.addPermanent apostle S.alice g0
-                    (receivers, g2) = if withPiker then (\(a, h) -> ([a], h)) (S.addPermanent piker S.alice g1) else ([], g1)
-                    (victim, g3) = S.addPermanent giant S.bob g2
-                    (strength, g4) = S.addPermanent unholy S.bob g3
-                    (split, g5) = S.addPermanent bonesplitter S.bob g4
-                    (g6, spell) = S.handOne fumble (S.attach split victim (S.attach strength victim g5))
-                    answer :: Prompt.Prompt r -> r
-                    answer p = case p of
-                      Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just victim) . Recipient.objectOf) . snd) sets
-                      _ -> S.identityAnswer p
-                    cast = S.runPure answer (g6 {GameState.priority = Just S.alice}) (S.cast S.alice spell)
-                    resolved = S.runPure answer cast Stack.resolveTop
-                 in (warded, receivers, victim, strength, split, resolved, settle answer resolved)
-          case board True of
-            (warded, [carrier], victim, strength, split, resolved, _) -> do
-              Spec.assertEqWith s "the Aura and the Equipment are on alice's Piker" (hostOf strength resolved, hostOf split resolved) (Just carrier, Just carrier)
-              Spec.assertEqWith s "and alice controls both" (Projection.controllerOf strength resolved, Projection.controllerOf split resolved) (Just S.alice, Just S.alice)
-              Spec.assertEqWith s "the Piker is 2/1 + 2/+1 + 2/+0" (S.powerToughnessOf carrier resolved) (Just (6, 2))
-              Spec.assertEqWith s "the Apostle took nothing" (S.powerToughnessOf warded resolved) (Just (2, 1))
-              Spec.assertBool s (not (Set.member victim (GameState.battlefield resolved))) "the Giant left the battlefield"
-            _ -> Spec.assertFailure s "the fixture wanted one receiver"
-          case board False of
-            (_, _, _, strength, split, resolved, settled) -> do
-              Spec.assertEqWith s "with no creature able to take both, alice still gains control of both" (Projection.controllerOf strength resolved, Projection.controllerOf split resolved) (Just S.alice, Just S.alice)
-              Spec.assertEqWith s "and after CR 704.5m/n the Bonesplitter stands unattached, the Aura gone" (hostOf split settled, Set.member split (GameState.battlefield settled), Set.member strength (GameState.battlefield settled)) (Nothing, True, False)
 
 -- CR 702.65 / 701.12d: aura swap. Arcanum Wings {1}{U} Enchantment -- Aura,
 -- "Enchant creature" / "Enchanted creature has flying." / "Aura swap {2}{U}"

@@ -45,8 +45,8 @@ offerToEnd resolution gs = List.find ((== resolution) . PaidExpiry.resolution . 
 --     spell, that stored the effect -- not the current controller of the object
 --     it is on. That seat rides the stored effect (PaidExpiry.player), baked by
 --     Parun.Engine.Expiry.arm, so a control change afterwards leaves the offer
---     where it was -- proved by Parun.AuraSpec's "CR 109.5 the activator keeps the
---     pay-to-end offer after Confiscate steals the animated Licid";
+--     where it was -- proved by data/scenarios/aura's "CR 109.5: the activator
+--     keeps the pay-to-end offer after Confiscate steals the animated Licid";
 --   * the cost is payable. An action the player cannot take is not offered,
 --     Parun.Engine.Action.legalActions' posture throughout.
 --

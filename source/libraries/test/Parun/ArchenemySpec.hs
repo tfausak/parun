@@ -30,13 +30,11 @@ import qualified Parun.Types.Deck as Deck
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
-import qualified Parun.Types.Keyword as Keyword
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Prompt as Prompt
-import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.SideDeck as SideDeck
 import qualified Parun.Types.Zone as Zone
 
@@ -98,47 +96,6 @@ spec s registry = Spec.describe s "Parun.Engine.Archenemy" $ do
     Spec.assertEqWith s "CR 904.13c carol loses at ten poison and bob plays on" (Game.stillPlaying poisoned) [S.alice, S.bob]
     Spec.assertEqWith s "CR 810.8c a team at 0 life loses together" (Game.stillPlaying felled) [S.alice]
     Spec.assertEqWith s "without the shared total each opponent starts at CR 903.7's 40" (lives (started False)) (Just 60, Just 40, Just 40)
-
-  -- CR 703.4e / 904.9 / 704.6e: at the start of her precombat main phase alice
-  -- sets Look Skyward and Despair in motion; its "When you set this scheme in
-  -- motion" makes a 5/5 Dragon, and once that has resolved the plain scheme
-  -- goes to the bottom of her scheme deck.
-  Spec.it s "CR 904.9 the archenemy sets a scheme in motion, and CR 704.6e abandons it once its trigger resolves" $ do
-    board <- schemeBoard s registry ["Look Skyward and Despair", "The Very Soil Shall Shake"]
-    let triggered = S.runPure S.identityAnswer (inMain S.alice board) (Engine.runTurnBasedActions Phase.PrecombatMain >> Engine.settleForPriority)
-        resolved = S.runPure S.identityAnswer triggered Engine.priorityLoop
-        bobsTurn = S.runPure S.identityAnswer (inMain S.bob board) (Engine.runTurnBasedActions Phase.PrecombatMain >> Engine.priorityLoop)
-    Spec.assertEqWith s "CR 904.9 its trigger made a 5/5 flying Dragon for alice" (fmap (\oid -> (S.powerToughnessOf oid resolved, Projection.hasKeyword Keyword.Flying oid resolved)) (creaturesOf S.alice resolved)) [(Just (5, 5), True)]
-    Spec.assertEqWith s "CR 701.32b Look Skyward and Despair is face up while its trigger waits" (names (Archenemy.faceUp triggered) triggered) ["Look Skyward and Despair"]
-    Spec.assertEqWith s "CR 704.6e and the spent scheme is on the bottom of her deck" (names (Archenemy.deckOf S.alice resolved) resolved) ["The Very Soil Shall Shake", "Look Skyward and Despair"]
-    Spec.assertEqWith s "with nothing face up" (Archenemy.faceUp resolved) []
-    Spec.assertEqWith s "on bob's turn nothing is set in motion" (Archenemy.faceUp bobsTurn, creaturesOf S.alice bobsTurn) ([], [])
-
-  -- CR 205.4h / 904.11 / 904.8: The Very Soil Shall Shake is ongoing, so it
-  -- stays face up, and its "Creatures you control get +2/+2 and have trample"
-  -- functions from the command zone -- alice's, not bob's.
-  Spec.it s "CR 205.4h an ongoing scheme stays face up and its static ability applies" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    board <- schemeBoard s registry ["The Very Soil Shall Shake", "Look Skyward and Despair"]
-    let (alicesPiker, b1) = S.addPermanent piker S.alice board
-        (bobsPiker, b2) = S.addPermanent piker S.bob b1
-        set = S.runPure S.identityAnswer (inMain S.alice b2) (Engine.runTurnBasedActions Phase.PrecombatMain >> Engine.priorityLoop)
-    Spec.assertEqWith s "CR 205.4h it is still face up" (names (Archenemy.faceUp set) set) ["The Very Soil Shall Shake"]
-    Spec.assertEqWith s "CR 904.8 alice's Piker is a 4/3 with trample" (S.powerToughnessOf alicesPiker set, Projection.hasKeyword Keyword.Trample alicesPiker set) (Just (4, 3), True)
-    Spec.assertEqWith s "and bob's is its printed 2/1" (S.powerToughnessOf bobsPiker set) (Just (2, 1))
-
-  -- CR 701.33: "When a creature you control dies, abandon this scheme." The
-  -- ongoing scheme goes to the bottom of the deck and its pump ends.
-  Spec.it s "CR 701.33 an ongoing scheme's own trigger abandons it" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    board <- schemeBoard s registry ["The Very Soil Shall Shake", "Look Skyward and Despair"]
-    let (victim, b1) = S.addPermanent piker S.alice board
-        (survivor, b2) = S.addPermanent piker S.alice b1
-        set = S.runPure S.identityAnswer (inMain S.alice b2) (Engine.runTurnBasedActions Phase.PrecombatMain >> Engine.priorityLoop)
-        died = S.runPure S.identityAnswer set (Event.destroy (pure ()) Regenerability.Regenerable [victim] >> Engine.priorityLoop)
-    Spec.assertEqWith s "CR 701.33b the scheme is no longer face up" (Archenemy.faceUp died) []
-    Spec.assertEqWith s "and is on the bottom of alice's scheme deck" (names (Archenemy.deckOf S.alice died) died) ["Look Skyward and Despair", "The Very Soil Shall Shake"]
-    Spec.assertEqWith s "so the surviving Piker is its printed 2/1 again" (S.powerToughnessOf survivor died) (Just (2, 1))
 
   -- CR 500.7 / 611.2a / 101.2: All in Good Time ("When you set this scheme in
   -- motion, take an extra turn after this one. Schemes can't be set in motion

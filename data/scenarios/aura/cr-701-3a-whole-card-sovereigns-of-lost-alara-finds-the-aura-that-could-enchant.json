@@ -1,0 +1,191 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Sovereigns of Lost Alara",
+            "label": "sovereigns",
+            "ready": true
+          },
+          {
+            "card": "Apostle of Purifying Light",
+            "label": "apostle",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Banewasp Affliction",
+            "label": "banewasp"
+          },
+          {
+            "card": "Entangling Vines",
+            "label": "vines"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "BeginningOfCombat"
+  },
+  "description": "CR 701.3a whole card: Sovereigns of Lost Alara finds the Aura that could enchant the creature its trigger bound",
+  "note": "The object CR 701.3a's question is about is the one the resolution BOUND, not the searching ability's source: Sovereigns' trigger says \"an Aura card that could enchant THAT CREATURE\" of CR 506.5's lone attacker. Entangling Vines enchants a tapped creature, which the attacking Apostle of Purifying Light is (CR 508.1f) and the untapped Sovereigns is not; Banewasp Affliction is black, which the Apostle's protection from black refuses (CR 702.16c) and the Sovereigns would take. So the search offers the Vines and not the Banewasp (naming it is refused), and the Vines enter on the Apostle. The Haskell premise reads of Attach.attachableWithLastKnown are the fixture's design, stated here.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$apostle"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "OrderTriggers": [
+          "$sovereigns",
+          "$sovereigns"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseOptional": "Exercises"
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$banewasp"
+          ]
+        }
+      },
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$vines"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$banewasp"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "$apostle",
+          "object": "Entangling Vines",
+          "of": "AttachedTo"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Banewasp Affliction",
+          "count": 1,
+          "player": "alice",
+          "zone": "Library"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Banewasp Affliction",
+          "count": 0,
+          "player": "alice",
+          "zone": "Hand"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$apostle",
+          "tapped": true
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$sovereigns",
+          "tapped": false
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Attackers": {
+          "attackers": {
+            "$apostle": "$bob"
+          }
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    }
+  ]
+}

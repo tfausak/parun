@@ -84,8 +84,8 @@ data Affected
     -- type out beside this atom's own content: @Matching (And [HasCardType
     -- Creature, HasAttached IsSource])@, as Bonesplitter's card data does.
     --
-    -- Proven by Parun.AuraSpec's "CR 613.1b/704.5m Control Magic keeps a crewed
-    -- Vehicle and loses it the instant the crew wears off".
+    -- Proven by data/scenarios/aura's "CR 613.1b/704.5m Control Magic keeps a
+    -- crewed Vehicle and loses it the instant the crew wears off".
     Attached
   | -- | CR 303.4b / 303.4m: the objects matching the Filter that the ENCHANTED
     -- PLAYER controls -- Curse of Death's Hold's "creatures enchanted player

@@ -1,0 +1,192 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "mana"
+          },
+          {
+            "attached": "host",
+            "card": "Confiscate",
+            "label": "aura"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Enchantment Alteration",
+            "label": "alteration"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "host"
+          },
+          {
+            "card": "Mountain",
+            "label": "middle"
+          },
+          {
+            "card": "Plains",
+            "label": "last"
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "creature"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 205.2a an Aura on a land moves only to another land",
+  "note": "Enchantment Alteration: \"Attach target Aura attached to a creature or land to another permanent of that type.\" alice's Confiscate holds bob's Forest; Confiscate's \"enchant permanent\" admits bob's Goblin Piker, and rule 205.2a's \"that type\" does not, so naming the Piker as the destination is refused. bob's Plains is offered and taken, and Confiscate's control follows it (CR 613.1b): alice controls the Plains and bob has his Forest back. The control file takes alice's own Island, also offered: the destination names no controller.",
+  "timeline": [
+    {
+      "check": {
+        "View": {
+          "is": "alice",
+          "object": "$host",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$mana",
+            null
+          ],
+          "object": "$alteration",
+          "targets": [
+            "$aura"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "ChooseAttachment",
+          "with": "$creature"
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseAttachment",
+          "with": "$last"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "$last",
+          "object": "$aura",
+          "of": "AttachedTo"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "object": "$host",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "object": "$middle",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "object": "$creature",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "alice",
+          "object": "$last",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

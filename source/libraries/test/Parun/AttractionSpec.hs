@@ -18,7 +18,6 @@
 module Parun.AttractionSpec where
 
 import qualified Control.Monad.Trans.State.Strict as State
-import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
@@ -26,7 +25,6 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Parun.Engine.Attraction as Attraction
-import qualified Parun.Engine.Combat as Combat
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
@@ -42,8 +40,6 @@ import qualified Parun.Support as S
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.ActiveReplacement as ActiveReplacement
 import qualified Parun.Types.CardName as CardName
-import qualified Parun.Types.Combat as Combat.Type
-import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.ControllerRelation as ControllerRelation
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterName as CounterName
@@ -104,21 +100,6 @@ withAttractions pid printings gs =
 -- CR 701.51: opening an Attraction.
 openSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 openSpec s registry = Spec.describe s "Open an Attraction" $ do
-  Spec.it s "CR 701.51b Deadbeat Attendant puts the top of the Attraction deck onto the battlefield" $ do
-    attendant <- S.printingOf s registry "Deadbeat Attendant"
-    swamp <- S.printingOf s registry "Swamp"
-    cars <- S.printingOf s registry "Bumper Cars"
-    -- createDeck deals the deck in printing order, so 202a is on top and 202f
-    -- beneath it: the lights of what entered say WHICH card was opened.
-    let (gs, spellId) = S.handOne attendant (withAttractions S.alice [carsA cars, carsF cars] (S.landsInPlay swamp 2))
-        cast = S.runPure S.identityAnswer gs (S.cast S.alice spellId)
-        after = S.runPure S.identityAnswer cast Engine.priorityLoop
-        opened = filter (\oid -> Game.lightsOf oid after /= Set.empty) (Set.toList (GameState.battlefield after))
-    -- THE GAMEPLAY ASSERTION: the top card, 202a, is on the battlefield.
-    Spec.assertEqWith s "CR 701.51b: the top card entered, lit 2, 3 and 6" (fmap (`Game.lightsOf` after) opened) [Set.fromList [2, 3, 6]]
-    Spec.assertEqWith s "under alice's control" (S.countOnBattlefieldByName bumperCars S.alice after) 1
-    Spec.assertEqWith s "and 202f is left in the deck" (fmap (`Game.lightsOf` after) (Attraction.deckOf S.alice after)) [Set.fromList [4, 5, 6]]
-    Spec.assertEqWith s "which was two cards before" (length (Attraction.deckOf S.alice gs)) 2
   Spec.it s "CR 701.51b / 708.5 nobody sees the cards still in the Attraction deck, before or after the open" $ do
     attendant <- S.printingOf s registry "Deadbeat Attendant"
     swamp <- S.printingOf s registry "Swamp"
@@ -194,60 +175,9 @@ visitWith :: [Natural] -> ObjectId -> GameState.GameState -> (GameState.GameStat
 visitWith rolls target gs =
   rolling rolls target gs (Engine.runTurnBasedActions Phase.PrecombatMain >> Engine.priorityLoop)
 
--- Could bob decline to block once alice attacks with everything -- her Piker,
--- the one creature she controls? The gameplay question Bumper Cars'
--- requirement answers (CR 509.1c).
-bobMayDecline :: GameState.GameState -> Bool
-bobMayDecline gs =
-  let board = gs {GameState.phase = Phase.Combat CombatStep.DeclareAttackers, GameState.combat = Combat.emptyCombat {Combat.Type.defenders = [S.bob]}}
-      attacked = S.runPure S.aggressiveAnswer board (Combat.declareAttackers S.manaPerformer S.alice)
-   in Combat.legalBlockDeclaration S.bob Map.empty attacked
-
--- CR 703.4g / 701.52a / 702.159a: rolling to visit.
-visitSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+-- CR 717.4: rolling to visit.
+visitSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 visitSpec s registry = Spec.describe s "Roll to visit" $ do
-  Spec.it s "CR 702.159a a result lit up on the Attraction triggers its visit ability" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    cars <- S.printingOf s registry "Bumper Cars"
-    let (gs, mine, _, _) = visitBoard piker (carsA cars)
-        (hit, _) = visitWith [3] mine gs
-        (miss, _) = visitWith [4] mine gs
-    -- THE GAMEPLAY ASSERTION: a 3 is lit on 202a, so the visit ability resolved
-    -- and alice's Piker must be blocked; a 4 is not, so nothing triggered.
-    Spec.assertBool s (not (bobMayDecline hit)) "CR 509.1c: after a 3, bob must block the Piker"
-    Spec.assertBool s (bobMayDecline miss) "CR 701.52a: after a 4, nothing was visited"
-    Spec.assertBool s (bobMayDecline gs) "and before the roll, nothing required it"
-  Spec.it s "CR 717.1 the lights are the printing's" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    cars <- S.printingOf s registry "Bumper Cars"
-    -- The pair of boards above, differing only in the printing: 202f lights 4
-    -- and not 3.
-    let (gs, mine, _, _) = visitBoard piker (carsF cars)
-    Spec.assertBool s (bobMayDecline (fst (visitWith [3] mine gs))) "a 3 visits nothing lit 4, 5 and 6"
-    Spec.assertBool s (not (bobMayDecline (fst (visitWith [4] mine gs)))) "and a 4 visits it"
-  -- The copy tripwire: a Phyrexian Metamorph copying Bumper Cars is an
-  -- Attraction named Bumper Cars with the visit ability, but its card lights
-  -- nothing (CR 109.3, 707.2) and has a traditional back (CR 717.6).
-  Spec.it s "CR 707.2 a copy of an Attraction rolls but lights nothing, and is no Astrotorium card" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    cars <- S.printingOf s registry "Bumper Cars"
-    metamorph <- S.printingOf s registry "Phyrexian Metamorph"
-    let (board, mine, _, original) = visitBoard piker (carsA cars)
-        copyAnswer :: Prompt.Prompt r -> r
-        copyAnswer p = case p of
-          Prompt.ChooseCopyTarget {} -> Just original
-          _ -> S.identityAnswer p
-        (_, staged) = S.spellOnStack metamorph S.alice board
-        entered = S.runPure copyAnswer staged Stack.resolveTop
-        -- The original leaves, so the copy is alice's only Attraction.
-        gs = S.runPure S.identityAnswer entered (Event.changeZone (pure ()) original Zone.Exile)
-        printedMetamorph oid = fmap Face.name (Game.faceOf oid gs) == Just (CardName.MkCardName (Text.pack "Phyrexian Metamorph"))
-        copyId = Maybe.fromMaybe original (List.find printedMetamorph (Set.toList (GameState.battlefield gs)))
-    Spec.assertEqWith s "CR 707.2: the copy is a Bumper Cars" (Projection.namesOf copyId gs) (Set.singleton bumperCars)
-    Spec.assertEqWith s "CR 717.4: it is an Attraction, so alice rolls" (snd (visitWith [3] mine gs)) [6]
-    Spec.assertBool s (bobMayDecline (fst (visitWith [3] mine gs))) "CR 109.3: a 3 visits nothing, the copy's card lighting nothing"
-    let binned = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) copyId Zone.Graveyard)
-    Spec.assertEqWith s "CR 717.6: the Metamorph card goes to the graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice binned)) 1
   Spec.it s "CR 717.4 a player who controls no Attraction does not roll" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     cars <- S.printingOf s registry "Bumper Cars"
@@ -256,23 +186,6 @@ visitSpec s registry = Spec.describe s "Roll to visit" $ do
         bobs = gs {GameState.activePlayer = S.bob, GameState.priority = Just S.bob}
     Spec.assertEqWith s "alice rolls one d6 on her turn" (snd (visitWith [3] mine gs)) [6]
     Spec.assertEqWith s "bob rolls nothing on his" (snd (visitWith [3] mine bobs)) []
-  Spec.it s "CR 701.52a the roll to visit is a die roll: Pixie Guide adds a die and CR 706.6 ignores the lower" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    cars <- S.printingOf s registry "Bumper Cars"
-    guide <- S.printingOf s registry "Pixie Guide"
-    let (gs, mine, _, _) = visitBoard piker (carsA cars)
-        guarded = snd (S.addPermanent guide S.alice gs)
-    -- THE GAMEPLAY ASSERTION: 1 then 3 under the Guide keeps the 3, which is
-    -- lit; without it the 1 is the result, which is not.
-    Spec.assertBool s (not (bobMayDecline (fst (visitWith [1, 3] mine guarded)))) "CR 706.6: the 1 is ignored and the 3 visits"
-    Spec.assertBool s (bobMayDecline (fst (visitWith [1, 3] mine gs))) "CR 706.1: without the Guide the 1 stands"
-    Spec.assertEqWith s "two dice under the Guide" (snd (visitWith [1, 3] mine guarded)) [6, 6]
-  Spec.it s "CR 703.4g the turn machinery itself rolls as the precombat main phase begins" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    cars <- S.printingOf s registry "Bumper Cars"
-    let (gs, mine, _, _) = visitBoard piker (carsA cars)
-        (_, asked) = rolling [3] mine gs Engine.runStep
-    Spec.assertEqWith s "one d6" asked [6]
 
 -- CR 717.6: the junkyard.
 junkyardSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -365,33 +278,17 @@ exileEnteringAttractions src =
     }
 
 -- CR 701.51c: "whenever you open an Attraction".
-openTriggerSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+openTriggerSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 openTriggerSpec s registry = Spec.describe s "Whenever you open an Attraction" $ do
-  Spec.it s "CR 701.51c The Most Dangerous Gamer enters, opens an Attraction, and gets a counter" $ do
+  -- The paired board of data/scenarios/attraction's CR 701.51c Gamer scenarios:
+  -- the same entry, but a hand-seeded replacement exiles the Attraction instead.
+  Spec.it s "CR 701.51c a replaced entry opens nothing that triggers" $ do
     gamer <- S.printingOf s registry "The Most Dangerous Gamer"
     cars <- S.printingOf s registry "Bumper Cars"
     let (spellId, gs) = S.spellOnStack gamer S.alice (withAttractions S.alice [carsA cars] (Setup.emptyGame S.bothPlayers))
-        resolved board = S.runPure S.identityAnswer board (Stack.resolveTop >> Engine.priorityLoop)
-        opened = resolved gs
-        -- The paired board: the same entry, but the Attraction is exiled instead.
-        replaced = resolved (S.addReplacement (exileEnteringAttractions spellId) gs)
-        -- And the empty deck, which opens nothing (CR 609.3).
-        (_, bare) = S.spellOnStack gamer S.alice (Setup.emptyGame S.bothPlayers)
-    -- THE GAMEPLAY ASSERTION: opening put a +1/+1 counter on the Gamer.
-    Spec.assertEqWith s "CR 701.51c: the Gamer is a 3/3" (gamerPower opened) [Just 3]
-    Spec.assertEqWith s "CR 701.51c: a replaced entry opens nothing that triggers" (gamerPower replaced) [Just 2]
-    Spec.assertEqWith s "CR 609.3: an empty deck opens nothing" (gamerPower (resolved bare)) [Just 2]
-    Spec.assertEqWith s "Bumper Cars entered" (S.countOnBattlefieldByName bumperCars S.alice opened) 1
-    Spec.assertEqWith s "and, replaced, went to exile" (length (Game.zoneMembers Zone.Exile S.alice replaced)) 1
-  Spec.it s "CR 701.51c an opponent opening an Attraction does not trigger \"you\"" $ do
-    gamer <- S.printingOf s registry "The Most Dangerous Gamer"
-    cars <- S.printingOf s registry "Bumper Cars"
-    let (_, g1) = S.addPermanent gamer S.alice (Setup.emptyGame S.bothPlayers)
-        gs = withAttractions S.bob [carsF cars] (withAttractions S.alice [carsA cars] g1)
-        openedBy pid = S.runPure S.identityAnswer gs (Attraction.open (pure ()) pid >> Engine.priorityLoop)
-    Spec.assertEqWith s "alice opening grows her Gamer" (gamerPower (openedBy S.alice)) [Just 3]
-    Spec.assertEqWith s "bob opening does not" (gamerPower (openedBy S.bob)) [Just 2]
-    Spec.assertEqWith s "though bob's Attraction entered" (S.countOnBattlefieldByName bumperCars S.bob (openedBy S.bob)) 1
+        replaced = S.runPure S.identityAnswer (S.addReplacement (exileEnteringAttractions spellId) gs) (Stack.resolveTop >> Engine.priorityLoop)
+    Spec.assertEqWith s "CR 701.51c: the Gamer is still a 2/2" (gamerPower replaced) [Just 2]
+    Spec.assertEqWith s "and Bumper Cars went to exile" (length (Game.zoneMembers Zone.Exile S.alice replaced)) 1
 
 luck :: CounterKind.CounterKind Keyword.Keyword
 luck = CounterKind.Named (CounterName.UnsafeMkCounterName (Text.pack "luck"))

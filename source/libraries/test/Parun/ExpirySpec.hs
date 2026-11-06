@@ -1979,8 +1979,9 @@ spec s registry = Spec.describe s "Parun.Engine.Expiry" $ do
   lingeringSpec s registry
 
 -- CR 116.2c's duration, which no sweep of this module ends: the unit-level half
--- of Parun.AuraSpec's Gliding Licid pair. The offer that DOES end it is
--- Parun.Engine.EndEffect's, and it is proved there at gameplay level.
+-- of the Gliding Licid pair, Parun.AuraSpec's and data/scenarios/aura's. The
+-- offer that DOES end it is Parun.Engine.EndEffect's, and it is proved there at
+-- gameplay level.
 --
 -- The cost {U} is arbitrary here and is asserted to travel unchanged, since the
 -- price is what the offer later quotes. What arming DOES decide is the seat: CR

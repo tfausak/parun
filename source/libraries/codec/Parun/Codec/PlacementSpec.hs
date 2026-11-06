@@ -1,6 +1,7 @@
 module Parun.Codec.PlacementSpec where
 
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Codec.Placement as Placement
 import qualified Parun.JsonCodec.Common as Common
@@ -33,9 +34,10 @@ spec s = Spec.describe s "Parun.Codec.Placement" $ do
           Placement.Type.commander = True,
           Placement.Type.face = Just (CardName.Type.MkCardName (Text.pack "Nightfall Predator")),
           Placement.Type.faceDown = Just FaceDownReason.Type.Manifested,
-          Placement.Type.protector = Just (Label.Type.MkLabel (Text.pack "carol"))
+          Placement.Type.protector = Just (Label.Type.MkLabel (Text.pack "carol")),
+          Placement.Type.lights = Set.fromList [2, 3, 6]
         }
-      " {\"card\":\"Goblin Piker\",\"label\":\"piker\",\"tapped\":true,\"ready\":true,\"damage\":1,\"counters\":[{\"key\":{\"type\":\"PlusOnePlusOne\"},\"value\":2}],\"token\":true,\"controller\":\"bob\",\"attached\":\"bear\",\"commander\":true,\"face\":\"Nightfall Predator\",\"faceDown\":\"Manifested\",\"protector\":\"carol\"} "
+      " {\"card\":\"Goblin Piker\",\"label\":\"piker\",\"tapped\":true,\"ready\":true,\"damage\":1,\"counters\":[{\"key\":{\"type\":\"PlusOnePlusOne\"},\"value\":2}],\"token\":true,\"controller\":\"bob\",\"attached\":\"bear\",\"commander\":true,\"face\":\"Nightfall Predator\",\"faceDown\":\"Manifested\",\"protector\":\"carol\",\"lights\":[2,3,6]} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s Placement.codec
 
@@ -54,5 +56,6 @@ plain name =
       Placement.Type.commander = False,
       Placement.Type.face = Nothing,
       Placement.Type.faceDown = Nothing,
-      Placement.Type.protector = Nothing
+      Placement.Type.protector = Nothing,
+      Placement.Type.lights = Set.empty
     }

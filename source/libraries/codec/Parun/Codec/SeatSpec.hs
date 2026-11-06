@@ -3,6 +3,7 @@ module Parun.Codec.SeatSpec where
 import qualified Data.Either as Either
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Codec.Seat as Seat
 import qualified Parun.JsonCodec.Codec as Codec
@@ -17,6 +18,7 @@ import qualified Parun.Types.Placement as Placement.Type
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind.Type
 import qualified Parun.Types.Readiness as Readiness.Type
 import qualified Parun.Types.Seat as Seat.Type
+import qualified Parun.Types.SideDeck as SideDeck.Type
 import qualified Parun.Types.TapState as TapState.Type
 import qualified Parun.Types.TeamId as TeamId.Type
 
@@ -42,9 +44,10 @@ spec s = Spec.describe s "Parun.Codec.Seat" $ do
           Seat.Type.library = Seq.singleton (card "Island"),
           Seat.Type.exile = Seq.singleton (card "Bad Moon"),
           Seat.Type.command = Seq.singleton (card "Shimatsu the Bloodcloaked"),
-          Seat.Type.ante = Seq.singleton (card "Contract from Below")
+          Seat.Type.ante = Seq.singleton (card "Contract from Below"),
+          Seat.Type.sideDecks = Map.fromList [(SideDeck.Type.Attraction, Seq.singleton (card "Bumper Cars")), (SideDeck.Type.Scheme, Seq.fromList [card "Look Skyward and Despair", card "All in Good Time"])]
         }
-      " {\"name\":\"alice\",\"life\":7,\"counters\":[{\"key\":\"Energy\",\"value\":3}],\"team\":1,\"range\":2,\"emperor\":true,\"graveyardOrder\":\"Matters\",\"manaPool\":\"RC\",\"battlefield\":[{\"card\":\"Mountain\"}],\"hand\":[{\"card\":\"Lightning Bolt\"}],\"graveyard\":[{\"card\":\"Goblin Piker\"}],\"library\":[{\"card\":\"Island\"}],\"exile\":[{\"card\":\"Bad Moon\"}],\"command\":[{\"card\":\"Shimatsu the Bloodcloaked\"}],\"ante\":[{\"card\":\"Contract from Below\"}]} "
+      " {\"name\":\"alice\",\"life\":7,\"counters\":[{\"key\":\"Energy\",\"value\":3}],\"team\":1,\"range\":2,\"emperor\":true,\"graveyardOrder\":\"Matters\",\"manaPool\":\"RC\",\"battlefield\":[{\"card\":\"Mountain\"}],\"hand\":[{\"card\":\"Lightning Bolt\"}],\"graveyard\":[{\"card\":\"Goblin Piker\"}],\"library\":[{\"card\":\"Island\"}],\"exile\":[{\"card\":\"Bad Moon\"}],\"command\":[{\"card\":\"Shimatsu the Bloodcloaked\"}],\"ante\":[{\"card\":\"Contract from Below\"}],\"sideDecks\":[{\"key\":\"Attraction\",\"value\":[{\"card\":\"Bumper Cars\"}]},{\"key\":\"Scheme\",\"value\":[{\"card\":\"Look Skyward and Despair\"},{\"card\":\"All in Good Time\"}]}]} "
   Spec.it s "an unknown mana symbol is refused" $
     Spec.assertBool
       s
@@ -70,7 +73,8 @@ empty name =
       Seat.Type.library = Seq.empty,
       Seat.Type.exile = Seq.empty,
       Seat.Type.command = Seq.empty,
-      Seat.Type.ante = Seq.empty
+      Seat.Type.ante = Seq.empty,
+      Seat.Type.sideDecks = Map.empty
     }
 
 card :: String -> Placement.Type.Placement
@@ -88,5 +92,6 @@ card name =
       Placement.Type.commander = False,
       Placement.Type.face = Nothing,
       Placement.Type.faceDown = Nothing,
-      Placement.Type.protector = Nothing
+      Placement.Type.protector = Nothing,
+      Placement.Type.lights = Set.empty
     }

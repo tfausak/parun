@@ -1,6 +1,7 @@
 module Parun.Types.Placement where
 
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 import Numeric.Natural (Natural)
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CounterKind as CounterKind
@@ -32,6 +33,8 @@ data Placement = MkPlacement
     -- | CR 708.2a: face down, by the rules that allowed it (CR 708.6).
     faceDown :: Maybe FaceDownReason.FaceDownReason,
     -- | CR 310.9: the seat protecting it, a battle.
-    protector :: Maybe Label.Label
+    protector :: Maybe Label.Label,
+    -- | CR 717.1: the numbers lit up on its printing, an Attraction's.
+    lights :: Set.Set Natural
   }
   deriving (Eq, Ord, Show)

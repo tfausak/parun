@@ -1,0 +1,262 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Goblin Piker",
+            "label": "bystander"
+          },
+          {
+            "card": "War Mammoth",
+            "label": "mammoth"
+          },
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Swamp",
+            "label": "s1"
+          },
+          {
+            "card": "Swamp",
+            "label": "s2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Nyxborn Rollicker",
+            "label": "rollicker"
+          },
+          {
+            "card": "Doom Blade",
+            "label": "blade"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 702.103f: when its host dies the bestowed Aura stays, unattached, and is a 1/1 Satyr creature again",
+  "note": "CR 702.103f, \"an exception to rule 704.5m\": the bestowed Aura is not buried with its host; it becomes unattached, ceases to be bestowed, and is a creature again. The zone alone would not discriminate: an engine that never ended CR 702.103b's effect leaves an Enchantment Aura with no power or toughness, which CR 704.5f does not bury either, so the card types and P/T are read as well. alice Doom Blades the enchanted Mammoth.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "cost": [
+            {
+              "type": "Generic",
+              "value": 1
+            },
+            {
+              "type": "OfType",
+              "value": {
+                "type": "Colored",
+                "value": "Red"
+              }
+            }
+          ],
+          "mana": [
+            "$m1",
+            "$m2",
+            null
+          ],
+          "object": "$rollicker",
+          "targets": [
+            "$mammoth"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "$mammoth",
+          "power": 4,
+          "toughness": 4
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Types": {
+          "object": "Nyxborn Rollicker",
+          "types": [
+            "Enchantment"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "$mammoth",
+          "object": "Nyxborn Rollicker",
+          "of": "AttachedTo"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$s1",
+            "$s2"
+          ],
+          "object": "$blade",
+          "targets": [
+            "$mammoth"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "War Mammoth",
+          "count": 1,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "Nyxborn Rollicker",
+          "power": 1,
+          "toughness": 1
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Types": {
+          "object": "Nyxborn Rollicker",
+          "types": [
+            "Creature",
+            "Enchantment"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Subtypes": {
+          "object": "Nyxborn Rollicker",
+          "subtypes": [
+            "Satyr"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": null,
+          "object": "Nyxborn Rollicker",
+          "of": "AttachedTo"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Nyxborn Rollicker",
+          "count": 0,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "$bystander",
+          "power": 2,
+          "toughness": 1
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

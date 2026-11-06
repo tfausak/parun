@@ -11,7 +11,6 @@ import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
-import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Engine.Binding as Binding
@@ -56,7 +55,6 @@ import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Quantity as Quantity.Type
 import qualified Parun.Types.Recipient as Recipient
-import qualified Parun.Types.Sickness as Sickness
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.TargetSlot as TargetSlot
@@ -534,34 +532,18 @@ trainingSpec s _ =
 -- keyword arrives here through the card's own Create -- codec-parsed card data,
 -- never a hand-built face -- and the Falcon beside it is the control, a creature
 -- of the same size and controller with no decayed.
---
--- bob defends with NOTHING, deliberately: a blocked 2/2 token would die to CR
--- 704.5g whether or not rule 702.147a did anything, so the sacrifice assertion
--- would pass for the wrong reason.
-decayedSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+decayedSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 decayedSpec s registry =
   let settleFor gs = snd (Engine.runGamePure S.identityAnswer gs Engine.settleForPriority)
       resolveAll gs = snd (Engine.runGamePure S.identityAnswer gs Engine.priorityLoop)
-      -- CR 302.6: the token is minted this turn and so is summoning sick, and
-      -- nothing in the pool gives a decayed token haste -- so this is the state a
-      -- turn later would reach, and the one fixture step below that is not the
-      -- card's own doing.
-      settled oid gs =
-        gs {GameState.objects = Map.adjust (\o -> o {Object.sickness = Sickness.Settled S.alice}) oid (GameState.objects gs)}
       -- alice's Falcon Abomination, entered and its trigger resolved, with the
-      -- Zombie token settled beside it.
+      -- Zombie token beside it.
       board = do
         falcon <- S.printingOf s registry "Falcon Abomination"
         let (gs0, _, _) = S.combatBoardOf [] []
             (bird, gs1) = S.entersWithTrigger falcon S.alice gs0
             made = resolveAll (settleFor gs1)
         pure (bird, made, S.tokensOf made)
-      noAttacks :: Prompt.Prompt r -> r
-      noAttacks p = case p of
-        Prompt.DeclareAttackers {} -> []
-        _ -> S.aggressiveAnswer p
-      atBlockers = S.runToStep (Phase.Combat CombatStep.DeclareBlockers)
-      atMain = S.runToStep Phase.PostcombatMain
    in Spec.describe s "Decayed (CR 702.147)" $ do
         -- CR 509.1b through rule 702.147a's static half, unleash's carrier with
         -- no gate. The Falcon is on the same board with the same controller, so a
@@ -574,44 +556,6 @@ decayedSpec s registry =
               Spec.assertBool s (not (Combat.canBlock S.alice zombie made)) "so it cannot block"
               Spec.assertBool s (Combat.canBlock S.alice bird made) "while the Falcon that made it can"
               Spec.assertEqWith s "and only the Falcon is offered" (Combat.legalBlockers S.alice made) [bird]
-            other -> Spec.assertFailure s ("expected exactly one token, got " <> show (length other))
-        -- CR 508.3a's declaration puts the minted trigger on the stack, and its
-        -- resolution arms rule 702's own delayed ability -- the only armed entry
-        -- on the board, since no card here declares one.
-        Spec.it s "CR 702.147a attacking arms one delayed ability" $ do
-          (_, made, tokens) <- board
-          case tokens of
-            [zombie] -> do
-              let after = atBlockers S.aggressiveAnswer (settled zombie made)
-              Spec.assertBool s (elem zombie (S.attackerDeclarationsOf after)) "the token really attacked"
-              Spec.assertEqWith s "one delayed ability waiting" (Seq.length (GameState.delayedTriggers after)) 1
-              Spec.assertBool s (S.onBattlefield zombie after) "and it is still there at declare blockers"
-            other -> Spec.assertFailure s ("expected exactly one token, got " <> show (length other))
-        -- CR 511.2: an ability that triggers "at end of combat" triggers as the
-        -- end of combat step begins. The Falcon attacked too and survives, so
-        -- "everything alice attacked with died" cannot pass this.
-        Spec.it s "CR 511.2 the delayed ability sacrifices it at end of combat" $ do
-          (bird, made, tokens) <- board
-          case tokens of
-            [zombie] -> do
-              let after = atMain S.aggressiveAnswer (settled zombie made)
-              Spec.assertBool s (not (S.onBattlefield zombie after)) "the token is gone"
-              Spec.assertBool s (S.onBattlefield bird after) "while the Falcon that attacked beside it is still there"
-              Spec.assertEqWith s "and the delayed ability is spent" (Seq.length (GameState.delayedTriggers after)) 0
-            other -> Spec.assertFailure s ("expected exactly one token, got " <> show (length other))
-        -- THE PAIR THAT MAKES THE TRIGGER REAL. Same board, same fixture, and
-        -- only the declaration different: rule 702.147a sacrifices a creature
-        -- that ATTACKED, so a decayed creature held back survives its own end of
-        -- combat. CR 508.8 skips the declare blockers and combat damage steps on
-        -- this run, which the end of combat step is not among.
-        Spec.it s "CR 702.147a a decayed creature that did not attack is not sacrificed" $ do
-          (_, made, tokens) <- board
-          case tokens of
-            [zombie] -> do
-              let after = atMain noAttacks (settled zombie made)
-              Spec.assertEqWith s "nothing was declared" (S.attackerDeclarationsOf after) []
-              Spec.assertEqWith s "so nothing was armed" (Seq.length (GameState.delayedTriggers after)) 0
-              Spec.assertBool s (S.onBattlefield zombie after) "and the token is still there"
             other -> Spec.assertFailure s ("expected exactly one token, got " <> show (length other))
 
 -- CR 603.2's "that player" reaching a TARGET SLOT rather than an effect's
@@ -797,21 +741,7 @@ larcenySpec s registry =
 -- force, never one the interpreter asked for.
 provokeSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 provokeSpec s registry =
-  let board mine theirs = do
-        ours <- mapM (S.printingOf s registry) mine
-        yours <- mapM (S.printingOf s registry) theirs
-        pure (S.combatBoardOf ours yours)
-      -- Exercise or decline rule 702.39a's "may", aim its target, and never
-      -- block voluntarily. S.aggressiveAnswer would block with everything and
-      -- Script.declining would decline the "may", so a case about either has to
-      -- say both itself.
-      plan :: OptionalDecision.OptionalDecision -> ObjectId.ObjectId -> Prompt.Prompt r -> r
-      plan may target p = case p of
-        Prompt.ChooseOptional {} -> may
-        Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToCreature target))) sets
-        Prompt.DeclareBlockers {} -> Map.empty
-        _ -> S.aggressiveAnswer p
-      atBlockers :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> GameState.GameState
+  let atBlockers :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> GameState.GameState
       atBlockers = S.runToStep (Phase.Combat CombatStep.DeclareBlockers)
    in Spec.describe s "Provoke" $ do
         -- CR 508.5 at THREE seats, where "defending player" and "an opponent"
@@ -840,21 +770,6 @@ provokeSpec s registry =
                 (Set.notMember (Recipient.ToCreature bobs) (Target.legalRecipients StackObjectKind.Spell (Just S.alice) attacker slot after))
                 "bob is an opponent but not the defender"
             _ -> Spec.assertFailure s "fixture should give each seat one creature"
-        -- CR 500.5a: "this combat" ends with the combat PHASE, so the stored
-        -- requirement is swept before the postcombat main phase. Read off the
-        -- store rather than through a block, there being no second declare
-        -- blockers step in one combat phase to observe it in.
-        Spec.it s "CR 500.5a the stored requirement lasts exactly the combat phase" $ do
-          (gs0, _, theirs) <- board ["Goblin Grappler"] ["Goblin Piker"]
-          case theirs of
-            [piker] -> do
-              let atBlock = atBlockers (plan OptionalDecision.Exercises piker) gs0
-                  -- S.runToStep stops as soon as combat is left, so naming the
-                  -- postcombat main phase runs the rest of the combat phase.
-                  afterCombat = S.runToStep Phase.PostcombatMain (plan OptionalDecision.Exercises piker) atBlock
-              Spec.assertEqWith s "stored while the ability has resolved" (length (GameState.blockRequirements atBlock)) 1
-              Spec.assertEqWith s "and gone once the phase ends" (GameState.blockRequirements afterCombat) []
-            _ -> Spec.assertFailure s "fixture should give bob a Piker"
         -- CR 702.39b's instances, asserted of the MINT as mentor's are, and with
         -- them the slot the gameplay cases can only see through its effects: CR
         -- 508.3a's condition, and rule 702.39a's one printed narrowing.
@@ -944,25 +859,6 @@ evolveSpec s registry =
           (raptorId, after) <- evolvesAgainst raptor "Llanowar Augur"
           Spec.assertEqWith s "one counter" (countersOn raptorId after) (Map.singleton CounterKind.PlusOnePlusOne 1)
           Spec.assertEqWith s "so it is a 1/2" (S.powerToughnessOf raptorId after) (Just (1, 2))
-        -- "GREATER" is strict on both axes: a 0/1 entering ties the Raptor twice
-        -- and evolves nothing. The falsifier for a comparison written as "at
-        -- least".
-        Spec.it s "CR 702.100a a 0/1 entering ties both axes and evolves nothing" $ do
-          raptor <- S.printingOf s registry "Cloudfin Raptor"
-          (raptorId, after) <- evolvesAgainst raptor "Birds of Paradise"
-          Spec.assertEqWith s "no counters" (countersOn raptorId after) Map.empty
-          Spec.assertEqWith s "it is its printed 0/1" (S.powerToughnessOf raptorId after) (Just (0, 1))
-        -- "A creature YOU CONTROL": the same Piker that evolves the Raptor from
-        -- alice's side does nothing from bob's, and nothing reaches the stack --
-        -- CR 603.4 says an ability whose "if" is false does not trigger, but here
-        -- it is the CONDITION that rejects the event.
-        Spec.it s "CR 702.100a an opponent's creature entering is not a trigger at all" $ do
-          raptor <- S.printingOf s registry "Cloudfin Raptor"
-          piker <- S.printingOf s registry "Goblin Piker"
-          let (raptorId, _, gs) = board raptor piker S.bob
-              settled = settle gs
-          Spec.assertEqWith s "nothing on the stack" (GameState.stack settled) []
-          Spec.assertEqWith s "and no counters" (countersOn raptorId (resolveAll settled)) Map.empty
         -- CR 608.2a, the case that makes rule 702.100a's "if" an intervening one
         -- rather than part of the event: the trigger is on the stack legitimately,
         -- and a pump on the BEARER in response makes it resolve doing nothing. The
@@ -1099,63 +995,6 @@ krasisSpec s registry =
           Spec.assertEqWith s "the Raptor did evolve" (plusOnes raptor after) 1
           Spec.assertEqWith s "the Krasis did not" (plusOnes krasis after) 0
 
--- CR 702.116a's myriad: an attack trigger whose loop mints a token copy per
--- opponent OTHER than the defending player, each entering tapped and attacking
--- that opponent, and one CR 603.7 delayed ability exiling the whole batch at end
--- of combat (CR 511.2).
---
--- Wyrm's Crossing Patrol {W} Creature -- Human Soldier 1/1 is the producer: its
--- whole text is myriad, so nothing else on the card can supply the token.
---
--- THREE SEATS and CR 802's option, which S.threePlayerCombat sets: at two seats
--- the loop is empty (the only opponent IS the defending player) and at three the
--- board can tell the opponent the Patrol attacked from the one it did not. The
--- Goblin Piker beside it is the control -- another creature alice attacked bob
--- with, so "everything that attacked was exiled" cannot pass the end-of-combat
--- case.
---
--- The answerer aims every declaration at BOB. That is what makes the CR 702.116a
--- narrowing observable rather than incidental: the token's own CR 508.4 choice is
--- elided because carol is its only candidate, and a narrowing that admitted every
--- defending player would take bob instead.
-myriadSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
-myriadSpec s registry =
-  let plan :: Prompt.Prompt r -> r
-      plan p = case p of
-        Prompt.ChooseAttackTarget {} -> S.attackTo S.bob p
-        -- Rule 702.116a's per-opponent "may", taken against every opponent.
-        Prompt.ChooseLoopMembers _ _ _ offered -> Set.fromList offered
-        Prompt.DeclareBlockers {} -> Map.empty
-        _ -> S.aggressiveAnswer p
-      -- The same answerer taking only `wanted` out of the loop's members.
-      picking :: Set.Set Recipient.Recipient -> Prompt.Prompt r -> r
-      picking wanted p = case p of
-        Prompt.ChooseLoopMembers {} -> wanted
-        _ -> plan p
-      atBlockers = S.runToStep (Phase.Combat CombatStep.DeclareBlockers)
-      -- threePlayerCombat's board with dave seated too.
-      fourSeats = do
-        patrol <- S.printingOf s registry "Wyrm's Crossing Patrol"
-        piker <- S.printingOf s registry "Goblin Piker"
-        let (_, gs1) = S.addPermanent patrol S.alice S.fourPlayerGame
-            (_, gs2) = S.addPermanent piker S.alice gs1
-            gs0 =
-              gs2
-                { GameState.activePlayer = S.alice,
-                  GameState.phase = Phase.Combat CombatStep.BeginningOfCombat,
-                  GameState.remaining = S.phasesAfter (Phase.Combat CombatStep.BeginningOfCombat)
-                }
-        pure gs0
-   in Spec.describe s "Myriad (CR 702.116)" $ do
-        -- THE PAIR of the case above, picking nobody: rule 702.116a's "if one or
-        -- more tokens are created this way" then arms nothing, which the clause
-        -- counting the minted batch is what holds.
-        Spec.it s "CR 702.116a at four seats picking nobody arms no exile" $ do
-          gs0 <- fourSeats
-          let after = atBlockers (picking Set.empty) gs0
-          Spec.assertEqWith s "CR 702.116a no delayed exile is armed" (length (GameState.delayedTriggers after)) 0
-          Spec.assertEqWith s "CR 702.116a and no token was minted" (S.tokensOf after) []
-
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Parun.Engine.Trigger" $ do
   frenzySpec s registry
@@ -1164,7 +1003,6 @@ spec s registry = Spec.describe s "Parun.Engine.Trigger" $ do
   mentorsTriggerSpec s registry
   trainingSpec s registry
   decayedSpec s registry
-  myriadSpec s registry
   provokeSpec s registry
   trygonPredatorSpec s registry
   questingBeastSpec s registry
