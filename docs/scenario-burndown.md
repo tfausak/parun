@@ -133,32 +133,6 @@ spec-local helper, and the `other-*` tail, are left out: grep for them.
 
 ## Tests
 
-### `AuraSpec`
-
-- CR 109.5: the activator keeps the pay-to-end offer after Confiscate steals the animated Licid | `board:stage-a-placement-cannot-be-attached-to-o6`
-- CR 205.2a an Aura on a creature moves only to another creature | `board:object-attachedto`
-- CR 205.2a an Aura on a land moves only to another land | `board:object-attachedto`
-- CR 301.5d Vulshok Battlemaster takes every Equipment, and bob keeps control of his | `check:helper-hostOf`
-- CR 303.4d whole cards: an Aura made a creature unattaches, then is buried | `check:intermediate-state`
-- CR 303.4e whole cards: Aura Graft takes bob's Control Magic and the creature it moves onto | `check:other-Object.sickness`
-- CR 303.4j whole cards: Crown of the Ages cannot move Setessan Training onto an opponent's creature | `check:other-Object.timestamp`
-- CR 608.2h Fumble takes the Auras and Equipment that were attached to the bounced creature | `check:intermediate-state`
-- CR 613.1b/704.5m Control Magic keeps a crewed Vehicle and loses it the instant the crew wears off | `board:stage-a-placement-cannot-be-attached-to-o0`
-- CR 613.8a/613.8b a permanent already stolen from the enchanted player is not handed over again | `check:other-Combat.canAttack`
-- CR 613.8b two Confiscates enchanting each other apply in timestamp order | `board:object-attachedto`
-- CR 701.3a equipping again moves the Equipment off the first creature | `check:helper-attachedTo`
-- CR 701.3a whole card: Sovereigns of Lost Alara finds the Aura that could enchant the creature its trigger bound | `move:out-of-range-answer` `check:other-Attach.attachableWithLastKnown`
-- CR 701.3b with only its own host available the Aura does not move and is not restamped | `check:helper-attachedTo` `check:other-Object.timestamp`
-- CR 701.3c attaching to a different creature restamps; re-attaching to the same one does not | `check:other-Object.timestamp`
-- CR 701.3c moving an Aura to a different creature restamps it | `check:helper-attachedTo` `check:other-Object.timestamp`
-- CR 702.103f: when its host dies the bestowed Aura stays, unattached, and is a 1/1 Satyr creature again | `board:stage-a-placement-cannot-be-attached-to-o5`
-- CR 702.5a whole card: Cloudform becomes an Aura with a granted enchant ability and attaches to what it manifests | `check:other-Card.foldEnchant` `check:other-Projection.enchantOf` `check:other-TargetSlot.required`
-- CR 702.5c: a copied trigger's second granted enchant still admits the returned creature | `check:abilities`
-- CR 702.5d whole card: Curse of Death's Hold enters attached to the player it targeted and shrinks that player's creatures | `check:intermediate-state`
-- CR 702.6a equipping attaches the Equipment to the target creature | `check:helper-attachedTo`
-- CR 704.5m: Cloudform is buried with the creature its granted enchant ability let it hold | `board:stage-a-placement-cannot-be-attached-to-o8`
-- with no permanent it can enchant the Aura does not move, and alice still gains it | `check:other-Object.timestamp`
-
 ### `BoardEffectSpec`
 
 - CR 109.2 Corrosive Gale deals X to each creature with flying, and none to the one without | `check:intermediate-state`
