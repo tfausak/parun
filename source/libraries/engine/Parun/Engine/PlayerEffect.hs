@@ -2252,7 +2252,7 @@ opensZoneOf pid zone oid inZone gs =
 
 -- CR 601.3: may `pid` cast `oid` from this zone because an EFFECT says so?
 --
--- The typed question Parun.Engine.Cast.castableZones asks beside the
+-- The typed question Parun.Engine.Cast.permittedFrom asks beside the
 -- object-scoped Parun.Types.CastingPermission.CastFromGraveyard it already read,
 -- so that module never sees a PlayerEffect constructor and neither permission is
 -- expressed in terms of the other. One card carrying flashback and one player
@@ -2544,8 +2544,10 @@ mayPlayByMayhem pid oid gs = case Game.lookupObject oid gs of
   Just obj ->
     Object.zone obj == Zone.Graveyard
       && Object.owner obj == pid
-      && Keyword.hasCostlessMayhem (Map.keysSet (Projection.keywordsOf oid gs))
+      -- The turn's log before the projection, which gathers the whole board
+      -- for every card in the graveyard (#4698).
       && Game.discardedThisTurnBy pid oid gs
+      && Keyword.hasCostlessMayhem (Map.keysSet (Projection.keywordsOf oid gs))
 
 -- CR 601.3 / 305.1: may `pid` play `oid` out of their own graveyard under a
 -- permission the card has there (CastingPermission.PlayFromGraveyard, Kethis,
@@ -2689,7 +2691,7 @@ mayCastFromHandWithoutPayingManaCost pid oid gs =
 -- The PLAY-side sibling of mayCastFrom above, and read at a different gate for
 -- the reason CR 305.1 gives: playing a land is a special action that never uses
 -- the stack, so Parun.Engine.Action.playableLands asks this where
--- Parun.Engine.Cast.castableZones asks that one. Neither permission implies the
+-- Parun.Engine.Cast.permittedFrom asks that one. Neither permission implies the
 -- other, and Yawgmoth's Will declares both arms because its sentence says both.
 --
 -- A LIST of (zone, owner) piles rather than a Bool about one, which is the shape

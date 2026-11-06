@@ -3470,7 +3470,13 @@ stickerGathered gs =
         -- CR 123.9.
         Just StickerContent.Art -> []
         Nothing -> []
-   in [part | (oid, obj) <- Map.toList (GameState.objects gs), placement <- Foldable.toList (Object.stickers obj), part <- parts oid placement]
+      -- A fold rather than Map.toList, so an object with no sticker -- nearly
+      -- every one, walked on every projection -- allocates nothing (#4698).
+      stickered oid obj rest =
+        if Seq.null (Object.stickers obj)
+          then rest
+          else [part | placement <- Foldable.toList (Object.stickers obj), part <- parts oid placement] <> rest
+   in Map.foldrWithKey stickered [] (GameState.objects gs)
 
 -- CR 123.7 / 613.1f: an ability sticker's abilities as layer-6 grants, one per
 -- keyword instance and one per other ability, none of them read.
