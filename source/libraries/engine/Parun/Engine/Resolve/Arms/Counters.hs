@@ -1275,19 +1275,19 @@ firebend applyEffectWith runSubgame resolving source controller legal chosen add
   applyEffectWith runSubgame resolving source controller legal chosen (Effect.AddMana addition)
   State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Firebend controller)))
 
--- CR 701.47a: the resolving controller amasses; the keyword action is
--- Parun.Engine.Amass.amass's, and this arm evaluates only the printed N.
+-- CR 701.47a / 701.71a: the resolving controller amasses or empowers Jace; the
+-- keyword action is Parun.Engine.Amass.amass's, and this arm evaluates only the printed N.
 --
 -- Targetless: no CR 608.2b legality to re-check.
 amass :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Amass.Type.Amass -> Game ()
-amass settle resolving source controller legal (Amass.Type.MkAmass quantity subtype mSlot) = do
+amass settle resolving source controller legal (Amass.Type.MkAmass quantity kind mSlot) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
   case Quantity.evaluateFor viewOf context gs resolving source quantity of
     Nothing -> pure () -- unevaluable quantity: no-op (the powerOf posture)
     Just n -> do
-      chose <- Amass.amass settle controller source resolving subtype (Integer.toNaturalSaturating n)
+      chose <- Amass.amass settle controller source resolving kind (Integer.toNaturalSaturating n)
       -- CR 701.47c: "the amassed Army" is the creature chosen, whether or not it
       -- received counters -- so this is bound off the choice and not off the
       -- counters, and an amass whose pool was empty (CR 701.47b) binds nothing.

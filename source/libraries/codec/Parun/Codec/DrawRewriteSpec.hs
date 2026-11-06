@@ -1,6 +1,7 @@
 module Parun.Codec.DrawRewriteSpec where
 
 import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Codec.DrawRewrite as DrawRewrite
 import qualified Parun.JsonCodec.Common as Common
@@ -33,7 +34,9 @@ spec s = Spec.describe s "Parun.Codec.DrawRewrite" $ do
               FromOutsideTheGame.upTo = False,
               FromOutsideTheGame.destination = OutsideDestination.Hand,
               FromOutsideTheGame.filter = Filter.And [],
-              FromOutsideTheGame.reveal = False
+              FromOutsideTheGame.reveal = False,
+              FromOutsideTheGame.differentIn = Set.empty,
+              FromOutsideTheGame.pick = Nothing
             }
       )
       " {\"type\":\"FromOutsideTheGame\",\"value\":{\"count\":1,\"destination\":\"Hand\",\"filter\":{\"type\":\"And\",\"value\":[]},\"reveal\":false,\"upTo\":false}} "

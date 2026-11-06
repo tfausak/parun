@@ -2358,8 +2358,9 @@ replacementEffectRiders replacement = case replacement of
   ReplacementEffect.PlaneswalkR {} -> []
   ReplacementEffect.PhaseR _ -> []
 
--- CR 111.1's token a replacement MINTS: TokenR's appended token (Queen Allenal
--- of Ruadach's Soldier), the one arm embedding a whole Card. The axis
+-- CR 111.1's token a replacement MINTS: TokenR's added token (Queen Allenal of
+-- Ruadach's Soldier, Draconic Visitor's Dragon), the one arm embedding a whole
+-- Card. The axis
 -- effectMintedFaces walks for a Create, one carrier over.
 --
 -- Exhaustive rather than a wildcard, this file's discipline for a sum: a second
@@ -2999,7 +3000,7 @@ effectMintedFaces effect = case effect of
   Effect.FromOutsideTheGame _ -> []
   Effect.ExileThisSpell -> []
   Effect.Bolster _ -> []
-  -- The Army token is Parun.Engine.Amass.armyToken's, minted from the rulebook
+  -- The Army and Jace tokens are Parun.Engine.Amass's, minted from the rulebook
   -- rather than embedded in card data, so this arm mints no face of the card's own.
   Effect.Amass _ -> []
   Effect.Blight _ -> []
@@ -5112,6 +5113,7 @@ entryRewriteFilters entryRewrite = case entryRewrite of
   EntryRewrite.Tribute _ -> []
   EntryRewrite.Compleated _ -> []
   EntryRewrite.Tapped -> []
+  EntryRewrite.Prepared -> []
   EntryRewrite.OrTapped (EntryPrice.PayLife _) -> []
   EntryRewrite.EntersTransformed -> []
   -- ALL THREE fields: the permanents the sacrifice may take, CR 122.1b's kind

@@ -65,6 +65,7 @@ import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerActed as PlayerActed
+import qualified Parun.Types.PlayerAction as PlayerAction
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.PrintingId as PrintingId
@@ -414,7 +415,7 @@ records :: HistoryRead.HistoryRead -> GameEvent -> Bool
 records reading event = case reading of
   HistoryRead.Activations -> False
   HistoryRead.Attacks -> attackerDeclared event
-  HistoryRead.Bendings -> bent event
+  HistoryRead.Acts acts -> actedAmong acts event
   HistoryRead.Blockers -> blocked event
   HistoryRead.Blocks -> Maybe.isJust (Game.blockedAttacker event)
   HistoryRead.Casts -> Maybe.isJust (Game.castOf event)
@@ -466,9 +467,9 @@ dealtDamage event = case event of
   GameEvent.DamageDealt {} -> True
   _ -> False
 
-bent :: GameEvent -> Bool
-bent event = case event of
-  GameEvent.PlayerActed acted -> Set.member (PlayerActed.action acted) Game.bendingActions
+actedAmong :: Set.Set PlayerAction.PlayerAction -> GameEvent -> Bool
+actedAmong acts event = case event of
+  GameEvent.PlayerActed acted -> Set.member (PlayerActed.action acted) acts
   _ -> False
 
 milled :: GameEvent -> Bool

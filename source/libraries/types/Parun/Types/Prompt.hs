@@ -299,8 +299,8 @@ data Prompt r where
   -- | CR 701.39a: which of the creatures tied for least toughness is
   -- bolstered; the ObjectId is the resolving object.
   ChooseBolster :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
-  -- | CR 701.47a: which Army gets the amass counters, read after the rule's
-  -- token is created; not raised for zero (CR 701.47b).
+  -- | CR 701.47a / 701.71a: which Army or Jace token gets the counters, read
+  -- after the rule's token is created; not raised for zero (CR 701.47b).
   ChooseAmass :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
   -- | CR 701.68a: which creature is blighted, the candidates unnarrowed; not
   -- raised for zero (CR 101.3, CR 701.68b).
@@ -407,7 +407,8 @@ data Prompt r where
   -- rather than a printing because which zone it leaves decides what triggers
   -- (CR 729.4a). Two copies of one printing are one offer, which the answer may
   -- name once per copy. Also a search's find outside the game (CR 701.23j),
-  -- asked after its find in the zones.
+  -- asked after its find in the zones, and the opponent's pick among revealed
+  -- cards (Parun.Types.OutsidePick), asked of that opponent.
   ChooseFromOutsideTheGame :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty OutsideCard.OutsideCard -> Natural.Natural -> Natural.Natural -> Prompt [OutsideCard.OutsideCard]
   -- | CR 309.5a \/ 701.49b: which arrow out of the current room a venturing
   -- player follows; the ObjectId is the dungeon card.

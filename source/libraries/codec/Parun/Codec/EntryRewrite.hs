@@ -56,6 +56,7 @@ codec abilityCodec effectCodec =
       Arm.payload "Amplify" Common.natural EntryRewrite.Amplify (\x -> case x of EntryRewrite.Amplify y -> Just y; _ -> Nothing),
       Arm.payload "Compleated" Common.natural EntryRewrite.Compleated (\x -> case x of EntryRewrite.Compleated y -> Just y; _ -> Nothing),
       Arm.nullary "Tapped" EntryRewrite.Tapped,
+      Arm.nullary "Prepared" EntryRewrite.Prepared,
       Arm.nullary "EntersTransformed" EntryRewrite.EntersTransformed,
       Arm.payload "OrTapped" EntryPrice.codec EntryRewrite.OrTapped (\x -> case x of EntryRewrite.OrTapped y -> Just y; _ -> Nothing),
       Arm.payload "SacrificeAnyNumber" SacrificeAnyNumber.codec EntryRewrite.SacrificeAnyNumber (\x -> case x of EntryRewrite.SacrificeAnyNumber y -> Just y; _ -> Nothing),
@@ -87,6 +88,7 @@ tagOf x = case x of
   EntryRewrite.Amplify {} -> "Amplify"
   EntryRewrite.Compleated {} -> "Compleated"
   EntryRewrite.Tapped {} -> "Tapped"
+  EntryRewrite.Prepared {} -> "Prepared"
   EntryRewrite.EntersTransformed {} -> "EntersTransformed"
   EntryRewrite.OrTapped {} -> "OrTapped"
   EntryRewrite.SacrificeAnyNumber {} -> "SacrificeAnyNumber"

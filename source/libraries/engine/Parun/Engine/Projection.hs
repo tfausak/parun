@@ -5549,12 +5549,14 @@ toughnessOf :: ObjectId -> GameState -> Maybe Integer
 toughnessOf oid gs = PC.toughness (project oid gs)
 
 -- CR 510.1a: the amount this creature assigns as combat damage. A card can
--- substitute toughness or nothing; power remains the rules default.
+-- substitute toughness, nothing, or a negative power read as positive (CR
+-- 107.1b); power remains the rules default.
 combatDamageAmountOf :: ObjectId -> GameState -> Maybe Integer
 combatDamageAmountOf oid gs =
   let pc = project oid gs
    in case PC.combatDamageAmount pc of
         Nothing -> PC.power pc
+        Just CombatDamageAmount.PowerAsPositive -> fmap abs (PC.power pc)
         Just CombatDamageAmount.EqualToToughness -> PC.toughness pc
         Just CombatDamageAmount.NoCombatDamage -> Just 0
 

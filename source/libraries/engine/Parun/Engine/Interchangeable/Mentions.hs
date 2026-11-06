@@ -807,7 +807,7 @@ alternativeCostNames asking x = case x of
 
 amassNames :: (Monoid r) => Asking r -> Amass.Amass -> r
 amassNames asking x = case x of
-  Amass.MkAmass quantity _subtype slot -> quantityNames asking quantity <> foldMap (slotNames asking) slot
+  Amass.MkAmass quantity _kind slot -> quantityNames asking quantity <> foldMap (slotNames asking) slot
 
 anyNumberDiscardNames :: (Monoid r) => Asking r -> AnyNumberDiscard.AnyNumberDiscard -> r
 anyNumberDiscardNames asking x = case x of
@@ -1753,6 +1753,7 @@ entryRewriteNames asking onAbility onEffect x = case x of
   EntryRewrite.Tribute _natural -> mempty
   EntryRewrite.Compleated _natural -> mempty
   EntryRewrite.Tapped -> mempty
+  EntryRewrite.Prepared -> mempty
   EntryRewrite.OrTapped entryPrice -> entryPriceNames asking entryPrice
   EntryRewrite.EntersTransformed -> mempty
   EntryRewrite.RunEffects seq_ -> foldMap onEffect seq_
@@ -1891,7 +1892,7 @@ foretellCostNames asking onKeyword x = case x of
 
 fromOutsideTheGameNames :: (Monoid r) => Asking r -> FromOutsideTheGame.FromOutsideTheGame -> r
 fromOutsideTheGameNames asking x = case x of
-  FromOutsideTheGame.MkFromOutsideTheGame _count _upTo _destination filter_ _reveal -> filterNames asking filter_
+  FromOutsideTheGame.MkFromOutsideTheGame _count _upTo _destination filter_ _reveal _differentIn _pick -> filterNames asking filter_
 
 fromReferenceNames :: (Monoid r) => Asking r -> FromReference.FromReference -> r
 fromReferenceNames asking x = case x of
@@ -2761,7 +2762,7 @@ quantityNames asking x = case x of
     playerRefNames asking playerRef <> case tally of
       TurnTally.CardsDiscarded -> history asking HistoryRead.Discards
       TurnTally.CardsDrawn -> mempty
-      TurnTally.Bendings -> history asking HistoryRead.Bendings
+      TurnTally.ActionsDone acts -> history asking (HistoryRead.Acts acts)
       TurnTally.LandsPlayed -> mempty
   Quantity.LifeChanged tally -> turnHistory asking (LifeTally.turn tally) (case LifeTally.direction tally of LifeDirection.Gained -> HistoryRead.LifeGains; LifeDirection.Lost -> HistoryRead.LifeLosses) <> playerRefNames asking (LifeTally.player tally)
   Quantity.PlayersDealtDamageThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.recipient tally)
@@ -3057,6 +3058,7 @@ tokenPlusNames :: Asking r -> (card -> r) -> TokenPlus.TokenPlus card -> r
 tokenPlusNames _asking onCard x = case x of
   TokenPlus.One card -> onCard card
   TokenPlus.ThatMany card -> onCard card
+  TokenPlus.Instead card -> onCard card
 
 tokenRNames :: (Monoid r) => Asking r -> (card -> r) -> TokenR.TokenR card -> r
 tokenRNames asking onCard x = case x of

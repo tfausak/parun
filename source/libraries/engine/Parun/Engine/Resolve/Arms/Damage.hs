@@ -917,7 +917,7 @@ search settle performManaAbility runSubgame resolving source controller legal (S
                   Just candidates
                     | outsideRoom > 0 -> do
                         outsideAnswer <- Game.choose (Prompt.ChooseFromOutsideTheGame decider searcher candidates 0 outsideRoom)
-                        pure (Event.settleOutside outsideAvailable 0 outsideRoom outsideAnswer)
+                        pure (Event.settleOutside id outsideAvailable 0 outsideRoom outsideAnswer)
                   _ -> pure []
                 let room = capHere - min capHere (List.genericLength picked + List.genericLength outsidePicked)
                 -- The completion keeps every description to one card: picked
