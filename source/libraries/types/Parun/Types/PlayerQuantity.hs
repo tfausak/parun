@@ -4,7 +4,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.Quantity as Quantity
 
 -- | "These players, this many" -- the payload of every Parun.Types.Effect arm
--- whose whole instruction is a PlayerRef and a Quantity: Scry, Surveil,
+-- whose whole instruction is a PlayerRef and a Quantity: Scry,
 -- Fateseal, GainLife, SetLifeTotal and IncreaseSpeed.
 --
 -- SHARED FOR EXPEDIENCY, and not because those arms mean the same thing. The
@@ -25,7 +25,8 @@ import qualified Parun.Types.Quantity as Quantity
 -- it has its own record rather than a nullable field here. Parun.Types.Draw left
 -- the same way, over CR 121.6c's additional action, "and reveal it" (#1899),
 -- Parun.Types.LifeLoss over CR 728.1a's cause, and Parun.Types.Blight over CR
--- 701.68c's blighted creature.
+-- 701.68c's blighted creature, and Parun.Types.Surveil over CR 608.2c's bound
+-- cards.
 data PlayerQuantity = MkPlayerQuantity
   { player :: PlayerRef.PlayerRef,
     quantity :: Quantity.Quantity

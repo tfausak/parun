@@ -1,0 +1,48 @@
+{
+  "description": "CR 701.25a / 608.2c Enlightened Confidant returns a surveilled card whose mana value is at most the life gained this turn and leaves a costlier one in the graveyard",
+  "note": "Each of alice's turns its lifelink attack gains 2: turn 1's end step bins the two-mana Grizzly Bears, which comes back (equal counts), and turn 3's bins the three-mana Hill Giant, which stays.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Enlightened Confidant", "label": "confidant", "ready": true}
+        ],
+        "library": [
+          {"card": "Grizzly Bears", "label": "bears"},
+          {"card": "Island"},
+          {"card": "Hill Giant", "label": "giant"},
+          {"card": "Island"},
+          {"card": "Island"},
+          {"card": "Island"}
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {"card": "Island"},
+          {"card": "Island"},
+          {"card": "Island"},
+          {"card": "Island"},
+          {"card": "Island"}
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$confidant"]}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Life": {"player": "alice", "life": 22}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "EndStep", "player": "alice", "do": {"Answer": {"prompt": "ChooseSurveil", "with": [["$bears"], []]}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 0}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$confidant"]}},
+    {"turn": 3, "step": "CombatDamage", "player": "alice", "check": {"Life": {"player": "alice", "life": 24}}},
+    {"turn": 3, "step": "EndStep", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "EndStep", "player": "alice", "do": {"Answer": {"prompt": "ChooseSurveil", "with": [["$giant"], []]}}},
+    {"turn": 3, "step": "EndStep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 3, "step": "EndStep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 0}}}
+  ]
+}

@@ -32,8 +32,8 @@
 -- takes the prepared Aviator away and alice's next untap step brings it back
 -- (CR 702.26a), and Twincast is CR 722.3d's -- a copy of the cast Jump, re-aimed
 -- under CR 707.10c at Russet Wolves, which is the second creature only that case
--- needs. Rule 722.3d's second sentence is not observable: no card in data/cards/
--- refers to a spell cast as a prepare spell.
+-- needs. Rule 722.3d's second sentence is Codie, Ravenous Codex's "a prepared
+-- spell", asked of the Twincast copy.
 --
 -- CR 722.5's alternative name needs nothing here, for Parun.FlipSpec's CR 710.5
 -- reason: Prompt.ChooseCardName offers no candidate list.
@@ -49,6 +49,7 @@ import qualified Parun.Engine.Action as Action
 import qualified Parun.Engine.Cast as Cast
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Sba as Sba
 import qualified Parun.Engine.Setup as Setup
@@ -62,6 +63,7 @@ import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.Facing as Facing
+import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Label as Label
@@ -74,10 +76,11 @@ import qualified Parun.Types.Staged as Staged
 import qualified Parun.Types.Timed as Timed
 import qualified Parun.Types.Zone as Zone
 
-aviatorName, jumpName, cloneName :: CardName.CardName
+aviatorName, jumpName, cloneName, twincastName :: CardName.CardName
 aviatorName = CardName.MkCardName (Text.pack "Encouraging Aviator")
 jumpName = CardName.MkCardName (Text.pack "Jump")
 cloneName = CardName.MkCardName (Text.pack "Clone")
+twincastName = CardName.MkCardName (Text.pack "Twincast")
 
 -- Every cast this player is offered, by the NAME of the half being offered --
 -- Parun.AdventureSpec's read of the same menu, and the shape CR 722.3's claim is
@@ -107,6 +110,13 @@ isPrepared oid gs = maybe False (Set.member Designation.Prepared . Object.design
 jumpAt :: ObjectId.ObjectId -> Prompt.Prompt r -> r
 jumpAt victim p = case p of
   Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter (== Recipient.ToCreature victim) . snd) sets
+  _ -> S.identityAnswer p
+
+-- jumpAt for a prompt that may ask for either of several recipients: Twincast's
+-- spell target, then its copy's CR 707.10c re-aim.
+aimedAmong :: [Recipient.Recipient] -> Prompt.Prompt r -> r
+aimedAmong recipients p = case p of
+  Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter (`elem` recipients) . snd) sets
   _ -> S.identityAnswer p
 
 -- alice's Aviator and a Goblin Piker against bob, with one Island to pay the
@@ -214,6 +224,36 @@ spec s registry = Spec.describe s "Preparation" $ do
         Spec.assertBool s (Projection.hasKeyword Keyword.Flying pikerId resolved) "CR 722.3c: the cast copy gives the Piker flying"
         Spec.assertBool s (not (isPrepared aviatorId resolved)) "CR 601.2i: the Aviator is no longer prepared"
         Spec.assertEqWith s "and no copy is left in exile" (prepareCopies resolved) []
+      other -> Spec.assertFailure s ("expected exactly one copy in exile, got " <> show (length other))
+  -- CR 722.3d: "if a prepare spell is copied, the copy is also a prepare spell.
+  -- Any rule or effect that refers to a spell cast as a prepare spell refers to
+  -- the copy as well." Codie, Ravenous Codex's "a prepared spell" is that
+  -- reference, Filter.IsPreparedSpell. The copy in EXILE is the falsifier of a
+  -- reading off Source.OfCardCopy: it is the same object, not yet cast.
+  Spec.it s "CR 722.3d a Twincast copy of the cast Jump is a prepared spell too" $ do
+    built <- S.buildBoardOrFail s registry aviatorDuel
+    pikerId <- aliasOrFail s built "piker"
+    island <- S.printingOf s registry "Island"
+    twincast <- S.printingOf s registry "Twincast"
+    (_, attacked) <- S.runScriptOrFail s attackScript built S.combatGame
+    let (withTwincast, twincastId) = S.handOne twincast (S.landsFor island S.alice 2 attacked)
+        prepared = PlayerEffect.matchesObjectFrom (PlayerEffect.liveSource Nothing) Filter.IsPreparedSpell
+    case prepareCopies withTwincast of
+      [copyId] -> do
+        Spec.assertBool s (not (prepared copyId withTwincast)) "the copy in exile is not yet a prepared spell"
+        let cast = S.runPure (jumpAt pikerId) withTwincast (Cast.castSpell S.manaPerformer S.alice copyId jumpName Facing.FaceUp)
+        case GameState.stack cast of
+          [jumpId] -> do
+            Spec.assertBool s (prepared jumpId cast) "CR 722.3d: the cast Jump is a prepared spell"
+            let aimed = [Recipient.ToObject jumpId, Recipient.ToCreature pikerId]
+                twincastCast = S.runPure (aimedAmong aimed) cast (Cast.castSpell S.manaPerformer S.alice twincastId twincastName Facing.FaceUp)
+                copied = S.runPure (aimedAmong aimed) twincastCast Stack.resolveTop
+            case GameState.stack copied of
+              [twinId, original] | original == jumpId -> do
+                Spec.assertBool s (twinId /= jumpId) "Twincast put a new object on the stack"
+                Spec.assertBool s (prepared twinId copied) "CR 722.3d: the copy is a prepared spell too"
+              other -> Spec.assertFailure s ("expected the copy above the cast Jump, got " <> show other)
+          other -> Spec.assertFailure s ("expected the cast Jump alone on the stack, got " <> show other)
       other -> Spec.assertFailure s ("expected exactly one copy in exile, got " <> show (length other))
   -- CR 722.3c's residency condition, the half CR 704.5e's exception is scoped to:
   -- "this copy remains in exile for as long as the prepared permanent remains on

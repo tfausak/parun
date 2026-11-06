@@ -511,6 +511,7 @@ cloud-sprite
 cloudform
 coastal-wizard
 coat-of-arms
+codie-ravenous-codex
 coercion
 coldsteel-heart
 collective-restraint
@@ -1237,6 +1238,7 @@ gyox-brutal-carnivora
 hag-of-inner-weakness
 hakbal-of-the-surging-soul
 halana-and-alena-partners
+hall-of-echoes
 hallar-the-firefletcher
 hallowed-moonlight
 hama-the-bloodbender
@@ -1627,6 +1629,7 @@ longstalk-brawl
 longtusk-cub
 look-skyward-and-despair
 loot-exuberant-explorer
+loot-the-nexus
 loot-the-pathfinder
 lord-of-the-pit
 lorescale-coatl
@@ -2725,6 +2728,7 @@ takesies-backsies
 talas-explorer
 talent-of-the-telepath
 tameshi-reality-architect
+tam-the-possibility
 tamiyo-compleated-sage
 tamiyos-compleation
 tangled-florahedron-tangled-vale
@@ -2886,6 +2890,7 @@ tolarian-winds
 tomb-of-annihilation
 tome-anima
 tome-of-the-infinite
+tomik-orzhov-lawmage
 too-greedily-too-deep
 toralfs-disciple
 torgaar-famine-incarnate
@@ -3395,3 +3400,5 @@ time-vault
 false-orders
 ydwen-efreet
 forcefield
+chandra-chill-of-compliance
+enlightened-confidant
