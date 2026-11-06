@@ -37,6 +37,8 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Engine.Engine as Engine
+import qualified Parun.Engine.Event as Event
+import qualified Parun.Engine.Fragmented as Fragmented
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.Projection as Projection
@@ -44,6 +46,7 @@ import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.Action as Action
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.Affected as Affected
@@ -52,6 +55,8 @@ import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterLink as CounterLink
+import qualified Parun.Types.CounterLinked as CounterLinked
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.Expiry as Expiry
 import qualified Parun.Types.GameState as GameState
@@ -73,6 +78,7 @@ import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Sickness as Sickness
+import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
@@ -126,14 +132,31 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- different game choice (CR 732.1, 601.2c) and goes ahead.
     Spec.assertEqWith s "CR 732.3 only alice's repeated aim is refused" (poppetAttempts poppet bears Nothing) [(False, True), (False, False), (True, True)]
 
-  Spec.it s "a card reading counter links keeps a counter loop's states distinct" $ do
+  Spec.it s "a card reading only its own counter links leaves a counter loop detected" $ do
     poppet <- S.printingOf s registry "Grim Poppet"
     bears <- S.printingOf s registry "Grizzly Bears"
     tomb <- S.printingOf s registry "Cyclopean Tomb"
     -- The Poppet loop above, beside alice's Cyclopean Tomb: each lap files
-    -- counter links (CR 607.1) a card in the game reads, so her repeated aim
-    -- goes ahead.
-    Spec.assertEqWith s "CR 732.3 Cyclopean Tomb keeps alice's repeated aim" (poppetAttempts poppet bears (Just tomb)) [(False, True), (False, True), (True, True)]
+    -- counter links against the Poppets, and a Tomb reads only its own (CR
+    -- 607.1), so the state still recurs.
+    Spec.assertEqWith s "CR 732.3 Cyclopean Tomb leaves alice's repeated aim refused" (poppetAttempts poppet bears (Just tomb)) [(False, True), (False, False), (True, True)]
+
+  Spec.it s "a counter link is compared only where its source reads its own" $ do
+    poppet <- S.printingOf s registry "Grim Poppet"
+    tomb <- S.printingOf s registry "Cyclopean Tomb"
+    island <- S.printingOf s registry "Island"
+    -- One state with and without a link on alice's Island, its source her
+    -- Grim Poppet, her Cyclopean Tomb, or that Tomb once it has died (CR
+    -- 608.2h): only a Tomb can tell the two apart.
+    let (tombId, gs1) = S.addPermanent tomb S.alice (Setup.emptyGame S.bothPlayers)
+        (poppetId, gs2) = S.addPermanent poppet S.alice gs1
+        (islandId, gs3) = S.addPermanent island S.alice gs2
+        dead = S.runPure S.identityAnswer gs3 (Event.changeZone (pure ()) tombId Zone.Graveyard)
+        link source = CounterLink.MkCounterLink {CounterLink.source = source, CounterLink.acquisition = Acquisition.Own, CounterLink.moved = CounterLinked.PutWith CounterKind.PlusOnePlusOne}
+        recurs source gs = Fragmented.digest gs {GameState.counteredWith = Map.singleton islandId (Set.singleton (link source))} == Fragmented.digest gs
+    Spec.assertEqWith s "CR 732.3 a Grim Poppet's link is no new state" (recurs poppetId gs3) True
+    Spec.assertEqWith s "CR 732.3 a Cyclopean Tomb's link is a new state" (recurs tombId gs3) False
+    Spec.assertEqWith s "CR 732.3 a dead Cyclopean Tomb's link is a new state" (recurs tombId dead) False
 
   Spec.it s "an activation is refused as paid, not as announced" $ do
     birds <- S.printingOf s registry "Birds of Paradise"

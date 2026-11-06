@@ -23,9 +23,6 @@ data HistoryRead
     Convokes
   | -- | Vehicles crewed, and creatures crewing them (CR 702.122a).
     Crews
-  | -- | Counters put on or removed from an object, which GameState.counteredWith
-    -- files against the effect's source (CR 607.1).
-    CounterMoves
   | -- | Damage dealt (CR 120.1).
     Damage
   | -- | Permanents that died (CR 700.4).

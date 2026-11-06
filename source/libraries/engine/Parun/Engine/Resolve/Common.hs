@@ -2281,7 +2281,9 @@ linkCraftMaterials resolving entered gs =
 -- first `logged` -- one window per instruction, recordExiledWith's, and a
 -- difference over the log rather than a case over the opcode. A counter event
 -- moving none files nothing, so neither does an instruction that did nothing
--- (CR 609.3), and happenedBetween needs no copy-across.
+-- (CR 609.3), and happenedBetween needs no copy-across. A counter another
+-- source's effect moved inside the window, a mana ability paying mid-resolution
+-- (CR 605.3a), is filed against `source` too.
 recordCounteredWith :: ObjectId -> Acquisition.Acquisition -> Int -> GameState -> GameState
 recordCounteredWith source acquisition logged gs =
   let link moved = CounterLink.MkCounterLink {CounterLink.source = source, CounterLink.acquisition = acquisition, CounterLink.moved = moved}
