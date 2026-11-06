@@ -133,6 +133,11 @@ component self named c = case c of
            other <- singular named card right
          ]
   CostComponent.Blight (CostAmount.Fixed n) -> [Text.pack ("Blight " <> show n)]
+  -- A loyalty symbol, its minus a minus sign (CR 107.7, CR 606.4).
+  CostComponent.AddLoyaltyToThis 0 -> [Text.pack "[0]"]
+  CostComponent.AddLoyaltyToThis n -> [Text.pack ("[+" <> show n <> "]")]
+  CostComponent.RemoveLoyaltyFromThis (CostAmount.Fixed n) | n > 0 -> [Text.pack ("[\8722" <> show n <> "]")]
+  CostComponent.RemoveLoyaltyFromThis (CostAmount.Announced _) -> [Text.pack "[\8722X]"]
   CostComponent.ReturnThis -> [Text.pack "Return " <> self <> Text.pack " to its owner's hand"]
   CostComponent.ExileThis -> [Text.pack "Exile " <> self]
   CostComponent.ExileThisFromGraveyard -> [Text.pack "Exile " <> self <> Text.pack " from your graveyard"]

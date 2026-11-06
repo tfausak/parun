@@ -445,7 +445,6 @@ chandra-flames-fury
 chandra-flameshaper
 chandra-heart-of-fire
 chandra-nalaar
-chandra-novice-pyromancer
 chandra-pyromaster
 chandras-firemaw
 chandra-the-firebrand
@@ -1083,7 +1082,6 @@ garna-bloodfist-of-keld
 garruk-apex-predator
 garruk-caller-of-beasts
 garruk-primal-hunter
-garruk-wildspeaker
 garruks-horde
 garruks-packleader
 garth-one-eye
@@ -1434,7 +1432,6 @@ ivory-tower
 ivy-gleeful-spellthief
 ixidron
 izoni-center-of-the-web
-jace-beleren
 jace-memory-adept
 jace-the-living-guildpact
 jace-vryns-prodigy-jace-telepath-unbound
@@ -1588,7 +1585,6 @@ light-of-promise
 lightshell-duo
 lightstall-inquisitor
 lightwielder-paladin
-liliana-death-mage
 liliana-dreadhorde-general
 liliana-heretical-healer-liliana-defiant-necromancer
 liliana-of-the-dark-realms
@@ -3044,7 +3040,6 @@ visions-of-beyond
 vitalizing-cascade
 vito-thorn-of-the-dusk-rose
 vitu-ghazi-inspector
-vivien-of-the-arkbow
 vivien-reid
 viviens-invocation
 viviens-jaguar
@@ -3243,7 +3238,6 @@ death-baron
 inferno-hellion
 aether-gust
 agent-of-treachery
-ajani-inspiring-leader
 ajani-strength-of-the-pride
 ancestral-blade
 angel-of-vitality
