@@ -177,8 +177,8 @@ jaceToken =
       you = PlayerRef.Relative PlayerRelation.You
    in card {Card.faces = fmap (\face -> face {Face.loyalty = Just (Loyalty.Literal 0)}) (Card.faces card)}
 
--- CR 606.4's "[−N]:" loyalty ability over one effect, the token's printed
--- ability (CR 111.10) rather than one a keyword grants.
+-- CR 606.4's "[−N]:" loyalty ability over one effect, an ability the rule
+-- defines the token with (CR 111.3) rather than one a keyword grants.
 loyaltyAbility :: Natural -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card) -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)
 loyaltyAbility n effect =
   ActivatedAbility.MkActivatedAbility
