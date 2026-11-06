@@ -697,6 +697,13 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PlayerManifestsDread PlayerRelation.You)
       " {\"type\":\"PlayerManifestsDread\",\"value\":\"You\"} "
+  -- CR 700.17: Seven of Nine's "whenever you face a dilemma".
+  Spec.it s "PlayerFacesDilemma" $
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      (TriggerCondition.PlayerFacesDilemma PlayerRelation.You)
+      " {\"type\":\"PlayerFacesDilemma\",\"value\":\"You\"} "
   -- CR 706.2: Night Shift of the Living Dead's "whenever you roll a 6".
   Spec.it s "PlayerRollsResult" $
     Common.assertCodec

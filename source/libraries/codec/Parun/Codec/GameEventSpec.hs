@@ -53,6 +53,7 @@ import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.Drew as Drew
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Exploited as Exploited
+import qualified Parun.Types.FacedDilemma as FacedDilemma
 import qualified Parun.Types.FloatingCandidate as FloatingCandidate
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.HalfUnlocked as HalfUnlocked
@@ -588,6 +589,14 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       GameEvent.codec
       (GameEvent.ManifestedDread (ManifestedDread.MkManifestedDread (PlayerId.MkPlayerId 1) (Seq.fromList [ObjectId.MkObjectId 5])))
       " {\"type\":\"ManifestedDread\",\"value\":{\"player\":1,\"cards\":[5]}} "
+  -- CR 700.17. The chooser and the spell or ability, distinct numbers so a codec
+  -- that swapped them would not round-trip.
+  Spec.it s "FacedDilemma" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.FacedDilemma (FacedDilemma.MkFacedDilemma (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 5)))
+      " {\"type\":\"FacedDilemma\",\"value\":{\"player\":1,\"object\":5}} "
   -- CR 706.2. The roller and one die's result, distinct numbers so a codec that
   -- swapped them would not round-trip.
   Spec.it s "DieResultSettled" $
