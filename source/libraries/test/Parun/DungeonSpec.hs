@@ -751,6 +751,13 @@ spec s registry = Spec.describe s "Parun.Engine.Dungeon" $ do
     Spec.assertBool s (Set.member acererakName (namesIn Zone.Hand S.alice afterLostMine)) "having completed Lost Mine of Phandelver, Acererak still returns to hand"
     Spec.assertBool s (Set.member acererakName (namesIn Zone.Battlefield S.alice afterTomb)) "having completed Tomb of Annihilation, Acererak stays on the battlefield"
     Spec.assertBool s (not (Set.member acererakName (namesIn Zone.Battlefield S.alice afterLostMine))) "and is off the battlefield on the Lost Mine board"
+    -- CR 701.49a: the venture after the bounce happened on both boards it
+    -- returned on, and not on the Tomb board, whose completed dungeon is gone.
+    Spec.assertEqWith
+      s
+      "the venture put a marker on the topmost room only where Acererak returned"
+      (fmap (markerOf S.alice) [afterNothing, afterLostMine, afterTomb])
+      [Just RoomIndex.topmost, Just RoomIndex.topmost, Nothing]
     -- Neither of the two discriminating boards is green because nothing happened:
     -- each really completed one dungeon, and the tally cannot tell them apart.
     Spec.assertEqWith
