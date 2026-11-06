@@ -32,17 +32,15 @@ census did not settle.
 
 - Blessed Ghoul: `_Rule:FromGraveyard`
 
-- Bloodline Recollector // Ancestral Craving: translate skips preparation cards
+- Bloodline Recollector // Ancestral Craving:
+  `_Condition:ANumberOfPermanentsDiedThisTurn`
 
 - Bloombrute: `_Rule:TriggerOnceEachTurn`
 
-- Blossom-Blessed Angel: translate skips preparation cards; verify the clauses
-  besides "enters prepared"
 
 - Budding Insurgent: `_Action:If`
 
-- Carnivorous Cultivator: translate skips preparation cards; verify the clauses
-  besides "enters prepared"
+- Carnivorous Cultivator: `_SearchLibraryAction:PutFoundCardsIntoGraveyard`
 
 - Chandra, Torch of Defiance: `field: Loyalty`
 
@@ -76,8 +74,7 @@ census did not settle.
 - Denzilore Fatehold: `_Trigger:Or`
 
 
-- Diviner of Victory: translate skips preparation cards; verify the clauses
-  besides "enters prepared"
+- Diviner of Victory: `_Trigger:Or`
 
 - Divining Duelist: `_Actions:Modal_ChooseOne`
 
@@ -87,8 +84,6 @@ census did not settle.
 
 - Edgar, Moonlit Sovereign: `_Players:HasntCastASpellThisTurn`
 
-- Emergency Phytomedic: translate skips preparation cards; verify the clauses
-  besides "enters prepared"
 
 - Emrakul, the Exigent Doom: `_Rule:FromStack`; verify "until this card is cast
   from exile" over a `SpellCast` duration and the exile-from-hand cost
@@ -102,8 +97,8 @@ census did not settle.
 
 - Fatehold Charm: `_Target:TargetSpellOrTargetPermanent`
 
-- Fatehold Chronologist: translate skips preparation cards; verify the clauses
-  besides "enters prepared"
+- Fatehold Chronologist: `_CreatableToken:NamedTokenWithPT`; shares Peer Review
+  (#6457)
 
 - Fateshaper Aspirant: `_Actions:Modal_ChooseOne`
 
@@ -149,8 +144,7 @@ census did not settle.
 
 - Guiding Hydra: `_ReplacementActionWouldEnter:EntersWithNumberCounters`
 
-- Hallway Heckler: translate skips preparation cards; verify the clauses besides
-  "enters prepared"
+- Hallway Heckler: `_Cost:DiscardACard`; shares Vicious Verse (#6457)
 
 - Hapatra, the Desert Fang: `_Target:UptoOneTargetPermanentEachPlayerControls`
 
@@ -159,8 +153,7 @@ census did not settle.
 
 - Heartstring Puller: `_CreatableToken:NamedTokenWithPT`
 
-- Heartwood Crafter: translate skips preparation cards; verify the clauses
-  besides "enters prepared"
+- Heartwood Crafter: `_Action:AddManaWithModifiers`; shares Soul Tether (#6457)
 
 - Hexhaven Battalion: `_CreatableToken:NamedTokenWithPT`
 
@@ -206,8 +199,8 @@ census did not settle.
 
 - Konstrari Charm: `_Actions:Modal_ChooseOne`
 
-- Konstrari Improviser: translate skips preparation cards; verify the clauses
-  besides "enters prepared"
+- Konstrari Improviser: `_CreatableToken:HeartwoodToken`; shares Soul Tether
+  (#6457)
 
 - Koth, the Geomancer: `_Action:If`
 
@@ -254,7 +247,8 @@ census did not settle.
 
 - Overwrite the Multiverse: `_Action:Exile`
 
-- Paradox Shaper // Omit Variables: translate skips preparation cards
+- Paradox Shaper // Omit Variables: `_Permanents:IsntPrepared`; shares Omit
+  Variables (#6457)
 
 - Perfected Theory: `_LayerEffect:SetPT`
 
@@ -273,13 +267,11 @@ census did not settle.
 - Prophesied End: `_Action:If`
 
 
-- Prudent Fateseer: translate skips preparation cards; verify the clauses
-  besides "enters prepared"
+- Prudent Fateseer: `_Rule:TriggerOnceEachTurn`; shares Peer Review (#6457)
 
 - Puppet Crafting: `_Permanents:IsNonEnchantmentType`
 
-- Pyre Rhymer: translate skips preparation cards; verify the clauses besides
-  "enters prepared"
+- Pyre Rhymer: `_Action:CreateTriggerUntil`
 
 - Recursive Recruitment: `_CreatableToken:NamedTokenWithPT`
 
@@ -315,8 +307,7 @@ census did not settle.
 - Seasoned Cryomancer:
   `_Action:Reflexive_Discard_WhenYouDiscardOneOrMoreCardsOfTypeThisWay`
 
-- Semester Foreseer: translate skips preparation cards; verify the clauses
-  besides "enters prepared"
+- Semester Foreseer: `_Action:Surveil`; shares Peer Review (#6457)
 
 
 - Silence the Echo: `_Rule:CastEffect`
@@ -339,7 +330,8 @@ census did not settle.
 
 - Stingerquill Charm: `_CreatableToken:NamedTokenWithPT`
 
-- Stingerquill Voxmancer // Vicious Verse: translate skips preparation cards
+- Stingerquill Voxmancer // Vicious Verse: `_Permanents:IsntPrepared`; shares
+  Vicious Verse (#6457)
 
 - Stinging Vitriol: `_Action:RevealHandAndPlayerChoosesACardToDiscard`
 
@@ -371,8 +363,6 @@ census did not settle.
 
 - Theorix Charm: `_Player:ControllerOfSpell`
 
-- Theorix Metamage: translate skips preparation cards; verify the clauses
-  besides "enters prepared"
 
 - Tinybones, Pocket Nuisance: `_Trigger:WhenAPlayerDiscardsAnyNumberOfCards`
 
@@ -396,16 +386,15 @@ census did not settle.
 
 - Unflinching Hortimancer: `_Rule:Ward`
 
-- Variable Chaser: translate skips preparation cards; verify the clauses besides
-  "enters prepared"
+- Variable Chaser: `_Action:EachPlayerMayActions`
 
 - Verdant Kraken: renders differently from its Oracle text
 
 
 - Vigorbloom Charm: `_Action:Fight`
 
-- Vigorbloom Vanguard: translate skips preparation cards; verify the clauses
-  besides "enters prepared"
+- Vigorbloom Vanguard: `_Permanents:HasACounterOfType`; shares Seed Suture
+  (#6457)
 
 - Vindictive Triumph: `_Action:If`
 
@@ -413,8 +402,6 @@ census did not settle.
 
 - Violent Echoes: `_Action:If`
 
-- Void Extrapolator: translate skips preparation cards; verify the clauses
-  besides "enters prepared"
 
 
 - Vraska, Soul of Stone: `_Rule:Activated`
@@ -442,12 +429,13 @@ census did not settle.
 
 - Way of the Wildspeaker: `_Rule:Activated`
 
-- Whiplash Wordsmith: translate skips preparation cards; verify the clauses
-  besides "enters prepared"
+- Whiplash Wordsmith: `_Players:WasDealtNoncombatDamageThisTurn`; shares Vicious
+  Verse (#6457)
 
 - Winter, Tormented Loner: `_Action:Reflexive_Sacrifice_WhenYouDo`
 
-- Woodwork Prodigy // Soul Tether: translate skips preparation cards
+- Woodwork Prodigy // Soul Tether: `_Permanents:IsntPrepared`; shares Soul
+  Tether (#6457)
 
 - Wrath of the Bloodmane: `_Rule:CastEffect`
 
@@ -465,4 +453,11 @@ census did not settle.
 
 ## Needs a capability
 
-None.
+### #6457: two cards sharing one prepare spell
+
+The pool holds Blossom-Blessed Angel // Seed Suture and Theorix Metamage //
+Omit Variables, so a second holder of either spell cannot enter it.
+
+- Emergency Phytomedic // Seed Suture: translates; shares Seed Suture
+
+- Void Extrapolator // Omit Variables: translates; shares Omit Variables

@@ -9,6 +9,7 @@
 module Parun.Ingest where
 
 import qualified Control.Applicative as Applicative
+import qualified Control.Monad as Monad
 import qualified Data.Char as Char
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
@@ -44,6 +45,8 @@ import qualified Text.Read as Read
 -- MTGJSON has none), or why it is not one this builds.
 candidate :: Value.Value -> Either Text.Text Card.Card
 candidate value = do
+  fields <- Common.asObject value
+  Monad.forM_ (Common.optionalField "faces" fields) (const (Left (Text.pack "faces: more than one")))
   (face, printedPower, printedToughness) <- printed value
   power <- traverse (fmap Power.MkPower . literal) printedPower
   toughness <- traverse (fmap Toughness.MkToughness . literal) printedToughness
@@ -83,15 +86,26 @@ printed value = do
           }
   pure (Oracle.Face.bare (CardName.MkCardName name) (Just text) cost (Set.fromList indicator) typeLine Nothing Nothing Map.empty, power, toughness)
 
--- | The card with its face's printed characteristics taken from 'printed':
--- mana cost, colour indicator, type line, and a power or toughness printed as
--- a plain number, a star's left as the card has it. mtgish's ASTs are a
--- snapshot that drifts from MTGJSON's current Oracle (#5478).
-reprint :: (Face.Face Card.Card, Maybe Text.Text, Maybe Text.Text) -> Card.Card -> Card.Card
-reprint (record, printedPower, printedToughness) card = card {Card.faces = fmap set (Card.faces card)}
+-- | Each face a record prints ('printed'): those of its @faces@, a card of
+-- more than one face (CR 723's preparation card), or the record's own.
+printedFaces :: Value.Value -> Either Text.Text [(Face.Face Card.Card, Maybe Text.Text, Maybe Text.Text)]
+printedFaces value = do
+  fields <- Common.asObject value
+  case Common.optionalField "faces" fields of
+    Nothing -> fmap pure (printed value)
+    Just faces -> Common.asArray faces >>= traverse printed
+
+-- | The card with each face's printed characteristics taken from the record
+-- of the same name ('printedFaces'): mana cost, colour indicator, type line,
+-- and a power or toughness printed as a plain number, a star's left as the
+-- card has it. mtgish's ASTs are a snapshot that drifts from MTGJSON's
+-- current Oracle (#5478). A face no record names is left as it is.
+reprint :: [(Face.Face Card.Card, Maybe Text.Text, Maybe Text.Text)] -> Card.Card -> Card.Card
+reprint records card = card {Card.faces = fmap (\face -> maybe face (set face) (lookup (Face.name face) byName)) (Card.faces card)}
   where
+    byName = [(Face.name record, entry) | entry@(record, _, _) <- records]
     number wrap kept = maybe Nothing (either (const kept) (Just . wrap) . literal)
-    set face =
+    set face (record, printedPower, printedToughness) =
       face
         { Face.manaCost = Face.manaCost record,
           Face.colorIndicator = Face.colorIndicator record,

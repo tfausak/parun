@@ -52,37 +52,45 @@ import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.TypeLine as TypeLine
 
 -- | The card's rules text in its current Oracle wording, or 'Nothing' for a
--- card some part of which is not rendered yet: the head wording of each
--- ability, one per line.
+-- card some part of which is not rendered yet: each face's ('renderFace'),
+-- faces apart by a line holding "//".
 render :: Card.Card -> Maybe Text.Text
 render card = do
-  face <- single card
-  fmap (Text.intercalate (Text.pack "\n")) (traverse Maybe.listToMaybe (faceAbilities face))
+  faces <- renderable card
+  fmap (Text.intercalate (Text.pack "\n//\n")) (traverse renderFace (NonEmpty.toList faces))
+
+-- | A face's rules text: the head wording of each ability, one per line.
+renderFace :: Face.Face Card.Card -> Maybe Text.Text
+renderFace face = fmap (Text.intercalate (Text.pack "\n")) (traverse Maybe.listToMaybe (faceAbilities face))
 
 -- | The card's abilities, each with every wording of it Oracle uses, the
 -- current first, and none for an ability not rendered yet. An ability's
 -- wordings are its own, so the choices of one ability add to those of the
--- next rather than multiplying with them. Only a single normal face is read
--- yet: every ability of any other card is listed unrendered.
+-- next rather than multiplying with them. Only a card 'renderable' answers
+-- for is read: every ability of any other card is listed unrendered.
 abilities :: Card.Card -> [[Text.Text]]
-abilities card = case single card of
-  Just face -> faceAbilities face
+abilities card = case renderable card of
+  Just faces -> concatMap faceAbilities faces
   Nothing -> concatMap (fmap (const []) . faceAbilities) (Card.faces card)
 
--- | The card's face, when it is the one normal face this renders: a card of
--- any other layout is not rendered yet, even one whose faces hold nothing.
-single :: Card.Card -> Maybe (Face.Face Card.Card)
-single card = case Card.faces card of
-  face NonEmpty.:| [] | Card.layout card == Layout.Normal -> Just face
+-- | The card's faces, when it is a card this renders: one normal face, or a
+-- preparation card's (CR 723), each face's text its own. A card of any other
+-- layout is not rendered yet, even one whose faces hold nothing.
+renderable :: Card.Card -> Maybe (NonEmpty.NonEmpty (Face.Face Card.Card))
+renderable card = case (Card.layout card, Card.faces card) of
+  (Layout.Normal, faces@(_ NonEmpty.:| [])) -> Just faces
+  (Layout.Preparation, faces) -> Just faces
   _ -> Nothing
 
--- | Whether the text says what the card says: each of its abilities takes
--- one of its wordings' pieces from the text's, modulo 'Normalise.normalise',
--- and none is left over. A card some part of which is not rendered yet says
--- nothing.
+-- | Whether the text says what the card's face of that name says: each of
+-- the face's abilities takes one of its wordings' pieces from the text's,
+-- modulo 'Normalise.normalise', and none is left over. A card some part of
+-- which is not rendered yet says nothing; nor does a name no face has.
 says :: Card.Card -> CardName.CardName -> Text.Text -> Bool
 says card name text =
-  Maybe.isJust (render card) && any null (leftovers name text (abilities card))
+  Maybe.isJust (render card) && any (any null . leftovers name text . faceAbilities) named
+  where
+    named = [face | Just faces <- [renderable card], face <- NonEmpty.toList faces, Face.name face == name]
 
 -- | The text's pieces left over once each ability has taken the pieces of one
 -- of its wordings, one list per way they can. The face keeps no printed

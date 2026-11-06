@@ -205,9 +205,11 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "Flying\nVigilance")) (Oracle.render (card Layout.Normal [[Keyword.Flying, Keyword.Vigilance]]))
     Spec.assertEq s (Just Text.empty) (Oracle.render (card Layout.Normal [[]]))
 
-  Spec.it s "render answers only for a single normal face" $ do
+  -- CR 723.2: a preparation card's faces each print their own text.
+  Spec.it s "render answers only for a single normal face or a preparation card" $ do
     Spec.assertEq s Nothing (Oracle.render (card Layout.Normal [[Keyword.Flying], [Keyword.Flying]]))
     Spec.assertEq s Nothing (Oracle.render (card Layout.Split [[Keyword.Flying]]))
+    Spec.assertEq s (Just (Text.pack "Flying\n//\nVigilance")) (Oracle.render (card Layout.Preparation [[Keyword.Flying], [Keyword.Vigilance]]))
 
   -- CR 702: a keyword's number or cost follows it, a cost of more than mana
   -- after a dash; a quality reads as a colour's name or a plural.

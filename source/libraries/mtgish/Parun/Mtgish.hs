@@ -196,27 +196,47 @@ type Modal = Modal.Modal Card.Card Ability
 
 type Filter = Filter.Filter Keyword.Keyword
 
--- | The card a translation is accepted as: one whose Oracle text is known
--- and says what Parun.Oracle renders for it ('Oracle.says'). Otherwise why
--- not, with what it renders as where it renders at all.
+-- | The card a translation is accepted as: one each of whose faces' Oracle
+-- text is known and says what Parun.Oracle renders for it ('Oracle.says').
+-- Otherwise why not, with what the first face that does not renders as,
+-- where it renders at all.
 accepted :: Card.Card -> Translated Card.Card
-accepted translated = case Card.faces translated of
-  face NonEmpty.:| []
-    | Just text <- Face.oracleText face ->
-        if Oracle.says translated (Face.name face) text
-          then Right translated
-          else Left (Text.pack "renders as: " <> Text.replace (Text.pack "\n") (Text.pack " // ") (Maybe.fromMaybe (Text.pack "(nothing)") (Oracle.render translated)))
-  _ -> Left (Text.pack "no Oracle text")
+accepted translated = translated <$ traverse said (Card.faces translated)
+  where
+    said f = case Face.oracleText f of
+      Just text
+        | Oracle.says translated (Face.name f) text -> Right ()
+        | otherwise -> Left (Text.pack "renders as: " <> Text.replace (Text.pack "\n") (Text.pack " // ") (Maybe.fromMaybe (Text.pack "(nothing)") (rendered f)))
+      Nothing -> Left (Text.pack "no Oracle text")
+    rendered f = Monad.void (Oracle.render translated) >> Oracle.renderFace f
 
 -- | One line of mtgish's AST file as the card it means, or the node kind it
--- stopped at. Only a card of one normal face is read.
+-- stopped at. Only a card of one normal face is read, or a preparation card
+-- (CR 723), its own face first and its prepare spell's after
+-- ('Layout.Preparation').
 card :: Value.Value -> Translated Card.Card
 card value = do
   pairs <- Common.asObject value
-  let keys = fmap (String.unwrap . Pair.name) pairs
-      known = fmap Text.pack ["_OracleCard", "Name", "Typeline", "ManaCost", "Rules", "CardPT", "ColorIndicator"]
   oracleCard <- Common.field "_OracleCard" pairs >>= Common.asText
-  Monad.unless (oracleCard == Text.pack "Card") (Left (Text.pack "_OracleCard:" <> oracleCard))
+  case Text.unpack oracleCard of
+    "Card" -> do
+      f <- readFace [] pairs
+      pure Card.MkCard {Card.layout = Layout.Normal, Card.faces = f NonEmpty.:| []}
+    "Preparer" -> do
+      f <- readFace ["Prepared"] pairs
+      prepared <- Common.field "Prepared" pairs >>= Common.asObject
+      kind <- Common.field "_OracleCard" prepared >>= Common.asText
+      Monad.unless (kind == Text.pack "Card") (Left (Text.pack "_OracleCard:" <> kind))
+      spell <- readFace [] prepared
+      pure Card.MkCard {Card.layout = Layout.Preparation, Card.faces = f NonEmpty.:| [spell]}
+    _ -> Left (Text.pack "_OracleCard:" <> oracleCard)
+
+-- | One face of a card's AST, the extra keys named the card's own rather
+-- than the face's.
+readFace :: [String] -> [Pair.Pair Value.Value] -> Translated Face
+readFace extra pairs = do
+  let keys = fmap (String.unwrap . Pair.name) pairs
+      known = fmap Text.pack (["_OracleCard", "Name", "Typeline", "ManaCost", "Rules", "CardPT", "ColorIndicator"] <> extra)
   case filter (\k -> notElem k known) keys of
     [] -> pure ()
     k : _ -> Left (Text.pack "field: " <> k)
@@ -234,9 +254,8 @@ card value = do
       p <- Common.field "Power" fields >>= stated (defined "CDA_Power")
       t <- Common.field "Toughness" fields >>= stated (defined "CDA_Toughness")
       Right (Just (Power.MkPower p), Just (Toughness.MkToughness t))
-  let face = Oracle.Face.bare (CardName.MkCardName name) Nothing cost (Set.fromList indicator) typeLine power toughness Map.empty
-  translated <- Monad.foldM rule face ruleNodes
-  pure Card.MkCard {Card.layout = Layout.Normal, Card.faces = translated NonEmpty.:| []}
+  let bare = Oracle.Face.bare (CardName.MkCardName name) Nothing cost (Set.fromList indicator) typeLine power toughness Map.empty
+  Monad.foldM rule bare ruleNodes
   where
     stated starred v
       | starred = Right Quantity.Star
@@ -346,21 +365,23 @@ rule face n = case Node.tag n of
     rows <- Common.asArray effects' >>= traverse (Node.node Monad.>=> playerRule)
     pure face {Face.playerAbilities = Face.playerAbilities face <> [PlayerStaticAbility.MkPlayerStaticAbility (PlayerScope.Related relation) Nothing Nothing e | e <- rows]}
   -- "This land enters tapped" (CR 614.1d), or "... unless [condition]",
-  -- which applies while the condition fails ('Oracle.Trigger.unless').
+  -- which applies while the condition fails ('Oracle.Trigger.unless'); "This
+  -- creature enters prepared" (CR 723.3a).
   "AsPermanentEnters" -> do
     (who, replacements) <- pair n
     p <- Node.node who
     Monad.unless (Node.tag p == "ThisPermanent") (Node.untranslated p)
     rewrites <- Common.asArray replacements >>= traverse Node.node
     case rewrites of
-      [r] | tapped r -> pure face {Face.replacementEffects = Face.replacementEffects face <> [entersTapped]}
+      [r] | tapped r -> pure face {Face.replacementEffects = Face.replacementEffects face <> [entering EntryRewrite.Tapped]}
+      [r] | Node.tag r == "EntersPrepared" && Maybe.isNothing (Node.args r) -> pure face {Face.replacementEffects = Face.replacementEffects face <> [entering EntryRewrite.Prepared]}
       [r] | Node.tag r == "Unless" -> do
         (conditionValue, inner) <- pair r
         within <- Common.asArray inner >>= traverse Node.node
         Monad.unless (fmap tapped within == [True]) (Node.untranslated r)
         c <- Node.node conditionValue >>= intervening outermost
         failing <- maybe (Node.untranslated r) Right (Oracle.Trigger.unless c)
-        pure face {Face.replacementEffects = Face.replacementEffects face <> [entersTapped {PrintedReplacement.condition = Just failing}]}
+        pure face {Face.replacementEffects = Face.replacementEffects face <> [(entering EntryRewrite.Tapped) {PrintedReplacement.condition = Just failing}]}
       r : _ -> Node.untranslated r
       [] -> Node.untranslated n
     where
@@ -483,12 +504,13 @@ staticAbility affected modifications =
       StaticAbility.modifications = modifications
     }
 
--- | The source's entering tapped (CR 614.1d).
-entersTapped :: PrintedReplacement.PrintedReplacement Card.Card Ability Effect
-entersTapped =
+-- | The source's entering so rewritten: tapped (CR 614.1d) or prepared (CR
+-- 723.3a).
+entering :: EntryRewrite.EntryRewrite Ability Effect -> PrintedReplacement.PrintedReplacement Card.Card Ability Effect
+entering rewrite =
   PrintedReplacement.MkPrintedReplacement
     { PrintedReplacement.condition = Nothing,
-      PrintedReplacement.effect = ReplacementEffect.EntryR EntryR.MkEntryR {EntryR.matching = Filter.IsSource, EntryR.rewrite = EntryRewrite.Tapped},
+      PrintedReplacement.effect = ReplacementEffect.EntryR EntryR.MkEntryR {EntryR.matching = Filter.IsSource, EntryR.rewrite = rewrite},
       PrintedReplacement.functionsFrom = Set.empty,
       PrintedReplacement.name = Nothing
     }
