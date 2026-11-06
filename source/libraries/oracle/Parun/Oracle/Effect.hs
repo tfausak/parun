@@ -22,6 +22,8 @@ import qualified Parun.Oracle.Prose as Prose
 import qualified Parun.Oracle.Target as Target
 import qualified Parun.Oracle.Trigger as Trigger
 import qualified Parun.Types.AgainstSlot as AgainstSlot
+import qualified Parun.Types.Amass as Amass
+import qualified Parun.Types.AmassKind as AmassKind
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.ChooseBetween as ChooseBetween
 import qualified Parun.Types.Clause as Clause
@@ -633,6 +635,9 @@ joined context predicates = case predicates of
           <> [ (Prose.sentence (clauseText p {verb = vp} <> Text.pack " and " <> vq <> Text.pack ", where X is " <> e) <> trailing q, allMentions p <> mentions q)
              | (vp, vq, e) <- sharedX
              ]
+          -- Free: two sentences (Vraska's Final Mercy's "You lose 2 life.
+          -- Empower Jace 6.").
+          <> apart
     -- Free: two sentences (Afterlife Insurance), "and" (Bad Deal) or, after
     -- an imperative, ", then" (Macabre Waltz) or "and" (Sorcerer's Strongbox).
     | implied p || implied q -> apart <> together <> togetherX <> thenImperative <> andImperative <> imperativeAnd
@@ -824,6 +829,10 @@ effect context e = case e of
       Maybe.isNothing (Mill.slot m) -> do
         n <- Target.cards (Mill.quantity m)
         imperative context (Mill.player m) (Text.pack "mill " <> n) (Text.pack "mills " <> n)
+  -- "Empower Jace 2" (CR 701.71a).
+  Effect.Amass (Amass.MkAmass q AmassKind.EmpowerJace Nothing) -> do
+    n <- Target.amount q
+    imperative context (PlayerRef.Relative PlayerRelation.You) (Text.pack "empower Jace " <> n) Text.empty
   -- "Scry 2" (CR 701.22a).
   Effect.Scry (PlayerQuantity.MkPlayerQuantity who q) -> do
     n <- Target.amount q
