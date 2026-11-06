@@ -2147,6 +2147,7 @@ library play
     parun:exceptions,
     parun:extra,
     parun:json-codec,
+    parun:oracle,
     parun:registry,
     parun:scenario,
     parun:spec,

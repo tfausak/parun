@@ -7,10 +7,12 @@ module Parun.Play.Protocol where
 
 import qualified Data.Bifunctor as Bifunctor
 import qualified Data.Char as Char
+import qualified Data.Containers.ListUtils as ListUtils
 import qualified Data.Foldable as Foldable
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Parun.Codec.CombatDamageOption as Codec.CombatDamageOption
@@ -26,10 +28,14 @@ import qualified Parun.Codec.Reply as Codec.Reply
 import qualified Parun.Codec.Request as Codec.Request
 import qualified Parun.Codec.SlotName as Codec.SlotName
 import qualified Parun.Engine.Combat as Combat
+import qualified Parun.Engine.Cost as Cost
 import qualified Parun.Engine.Driver as Driver
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.PlayerView as PlayerView
 import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.View as Projection.View
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
@@ -40,11 +46,16 @@ import qualified Parun.Scenario.Reply as Reply
 import qualified Parun.Types.Action as Action
 import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
+import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Dividing as Dividing
+import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.Label as Label
+import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Mana as Mana.Type
+import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.MulliganOffer as MulliganOffer
 import qualified Parun.Types.ObjectId as ObjectId
@@ -54,6 +65,7 @@ import qualified Parun.Types.Question as Question
 import qualified Parun.Types.Reference as Reference
 import qualified Parun.Types.Reply as R
 import qualified Parun.Types.Request as Request
+import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Text.Read as Read
 
 -- | Answers each prompt a seat answers over the line `send` carries, asking
@@ -166,8 +178,17 @@ offerOf gs prompt = case prompt of
         ("slots", Reply.encode (Reply.mapOf (Reply.viaCodec Codec.SlotName.codec) (Reply.pairOf Reply.natural (Reply.setOf Reply.recipient))) namer slots)
       ]
   Prompt.ChooseManaSource _ payer cost sources ->
-    fields [("payer", Reply.encode Reply.player namer payer), ("cost", Reply.encode (Reply.viaCodec Codec.ManaCost.codec) namer cost), ("sources", manaSources gs sources)]
+    fields
+      ( [("payer", Reply.encode Reply.player namer payer), ("cost", Reply.encode (Reply.viaCodec Codec.ManaCost.codec) namer cost), ("sources", manaSources gs sources)]
+          <> [("substitutes", Reply.encode (Reply.list (Reply.viaCodec Codec.Keyword.codec)) namer keywords) | let keywords = substitutingKeywords gs payer cost, not (null keywords)]
+      )
   Prompt.ChooseExtraManaSource _ _ sources -> fields [("sources", manaSources gs sources)]
+  -- CR 733.1: the sources of the one activation asked about.
+  Prompt.ReverseManaAbilities _ _ sources -> fields [("sources", objects (NonEmpty.toList sources))]
+  -- CR 601.2b / 702.51a: each candidate's cost.
+  --
+  -- Not implemented: the keyword that offered each candidate (#5225).
+  Prompt.ChooseCost _ _ source candidates _ -> fields [("source", object source), ("costs", Reply.encode (Reply.list (Reply.viaCodec (Codec.Cost.codec Codec.Keyword.codec))) namer (fmap CandidateCost.cost candidates))]
   Prompt.PayLifeForMana _ _ life mana -> fields [("life", natural life), ("mana", Reply.encode (Reply.viaCodec Codec.ManaType.codec) namer mana)]
   Prompt.ChooseManaYield _ _ source options -> fields [("source", object source), ("yields", Reply.encode (Reply.list (Reply.list (Reply.viaCodec Codec.ManaType.codec))) namer (fmap (fmap ManaUnit.manaType . Mana.yieldUnits) (Foldable.toList options)))]
   Prompt.ChooseManaSpentOnX _ _ source shares -> fields [("source", object source), ("shares", Reply.encode (Reply.list (Reply.list (Reply.viaCodec Codec.ManaType.codec))) namer (fmap (fmap ManaUnit.manaType . Mana.Type.unwrap) (Foldable.toList shares)))]
@@ -215,6 +236,29 @@ actionOffer gs action = fields (("action", R.Text (Text.pack kind)) : rest)
       Action.RollPlanarDie -> ("RollPlanarDie", [])
     on oid = [("object", object oid)]
     named name = [("name", R.Text (CardName.unwrap name))]
+
+-- | CR 702.51a / 702.66a / 702.126a: the keywords of the spell `payer` is
+-- casting that let part of this cost be paid other than with mana, which
+-- Cost.announceSubstitutions asks about once CR 601.2g's window closes. None
+-- for a payment that is not a cast's: CR 601.2a put the spell on top of the
+-- stack, and CR 601.2i has not yet logged it cast.
+substitutingKeywords :: GameState.GameState -> PlayerId.PlayerId -> ManaCost.ManaCost -> [Keyword.Type.Keyword]
+substitutingKeywords gs payer cost = case GameState.stack gs of
+  top : _
+    | Game.isSpell top gs,
+      Projection.View.controllerOf top gs == Just payer,
+      not (any (castAs top . LoggedEvent.event) (GameState.events gs)) ->
+        ListUtils.nubOrd
+          [ k
+          | k <- Map.keys (Cost.spellKeywords payer top gs),
+            symbol <- ManaCost.unwrap cost,
+            not (null (Keyword.manaSubstitutesFor symbol (Set.singleton k)))
+          ]
+  _ -> []
+  where
+    castAs top e = case e of
+      GameEvent.SpellCast cast -> SpellWasCast.spell cast == top
+      _ -> False
 
 -- | Each mana source beside the mana it could make, one list of mana types
 -- per yield (Mana.manaYieldsOf).

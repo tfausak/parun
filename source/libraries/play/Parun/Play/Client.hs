@@ -20,6 +20,8 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Parun.Codec.CombatDamageOption as Codec.CombatDamageOption
+import qualified Parun.Codec.Cost as Codec.Cost
+import qualified Parun.Codec.Keyword as Codec.Keyword
 import qualified Parun.Codec.ManaCost as Codec.ManaCost
 import qualified Parun.Codec.ManaType as Codec.ManaType
 import qualified Parun.Codec.NumberFloor as Codec.NumberFloor
@@ -31,6 +33,8 @@ import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Oracle.Cost as Oracle.Cost
+import qualified Parun.Oracle.Keyword as Oracle.Keyword
 import qualified Parun.Play.Render as Render
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
@@ -266,9 +270,28 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
         held = foldMap (\t -> Text.pack "{" <> Render.manaType t <> Text.pack "}") pool
         left = foldMap (\(colored, rest) -> Text.pack ", leaving " <> Render.manaCost (ManaCost.MkManaCost ([ManaSymbol.Generic rest | rest > 0] <> fmap ManaSymbol.OfType colored))) (owing view offer)
         progress = if null pool then Text.empty else Text.pack " with " <> held <> Text.pack " in the pool" <> left
-    sourcePick (Text.pack "Paying " <> Render.manaCost cost <> progress <> Text.pack ". Choose a source to pay with, stop to stop paying, or auto (or press Enter) to pay the rest:") (Text.pack "stop") (Text.pack ", stop, or auto")
+        substitutes = foldMap (Foldable.foldMap (Maybe.maybeToList . Maybe.listToMaybe . Oracle.Keyword.keywordWord Text.empty)) (field "substitutes" offer >>= decoded (Common.list Codec.Keyword.codec))
+        -- CR 601.2g-h: the substitution is asked once the mana window closes.
+        later = if null substitutes then Text.empty else Text.pack ". After the mana, " <> Text.intercalate (Text.pack " or ") substitutes <> Text.pack " can pay part of it"
+    sourcePick (Text.pack "Paying " <> Render.manaCost cost <> progress <> later <> Text.pack ". Choose a source to pay with, stop to stop paying, or auto (or press Enter) to pay the rest:") (Text.pack "stop") (Text.pack ", stop, or auto")
   -- CR 601.2g: mana abilities are activated before the cost is paid.
   "ChooseExtraManaSource" -> sourcePick (Text.pack "The cost is covered. Choose another source to activate, or press Enter to pay now:") Text.empty (Text.pack ", or press Enter to pay now")
+  -- CR 733.1: whether the mana abilities of one activation are reversed too.
+  "ReverseManaAbilities" -> do
+    sources <- field "sources" offer >>= arrayOf
+    pure
+      ( [Text.pack "That action was reversed. Reverse the mana ability of " <> Text.intercalate (Text.pack " and ") (fmap (listedName view) sources) <> Text.pack " too?", Text.pack "  1. Yes", Text.pack "  2. No"],
+        fmap (\i -> optionalDecision (if i == 1 then OptionalDecision.Exercises else OptionalDecision.Declines)) . one 2
+      )
+  -- CR 601.2b / 702.51a: each candidate as Oracle text prints its cost.
+  "ChooseCost" -> do
+    source <- field "source" offer
+    costs <- field "costs" offer >>= arrayOf
+    let self = objectName view source
+    pure
+      ( Text.pack "Choose how to pay for " <> self <> Text.pack ":" : numbered (fmap (candidateName self) costs),
+        fmap (R.Number . toInteger . subtract 1) . one (Natural.length costs)
+      )
   "ChooseManaYield" -> do
     source <- field "source" offer
     yields <- field "yields" offer >>= decoded (Common.list (Common.list Codec.ManaType.codec))
@@ -570,6 +593,12 @@ payerSeat :: PlayerView.PlayerView -> R.Reply -> Maybe SeatView.SeatView
 payerSeat view offer = do
   payer <- field "payer" offer >>= textOf >>= Read.readMaybe . Text.unpack
   List.find ((== PlayerId.MkPlayerId payer) . SeatView.player) (PlayerView.seats view)
+
+-- | A ChooseCost candidate's cost as Oracle text prints it (Oracle.Cost.cost),
+-- or the offer itself where it does not print.
+candidateName :: Text.Text -> R.Reply -> Text.Text
+candidateName self candidate =
+  Maybe.fromMaybe (Common.render (Codec.Reply.toValue candidate)) (decoded (Codec.Cost.codec Codec.Keyword.codec) candidate >>= Maybe.listToMaybe . Oracle.Cost.cost self (Oracle.Keyword.keywordWord self))
 
 -- | A mana source as an offer names it, beside the mana types of each yield.
 manaSource :: R.Reply -> Maybe (R.Reply, [[ManaType.ManaType]])

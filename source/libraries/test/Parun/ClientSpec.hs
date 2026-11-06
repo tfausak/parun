@@ -428,6 +428,35 @@ spec s registry = Spec.describe s "Client" $ do
       (filter (Text.isPrefixOf (Text.pack "Undone: ")) (takeWhile (not . menuHeading) (drop 1 (dropWhile (/= Text.pack "> []") shown))))
       [Text.pack "Undone: Cast Ebony Charm could not be completed (a choice announced for it was illegal), so it was reversed and its payments canceled."]
 
+  Spec.it s "CR 702.51a the payment says convoke is coming, and each convoke candidate is listed as the creatures it taps and the mana it leaves" $ do
+    (placed, resolved, tapped, shown) <- castTyping (convokes "{2}{G}{G}, Tap three untapped creatures you control" "Siege Wurm") s registry "Siege Wurm" (replicate 4 "Forest" <> replicate 3 "Grizzly Bears")
+    Spec.assertEqWith s "the wurm resolved" resolved True
+    Spec.assertEqWith s "every land and creature tapped" (fmap (`elem` tapped) placed) (replicate 7 True)
+    Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Paying {5}{G}{G}. After the mana, convoke can pay part of it. Choose a source")) shown) "told convoke is coming"
+    Spec.assertEqWith
+      s
+      "every candidate listed"
+      (take 9 (drop 1 (dropWhile (/= Text.pack "Choose how to pay for Siege Wurm:") shown)))
+      ( zipWith
+          (\i t -> Text.pack ("  " <> show i <> ". " <> t))
+          [1 :: Int ..]
+          [ "{5}{G}{G}",
+            "{5}{G}, Tap an untapped green creature you control",
+            "{5}, Tap two untapped green creatures you control",
+            "{4}{G}{G}, Tap an untapped creature you control",
+            "{4}{G}, Tap an untapped creature you control, Tap an untapped green creature you control",
+            "{4}, Tap an untapped creature you control, Tap two untapped green creatures you control",
+            "{3}{G}{G}, Tap two untapped creatures you control",
+            "{3}{G}, Tap two untapped creatures you control, Tap an untapped green creature you control",
+            "{2}{G}{G}, Tap three untapped creatures you control"
+          ]
+      )
+
+  Spec.it s "CR 733.1 a cast reversed asks whether each mana ability is reversed too, as yes or no" $ do
+    (placed, resolved, tapped, shown) <- castTyping (convokes "{5}{G}{G}" "Siege Wurm") s registry "Siege Wurm" (replicate 4 "Forest" <> replicate 3 "Grizzly Bears")
+    Spec.assertEqWith s "the wurm did not resolve, and no Forest stayed tapped" (resolved, filter (`elem` tapped) (take 4 placed)) (False, [])
+    Spec.assertEqWith s "asked once per Forest" (length (filter (== Text.pack "That action was reversed. Reverse the mana ability of Your Forest (tapped) too?") shown)) 4
+
   -- The Plateau makes red ahead of white, so taking its first yield fails.
   Spec.it s "auto pays through a dual land, taking the color still owed" $ do
     (lands, resolved, tapped, shown) <- castPaying "auto" s registry "Savannah Lions" ["Taiga", "Plateau"]
@@ -857,7 +886,11 @@ asking hotseat typing gs prompt =
 -- typing this word at each payment: the lands, whether it resolved, which
 -- lands it tapped, and what the screen showed.
 castPaying :: (Monad m) => String -> Spec.Spec m n -> Registry.Registry m -> String -> [String] -> m ([ObjectId.ObjectId], Bool, [ObjectId.ObjectId], [Text.Text])
-castPaying word s registry spell names = do
+castPaying word s registry spell = castTyping (castsOnce word spell) s registry spell
+
+-- castPaying, alice answering as this typist does.
+castTyping :: (Monad m) => (Screen -> Maybe Text.Text) -> Spec.Spec m n -> Registry.Registry m -> String -> [String] -> m ([ObjectId.ObjectId], Bool, [ObjectId.ObjectId], [Text.Text])
+castTyping typist s registry spell names = do
   gs <- started s registry
   printings <- mapM (S.printingOf s registry) names
   card <- S.printingOf s registry spell
@@ -865,7 +898,7 @@ castPaying word s registry spell names = do
       (lands, withLands) = List.foldl' place ([], gs) printings
       board = snd (S.addHandCard card S.alice withLands)
       bears = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack spell)) S.alice
-      seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce word spell)) (const (Right Nothing)))) botOrDefault
+      seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 typist) (const (Right Nothing)))) botOrDefault
       run = Driver.drive [] seats 20 (pure . (> bears board) . bears) board
       (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
       -- A game that stopped is read as the board it started from.
@@ -891,6 +924,16 @@ castsOnce word spell sc
           cast = [n | not (typedYet word sc), (n, rest) <- options, rest == Text.pack (". Cast " <> spell)]
        in Maybe.listToMaybe (cast <> [n | (n, rest) <- options, rest == Text.pack ". Pass"])
   | otherwise = plays sc
+  where
+    shown = pending sc
+
+-- Casts the spell as castsOnce does, paying with auto, choosing the cost
+-- listed as this, and reversing every mana ability a reversed cast asks about.
+convokes :: String -> String -> Screen -> Maybe Text.Text
+convokes wanted spell sc
+  | any (Text.isPrefixOf (Text.pack "Choose how to pay for ")) shown = Maybe.listToMaybe [n | line <- shown, (n, rest) <- [Text.breakOn (Text.pack ". ") (Text.strip line)], not (Text.null n), Text.all (`elem` ['0' .. '9']) n, rest == Text.pack (". " <> wanted)]
+  | any (Text.isPrefixOf (Text.pack "That action was reversed.")) shown = Just (Text.pack "1")
+  | otherwise = castsOnce "auto" spell sc
   where
     shown = pending sc
 
