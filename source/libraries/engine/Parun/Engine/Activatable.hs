@@ -53,10 +53,12 @@ import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.ObjectSnapshot as ObjectSnapshot
 import qualified Parun.Types.PastActivation as PastActivation
 import qualified Parun.Types.PaymentSubject as PaymentSubject
+import qualified Parun.Types.PlayerEffect as PlayerEffect.Type
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Recipient as Recipient
+import Parun.Types.RowSource (RowSource)
 import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.Zone as Zone
@@ -459,13 +461,14 @@ payableCost aimable = payableCostAt aimable 0
 payableCostAt :: [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> Natural -> Maybe Keyword -> Maybe AbilityName.AbilityName -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
 payableCostAt aimable x stamp named spendable pid srcId gs =
   let pcs = Projection.projectAll gs
-   in payableCostAtGiven aimable (Cost.supplyManaSourcesGiven (Projection.controlGrants gs) pcs pid gs) pcs x stamp named spendable pid srcId gs
+   in payableCostAtGiven (PlayerEffect.applying pid gs) aimable (Cost.supplyManaSourcesGiven (Projection.controlGrants gs) pcs pid gs) pcs x stamp named spendable pid srcId gs
 
 -- The same predicate on a board the caller already walked -- see
--- Cost.canPaySomeCompletionGiven.
-payableCostAtGiven :: [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> [ObjectId] -> Map.Map ObjectId PC.ProjectedCharacteristics -> Natural -> Maybe Keyword -> Maybe AbilityName.AbilityName -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
-payableCostAtGiven aimable sources pcs x stamp named spendable pid srcId gs cost =
-  aimingSomewhere (\adjustments -> Cost.plusComponents adjustments (Cost.substituteX x cost)) aimable stamp named (Loyalty.loyaltyKindOf cost) pid srcId gs (\slots adjustments -> let totalled = Cost.plusComponents adjustments (Cost.substituteX x cost) in Cost.canPaySomeCompletionGiven slots (PaymentSubject.Activating srcId stamp spendable) ManaSpending.AsProduced sources pcs pid srcId (Cost.totalManas adjustments) (Cost.waterbendSubstitutions (Cost.Type.components totalled) slots pid srcId gs) totalled gs)
+-- Cost.canPaySomeCompletionGiven. `effects` MUST be `PlayerEffect.applying pid
+-- gs`'s own answer, which a per-ability loop takes once.
+payableCostAtGiven :: [(RowSource, PlayerEffect.Type.PlayerEffect)] -> [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> [ObjectId] -> Map.Map ObjectId PC.ProjectedCharacteristics -> Natural -> Maybe Keyword -> Maybe AbilityName.AbilityName -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
+payableCostAtGiven effects aimable sources pcs x stamp named spendable pid srcId gs cost =
+  aimingSomewhere effects (\adjustments -> Cost.plusComponents adjustments (Cost.substituteX x cost)) aimable stamp named (Loyalty.loyaltyKindOf cost) pid srcId gs (\slots adjustments -> let totalled = Cost.plusComponents adjustments (Cost.substituteX x cost) in Cost.canPaySomeCompletionGiven slots (PaymentSubject.Activating srcId stamp spendable) ManaSpending.AsProduced sources pcs pid srcId (Cost.totalManas adjustments) (Cost.waterbendSubstitutions (Cost.Type.components totalled) slots pid srcId gs) totalled gs)
 
 -- CR 601.2f's totalling asked where CR 601.2c's targets do not exist yet: the
 -- predicate holds if SOME aiming this activation could still take leaves the
@@ -521,8 +524,8 @@ payableCostAtGiven aimable sources pcs x stamp named spendable pid srcId gs cost
 -- `slotReading` is asked of the cost with the blind gather's components added,
 -- so a criterion arriving on a component CR 601.2f's adjustments add takes the
 -- cost search as a printed one does.
-aimingSomewhere :: (CostAdjustments.CostAdjustments -> Cost Keyword) -> [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> Maybe Keyword -> Maybe AbilityName.AbilityName -> LoyaltyKind.LoyaltyKind -> PlayerId -> ObjectId -> GameState -> (Map.Map SlotName (Set.Set Recipient.Recipient) -> CostAdjustments.CostAdjustments -> Bool) -> Bool
-aimingSomewhere costWith aimable stamp named loyalty pid srcId gs payable =
+aimingSomewhere :: [(RowSource, PlayerEffect.Type.PlayerEffect)] -> (CostAdjustments.CostAdjustments -> Cost Keyword) -> [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> Maybe Keyword -> Maybe AbilityName.AbilityName -> LoyaltyKind.LoyaltyKind -> PlayerId -> ObjectId -> GameState -> (Map.Map SlotName (Set.Set Recipient.Recipient) -> CostAdjustments.CostAdjustments -> Bool) -> Bool
+aimingSomewhere effects costWith aimable stamp named loyalty pid srcId gs payable =
   -- CR 605.1a's kind is AbilityKind.NonManaAbility at all three sites in this
   -- module, and CR 605.3b is why: activatableGiven refuses a mana ability
   -- outright and the cost conjunct this gate serves sits after that refusal,
@@ -536,7 +539,7 @@ aimingSomewhere costWith aimable stamp named loyalty pid srcId gs payable =
   -- than an ability: Loyalty.loyaltyKindOf reads it off the same printed cost the
   -- caller is measuring, so Carth the Lion's addition is totalled in here only
   -- for an ability whose own cost carries a loyalty symbol.
-  let gather aimedAt = Cost.activationAdjustments aimedAt stamp named AbilityKind.NonManaAbility loyalty pid srcId gs
+  let gather aimedAt = PlayerEffect.activationCostAdjustmentsGiven effects pid aimedAt stamp named AbilityKind.NonManaAbility loyalty srcId gs
       candidates = Set.unions (concatMap (Map.elems . snd) aimable)
       blind = gather Set.empty
       -- The added components are the blind gather's under every aiming:
@@ -683,6 +686,9 @@ activatableGiven pools sources pid srcId ability gs =
       -- aimingSomewhere. Shared with the mode conjunct's own `fillable` rather
       -- than taken twice: they are the same question (CR 700.2a).
       aimable = candidateSlotsGiven (ActivatedAbility.name ability) pools pid srcId modal fillable gs
+      -- The player rows and CR 602.5's prohibitions out of the enumeration's
+      -- pools, each a walk of the board that does not depend on this ability.
+      rows = Target.playerRowsOf pools pid gs
    in mayActivateGiven grants pid srcId ability gs
         -- CR 801.6. Not asked of a mana ability's windows (Cost.manaActivations):
         -- their sources are the permanents the player controls
@@ -715,15 +721,15 @@ activatableGiven pools sources pid srcId ability gs =
         -- Realmbreaker's Grasp's "unless they're mana abilities" an exemption
         -- rather than a second reading: its row names this kind, so the mana
         -- window's question -- ManaAbility -- never matches it.
-        && not (ActivationProhibition.prohibited AbilityKind.NonManaAbility (ActivatedAbility.cost ability) srcId gs)
+        && not (ActivationProhibition.prohibitedGiven pcs grants (Target.activationProhibitionRows pools) AbilityKind.NonManaAbility (ActivatedAbility.cost ability) srcId gs)
         -- CR 602.5's player-axis prohibition (Sen Triplets), beside detain for
         -- its reason: rule 701.35a stamps one object and this names a player, and
         -- neither carves a mana ability out -- so Cost.manaActivationsGiven
         -- carries this conjunct too, for the CR 605.3a windows that never reach
         -- this function.
-        && not (PlayerEffect.prohibitsActivating (ActivatedAbility.keyword ability) srcId pid gs)
+        && not (PlayerEffect.prohibitsActivatingGiven (ActivatedAbility.keyword ability) srcId gs rows)
         && sicknessOkGiven grants pcs pid srcId ability gs
         && riderOk pid srcId ability gs
         && loyaltyOk pid srcId ability gs
         && Modal.selectionPossible fillable (Modal.Type.selection modal)
-        && any (payableCostAtGiven aimable sources pcs (leastX pid srcId ability gs) (ActivatedAbility.keyword ability) (ActivatedAbility.name ability) (ActivationRestriction.spendableTypes srcId (ActivatedAbility.restrictions ability) gs) pid srcId gs) (costsFor pid ability gs)
+        && any (payableCostAtGiven rows aimable sources pcs (leastX pid srcId ability gs) (ActivatedAbility.keyword ability) (ActivatedAbility.name ability) (ActivationRestriction.spendableTypes srcId (ActivatedAbility.restrictions ability) gs) pid srcId gs) (costsFor pid ability gs)
