@@ -16,7 +16,7 @@
               "value": {
                 "comparison": "AtLeast",
                 "measured": {
-                  "type": "PlayersDealtDamageThisTurn",
+                  "type": "PlayersDealtDamage",
                   "value": {
                     "recipient": {
                       "type": "Relative",

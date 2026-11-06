@@ -49,7 +49,7 @@
                             "value": "You"
                           },
                           "quantity": {
-                            "type": "PlayersDealtDamageThisTurn",
+                            "type": "PlayersDealtDamage",
                             "value": {
                               "kind": "Combat",
                               "recipient": {

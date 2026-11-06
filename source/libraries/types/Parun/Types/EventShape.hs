@@ -20,7 +20,7 @@ import qualified Parun.Types.Zone as Zone
 -- about a population of objects, since a member of this fold is a Filter view of
 -- an object and the unit counted is an EVENT. Those questions are
 -- Parun.Types.Quantity arms instead -- CardsDiscardedThisTurn,
--- PlayersDealtDamageThisTurn, EnteredThisTurn, EnteredFrom and WasCastFrom among
+-- PlayersDealtDamage, EnteredThisTurn, EnteredFrom and WasCastFrom among
 -- them -- each of which reads GameState.events directly through a
 -- Parun.Engine.Game accessor.
 data EventShape

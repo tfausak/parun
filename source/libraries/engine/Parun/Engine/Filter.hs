@@ -965,7 +965,7 @@ playerView pid =
       -- from here, this view being built from a PlayerId alone and holding no
       -- board whose event log could be folded. False is therefore the DEFAULT and
       -- not the answer: Parun.Engine.Count.playerView overwrites it from
-      -- Game.wasDealtDamageThisTurn, and both roads a player candidate travels --
+      -- Game.wasDealtDamage, and both roads a player candidate travels --
       -- that module's Scope.OverPlayers fold and
       -- Parun.Engine.Target.admittedGiven's Recipient.ToPlayer arm -- build the
       -- view through it. Parun.DamageSpec's Needle Drop case is what proves it.

@@ -183,6 +183,7 @@ import qualified Parun.Types.DamagePart as DamagePart
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
+import qualified Parun.Types.DamageTally as DamageTally
 import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.DealtDamage as DealtDamage
@@ -2765,7 +2766,7 @@ quantityNames asking x = case x of
       TurnTally.ActionsDone acts -> history asking (HistoryRead.Acts acts)
       TurnTally.LandsPlayed -> mempty
   Quantity.LifeChanged tally -> turnHistory asking (LifeTally.turn tally) (case LifeTally.direction tally of LifeDirection.Gained -> HistoryRead.LifeGains; LifeDirection.Lost -> HistoryRead.LifeLosses) <> playerRefNames asking (LifeTally.player tally)
-  Quantity.PlayersDealtDamageThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.recipient tally)
+  Quantity.PlayersDealtDamage tally -> turnHistory asking (DamageTally.turn tally) HistoryRead.Damage <> playerRefNames asking (DealtDamage.recipient (DamageTally.dealt tally))
   Quantity.DamageDealtToPlayersThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.recipient tally)
   Quantity.DamageDealtThisTurn _ -> history asking HistoryRead.Damage
   Quantity.SpellsCast tally -> turnHistory asking (SpellTally.turn tally) HistoryRead.Casts <> playerRefNames asking (SpellTally.player tally)

@@ -618,6 +618,8 @@ library codec
     Parun.Codec.DamageRewrite
     Parun.Codec.DamageRewriteSpec
     Parun.Codec.DamageRSpec
+    Parun.Codec.DamageTally
+    Parun.Codec.DamageTallySpec
     Parun.Codec.DamageTrigger
     Parun.Codec.DamageTriggerSpec
     Parun.Codec.Daytime
@@ -2763,6 +2765,7 @@ library types
     Parun.Types.DamageR
     Parun.Types.DamageRecipient
     Parun.Types.DamageRewrite
+    Parun.Types.DamageTally
     Parun.Types.DamageTrigger
     Parun.Types.Daytime
     Parun.Types.DealDamage

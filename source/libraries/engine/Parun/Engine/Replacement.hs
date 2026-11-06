@@ -87,6 +87,7 @@ import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
+import qualified Parun.Types.DamageTally as DamageTally
 import qualified Parun.Types.Daytime as Daytime
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
@@ -183,6 +184,7 @@ import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.UntapR as UntapR
 import qualified Parun.Types.Uses as Uses
+import qualified Parun.Types.WhichTurn as WhichTurn
 import qualified Parun.Types.Zone as Zone
 import Parun.Types.ZoneChange (ZoneChange)
 import qualified Parun.Types.ZoneChange as ZoneChange
@@ -1361,7 +1363,7 @@ admitsEntry gs oid rewrite = case rewrite of
   -- take a CR 616.1e bucket and could be handed the entry ahead of a rewrite with
   -- something to do.
   --
-  -- The measurement is Quantity.PlayersDealtDamageThisTurn, which reads CR
+  -- The measurement is Quantity.PlayersDealtDamage, which reads CR
   -- 120.3a's damaged-player record (Parun.Engine.Game.damagedPlayer): damage to
   -- an opponent's creature or to the controller herself is not damage to an
   -- opponent, and CR 119.4's bare life loss is not damage at all. "Was an
@@ -1397,7 +1399,7 @@ admitsEntry gs oid rewrite = case rewrite of
   EntryRewrite.Bloodthirst Nothing -> True
   EntryRewrite.Bloodthirst (Just _) ->
     let context = Projection.sourceContext gs (Projection.controllerOf oid gs) oid
-     in maybe False (> 0) (Quantity.evaluate (Projection.fullView gs) context gs oid (Quantity.Type.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing, DealtDamage.by = Nothing}))
+     in maybe False (> 0) (Quantity.evaluate (Projection.fullView gs) context gs oid (Quantity.Type.PlayersDealtDamage DamageTally.MkDamageTally {DamageTally.dealt = DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing, DealtDamage.by = Nothing}, DamageTally.turn = WhichTurn.ThisTurn}))
   -- CR 702.150a's own first condition, the ability's rather than the pattern's:
   -- "If this permanent WOULD ENTER WITH ONE OR MORE LOYALTY COUNTERS ON IT". The
   -- pending count is what that asks about (GameState.enteringCounters), so the

@@ -26,6 +26,7 @@ import qualified Parun.Types.Count as Count
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.DamageDirection as DamageDirection
 import qualified Parun.Types.DamageKind as DamageKind
+import qualified Parun.Types.DamageTally as DamageTally
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.Devotion as Devotion
@@ -669,20 +670,25 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.LifeChanged LifeTally.MkLifeTally {LifeTally.player = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), LifeTally.direction = LifeDirection.Lost, LifeTally.turn = WhichTurn.LastTurn})
       " {\"type\":\"LifeChanged\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"direction\":\"Lost\",\"turn\":\"LastTurn\"}} "
-  -- CR 120.1: a PlayerRef and an optional kind. Furious Spinesplitter's is the
-  -- Relative arm over Opponent with no kind; Tymna the Weaver's narrows it to CR
-  -- 510.2's combat damage.
-  Spec.it s "PlayersDealtDamageThisTurn, any damage and combat damage" $ do
+  -- CR 120.1: a PlayerRef, an optional kind and a turn. Furious Spinesplitter's
+  -- is the Relative arm over Opponent with no kind; Tymna the Weaver's narrows it
+  -- to CR 510.2's combat damage; Command the Stage's reads last turn.
+  Spec.it s "PlayersDealtDamage, any damage, combat damage and last turn" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing, DealtDamage.by = Nothing})
-      " {\"type\":\"PlayersDealtDamageThisTurn\",\"value\":{\"recipient\":{\"type\":\"Relative\",\"value\":\"Opponent\"}}} "
+      (Quantity.PlayersDealtDamage DamageTally.MkDamageTally {DamageTally.dealt = DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing, DealtDamage.by = Nothing}, DamageTally.turn = WhichTurn.ThisTurn})
+      " {\"type\":\"PlayersDealtDamage\",\"value\":{\"recipient\":{\"type\":\"Relative\",\"value\":\"Opponent\"}}} "
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), DealtDamage.kind = Just DamageKind.Combat, DealtDamage.by = Nothing})
-      " {\"type\":\"PlayersDealtDamageThisTurn\",\"value\":{\"recipient\":{\"type\":\"InSlot\",\"value\":\"target\"},\"kind\":\"Combat\"}} "
+      (Quantity.PlayersDealtDamage DamageTally.MkDamageTally {DamageTally.dealt = DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), DealtDamage.kind = Just DamageKind.Combat, DealtDamage.by = Nothing}, DamageTally.turn = WhichTurn.ThisTurn})
+      " {\"type\":\"PlayersDealtDamage\",\"value\":{\"recipient\":{\"type\":\"InSlot\",\"value\":\"target\"},\"kind\":\"Combat\"}} "
+    Common.assertCodec
+      s
+      Quantity.codec
+      (Quantity.PlayersDealtDamage DamageTally.MkDamageTally {DamageTally.dealt = DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Just DamageKind.Noncombat, DealtDamage.by = Nothing}, DamageTally.turn = WhichTurn.LastTurn})
+      " {\"type\":\"PlayersDealtDamage\",\"value\":{\"recipient\":{\"type\":\"Relative\",\"value\":\"Opponent\"},\"kind\":\"Noncombat\",\"turn\":\"LastTurn\"}} "
   -- CR 120.1 again, the same log read as a TOTAL: Petrified Wood-Kin's rule
   -- 702.54b X is the Relative arm over Opponent, and it must not share a tag with
   -- the tally above, which answers a different number on the same board.

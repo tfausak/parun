@@ -12,6 +12,7 @@ import qualified Parun.Codec.CompletedDungeon as CompletedDungeon
 import qualified Parun.Codec.Count as Count
 import qualified Parun.Codec.CounterKind as CounterKind
 import qualified Parun.Codec.DamageDirection as DamageDirection
+import qualified Parun.Codec.DamageTally as DamageTally
 import qualified Parun.Codec.DealtDamage as DealtDamage
 import qualified Parun.Codec.Designation as Designation
 import qualified Parun.Codec.Devotion as Devotion
@@ -185,11 +186,11 @@ codec =
       -- not the events, which is the arm's own reading rather than anything on
       -- the wire.
       Arm.payload "LifeChanged" LifeTally.codec Quantity.LifeChanged (\x -> case x of Quantity.LifeChanged y -> Just y; _ -> Nothing),
-      -- CR 120.1's damage: a PlayerRef and, for CR 510.2's combat damage alone,
-      -- a kind. The threshold that turns the count into "an opponent was dealt
-      -- damage" is the Comparison's, not this arm's.
-      Arm.payload "PlayersDealtDamageThisTurn" (DealtDamage.codec PlayerRef.codec) Quantity.PlayersDealtDamageThisTurn (\x -> case x of Quantity.PlayersDealtDamageThisTurn y -> Just y; _ -> Nothing),
-      -- CR 120.1's damage as a TOTAL, PlayersDealtDamageThisTurn's payload: rule
+      -- CR 120.1's damage: a PlayerRef, a kind, and the turn. The threshold that
+      -- turns the count into "an opponent was dealt damage" is the Comparison's,
+      -- not this arm's.
+      Arm.payload "PlayersDealtDamage" DamageTally.codec Quantity.PlayersDealtDamage (\x -> case x of Quantity.PlayersDealtDamage y -> Just y; _ -> Nothing),
+      -- CR 120.1's damage as a TOTAL, PlayersDealtDamage's dealt: rule
       -- 702.54b's "your opponents" is the reference rather than anything here.
       Arm.payload "DamageDealtToPlayersThisTurn" (DealtDamage.codec PlayerRef.codec) Quantity.DamageDealtToPlayersThisTurn (\x -> case x of Quantity.DamageDealtToPlayersThisTurn y -> Just y; _ -> Nothing),
       -- CR 120.1's damage again, with only the event's end on the wire for
@@ -327,7 +328,7 @@ tagOf x = case x of
   Quantity.TalliedThisTurn TurnTally.ActionsDone {} _ -> "ActionsDoneThisTurn"
   Quantity.TalliedThisTurn TurnTally.LandsPlayed _ -> "LandsPlayedThisTurn"
   Quantity.LifeChanged {} -> "LifeChanged"
-  Quantity.PlayersDealtDamageThisTurn {} -> "PlayersDealtDamageThisTurn"
+  Quantity.PlayersDealtDamage {} -> "PlayersDealtDamage"
   Quantity.DamageDealtToPlayersThisTurn {} -> "DamageDealtToPlayersThisTurn"
   Quantity.DamageDealtThisTurn {} -> "DamageDealtThisTurn"
   Quantity.SpellsCast {} -> "SpellsCast"
