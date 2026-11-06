@@ -38,11 +38,14 @@ import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Deck as Deck
 import qualified Parun.Types.Dividing as Dividing
+import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GuessAnswer as GuessAnswer
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.NumberFloor as NumberFloor
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.Observer as Observer
 import qualified Parun.Types.PayOffer as PayOffer
@@ -132,6 +135,30 @@ spec s registry = Spec.describe s "Bot" $ do
   Spec.it s "finds any group of at most so many matching cards" $ do
     let cards = fmap ObjectId.MkObjectId [8, 9, 10]
     Spec.assertEqWith s "groups" (Set.map List.sort (drawn (Prompt.Search decider S.alice cards 2))) (Set.fromList (filter ((<= 2) . length) (List.subsequences cards)))
+
+  -- CR 608.2d: Imperial Edict's "a creature they control" is any of them.
+  Spec.it s "chooses any matching permanent" $ do
+    let candidates = ObjectId.MkObjectId 8 NonEmpty.:| [ObjectId.MkObjectId 9, ObjectId.MkObjectId 10]
+    Spec.assertEqWith s "permanents" (drawn (Prompt.ChoosePermanent decider S.alice oid candidates Seq.empty)) (Set.fromList (NonEmpty.toList candidates))
+
+  -- CR 608.2d: Coercion's "choose a card from it" is any of them.
+  Spec.it s "chooses any card from among the group" $ do
+    let candidates = ObjectId.MkObjectId 8 NonEmpty.:| [ObjectId.MkObjectId 9, ObjectId.MkObjectId 10]
+    Spec.assertEqWith s "cards" (drawn (Prompt.ChooseCardFromAmong decider S.alice oid candidates)) (Set.fromList (NonEmpty.toList candidates))
+
+  -- CR 701.21a: Wildfire's "sacrifices four lands" from five is any four.
+  Spec.it s "sacrifices any group of the count" $ do
+    let candidates = fmap ObjectId.MkObjectId [8 .. 12]
+    Spec.assertEqWith s "groups" (drawn (Prompt.ChooseSacrifices decider S.alice oid candidates 4 Seq.empty)) (Set.fromList (fmap Set.fromList (filter ((== 4) . length) (List.subsequences candidates))))
+
+  Spec.it s "guesses either way" $ do
+    Spec.assertEqWith s "guesses" (drawn (Prompt.ChooseGuess decider S.alice oid (Filter.And []))) (Set.fromList [GuessAnswer.Holds, GuessAnswer.DoesNotHold])
+
+  -- CR 107.1c: a bounded number is any from its floor to its bound; an
+  -- unbounded bid tops the high bid by one or declines.
+  Spec.it s "chooses any number in range and tops a bid by one" $ do
+    Spec.assertEqWith s "bounded" (drawn (Prompt.ChooseNumber decider S.alice oid 1 NumberFloor.Least (Just 4))) (Set.fromList [1 .. 4])
+    Spec.assertEqWith s "bid" (drawn (Prompt.ChooseNumber decider S.alice oid 3 NumberFloor.HighBid Nothing)) (Set.fromList [3, 4])
 
 -- Every answer the bot gives the prompt over many seeds.
 drawn :: (Ord r) => Prompt.Prompt r -> Set.Set r

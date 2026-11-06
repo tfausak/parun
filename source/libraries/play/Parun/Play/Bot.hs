@@ -21,6 +21,7 @@ import qualified Parun.Types.Action as Action
 import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.Dividing as Dividing
+import qualified Parun.Types.GuessAnswer as GuessAnswer
 import qualified Parun.Types.MulliganDecision as MulliganDecision
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.PaymentDecision as PaymentDecision
@@ -28,8 +29,9 @@ import qualified Parun.Types.PlayerView as PlayerView
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.SplitMix as SplitMix.Type
 
--- | Each prompt a Portal game reaches, answered with one of its legal answers,
--- each equally likely. Never concedes.
+-- | Each prompt a Portal game reaches, plus ChooseGuess and ChooseNumber,
+-- answered with one of its legal answers, each equally likely, an unbounded
+-- number capped one past its floor. Never concedes.
 --
 -- Not implemented: a random answer to every other prompt, which gets
 -- 'Replay.defaultAnswer' (#5227).
@@ -56,7 +58,7 @@ bot = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.OrderTriggers _ _ entries -> SplitMix.shuffle (zipWith const [0 ..] entries)
   -- CR 510.1c-e / 702.19b: every division whose gates this creature's own
   -- damage clears. Not implemented: a division leaning on another creature's
-  -- damage in the same step, legal under CR 702.19b's last sentence (#5227).
+  -- damage in the same step, legal under CR 702.19b's third sentence (#5227).
   Prompt.AssignCombatDamage _ _ _ thresholds power ->
     maybe (pure (Replay.defaultAnswer (Asked.prompt asked))) SplitMix.pick . NonEmpty.nonEmpty $
       filter (\division -> Damage.tiersCleared thresholds division Set.empty division) (divisions (Map.keys thresholds) power)
@@ -66,6 +68,13 @@ bot = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
     maybe (pure (Replay.defaultAnswer (Asked.prompt asked))) SplitMix.pick . NonEmpty.nonEmpty $
       filter (Target.divides dividing targets) (divisions (NonEmpty.toList targets) (Dividing.total dividing))
   Prompt.ChooseToPay {} -> SplitMix.pick (PaymentDecision.Declines NonEmpty.:| [PaymentDecision.Pays])
+  Prompt.ChoosePermanent _ _ _ candidates _ -> SplitMix.pick candidates
+  Prompt.ChooseCardFromAmong _ _ _ candidates -> SplitMix.pick candidates
+  Prompt.ChooseSacrifices _ _ _ candidates count _ -> fmap (Set.fromList . List.genericTake count) (SplitMix.shuffle candidates)
+  Prompt.ChooseGuess {} -> SplitMix.pick (GuessAnswer.Holds NonEmpty.:| [GuessAnswer.DoesNotHold])
+  -- CR 107.1c: an unbounded number, a bid's included, reaches one past its
+  -- floor, so a bid tops the high bid by one or declines.
+  Prompt.ChooseNumber _ _ _ least _ greatest -> SplitMix.between least (Maybe.fromMaybe (least + 1) greatest)
   prompt -> pure (Replay.defaultAnswer prompt)
 
 -- | CR 103.1: whether the bot, picked to choose who plays first, plays first
