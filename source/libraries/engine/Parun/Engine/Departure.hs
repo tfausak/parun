@@ -26,6 +26,7 @@ import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Emperor as Emperor
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.GrandMelee as GrandMelee
 import qualified Parun.Engine.Initiative as Initiative
 import qualified Parun.Engine.Monarch as Monarch
 import qualified Parun.Engine.Plane as Plane
@@ -187,6 +188,8 @@ leaveAll departing = do
   Event.simultaneously $ do
     State.modify' (Event.fileBoardBefore before)
     Monad.forM_ departing (\(why, pid) -> State.modify' (leave why pid . clauses pid))
+    -- CR 807.4c / 807.4e: the turn markers, once every status has flipped.
+    State.modify' (GrandMelee.departed pids)
     -- CR 603.9: a player who leaves loses, whatever the reason, unless the game
     -- was a draw for them. Inside the bracket, so CR 603.10f's look-back finds
     -- the permanents the first clause just took with them.

@@ -1617,6 +1617,8 @@ library codec
     Parun.Codec.TurnedUpOffDeckSpec
     Parun.Codec.TurnFaceDown
     Parun.Codec.TurnFaceDownSpec
+    Parun.Codec.TurnMarker
+    Parun.Codec.TurnMarkerSpec
     Parun.Codec.TurnRole
     Parun.Codec.TurnRoleSpec
     Parun.Codec.TurnScope
@@ -1784,6 +1786,7 @@ library engine
     Parun.Engine.Fragmented
     Parun.Engine.Game
     Parun.Engine.Goad
+    Parun.Engine.GrandMelee
     Parun.Engine.Ignore
     Parun.Engine.IgnoredAbility
     Parun.Engine.Initiative
@@ -2336,6 +2339,7 @@ library test
     Parun.FragmentedSpec
     Parun.GameSpec
     Parun.GoadSpec
+    Parun.GrandMeleeSpec
     Parun.HarnessSpec
     Parun.HealSpec
     Parun.IngestSpec
@@ -3310,6 +3314,7 @@ library types
     Parun.Types.TurnedFaceUp
     Parun.Types.TurnedUpOffDeck
     Parun.Types.TurnFaceDown
+    Parun.Types.TurnMarker
     Parun.Types.TurnRole
     Parun.Types.TurnScope
     Parun.Types.TurnTally

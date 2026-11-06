@@ -69,6 +69,7 @@ import qualified Parun.Codec.ReturnWatch as ReturnWatch
 import qualified Parun.Codec.SideDeck as SideDeck
 import qualified Parun.Codec.SpellWasCast as SpellWasCast
 import qualified Parun.Codec.Timestamp as Timestamp
+import qualified Parun.Codec.TurnMarker as TurnMarker
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
@@ -237,6 +238,7 @@ codec resolve = Fields.object $ do
   enteredWith <- Fields.defaulted "enteredWith" Map.empty (Common.naturalMap ObjectId.codec EntryLink.codec) GameState.enteredWith
   exilePiles <- Fields.defaulted "exilePiles" Map.empty (Common.naturalMap ObjectId.codec Timestamp.codec) GameState.exilePiles
   extraTurns <- Fields.defaulted "extraTurns" [] (Common.list ExtraTurn.codec) GameState.extraTurns
+  turnMarkers <- Fields.defaulted "turnMarkers" [] (Common.list TurnMarker.codec) GameState.turnMarkers
   subgamesThisMatch <- Fields.defaulted "subgamesThisMatch" 0 Common.natural GameState.subgamesThisMatch
   gamesThisMatch <- Fields.defaulted "gamesThisMatch" 1 Common.natural GameState.gamesThisMatch
   gameNumber <- Fields.defaulted "gameNumber" 1 Common.natural GameState.gameNumber
@@ -366,6 +368,7 @@ codec resolve = Fields.object $ do
         GameState.enteredWith = enteredWith,
         GameState.exilePiles = exilePiles,
         GameState.extraTurns = extraTurns,
+        GameState.turnMarkers = turnMarkers,
         GameState.subgamesThisMatch = subgamesThisMatch,
         GameState.gamesThisMatch = gamesThisMatch,
         GameState.gameNumber = gameNumber,
