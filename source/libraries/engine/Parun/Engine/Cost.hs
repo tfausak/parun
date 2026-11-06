@@ -4738,7 +4738,8 @@ composeReversal before windows keeps = case NonEmpty.nonEmpty windows of
 -- rule's "revealed from a library" protects. `nextEventGroup` rides at
 -- `since`'s value, since a carried-over entry may already hold a group
 -- `snapshot`'s own counter would otherwise repeat -- GameState.events' groups
--- are non-decreasing along the log.
+-- are non-decreasing along the log. Each kept entry's card stays exposed
+-- (Event.expose), its id having reached a seat.
 --
 -- The `events` carry is a REGRESSION FENCE: a mana ability that revealed or
 -- looked stands whole, so only a reversed cost could bring a reveal here, and
@@ -4752,11 +4753,14 @@ keepingLibraryActions since snapshot =
         Nothing -> held
       inLibraryOf gs oid = any (Foldable.elem oid) (GameState.library gs)
       revealedFromLibrary logged = any (\oid -> inLibraryOf snapshot oid && inLibraryOf since oid) (shownCard logged)
-   in snapshot
-        { GameState.library = Map.mapWithKey keep (GameState.library snapshot),
-          GameState.events = GameState.events snapshot <> Seq.filter revealedFromLibrary (Seq.drop (Seq.length (GameState.events snapshot)) (GameState.events since)),
-          GameState.nextEventGroup = GameState.nextEventGroup since
-        }
+      kept = Seq.filter revealedFromLibrary (Seq.drop (Seq.length (GameState.events snapshot)) (GameState.events since))
+      restored =
+        snapshot
+          { GameState.library = Map.mapWithKey keep (GameState.library snapshot),
+            GameState.events = GameState.events snapshot <> kept,
+            GameState.nextEventGroup = GameState.nextEventGroup since
+          }
+   in Foldable.foldl' (\g logged -> maybe g (`Event.expose` g) (shownCard logged)) restored kept
 
 -- The restore every caller that reverts a failed payment to its own snapshot
 -- performs: `before` with what CR 733.1's last sentence keeps standing, read off
@@ -5389,13 +5393,10 @@ shuffledLibrary opened closed =
         _ -> False
    in any shuffle (Seq.drop (Seq.length (GameState.events opened)) (GameState.events closed))
 
--- The card a logged reveal (CR 701.20a) or look showed: CR 701.20e has a look
--- follow a reveal's rules, so CR 733.1's last sentence keeps both standing.
+-- Event.shownCard off the log: CR 733.1's last sentence keeps a reveal and a
+-- look standing alike.
 shownCard :: LoggedEvent.LoggedEvent -> Maybe ObjectId
-shownCard logged = case LoggedEvent.event logged of
-  GameEvent.Revealed revealed -> Just (Revealed.card revealed)
-  GameEvent.Looked looked -> Just (Looked.card looked)
-  _ -> Nothing
+shownCard = Event.shownCard . LoggedEvent.event
 
 -- CR 601.2h: the parts are paid "in any order", and the ORDER IS THE PAYER'S.
 -- Observable: Jarad, Golgari Lich Lord's "Sacrifice a Swamp and a Forest" beside

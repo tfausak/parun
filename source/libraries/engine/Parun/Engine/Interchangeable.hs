@@ -119,8 +119,10 @@ objects pcs gs a b =
         -- a commander is never alike with another copy of its printing, and two
         -- commanders are never alike either. The starting owner is compared,
         -- since Ante.ownershipChanges tells two cards apart by it.
+        -- Object.exposed is bookkeeping too: whether an id reached a seat
+        -- changes no rule's answer, only which ids a shuffle re-mints.
         (Just x, Just y) ->
-          withoutSerials x {Object.timestamp = Object.timestamp y} == withoutSerials y
+          withoutSerials x {Object.timestamp = Object.timestamp y, Object.exposed = Object.exposed y} == withoutSerials y
             && fmap snd (Commander.commanderCardOf a gs) == fmap snd (Commander.commanderCardOf b gs)
         _ -> False
       unserial identity = identity {CardIdentity.serial = 0}

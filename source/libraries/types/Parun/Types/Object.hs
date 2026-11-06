@@ -160,6 +160,14 @@ data Object = MkObject
     -- Per-incarnation: reset by newIncarnation (CR 400.7), which ends every
     -- window when the card changes zones.
     revealed :: Set.Set RevealWindow.RevealWindow,
+    -- | CR 701.24a: whether this object's id has reached a seat -- a reveal or
+    -- look of it, a view showing it atop its library, a search offering it --
+    -- so a shuffle re-mints it (Parun.Engine.Event.forgetShown) and no seat can
+    -- follow it through.
+    --
+    -- Per-incarnation: reset by newIncarnation (CR 400.7), the new object's id
+    -- having reached no one.
+    exposed :: Bool,
     -- | CR 120.3e: damage dealt to a creature is MARKED on it. A count and not a
     -- list of tagged units, every damage rider being consumed at deal time and CR
     -- 704.5g reading only the total. Removed at cleanup (CR 514.2), by a
@@ -975,6 +983,7 @@ new o s z t =
       exiledFaceDown = False,
       exileLookers = Set.empty,
       revealed = Set.empty,
+      exposed = False,
       damage = 0,
       sickness = Sickness.Sick,
       -- CR 702.30a read straight: the object that comes back came under its

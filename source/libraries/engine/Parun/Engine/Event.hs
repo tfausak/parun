@@ -453,7 +453,7 @@ restampLifeChanges logged =
 recordEventOver :: GameState -> GameEvent -> GameState -> GameState
 recordEventOver board event gs =
   let group = GameState.nextEventGroup gs
-   in (involveActedOn event gs)
+   in (involveActedOn event (exposeShown event gs))
         { GameState.events = GameState.events gs Seq.|> LoggedEvent.MkLoggedEvent {LoggedEvent.group = group, LoggedEvent.event = event},
           GameState.nextEventGroup =
             if GameState.eventGroupDepth gs == 0
@@ -7337,20 +7337,33 @@ stayPut oid obj requestedDest position shuffling = case Object.zone obj of
   _ -> pure Seq.empty
 
 -- CR 701.20d's new object for a library card shown to a player -- revealed (a
--- live CR 701.20a window, a Revealed entry this turn, or CR 401.6's revealed top
--- card, GameState.revealedTops) or looked at (CR 701.20e's Looked) -- re-minted
--- where it lies (remint). Answers the id the card now has.
+-- live CR 701.20a window, or a Revealed entry) or looked at (CR 701.20e's
+-- Looked) -- re-minted where it lies (remint). CR 701.24a's "no player knows
+-- their order" widens it to every card whose id reached a seat
+-- (Object.exposed): one shown on an earlier turn, a top card shown to its owner
+-- alone, a search's offer. Answers the id the card now has.
+-- Parun.PlayerViewSpec's CR 701.24a cases prove the widening.
 forgetShown :: ObjectId -> GameState -> (ObjectId, GameState)
 forgetShown oid gs = case Game.lookupObject oid gs of
   Just obj
-    | Object.zone obj == Zone.Library && shown -> remint oid gs
-    where
-      shown = not (Set.null (Object.revealed obj)) || elem oid (GameState.revealedTops gs) || any names (GameState.events gs)
-      names logged = case LoggedEvent.event logged of
-        GameEvent.Revealed r -> Revealed.card r == oid
-        GameEvent.Looked l -> Looked.card l == oid
-        _ -> False
+    | Object.zone obj == Zone.Library && (Object.exposed obj || not (Set.null (Object.revealed obj))) -> remint oid gs
   _ -> (oid, gs)
+
+-- | CR 701.24a: mark that an object's id has reached a seat (Object.exposed).
+expose :: ObjectId -> GameState -> GameState
+expose oid gs = gs {GameState.objects = Map.adjust (\obj -> obj {Object.exposed = True}) oid (GameState.objects gs)}
+
+-- | `expose` for the card a logged event shows (shownCard).
+exposeShown :: GameEvent -> GameState -> GameState
+exposeShown event = maybe id expose (shownCard event)
+
+-- | The card a reveal (CR 701.20a) or a look showed, CR 701.20e having a look
+-- follow a reveal's rules.
+shownCard :: GameEvent -> Maybe ObjectId
+shownCard event = case event of
+  GameEvent.Revealed revealed -> Just (Revealed.card revealed)
+  GameEvent.Looked looked -> Just (Looked.card looked)
+  _ -> Nothing
 
 -- A library card swapped into the same place in its pile under a fresh id,
 -- through Object.newIncarnation. Not a zone change, so nothing is logged and no
@@ -7382,7 +7395,8 @@ remint oid gs = case Game.lookupObject oid gs of
 -- settle that is no longer revealed there -- a card is over it, or nothing
 -- reveals it now -- is re-minted where it lies (remint), so it is a new object
 -- once revealed again; then each library's revealed top is recorded
--- (Visibility.revealedTop). Settled at CR 117.5 and after each instruction
+-- (Visibility.revealedTop), and each top card any seat sees, a look's audience
+-- included, is exposed (CR 701.24a, forgetShown). Settled at CR 117.5 and after each instruction
 -- (Parun.Engine.Resolve.Effect.applyEffectWith), so a run that ends and
 -- resumes within one resolution is seen.
 --
@@ -7397,7 +7411,9 @@ settleRevealedTops gs =
   let now = Map.fromList [(pid, top) | pid <- Map.keys (GameState.players gs), Just top <- [Visibility.revealedTop pid gs]]
       lapsed = [oid | (pid, oid) <- Map.toList (GameState.revealedTops gs), Map.lookup pid now /= Just oid, Game.zoneOf oid gs == Just Zone.Library]
       reminted = Foldable.foldl' (\g oid -> snd (remint oid g)) gs lapsed
-   in reminted {GameState.revealedTops = now}
+      seated = Map.keys (GameState.players reminted)
+      seen = [top | pid <- seated, Just top <- [Game.shownTop pid reminted], any (\seat -> Visibility.sees seat top reminted == Visibility.Type.Visible) seated]
+   in (Foldable.foldl' (flip expose) reminted seen) {GameState.revealedTops = now}
 
 -- forgetShown over every card an instruction reordered, in the order given.
 forgetAllShown :: (Foldable t) => t ObjectId -> GameState -> GameState

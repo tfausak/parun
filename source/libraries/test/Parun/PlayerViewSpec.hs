@@ -55,6 +55,7 @@ import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Label as Label
 import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Looked as Looked
@@ -76,6 +77,7 @@ import qualified Parun.Types.Seat as Seat
 import qualified Parun.Types.SeatView as SeatView
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.SpellWasCast as SpellWasCast
+import qualified Parun.Types.Staged as Staged
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChange as ZoneChange
@@ -351,6 +353,37 @@ spec s registry = Spec.describe s "PlayerView" $ do
       Spec.assertEqWith s (seat <> "CR 400.2 the land, seen arriving") [ProjectedCharacteristics.names (Moved.characteristics m) | GameEvent.Moved m <- witnessedBy pid gs, ZoneChange.from (Moved.change m) == Zone.Library] [Set.singleton (CardName.MkCardName (Text.pack "Plains"))]
       Spec.assertBool s (Text.pack "Plains moves from a library to the battlefield." `elem` drawnFor pid gs) (seat <> "drawn")
     Spec.assertBool s (not ("Hill Giant" `List.isInfixOf` encodedFor S.bob gs)) "CR 701.23a the card alice saw searching reaches no part of bob's view"
+  -- Evolving Wilds' shuffle keeps the Giant on top, where alice sees it before
+  -- and after through Vizier of the Menagerie; the other Plains was offered to
+  -- her search and left in; the Bears reached no seat.
+  Spec.it s "CR 701.24a a library card whose id reached a seat comes out of the shuffle a new object" $ do
+    let mine =
+          (S.battlefield S.alice [S.settled "vizier" "Vizier of the Menagerie", S.settled "wilds" "Evolving Wilds"])
+            { Seat.library = Seq.fromList (fmap (\(label, card) -> S.aliased label (S.cardSetup card)) [("giant", "Hill Giant"), ("found", "Plains"), ("other", "Plains"), ("bears", "Grizzly Bears")])
+            }
+        setup = S.board (mine NonEmpty.:| [S.playerSetup S.bob]) S.alice S.precombatMain
+        answering prompt labels = Move.Answer (Answer.MkAnswer (Text.pack prompt) (Reply.Array (fmap (Reply.Text . Text.pack) labels)) False)
+        script =
+          S.turn
+            1
+            [ S.on S.precombatMain S.alice (S.activateAction (S.aliasRef "wilds") Choices.none),
+              S.on S.precombatMain S.alice Move.Pass,
+              S.on S.precombatMain S.alice (answering "Search" ["$found"]),
+              S.on S.precombatMain S.alice (answering "Shuffle" ["$giant", "$other", "$bears"])
+            ]
+        seenLibrary gs = [(ObjectView.object o, fmap ProjectedCharacteristics.names (ObjectView.characteristics o)) | seat <- Maybe.maybeToList (seatOf S.alice (PlayerView.viewFor S.alice gs)), o <- SeatView.library seat]
+        giantName = Just (Set.singleton (CardName.MkCardName (Text.pack "Hill Giant")))
+    built <- S.buildBoardOrFail s registry setup
+    let labelled name = maybe (Spec.assertFailure s ("no " <> name)) pure (Map.lookup (Label.MkLabel (Text.pack name)) (Staged.objects built))
+    giant <- labelled "giant"
+    other <- labelled "other"
+    bears <- labelled "bears"
+    after <- S.play s registry setup script S.priorityGame
+    Spec.assertEqWith s "CR 701.24a alice sees a Hill Giant atop her library after the shuffle, under a new id" (fmap (\(oid, names) -> (oid == giant, names)) (seenLibrary after)) [(False, giantName)]
+    Spec.assertEqWith s "CR 701.24a the Plains her search was offered is a new object" (Game.lookupObject other after) Nothing
+    Spec.assertEqWith s "the Bears no seat saw keeps its id" (Game.zoneOf bears after) (Just Zone.Library)
+    Spec.assertEqWith s "before the shuffle alice saw the Giant under its id" (seenLibrary (Staged.state built)) [(giant, giantName)]
+    Spec.assertEqWith s "the search took the found Plains out of the library" (length (Game.zoneMembers Zone.Library S.alice after)) 3
   Spec.it s "CR 700.3 Curator of Destinies's face-up pile is seen moving to the hand, and its face-down pile is not" $ do
     let islands = fmap (\n -> "i" <> show n) [1 :: Int .. 6]
         mine =
