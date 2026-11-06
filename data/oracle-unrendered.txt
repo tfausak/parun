@@ -28,7 +28,6 @@ act-of-treason
 act-on-impulse
 ad-nauseam
 adaptive-automaton
-adaptive-gemguard
 adric-mathematical-genius
 advancing-the-spirit
 aegis-angel
@@ -299,7 +298,6 @@ blood-moon
 blood-reckoning
 blood-seeker
 blood-tithe
-bloodbraid-challenger
 bloodcrazed-goblin
 bloodghast
 bloodletter-of-aclazotz
@@ -354,7 +352,6 @@ brineborn-cutthroat
 bringer-of-the-black-dawn
 brink-of-disaster
 bristling-boar
-brittle-effigy
 broken-wings
 bronze-tablet
 bronzehide-lion
@@ -503,7 +500,6 @@ clever-concealment
 clever-impersonator
 clinquant-skymage
 cloak-of-confusion
-clock-of-omens
 clockwork-avian
 clockwork-beast
 clockwork-steed
@@ -593,7 +589,6 @@ crucible-of-worlds
 cruel-bargain
 cruel-edict
 cruel-fate
-cruel-sadist
 crumb-and-get-it
 crumbling-colossus
 cry-of-contrition
@@ -690,7 +685,6 @@ desecration-demon
 desert
 desertion
 desolation-twin
-despoiler-of-souls
 destined-lead
 destructive-force
 detection-tower
@@ -715,7 +709,6 @@ dinosaurs-on-a-spaceship
 dire-fleet-daredevil
 disarm
 disciple-of-bolas
-disciple-of-the-ring
 discombobulate
 disguise-agent
 dismantling-wave
@@ -758,7 +751,6 @@ dragon-mask
 dragon-whelp
 dragonhawk-fates-tempest
 dragonlords-servant
-dragons-hoard
 dragons-prey
 dragonskull-summit
 dragonstorm-globe
@@ -1116,7 +1108,6 @@ geyser-leaper
 ghalta-primal-hunger
 ghastbark-twins
 ghazban-ogre
-ghirapur-aether-grid
 ghirapur-guide
 ghitu-encampment
 ghitu-fire
@@ -1224,12 +1215,10 @@ green-ward
 greenbelt-guardian
 grifters-blade
 grim-hireling
-grim-lavamancer
 grim-poppet
 grim-reminder
 grim-return
 grindclock
-grinning-ignus
 grinning-totem
 grist-the-hunger-tide
 grooms-finery
@@ -1258,7 +1247,6 @@ hamletback-goliath
 hammerhand
 hand-of-the-praetors
 hangarback-walker
-hanged-executioner
 hanweir-battlements
 hanweir-garrison
 happy-hogan-bodyguard
@@ -1296,18 +1284,15 @@ heart-piercer-bow
 heartstone
 heavenly-blademaster
 heavy-fog
-hecatomb
 hei-bai-forest-guardian
 heirloom-blade
 heliod-sun-crowned
-hellion-crucible
 henry-wu-ingen-geneticist
 henzie-toolbox-torre
 herald-of-eternal-dawn
 herald-of-the-pantheon
 herald-of-war
 heraldic-banner
-heritage-druid
 hermes-overseer-of-elpis
 hero-of-bladehold
 heroes-bane
@@ -1334,7 +1319,6 @@ holy-day
 homarid-warrior
 homunculus-horde
 honored-hierarch
-hopeful-initiate
 hornet-nest
 hostage-taker
 hot-soup
@@ -1430,7 +1414,6 @@ inys-haen
 iridescent-angel
 iron-apprentice
 iron-monger-sadistic-tycoon
-iron-spider-stark-upgrade
 ironclaw-buzzardiers
 ironclaw-curse
 ironclaw-orcs
@@ -1635,7 +1618,6 @@ living-lore
 living-plane
 living-terrain
 living-wish
-llanowar-behemoth
 llanowar-empath
 llanowar-sentinel
 loaming-shaman
@@ -1917,7 +1899,6 @@ norritt
 norwood-priestess
 norwood-riders
 novice-knight
-novijen-sages
 null-chamber
 oath-of-the-ancient-wood
 ob-nixilis-unshackled
@@ -1950,7 +1931,6 @@ opalescence
 open-the-vaults
 open-the-way
 opera-love-song
-opposition
 opposition-agent
 oppressive-rays
 oracle-en-vec
@@ -2028,7 +2008,6 @@ pentagram-of-the-ages
 pentarch-paladin
 pentavus
 perennation
-perilous-vault
 persecute
 person-of-interest
 personal-incarnation
@@ -2172,7 +2151,6 @@ quickling
 quicksilver-amulet
 quicksilver-gargantuan
 quilled-greatwurm
-quillspike
 quina-qu-gourmet
 qutrub-forayer
 rabid-elephant
@@ -2335,7 +2313,6 @@ rootha-mastering-the-moment
 rootpath-purifier
 rootwater-matriarch
 rope
-rot-curse-rakshasa
 rout
 rowdy-crew
 rowen
@@ -2578,15 +2555,10 @@ sorin-markov
 sorrows-path
 soul-burn
 soul-conduit
-soul-diviner
 soul-foundry
 soul-immolation
-soul-of-innistrad
-soul-of-new-phyrexia
 soul-of-ravnica
 soul-of-shandalar
-soul-of-theros
-soul-of-zendikar
 soul-sculptor
 soul-shackled-zombie
 soul-shatter
@@ -2641,7 +2613,6 @@ spitfire-handler
 splinter-twin
 spreading-algae
 springbloom-druid
-springleaf-drum
 spy-kit
 spymasters-vault
 squad-captain
@@ -2738,7 +2709,6 @@ surveyors-scope
 susan-foreman
 suspend
 suspend-aggression
-suspicious-shambler
 sutured-ghoul
 swamp-mosquito
 swans-of-bryn-argoll
@@ -3146,7 +3116,6 @@ well-rested
 wheel-of-sun-and-moon
 whim-of-volrath
 whippoorwill
-whirler-rogue
 whirling-dervish
 whirlpool-drake
 whirlpool-rider
@@ -3261,7 +3230,6 @@ anticipate
 apex-of-power
 arcades-the-strategist
 blood-divination
-bone-dragon
 chaos-wand
 chromium-the-mutable
 colossal-majesty

@@ -27,7 +27,7 @@ data Phrase = MkPhrase
     nouns :: [Noun],
     qualifiers :: [Qualifier]
   }
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 -- | A noun in both numbers. A disjunction of whole phrases ("land or nonblack
 -- creature") has no plural Oracle text uses, so answers none.
@@ -35,7 +35,7 @@ data Noun = MkNoun
   { singular :: Text.Text,
     plural :: Maybe Text.Text
   }
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 -- | Words before or after the noun, which agree with it in number: "a
 -- creature you control" and "creatures you control" agree, "a creature an
@@ -44,7 +44,7 @@ data Qualifier = MkQualifier
   { one :: Text.Text,
     many :: Text.Text
   }
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 -- | Grammatical number.
 data Number
@@ -54,13 +54,28 @@ data Number
 
 -- | The phrase a filter describes, or none for one this cannot describe.
 phrase :: Filter.Filter k -> (k -> [Text.Text]) -> [Phrase]
-phrase f named = case f of
+phrase = phraseJoining Plain
+
+-- | How a disjunction of whole phrases joins its nouns, in the singular and
+-- the plural.
+data Joining
+  = -- | "artifact or enchantment", "creatures and lands" (Devastation).
+    Plain
+  | -- | "each artifact creature and/or Vehicle" (Iron Spider, Stark Upgrade),
+    -- "two artifacts and/or creatures" (Adaptive Gemguard), where one object
+    -- may be both.
+    Inclusive
+  deriving (Eq, Show)
+
+-- | 'phrase', joining a disjunction's nouns as given.
+phraseJoining :: Joining -> Filter.Filter k -> (k -> [Text.Text]) -> [Phrase]
+phraseJoining joining f named = case f of
   Filter.And fs -> do
-    parts <- traverse (\g -> phrase g named) fs
+    parts <- traverse (\g -> phraseJoining joining g named) fs
     pure (List.foldl' merge empty parts)
   Filter.Or fs
     | Just ts <- traverse cardTypeOf fs, Just p <- permanentCard (Set.fromList ts) -> [p]
-    | otherwise -> disjunction =<< traverse (\g -> phrase g named) fs
+    | otherwise -> disjunction joining =<< traverse (\g -> phraseJoining joining g named) fs
   Filter.HasCardType t -> [noun (cardType Singular t) (Just (cardType Plural t))]
   Filter.HasSubtype s -> do
     name <- subtype s
@@ -182,9 +197,10 @@ permanentCard ts =
 -- ("white and/or blue creatures", Ignite Disorder), and whole phrases join
 -- into one noun ("artifact or enchantment"), whose plural Oracle text writes
 -- with "and" ("all creatures and lands", Devastation) where the nouns are
--- bare, and not at all otherwise.
-disjunction :: [Phrase] -> [Phrase]
-disjunction ps
+-- bare, and not at all otherwise; 'Inclusive' joins both numbers with
+-- "and/or".
+disjunction :: Joining -> [Phrase] -> [Phrase]
+disjunction joining ps
   | length ps < 2 = []
   | all (\p -> null (nouns p) && null (qualifiers p) && length (adjectives p) == 1) ps = do
       let adjs = concatMap adjectives ps
@@ -196,10 +212,13 @@ disjunction ps
       -- (Devout Decree).
       MkPhrase [MkQualifier ones manys] [] [] : [qualifier (Text.pack "that's " <> ones) (Text.pack "that are " <> manys) | colours]
   | not (any (null . nouns) ps) = do
+      let (one', many') = case joining of
+            Plain -> ("or", "and")
+            Inclusive -> ("and/or", "and/or")
       singulars <- traverse (describe Singular (MkNoun Text.empty Nothing)) ps
       let bare p = null (adjectives p) && null (qualifiers p)
           plurals = traverse (Maybe.listToMaybe . describe Plural (MkNoun Text.empty Nothing)) ps
-      [noun (Prose.listing "or" singulars) (Monad.mfilter (const (all bare ps)) (fmap (Prose.listing "and") plurals))]
+      [noun (Prose.listing one' singulars) (Monad.mfilter (const (all bare ps)) (fmap (Prose.listing many') plurals))]
   | otherwise = []
 
 -- | A card type's name, in lower case as rules text uses it.
