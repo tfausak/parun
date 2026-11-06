@@ -569,6 +569,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.TagWasSpent _ -> predicate
         Filter.Type.Paid _ -> predicate
         Filter.Type.IsPrototyped -> predicate
+        Filter.Type.IsPreparedSpell -> predicate
 
 -- A baked answer as a Filter. `And []` is the trivial predicate by
 -- Parun.Types.Filter's own note, so its negation is the trivially false one --
@@ -1571,6 +1572,8 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       -- object's own flag is a field of an OBJECT, which lastKnownView adds. A
       -- regression fence: no card asks it of a snapshot.
       Filter.prototyped = PC.prototyped snapshot,
+      -- CR 722.3c's record is a field of an OBJECT -- `tributePaid` above.
+      Filter.preparedSpell = False,
       -- CR 400.7d's mana record is a field of an OBJECT, which a
       -- ProjectedCharacteristics does not carry -- `designations` above, same
       -- sentence -- so a past event reports none.

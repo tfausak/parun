@@ -717,6 +717,13 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       Filter.IsPrototyped
       " {\"type\":\"IsPrototyped\"} "
+  -- Codie, Ravenous Codex's "a prepared spell".
+  Spec.it s "IsPreparedSpell" $
+    Common.assertCodec
+      s
+      codec
+      Filter.IsPreparedSpell
+      " {\"type\":\"IsPreparedSpell\"} "
   Spec.it s "HasDesignation Renowned" $
     Common.assertCodec
       s

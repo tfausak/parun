@@ -700,6 +700,7 @@ filterNames asking criterion = case criterion of
   Filter.TagWasSpent _tag -> mempty
   Filter.Paid _keywordDesignator -> mempty
   Filter.IsPrototyped -> mempty
+  Filter.IsPreparedSpell -> mempty
   Filter.And nested -> foldMap (filterNames asking) nested
   Filter.Or nested -> foldMap (filterNames asking) nested
   Filter.Not nested -> filterNames asking nested
