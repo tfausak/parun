@@ -393,6 +393,21 @@ frontFaceKeywords oid card gs =
   let front o = o {Object.face = Just (Face.name (Card.frontFace card)), Object.facing = Facing.FaceUp, Object.exiledFaceDown = False}
    in Map.keysSet (Projection.keywordsOf oid gs {GameState.objects = Map.adjust front oid (GameState.objects gs)})
 
+-- CR 113.6d / 613.1f: the face being cast, less the cost abilities it prints
+-- where a layer-6 wipe reaches the SPELL (`spell`, asSpellProjected): a
+-- perpetual one does, one confined to graveyards does not. Its additional costs
+-- (CR 118.8, choices included) and alternative costs (CR 118.9) are abilities
+-- functioning on the stack (CR 113.1a, 113.6d), where CR 601.2f totals the
+-- cost. Parun.CostSpec's "CR 118.8 a Demon of Catastrophes that perpetually
+-- lost all abilities is cast without a sacrifice", "CR 118.9 an
+-- Asmoranomardicadaistinaculdacar that perpetually lost all abilities has no
+-- alternative cost" and "CR 113.6d under Yixlid Jailer a Fireblast cast from
+-- the graveyard still sacrifices two Mountains" prove it.
+spellFace :: PC.ProjectedCharacteristics -> Face.Face card -> Face.Face card
+spellFace spell face
+  | PC.lostAllAbilities spell = face {Face.additionalCosts = [], Face.additionalCostChoices = [], Face.alternativeCosts = []}
+  | otherwise = face
+
 -- CR 118.8 / 601.2b: one candidate per way of paying this face's CHOICE costs --
 -- Caustic Exhale's "behold a Dragon or pay {1}". Folded into every candidate
 -- rather than into the printed cost alone, `withAdditional`'s reason one field
@@ -518,7 +533,7 @@ candidateCostsGiven permitted pid name oid gs =
           let -- CR 707.2: the costs are copiable values, so a card carrying a
               -- copy stamp or a conjured duplicate's values is priced off those
               -- (Game.castingFaceOf).
-              face = Game.castingFaceNamed obj card name
+              face = spellFace spell (Game.castingFaceNamed obj card name)
               printed = Cost.MkCost {Cost.mana = Face.manaCost face, Cost.components = Face.additionalCosts face}
               -- CR 118.9d: an alternative replaces only the MANA cost; every
               -- additional cost still applies. CR 702.34a's last sentence sends
@@ -543,30 +558,15 @@ candidateCostsGiven permitted pid name oid gs =
                     gs
                     oid
                     cond
-              -- CR 113.6d / 613.1f: a printed alternative cost is an ability that
-              -- functions on the stack, so a layer-6 wipe takes it only where
-              -- it reaches the SPELL (`spell`): a perpetual one does, one
-              -- confined to graveyards does not. The projection is asked only
-              -- of a face printing one. Parun.CostSpec's "CR 118.9 an
-              -- Asmoranomardicadaistinaculdacar that perpetually lost all
-              -- abilities has no alternative cost" and "CR 113.6d under Yixlid
-              -- Jailer a Fireblast cast from the graveyard still sacrifices two
-              -- Mountains" prove both.
-              --
-              -- A GRANTED alternative cost (Mine Security's perpetual "You may
-              -- pay {0} rather than pay this spell's mana cost") is read off
-              -- `spell` too, CR 113.6d's standing; the projection has already
-              -- applied any wipe to it. The scenario
+              -- CR 113.6d: a printed alternative cost is an ability that
+              -- functions on the stack, so `spellFace` has dropped it where a
+              -- layer-6 wipe reaches the spell. A GRANTED one (Mine Security's
+              -- perpetual "You may pay {0} rather than pay this spell's mana
+              -- cost") is read off `spell` too, CR 113.6d's standing; the
+              -- projection has already applied any wipe to it. The scenario
               -- cr-118-9-the-kavu-mine-security-conjured-is-cast-for-0 proves it.
               alternatives =
-                ( case Face.alternativeCosts face of
-                    [] -> []
-                    printedAlternatives ->
-                      if PC.lostAllAbilities spell
-                        then []
-                        else fmap (withAdditional . AlternativeCost.cost) (filter available printedAlternatives)
-                )
-                  <> fmap (withAdditional . AlternativeCost.cost) (filter available (PC.grantedAlternativeCosts spell))
+                fmap (withAdditional . AlternativeCost.cost) (filter available (Face.alternativeCosts face <> PC.grantedAlternativeCosts spell))
               -- CR 702.103a: bestow, offered from EVERY zone the printed cost is
               -- -- "a static ability that functions in any zone from which you
               -- could play the card it's on" -- so it joins `ordinary` below

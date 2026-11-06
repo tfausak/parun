@@ -158,9 +158,7 @@ data Face card = MkFace
     -- reach zero.
     --
     -- The closed half must read this through Parun.Engine.Projection.keywordsOf, never
-    -- directly, since layer 6 grants and removes abilities. The exception is a
-    -- reader off the battlefield that still takes the printed card (#4710) --
-    -- the carve-out additionalCosts takes. A GRAVEYARD reader of rule
+    -- directly, since layer 6 grants and removes abilities. A GRAVEYARD reader of rule
     -- 702.34a's flashback goes through the projection, so a granted one reaches
     -- the cost (Parun.Engine.Cost.costsFor). So do the HAND readers of rule
     -- 702.8a's flash (Parun.Engine.Cast.instantSpeed: Teferi, Mage of Zhalfir's
@@ -322,10 +320,9 @@ data Face card = MkFace
     -- carriers cannot be merged.
     counterability :: Counterability.Counterability,
     -- | CR 118.8: this face's printed additional costs, paid at the same time as
-    -- the spell's mana cost (Village Rites). Read directly from the card: a cost
-    -- is consulted while the object is in hand, where this reader takes the
-    -- printed card (#4710), or the copy stamp's
-    -- values where it carries one (Game.castingFaceOf). CR 118.8d: this does not
+    -- the spell's mana cost (Village Rites). Read off the card, or the copy
+    -- stamp's values where it carries one (Game.castingFaceOf), less a layer-6
+    -- wipe reaching the spell (CR 113.6d, Parun.Engine.Cost.spellFace). CR 118.8d: this does not
     -- change the card's mana cost, so 'manaCost' above and every reader of mana
     -- value is unaffected.
     --
