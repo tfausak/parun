@@ -17,9 +17,11 @@ codec = Fields.object $ do
   permanents <- Fields.required "permanents" ChosenPermanents.codec ChoosePermanents.permanents
   slot <- Fields.required "slot" SlotName.codec ChoosePermanents.slot
   pileChooser <- Fields.defaulted "pileChooser" Nothing (Common.maybe PlayerRef.codec) ChoosePermanents.pileChooser
+  rest <- Fields.defaulted "rest" Nothing (Common.maybe SlotName.codec) ChoosePermanents.rest
   pure
     ChoosePermanents.MkChoosePermanents
       { ChoosePermanents.permanents = permanents,
         ChoosePermanents.slot = slot,
-        ChoosePermanents.pileChooser = pileChooser
+        ChoosePermanents.pileChooser = pileChooser,
+        ChoosePermanents.rest = rest
       }

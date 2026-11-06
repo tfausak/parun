@@ -379,6 +379,8 @@ library codec
     Parun.Codec.ChooseBetween
     Parun.Codec.ChooseBetweenSpec
     Parun.Codec.ChooseCardName
+    Parun.Codec.ChooseGroup
+    Parun.Codec.ChooseGroupSpec
     Parun.Codec.ChooseNumber
     Parun.Codec.ChooseNumberSpec
     Parun.Codec.ChoosePermanents
@@ -875,6 +877,7 @@ library codec
     Parun.Codec.GrantPlayFromExileSpec
     Parun.Codec.GraveyardOrder
     Parun.Codec.GraveyardOrderSpec
+    Parun.Codec.Grouping
     Parun.Codec.Guess
     Parun.Codec.GuessSpec
     Parun.Codec.HalfUnlocked
@@ -2594,6 +2597,7 @@ library types
     Parun.Types.Choices
     Parun.Types.ChooseBetween
     Parun.Types.ChooseCardName
+    Parun.Types.ChooseGroup
     Parun.Types.ChooseNumber
     Parun.Types.ChoosePermanents
     Parun.Types.ChoosePlayer
@@ -2870,6 +2874,7 @@ library types
     Parun.Types.GrantPlayFromExile
     Parun.Types.GraveyardArrangement
     Parun.Types.GraveyardOrder
+    Parun.Types.Grouping
     Parun.Types.Guess
     Parun.Types.GuessAnswer
     Parun.Types.HalfUnlocked

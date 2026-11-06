@@ -65,6 +65,7 @@ import qualified Parun.Types.CastRepetition as CastRepetition
 import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.ChooseCardName as ChooseCardName
+import qualified Parun.Types.ChooseGroup as ChooseGroup
 import qualified Parun.Types.ChooseNumber as ChooseNumber
 import qualified Parun.Types.ChoosePermanents as ChoosePermanents
 import qualified Parun.Types.ChoosePlayer as ChoosePlayer
@@ -160,6 +161,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Grouping as Grouping
 import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HiddenZone as HiddenZone
 import qualified Parun.Types.HowMany as HowMany
@@ -699,6 +701,13 @@ objectRefPlayerRefs ref = case ref of
   ObjectRef.FromAnywhere _ -> []
   ObjectRef.AllOf refs -> concatMap objectRefPlayerRefs refs
 
+-- The refs a group to choose among names: a pile's slot, and no ref for the
+-- sectors, which are designations.
+groupingRefs :: Grouping.Grouping -> [ObjectRef]
+groupingRefs grouping = case grouping of
+  Grouping.Sectors -> []
+  Grouping.Piles slots -> fmap ObjectRef.InSlot (NonEmpty.toList slots)
+
 -- The refs a CR 707.10 answer names: rule 707.10d's candidates, and nothing for
 -- the other two, neither of which describes anything.
 copyTargetsRefs :: CopyTargets.CopyTargets -> [ObjectRef]
@@ -889,7 +898,8 @@ effectObjectRefs effect = case effect of
   Effect.ChoosePlayer {} -> []
   Effect.ChoosePlayerAtRandom {} -> []
   Effect.ChoosePermanents {} -> []
-  Effect.ChooseSector {} -> []
+  -- CR 700.3: the piles an earlier instruction bound, and what the choice is for.
+  Effect.ChooseGroup choice -> groupingRefs (ChooseGroup.among choice) <> Foldable.toList (ChooseGroup.about choice)
   Effect.RollDie {} -> []
   Effect.FlipCoin {} -> []
   Effect.ExileHandThenDraw -> []
@@ -1122,7 +1132,7 @@ effectPlayerRefs effect = case effect of
   -- The seat that picks -- Archfiend of Depravity's "that player" -- and the
   -- one that picks a pile (CR 700.3).
   Effect.ChoosePermanents choice -> ChosenPermanents.chooser (ChoosePermanents.permanents choice) : Foldable.toList (ChoosePermanents.pileChooser choice)
-  Effect.ChooseSector {} -> []
+  Effect.ChooseGroup {} -> []
   Effect.RollDie {} -> []
   -- The seat that flips -- Mana Clash's target opponent (CR 705.2).
   Effect.FlipCoin flipCoin -> [FlipCoin.flipper flipCoin]
@@ -1589,11 +1599,11 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.PlaySubgame _ -> Map.empty
   -- A DEFINITION too: chosen as this effect is applied (CR 608.2d), never read.
   Effect.ChoosePlayer _ -> Map.empty
-  Effect.ChooseSector _ -> Map.empty
+  Effect.ChooseGroup _ -> Map.empty
   Effect.ChoosePlayerAtRandom _ -> Map.empty
   -- The slot is a DEFINITION; the reads are the ceiling's and the Filter's, and
   -- the chooser is a PlayerRef, reported at the head with every other one.
-  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents filter_ _ count _) _ _) ->
+  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents filter_ _ count _) _ _ _) ->
     joinTwo (maybe Map.empty quantitySlots (HowMany.quantity count)) (filterSlotsOf filter_)
   -- A DEFINITION for the result slot (boundSlots below), but CR 706.2's modifier
   -- is a READ: the instruction's own Quantity may name a slot an earlier effect
@@ -2370,7 +2380,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.PlaySubgame _ -> True
   -- PlaySubgame's answer: a definition reads no slot.
   Effect.ChoosePlayer _ -> True
-  Effect.ChooseSector _ -> True
+  Effect.ChooseGroup _ -> True
   Effect.ChoosePlayerAtRandom _ -> True
   Effect.ChoosePermanents choice -> all Quantity.slotsAreExhaustive (HowMany.quantity (ChosenPermanents.count (ChoosePermanents.permanents choice)))
   Effect.RollDie rollDie -> Quantity.slotsAreExhaustive (RollDie.count rollDie) && all Quantity.slotsAreExhaustive (RollDie.modifier rollDie)
@@ -2632,7 +2642,7 @@ hasRead wanted =
         Effect.AttachAll {} -> False
         Effect.PlaySubgame _ -> False
         Effect.ChoosePlayer _ -> False
-        Effect.ChooseSector _ -> False
+        Effect.ChooseGroup _ -> False
         Effect.ChoosePlayerAtRandom _ -> False
         Effect.ChoosePermanents choice -> any (Quantity.hasRead wanted) (HowMany.quantity (ChosenPermanents.count (ChoosePermanents.permanents choice)))
         -- CR 706.2's modifier and CR 706.1's count are ordinary Quantities, so
@@ -2701,8 +2711,8 @@ boundSlots effect = case effect of
   Effect.ChoosePlayer choice -> Set.singleton (ChoosePlayer.slot choice)
   Effect.ChoosePlayerAtRandom choice -> Set.singleton (ChoosePlayerAtRandom.slot choice)
   -- CR 608.2d: the permanents this effect's chooser picked.
-  Effect.ChoosePermanents choice -> Set.singleton (ChoosePermanents.slot choice)
-  Effect.ChooseSector slot -> Set.singleton slot
+  Effect.ChoosePermanents choice -> Set.singleton (ChoosePermanents.slot choice) <> foldMap Set.singleton (ChoosePermanents.rest choice)
+  Effect.ChooseGroup choice -> Set.singleton (ChooseGroup.slot choice)
   -- CR 706.4: the result the roller used, and, where the card reads it, the
   -- other result of the same instruction, for a later effect of this resolution
   -- to read as Quantity.InSlot.

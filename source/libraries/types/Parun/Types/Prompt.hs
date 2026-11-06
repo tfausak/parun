@@ -796,7 +796,9 @@ data Prompt r where
   ChooseAnyNumber :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> AnyNumberOf.AnyNumberOf -> [ObjectId.ObjectId] -> Maybe Natural.Natural -> Seq.Seq (PlayerId.PlayerId, Set.Set ObjectId.ObjectId) -> Prompt (Set.Set ObjectId.ObjectId)
   -- | CR 700.3: which of the piles an effect separated objects into the player
   -- takes, any of them possibly empty (CR 700.3d). Elided where the piles are
-  -- alike. Answers as Response.ChosePile. The Seq is ChooseAnyNumber's.
+  -- alike. The object is the effect's source, or the one the choice is for
+  -- (Effect.ChooseGroup's `about`). Answers as Response.ChosePile. The Seq is
+  -- ChooseAnyNumber's.
   ChoosePile :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty (Set.Set ObjectId.ObjectId) -> Seq.Seq (PlayerId.PlayerId, Set.Set ObjectId.ObjectId) -> Prompt (Set.Set ObjectId.ObjectId)
   -- | CR 608.2d: which one of the matching permanents a resolving effect acts
   -- on (Parun.Types.ChosenPermanents at HowMany.Exactly), asked once per pick;

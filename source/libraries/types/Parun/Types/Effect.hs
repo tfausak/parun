@@ -19,6 +19,7 @@ import qualified Parun.Types.CastOffer as CastOffer
 import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.ChooseCardName as ChooseCardName
+import qualified Parun.Types.ChooseGroup as ChooseGroup
 import qualified Parun.Types.ChooseNumber as ChooseNumber
 import qualified Parun.Types.ChoosePermanents as ChoosePermanents
 import qualified Parun.Types.ChoosePlayer as ChoosePlayer
@@ -659,9 +660,9 @@ data Effect card ability
     -- pile of them, bound into its slot for a later effect of the same
     -- resolution to act on.
     ChoosePermanents ChoosePermanents.ChoosePermanents
-  | -- | CR 702.158d: the resolving controller chooses a sector, whose permanents
-    -- are bound into the slot.
-    ChooseSector SlotName.SlotName
+  | -- | CR 702.158d / 700.3: the resolving controller chooses a sector or a
+    -- pile, whose permanents are bound into the slot.
+    ChooseGroup ChooseGroup.ChooseGroup
   | -- | CR 706.1: roll dice of the stated kind and number, and bind the result
     -- as an amount at the payload's slot for a later effect to read as
     -- Quantity.InSlot (Ancient Copper Dragon, Valiant Endeavor).

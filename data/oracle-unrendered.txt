@@ -2185,6 +2185,7 @@ radiating-lightning
 raffine-scheming-seer
 raffines-informant
 rag-man
+raging-river
 raiders-allegiance
 rain-of-daggers
 raise-the-draugr
