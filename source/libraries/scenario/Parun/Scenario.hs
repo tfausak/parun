@@ -1674,6 +1674,11 @@ resolveObject ref gs = case ref of
     case List.reverse (castsOf card gs) of
       oid : _ -> pure oid
       [] -> failWith (Failure.MkUnknownObject ref False)
+  Reference.OnStack position -> case position of
+    0 -> failWith (Failure.MkUnknownObject ref False)
+    _ -> case List.genericDrop (position - 1) (GameState.stack gs) of
+      oid : _ -> pure oid
+      [] -> failWith (Failure.MkUnknownObject ref False)
   where
     onStack source sourceOf = do
       wanted <- sourceObject source

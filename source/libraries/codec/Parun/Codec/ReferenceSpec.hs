@@ -24,12 +24,14 @@ spec s = Spec.describe s "Parun.Codec.Reference" $ do
     Common.assertCodec s Reference.codec (Reference.Type.AbilityOf (Reference.Type.Printed (CardName.Type.MkCardName (Text.pack "Grizzly Bears")) 2)) " \"ability of Grizzly Bears#2\" "
   Spec.it s "a cast spell is named by the card it was cast from" $
     Common.assertCodec s Reference.codec (Reference.Type.SpellOf (Reference.Type.Labelled (Label.Type.MkLabel (Text.pack "will")))) " \"spell of $will\" "
+  Spec.it s "an object on the stack is named by its place from the top" $
+    Common.assertCodec s Reference.codec (Reference.Type.OnStack 2) " \"stack 2\" "
   Spec.it s "an explicit first occurrence reads as the bare name" $
     Common.assertFromJson s (Codec.decode Reference.codec) " \"Grizzly Bears#1\" " (Reference.Type.Printed (CardName.Type.MkCardName (Text.pack "Grizzly Bears")) 1)
-  Spec.it s "rejects a bare @, an empty string and a non-number occurrence" $
+  Spec.it s "rejects a bare @, an empty string and a non-number occurrence or place" $
     Spec.assertBool
       s
-      (all (Either.isLeft . Reference.fromText . Text.pack) ["$", "", "Grizzly Bears#", "Grizzly Bears#two"])
+      (all (Either.isLeft . Reference.fromText . Text.pack) ["$", "", "Grizzly Bears#", "Grizzly Bears#two", "stack ", "stack two"])
       "expected every one to fail"
   Spec.it s "has a schema" $
     Common.assertHasSchema s Reference.codec
