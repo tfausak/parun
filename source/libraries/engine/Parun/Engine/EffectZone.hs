@@ -172,6 +172,7 @@ zonesFunctionedAgainst itself delayed effect = case effect of
   Effect.Blight _ -> Set.empty
   Effect.Earthbend _ -> Set.empty
   Effect.Airbend _ -> Set.empty
+  Effect.Assimilate _ -> Set.empty
   Effect.TemptWithTheRing -> Set.empty
   Effect.OpenAttraction -> Set.empty
   Effect.Planeswalk -> Set.empty

@@ -991,6 +991,19 @@ earthbentLand = SlotName.MkSlotName (Text.pack "thatEarthbentLand")
 airbentObjects :: SlotName
 airbentObjects = SlotName.MkSlotName (Text.pack "thoseAirbentObjects")
 
+-- CR 701.72a: the reserved slot naming the PERMANENTS an assimilate names,
+-- which rule 701.72a's instructions act on. Placed in the arm's own `legal` by
+-- Parun.Engine.Resolve.Arms.Counters's Assimilate arm and never stored: the
+-- instructions Parun.Engine.Assimilate writes run inside that arm, and nothing
+-- after it reads them. Reserved for airbentObjects' reason.
+assimilatedPermanents :: SlotName
+assimilatedPermanents = SlotName.MkSlotName (Text.pack "thoseAssimilatedPermanents")
+
+-- CR 701.72b: assimilatedPermanents' twin naming the CARDS in other zones,
+-- which rule 701.72b puts onto the battlefield.
+assimilatedCards :: SlotName
+assimilatedCards = SlotName.MkSlotName (Text.pack "thoseAssimilatedCards")
+
 -- CR 601.2i: the reserved slot under which a cast trigger's WATCHED SPELL is
 -- bound -- the printed "it" in Presence of the Master's "whenever a player casts
 -- an enchantment spell, counter it", and "that spell" wherever a card spells the

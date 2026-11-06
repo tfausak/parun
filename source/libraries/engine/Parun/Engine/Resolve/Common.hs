@@ -114,6 +114,7 @@ import qualified Parun.Types.Duration as Duration
 import Parun.Types.Effect (Effect)
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntryAttack as EntryAttack
+import qualified Parun.Types.EntryLink as EntryLink
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Parun.Types.ExileLink as ExileLink
@@ -3442,6 +3443,8 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
      in not (null blighters) && not (any (`Blight.canBlight` gs) blighters)
   Effect.Earthbend {} -> False
   Effect.Airbend {} -> False
+  -- CR 608.2d: Effect.MoveToZone's reading, the reference asking as that one's does.
+  Effect.Assimilate ref -> choosesFromNothing ref
   Effect.TemptWithTheRing {} -> False
   -- CR 609.3: an empty Attraction deck opens nothing.
   Effect.OpenAttraction -> null (Attraction.deckOf controller gs)
@@ -3864,6 +3867,15 @@ bindStickerSlot holder slot ref = overHolderBindings holder (Map.insert slot (Bi
 ticketCapOf :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> GameState -> Maybe Quantity.Type.Quantity -> Maybe Natural
 ticketCapOf resolving source controller legal gs =
   fmap (maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor (effectViewOf resolving source legal gs) (effectContext gs resolving controller source legal (slotBindings resolving gs)) gs resolving source)
+
+-- CR 607.5: link `entrant` to `source`, for the abilities that came with the
+-- one resolving (Filter.EnteredWithSource): CR 607.2c's "put onto the
+-- battlefield with" and CR 701.72c's "assimilated with". Adds to the
+-- permanent's links rather than replacing them.
+linkEntrant :: ObjectId -> ObjectId -> ObjectId -> GameState -> GameState
+linkEntrant resolving source entrant gs =
+  let link = EntryLink.MkEntryLink source (Game.readingAcquisition resolving source gs source)
+   in gs {GameState.enteredWith = Map.insertWith Set.union entrant (Set.singleton link) (GameState.enteredWith gs)}
 
 -- CR 603.7c: bind `target` into `slot` of `holder`'s binding environment, so a
 -- delayed ability armed later in the SAME resolution can name the object.

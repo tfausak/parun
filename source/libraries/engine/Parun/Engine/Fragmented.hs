@@ -149,7 +149,7 @@ digest gs =
             GameState.continuousEffects = effects,
             GameState.objects = objects,
             GameState.exiledWith = fmap (\link -> link {ExileLink.acquisition = reacquire (ExileLink.acquisition link)}) (GameState.exiledWith gs),
-            GameState.enteredWith = fmap (\link -> link {EntryLink.acquisition = reacquire (EntryLink.acquisition link)}) (GameState.enteredWith gs),
+            GameState.enteredWith = fmap (Set.map (\link -> link {EntryLink.acquisition = reacquire (EntryLink.acquisition link)})) (GameState.enteredWith gs),
             -- Canonical rather than dropped: a payment leaves an empty pool
             -- behind where there was no entry, and no card tells the two apart.
             GameState.manaPool = Map.filter (not . null . Mana.unwrap) (GameState.manaPool gs)

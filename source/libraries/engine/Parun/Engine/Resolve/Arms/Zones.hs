@@ -77,7 +77,6 @@ import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntryBlock as EntryBlock
 import qualified Parun.Types.EntryController as EntryController
 import qualified Parun.Types.EntryHost as EntryHost
-import qualified Parun.Types.EntryLink as EntryLink
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Parun.Types.ExchangeOwnership as ExchangeOwnership
@@ -259,7 +258,7 @@ moveToZone settle resolving source controller legal chosen (MoveToZone.MkMoveToZ
           -- a redirected move records nothing.
           landed <- State.gets (fmap Object.zone . Game.lookupObject newId)
           Monad.when (landed == Just Zone.Battlefield) $ do
-            State.modify' (\g -> g {GameState.enteredWith = Map.insert newId (EntryLink.MkEntryLink source (Game.readingAcquisition resolving source g source)) (GameState.enteredWith g)})
+            State.modify' (Common.linkEntrant resolving source newId)
             State.modify' (Common.linkCraftMaterials resolving newId)
         pure (foldr Set.insert sofar mNew, mNew : acc)
       -- CR 303.4f's choice for an Aura the effect puts onto the battlefield

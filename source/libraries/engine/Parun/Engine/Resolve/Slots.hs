@@ -921,6 +921,7 @@ effectObjectRefs effect = case effect of
   Effect.Earthbend (Earthbend.MkEarthbend _ ref) -> [ref]
   -- CR 701.65a's "those objects".
   Effect.Airbend ref -> [ref]
+  Effect.Assimilate ref -> [ref]
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []
@@ -1156,6 +1157,7 @@ effectPlayerRefs effect = case effect of
   Effect.Earthbend {} -> []
   -- Rule 701.65a names the owner of each exiled card, whom no slot can hold.
   Effect.Airbend {} -> []
+  Effect.Assimilate {} -> []
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []
@@ -1336,6 +1338,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.Blight (Blight.Type.MkBlight _ quantity _) -> quantitySlots quantity
   Effect.Earthbend (Earthbend.MkEarthbend quantity _) -> quantitySlots quantity
   Effect.Airbend {} -> Map.empty
+  Effect.Assimilate {} -> Map.empty
   Effect.TemptWithTheRing -> Map.empty
   Effect.OpenAttraction -> Map.empty
   Effect.Planeswalk -> Map.empty
@@ -2204,6 +2207,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.Blight (Blight.Type.MkBlight _ quantity _) -> Quantity.slotsAreExhaustive quantity
   Effect.Earthbend (Earthbend.MkEarthbend quantity _) -> Quantity.slotsAreExhaustive quantity
   Effect.Airbend {} -> True
+  Effect.Assimilate {} -> True
   Effect.TemptWithTheRing -> True
   Effect.OpenAttraction -> True
   Effect.Planeswalk -> True
@@ -2507,6 +2511,7 @@ hasRead wanted =
         Effect.Blight (Blight.Type.MkBlight _ quantity _) -> Quantity.hasRead wanted quantity
         Effect.Earthbend (Earthbend.MkEarthbend quantity _) -> Quantity.hasRead wanted quantity
         Effect.Airbend {} -> False
+        Effect.Assimilate {} -> False
         Effect.TemptWithTheRing -> False
         Effect.OpenAttraction -> False
         Effect.Planeswalk -> False
@@ -2801,6 +2806,9 @@ boundSlots effect = case effect of
   -- Binding.airbentObjects is stamped by the MoveToZone Parun.Engine.Airbend
   -- mints, and is reserved for the same reason Binding.earthbentLand is.
   Effect.Airbend _ -> Set.empty
+  -- The reserved slots Parun.Engine.Assimilate's instructions name live in the
+  -- arm's own `legal` and are never stored.
+  Effect.Assimilate _ -> Set.empty
   Effect.TemptWithTheRing -> Set.empty
   Effect.OpenAttraction -> Set.empty
   Effect.Planeswalk -> Set.empty

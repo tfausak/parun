@@ -733,6 +733,12 @@ data Effect card ability
     -- as one procedure. Targets, Earthbend's shape one rule over, and a bare
     -- ObjectRef because rule 701.65a fixes everything else.
     Airbend ObjectRef.ObjectRef
+  | -- | CR 701.72a / 701.72b: assimilate the objects the ObjectRef names --
+    -- gain control of each permanent, or put each card from another zone onto
+    -- the battlefield under the resolving controller's control, with a +1\/+1
+    -- counter, as a Borg artifact creature. Performed by Parun.Engine.Assimilate
+    -- as one procedure. May target, Airbend's shape.
+    Assimilate ObjectRef.ObjectRef
   | -- | CR 701.54a: the Ring tempts the resolving controller, performed by
     -- Parun.Engine.Ring.tempt as one procedure that cannot stop early (CR
     -- 701.54d). Nullary, rule 701.54a fixing everything.

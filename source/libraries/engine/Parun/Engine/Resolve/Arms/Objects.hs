@@ -99,7 +99,6 @@ import qualified Parun.Types.DrawRewrite as DrawRewrite
 import Parun.Types.Effect (Effect)
 import qualified Parun.Types.EntryBlock as EntryBlock
 import qualified Parun.Types.EntryHost as EntryHost
-import qualified Parun.Types.EntryLink as EntryLink
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.ExileHaunting as ExileHaunting
 import qualified Parun.Types.Exploited as Exploited
@@ -239,14 +238,9 @@ create settle resolving source controller legal chosen (Create.MkCreate quantity
             Monad.forM_ mBlocked (\blocked -> Monad.mapM_ (Combat.putOntoBattlefieldBlocking blocked) made)
             pure made
       _ -> pure []
-  Monad.when linked (linkEntrants resolving source minted)
+  -- CR 607.2c / 607.5: `minted` were created with `source`.
+  Monad.when linked (State.modify' (\g -> foldr (Common.linkEntrant resolving source) g minted))
   Common.bindObjects resolving mSlot minted
-
--- CR 607.2c / 607.5: `minted` were created with `source`, for the abilities that
--- came with the one making them (Filter.EnteredWithSource).
-linkEntrants :: ObjectId -> ObjectId -> [ObjectId] -> Game ()
-linkEntrants resolving source minted =
-  State.modify' (\g -> g {GameState.enteredWith = foldr (`Map.insert` EntryLink.MkEntryLink source (Game.readingAcquisition resolving source g source)) (GameState.enteredWith g) minted})
 
 -- Alchemy's conjure keyword action. Digital-only, so there is no rule to cite;
 -- what the CR settles is that the result is a CARD and not CR 111.1's token,
@@ -503,7 +497,7 @@ createCopy settle resolving source controller legal chosen (CreateCopy.MkCreateC
               pure made
     _ -> pure []
   -- Dance of Many's later abilities mean this token.
-  Monad.when linked (linkEntrants resolving source minted)
+  Monad.when linked (State.modify' (\g -> foldr (Common.linkEntrant resolving source) g minted))
   Common.bindObjects resolving mSlot minted
 
 becomeCopy :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> BecomeCopy.BecomeCopy (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()

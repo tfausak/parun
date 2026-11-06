@@ -434,7 +434,8 @@ data Filter keyword
   | -- | CR 400.7: the candidate, as this object, was put onto the battlefield by
     -- an effect of the evaluation's SOURCE -- Animate Dead's "creature put onto
     -- the battlefield with this Aura", Dance of Many's "the token", Tetravus'
-    -- "tokens created with this creature". Read off
+    -- "tokens created with this creature" -- or was assimilated by one (CR
+    -- 701.72c, The Best of Both Worlds' "assimilated with this Saga"). Read off
     -- GameState.enteredWith.
     EnteredWithSource
   | -- | CR 607.1 / 400.7: an effect of the evaluation's SOURCE moved counters

@@ -595,13 +595,16 @@ data GameState = MkGameState
     -- being neither an opcode's window nor a redirected move. Cleaned up by key
     -- only.
     exiledWith :: Map.Map ObjectId.ObjectId ExileLink.ExileLink,
-    -- | CR 400.7 / 607.5: the object whose effect put each permanent onto the
-    -- battlefield and the acquisition the ability came with, keyed by the
-    -- entered incarnation and written by Parun.Engine.Resolve.Arms.Zones's
-    -- Effect.MoveToZone arm and, for a Create.linked or CreateCopy.linked token,
-    -- Parun.Engine.Resolve.Arms.Objects's. Read by Filter.EnteredWithSource.
-    -- Cleaned up by key only.
-    enteredWith :: Map.Map ObjectId.ObjectId EntryLink.EntryLink,
+    -- | CR 400.7 / 607.5: the objects whose effects put each permanent onto the
+    -- battlefield or assimilated it (CR 701.72c), and the acquisition each
+    -- ability came with, keyed by the incarnation and written through
+    -- Parun.Engine.Resolve.Common.linkEntrant: by Parun.Engine.Resolve.Arms.Zones's
+    -- Effect.MoveToZone arm, by Parun.Engine.Resolve.Arms.Objects's for a
+    -- Create.linked or CreateCopy.linked token, and by
+    -- Parun.Engine.Resolve.Arms.Counters's Effect.Assimilate arm. A SET, since
+    -- a permanent that entered with one source can be assimilated with another.
+    -- Read by Filter.EnteredWithSource. Cleaned up by key only.
+    enteredWith :: Map.Map ObjectId.ObjectId (Set.Set EntryLink.EntryLink),
     -- | CR 400.7 / 607.1: the sources whose effects put counters on or removed
     -- counters from each object, as that object, keyed by the incarnation and
     -- written by Parun.Engine.Resolve.Effect.applyEffectWith off the

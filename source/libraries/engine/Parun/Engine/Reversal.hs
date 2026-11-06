@@ -187,7 +187,7 @@ withoutAnnouncement before entry closed = do
   haunting <- mapOf GameState.haunting
   encoded <- mapOf GameState.encoded
   exiledWith <- mapOf GameState.exiledWith
-  enteredWith <- mapOf GameState.enteredWith
+  enteredWith <- mapOfSets GameState.enteredWith
   counteredWith <- mapOfSets GameState.counteredWith
   exilePiles <- mapOf GameState.exilePiles
   extraTurns <- listOf GameState.extraTurns

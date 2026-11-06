@@ -1,0 +1,15 @@
+{
+  "description": "CR 701.72b / 205.1b Death Is Irrelevant assimilates an enchantment creature card from alice's own graveyard, which stays an enchantment",
+  "note": "\"From a graveyard\" admits alice's own. Fang of Shigeki, an Enchantment Creature -- Ninja Snake, keeps its enchantment type and loses Ninja and Snake (CR 205.1b's \"[creature type] artifact creature\"), and as an artifact creature it has indestructible from Death Is Irrelevant.",
+  "board": {"active": "alice", "step": "PostcombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Death Is Irrelevant"}], "graveyard": [{"card": "Fang of Shigeki", "label": "fang"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "EndStep", "player": "alice", "do": {"ChooseTargets": {"target": ["$fang"]}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "EndStep", "player": "alice", "check": {"View": {"of": "Controller", "object": "Fang of Shigeki", "is": "alice"}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "check": {"Counters": {"object": "Fang of Shigeki", "kind": {"type": "PlusOnePlusOne"}, "count": 1}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "check": {"Types": {"object": "Fang of Shigeki", "types": ["Artifact", "Creature", "Enchantment"]}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "check": {"Subtypes": {"object": "Fang of Shigeki", "subtypes": ["Borg"]}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "check": {"PowerToughness": {"object": "Fang of Shigeki", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "check": {"Keywords": {"object": "Fang of Shigeki", "keyword": {"type": "Indestructible"}, "count": 1}}}
+  ]
+}

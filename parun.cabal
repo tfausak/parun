@@ -1757,6 +1757,7 @@ library engine
     Parun.Engine.Amass
     Parun.Engine.Ante
     Parun.Engine.Archenemy
+    Parun.Engine.Assimilate
     Parun.Engine.Attach
     Parun.Engine.AttachRestriction
     Parun.Engine.AttackCost

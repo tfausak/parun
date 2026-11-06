@@ -1630,6 +1630,22 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
           /= toJson (Effect.MakePlotted (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
       )
       "Airbend and MakePlotted of the same slot encode differently"
+  -- CR 701.72a / 701.72b, Airbend's bare-ObjectRef shape: control, counter
+  -- and type change are the rulebook's. Compared against Airbend, so the tag is
+  -- proved load-bearing.
+  Spec.it s "Assimilate round-trips a slot, and is not Airbend" $ do
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (Effect.Assimilate (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
+      " {\"type\":\"Assimilate\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
+    Spec.assertBool
+      s
+      ( toJson (Effect.Assimilate (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
+          /= toJson (Effect.Airbend (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
+      )
+      "Assimilate and Airbend of the same slot encode differently"
   -- CR 701.15a, which shares Detain's wire shape down to the field: both are a
   -- bare ObjectRef whose duration and whose actor the rulebook fixes, so the tag
   -- is the only thing telling them apart. data/cards prints the slot arm (Jeering

@@ -180,6 +180,7 @@ data Subtype
   | Bison
   | Blinkmoth
   | Boar
+  | Borg
   | Bringer
   | Brushwagg
   | Camarid

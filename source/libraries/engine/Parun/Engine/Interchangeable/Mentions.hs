@@ -1642,6 +1642,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.Blight blight -> blightNames asking blight
   Effect.Earthbend earthbend -> earthbendNames asking earthbend
   Effect.Airbend objectRef -> objectRefNames asking objectRef
+  Effect.Assimilate objectRef -> objectRefNames asking objectRef
   Effect.TemptWithTheRing -> mempty
   Effect.OpenAttraction -> mempty
   Effect.Planeswalk -> mempty
