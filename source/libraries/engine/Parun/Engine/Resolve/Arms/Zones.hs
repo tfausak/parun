@@ -201,11 +201,11 @@ moveToZone settle resolving source controller legal chosen (MoveToZone.MkMoveToZ
       -- (Replacement.matchesPrinted).
       -- The engine installs one row naming NO destination -- CR 702.34a's
       -- exile, Parun.Engine.Keyword.castFromGraveyardExile -- which admits the
-      -- battlefield too. It separates nothing either: the four rules that
-      -- install it arm it onto an INSTANT OR SORCERY spell alone (CR 702.34a
-      -- and CR 702.133a say so outright; CR 702.127a's aftermath is printed on
-      -- a split card's instant and sorcery halves, and CR 702.180a's harmonize
-      -- on instants and sorceries), and no such spell is a
+      -- battlefield too. It separates nothing either: the five rules that
+      -- install it arm it onto an INSTANT OR SORCERY spell alone (CR 702.34a,
+      -- 702.133a and 702.196a say so outright; CR 702.127a's aftermath is
+      -- printed on a split card's instant and sorcery halves, and CR 702.180a's
+      -- harmonize on instants and sorceries), and no such spell is a
       -- member of a batch entering the battlefield. A card whose ZoneChangeR
       -- watched the battlefield and could match a member of such a batch would
       -- separate them.

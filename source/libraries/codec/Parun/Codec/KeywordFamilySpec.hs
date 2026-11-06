@@ -51,6 +51,13 @@ spec s = Spec.describe s "Parun.Codec.KeywordFamily" $ do
       KeywordFamily.Flashback
       " \"Flashback\" "
 
+  Spec.it s "BeamMeUp" $
+    Common.assertCodec
+      s
+      KeywordFamily.codec
+      KeywordFamily.BeamMeUp
+      " \"BeamMeUp\" "
+
   Spec.it s "Plot" $
     Common.assertCodec
       s

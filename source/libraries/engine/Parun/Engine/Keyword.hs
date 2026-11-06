@@ -545,6 +545,7 @@ abilitiesFor keyword count = case keyword of
   -- a leaves-the-stack replacement rather than triggers.
   Keyword.Disturb _ -> []
   Keyword.Harmonize _ -> []
+  Keyword.BeamMeUp _ -> []
   -- CR 702.148a's two static abilities print no triggered ability either: one is
   -- an alternative cost (Parun.Engine.Cost.candidateCostsGiven) and the other a CR
   -- 612.1 text change, which Parun.Types.Keyword's Cleave says the card states for
@@ -825,6 +826,7 @@ handAbilitiesFor keyword = fmap (mintedBy keyword) $ case keyword of
   Keyword.Warp _ -> []
   Keyword.Disturb _ -> []
   Keyword.Harmonize _ -> []
+  Keyword.BeamMeUp _ -> []
   Keyword.Cleave _ -> []
   Keyword.Overload _ -> []
   Keyword.Awaken _ -> []
@@ -1408,6 +1410,7 @@ graveyardAbilitiesFor keyword = fmap (mintedBy keyword) $ case keyword of
   Keyword.Warp _ -> []
   Keyword.Disturb _ -> []
   Keyword.Harmonize _ -> []
+  Keyword.BeamMeUp _ -> []
   Keyword.Cleave _ -> []
   Keyword.Overload _ -> []
   Keyword.Awaken _ -> []
@@ -2048,6 +2051,7 @@ battlefieldAbilitiesFor keyword count = fmap (mintedBy keyword) $ case keyword o
   Keyword.Warp _ -> []
   Keyword.Disturb _ -> []
   Keyword.Harmonize _ -> []
+  Keyword.BeamMeUp _ -> []
   Keyword.Cleave _ -> []
   Keyword.Overload _ -> []
   Keyword.Awaken _ -> []
@@ -2643,6 +2647,12 @@ permissionsFor cardTypes keyword = case keyword of
     | Set.member CardType.Instant cardTypes || Set.member CardType.Sorcery cardTypes ->
         [CastingPermission.CastFromGraveyard Nothing []]
     | otherwise -> []
+  -- CR 702.196a: flashback's first ability with a larger cost, gated by the same
+  -- clause; the return-a-creature part is Parun.Engine.Cost.candidateCostsGiven's.
+  Keyword.BeamMeUp _
+    | Set.member CardType.Instant cardTypes || Set.member CardType.Sorcery cardTypes ->
+        [CastingPermission.CastFromGraveyard Nothing []]
+    | otherwise -> []
   -- CR 702.103a grants no permission either, and it is flashback's near miss:
   -- both offer an alternative cost through CR 601.2b and 601.2f-h, but rule
   -- 702.103a's ability "functions in any zone from which you could play the card
@@ -3168,6 +3178,16 @@ harmonizeCosts :: Set Keyword -> [Cost Keyword]
 harmonizeCosts keywords =
   let costOf keyword = case keyword of
         Keyword.Harmonize cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.196a: every beam me up cost this card has, flashbackCosts' shape and
+-- for its reason. The BARE payload: rule 702.196a's return of a creature rides
+-- in the candidate Parun.Engine.Cost.candidateCostsGiven assembles.
+beamMeUpCosts :: Set Keyword -> [Cost Keyword]
+beamMeUpCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.BeamMeUp cost -> Just cost
         _ -> Nothing
    in Maybe.mapMaybe costOf (Set.toAscList keywords)
 
@@ -4053,17 +4073,18 @@ manaSubstitutesFor symbol keywords =
         _ -> Nothing
    in Maybe.mapMaybe substituteOf (Set.toAscList keywords)
 
--- The one exile CR 702.34a, CR 702.127a, CR 702.133a and CR 702.180a all print,
+-- The one exile CR 702.34a, 702.127a, 702.133a, 702.180a and 702.196a all print,
 -- in the same words. Filter.IsSource, because the rule says "this card".
 -- `whenDestination = Nothing` is the rule's "instead of putting it anywhere else" -- every
 -- destination, not the graveyard alone, so Reprieve returning a flashed-back
 -- spell to its owner's hand exiles it instead (Parun.CastSpec's "CR 702.34a a
 -- flashback spell bounced off the stack is exiled, not returned to hand").
 --
--- GATED on the clause each of the four rules puts in front of it, and the four
+-- GATED on the clause each of the five rules puts in front of it, and the five
 -- clauses are not the same question. `castFor` is the keyword whose candidate cost
 -- the cast was announced for, which rule 702.34a's "if the flashback cost was
--- paid", rule 702.133a's jump-start clause and rule 702.180a's each ask about;
+-- paid", rule 702.133a's jump-start clause and rules 702.180a's and 702.196a's
+-- each ask about;
 -- rule 702.127a asks only whether the cast came from a graveyard.
 -- Parun.Engine.Cast installs what this
 -- returns without ever inspecting it.
@@ -4079,7 +4100,7 @@ castFromGraveyardReplacementsOf keywords castFor =
       (if any (paidFor . Keyword.Flashback) (flashbackCosts keywords) then [castFromGraveyardExile] else [])
         -- CR 702.127a's THIRD static ability, word for word CR 702.34a's second
         -- ability, so it is the same effect and not a sibling. The one of the
-        -- four that does NOT read `castFor`: rule 702.127a conditions its exile
+        -- five that does NOT read `castFor`: rule 702.127a conditions its exile
         -- on the zone alone, so an aftermath half cast from a graveyard for any
         -- cost is exiled.
         <> (if Set.member Keyword.Aftermath keywords then [castFromGraveyardExile] else [])
@@ -4096,6 +4117,10 @@ castFromGraveyardReplacementsOf keywords castFor =
         -- rule 702.34a's does, and against every harmonize the card has for that
         -- arm's reason.
         <> (if any (paidFor . Keyword.Harmonize) (harmonizeCosts keywords) then [castFromGraveyardExile] else [])
+        -- CR 702.196a's SECOND static ability, the fifth rule to print that
+        -- sentence, read against every beam me up the card has for flashback's
+        -- reason.
+        <> (if any (paidFor . Keyword.BeamMeUp) (beamMeUpCosts keywords) then [castFromGraveyardExile] else [])
 
 castFromGraveyardExile :: ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))
 castFromGraveyardExile =
@@ -4419,6 +4444,7 @@ mintedReplacementsFor keyword count = case keyword of
   -- than this one.
   Keyword.Disturb _ -> []
   Keyword.Harmonize _ -> []
+  Keyword.BeamMeUp _ -> []
   Keyword.Cleave _ -> []
   Keyword.Overload _ -> []
   Keyword.Awaken _ -> []
@@ -4910,6 +4936,7 @@ mintedCombatRestrictionsFor keyword = case keyword of
   Keyword.Warp _ -> []
   Keyword.Disturb _ -> []
   Keyword.Harmonize _ -> []
+  Keyword.BeamMeUp _ -> []
   Keyword.Cleave _ -> []
   Keyword.Overload _ -> []
   Keyword.Awaken _ -> []
@@ -5255,6 +5282,7 @@ mintedAttachRestrictionsFor keyword = case keyword of
   Keyword.Warp _ -> []
   Keyword.Disturb _ -> []
   Keyword.Harmonize _ -> []
+  Keyword.BeamMeUp _ -> []
   Keyword.Cleave _ -> []
   Keyword.Overload _ -> []
   Keyword.Awaken _ -> []
@@ -5801,6 +5829,7 @@ functionsOnBattlefield keyword = case keyword of
   -- CR 113.6b, 113.6f and 113.6m: abilities that function from a hand, a
   -- graveyard or exile -- the zone the card is cast or activated from.
   Keyword.Aftermath -> False
+  Keyword.BeamMeUp _ -> False
   Keyword.Cycling {} -> False
   Keyword.Disturb _ -> False
   Keyword.Dredge _ -> False
@@ -6070,6 +6099,7 @@ familyOf keyword = case keyword of
   Keyword.Warp _ -> Just KeywordFamily.Warp
   Keyword.Disturb _ -> Just KeywordFamily.Disturb
   Keyword.Harmonize _ -> Just KeywordFamily.Harmonize
+  Keyword.BeamMeUp _ -> Just KeywordFamily.BeamMeUp
   Keyword.Cleave _ -> Just KeywordFamily.Cleave
   Keyword.Overload _ -> Just KeywordFamily.Overload
   Keyword.Awaken _ -> Just KeywordFamily.Awaken

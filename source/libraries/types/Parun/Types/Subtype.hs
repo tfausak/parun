@@ -294,6 +294,7 @@ data Subtype
   | Kavu
   | Kirin
   | Kithkin
+  | Klingon
   | Knight
   | Kobold
   | Kor

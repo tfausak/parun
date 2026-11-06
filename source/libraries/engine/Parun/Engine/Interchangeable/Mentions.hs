@@ -2157,6 +2157,7 @@ keywordNames asking x = case x of
   Keyword.Warp cost -> costNames asking (keywordNames asking) cost
   Keyword.Disturb cost -> costNames asking (keywordNames asking) cost
   Keyword.Harmonize cost -> costNames asking (keywordNames asking) cost
+  Keyword.BeamMeUp cost -> costNames asking (keywordNames asking) cost
 
 keywordCountNames :: (Monoid r) => Asking r -> KeywordCount.KeywordCount keyword -> r
 keywordCountNames asking x = case x of

@@ -849,15 +849,16 @@ candidateCostsGiven permitted pid name oid gs =
                 -- Three shapes, differing in what they do to the printed cost, plus
                 -- an effect's permission. Flashback (CR 702.34a) REPLACES the mana
                 -- cost, so it is wrapped by `withAdditional`, and escape (CR
-                -- 702.138a) and mayhem (CR 702.187b) are that same shape in their
-                -- own rules' words; aftermath (CR 702.127a) replaces nothing, so it
-                -- is `printed`; jump-start (CR 702.133a) and retrace (CR 702.81a)
+                -- 702.138a), mayhem (CR 702.187b) and beam me up (CR 702.196a)
+                -- are that same shape in their own rules' words; aftermath (CR
+                -- 702.127a) replaces nothing, so it is `printed`; jump-start (CR 702.133a) and retrace (CR 702.81a)
                 -- ADD a discard to `printed`, one however many such abilities the
                 -- card has; and CR 601.3 / Yawgmoth's Will is an EFFECT stating no
                 -- cost, offering the hand's list BESIDE the rest rather than instead
                 -- of them. Rule 702.34a's "if the resulting spell is an instant or
                 -- sorcery spell" gates the permission and the cost that sentence
-                -- states alike (Keyword.permissionsFor, `stated`), so another
+                -- states alike (Keyword.permissionsFor, `stated`), as rule
+                -- 702.196a's does its own, so another
                 -- permission's cast is not offered that cost; rule 702.138a and rule
                 -- 702.81a state no such clause to gate, and rule 702.187b's own
                 -- clause is asked here rather than there, at the mayhem offer below.
@@ -879,6 +880,15 @@ candidateCostsGiven permitted pid name oid gs =
                       -- spells it; the "other" needs no exclusion, exileCandidates'
                       -- CR 601.2a note below.
                       escape cost = CandidateCost.plain (Just (Keyword.Type.Escape cost)) (withAdditional cost)
+                      -- CR 702.196a: flashback's candidate with the payload's
+                      -- components plus returning one creature you control to its
+                      -- owner's hand, paid as Meloku the Clouded Mirror's return is.
+                      -- CR 702.196b's "can't be beamed up" is not implemented (#6525).
+                      beamedUp cost =
+                        let yourCreature = Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.HeldBy Holder.Controller PlayerRelation.You]
+                         in CandidateCost.plain
+                              (Just (Keyword.Type.BeamMeUp cost))
+                              (withAdditional cost {Cost.components = Cost.components cost <> [CostComponent.ReturnPermanents (ReturnPermanents.MkReturnPermanents 1 yourCreature)]})
                       -- CR 702.187b's cost, read as flashback's is and wrapped by
                       -- `withAdditional` for the same reason, rule 702.187b sending
                       -- the cast through CR 601.2f-h in its own words. Offered only
@@ -950,7 +960,7 @@ candidateCostsGiven permitted pid name oid gs =
                          in concatMap
                               (\cost -> tappingNone cost : fmap (tappingOne cost) tappable)
                               (Keyword.harmonizeCosts keywords)
-                      stated = not . null . Keyword.permissionsFor (TypeLine.types (Face.typeLine face)) . Keyword.Type.Flashback
+                      stated keyword = not . null . Keyword.permissionsFor (TypeLine.types (Face.typeLine face)) . keyword
                       -- CR 601.3: a permission naming the cost it admits --
                       -- Tenacious Underdog's "cast this card from your graveyard
                       -- using its blitz ability" -- opens only the candidates a
@@ -963,7 +973,8 @@ candidateCostsGiven permitted pid name oid gs =
                       -- the printed cost and its alternatives (Demonic Embrace);
                       -- Parun.Engine.Cast.castWays adds what it states.
                       payingPermitted = not (null [() | CastingPermission.CastFromGraveyard Nothing (_ : _) <- permissionsOf oid face gs])
-                   in fmap flashback (filter stated (Keyword.flashbackCosts keywords))
+                   in fmap flashback (filter (stated Keyword.Type.Flashback) (Keyword.flashbackCosts keywords))
+                        <> fmap beamedUp (filter (stated Keyword.Type.BeamMeUp) (Keyword.beamMeUpCosts keywords))
                         <> fmap escape (Keyword.escapeCosts keywords)
                         <> (if Game.discardedThisTurnBy pid oid gs then fmap mayhem (Keyword.mayhemCosts keywords) else [])
                         <> harmonized

@@ -3122,6 +3122,7 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Warp cost -> Keyword.Type.Warp (rewriteCost pairs cost)
   Keyword.Type.Disturb cost -> Keyword.Type.Disturb (rewriteCost pairs cost)
   Keyword.Type.Harmonize cost -> Keyword.Type.Harmonize (rewriteCost pairs cost)
+  Keyword.Type.BeamMeUp cost -> Keyword.Type.BeamMeUp (rewriteCost pairs cost)
   Keyword.Type.Cleave cost -> Keyword.Type.Cleave (rewriteCost pairs cost)
   Keyword.Type.Overload cost -> Keyword.Type.Overload (rewriteCost pairs cost)
   Keyword.Type.Awaken cost -> Keyword.Type.Awaken (rewriteCost pairs cost)

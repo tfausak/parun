@@ -261,6 +261,7 @@ creatureTypeWord subtype = case subtype of
   Subtype.Kavu -> Just (Text.pack "Kavu")
   Subtype.Kirin -> Just (Text.pack "Kirin")
   Subtype.Kithkin -> Just (Text.pack "Kithkin")
+  Subtype.Klingon -> Just (Text.pack "Klingon")
   Subtype.Knight -> Just (Text.pack "Knight")
   Subtype.Kobold -> Just (Text.pack "Kobold")
   Subtype.Kor -> Just (Text.pack "Kor")

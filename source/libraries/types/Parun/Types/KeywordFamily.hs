@@ -29,7 +29,7 @@ module Parun.Types.KeywordFamily where
 -- parameter that CR 702.14c's landwalk filter and CR 702.37a's morph cost force
 -- on it. A family type that named Keyword instead would reopen that cycle.
 --
--- THE CONSTRUCTORS BELOW are this pool's, not Magic's. Rule 702 runs to 702.195,
+-- THE CONSTRUCTORS BELOW are this pool's, not Magic's. Rule 702 runs to 702.196,
 -- roughly a third of those keywords written with a cost or an N; the ones here are
 -- those of them Parun.Types.Keyword models. The set grows with that type -- the
 -- remaining cost-bearing keywords all land here eventually -- so a
@@ -78,6 +78,9 @@ data KeywordFamily
     Kicker
   | -- | CR 702.34a: flashback [cost].
     Flashback
+  | -- | CR 702.196a: beam me up [cost]. No card in the pool asks yet, and it is
+    -- owed at the keyword rather than at the first asker.
+    BeamMeUp
   | -- | CR 702.37a: morph [cost]. CR 702.37e writes this family in the CR's own
     -- voice -- "a face-down permanent you control with A MORPH ABILITY" -- and
     -- Backslide's "target creature with a morph ability" is the card asking

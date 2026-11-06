@@ -263,7 +263,8 @@ codec =
       Arm.payload "Transfigure" (Cost.codec codec) Keyword.Transfigure (\x -> case x of Keyword.Transfigure y -> Just y; _ -> Nothing),
       Arm.payload "Encore" (Cost.codec codec) Keyword.Encore (\x -> case x of Keyword.Encore y -> Just y; _ -> Nothing),
       Arm.payload "Disturb" (Cost.codec codec) Keyword.Disturb (\x -> case x of Keyword.Disturb y -> Just y; _ -> Nothing),
-      Arm.payload "Harmonize" (Cost.codec codec) Keyword.Harmonize (\x -> case x of Keyword.Harmonize y -> Just y; _ -> Nothing)
+      Arm.payload "Harmonize" (Cost.codec codec) Keyword.Harmonize (\x -> case x of Keyword.Harmonize y -> Just y; _ -> Nothing),
+      Arm.payload "BeamMeUp" (Cost.codec codec) Keyword.BeamMeUp (\x -> case x of Keyword.BeamMeUp y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: Keyword.Keyword -> String
@@ -467,3 +468,4 @@ tagOf x = case x of
   Keyword.Encore {} -> "Encore"
   Keyword.Disturb {} -> "Disturb"
   Keyword.Harmonize {} -> "Harmonize"
+  Keyword.BeamMeUp {} -> "BeamMeUp"
