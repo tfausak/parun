@@ -51,6 +51,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Layout as Layout
 import qualified Parun.Types.Loyalty as Loyalty
+import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.Modification as Modification
 import Parun.Types.ObjectId (ObjectId)
 import Parun.Types.PlayerId (PlayerId)
@@ -183,7 +184,7 @@ loyaltyAbility n effect =
   ActivatedAbility.MkActivatedAbility
     { ActivatedAbility.cost =
         Cost.MkCost
-          { Cost.mana = Nothing,
+          { Cost.mana = Just (ManaCost.MkManaCost []),
             Cost.components = [CostComponent.RemoveLoyaltyFromThis (CostAmount.Fixed n)]
           },
       ActivatedAbility.modal = Mint.oneMode (Seq.singleton effect),
@@ -204,7 +205,7 @@ tokenOf kind = case kind of
   AmassKind.EmpowerJace -> jaceToken
 
 -- | The counters the keyword action puts on the chosen object.
-counterKindOf :: AmassKind.AmassKind -> CounterKind.CounterKind
+counterKindOf :: AmassKind.AmassKind -> CounterKind.CounterKind keyword
 counterKindOf kind = case kind of
   AmassKind.Army _ -> CounterKind.PlusOnePlusOne
   AmassKind.EmpowerJace -> CounterKind.Loyalty
