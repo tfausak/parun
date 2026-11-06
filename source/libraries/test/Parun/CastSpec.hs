@@ -5112,6 +5112,7 @@ announcedTopSpec s registry = Spec.describe s "CR 401.5" $ do
                   Seat.library = Seq.fromList ([S.aliased alias (S.cardSetup name) | (alias, name) <- library] <> replicate 3 (S.cardSetup "Island"))
                 }
          in S.board (alice NonEmpty.:| [S.playerSetup S.bob]) S.alice S.precombatMain
+      leafkinFirst :: ObjectId.ObjectId -> Prompt.Prompt r -> r
       leafkinFirst leafkin p = case p of
         Prompt.ChooseManaSource _ _ _ sources -> Just (if leafkin `elem` sources then leafkin else NonEmpty.head sources)
         Prompt.ChooseExtraManaSource {} -> Nothing
