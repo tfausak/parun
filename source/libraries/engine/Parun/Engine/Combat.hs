@@ -453,7 +453,7 @@ canAttack :: PlayerId -> ObjectId -> GameState -> Bool
 canAttack pid oid gs = canAttackGiven (Snapshot.onDemand gs) (CombatRestriction.cantAttack [oid] gs) (AttackPermission.waivers [oid] gs) pid oid gs
 
 canAttackGiven :: Snapshot.Snapshot -> Set ObjectId -> Set (ObjectId, AttackWaiver.AttackWaiver) -> PlayerId -> ObjectId -> GameState -> Bool
-canAttackGiven (Snapshot.MkSnapshot pcs grants) restricted waived pid oid gs = case Game.lookupObject oid gs of
+canAttackGiven (Snapshot.MkSnapshot {Snapshot.projected = pcs, Snapshot.grants = grants}) restricted waived pid oid gs = case Game.lookupObject oid gs of
   Nothing -> False
   Just obj ->
     Projection.controllerOfGiven grants oid gs == Just pid
@@ -1158,7 +1158,7 @@ canBlock :: PlayerId -> ObjectId -> GameState -> Bool
 canBlock pid oid gs = canBlockGiven (Snapshot.onDemand gs) (CombatRestriction.cantBlock (Just pid) [oid] gs) pid oid gs
 
 canBlockGiven :: Snapshot.Snapshot -> Set ObjectId -> PlayerId -> ObjectId -> GameState -> Bool
-canBlockGiven (Snapshot.MkSnapshot pcs grants) restricted pid oid gs = case Game.lookupObject oid gs of
+canBlockGiven (Snapshot.MkSnapshot {Snapshot.projected = pcs, Snapshot.grants = grants}) restricted pid oid gs = case Game.lookupObject oid gs of
   Nothing -> False
   Just obj ->
     Projection.controllerOfGiven grants oid gs == Just pid
@@ -1315,7 +1315,7 @@ landwalkAllows :: ObjectId -> GameState -> Bool
 landwalkAllows attacker gs = landwalkAllowsGiven (Snapshot.onDemand gs) attacker gs
 
 landwalkAllowsGiven :: Snapshot.Snapshot -> ObjectId -> GameState -> Bool
-landwalkAllowsGiven (Snapshot.MkSnapshot pcs grants) attacker gs =
+landwalkAllowsGiven (Snapshot.MkSnapshot {Snapshot.projected = pcs, Snapshot.grants = grants}) attacker gs =
   let -- A wildcard rather than an exhaustive case: this asks about ONE named
       -- constructor rather than classifying every keyword.
       landCriterionOf keyword = case keyword of
@@ -1400,7 +1400,7 @@ pairAllowed candidates attackers blocker attacker gs =
 -- pair, decided for every pair by CombatRestriction.barredBlocks. An EMPTY
 -- set is a board stating no such restriction rather than a cache miss.
 pairAllowedGiven :: Snapshot.Snapshot -> Set (ObjectId, ObjectId) -> [ObjectId] -> [ObjectId] -> ObjectId -> ObjectId -> GameState -> Bool
-pairAllowedGiven board@(Snapshot.MkSnapshot pcs _) barred candidates attackers blocker attacker gs =
+pairAllowedGiven board@(Snapshot.MkSnapshot {Snapshot.projected = pcs}) barred candidates attackers blocker attacker gs =
   -- CR 509.1a: the blocker must be one this player could block with at all, and
   -- the attacker must actually be attacking.
   List.elem blocker candidates

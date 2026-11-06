@@ -442,7 +442,7 @@ fallsOff pools gs oid = case Map.lookup oid pcs of
             -- range of influence.
             || outOfReach grants gs oid recipient
   where
-    Snapshot.MkSnapshot pcs grants = Target.board pools
+    Snapshot.MkSnapshot {Snapshot.projected = pcs, Snapshot.grants = grants} = Target.board pools
 
 -- CR 303.4c: is `recipient` still one the enchanting Aura `source`'s enchant
 -- slot ADMITS?
@@ -741,7 +741,7 @@ checkOnce instead boards = do
       -- see #430. Both stay THUNKS -- a board with no filtered Aura on it forces
       -- neither -- which is the posture Target.legalRecipientsGiven argues for.
       grants = Projection.controlGrants gs
-      pools = Target.poolsOf (Snapshot.MkSnapshot pcs grants) gs
+      pools = Target.poolsOf (Snapshot.given pcs grants gs) gs
       classify oid = case Map.lookup oid pcs of
         Nothing -> Nothing
         Just pc

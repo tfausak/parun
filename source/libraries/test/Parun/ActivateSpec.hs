@@ -3579,6 +3579,25 @@ hoistDifferentialSpec s registry = do
     Spec.assertEqWith s "the reference offers three different per-permanent answers to differ about" (length reference) 18
     Spec.assertEqWith s "and the hoisted enumeration answers it action for action" (activationsIn (Action.legalActions S.alice board)) reference
 
+  -- The cost walks Snapshot hoists: Bloodthrone Vampire's sacrifice
+  -- pool, and Consulate Dreadnought's crew pool under CR 702.122d. Blind-Spot
+  -- Giant (4) and Hill Giant (3) reach crew 6 only while the Giant is not
+  -- under Revoke Privileges.
+  Spec.it s "the enumeration answers the sacrifice and crew gates the wrappers answer" $ do
+    printings <- traverse (S.printingOf s registry) ["Bloodthrone Vampire", "Consulate Dreadnought", "Blind-Spot Giant", "Hill Giant"]
+    revoke <- S.printingOf s registry "Revoke Privileges"
+    let board = hoistMixedBoard printings 1
+        offered gs = activationsIn (Action.legalActions S.alice gs)
+        crews gs = length (filter (== dreadnoughtId) [oid | A.Activate oid _ <- offered gs])
+        -- hoistMixedBoard adds them in `printings`' order, ids ascending.
+        (vampireId, dreadnoughtId, giantId) = (Set.elemAt 0 (GameState.battlefield board), Set.elemAt 1 (GameState.battlefield board), Set.elemAt 2 (GameState.battlefield board))
+        (auraId, unattached) = S.addPermanent revoke S.alice board
+        enchanted = S.attach auraId giantId unattached
+    Spec.assertEqWith s "the Dreadnought's crew is offered with the Giant free" (crews board) 1
+    Spec.assertEqWith s "and refused with the Giant under Revoke Privileges" (crews enchanted) 0
+    Spec.assertEqWith s "the Vampire's sacrifice is offered" (length [oid | A.Activate oid _ <- offered enchanted, oid == vampireId]) 1
+    Spec.assertEqWith s "and the hoisted enumeration answers the wrappers action for action" (offered enchanted) (referenceActivations S.alice enchanted)
+
 -- CR 101.1 / 602.2b / 601.2c, the two halves of an activation's announced X that
 -- only a card printing both can prove: a ceiling the ABILITY's own words put on
 -- the value, and a target slot whose CR 202.3 computed bound reads the value once

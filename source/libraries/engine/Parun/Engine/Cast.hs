@@ -33,6 +33,7 @@ import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
 import qualified Parun.Engine.Resolve.Slots as Slots
+import qualified Parun.Engine.Snapshot as Snapshot
 import qualified Parun.Engine.SourceContext as SourceContext
 import qualified Parun.Engine.SplitSecond as SplitSecond
 import qualified Parun.Engine.Sticker as Sticker
@@ -646,7 +647,7 @@ payableCountedAtGiven modes pcs sources x extra spending pid oid gs cost =
         let totalled = Cost.plusComponents adjustments substituted
             slots = Binding.withAnnouncedTargets aiming
             totals m = fmap (assisted . Cost.confineX (xConfinement oid gs) confinedX adjustments m) (Cost.totalManas adjustments m)
-         in Cost.canPaySomeCompletionGiven slots (PaymentSubject.Casting oid) spending sources pcs pid oid totals (Cost.manaSubstitutions (Cost.Type.components totalled) slots pid oid gs) totalled gs
+         in Cost.canPaySomeCompletionGiven slots (PaymentSubject.Casting oid) spending sources (Snapshot.given pcs (Projection.controlGrants gs) gs) pid oid totals (Cost.manaSubstitutions (Cost.Type.components totalled) slots pid oid gs) totalled gs
       -- The adjustments with nothing aimed at, which are the adjustments under
       -- EVERY aiming unless they read the targets (readsTargets below), so the
       -- components they add are inspected for a criterion naming a slot exactly as
