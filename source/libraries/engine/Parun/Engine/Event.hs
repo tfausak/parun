@@ -88,6 +88,7 @@ import qualified Parun.Types.AttachR as AttachR
 import qualified Parun.Types.AttachRewrite as AttachRewrite
 import qualified Parun.Types.AttackTrigger as AttackTrigger
 import qualified Parun.Types.AttackedTrigger as AttackedTrigger
+import qualified Parun.Types.BattlefieldCandidate as BattlefieldCandidate
 import qualified Parun.Types.BecameAttached as BecameAttached
 import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
@@ -342,7 +343,7 @@ import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 -- every event in its body shares the one the bracket froze. Only advanced at
 -- depth 0, which is what freezes it.
 recordEvent :: GameEvent -> GameState -> GameState
-recordEvent event gs = recordEventOver gs event gs
+recordEvent event gs = recordEventOver (battlefieldCandidates gs) event gs
 
 -- CR 603.10a / 603.10b / 603.10d: file `before` as the board the next event's
 -- group looks back to.
@@ -452,11 +453,12 @@ restampLifeChanges logged =
               _ -> entry
    in Seq.mapWithIndex restamp logged
 
--- `recordEvent`, sampling CR 603.10's board off `board` rather than off the state
--- the entry is appended to: for an event the caller records after the moment it
--- happened, `becameTarget`'s reason.
-recordEventOver :: GameState -> GameEvent -> GameState -> GameState
-recordEventOver board event gs =
+-- `recordEvent`, filing `sample` as CR 603.10's board rather than sampling the
+-- state the entry is appended to: for an event the caller records after the
+-- moment it happened (`becameTarget`'s reason), or for a caller recording many
+-- on one unchanged board (Mana.triggeredYields').
+recordEventOver :: Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameEvent -> GameState -> GameState
+recordEventOver sample event gs =
   let group = GameState.nextEventGroup gs
    in (involveActedOn event (exposeShown event gs))
         { GameState.events = GameState.events gs Seq.|> LoggedEvent.MkLoggedEvent {LoggedEvent.group = group, LoggedEvent.event = event},
@@ -465,7 +467,7 @@ recordEventOver board event gs =
               then EventGroup.next group
               else group,
           GameState.battlefieldWhenTriggered =
-            Map.insert group (battlefieldCandidates board) (GameState.battlefieldWhenTriggered gs)
+            Map.insert group sample (GameState.battlefieldWhenTriggered gs)
         }
 
 -- CR 801.16: every object an event acts on is involved in whatever the game is
@@ -9476,16 +9478,17 @@ counterOne settle before destination counterer source controller oid = do
 -- proved by its scenario's Twisted Fealty naming one creature in both slots.
 becameTarget :: GameState -> ObjectId -> StackObjectKind.StackObjectKind -> PlayerId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> Game ()
 becameTarget announced source kind controller chosen =
-  simultaneously . Foldable.for_ (ListUtils.nubOrdOn (\r -> (Recipient.playerOf r, Recipient.objectOf r)) (concatMap Set.toAscList (Map.elems chosen))) $ \targeted ->
-    State.modify'
-      . recordEventOver announced
-      $ GameEvent.BecameTarget
-        BecameTarget.MkBecameTarget
-          { BecameTarget.targeted = targeted,
-            BecameTarget.source = source,
-            BecameTarget.kind = kind,
-            BecameTarget.controller = controller
-          }
+  let sample = battlefieldCandidates announced
+   in simultaneously . Foldable.for_ (ListUtils.nubOrdOn (\r -> (Recipient.playerOf r, Recipient.objectOf r)) (concatMap Set.toAscList (Map.elems chosen))) $ \targeted ->
+        State.modify'
+          . recordEventOver sample
+          $ GameEvent.BecameTarget
+            BecameTarget.MkBecameTarget
+              { BecameTarget.targeted = targeted,
+                BecameTarget.source = source,
+                BecameTarget.kind = kind,
+                BecameTarget.controller = controller
+              }
 
 -- CR 701.3b and CR 701.3c: store the attachment, restamp, and record it -- and
 -- rule 701.3d's unattachment from the old host, when there was one.

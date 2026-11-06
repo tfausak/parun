@@ -585,14 +585,14 @@ changesLoss gs event candidate = case (ReplacementCandidate.effect candidate, ev
 --
 -- A floating row is never spent here: Pale Moon's lasts the turn, and no
 -- printing spends one per use.
+--
+-- The rows are gathered before `oid` is taken, so a caller asking of every
+-- source binds `manaRewrites gs` once and gathers once.
 manaRewrites :: GameState -> ObjectId -> [ManaType.ManaType]
-manaRewrites gs oid =
+manaRewrites gs =
   let viewOf = Projection.viewsOf gs
-   in [ ManaR.produces row
-      | candidate <- collect gs (GameState.replacements gs),
-        ReplacementEffect.ManaR row <- [ReplacementCandidate.effect candidate],
-        matchesFiltered viewOf gs candidate (ManaR.matching row) oid
-      ]
+      rows = [(candidate, row) | candidate <- collect gs (GameState.replacements gs), ReplacementEffect.ManaR row <- [ReplacementCandidate.effect candidate]]
+   in \oid -> [ManaR.produces row | (candidate, row) <- rows, matchesFiltered viewOf gs candidate (ManaR.matching row) oid]
 
 -- CR 614.1: does this instance apply to this proposed event? The arms must agree
 -- on the EVENT CLASS -- which the type already rules out for the impossible
