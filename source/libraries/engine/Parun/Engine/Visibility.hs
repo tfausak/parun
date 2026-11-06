@@ -78,6 +78,7 @@ witnessed pid logged = case LoggedEvent.event logged of
   GameEvent.SpellCopied {} -> Visibility.Visible
   GameEvent.BecameMonarch {} -> Visibility.Visible
   GameEvent.TookInitiative {} -> Visibility.Visible
+  GameEvent.MulliganDeclared {} -> Visibility.Visible
   GameEvent.Discarded {} -> Visibility.Visible
   GameEvent.Milled {} -> Visibility.Visible
   GameEvent.Drew {} -> Visibility.Visible

@@ -118,6 +118,7 @@ import qualified Parun.Types.Mentored as Mentored
 import qualified Parun.Types.Milled as Milled
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.Moved as Moved
+import qualified Parun.Types.MulliganDeclared as MulliganDeclared
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.ObjectSnapshot as ObjectSnapshot
@@ -268,6 +269,7 @@ movedOf event = case event of
   GameEvent.SpellCopied _ -> Nothing
   GameEvent.BecameMonarch _ -> Nothing
   GameEvent.TookInitiative _ -> Nothing
+  GameEvent.MulliganDeclared _ -> Nothing
   -- The Moved event emitted by the same discard is the zone change; this one
   -- says the move WAS a discard (CR 701.9a).
   GameEvent.Discarded {} -> Nothing
@@ -422,6 +424,7 @@ participants event =
         GameEvent.SpellCopied c -> ([SpellWasCopied.copy c], [SpellWasCopied.player c])
         GameEvent.BecameMonarch pid -> player pid
         GameEvent.TookInitiative pid -> player pid
+        GameEvent.MulliganDeclared d -> player (MulliganDeclared.player d)
         GameEvent.Discarded d -> ([Discarded.card d], [Discarded.player d])
         GameEvent.Milled m -> (Foldable.toList (Milled.cards m), [Milled.player m])
         GameEvent.Drew d -> player (Drew.player d)
@@ -1272,6 +1275,7 @@ eventTriggers events gs =
         GameEvent.SpellCopied _ -> Map.empty
         GameEvent.BecameMonarch _ -> Map.empty
         GameEvent.TookInitiative _ -> Map.empty
+        GameEvent.MulliganDeclared _ -> Map.empty
         GameEvent.Discarded {} -> Map.empty
         GameEvent.Drew {} -> Map.empty
         GameEvent.Revealed {} -> Map.empty
@@ -1580,6 +1584,7 @@ eventTriggers events gs =
         GameEvent.SpellCopied _ -> Map.empty
         GameEvent.BecameMonarch _ -> Map.empty
         GameEvent.TookInitiative _ -> Map.empty
+        GameEvent.MulliganDeclared _ -> Map.empty
         -- A reveal is not a cycling, whatever it showed. `revealedInHand` below is
         -- what hangs an ability on the card a reveal names.
         GameEvent.Revealed {} -> Map.empty
@@ -1977,6 +1982,7 @@ eventTriggers events gs =
         GameEvent.StepBegan {} -> Map.empty
         GameEvent.BecameMonarch _ -> Map.empty
         GameEvent.TookInitiative _ -> Map.empty
+        GameEvent.MulliganDeclared _ -> Map.empty
         GameEvent.Revealed {} -> Map.empty
         GameEvent.Looked {} -> Map.empty
         GameEvent.Voted {} -> Map.empty
@@ -2145,6 +2151,7 @@ eventTriggers events gs =
         GameEvent.SpellCopied _ -> Map.empty
         GameEvent.BecameMonarch _ -> Map.empty
         GameEvent.TookInitiative _ -> Map.empty
+        GameEvent.MulliganDeclared _ -> Map.empty
         GameEvent.AttackerDeclared {} -> Map.empty
         GameEvent.BecameBlocking {} -> Map.empty
         GameEvent.BlocksDeclared {} -> Map.empty
@@ -3829,6 +3836,7 @@ resnapshot gs without event =
         GameEvent.StepBegan {} -> Just event
         GameEvent.BecameMonarch {} -> Just event
         GameEvent.TookInitiative {} -> Just event
+        GameEvent.MulliganDeclared {} -> Just event
         GameEvent.Discarded {} -> Just event
         GameEvent.Milled {} -> Just event
         GameEvent.Drew {} -> Just event

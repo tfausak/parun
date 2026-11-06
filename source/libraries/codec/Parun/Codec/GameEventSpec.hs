@@ -69,6 +69,8 @@ import qualified Parun.Types.ManifestedDread as ManifestedDread
 import qualified Parun.Types.Mentored as Mentored
 import qualified Parun.Types.Milled as Milled
 import qualified Parun.Types.Moved as Moved
+import qualified Parun.Types.MulliganDecision as MulliganDecision
+import qualified Parun.Types.MulliganDeclared as MulliganDeclared
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
@@ -563,6 +565,13 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       GameEvent.codec
       (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.CompleteDungeon (PlayerId.MkPlayerId 5)))
       " {\"type\":\"PlayerActed\",\"value\":{\"action\":\"CompleteDungeon\",\"player\":5}} "
+  -- CR 103.5 / 103.5c.
+  Spec.it s "MulliganDeclared" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.MulliganDeclared (MulliganDeclared.MkMulliganDeclared (PlayerId.MkPlayerId 1) MulliganDecision.Mulligan 2))
+      " {\"type\":\"MulliganDeclared\",\"value\":{\"player\":1,\"decision\":\"Mulligan\",\"bottomCount\":2}} "
   -- CR 305.1. The player, the land as it arrived, and the zone it was played
   -- from, which is what Urianger Augurelt's condition reads.
   Spec.it s "LandPlayed" $

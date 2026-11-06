@@ -4,4 +4,4 @@ module Parun.Types.MulliganDecision where
 data MulliganDecision
   = Mulligan
   | Keep
-  deriving (Eq, Ord, Show)
+  deriving (Bounded, Enum, Eq, Ord, Show)

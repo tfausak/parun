@@ -49,6 +49,8 @@ import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Milled as Milled
 import qualified Parun.Types.Moved as Moved
+import qualified Parun.Types.MulliganDecision as MulliganDecision
+import qualified Parun.Types.MulliganDeclared as MulliganDeclared
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.ObjectView as ObjectView
 import qualified Parun.Types.Phase as Phase
@@ -359,6 +361,9 @@ event view logged = case LoggedEvent.event logged of
   GameEvent.Revealed r -> said [player (Revealed.player r), Text.pack "reveals", snapshotName (Revealed.characteristics r)]
   GameEvent.Looked l -> said [Text.pack "Looked at", snapshotName (Looked.characteristics l)]
   GameEvent.SpellCountered c -> said [name (Countering.countered c), Text.pack "is countered"]
+  GameEvent.MulliganDeclared d -> case MulliganDeclared.decision d of
+    MulliganDecision.Keep -> said [player (MulliganDeclared.player d), Text.pack "keeps"]
+    MulliganDecision.Mulligan -> said [player (MulliganDeclared.player d), Text.pack "mulligans, bottoming", count (MulliganDeclared.bottomCount d) "card"]
   GameEvent.StepBegan {} -> Nothing
   GameEvent.CardArrived {} -> Nothing
   GameEvent.AttackersDeclared {} -> Nothing

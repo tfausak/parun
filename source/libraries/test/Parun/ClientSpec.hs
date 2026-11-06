@@ -72,6 +72,7 @@ import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.MulliganDecision as MulliganDecision
 import qualified Parun.Types.MulliganOffer as MulliganOffer
 import qualified Parun.Types.NumberFloor as NumberFloor
 import qualified Parun.Types.Object as Object
@@ -378,7 +379,7 @@ spec s registry = Spec.describe s "Client" $ do
         facingBob = Hotseat.fresh {Hotseat.facing = Just S.bob}
         facingAlice = Hotseat.fresh {Hotseat.facing = Just S.alice}
         upkeep = gs {GameState.phase = Phase.Beginning BeginningStep.Upkeep, GameState.activePlayer = S.bob}
-    Spec.assertEqWith s "passed for, in the other seat's upkeep" (asking facingAlice [] upkeep manaOnly) (Right Action.Pass, [Text.pack "Player 1 draws 7 cards.", Text.pack "Player 2 draws 7 cards.", Text.pack "Player 1 passes in Player 2's upkeep (no other actions)."])
+    Spec.assertEqWith s "passed for, in the other seat's upkeep" (asking facingAlice [] upkeep manaOnly) (Right Action.Pass, [Text.pack "Player 1 draws 7 cards.", Text.pack "Player 2 draws 7 cards.", Text.pack "Player 1 keeps.", Text.pack "Player 2 keeps.", Text.pack "Player 1 passes in Player 2's upkeep (no other actions)."])
     let menu (outcome, shown) = (outcome, any menuHeading shown)
         handedOff (outcome, shown) = (outcome, take 2 shown)
     Spec.assertEqWith s "handed off and asked, facing another seat" (handedOff (asking facingBob ["", ""] upkeep manaOnly)) (Right Action.Pass, [Text.pack "<clear>", Text.pack "Pass to Player 1, then press Enter."])
@@ -591,6 +592,28 @@ spec s registry = Spec.describe s "Client" $ do
         twoSlots = Prompt.ChooseTargets (Decider.MkDecider S.alice) S.alice spell (Map.fromList [(slot, (1, legal)), (second, (1, legal))])
         (_, twoShown) = asking Hotseat.fresh {Hotseat.facing = Just S.alice} ["1", "2"] gs twoSlots
     Spec.assertEqWith s "several slots are named as words" (filter (Text.isPrefixOf (Text.pack "Choose 1 target")) twoShown) [Text.pack "Choose 1 target for Demolish (second target):", Text.pack "Choose 1 target for Demolish (target):"]
+
+  Spec.it s "CR 103.5 another seat is told who kept, who mulliganed and how many cards each mulligan bottoms" $ do
+    matchup <- BotSpec.bears s registry
+    let answer :: Prompt.Prompt r -> r
+        answer p = case p of
+          Prompt.DeclareMulligan _ pid offer | pid == S.alice && MulliganOffer.taken offer < 2 -> MulliganDecision.Mulligan
+          _ -> S.castAnswer p
+        gs = snd (Engine.runGamePure answer (Setup.gameWith GameSettings.plain (fmap fst matchup)) (Setup.newGame (Resolve.performHandAction Engine.playSubgame) matchup))
+        view = PlayerView.viewFor S.bob gs
+    Spec.assertEqWith
+      s
+      "told to Player 2"
+      (Render.events view (Render.witnessed view))
+      [ Text.pack "Player 1 draws 7 cards.",
+        Text.pack "Player 2 draws 7 cards.",
+        Text.pack "Player 1 mulligans, bottoming 1 card.",
+        Text.pack "Player 2 keeps.",
+        Text.pack "Player 1 draws 7 cards.",
+        Text.pack "Player 1 mulligans, bottoming 2 cards.",
+        Text.pack "Player 1 draws 7 cards.",
+        Text.pack "Player 1 keeps."
+      ]
 
   Spec.it s "CR 103.5 a mulligan is asked before the first turn, not in its untap step" $ do
     gs <- started s registry

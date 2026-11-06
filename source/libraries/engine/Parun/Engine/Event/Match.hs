@@ -790,6 +790,7 @@ anyTriggerReads event = case event of
   GameEvent.SpellCopied {} -> True
   GameEvent.BecameMonarch {} -> True
   GameEvent.TookInitiative {} -> True
+  GameEvent.MulliganDeclared {} -> False
   GameEvent.Discarded {} -> True
   GameEvent.Milled {} -> False
   GameEvent.Drew {} -> True

@@ -1198,6 +1198,7 @@ damageOf event = case event of
   GameEvent.SpellCopied _ -> Nothing
   GameEvent.BecameMonarch _ -> Nothing
   GameEvent.TookInitiative _ -> Nothing
+  GameEvent.MulliganDeclared _ -> Nothing
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
@@ -1276,6 +1277,7 @@ revealOf event = case event of
   GameEvent.SpellCopied _ -> Nothing
   GameEvent.BecameMonarch _ -> Nothing
   GameEvent.TookInitiative _ -> Nothing
+  GameEvent.MulliganDeclared _ -> Nothing
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
@@ -11863,6 +11865,7 @@ abilityTriggeredOf event = case event of
   GameEvent.StepBegan {} -> Nothing
   GameEvent.BecameMonarch _ -> Nothing
   GameEvent.TookInitiative _ -> Nothing
+  GameEvent.MulliganDeclared _ -> Nothing
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
