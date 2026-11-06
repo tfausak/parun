@@ -1,0 +1,125 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Henzie \"Toolbox\" Torre",
+            "label": "henzie"
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain"
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain-2"
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain-3"
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain-4"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          }
+        ],
+        "library": [
+          {
+            "card": "Mountain"
+          },
+          {
+            "card": "Mountain"
+          },
+          {
+            "card": "Mountain"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 702.152a cast for Henzie's blitz at its own cost, the Hill Giant attacks and is sacrificed; cast for its printed cost it stays",
+  "final": [
+    {
+      "Life": {
+        "life": 20,
+        "player": "bob"
+      }
+    },
+    {
+      "Count": {
+        "card": "Hill Giant",
+        "count": 1,
+        "player": "alice",
+        "zone": "Battlefield"
+      }
+    },
+    {
+      "Count": {
+        "card": "Mountain",
+        "count": 0,
+        "player": "alice",
+        "zone": "Hand"
+      }
+    }
+  ],
+  "note": "The same board as the blitz file, the cast naming the printed {3}{R}, which no keyword offered: the Giant has no haste, is not sacrificed and draws nothing.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "cost": [
+            {
+              "type": "Generic",
+              "value": 3
+            },
+            {
+              "type": "OfType",
+              "value": {
+                "type": "Colored",
+                "value": {
+                  "type": "Red"
+                }
+              }
+            }
+          ],
+          "costOffer": {
+            "type": "ByNoKeyword"
+          },
+          "mana": [
+            "$mountain",
+            "$mountain-2",
+            "$mountain-3",
+            "$mountain-4"
+          ],
+          "object": "$giant"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Attackers": {
+          "attackers": {}
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    }
+  ]
+}
