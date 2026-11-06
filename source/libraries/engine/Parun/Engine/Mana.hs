@@ -3138,7 +3138,7 @@ supplySourcesGiven capacity grants pcs pid gs =
 -- there is a loop over the battlefield, so an activation cost measured through
 -- the wrapper costs a whole-board sweep per permanent (#716).
 --
--- `board` is supplySourcesGiven's answer for this player, handed in rather than
+-- `swept` is supplySourcesGiven's answer for this player, handed in rather than
 -- taken, because that sweep is itself a walk of everything the player controls
 -- asking manaRoutesOfGiven of each -- identical for every ability of every
 -- permanent in one enumeration, and so one more per-permanent O(N) walk when it
@@ -3170,9 +3170,9 @@ supplySourcesGiven capacity grants pcs pid gs =
 -- (#1134). It is the whole cost's claims and not the remainder's, which is
 -- exact: `Cost.canPay` asks this before any part of the cost is paid.
 payableResolutionsGiven :: PaymentSubject.PaymentSubject -> ManaSpending -> Sources -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> Natural -> Natural -> [Claim] -> ManaCost -> GameState -> [([Demand], Natural, Natural)]
-payableResolutionsGiven subject spending board pcs pid committed committedEnergy claimed cost gs =
-  let sources = sourceIds board
-      capacity = sourceCapacity board
+payableResolutionsGiven subject spending swept pcs pid committed committedEnergy claimed cost gs =
+  let sources = sourceIds swept
+      capacity = sourceCapacity swept
       -- EVERY payment a board can hold, and not just the one this walk is for:
       -- the outer cost's, plus each source's own activation cost, which CR
       -- 605.3a lets the player pay inside the outer one's mana window and CR
@@ -3206,7 +3206,7 @@ payableResolutionsGiven subject spending board pcs pid committed committedEnergy
       -- sources (or the other way round) would make this disagree with `spend`
       -- about what is payable, and the symptom is an action the engine offers and
       -- then cannot pay.
-      clauses = sourceClauses board
+      clauses = sourceClauses swept
       -- The clauses speaking about the cost being paid and no other (Vizier of the
       -- Menagerie's creature spells, Tome of the Infinite's own): CR 602.2b's
       -- activation of a mana ability in this payment's window is a payment of its
@@ -3218,7 +3218,7 @@ payableResolutionsGiven subject spending board pcs pid committed committedEnergy
         | costClauses == clauses = serves
         | otherwise = serves . rewriteSupply costClauses
       pooled = fmap (rewriteSupply clauses . supplyOf admitting) (unitsOf (Game.poolOf pid gs))
-      suppliesAt limit oid = manaSuppliesGiven limit capacity pcs pid (sourceBorrowed board oid) oid gs
+      suppliesAt limit oid = manaSuppliesGiven limit capacity pcs pid (sourceBorrowed swept oid) oid gs
       -- CR 601.2b / 602.2b: a route announcing its own X (Wizard's Rockets)
       -- is priced at every X up to D * 2^(m - 1), where D is what the cost and
       -- every other mana-eating group demand at most and m how many such
@@ -3228,7 +3228,7 @@ payableResolutionsGiven subject spending board pcs pid committed committedEnergy
       -- least X every unit serves a demand placed after it, and the last
       -- such activation has at most D to serve, the one before it D plus the
       -- last's X, and so on.
-      fixedPer = sourceSupplies board
+      fixedPer = sourceSupplies swept
       announced (_, yield, _, _) = Maybe.isJust (yieldX yield)
       xActivations = sum [Activations.times activations | supplies <- fixedPer, activations <- ListUtils.nubOrd [activations | supply@(activations, _, _, _) <- supplies, announced supply]]
       xCeiling = demandBoundOf fixedPer * 2 ^ (max 1 xActivations - 1)
@@ -3284,7 +3284,7 @@ payableResolutionsGiven subject spending board pcs pid committed committedEnergy
         [ [ (oid, MkSourceOption {optionSupplies = List.genericReplicate k (rewriteSupply clauses (supplyOf admitting (lifeForManaUnit mana))), optionDemands = [], optionClaims = [], optionLife = k * life, optionEnergy = 0, optionDoublings = []})
           | k <- takeWhile (affordable . (* life)) [0 .. demandBound]
           ]
-        | (oid, life, mana) <- sourceLifeForMana board
+        | (oid, life, mana) <- sourceLifeForMana swept
         ]
       options = lifeForManaOptions <> concat (zipWith (\oid supplies -> fmap (fmap ((,) oid)) (sourceOptions clauses (admitting . producedDuring subject) (Claim.contends contested) board demandBound typedNeeds supplies)) sources suppliesPer)
       -- One option taken from each group, appended to the pool: `sequenceA` over
@@ -3360,7 +3360,7 @@ payableResolutionsGiven subject spending board pcs pid committed committedEnergy
       within taken = and (Map.intersectionWith (<=) taken room)
       weighed = fmap (fmap (\(_, option) -> (option, takesOf (optionClaims option)))) options
       -- CR 119.4's floor, asked of every board: the player effects walked once.
-      affordable = sourceLifePayable board
+      affordable = sourceLifePayable swept
       payable (demands, generic, life) =
         let fits (supplies, eaten, costPosition, subjectAt, spent, doublings) =
               if null doublings
