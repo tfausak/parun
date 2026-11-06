@@ -348,8 +348,8 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
             proposed = Cast.asProposed oid name facing gs
             --
             -- CR 113.6d: less the cost abilities a layer-6 wipe took from the
-            -- spell (Cost.spellFace).
-            priced = Cost.spellFace (Cost.asSpellProjected caster oid proposed) (if Facing.isFaceDown facing then Maybe.fromMaybe face (Cast.proposedFace oid name proposed) else face)
+            -- spell (Projection.wipedFace).
+            priced = Projection.wipedFace (Cost.asSpellProjected caster oid proposed) (if Facing.isFaceDown facing then Maybe.fromMaybe face (Cast.proposedFace oid name proposed) else face)
             -- CR 601.2f: the offer's own reduction (CastOffer.reduction) rides
             -- every candidate, the printed cost and an alternative alike, so it
             -- applies after any increase. The cast is then handed these

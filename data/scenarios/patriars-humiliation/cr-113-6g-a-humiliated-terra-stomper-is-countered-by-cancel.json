@@ -1,0 +1,256 @@
+{
+  "description": "CR 113.6g / 613.1f: a Terra Stomper that perpetually lost all abilities to Patriar's Humiliation, bounced and recast, is countered by Cancel",
+  "note": "The loss follows the card to the stack, so its can't-be-countered ability no longer functions there. The control humiliates a Grizzly Bears instead.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "p1"
+          },
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Forest",
+            "label": "f1"
+          },
+          {
+            "card": "Forest",
+            "label": "f2"
+          },
+          {
+            "card": "Forest",
+            "label": "f3"
+          },
+          {
+            "card": "Forest",
+            "label": "f4"
+          },
+          {
+            "card": "Forest",
+            "label": "f5"
+          },
+          {
+            "card": "Forest",
+            "label": "f6"
+          },
+          {
+            "card": "Terra Stomper",
+            "label": "stomper"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Patriar's Humiliation",
+            "label": "humiliation"
+          },
+          {
+            "card": "Unsummon",
+            "label": "unsummon"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "b1"
+          },
+          {
+            "card": "Island",
+            "label": "b2"
+          },
+          {
+            "card": "Island",
+            "label": "b3"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Cancel",
+            "label": "cancel"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$humiliation",
+          "targets": [
+            "$stomper"
+          ],
+          "mana": [
+            "$p1"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$unsummon",
+          "targets": [
+            "$stomper"
+          ],
+          "mana": [
+            "$i1"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Hand",
+          "card": "Terra Stomper",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$stomper",
+          "mana": [
+            "$f1",
+            "$f2",
+            "$f3",
+            "$f4",
+            "$f5",
+            "$f6"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$cancel",
+          "targets": [
+            "$stomper"
+          ],
+          "mana": [
+            "$b1",
+            "$b2",
+            "$b3"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Graveyard",
+          "card": "Terra Stomper",
+          "count": 1
+        }
+      }
+    }
+  ]
+}
