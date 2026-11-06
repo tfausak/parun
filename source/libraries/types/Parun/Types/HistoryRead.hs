@@ -1,16 +1,19 @@
 module Parun.Types.HistoryRead where
 
+import qualified Data.Set as Set
+import qualified Parun.Types.PlayerAction as PlayerAction
+
 -- | CR 732.3: which part of the turn's history -- GameState.events, or
 -- GameState.activationsThisTurn -- a construct reads, as
 -- Parun.Engine.Interchangeable.Mentions classifies the effect DSL and
 -- Parun.Engine.Fragmented asks. Loop-local, so no codec.
 data HistoryRead
-  = -- | Activations begun this turn, GameState.activationsThisTurn (CR 602.2).
+  = -- | Acts of these kinds taken (CR 603.2), Parun.Types.PlayerAction.
+    Acts (Set.Set PlayerAction.PlayerAction)
+  | -- | Activations begun this turn, GameState.activationsThisTurn (CR 602.2).
     Activations
   | -- | Attackers declared (CR 508.1).
     Attacks
-  | -- | Bending actions taken (CR 701.65b, 701.66b, 701.67c, 702.189b).
-    Bendings
   | -- | Creatures that blocked (CR 509.3a).
     Blockers
   | -- | Attackers that became blocked (CR 509.1h).
@@ -53,4 +56,4 @@ data HistoryRead
     StepBegins
   | -- | Abilities that triggered (CR 603.2).
     Triggers
-  deriving (Bounded, Enum, Eq, Ord, Show)
+  deriving (Eq, Ord, Show)

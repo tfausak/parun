@@ -115,10 +115,18 @@
                       "value": {
                         "comparison": "AtLeast",
                         "measured": {
-                          "type": "BendingsThisTurn",
+                          "type": "ActionsDoneThisTurn",
                           "value": {
-                            "type": "Relative",
-                            "value": "You"
+                            "actions": [
+                              "Earthbend",
+                              "Waterbend",
+                              "Airbend",
+                              "Firebend"
+                            ],
+                            "player": {
+                              "type": "Relative",
+                              "value": "You"
+                            }
                           }
                         },
                         "threshold": {

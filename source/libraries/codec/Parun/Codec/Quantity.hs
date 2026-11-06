@@ -1,5 +1,6 @@
 module Parun.Codec.Quantity where
 
+import qualified Data.Set as Set
 import qualified Parun.Codec.AbilityAct as AbilityAct
 import qualified Parun.Codec.ActivationsThisTurn as ActivationsThisTurn
 import qualified Parun.Codec.AgainstExiledPile as AgainstExiledPile
@@ -22,6 +23,7 @@ import qualified Parun.Codec.LifeTally as LifeTally
 import qualified Parun.Codec.ManaCount as ManaCount
 import qualified Parun.Codec.ManaSpent as ManaSpent
 import qualified Parun.Codec.Measure as Measure
+import qualified Parun.Codec.PlayerAction as PlayerAction
 import qualified Parun.Codec.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Codec.PlayerDesignationTally as PlayerDesignationTally
 import qualified Parun.Codec.PlayerRef as PlayerRef
@@ -35,8 +37,11 @@ import qualified Parun.Codec.VotesReceived as VotesReceived
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.ControlWindow as ControlWindow
+import qualified Parun.Types.PlayerAction as PlayerActionType
+import qualified Parun.Types.PlayerRef as PlayerRefType
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.TurnTally as TurnTally
 
@@ -173,7 +178,7 @@ codec =
       -- could state.
       Arm.payload "CardsDiscardedThisTurn" PlayerRef.codec (Quantity.TalliedThisTurn TurnTally.CardsDiscarded) (\x -> case x of Quantity.TalliedThisTurn TurnTally.CardsDiscarded y -> Just y; _ -> Nothing),
       Arm.payload "CardsDrawnThisTurn" PlayerRef.codec (Quantity.TalliedThisTurn TurnTally.CardsDrawn) (\x -> case x of Quantity.TalliedThisTurn TurnTally.CardsDrawn y -> Just y; _ -> Nothing),
-      Arm.payload "BendingsThisTurn" PlayerRef.codec (Quantity.TalliedThisTurn TurnTally.Bendings) (\x -> case x of Quantity.TalliedThisTurn TurnTally.Bendings y -> Just y; _ -> Nothing),
+      Arm.payload "ActionsDoneThisTurn" actionsDoneCodec (\(acts, ref) -> Quantity.TalliedThisTurn (TurnTally.ActionsDone acts) ref) (\x -> case x of Quantity.TalliedThisTurn (TurnTally.ActionsDone acts) ref -> Just (acts, ref); _ -> Nothing),
       Arm.payload "LandsPlayedThisTurn" PlayerRef.codec (Quantity.TalliedThisTurn TurnTally.LandsPlayed) (\x -> case x of Quantity.TalliedThisTurn TurnTally.LandsPlayed y -> Just y; _ -> Nothing),
       -- CR 119.3's life gained, with only a PlayerRef on the wire for
       -- CardsDiscardedThisTurn's reason above. What is SUMMED is the amounts and
@@ -247,6 +252,14 @@ codec =
       Arm.nullary "StationMeasure" Quantity.StationMeasure
     ]
 
+-- TurnTally.ActionsDone's payload: which acts, and whose.
+actionsDoneCodec :: Codec.Codec (Set.Set PlayerActionType.PlayerAction, PlayerRefType.PlayerRef)
+actionsDoneCodec =
+  Fields.object $
+    (,)
+      <$> Fields.required "actions" (Common.set PlayerAction.codec) fst
+      <*> Fields.required "player" PlayerRef.codec snd
+
 tagOf :: Quantity.Quantity -> String
 tagOf x = case x of
   Quantity.Literal {} -> "Literal"
@@ -311,7 +324,7 @@ tagOf x = case x of
   Quantity.AttackersInTheirLastTurn {} -> "AttackersInTheirLastTurn"
   Quantity.TalliedThisTurn TurnTally.CardsDiscarded _ -> "CardsDiscardedThisTurn"
   Quantity.TalliedThisTurn TurnTally.CardsDrawn _ -> "CardsDrawnThisTurn"
-  Quantity.TalliedThisTurn TurnTally.Bendings _ -> "BendingsThisTurn"
+  Quantity.TalliedThisTurn TurnTally.ActionsDone {} _ -> "ActionsDoneThisTurn"
   Quantity.TalliedThisTurn TurnTally.LandsPlayed _ -> "LandsPlayedThisTurn"
   Quantity.LifeChanged {} -> "LifeChanged"
   Quantity.PlayersDealtDamageThisTurn {} -> "PlayersDealtDamageThisTurn"

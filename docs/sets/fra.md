@@ -231,8 +231,6 @@ first.
   planeswalker (CR 508.1c).
 - #6487: Infinite Coursework. No effect removes the prepared designation (CR
   722.3b).
-- #6490: Desperate Futurescribe; Proctor of Potential; Surveillance Phantasm. No
-  turn tally counts scries or surveils (CR 701.22a, 701.25a).
 - #6491: Command the Stage. Damage readers have no `WhichTurn`, so "last turn"
   can't be asked.
 - #6496: Loot, the Anomaly. `CombatDamageAmount` can't treat a negative power as

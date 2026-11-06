@@ -3402,3 +3402,6 @@ ydwen-efreet
 forcefield
 chandra-chill-of-compliance
 enlightened-confidant
+desperate-futurescribe
+proctor-of-potential
+surveillance-phantasm
