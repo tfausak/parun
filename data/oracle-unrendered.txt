@@ -1627,6 +1627,7 @@ longstalk-brawl
 longtusk-cub
 look-skyward-and-despair
 loot-exuberant-explorer
+loot-the-nexus
 loot-the-pathfinder
 lord-of-the-pit
 lorescale-coatl
@@ -2725,6 +2726,7 @@ takesies-backsies
 talas-explorer
 talent-of-the-telepath
 tameshi-reality-architect
+tam-the-possibility
 tamiyo-compleated-sage
 tamiyos-compleation
 tangled-florahedron-tangled-vale
