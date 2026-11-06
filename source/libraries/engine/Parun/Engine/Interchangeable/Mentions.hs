@@ -2954,7 +2954,7 @@ shuffleIntoLibraryNames asking x = case x of
 
 skipPhaseNames :: (Monoid r) => Asking r -> SkipPhase.SkipPhase -> r
 skipPhaseNames asking x = case x of
-  SkipPhase.MkSkipPhase player _selector _uses duration -> playerRefNames asking player <> durationNames asking duration
+  SkipPhase.MkSkipPhase player _selector _uses duration count -> playerRefNames asking player <> durationNames asking duration <> quantityNames asking count
 
 slotCountNames :: (Monoid r) => Asking r -> SlotCount.SlotCount -> r
 slotCountNames asking x = case x of

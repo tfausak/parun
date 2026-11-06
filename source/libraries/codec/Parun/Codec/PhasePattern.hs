@@ -3,7 +3,7 @@
 module Parun.Codec.PhasePattern where
 
 import qualified Parun.Codec.ControllerRelation as ControllerRelationCodec
-import qualified Parun.Codec.PhaseSelector as PhaseSelector
+import qualified Parun.Codec.SkipWindow as SkipWindow
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.ControllerRelation as ControllerRelation
@@ -17,7 +17,7 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 -- honest instead, the same treatment SetController's PlayerId gets.
 codec :: Codec.Codec PhasePattern.PhasePattern
 codec = Fields.object $ do
-  whichPhase <- Fields.required "whichPhase" PhaseSelector.codec PhasePattern.whichPhase
+  whichPhase <- Fields.required "whichPhase" SkipWindow.codec PhasePattern.whichPhase
   whosePhase <- Fields.defaulted "whosePhase" (ControllerRelation.Related PlayerRelation.AnyPlayer) ControllerRelationCodec.codec PhasePattern.whosePhase
   pure
     PhasePattern.MkPhasePattern

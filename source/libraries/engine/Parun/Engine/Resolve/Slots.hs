@@ -1049,7 +1049,7 @@ effectPlayerRefs effect = case effect of
   Effect.BecomeCopy x -> foldMap durationPlayerRefs (BecomeCopy.duration x)
   Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ _ copier _) -> [copier]
   Effect.Replace x -> durationPlayerRefs (Replace.duration x)
-  Effect.SkipPhase (SkipPhase.MkSkipPhase ref _ _ duration) -> ref : durationPlayerRefs duration
+  Effect.SkipPhase (SkipPhase.MkSkipPhase ref _ _ duration _) -> ref : durationPlayerRefs duration
   Effect.PreventNextDamage x -> durationPlayerRefs (PreventNextDamage.duration x)
   Effect.LaterPayment x -> durationPlayerRefs (LaterPayment.duration x) <> foldMap effectPlayerRefs (LaterPayment.effects x)
   Effect.PreventAllDamage x -> durationPlayerRefs (PreventAllDamage.duration x)
@@ -1444,7 +1444,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- row's captured environment answers at CR 616.1.
   Effect.Replace (Replace.MkReplace duration _ _ condition re) ->
     joinSlots [durationSlots duration, joinSlots (fmap conditionSlots (Maybe.maybeToList condition)), replacementRowSlots re]
-  Effect.SkipPhase x -> durationSlots (SkipPhase.duration x)
+  Effect.SkipPhase x -> joinSlots [durationSlots (SkipPhase.duration x), quantitySlots (SkipPhase.count x)]
   -- CR 615.5's rider reads slots of its own, so its reads join this effect's,
   -- LESS the reserved amount and source slots: the prevention binds those
   -- itself, and Resolve.runPreventionRider is the writer.
@@ -2284,7 +2284,7 @@ ownSlotsAreExhaustive effect = case effect of
       && all conditionSlotsAreExhaustive condition
       && all Quantity.slotsAreExhaustive (snd (replacementRowReads re))
       && all slotsAreExhaustive (replacementRowEffects re)
-  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration) -> durationSlotsAreExhaustive duration
+  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration count) -> durationSlotsAreExhaustive duration && Quantity.slotsAreExhaustive count
   Effect.LaterPayment (LaterPayment.MkLaterPayment duration _ effects) -> durationSlotsAreExhaustive duration && all slotsAreExhaustive effects
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity rider) ->
     durationSlotsAreExhaustive duration && Quantity.slotsAreExhaustive quantity && all slotsAreExhaustive rider
@@ -2571,7 +2571,7 @@ hasRead wanted =
         -- the three prevention opcodes' posture with their own riders.
         -- Aladdin's Lamp's count sits on the row, not on an effect it holds.
         Effect.Replace (Replace.MkReplace _ _ _ _ re) -> hasRead wanted (replacementRowEffects re) || any (Quantity.hasRead wanted) (snd (replacementRowReads re))
-        Effect.SkipPhase {} -> False
+        Effect.SkipPhase skipPhase -> Quantity.hasRead wanted (SkipPhase.count skipPhase)
         -- CR 601.2b's X reaches the rider too.
         Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ quantity rider) -> Quantity.hasRead wanted quantity || hasRead wanted (Foldable.toList rider)
         Effect.LaterPayment (LaterPayment.MkLaterPayment _ _ effects) -> hasRead wanted (Foldable.toList effects)

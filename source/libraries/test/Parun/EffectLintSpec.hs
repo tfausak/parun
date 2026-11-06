@@ -378,7 +378,7 @@ ownQuantities effect = case effect of
   Effect.BecomeCopy (BecomeCopy.MkBecomeCopy _ _ duration _ _) -> foldMap durationQuantities duration
   Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ quantity _ _) -> [quantity]
   Effect.Replace (Replace.MkReplace duration _ _ condition _) -> durationQuantities duration <> foldMap Resolve.conditionQuantities condition
-  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration) -> durationQuantities duration
+  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration count) -> count : durationQuantities duration
   Effect.LaterPayment (LaterPayment.MkLaterPayment duration _ _) -> durationQuantities duration
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity _) -> quantity : durationQuantities duration
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ _) -> durationQuantities duration

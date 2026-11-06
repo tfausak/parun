@@ -235,7 +235,6 @@ import qualified Parun.Types.PendingTrigger as PendingTrigger
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
-import Parun.Types.PhaseSelector (PhaseSelector)
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Parun.Types.Player as Player
@@ -277,6 +276,7 @@ import qualified Parun.Types.SacrificeToEnter as SacrificeToEnter
 import qualified Parun.Types.ShownComponent as ShownComponent
 import qualified Parun.Types.Sickness as Sickness
 import qualified Parun.Types.SideDeck as SideDeck
+import Parun.Types.SkipWindow (SkipWindow)
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.SpellCast as SpellCast
@@ -5107,7 +5107,7 @@ apply settle batch applied batchPrevented candidate event =
     -- Unreachable: `applies` admits TokenR only against WouldCreateTokens.
     (ReplacementEffect.TokenR {}, _) -> pure (Just event)
     -- CR 614.1b / 614.10: a skip is "instead of doing X, do nothing", so the
-    -- step or phase simply does not begin. Nothing is done first, unlike
+    -- step, phase or turn simply does not begin. Nothing is done first, unlike
     -- DamageRewrite.PreventAll's sibling arm: a skip has no consequence of its
     -- own to perform before it cancels.
     --
@@ -6788,12 +6788,13 @@ resolveTokens pid lots = do
   outcome <- applyReplacements (ProposedEvent.WouldCreateTokens pid lots)
   pure (outcome >>= Replacement.asTokens)
 
--- CR 500.11 / 614.10: settle whether a step or phase begins at all, on the turn
--- of `pid`. False means a skip took it, and proceeding past it is then the
--- caller's whole obligation -- CR 614.1b replaces a skipped step with nothing, so
--- there is no rewritten event to carry out. How far past it reaches is the
--- caller's too: one schedule entry for a PhaseSelector.Step, the phase's
--- remaining entries for a whole phase (Engine.runStep, Turn.dropRestOfPhase).
+-- CR 500.11 / 614.10: settle whether a step, phase or turn begins at all, on
+-- the turn of `pid`. False means a skip took it, and proceeding past it is then
+-- the caller's whole obligation -- CR 614.1b replaces a skipped step with
+-- nothing, so there is no rewritten event to carry out. How far past it reaches
+-- is the caller's too: one schedule entry for a PhaseSelector.Step, the phase's
+-- remaining entries for a whole phase (Engine.runStep, Turn.dropRestOfPhase),
+-- the next turn for a whole turn (Engine.takeNextTurn).
 --
 -- Answers a Bool rather than the settled event, unlike resolveDestruction, whose
 -- `Just` had to carry an identity because a rewrite can redirect which object is
@@ -6802,7 +6803,7 @@ resolveTokens pid lots = do
 --
 -- The typed door Parun.Engine.Engine uses, so Engine never cases on a
 -- ProposedEvent.
-beginsPhase :: PhaseSelector -> PlayerId -> Game Bool
+beginsPhase :: SkipWindow -> PlayerId -> Game Bool
 beginsPhase selector pid = do
   outcome <- applyReplacements (ProposedEvent.WouldBeginPhase selector pid)
   pure (Maybe.isJust (outcome >>= Replacement.asPhaseBegin))

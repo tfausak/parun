@@ -702,6 +702,7 @@ import qualified Parun.Codec.ShuffleIntoLibrarySpec
 import qualified Parun.Codec.SicknessSpec
 import qualified Parun.Codec.SideDeckSpec
 import qualified Parun.Codec.SkipPhaseSpec
+import qualified Parun.Codec.SkipWindowSpec
 import qualified Parun.Codec.SlotCountSpec
 import qualified Parun.Codec.SlotNameSpec
 import qualified Parun.Codec.SlotPerPlayerSpec
@@ -1714,6 +1715,7 @@ spec s registry corpus = do
   Parun.Codec.SicknessSpec.spec s
   Parun.Codec.SideDeckSpec.spec s
   Parun.Codec.SkipPhaseSpec.spec s
+  Parun.Codec.SkipWindowSpec.spec s
   Parun.Codec.SlotCountSpec.spec s
   Parun.Codec.SlotNameSpec.spec s
   Parun.Codec.SlotPerPlayerSpec.spec s

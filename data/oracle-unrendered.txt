@@ -802,6 +802,7 @@ early-harvest
 earthbending-lesson
 eaten-alive
 eaten-by-piranhas
+eater-of-days
 ebon-dragon
 ebony-horse
 eccentric-farmer
@@ -1729,6 +1730,7 @@ matoya-archon-elder
 mayhem-devil
 mazemind-tome
 meandering-towershell
+meditate
 meekstone
 megrim
 meletis-charlatan

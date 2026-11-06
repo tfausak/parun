@@ -402,6 +402,7 @@ import qualified Parun.Types.SetClassLevel as SetClassLevel
 import qualified Parun.Types.SetOwner as SetOwner
 import qualified Parun.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
 import qualified Parun.Types.SkipPhase as SkipPhase
+import qualified Parun.Types.SkipWindow as SkipWindow
 import qualified Parun.Types.SlotCount as SlotCount
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SlotPerPlayer as SlotPerPlayer
@@ -826,7 +827,7 @@ playerRefPositions =
         ("decrease-speed", Effect.DecreaseSpeed (SpeedDecrease.MkSpeedDecrease (plantedPlayer "ds") one 0), [plantedPlayer "ds"]),
         ("create", Effect.Create (Create.MkCreate one () EntryRiders.defaultValue Nothing (plantedPlayer "cr") False), [plantedPlayer "cr"]),
         ("create-emblem", Effect.CreateEmblem (CreateEmblem.MkCreateEmblem () (plantedPlayer "ce")), [plantedPlayer "ce"]),
-        ("skip-phase", Effect.SkipPhase (SkipPhase.MkSkipPhase (plantedPlayer "sn") PhaseSelector.CombatPhase Uses.Once Duration.Indefinite), [plantedPlayer "sn"]),
+        ("skip-phase", Effect.SkipPhase SkipPhase.MkSkipPhase {SkipPhase.player = plantedPlayer "sn", SkipPhase.selector = SkipWindow.PartOfTurn PhaseSelector.CombatPhase, SkipPhase.uses = Uses.Once, SkipPhase.duration = Duration.Indefinite, SkipPhase.count = SkipPhase.defaultCount}, [plantedPlayer "sn"]),
         ("gain-player-counters", Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters (plantedPlayer "gp") PlayerCounterKind.Rad one), [plantedPlayer "gp"]),
         ("remove-player-counters", Effect.RemovePlayerCounters (RemovePlayerCounters.MkRemovePlayerCounters (plantedPlayer "rp") PlayerCounterKind.Rad one Nothing), [plantedPlayer "rp"]),
         ("require-attack", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "ra")) (Just (AttackTargetRef.Players (plantedPlayer "ra-defender")))), [plantedPlayer "ra-defender"]),
@@ -1373,8 +1374,8 @@ ownCounts effect = case effect of
   -- control three or more artifacts", and its Counts are as much card data as a
   -- Duration's.
   Effect.Replace (Replace.MkReplace duration _ _ condition replacement) -> durationCounts duration <> foldMap conditionCounts condition <> concatMap effectCounts (replacementEffectRiders replacement) <> concatMap (overFaces cardCounts) (replacementMintedCards replacement)
-  -- CR 614.10a's "next" is a use count, not a Quantity.
-  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration) -> durationCounts duration
+  -- CR 614.10a's "next two" is a Quantity, so its Counts are reachable here.
+  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration count) -> durationCounts duration <> quantityCounts count
   -- CR 615.5's rider is an effect list a card authors, so its Counts are this
   -- card's Counts -- the same recursion Create takes into a minted token.
   Effect.LaterPayment (LaterPayment.MkLaterPayment duration _ effects) -> durationCounts duration <> concatMap effectCounts effects
@@ -6050,7 +6051,7 @@ effectFilters effect = case effect of
   -- Parun.Engine.Replacement.candidateContext a printed one is, where the
   -- duration and the CR 604.2 clause beside it are not.
   Effect.Replace (Replace.MkReplace duration _ _ condition replacement) -> frame Unframed (durationFilters duration <> foldMap conditionFilters condition) <> frame ReplacementRowFramed (replacementEffectFilters replacement) <> concatMap effectFilters (replacementEffectRiders replacement) <> concatMap (overFaces cardFilters) (replacementMintedCards replacement)
-  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration) -> frame Unframed (durationFilters duration)
+  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration count) -> frame Unframed (durationFilters duration <> quantityFilters count)
   -- The rider's Filters too, for CR 615.5. This is the traversal that dropped
   -- landwalk's payload once, so a nested effect list is exactly what it must not
   -- stop at.

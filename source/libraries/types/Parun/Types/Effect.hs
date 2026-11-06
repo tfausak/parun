@@ -385,8 +385,8 @@ data Effect card ability
     -- with a use count, an origin and an optional condition asked as the event
     -- would happen (CR 614.1). Targetless.
     Replace (Replace.Replace card ability (Effect card ability))
-  | -- | CR 614.10: each player the PlayerRef names skips this step or phase,
-    -- once or within a window (Fatigue, False Peace).
+  | -- | CR 614.10: each player the PlayerRef names skips this step, phase or
+    -- turn, once or within a window (Fatigue, False Peace, Meditate).
     SkipPhase SkipPhase.SkipPhase
   | -- | CR 615.7: install a prevention shield of the printed size over the
     -- recipients an ObjectRef or a described recipient side names, for a

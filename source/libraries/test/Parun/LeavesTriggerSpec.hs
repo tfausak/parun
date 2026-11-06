@@ -99,6 +99,7 @@ import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
 import qualified Parun.Types.Response as Response
+import qualified Parun.Types.SkipWindow as SkipWindow
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.StackObjectKind as StackObjectKind
@@ -3787,7 +3788,7 @@ ivoryGargoyleSpec s registry =
             (fmap ActiveReplacement.effect (GameState.replacements after))
             [ ReplacementEffect.PhaseR
                 PhasePattern.MkPhasePattern
-                  { PhasePattern.whichPhase = PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep),
+                  { PhasePattern.whichPhase = SkipWindow.PartOfTurn (PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep)),
                     PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton S.alice)
                   }
             ]

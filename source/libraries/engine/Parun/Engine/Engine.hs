@@ -130,6 +130,7 @@ import qualified Parun.Types.RestartSignal as RestartSignal
 import Parun.Types.Result (Result)
 import qualified Parun.Types.RevealWindow as RevealWindow
 import qualified Parun.Types.Sickness as Sickness
+import qualified Parun.Types.SkipWindow as SkipWindow
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.StackObjectKind as StackObjectKind
@@ -1721,8 +1722,15 @@ offerConcessions = do
 -- one, the same call is CR 611.2a). CR 702.26n hangs off that same moment, so
 -- Phasing.orphanSchedule fires at both places -- but only where the turn does not
 -- begin, a seat that begins one being nobody's orphan.
+--
+-- CR 500.11 / 614.10: a turn a skip takes is proceeded past as though it didn't
+-- exist, which is NOT CR 800.4k's turn that doesn't begin: none of the "would
+-- have begun" sweeps run for it, so "until your next turn" runs on past it
+-- (Hope of Ghirapur's ruling) and CR 723.1b's pending control waits for a turn
+-- actually taken. Event.beginsPhase asks every seat and every extra turn that
+-- would begin, through CR 616.1's loop.
 handoffTurn :: Game ()
-handoffTurn = State.modify' takeNextTurn
+handoffTurn = takeNextTurn
 
 -- CR 500.7 / 103.1: the seat the ordinary turn order resumes from, read through
 -- one function so the two callers cannot drift -- the active player, unless an
@@ -1747,54 +1755,77 @@ turnAnchorOf gs = Maybe.fromMaybe (GameState.activePlayer gs) (GameState.turnAnc
 -- TakeExtraTurn arm).
 --
 -- CR 807.4: a Grand Melee game's markers decide instead (takeMarkedTurn).
-takeNextTurn :: GameState -> GameState
-takeNextTurn gs
-  | not (null (GameState.turnMarkers gs)) = takeMarkedTurn gs
-  | otherwise = takeOrdinaryTurn gs
+takeNextTurn :: Game ()
+takeNextTurn = do
+  markers <- State.gets GameState.turnMarkers
+  if null markers then takeOrdinaryTurn else takeMarkedTurn
 
 -- takeNextTurn without turn markers.
-takeOrdinaryTurn :: GameState -> GameState
-takeOrdinaryTurn gs = case GameState.extraTurns gs of
-  [] -> walkToNextTurn (length (GameState.turnOrder gs)) (turnAnchorOf gs) (turnAnchorOf gs) gs
-  entry : rest ->
-    let pid = ExtraTurn.taker entry
-        anchor = turnAnchorOf gs
-        swept = dropAtTurnOfTeam pid gs {GameState.extraTurns = rest}
-        anchored = swept {GameState.turnAnchor = Just anchor}
-     in if List.elem pid (Game.stillPlaying swept)
-          then -- CR 500.11: this turn's OWN skips (Savor the Moment) come into
-          -- being as it begins, and only on this branch -- the CR 800.4k entry
-          -- the `else` spends belongs to a turn that never begins. Nothing of
-          -- this turn has started yet, so CR 614.10 is not yet in the way.
-            Replacement.installTurnSkips entry (beginTurn (Just (ExtraTurn.createdAt entry)) pid anchored)
-          else -- CR 702.26n, as on walkToNextTurn's skip branch below: this
+takeOrdinaryTurn :: Game ()
+takeOrdinaryTurn = do
+  gs <- State.get
+  case GameState.extraTurns gs of
+    [] -> walkToNextTurn (length (GameState.turnOrder gs)) (turnAnchorOf gs) (turnAnchorOf gs)
+    entry : rest -> do
+      let pid = ExtraTurn.taker entry
+          -- The entry is spent whether it begins, is skipped, or is CR
+          -- 800.4k's, and the ordinary rotation resumes from the same seat.
+          popped = gs {GameState.extraTurns = rest, GameState.turnAnchor = Just (turnAnchorOf gs)}
+      State.put popped
+      if List.elem pid (Game.stillPlaying popped)
+        then do
+          -- CR 614.10a: Magosi, the Waterveil's ruling makes a pending extra
+          -- turn "your next turn" whatever order the effects resolved in, so
+          -- it is asked here before the seating order is.
+          begins <- Event.beginsPhase SkipWindow.WholeTurn pid
+          if begins
+            then -- CR 500.11: this turn's OWN skips (Savor the Moment) come into
+            -- being as it begins, and only on this branch -- neither a skipped
+            -- entry nor the CR 800.4k entry below belongs to a turn that begins.
+            -- Nothing of this turn has started yet, so CR 614.10 is not yet in
+            -- the way.
+              State.modify' (Replacement.installTurnSkips entry . beginTurn (Just (ExtraTurn.createdAt entry)) pid . dropAtTurnOfTeam pid)
+            else takeOrdinaryTurn
+        else do
+          -- CR 702.26n, as on walkToNextTurn's departed-seat branch below: this
           -- entry is a turn `pid` would have begun, so a row keyed to them is
           -- rescheduled here too. No board reaches it, an extra turn for a
           -- departed player needing a phased-out permanent besides, so it is
           -- the rule written out at its second site rather than a proved one.
-            takeOrdinaryTurn (expireLastTurn pid (Phasing.orphanSchedule pid swept))
+          State.modify' (expireLastTurn pid . Phasing.orphanSchedule pid . dropAtTurnOfTeam pid)
+          takeOrdinaryTurn
 
 -- CR 807.4c-d / 807.4g / 807.4i-j: the marker under way is kept, passed or
 -- removed (GrandMelee.passTurn), then the next marker whose holder can begin
 -- begins its turn, their pending extra turn first (GrandMelee.begin). An extra
 -- turn whose taker has left is spent, and a departed seat the marker passed on
 -- its way to the holder is a turn that would have begun, as on
--- walkToNextTurn's skip branch (CR 800.4k, 800.4m, 702.26n).
-takeMarkedTurn :: GameState -> GameState
-takeMarkedTurn gs =
+-- walkToNextTurn's departed-seat branch (CR 800.4k, 800.4m, 702.26n).
+--
+-- CR 500.11: a skipped turn leaves its marker under way, so the next round
+-- passes it on as at the end of a turn (docs/decisions.md, "Where a skipped
+-- Grand Melee turn leaves its marker").
+takeMarkedTurn :: Game ()
+takeMarkedTurn = do
+  gs <- State.get
   let playing = Game.stillPlaying gs
       (gone, staying) = List.partition (\entry -> List.notElem (ExtraTurn.taker entry) playing) (GameState.extraTurns gs)
       spent = List.foldl' (flip wouldHaveBegun) gs {GameState.extraTurns = staying} (fmap ExtraTurn.taker gone)
       (ended, passed) = GrandMelee.passTurn spent
-   in case GrandMelee.nextMarker ended passed of
-        Nothing -> passed
-        Just marker ->
-          let pid = TurnMarker.holder marker
-              (entry, begun) = GrandMelee.begin marker passed
-              -- docs/decisions.md, "When a departed Grand Melee player's turn
-              -- would have begun".
-              skipped = GrandMelee.departedRightOf pid begun
-              swept = dropAtTurnOfTeam pid (List.foldl' (flip wouldHaveBegun) begun skipped) {GameState.turnAnchor = Nothing}
+  case GrandMelee.nextMarker ended passed of
+    Nothing -> State.put passed
+    Just marker -> do
+      let pid = TurnMarker.holder marker
+          (entry, begun) = GrandMelee.begin marker passed
+          -- docs/decisions.md, "When a departed Grand Melee player's turn
+          -- would have begun".
+          departedSeats = GrandMelee.departedRightOf pid begun
+      State.put (List.foldl' (flip wouldHaveBegun) begun departedSeats)
+      begins <- Event.beginsPhase SkipWindow.WholeTurn pid
+      if not begins
+        then takeMarkedTurn
+        else State.modify' $ \g ->
+          let swept = (dropAtTurnOfTeam pid g) {GameState.turnAnchor = Nothing}
            in case entry of
                 Just extra -> Replacement.installTurnSkips extra (beginTurn (Just (ExtraTurn.createdAt extra)) pid swept)
                 Nothing -> beginTurnOf pid swept
@@ -1812,27 +1843,37 @@ wouldHaveBegun pid gs = expireLastTurn pid (Phasing.orphanSchedule pid (dropAtTu
 -- CR 805.4: a seat whose player shares the turn the walk starts from has just
 -- taken it, so it is passed with no sweep -- that player's next turn is still to
 -- come.
-walkToNextTurn :: Int -> PlayerId -> PlayerId -> GameState -> GameState
-walkToNextTurn seatsLeft anchor seat gs =
-  if seatsLeft <= 0
-    then gs
-    else
-      let next = nextInOrder (GameState.turnOrder gs) seat
-          swept = dropAtTurnOfTeam next gs
-          -- CR 702.26n: the phasing analogue of the sweep above, on the same line
-          -- for the same reason -- this is the moment the turn WOULD have begun.
-          -- A row keyed to a seat this walk passes is rescheduled and phases in at
-          -- the untap step of whichever seat the walk lands on. This branch only:
-          -- a seat that does begin a turn is nobody's orphan.
-          orphaned = expireLastTurn next (Phasing.orphanSchedule next swept)
-       in if next /= anchor && Turn.sharesTurn gs anchor next
-            then walkToNextTurn (seatsLeft - 1) anchor next gs
-            else
-              if List.elem next (Game.stillPlaying swept)
-                then -- CR 500.7 / 103.1: this turn IS the ordinary rotation, so
-                -- there is nothing left to remember.
-                  beginTurnOf next swept {GameState.turnAnchor = Nothing}
-                else walkToNextTurn (seatsLeft - 1) anchor next orphaned
+--
+-- CR 500.11: a seat whose turn a skip takes becomes the walk's new start, with
+-- the whole bound again, so its teammates are passed with it (CR 805.8) and a
+-- skip may land on the seat the walk began from. Each skip spends a Uses.Once
+-- row, which is what ends that walk.
+walkToNextTurn :: Int -> PlayerId -> PlayerId -> Game ()
+walkToNextTurn seatsLeft anchor seat = do
+  gs <- State.get
+  Monad.when (seatsLeft > 0) $ do
+    let next = nextInOrder (GameState.turnOrder gs) seat
+        swept = dropAtTurnOfTeam next gs
+        -- CR 702.26n: the phasing analogue of the sweep above, on the same line
+        -- for the same reason -- this is the moment the turn WOULD have begun.
+        -- A row keyed to a seat this walk passes is rescheduled and phases in at
+        -- the untap step of whichever seat the walk lands on. This branch only:
+        -- a seat that does begin a turn is nobody's orphan.
+        orphaned = expireLastTurn next (Phasing.orphanSchedule next swept)
+    if next /= anchor && Turn.sharesTurn gs anchor next
+      then walkToNextTurn (seatsLeft - 1) anchor next
+      else
+        if List.elem next (Game.stillPlaying swept)
+          then do
+            begins <- Event.beginsPhase SkipWindow.WholeTurn next
+            if begins
+              then -- CR 500.7 / 103.1: this turn IS the ordinary rotation, so
+              -- there is nothing left to remember.
+                State.modify' (\g -> beginTurnOf next (dropAtTurnOfTeam next g) {GameState.turnAnchor = Nothing})
+              else walkToNextTurn (length (GameState.turnOrder gs)) next next
+          else do
+            State.put orphaned
+            walkToNextTurn (seatsLeft - 1) anchor next
 
 -- CR 800.4i: a departed player's last turn answers "during their last turn"
 -- only until their next turn would have begun, which is here.
@@ -2039,7 +2080,7 @@ runStep = do
   -- makes a teammate's skip the team's, which Replacement.applies answers.
   phaseBegins <- case Turn.phaseBeginningAt phase of
     Nothing -> pure True
-    Just selector -> Event.beginsPhase selector active
+    Just selector -> Event.beginsPhase (SkipWindow.PartOfTurn selector) active
   if not phaseBegins
     then skipWholePhase phase
     else do
@@ -2047,7 +2088,7 @@ runStep = do
       -- "skip your next draw step" waits for the first occurrence that isn't
       -- skipped (CR 614.10a) instead of being spent here.
       ruleSkips <- State.gets (\gs -> phase == Phase.Beginning BeginningStep.DrawStep && skipsDraw gs)
-      begins <- if ruleSkips then pure False else Event.beginsPhase (PhaseSelector.Step phase) active
+      begins <- if ruleSkips then pure False else Event.beginsPhase (SkipWindow.PartOfTurn (PhaseSelector.Step phase)) active
       if not begins
         then skipStep phase
         else runStepThatBegan phase

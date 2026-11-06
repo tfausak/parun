@@ -93,6 +93,20 @@ spec s registry = Spec.describe s "GrandMelee" $ do
       (turnsAfter 7 conceded)
       [(seat 4, False), (seat 5, False), (seat 6, False), (seat 7, False), (seat 0, True), (seat 0, False), (seat 2, False)]
 
+  -- CR 500.11 / 614.10a: seat 0 casts Meditate ("You skip your next turn."),
+  -- so when seat 4's marker reaches seat 0 the turn is skipped and the marker
+  -- passes on to seat 1 as at the end of a turn, the other marker's seat 5
+  -- going first (docs/decisions.md, "Where a skipped Grand Melee turn leaves
+  -- its marker").
+  Spec.it s "CR 500.11 a skipped turn passes its marker on" $ do
+    forest <- S.printingOf s registry "Forest"
+    island <- S.printingOf s registry "Island"
+    meditate <- S.printingOf s registry "Meditate"
+    let (spellId, staged) = S.addHandCard meditate (seat 0) (S.landsFor island (seat 0) 3 (melee forest 8))
+        main = untilPhase Phase.PrecombatMain staged
+        resolved = snd (Engine.runGamePure S.identityAnswer (S.runPure S.identityAnswer main (S.cast (seat 0) spellId)) Engine.priorityLoop)
+    Spec.assertEqWith s "CR 500.11 seat 0's turn is passed over" (fmap fst (turnsAfter 10 resolved)) (seats [4, 1, 5, 2, 6, 3, 7, 4, 5, 1])
+
   -- CR 807.5a: on seat 0's turn only seats 7, 0 and 1 are within range of the
   -- marker. Once seat 1 has cast Shock, seat 2 is within range of an object's
   -- controller, so is asked too until it resolves.
