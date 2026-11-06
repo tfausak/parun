@@ -4695,6 +4695,8 @@ aggregationReads a = case a of
   -- measureReads' reason: no Modification writes a mana cost.
   Aggregation.Distinct DistinctOf.ManaValues -> Set.empty
   Aggregation.Distinct DistinctOf.ManaCosts -> Set.empty
+  Aggregation.Distinct DistinctOf.Powers -> Set.singleton PowerA
+  Aggregation.Distinct DistinctOf.PlaneswalkerTypes -> Set.singleton Subtypes
   Aggregation.MostSharing trait -> traitReads trait
   -- CR 201.1's names have no Aspect, HasName's reason in filterReads.
   Aggregation.DistinctNames -> Set.empty

@@ -1236,6 +1236,7 @@ gyox-brutal-carnivora
 hag-of-inner-weakness
 hakbal-of-the-surging-soul
 halana-and-alena-partners
+hall-of-echoes
 hallar-the-firefletcher
 hallowed-moonlight
 hama-the-bloodbender
@@ -1626,6 +1627,7 @@ longstalk-brawl
 longtusk-cub
 look-skyward-and-despair
 loot-exuberant-explorer
+loot-the-nexus
 loot-the-pathfinder
 lord-of-the-pit
 lorescale-coatl
@@ -2725,6 +2727,7 @@ takesies-backsies
 talas-explorer
 talent-of-the-telepath
 tameshi-reality-architect
+tam-the-possibility
 tamiyo-compleated-sage
 tamiyos-compleation
 tangled-florahedron-tangled-vale
@@ -3395,3 +3398,5 @@ time-vault
 false-orders
 ydwen-efreet
 forcefield
+chandra-chill-of-compliance
+enlightened-confidant

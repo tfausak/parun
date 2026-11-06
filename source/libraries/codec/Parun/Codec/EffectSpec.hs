@@ -215,6 +215,7 @@ import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.StickerKind as StickerKind
 import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.Surveil as Surveil
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TapState as TapState
@@ -690,8 +691,17 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.Surveil (PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 2)))
+      (Effect.Surveil (Surveil.MkSurveil (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 2) Nothing))
       " {\"type\":\"Surveil\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"quantity\":{\"type\":\"Literal\",\"value\":2}}} "
+  -- Chandra, Chill of Compliance's "Surveil 1. If you put ... this way", the
+  -- slot written beside the two shared fields.
+  Spec.it s "Surveil, binding a slot" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (Effect.Surveil (Surveil.MkSurveil (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 1) (Just (SlotName.MkSlotName (Text.pack "surveilled")))))
+      " {\"type\":\"Surveil\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"slot\":\"surveilled\"}} "
   -- Spin into Myth's "then fateseal 2". The PlayerRef is the FATESEALER, so the
   -- controller spelling is the one a card writes; the opponent whose library is
   -- looked at is chosen as the effect applies and appears nowhere in the data.

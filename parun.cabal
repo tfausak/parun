@@ -1549,6 +1549,7 @@ library codec
     Parun.Codec.SuperlativeSpec
     Parun.Codec.Supertype
     Parun.Codec.SupertypeSpec
+    Parun.Codec.Surveil
     Parun.Codec.Suspend
     Parun.Codec.SuspendCounters
     Parun.Codec.SuspendCountersSpec
@@ -3300,6 +3301,7 @@ library types
     Parun.Types.SubtypesAre
     Parun.Types.Superlative
     Parun.Types.Supertype
+    Parun.Types.Surveil
     Parun.Types.Suspend
     Parun.Types.SuspendCounters
     Parun.Types.TakeExtraTurn
