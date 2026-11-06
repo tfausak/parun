@@ -1,0 +1,96 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Deadlock Trap",
+            "label": "deadlock-trap",
+            "ready": true
+          }
+        ],
+        "counters": [
+          {
+            "key": "Energy",
+            "value": 2
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "ready": true
+          },
+          {
+            "card": "Uthden Troll",
+            "label": "victim",
+            "ready": true
+          },
+          {
+            "card": "Uthden Troll",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 602.2 whole cards: the Troll Deadlock Trap named cannot be activated, and its twin can",
+  "final": [
+    {
+      "Tapped": {
+        "object": "$victim",
+        "tapped": true
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$deadlock-trap",
+        "tapped": true
+      }
+    }
+  ],
+  "note": "Uthden Troll because its \"{R}: Regenerate\" pays mana and nothing else: the Trap taps what it names, so a victim whose ability costs {T} would be silent whatever the prohibition did. Bob's two Trolls are identical and the Mountain pays either, so the named one withheld beside its twin offered is the stored prohibition and nothing else. The paired board aimed at the twin is cr-602-2-aimed-at-the-twin-the-first-troll-is-the-one-still-offered.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "object": "$deadlock-trap",
+          "targets": [
+            "$victim"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Pass",
+            "Activate Uthden Troll#2",
+            "ActivateManaAbility Mountain"
+          ],
+          "of": "Offered",
+          "player": "bob"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
