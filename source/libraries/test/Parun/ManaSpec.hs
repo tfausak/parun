@@ -1993,6 +1993,34 @@ foodChainSpec s registry = Spec.describe s "Food Chain" $ do
     Spec.assertBool s (holding 8) "the Myr's three for one colour, two Kobolds for each of the others"
     Spec.assertBool s (not (holding 7)) "and seven Kobolds leave a colour short"
 
+  -- The wide board again, with a second claimant on the creatures: each makes
+  -- Food Chain's group CONTESTED, so it may take fewer of them, yet the walk
+  -- stays small.
+  Spec.it s "CR 118.3 Food Chain beside forty-five creatures and a rival for them still answers at once" $ do
+    chain <- S.printingOf s registry "Food Chain"
+    creatures <- traverse (S.printingOf s registry) ["Crimson Kobolds", "Aegis Turtle", "Alpha Myr", "Alaborn Trooper", "Axebane Beast", "Ancient Carp", "Alpha Tyrranax", "Axebane Stag", "Ancient Brontodon"]
+    rivals <- traverse (S.printingOf s registry) ["Food Chain", "Blood Pet", "Ashnod's Altar"]
+    progenitus <- S.printingOf s registry "Progenitus"
+    Foldable.for_ rivals $ \rival -> do
+      let (held, oid) = S.handOne progenitus ((alicePermanents (chain : rival : concatMap (replicate 5) creatures)) {GameState.phase = Phase.PrecombatMain, GameState.remaining = Seq.empty})
+      Spec.assertBool s (S.castable S.alice oid held) "Progenitus is offered"
+
+  -- A CONTESTED creature Food Chain must still take: Blood Pet's mana value
+  -- is 1, so exiling it adds two of a colour where sacrificing it adds one
+  -- {B}. With six Kobolds the Myr covers one colour, the Pet a second, and the
+  -- Kobolds the other three; five Kobolds leave one short either way.
+  Spec.it s "CR 118.3 an Alpha Myr, a Blood Pet and six Crimson Kobolds feed Progenitus through Food Chain and five do not" $ do
+    chain <- S.printingOf s registry "Food Chain"
+    myr <- S.printingOf s registry "Alpha Myr"
+    pet <- S.printingOf s registry "Blood Pet"
+    kobolds <- S.printingOf s registry "Crimson Kobolds"
+    progenitus <- S.printingOf s registry "Progenitus"
+    let holding n =
+          let (held, oid) = S.handOne progenitus ((alicePermanents (chain : myr : pet : replicate n kobolds)) {GameState.phase = Phase.PrecombatMain, GameState.remaining = Seq.empty})
+           in S.castable S.alice oid held
+    Spec.assertBool s (holding 6) "the Myr's three, the Pet's two, and two Kobolds for each of three colours"
+    Spec.assertBool s (not (holding 5)) "and five Kobolds leave a colour short"
+
 -- Answers Prompt.ChooseSacrifices with `victim` alone, and defers everything
 -- else to S.identityAnswer.
 sacrificing :: ObjectId.ObjectId -> Prompt.Prompt r -> r
