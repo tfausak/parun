@@ -1172,3 +1172,25 @@ Entries are ordered by the first rule each cites.
   rock-hydra-divides-its-counters-away-from-the-lifelink and
   rock-hydra-divides-its-counters-onto-the-other-blocker.
 - **Issue**: #6276.
+
+## Camouflage's piles are block requirements
+
+- **Question**: "Each creature in a pile that can block the creature that pile
+  is assigned to does so." Where a pile's creatures can each block its attacker
+  but not all together (Charging Rhino), or a block costs something (Archangel
+  of Tithes), which block? And under Odric, Master Tactician, who divides?
+- **Rules**: CR 509.1, 509.1b, 509.1c, 613.11, 700.3 (CR of 2026-09-25). The
+  card has no rulings.
+- **Decision**: The defending player still declares blockers, barred from any
+  pair a pile does not hold, with each pile's pair a CR 509.1c requirement:
+  the declaration must obey as many as can be, a cost to block excusing one.
+  Where obeying them all is legal and free, it is made without asking. A later
+  Odric row hands both the division and that declaration to its controller,
+  in CR 613.11's timestamp order.
+- **Rejected**: Each pile's able creatures blocking regardless, which builds
+  an illegal block. The engine choosing among the ways to obey: that makes a
+  player's choice. Dropping a pile that can't block whole, as Forge does,
+  which blocks with fewer than can.
+- **Site**: `Parun.Engine.Combat`'s `blockScopeGiven`, `blockCeilingGiven`
+  and `pileChooser`. The scenarios under `data/scenarios/camouflage/`.
+- **Issue**: #5464.

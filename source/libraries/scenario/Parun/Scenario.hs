@@ -1050,6 +1050,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseFromOutsideTheGame _ _ cards least most -> all (`elem` cards) chosen && least <= List.genericLength chosen && List.genericLength chosen <= most
   Prompt.Type.DeclareAttackers _ _ attackers -> all (`elem` attackers) chosen
   Prompt.Type.DeclareBands _ _ attackers -> all (all (`elem` attackers)) chosen
+  Prompt.Type.DividePiles _ _ creatures _ -> all (all (`elem` creatures)) chosen
   Prompt.Type.DeclareBlockers _ _ blockers attackers -> all (`elem` blockers) (Map.keys chosen) && all (all (`elem` attackers)) chosen
   Prompt.Type.ChooseTargets _ _ _ offered -> Map.isSubmapOfBy (\picked (_, legal) -> Set.isSubsetOf picked legal) chosen offered
   Prompt.Type.AnnounceTargets _ _ _ offered -> all (`Map.member` offered) (Map.keys chosen)

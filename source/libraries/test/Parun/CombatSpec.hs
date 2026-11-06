@@ -38,6 +38,7 @@ import qualified Parun.Engine.Stack as Stack
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Registry as Registry
 import qualified Parun.Scenario as Scenario
+import qualified Parun.Scenario.Prompt as Scenario.Prompt
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
 import qualified Parun.Types.Acquisition as Acquisition
@@ -45,6 +46,7 @@ import qualified Parun.Types.ActiveAttackProhibition as ActiveAttackProhibition
 import qualified Parun.Types.ActiveAttackRequirement as ActiveAttackRequirement
 import qualified Parun.Types.ActiveObjectProhibition as ActiveObjectProhibition
 import qualified Parun.Types.Affected as Affected
+import qualified Parun.Types.AffectedPlayers as AffectedPlayers
 import qualified Parun.Types.AfterObjectTurn as AfterObjectTurn
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.BeginningStep as BeginningStep
@@ -74,7 +76,10 @@ import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerChoice as PlayerChoice
+import qualified Parun.Types.PlayerEffect as PlayerEffect
 import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.PlayerScope as PlayerScope
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
@@ -3086,3 +3091,41 @@ spec s registry = Spec.describe s "Parun.Engine.Combat" $ do
   textChangedCombatRestrictionSpec s registry
   textChangedCombatAffectedSpec s registry
   controlChangeSicknessSpec s registry
+  camouflageDivisionOrderSpec s registry
+
+-- CR 101.4 / 802.4 / Camouflage: at three seats, every defending player's
+-- creatures are divided, in APNAP order, before any pile is assigned at random
+-- or any blocker declared. Recorded by prompt rather than by outcome: a
+-- scenario keys its answers by prompt kind, so it cannot see this order.
+camouflageDivisionOrderSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+camouflageDivisionOrderSpec s registry =
+  Spec.it s "CR 101.4 Camouflage asks every defending player to divide before any pile is assigned" $ do
+    bears <- S.printingOf s registry "Grizzly Bears"
+    giant <- S.printingOf s registry "Hill Giant"
+    elves <- S.printingOf s registry "Llanowar Elves"
+    let (gs0, mine, _, _) = S.threePlayerCombat [bears, bears, bears] [giant] [elves]
+        -- Two attackers on bob, so his piles' assignment draws at random; one
+        -- on carol.
+        target :: ObjectId.ObjectId -> PlayerId.PlayerId
+        target oid = if List.elem oid (take 2 mine) then S.bob else S.carol
+        plan :: Prompt.Prompt r -> r
+        plan p = case p of
+          Prompt.ChooseAttackTarget _ _ attacker options -> Maybe.fromMaybe (NonEmpty.head options) (List.find (== AttackTarget.OfPlayer (target attacker)) (NonEmpty.toList options))
+          Prompt.DividePiles _ _ creatures _ -> [Set.fromList creatures]
+          _ -> S.aggressiveAnswer p
+        atBlockers = S.runToStep (Phase.Combat CombatStep.DeclareBlockers) plan gs0
+        piled = S.addPlayerEffect Expiry.AtCleanup (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer)) PlayerEffect.BlocksFromPiles S.alice atBlockers
+        recording :: Prompt.Prompt r -> State.State [Text.Text] r
+        recording p = do
+          State.modify' (<> [Scenario.Prompt.kindOf p <> foldMap (Text.pack . (' ' :) . show) (dividing p)])
+          pure (plan p)
+        dividing :: Prompt.Prompt r -> Maybe PlayerId.PlayerId
+        dividing p = case p of
+          Prompt.DividePiles _ who _ _ -> Just who
+          _ -> Nothing
+        asked = State.execState (Engine.runGame recording piled (Combat.declareBlockers S.manaPerformer)) []
+    Spec.assertEqWith
+      s
+      "bob and carol divide, in APNAP order, before bob's piles are drawn"
+      (filter (\kind -> List.any (`Text.isPrefixOf` kind) [Text.pack "DividePiles", Text.pack "RandomObject", Text.pack "DeclareBlockers"]) asked)
+      [Text.pack ("DividePiles " <> show S.bob), Text.pack ("DividePiles " <> show S.carol), Text.pack "RandomObject"]

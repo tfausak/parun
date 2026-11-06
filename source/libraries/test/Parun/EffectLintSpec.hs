@@ -1182,6 +1182,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.EntriesTrigger _ -> False
   PlayerEffect.AdditionalTriggers _ -> False
   PlayerEffect.ControlledWhileSearching -> False
+  PlayerEffect.BlocksFromPiles -> False
   PlayerEffect.YouChoose _ -> False
   PlayerEffect.ExilesFoundWhileSearching -> False
   PlayerEffect.CantAttackWithCreatures -> False
@@ -1265,6 +1266,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.EntriesTrigger _ -> False
   PlayerEffect.AdditionalTriggers _ -> False
   PlayerEffect.ControlledWhileSearching -> False
+  PlayerEffect.BlocksFromPiles -> False
   PlayerEffect.YouChoose _ -> False
   PlayerEffect.ExilesFoundWhileSearching -> False
   PlayerEffect.CantAttackWithCreatures -> False

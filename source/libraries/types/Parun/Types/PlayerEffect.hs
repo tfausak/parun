@@ -175,6 +175,10 @@ data PlayerEffect
     -- CR 109.5's "you" of the row chooses which of this player's creatures
     -- attack, or which block and how; announcements and payments stay theirs.
     YouChoose CombatDeclaration.CombatDeclaration
+  | -- | CR 509.1 / 700.3 / Camouflage: instead of declaring blockers, this player
+    -- divides creatures they control into piles, one per creature attacking
+    -- them, assigned to those attackers at random.
+    BlocksFromPiles
   | -- | CR 701.23 / 601.3 / 609.4b / Opposition Agent: while this player
     -- searches their library, they exile each card they find instead, and the
     -- row's "you" may play those cards, spending mana as though it were mana of

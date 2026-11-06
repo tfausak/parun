@@ -386,6 +386,7 @@ shapeOf prompt = case prompt of
   Prompt.DeclareAttackers {} -> list object
   Prompt.ChooseAttackTarget {} -> attackTarget
   Prompt.DeclareBands {} -> list (setOf object)
+  Prompt.DividePiles {} -> list (setOf object)
   Prompt.ChooseExert {} -> viaCodec Codec.OptionalDecision.codec
   Prompt.ChooseEnlist {} -> maybeOf object
   Prompt.ChooseEncode {} -> maybeOf object

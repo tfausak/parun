@@ -446,6 +446,10 @@ data Prompt r where
   -- blocking creature to the set it blocks (CR 509.1a's one can be raised), a
   -- non-blocker absent. Parun.Engine.Combat.legalBlockDeclaration judges it.
   DeclareBlockers :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> [ObjectId.ObjectId] -> Prompt (Map.Map ObjectId.ObjectId (Set.Set ObjectId.ObjectId))
+  -- | CR 700.3 / Camouflage: the defending player's creatures divided into
+  -- this many piles, each set one pile and any of them empty (CR 700.3d).
+  -- Filtered by Parun.Engine.Combat.dividePiles.
+  DividePiles :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt [Set.Set ObjectId.ObjectId]
   -- | CR 510.1 / 702.19b: the assigning creature divides its power among the
   -- recipients; the Map is recipient to lethal threshold (0 on the blocking
   -- side, CR 510.1d). Damage.wellFormedAssignment and Damage.tiersCleared

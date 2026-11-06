@@ -158,6 +158,7 @@ offerOf gs prompt = case prompt of
   Prompt.ArrangeGraveyardArrivals _ _ batch -> fields [("from", objects batch)]
   Prompt.DeclareAttackers _ _ attackers -> objects attackers
   Prompt.DeclareBlockers _ _ blockers attackers -> fields [("blockers", objects blockers), ("attackers", objects attackers)]
+  Prompt.DividePiles _ _ creatures count -> fields [("from", objects creatures), ("count", natural count)]
   Prompt.ChooseTargets _ _ source slots ->
     fields
       [ ("source", object source),

@@ -4937,6 +4937,7 @@ playerEffectFilters playerEffect = case playerEffect of
   PlayerEffect.EntriesTrigger e -> [EntriesTrigger.entrants e]
   PlayerEffect.AdditionalTriggers bearers -> [bearers]
   PlayerEffect.ControlledWhileSearching -> []
+  PlayerEffect.BlocksFromPiles -> []
   PlayerEffect.YouChoose _ -> []
   PlayerEffect.ExilesFoundWhileSearching -> []
   PlayerEffect.CantAttackWithCreatures -> []
