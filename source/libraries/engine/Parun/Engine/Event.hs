@@ -5142,10 +5142,12 @@ apply settle batch applied batchPrevented candidate event =
     -- pendingReplacementEffects' drains would run them at once.
     --
     -- CR 732.3: a skip whose source has one queued already, at the same turns to
-    -- come, is a repeated state, every seat between having skipped too. The
+    -- come and floating replacement rows, is a repeated state, every seat
+    -- between having skipped too; a lap that spent a row (Meditate) is not. The
     -- active player, or the first involved player in turn order from them, must
-    -- break the loop, so that player declines unasked; another is still asked,
-    -- and a lap of skips changes nothing.
+    -- break the loop, so that player declines unasked; another is still asked.
+    -- The active player is the one whose turn last ended (docs/decisions.md,
+    -- "Who is the active player while a turn is skipped").
     (ReplacementEffect.PhaseR (PhaseR.MkPhaseR _ (PhaseRewrite.MaySkipFor effects)), ProposedEvent.WouldBeginPhase _ pid) -> do
       gs <- State.get
       let decider = Maybe.fromMaybe pid (ReplacementCandidate.controller candidate)
@@ -5153,8 +5155,9 @@ apply settle batch applied batchPrevented candidate event =
           involved = foldMap (Set.singleton . PendingReplacementEffect.controller . PendingSkipEffect.pending) queued
           fromActive = let (before, after) = List.break (== GameState.activePlayer gs) (GameState.turnOrder gs) in after <> before
           breaker = List.find (`Set.member` involved) fromActive
-          position = (GameState.extraTurns gs, GameState.turnMarkers gs)
-          repeats = any (\q -> PendingReplacementEffect.source (PendingSkipEffect.pending q) == ReplacementCandidate.source candidate && (PendingSkipEffect.extraTurns q, PendingSkipEffect.turnMarkers q) == position) queued
+          floating = Set.fromList (fmap ActiveReplacement.timestamp (GameState.replacements gs))
+          position = (GameState.extraTurns gs, GameState.turnMarkers gs, floating)
+          repeats = any (\q -> PendingReplacementEffect.source (PendingSkipEffect.pending q) == ReplacementCandidate.source candidate && (PendingSkipEffect.extraTurns q, PendingSkipEffect.turnMarkers q, PendingSkipEffect.replacements q) == position) queued
       answer <-
         if repeats && breaker == Just decider
           then pure OptionalDecision.Declines
@@ -5176,8 +5179,9 @@ apply settle batch applied batchPrevented candidate event =
                               PendingReplacementEffect.controller = decider,
                               PendingReplacementEffect.source = ReplacementCandidate.source candidate
                             },
-                        PendingSkipEffect.extraTurns = fst position,
-                        PendingSkipEffect.turnMarkers = snd position
+                        PendingSkipEffect.extraTurns = GameState.extraTurns gs,
+                        PendingSkipEffect.turnMarkers = GameState.turnMarkers gs,
+                        PendingSkipEffect.replacements = floating
                       }
               }
           pure Nothing
