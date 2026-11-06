@@ -3059,8 +3059,10 @@ primaryOf gs pid =
 -- docs/decisions.md, "Which active player takes the monarch or initiative
 -- under shared team turns".
 --
--- Not implemented: any CR 801.5a / 801.5c range cut on this team choice under
--- limited range (#4918).
+-- No range cut: the choosing team holds every candidate, each in their own
+-- range (CR 801.2b). docs/decisions.md, "Whose range of influence cuts a team's
+-- choice"; the range scenario "CR 801.5a / 805.2 the primary player crowns a
+-- teammate outside their own range" proves it.
 --
 -- The walk anchors on the ACTIVE seat and excludes it, unlike
 -- Engine.nextStillPlaying's CR 800.4a walk, which anchors on the departing

@@ -1,0 +1,142 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Benalish Hero",
+            "label": "hero",
+            "ready": true
+          }
+        ],
+        "name": "alice",
+        "range": 1,
+        "team": 1
+      },
+      {
+        "name": "bob",
+        "range": 1,
+        "team": 1
+      },
+      {
+        "name": "carol",
+        "range": 1,
+        "team": 1
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Benalish Hero",
+            "label": "other",
+            "ready": true
+          }
+        ],
+        "name": "dave",
+        "range": 1,
+        "team": 1
+      },
+      {
+        "name": "erin",
+        "range": 1,
+        "team": 2
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Foriysian Brigade",
+            "label": "brigade",
+            "ready": true
+          }
+        ],
+        "name": "frank",
+        "range": 2,
+        "team": 2
+      }
+    ],
+    "sharedTeamTurns": true,
+    "step": "BeginningOfCombat"
+  },
+  "description": "CR 801.5a / 805.9 banding creatures of two controllers offer an active player in either range",
+  "note": "Shared team turns, alice, bob, carol and dave against erin and frank; frank's range is 2, every other range 1, and alice is her team's primary player. alice's Benalish Hero attacks frank and dave's attacks erin; frank's Foriysian Brigade blocks both. The banding creatures' controllers differ, so alice names the active player who divides the Brigade's damage, among those in her range or dave's: carol, two seats from alice and beside dave, is named and divides.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$hero",
+          "$other"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "DeclareBands",
+          "with": []
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Block": {
+          "$brigade": [
+            "$hero",
+            "$other"
+          ]
+        }
+      },
+      "player": "erin",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChoosePlayer",
+          "with": "carol"
+        }
+      },
+      "player": "alice",
+      "step": "CombatDamage",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "AssignCombatDamage",
+          "with": [
+            [
+              [
+                "Creature",
+                "$hero"
+              ],
+              2
+            ]
+          ]
+        }
+      },
+      "player": "carol",
+      "step": "CombatDamage",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Benalish Hero",
+          "count": 1,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "CombatDamage",
+      "turn": 1
+    }
+  ]
+}
