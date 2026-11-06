@@ -1720,6 +1720,16 @@ lifeSummed cost =
       others = filter (\component -> case component of CostComponent.PayLife (CostAmount.Fixed _) -> False; _ -> True) (Cost.components cost)
    in cost {Cost.components = others <> [CostComponent.PayLife (CostAmount.Fixed life) | life > 0]}
 
+-- CR 810.9b: the fixed life a cost pays, alone, with {0} for its mana -- what a
+-- teammate's agreed payment takes from the shared total another member's
+-- payment is measured against.
+lifePart :: Cost Keyword.Type.Keyword -> Cost Keyword.Type.Keyword
+lifePart cost =
+  Cost.MkCost
+    { Cost.mana = Just (ManaCost.MkManaCost []),
+      Cost.components = [component | component@(CostComponent.PayLife (CostAmount.Fixed _)) <- Cost.components (lifeSummed cost)]
+    }
+
 -- CR 702.24a's "[cost] for each age counter on it": N whole copies of this cost,
 -- as ONE cost. `plus` folded over itself, so the mana parts concatenate and the
 -- components are appended in order -- which is also rule 702.24a's "each choice

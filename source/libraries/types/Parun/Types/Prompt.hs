@@ -289,10 +289,8 @@ data Prompt r where
   ChooseProliferate :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> [PlayerId.PlayerId] -> Prompt (Set.Set ObjectId.ObjectId, Set.Set PlayerId.PlayerId)
   -- | Reverse the Sands' redistribution of life totals (CR 119.7-8): each
   -- chosen player maps to the player whose previous total they take, a
-  -- permutation Parun.Engine.Resolve checks. Elided below two candidates.
-  --
-  -- Not implemented: CR 810.9f's "not more than one member of each team"
-  -- (#4493).
+  -- permutation naming at most one member of each team sharing a life total
+  -- (CR 810.9f) that Parun.Engine.Resolve checks. Elided below two candidates.
   ChooseRedistribution :: Decider.Decider -> PlayerId.PlayerId -> [(PlayerId.PlayerId, Integer)] -> Prompt (Map.Map PlayerId.PlayerId PlayerId.PlayerId)
   -- | CR 701.54a: which creature becomes the tempted player's Ring-bearer;
   -- not raised for zero, where CR 701.54d still tempts.
@@ -707,8 +705,9 @@ data Prompt r where
   -- resolving effect's controller chooses (CR 608.2d; Stadium Vendors), or which
   -- active player a banding creature's controller names under CR 805.9
   -- (Parun.Engine.Damage.blockerChooser), or which winner takes an ante card
-  -- after a team's win (CR 407.2 / 104.2c, Parun.Engine.Ante.payOut) -- the
-  -- ObjectId is the entering permanent, the resolving source, the banding
+  -- after a team's win (CR 407.2 / 104.2c, Parun.Engine.Ante.payOut), or which
+  -- member a team chooses for a "set each player's life total" (CR 810.9d) --
+  -- the ObjectId is the entering permanent, the resolving source, the banding
   -- creature, or the ante card. The candidates
   -- come from the caller, and this constructor rather than ChooseOpponent above
   -- is the one raised exactly when they include the chooser.

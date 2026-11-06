@@ -75,10 +75,6 @@ data GameSettings = MkGameSettings
     sharedTeamTurns :: Bool,
     -- | CR 810.4 / 904.13b: whether each team shares one life total. Off by
     -- default ('plain'); Parun.Engine.Game.lifeSharers reads it.
-    --
-    -- Not implemented: CR 810.9b's joint payment cap, CR 810.9d's team choosing
-    -- the one member a "set each player's life total" affects, and CR 810.9f's
-    -- one member per team in a redistribution (#4493).
     sharedTeamLife :: Bool,
     -- | CR 801.2a: each player's range of influence.
     -- 'RangeOfInfluence.unlimited' by default ('plain'), since
