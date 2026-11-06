@@ -5113,6 +5113,7 @@ entryRewriteFilters entryRewrite = case entryRewrite of
   EntryRewrite.Tribute _ -> []
   EntryRewrite.Compleated _ -> []
   EntryRewrite.Tapped -> []
+  EntryRewrite.Prepared -> []
   EntryRewrite.OrTapped (EntryPrice.PayLife _) -> []
   EntryRewrite.EntersTransformed -> []
   -- ALL THREE fields: the permanents the sacrifice may take, CR 122.1b's kind

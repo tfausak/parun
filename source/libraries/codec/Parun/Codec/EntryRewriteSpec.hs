@@ -244,6 +244,14 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       EntryRewrite.Tapped
       " {\"type\":\"Tapped\"} "
+  -- CR 722.3a: the enters-prepared rewrite, payload-free because the rule fixes
+  -- the designation and CR 722.3c the copy it mints.
+  Spec.it s "Prepared (Pompous Battlemage)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      EntryRewrite.Prepared
+      " {\"type\":\"Prepared\"} "
   -- CR 702.145b via CR 614.1d: the enters-transformed rewrite, payload-free
   -- because the rule fixes every half -- which face comes from the card's layout,
   -- and the condition from the game's designation.

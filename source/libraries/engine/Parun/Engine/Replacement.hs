@@ -52,6 +52,7 @@ import qualified Parun.Engine.Interchangeable.Mentions as Mentions
 import qualified Parun.Engine.Mint as Mint
 import qualified Parun.Engine.Plane as Plane
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
+import qualified Parun.Engine.Prepare as Prepare
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
@@ -1414,6 +1415,10 @@ admitsEntry gs oid rewrite = case rewrite of
   -- enters, and both of the questions it asks are players'.
   EntryRewrite.Tribute _ -> True
   EntryRewrite.Tapped -> True
+  -- CR 722.3a's first gate, "if that permanent has the alternative
+  -- characteristics of a prepare spell", read off the copiable values the
+  -- entry has settled so far (CR 722.2b).
+  EntryRewrite.Prepared -> Prepare.hasPrepareSpell oid gs
   EntryRewrite.OrTapped _ -> True
   -- CR 614.1c's "as [this permanent] enters, [do something]". No condition here
   -- and Bloodthirst above is the contrast: rule 702.54a's condition is a RULE's,
@@ -1491,6 +1496,7 @@ entryCostOf rewrite = case rewrite of
   EntryRewrite.Tribute _ -> Nothing
   EntryRewrite.Compleated _ -> Nothing
   EntryRewrite.Tapped -> Nothing
+  EntryRewrite.Prepared -> Nothing
   EntryRewrite.OrTapped _ -> Nothing
   EntryRewrite.EntersTransformed -> Nothing
   EntryRewrite.RunEffects _ -> Nothing
@@ -2120,6 +2126,9 @@ bucketOfEffect re = case re of
   -- STATUS the permanent enters with (CR 110.5b), never whose it is, what it
   -- copies or which face is up. So CR 616.1e.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Tapped) -> ReplacementBucket.Other
+  -- CR 722.3a's designation is none of CR 616.1a-d either: a marker, not
+  -- control, a copy or a face. So CR 616.1e.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Prepared) -> ReplacementBucket.Other
   -- CR 614.1c's priced variant of the same rewrite is none of CR 616.1a-d
   -- either, and the price does not make it one: what the rewrite changes is still
   -- the STATUS the permanent enters with (CR 110.5b), and CR 701.20b makes a
@@ -2319,6 +2328,9 @@ readsApplier re = case re of
   -- the object the event already named (CR 110.5b), so it applies the same way
   -- whoever's row is applying it. Two such rows are the same write twice.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Tapped) -> False
+  -- CR 722.3a: Tapped's reason -- one marker on the object the event named, and
+  -- CR 722.3a's second gate makes a second row a no-op.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Prepared) -> False
   -- CR 614.1c: NO despite spending a resource, for SacrificeAnyNumber's reason.
   -- The payer is the ENTERING object's controller -- "you" in an "as this
   -- permanent enters" ability the permanent prints about itself -- read live off
@@ -2814,6 +2826,7 @@ recordsAChoice effect = case effect of
     EntryRewrite.Tribute _ -> False
     EntryRewrite.Compleated _ -> False
     EntryRewrite.Tapped -> False
+    EntryRewrite.Prepared -> False
     EntryRewrite.OrTapped _ -> False
     EntryRewrite.EntersTransformed -> False
     EntryRewrite.RunEffects _ -> False

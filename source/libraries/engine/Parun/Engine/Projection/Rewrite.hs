@@ -2001,6 +2001,7 @@ rewriteEntryRewrite pairs rewrite = case rewrite of
   EntryRewrite.Compleated _ -> rewrite
   -- CR 614.1d's bare "enters tapped": a tap status.
   EntryRewrite.Tapped -> rewrite
+  EntryRewrite.Prepared -> rewrite
   -- CR 614.1c's life price is a number. Its "reveal a [matching] card": Rustic
   -- Clachan's says Kithkin, a creature type word CR 612.2 licenses. Latent all
   -- the same: that EntryR matches Filter.IsSource, and a land is never a spell,

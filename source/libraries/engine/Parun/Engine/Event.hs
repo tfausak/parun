@@ -59,6 +59,7 @@ import qualified Parun.Engine.ManaRider as ManaRider
 import qualified Parun.Engine.Plane as Plane
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Players as Players
+import qualified Parun.Engine.Prepare as Prepare
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
@@ -4061,6 +4062,21 @@ apply settle batch applied batchPrevented candidate event =
       EntryRewrite.Tapped -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         enterTapped oid
+        pure (Just event)
+      -- CR 722.3a: "This creature enters prepared" (Pompous Battlemage), the
+      -- arm above's posture for a designation: stamped on the entering
+      -- incarnation, so no CR 603.2e "becomes" event is recorded. The first gate
+      -- (a prepare spell) is Replacement.admitsEntry's; the second (not already
+      -- prepared) is asked here, so a second row mints no second copy. CR
+      -- 722.3c's copy is minted as the designation is gained, through the one
+      -- road Parun.Engine.Prepare offers.
+      EntryRewrite.Prepared -> do
+        Replacement.consume (ReplacementCandidate.identity candidate)
+        gs <- State.get
+        Monad.unless (maybe True (Set.member Designation.Prepared . Object.designations) (Game.lookupObject oid gs)) $ do
+          State.modify' $ \g ->
+            g {GameState.objects = Map.adjust (\o -> o {Object.designations = Set.insert Designation.Prepared (Object.designations o)}) oid (GameState.objects g)}
+          Prepare.mintOnDesignated Designation.Prepared oid
         pure (Just event)
       -- CR 614.1c: "As this land enters, you may [price]. If you don't, it enters
       -- tapped" (Razorgrass Field, Rustic Clachan). The arm above's write, with a
