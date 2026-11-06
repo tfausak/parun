@@ -638,6 +638,9 @@ data Filter keyword
     -- kicked permanent was not kicked (CR 707.2), where CR 718.3d makes a copy
     -- of a prototyped permanent answer as one.
     IsPrototyped
+  | -- | CR 722.3c / 722.3d: the candidate is a spell cast as a prepare spell, a
+    -- copy of one included -- Codie, Ravenous Codex's "a prepared spell".
+    IsPreparedSpell
   | And [Filter keyword]
   | Or [Filter keyword]
   | Not (Filter keyword)

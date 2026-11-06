@@ -389,6 +389,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.TagWasSpent _ -> leaf predicate
   Filter.Type.Paid _ -> leaf predicate
   Filter.Type.IsPrototyped -> leaf predicate
+  Filter.Type.IsPreparedSpell -> leaf predicate
   Filter.Type.IsRingBearer -> leaf predicate
   Filter.Type.IsPaired -> leaf predicate
   Filter.Type.IsPairedWithSource -> leaf predicate

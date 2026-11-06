@@ -95,6 +95,7 @@ import qualified Parun.Codec.AttachmentTriggerSpec
 import qualified Parun.Codec.AttackCompanySpec
 import qualified Parun.Codec.AttackCostSpec
 import qualified Parun.Codec.AttackCountSpec
+import qualified Parun.Codec.AttackLimitScopeSpec
 import qualified Parun.Codec.AttackLimitUnlessSpec
 import qualified Parun.Codec.AttackOptionSpec
 import qualified Parun.Codec.AttackPermissionSpec
@@ -1113,6 +1114,7 @@ spec s registry corpus = do
   Parun.Codec.AttackerUnblockedSpec.spec s
   Parun.Codec.AttackersAreSpec.spec s
   Parun.Codec.AttackingPlayersSpec.spec s
+  Parun.Codec.AttackLimitScopeSpec.spec s
   Parun.Codec.AttackLimitUnlessSpec.spec s
   Parun.Codec.AttackOptionSpec.spec s
   Parun.Codec.AttackPermissionSpec.spec s

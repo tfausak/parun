@@ -43,6 +43,7 @@ import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSpent as ManaSpent
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.Measure as Measure
+import qualified Parun.Types.PlayerAction as PlayerAction
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Types.PlayerDesignation as PlayerDesignation
@@ -640,14 +641,14 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.TalliedThisTurn TurnTally.CardsDrawn (PlayerRef.Relative PlayerRelation.You))
       " {\"type\":\"CardsDrawnThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
-  -- CR 603.1b, on CardsDiscardedThisTurn's terms. Avatar Aang's is the Relative
-  -- arm.
-  Spec.it s "BendingsThisTurn" $
+  -- CR 603.1b / 608.2i: the acts, as a set, beside the player. Surveillance
+  -- Phantasm's scry and surveil.
+  Spec.it s "ActionsDoneThisTurn" $
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.TalliedThisTurn TurnTally.Bendings (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"BendingsThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
+      (Quantity.TalliedThisTurn (TurnTally.ActionsDone (Set.fromList [PlayerAction.Scry, PlayerAction.Surveil])) (PlayerRef.Relative PlayerRelation.You))
+      " {\"type\":\"ActionsDoneThisTurn\",\"value\":{\"actions\":[\"Scry\",\"Surveil\"],\"player\":{\"type\":\"Relative\",\"value\":\"You\"}}} "
   -- CR 305.2a, on CardsDiscardedThisTurn's terms. Fastbond's is the Relative arm.
   Spec.it s "LandsPlayedThisTurn" $
     Common.assertCodec

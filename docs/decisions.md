@@ -848,6 +848,25 @@ Entries are ordered by the first rule each cites.
   is offered to a subgame's wish as a creature and not as a sorcery".
 - **Issue**: none.
 
+## What "a prepared spell" names
+
+- **Question**: Codie, Ravenous Codex triggers on "a prepared spell". No rule
+  defines the phrase. Is it a spell cast from the copy CR 722.3c mints, or any
+  spell that has a prepare spell (CR 722.2a), such as Encouraging Aviator cast
+  from a hand?
+- **Rules**: CR 722.2a, 722.3c, 722.3d; CR of 2026-09-25.
+- **Decision**: A spell cast as a prepare spell, which CR 722.3d names as what
+  rules and effects refer to, or a copy of one. The Aviator cast from a hand is
+  not one, nor is the printed Jump.
+- **Rejected**: A spell with a prepare spell. CR 722.2a phrases that as "has a
+  prepare spell", and "prepared" is the designation CR 722.3a gives the
+  permanent whose copy is cast.
+- **Site**: `Parun.Engine.Cast.stampCastPrepared` and
+  `Filter.IsPreparedSpell`, proved by `data/scenarios/preparation`'s Codie
+  cases and `Parun.PreparationSpec`'s "CR 722.3d a Twincast copy of the cast
+  Jump is a prepared spell too".
+- **Issue**: #6488.
+
 ## Whether a subgame of a Commander game is one
 
 - **Question**: CR 903.11 limits what comes in from outside "a Commander

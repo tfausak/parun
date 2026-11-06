@@ -182,6 +182,7 @@ spec s = Spec.describe s "Parun.Codec.Object" $ do
           Object.bestowed = True,
           Object.mutating = True,
           Object.prototyped = True,
+          Object.castPrepared = True,
           Object.boughtBack = True,
           Object.unannounced = True,
           Object.spliced = Seq.fromList [PrintingId.MkPrintingId 31, PrintingId.MkPrintingId 30],
@@ -249,6 +250,7 @@ spec s = Spec.describe s "Parun.Codec.Object" $ do
           <> ",\"bestowed\":true"
           <> ",\"mutating\":true"
           <> ",\"prototyped\":true"
+          <> ",\"castPrepared\":true"
           <> ",\"boughtBack\":true"
           <> ",\"unannounced\":true"
           <> ",\"spliced\":[31,30]"

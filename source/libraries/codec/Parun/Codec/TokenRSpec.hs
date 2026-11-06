@@ -63,6 +63,18 @@ spec s = Spec.describe s "Parun.Codec.TokenR" $ do
           }
       )
       " {\"matching\":{\"whose\":{\"type\":\"You\"}},\"plus\":{\"type\":\"ThatMany\",\"value\":{\"faces\":[{\"name\":\"Soldier Token\",\"typeLine\":{\"types\":[\"Creature\"]}}]}}} "
+  -- CR 614.1a: Draconic Visitor swaps the matched tokens for its own.
+  Spec.it s "a substitute" $
+    Common.assertCodec
+      s
+      codec
+      ( TokenR.MkTokenR
+          { TokenR.matching = TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.HasCardType CardType.Artifact, TokenPattern.effectsOnly = False},
+            TokenR.scaling = Nothing,
+            TokenR.plus = Just (TokenPlus.Instead soldier)
+          }
+      )
+      " {\"matching\":{\"whose\":{\"type\":\"You\"},\"whatToken\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}},\"plus\":{\"type\":\"Instead\",\"value\":{\"faces\":[{\"name\":\"Soldier Token\",\"typeLine\":{\"types\":[\"Creature\"]}}]}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec
 
 -- A one-face creature token with every other field at the value

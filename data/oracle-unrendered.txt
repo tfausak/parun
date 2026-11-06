@@ -511,6 +511,7 @@ cloud-sprite
 cloudform
 coastal-wizard
 coat-of-arms
+codie-ravenous-codex
 coercion
 coldsteel-heart
 collective-restraint
@@ -741,6 +742,7 @@ doubling-chant
 doubling-cube
 doubling-season
 dovin-hand-of-control
+draconic-visitor
 drafnas-restoration
 drag-to-the-bottom
 dragon-egg
@@ -2889,6 +2891,7 @@ tolarian-winds
 tomb-of-annihilation
 tome-anima
 tome-of-the-infinite
+tomik-orzhov-lawmage
 too-greedily-too-deep
 toralfs-disciple
 torgaar-famine-incarnate
@@ -3400,3 +3403,6 @@ ydwen-efreet
 forcefield
 chandra-chill-of-compliance
 enlightened-confidant
+desperate-futurescribe
+proctor-of-potential
+surveillance-phantasm

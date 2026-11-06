@@ -182,6 +182,7 @@ codec keywordCodec =
       Arm.payload "TagWasSpent" ProductionTag.codec Filter.TagWasSpent (\x -> case x of Filter.TagWasSpent y -> Just y; _ -> Nothing),
       Arm.payload "Paid" (KeywordDesignator.codec keywordCodec) Filter.Paid (\x -> case x of Filter.Paid y -> Just y; _ -> Nothing),
       Arm.nullary "IsPrototyped" Filter.IsPrototyped,
+      Arm.nullary "IsPreparedSpell" Filter.IsPreparedSpell,
       Arm.payload "And" (Common.list (codec keywordCodec)) Filter.And (\x -> case x of Filter.And y -> Just y; _ -> Nothing),
       Arm.payload "Or" (Common.list (codec keywordCodec)) Filter.Or (\x -> case x of Filter.Or y -> Just y; _ -> Nothing),
       Arm.payload "Not" (codec keywordCodec) Filter.Not (\x -> case x of Filter.Not y -> Just y; _ -> Nothing),
@@ -342,6 +343,7 @@ tagOf x = case x of
   Filter.TagWasSpent {} -> "TagWasSpent"
   Filter.Paid {} -> "Paid"
   Filter.IsPrototyped {} -> "IsPrototyped"
+  Filter.IsPreparedSpell {} -> "IsPreparedSpell"
   Filter.And {} -> "And"
   Filter.Or {} -> "Or"
   Filter.Not {} -> "Not"

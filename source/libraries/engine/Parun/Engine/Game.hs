@@ -4052,20 +4052,15 @@ lifeChangedAmong :: LifeDirection.LifeDirection -> Seq.Seq LoggedEvent.LoggedEve
 lifeChangedAmong direction events admits =
   sum (fmap snd (filter (admits . fst) (Maybe.mapMaybe (lifeChangeOf direction . LoggedEvent.event) (Foldable.toList events))))
 
--- CR 603.1b: how many DISTINCT bending verbs this player has done this turn --
--- CR 701.65b's airbend, CR 701.66b's earthbend, CR 702.189b's firebend and CR
--- 701.67c's waterbend. lifeChangedIn's footing.
-bendingsThisTurn :: GameState -> PlayerId -> Int
-bendingsThisTurn gs pid =
+-- CR 603.1b / 608.2i: how many DISTINCT acts of these this player has done this
+-- turn -- Avatar Aang's four bendings, Surveillance Phantasm's scry or surveil.
+-- lifeChangedIn's footing.
+actionsDoneThisTurn :: Set.Set PlayerAction.PlayerAction -> GameState -> PlayerId -> Int
+actionsDoneThisTurn acts gs pid =
   let actionOf event = case event of
         GameEvent.PlayerActed acted | PlayerActed.player acted == pid -> Just (PlayerActed.action acted)
         _ -> Nothing
-   in Set.size (Set.intersection bendingActions (Set.fromList (Maybe.mapMaybe (actionOf . LoggedEvent.event) (Foldable.toList (GameState.events gs)))))
-
--- The four bending keyword actions bendingsThisTurn counts: CR 701.65b, CR
--- 701.66b, CR 702.189b and CR 701.67c.
-bendingActions :: Set.Set PlayerAction.PlayerAction
-bendingActions = Set.fromList [PlayerAction.Airbend, PlayerAction.Earthbend, PlayerAction.Firebend, PlayerAction.Waterbend]
+   in Set.size (Set.intersection acts (Set.fromList (Maybe.mapMaybe (actionOf . LoggedEvent.event) (Foldable.toList (GameState.events gs)))))
 
 -- CR 508.1a / 608.2i: how many creatures this player declared as attackers this
 -- turn. lifeChangedIn's footing -- a fold over GameState.events, whose

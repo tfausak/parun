@@ -701,6 +701,7 @@ filterNames asking criterion = case criterion of
   Filter.TagWasSpent _tag -> mempty
   Filter.Paid _keywordDesignator -> mempty
   Filter.IsPrototyped -> mempty
+  Filter.IsPreparedSpell -> mempty
   Filter.And nested -> foldMap (filterNames asking) nested
   Filter.Or nested -> foldMap (filterNames asking) nested
   Filter.Not nested -> filterNames asking nested
@@ -2761,7 +2762,7 @@ quantityNames asking x = case x of
     playerRefNames asking playerRef <> case tally of
       TurnTally.CardsDiscarded -> history asking HistoryRead.Discards
       TurnTally.CardsDrawn -> mempty
-      TurnTally.Bendings -> history asking HistoryRead.Bendings
+      TurnTally.ActionsDone acts -> history asking (HistoryRead.Acts acts)
       TurnTally.LandsPlayed -> mempty
   Quantity.LifeChanged tally -> turnHistory asking (LifeTally.turn tally) (case LifeTally.direction tally of LifeDirection.Gained -> HistoryRead.LifeGains; LifeDirection.Lost -> HistoryRead.LifeLosses) <> playerRefNames asking (LifeTally.player tally)
   Quantity.PlayersDealtDamageThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.recipient tally)
@@ -3057,6 +3058,7 @@ tokenPlusNames :: Asking r -> (card -> r) -> TokenPlus.TokenPlus card -> r
 tokenPlusNames _asking onCard x = case x of
   TokenPlus.One card -> onCard card
   TokenPlus.ThatMany card -> onCard card
+  TokenPlus.Instead card -> onCard card
 
 tokenRNames :: (Monoid r) => Asking r -> (card -> r) -> TokenR.TokenR card -> r
 tokenRNames asking onCard x = case x of

@@ -145,6 +145,7 @@ codec = Fields.object $ do
   bestowed <- Fields.defaulted "bestowed" (Object.bestowed defaults) Common.boolean Object.bestowed
   mutating <- Fields.defaulted "mutating" (Object.mutating defaults) Common.boolean Object.mutating
   prototyped <- Fields.defaulted "prototyped" (Object.prototyped defaults) Common.boolean Object.prototyped
+  castPrepared <- Fields.defaulted "castPrepared" (Object.castPrepared defaults) Common.boolean Object.castPrepared
   boughtBack <- Fields.defaulted "boughtBack" (Object.boughtBack defaults) Common.boolean Object.boughtBack
   unannounced <- Fields.defaulted "unannounced" (Object.unannounced defaults) Common.boolean Object.unannounced
   spliced <- Fields.defaulted "spliced" (Object.spliced defaults) (Common.seq PrintingId.codec) Object.spliced
@@ -217,6 +218,7 @@ codec = Fields.object $ do
         Object.bestowed = bestowed,
         Object.mutating = mutating,
         Object.prototyped = prototyped,
+        Object.castPrepared = castPrepared,
         Object.boughtBack = boughtBack,
         Object.unannounced = unannounced,
         Object.spliced = spliced,
