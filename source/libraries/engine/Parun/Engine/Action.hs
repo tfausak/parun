@@ -50,7 +50,7 @@ import qualified Parun.Types.Zone as Zone
 -- object-borne permission CR 715.3d and Effect.GrantPlayFromExile write; and a
 -- graveyard card may carry its own (CR 702.187c's mayhem,
 -- CastingPermission.PlayFromGraveyard). That
--- split is the same one Parun.Engine.Cast.castableZones draws for the cast side,
+-- split is the same one Parun.Engine.Cast.permittedFrom draws for the cast side,
 -- and the exile source is read through that module's own zoneCandidates so the
 -- two can never disagree about where to look -- CR 601.3's permission names a
 -- PLAYER, and exile is filed by owner, so a land somebody else owns has to be

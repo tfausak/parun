@@ -1312,23 +1312,23 @@ candidateFillable pid oid name proposed candidate =
 -- data/scenarios/cast-permission/cr-601-3e-serra-paragon-admits-the-prototyped-assembler-and-not-the-printed-one.json
 -- is the proof.
 --
--- Asks castableZones of the zone the card lies in, not inCastableZone's
+-- Asks permittedFrom of the zone the card lies in, not inCastableZone's
 -- membership: cardGatesOk asked that, and no stamp moves the card.
 candidateInZone :: PlayerId -> ObjectId -> CardName.CardName -> GameState -> CandidateCost.CandidateCost -> Bool
 candidateInZone pid oid name proposed candidate =
   let board = proposedFor oid (CandidateCost.keyword candidate) proposed
    in case (Game.zoneOf oid board, proposedFace oid name board) of
-        (Just zone, Just face) -> elem zone (castableZones pid oid face board)
+        (Just zone, Just face) -> permittedFrom pid oid face board zone
         _ -> False
 
 -- CR 601.3: the zones a spell can be cast from at all, in the engine's
--- canonical order -- what castableSpells scans, and the list castableZones
--- filters, so the two can never disagree about where to look.
+-- canonical order -- what castableSpells scans, and the list inCastableZone
+-- walks, so the two can never disagree about where to look.
 --
 -- The LIBRARY is in the list for one permission only: "you may cast spells from
 -- the top of your library", which Garruk's Horde narrows to creature spells,
 -- Future Sight states unrestricted, and Johann, Apprentice Sorcerer budgets at
--- once each turn. pileCandidates narrows it to the top card and castableZones'
+-- once each turn. pileCandidates narrows it to the top card and permittedFrom's
 -- own arm permits it.
 -- Panglacial Wurm is NOT that road -- its permission is scoped to a search in
 -- progress rather than to the whole game, and castableWhileSearching walks the
@@ -1336,61 +1336,59 @@ candidateInZone pid oid name proposed candidate =
 castZones :: [Zone.Zone]
 castZones = [Zone.Hand, Zone.Graveyard, Zone.Exile, Zone.Command, Zone.Library]
 
--- Which of those zones THIS player may cast THIS half of THIS object from --
--- where a permission turns into a zone.
+-- May THIS player cast THIS half of THIS object from this zone of castZones --
+-- where a permission turns into a zone. False for every other zone.
 --
 -- Takes the object and the board, where a card-carried permission would need
 -- only the face: CR 715.3d's permission is state on ONE exiled incarnation and
 -- names ONE player, so no function of a Face could answer for it.
-castableZones :: PlayerId -> ObjectId -> Face.Face Card.Type.Card -> GameState -> [Zone.Zone]
-castableZones pid oid face gs =
-  let permitted zone = case zone of
-        -- CR 304.1 / 307.1: the rules' own allowance is worded "from their
-        -- hand", so the hand needs no permission of its own -- unless a rule takes
-        -- it away, which CR 702.127a's second static ability does: "this half of
-        -- this split card can't be cast from any zone other than a graveyard".
-        --
-        -- A PROHIBITION and so read here rather than as a CastingPermission: a
-        -- permission list can only add zones, and this one removes the zone every
-        -- card gets for free. It reads the FACE, which is how the rule's "this
-        -- half" scoping comes out right -- Dusk is castable from a hand and Dawn
-        -- is not, off the same card.
-        --
-        -- WHOSE hand, which zoneCandidates no longer answers: that list offers
-        -- every player's, so rule 304.1's "their hand" is this conjunct and a
-        -- permission naming somebody else's (Sen Triplets) is the disjunct beside
-        -- it; see #2169. CR 400.1 gives each player their own hand and CR 400.3
-        -- keeps a card in its owner's, so the owner is the seat rule 304.1 names.
-        Zone.Hand ->
-          not (Keyword.hasAftermath (Face.keywordSet face))
-            && (ownedBy pid oid gs || PlayerEffect.mayCastFrom pid Zone.Hand oid gs)
-        Zone.Graveyard -> permitsCastFromGraveyard pid oid face gs
-        Zone.Exile -> permitsCastFromExile pid oid face gs
-        -- CR 903.8: "a player may cast a commander they own from the command
-        -- zone". A
-        -- FORMAT's permission, not a card's, which is why it is asked of
-        -- Parun.Engine.Commander rather than read off the face -- see that module.
-        -- The owner test is inside isCommander's caller: rule 903.8 lets only the
-        -- commander's owner cast it from there.
-        Zone.Command -> Commander.canCastFromCommandZone pid oid gs
-        -- CR 601.3 / Garruk's Horde: ONE permission, where the graveyard arm
-        -- above reads two. No card grants this about ITSELF, so there is no
-        -- object-scoped arm to read beside the player-scoped one, and the
-        -- nearest thing -- Panglacial Wurm's
-        -- CastingPermission.CastFromLibraryWhileSearching -- is deliberately not
-        -- read here: the card's "While you're searching your library" scopes it
-        -- to a search in progress, which castableWhileSearching answers
-        -- instead.
-        --
-        -- The FACE goes unread, where the graveyard arm needs it: the
-        -- permission's Filter is matched against the object's projection, which
-        -- the caller has already stamped to the half being proposed
-        -- (asProposed), so the narrowing "creature spells" reads the chosen half
-        -- without this arm naming it.
-        Zone.Library -> PlayerEffect.mayCastFrom pid Zone.Library oid gs
-        -- No other zone is in castZones.
-        _ -> False
-   in filter permitted castZones
+permittedFrom :: PlayerId -> ObjectId -> Face.Face Card.Type.Card -> GameState -> Zone.Zone -> Bool
+permittedFrom pid oid face gs zone = case zone of
+  -- CR 304.1 / 307.1: the rules' own allowance is worded "from their
+  -- hand", so the hand needs no permission of its own -- unless a rule takes
+  -- it away, which CR 702.127a's second static ability does: "this half of
+  -- this split card can't be cast from any zone other than a graveyard".
+  --
+  -- A PROHIBITION and so read here rather than as a CastingPermission: a
+  -- permission list can only add zones, and this one removes the zone every
+  -- card gets for free. It reads the FACE, which is how the rule's "this
+  -- half" scoping comes out right -- Dusk is castable from a hand and Dawn
+  -- is not, off the same card.
+  --
+  -- WHOSE hand, which zoneCandidates no longer answers: that list offers
+  -- every player's, so rule 304.1's "their hand" is this conjunct and a
+  -- permission naming somebody else's (Sen Triplets) is the disjunct beside
+  -- it; see #2169. CR 400.1 gives each player their own hand and CR 400.3
+  -- keeps a card in its owner's, so the owner is the seat rule 304.1 names.
+  Zone.Hand ->
+    not (Keyword.hasAftermath (Face.keywordSet face))
+      && (ownedBy pid oid gs || PlayerEffect.mayCastFrom pid Zone.Hand oid gs)
+  Zone.Graveyard -> permitsCastFromGraveyard pid oid face gs
+  Zone.Exile -> permitsCastFromExile pid oid face gs
+  -- CR 903.8: "a player may cast a commander they own from the command
+  -- zone". A
+  -- FORMAT's permission, not a card's, which is why it is asked of
+  -- Parun.Engine.Commander rather than read off the face -- see that module.
+  -- The owner test is inside isCommander's caller: rule 903.8 lets only the
+  -- commander's owner cast it from there.
+  Zone.Command -> Commander.canCastFromCommandZone pid oid gs
+  -- CR 601.3 / Garruk's Horde: ONE permission, where the graveyard arm
+  -- above reads two. No card grants this about ITSELF, so there is no
+  -- object-scoped arm to read beside the player-scoped one, and the
+  -- nearest thing -- Panglacial Wurm's
+  -- CastingPermission.CastFromLibraryWhileSearching -- is deliberately not
+  -- read here: the card's "While you're searching your library" scopes it
+  -- to a search in progress, which castableWhileSearching answers
+  -- instead.
+  --
+  -- The FACE goes unread, where the graveyard arm needs it: the
+  -- permission's Filter is matched against the object's projection, which
+  -- the caller has already stamped to the half being proposed
+  -- (asProposed), so the narrowing "creature spells" reads the chosen half
+  -- without this arm naming it.
+  Zone.Library -> PlayerEffect.mayCastFrom pid Zone.Library oid gs
+  -- No other zone is in castZones.
+  _ -> False
 
 -- CR 601.3: may this player cast this half of this exiled card? SIX INDEPENDENT
 -- PERMISSIONS, any of which suffices, because the rules state six: exileOpen's
@@ -1650,8 +1648,8 @@ permitsCastWarped pid oid gs = Maybe.fromMaybe False $ do
   pure (Object.owner obj == pid && GameState.turnNumber gs > turn)
 
 -- The objects in a castable zone that this player might cast, BEFORE any
--- permission is consulted -- the membership half of the two questions
--- castableZones asks, and the one list both castableSpells and inCastableZone
+-- permission is consulted -- the membership half of inCastableZone's two
+-- questions, permittedFrom being the other, and the one list both castableSpells and inCastableZone
 -- read so the offer and the gate cannot disagree about where to look.
 --
 -- EXILE is the shared zone rather than Game.zoneMembers, which files it by
@@ -1669,7 +1667,7 @@ permitsCastWarped pid oid gs = Maybe.fromMaybe False $ do
 -- A HAND, A GRAVEYARD and a LIBRARY are per-player piles (CR 400.1) and every
 -- player's is offered, exile's reason one paragraph up: a CR 601.3 permission
 -- names a PLAYER, and Sen Triplets' names somebody else's hand, so the owner test
--- is the PERMISSION's rather than this list's; see #2169. castableZones' hand arm,
+-- is the PERMISSION's rather than this list's; see #2169. permittedFrom's hand arm,
 -- permitsCastFromGraveyard and Parun.Engine.PlayerEffect.mayCastFrom are the three
 -- that answer it, and each refuses every player no permission names -- so the
 -- widening is an enumeration and never an offer to the table.
@@ -1722,7 +1720,9 @@ inCastableZone :: PlayerId -> ObjectId -> CardName.CardName -> GameState -> Bool
 inCastableZone pid oid name gs =
   case proposedFace oid name gs of
     Nothing -> False
-    Just face -> any (\zone -> elem oid (zoneCandidates zone pid gs)) (castableZones pid oid face gs)
+    -- Membership first, so only the zone the object lies in pays for its
+    -- permission (#4698).
+    Just face -> any (\zone -> elem oid (zoneCandidates zone pid gs) && permittedFrom pid oid face gs zone) castZones
 
 -- CR 205.4e: a legendary instant or sorcery can't be cast unless its caster
 -- controls a legendary creature or a legendary planeswalker.
@@ -2035,11 +2035,12 @@ castableGiven shared pid oid name facing gs =
 -- half being proposed off it.
 cardGatesOk :: PlayerId -> ObjectId -> CardName.CardName -> GameState -> Bool
 cardGatesOk pid oid name proposed =
-  cardTimingOk pid oid name proposed
-    -- CR 601.3e / 718.3a: on the card as printed or as a prototyped spell, a
-    -- lookahead; candidateInZone narrows the candidates to the reading each
-    -- one makes.
-    && any (inCastableZone pid oid name) (proposed : PlayerEffect.prototypedReading oid proposed)
+  -- CR 601.3e / 718.3a: on the card as printed or as a prototyped spell, a
+  -- lookahead; candidateInZone narrows the candidates to the reading each one
+  -- makes. Asked before the timing window, which projects the card several
+  -- times over, since most candidates are cards no permission names (#4698).
+  any (inCastableZone pid oid name) (proposed : PlayerEffect.prototypedReading oid proposed)
+    && cardTimingOk pid oid name proposed
     -- CR 601.3's prohibit half from a different CARRIER: a spell on the stack
     -- (CR 702.61a) rather than a continuous effect on a player. It names
     -- neither a player nor a quality of the spell, so no candidate can escape
@@ -2212,8 +2213,11 @@ castProposals pid gs =
 fusedFaceOf :: ObjectId -> GameState -> Maybe (Face.Face Card.Type.Card)
 fusedFaceOf oid gs = do
   card <- Game.cardOf oid gs
+  -- The split card before the projection, which only a split card needs
+  -- (#4698).
+  face <- Card.fusedFace card
   Monad.guard (Keyword.hasFuse (projectedKeywords oid gs))
-  Card.fusedFace card
+  pure face
 
 -- CR 601.3 (Panglacial): may this card be cast from the library while its
 -- controller searches their own library? A membership test on the card's casting

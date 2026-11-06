@@ -7,7 +7,7 @@
 -- designations, the
 -- Player.commander and Player.commanderCasts fields, Deck's commander, CR
 -- 702.124k's Background designation and the Filter.IsCommander atom that reads
--- it, the Zone.Command arm of Parun.Engine.Cast.castableZones, and the CR 903.8
+-- it, the Zone.Command arm of Parun.Engine.Cast.permittedFrom, and the CR 903.8
 -- increase Parun.Engine.Cost.spellAdjustments folds into CR 601.2f. Also the
 -- commander half of Parun.Engine.Setup's subgame pair -- CR 729.2c in and CR
 -- 729.5c out -- and the commander half of its restart, CR 727.5a. Those live
