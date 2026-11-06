@@ -124,7 +124,7 @@ faceAbilities face =
         (one, _) <- Target.described context slot'
         -- Free: a later reference may be "that creature" (Unstable Mutation).
         [word <> Text.pack " " <> one, Text.pack "that " <> one]
-      context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Map.empty [] [] [] host
+      context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Map.empty [] [] [] [] host
       -- A printed loyalty (CR 306.5a) is no Oracle text, as power is not.
       rest = face {Face.loyalty = Nothing, Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = [], Face.staticAbilities = [], Face.replacementEffects = [], Face.combatRestrictions = [], Face.playerAbilities = [], Face.enchant = [], Face.characteristicPT = Nothing}
       subtypes = TypeLine.subtypes (Face.typeLine face)

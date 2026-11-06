@@ -325,7 +325,6 @@ borborygmos-and-fblthp
 boreal-outrider
 boros-battleshaper
 boseiju-who-shelters-all
-bottle-of-suleiman
 bottomless-vault
 boundless-realms
 brace-for-impact
@@ -1151,8 +1150,6 @@ gnarlid-pack
 gnarlroot-trapper
 gnat-miser
 goblin-arsonist
-goblin-artillery
-goblin-bangchuckers
 goblin-battle-jester
 goblin-bird-grabber
 goblin-boarders
@@ -1935,7 +1932,6 @@ oracle-en-vec
 oracles-attendants
 orbs-of-warding
 orchard-spirit
-orcish-artillery
 orcish-conscripts
 orcish-captain
 orcish-farmer
@@ -2392,7 +2388,6 @@ scheming-aspirant
 scheming-symmetry
 scorching-dragonfire
 scorching-winds
-scoria-wurm
 scourge-of-valkas
 scouts-warning
 scrambleverse
@@ -2545,7 +2540,6 @@ song-of-the-dryads
 sonic-burst
 sonorous-howlbonder
 sorcerer-class
-sorcerers-strongbox
 sorceress-queen
 sorcerous-sight
 sorcerous-spyglass
@@ -2742,7 +2736,6 @@ tattoo-ward
 taunt
 taunting-challenge
 tavern-scoundrel
-tavern-swindler
 tawnoss-wand
 tawnoss-weaponry
 tayam-luminous-enigma
@@ -3149,7 +3142,6 @@ winged-portent
 wings-of-velis-vel
 winter-blast
 winter-orb
-winter-sky
 wire-surgeons
 witch-king-bringer-of-ruin
 witch-king-of-angmar

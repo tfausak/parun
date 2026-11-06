@@ -107,8 +107,8 @@ namesSelf c = case c of
 
 -- | One non-mana component of a cost: "{T}", "Sacrifice a Mountain",
 -- "Discard two cards", "Remove a +1/+1 counter from this creature", "Tap an
--- untapped creature you control", "Pay {E}{E}" (CR 701.21a, CR 701.9a, CR
--- 118.1, CR 107.14).
+-- untapped creature you control", "Pay {E}{E}", "Flip a coin" (CR 701.21a,
+-- CR 701.9a, CR 118.1, CR 107.14, CR 705.1).
 component :: Text.Text -> (k -> [Text.Text]) -> CostComponent.CostComponent k -> [Text.Text]
 component self named c = case c of
   CostComponent.TapThis -> [braced (Text.pack "T")]
@@ -140,6 +140,7 @@ component self named c = case c of
   CostComponent.RemoveLoyaltyFromThis (CostAmount.Announced _) -> [Text.pack "[\8722X]"]
   CostComponent.ReturnThis -> [Text.pack "Return " <> self <> Text.pack " to its owner's hand"]
   CostComponent.ExileThis -> [Text.pack "Exile " <> self]
+  CostComponent.FlipCoin -> [Text.pack "Flip a coin"]
   CostComponent.ExileThisFromGraveyard -> [Text.pack "Exile " <> self <> Text.pack " from your graveyard"]
   CostComponent.PayEnergy (CostAmount.Fixed n) | n > 0 -> [Text.pack "Pay " <> foldMap (const energy) [1 .. n]]
   CostComponent.PayEnergy (CostAmount.Announced _) -> [Text.pack "Pay X " <> energy]
