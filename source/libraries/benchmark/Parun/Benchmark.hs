@@ -7,6 +7,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import Numeric.Natural (Natural)
+import qualified Parun.Engine.Action as Action
 import qualified Parun.Engine.Cast as Cast
 import qualified Parun.Engine.Cost as Cost
 import qualified Parun.Engine.Engine as Engine
@@ -286,6 +287,16 @@ payable :: [Printing.Printing] -> ManaCost -> Natural -> Bool
 payable printings cost n = Mana.canPay Cost.manaActivations (PlayerId.MkPlayerId n) cost (onBattlefield (playersFrom n) printings)
 {-# NOINLINE payable #-}
 
+-- How many actions the first player may take over `n` copies of a creature
+-- with a tap ability: with Apprentice Sorcerer's "any target", every ability's
+-- slot is asked of the same pool of `n` creatures and two players (#1448).
+legalActionCount :: Printing.Printing -> Natural -> Int
+legalActionCount tapper n =
+  let players = playersFrom 0
+      gs = onBattlefield players (List.genericReplicate n tapper)
+   in length (Action.legalActions (NonEmpty.head players) gs {GameState.priority = Just (NonEmpty.head players)})
+{-# NOINLINE legalActionCount #-}
+
 -- Every shape #595 names that keeps a source plural, on one board: Treasonous
 -- Ogre pays life, Springleaf Drum's tap claim contends with every Llanowar Elves,
 -- and Transmogrant Altar and Chromatic Star eat mana, whose orderings a board
@@ -332,6 +343,8 @@ main = do
   piker <- fetchOrThrow registry "Goblin Piker"
   plural <- loadPluralBoard registry
   drum <- loadDrumBoard registry
+  sorcerer <- fetchOrThrow registry "Apprentice Sorcerer"
+  looter <- fetchOrThrow registry "Merfolk Looter"
   Bench.defaultMain
     [ Bench.bench "goldfish 2p" $ Bench.whnf (goldfish deck) 0,
       Bench.bench "casting 2p" $ Bench.whnf (casting deck) 0,
@@ -351,5 +364,12 @@ main = do
       Bench.bench "payable plural short" $ Bench.whnf (payable plural (generic 14)) 0,
       Bench.bench "payable plural far short" $ Bench.whnf (payable plural (generic 40)) 0,
       Bench.bench "payable plural off colour" $ Bench.whnf (payable plural (colored Color.Blue 3)) 0,
-      Bench.bench "payable drum short" $ Bench.whnf (payable drum (generic 9)) 0
+      Bench.bench "payable drum short" $ Bench.whnf (payable drum (generic 9)) 0,
+      -- #1448: every activation of 40 and of 80 targeted abilities.
+      Bench.bench "legal actions 40" $ Bench.whnf (legalActionCount sorcerer) 40,
+      Bench.bench "legal actions 80" $ Bench.whnf (legalActionCount sorcerer) 80,
+      -- The two lines above' paired control: the same boards, the ability
+      -- targeting nothing (Merfolk Looter).
+      Bench.bench "legal actions 40 untargeted" $ Bench.whnf (legalActionCount looter) 40,
+      Bench.bench "legal actions 80 untargeted" $ Bench.whnf (legalActionCount looter) 80
     ]

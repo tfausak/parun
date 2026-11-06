@@ -313,10 +313,12 @@ legalActions pid gs =
       -- with a fixture per depth of the gate chain -- a mana ability stops at
       -- CR 605.1a and never reaches those two gates, a non-mana one runs the
       -- whole chain -- until measuring bytes was judged too compiler-specific
-      -- to keep. A regression here fails nothing (gap #578). What is left in
-      -- the non-mana path is still O(N) per permanent without being a
-      -- whole-board structure to hoist -- the per-candidate filter over the
-      -- shared pool below (#1448).
+      -- to keep. A regression here fails nothing (gap #578).
+      --
+      -- Not implemented: an O(1) per-permanent non-mana path. The cost gate is
+      -- still O(N) per permanent without a whole-board structure to hoist, and
+      -- so are the whole legal sets a mode whose slots read each other builds
+      -- (#6417).
       grants = Projection.controlGrants gs
       pcs = Projection.projectAll gs
       -- ONE mana-source sweep of each kind for the whole enumeration. Each is a
