@@ -27,6 +27,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.Devour as Devour
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.Power as Power
@@ -104,18 +105,41 @@ spec s corpus = Spec.describe s "Parun.Ingest" $ do
           Left reason -> Spec.assertFailure s (tag <> ": " <> Text.unpack reason)
           Right k -> Spec.assertBool s (k `elem` Keyword.standalone || k `elem` unprinted) (tag <> ": not in Parun.Oracle.Keyword.standalone")
 
+  -- The witness that the payload tables are complete over the pool: every
+  -- keyword a pool card carries that prints as one line of a name and a
+  -- number, a mana cost (CR 107.4) or both reads back as itself, except where
+  -- the name carries a filter (devour and splice) or the payload means more
+  -- than it prints (backup, CR 702.165a).
+  Spec.it s "keyword reads back each pool keyword printed with a number or a mana cost" $ do
+    let excluded k = case k of
+          Keyword.Type.Backup _ -> True
+          Keyword.Type.Devour d -> Maybe.isJust (Devour.quality d)
+          Keyword.Type.Splice _ -> True
+          _ -> False
+        keywords = Set.fromList [k | (_, Right card) <- corpus, face <- NonEmpty.toList (Card.faces card), k <- Map.keys (Face.keywords face), not (excluded k)]
+        lines' = [(k, Text.toLower p) | k <- Set.toList keywords, [p] <- [Keyword.printed Text.empty k], payloaded (Text.toLower p)]
+        payloaded line = case Text.breakOnEnd (Text.pack " ") line of
+          (name, payload) -> Text.all (\c -> Char.isLetter c || c `elem` " -") name && not (Text.null payload) && Text.all (\c -> Char.isAlphaNum c || c `elem` "{}/\8212") payload && Text.any (\c -> Char.isDigit c || c == '{') payload
+    Spec.assertBool s (length lines' > 50) "too few payload keywords in the pool"
+    Spec.assertEq s [] [(show k, line) | (k, line) <- lines', Ingest.keyword line /= Right k]
+
   -- Each record as script/ingest/candidates.jq writes it, against a card
   -- written by hand and checked against Scryfall, so the two are independent.
   -- Rograkh is red only by its color indicator (CR 204), and it and
   -- Ornithopter cost {0}, which the pool writes as a cost of no symbols.
   -- Mountain Goat's mountainwalk is a landwalk over a basic land type (CR
-  -- 702.14a).
+  -- 702.14a). The rest carry a keyword's payload: a number, a mana cost, or
+  -- both (CR 702.62a), Ainok Tracker's beside a bare keyword.
   Spec.it s "candidate builds the card the pool holds" $ do
     registry <- Registry.defaultRoot >>= Registry.fileRegistry
     Monad.forM_
       [ ("Mountain Goat", "{\"name\":\"Mountain Goat\",\"manaCost\":\"{R}\",\"colorIndicator\":null,\"supertypes\":[],\"types\":[\"Creature\"],\"subtypes\":[\"Goat\"],\"power\":\"1\",\"toughness\":\"1\",\"text\":\"Mountainwalk (This creature can't be blocked as long as defending player controls a Mountain.)\"}"),
         ("Ornithopter", "{\"name\":\"Ornithopter\",\"manaCost\":\"{0}\",\"colorIndicator\":null,\"supertypes\":[],\"types\":[\"Artifact\",\"Creature\"],\"subtypes\":[\"Thopter\"],\"power\":\"0\",\"toughness\":\"2\",\"text\":\"Flying\"}"),
-        ("Rograkh, Son of Rohgahh", "{\"name\":\"Rograkh, Son of Rohgahh\",\"manaCost\":\"{0}\",\"colorIndicator\":[\"R\"],\"supertypes\":[\"Legendary\"],\"types\":[\"Creature\"],\"subtypes\":[\"Kobold\",\"Warrior\"],\"power\":\"0\",\"toughness\":\"1\",\"text\":\"First strike, menace, trample\\nPartner (You can have two commanders if both have partner.)\"}")
+        ("Rograkh, Son of Rohgahh", "{\"name\":\"Rograkh, Son of Rohgahh\",\"manaCost\":\"{0}\",\"colorIndicator\":[\"R\"],\"supertypes\":[\"Legendary\"],\"types\":[\"Creature\"],\"subtypes\":[\"Kobold\",\"Warrior\"],\"power\":\"0\",\"toughness\":\"1\",\"text\":\"First strike, menace, trample\\nPartner (You can have two commanders if both have partner.)\"}"),
+        ("Consulate Dreadnought", "{\"name\":\"Consulate Dreadnought\",\"manaCost\":\"{1}\",\"colorIndicator\":null,\"supertypes\":[],\"types\":[\"Artifact\"],\"subtypes\":[\"Vehicle\"],\"power\":\"7\",\"toughness\":\"11\",\"text\":\"Crew 6 (Tap any number of creatures you control with total power 6 or more: This Vehicle becomes an artifact creature until end of turn.)\"}"),
+        ("Barkhide Mauler", "{\"name\":\"Barkhide Mauler\",\"manaCost\":\"{4}{G}\",\"colorIndicator\":null,\"supertypes\":[],\"types\":[\"Creature\"],\"subtypes\":[\"Beast\"],\"power\":\"4\",\"toughness\":\"4\",\"text\":\"Cycling {2} ({2}, Discard this card: Draw a card.)\"}"),
+        ("Ainok Tracker", "{\"name\":\"Ainok Tracker\",\"manaCost\":\"{5}{R}\",\"colorIndicator\":null,\"supertypes\":[],\"types\":[\"Creature\"],\"subtypes\":[\"Dog\",\"Scout\"],\"power\":\"3\",\"toughness\":\"3\",\"text\":\"First strike\\nMorph {4}{R} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)\"}"),
+        ("Durkwood Baloth", "{\"name\":\"Durkwood Baloth\",\"manaCost\":\"{4}{G}{G}\",\"colorIndicator\":null,\"supertypes\":[],\"types\":[\"Creature\"],\"subtypes\":[\"Beast\"],\"power\":\"5\",\"toughness\":\"5\",\"text\":\"Suspend 5\8212{G} (Rather than cast this card from your hand, you may pay {G} and exile it with five time counters on it. At the beginning of your upkeep, remove a time counter. When the last is removed, you may cast it without paying its mana cost. It has haste.)\"}")
       ]
       $ \(name, json) -> do
         card <- Registry.named registry name
@@ -154,7 +178,8 @@ spec s corpus = Spec.describe s "Parun.Ingest" $ do
 
   Spec.it s "candidate leaves out a card it would have to guess at" $ do
     let reason json = Common.parse (Text.pack json) >>= Monad.void . Ingest.candidate
-    Spec.assertEq s (Left (Text.pack "text: ward {2}")) (reason "{\"name\":\"X\",\"manaCost\":\"{1}\",\"supertypes\":[],\"types\":[\"Creature\"],\"subtypes\":[],\"power\":\"1\",\"toughness\":\"1\",\"text\":\"Ward {2}\"}")
+    Spec.assertEq s (Left (Text.pack "text: ward\8212pay 3 life")) (reason "{\"name\":\"X\",\"manaCost\":\"{1}\",\"supertypes\":[],\"types\":[\"Creature\"],\"subtypes\":[],\"power\":\"1\",\"toughness\":\"1\",\"text\":\"Ward\8212Pay 3 life\"}")
+    Spec.assertEq s (Left (Text.pack "text: equip planeswalker {1}")) (reason "{\"name\":\"X\",\"manaCost\":\"{1}\",\"supertypes\":[],\"types\":[\"Artifact\"],\"subtypes\":[\"Equipment\"],\"text\":\"Equip planeswalker {1}\"}")
     Spec.assertEq s (Left (Text.pack "power/toughness: *")) (reason "{\"name\":\"X\",\"manaCost\":\"{1}\",\"supertypes\":[],\"types\":[\"Creature\"],\"subtypes\":[],\"power\":\"*\",\"toughness\":\"1\",\"text\":null}")
     Spec.assertEq s (Left (Text.pack "subtype: Nonesuch")) (reason "{\"name\":\"X\",\"manaCost\":\"{1}\",\"supertypes\":[],\"types\":[\"Creature\"],\"subtypes\":[\"Nonesuch\"],\"power\":\"1\",\"toughness\":\"1\",\"text\":null}")
 
