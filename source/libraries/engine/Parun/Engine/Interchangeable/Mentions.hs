@@ -1889,7 +1889,7 @@ foretellCostNames asking onKeyword x = case x of
 
 fromOutsideTheGameNames :: (Monoid r) => Asking r -> FromOutsideTheGame.FromOutsideTheGame -> r
 fromOutsideTheGameNames asking x = case x of
-  FromOutsideTheGame.MkFromOutsideTheGame _count _upTo _destination filter_ _reveal -> filterNames asking filter_
+  FromOutsideTheGame.MkFromOutsideTheGame _count _upTo _destination filter_ _reveal _differentIn _pick -> filterNames asking filter_
 
 fromReferenceNames :: (Monoid r) => Asking r -> FromReference.FromReference -> r
 fromReferenceNames asking x = case x of

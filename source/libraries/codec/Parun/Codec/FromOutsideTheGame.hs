@@ -2,9 +2,12 @@
 
 module Parun.Codec.FromOutsideTheGame where
 
+import qualified Data.Set as Set
+import qualified Parun.Codec.DifferentIn as DifferentIn
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.OutsideDestination as OutsideDestination
+import qualified Parun.Codec.OutsidePick as OutsidePick
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
@@ -20,6 +23,10 @@ import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
 -- sentence its card does not (Death Wish reveals nothing; The Raven's Warning
 -- names the library; Research brings up to four). Writing the key out in every
 -- card file that wishes is a cheap price for that not being possible.
+--
+-- `differentIn` and `pick` are defaulted for the same reason read the other
+-- way: the absent key is the sentence that does not print the clause, as for
+-- Parun.Codec.Search's flags.
 codec :: Codec.Codec FromOutsideTheGame.FromOutsideTheGame
 codec = Fields.object $ do
   count <- Fields.required "count" Common.natural FromOutsideTheGame.count
@@ -27,11 +34,15 @@ codec = Fields.object $ do
   destination <- Fields.required "destination" OutsideDestination.codec FromOutsideTheGame.destination
   filter_ <- Fields.required "filter" (Filter.codec Keyword.codec) FromOutsideTheGame.filter
   reveal <- Fields.required "reveal" Common.boolean FromOutsideTheGame.reveal
+  differentIn <- Fields.defaulted "differentIn" Set.empty (Common.set DifferentIn.codec) FromOutsideTheGame.differentIn
+  pick <- Fields.defaulted "pick" Nothing (Common.maybe OutsidePick.codec) FromOutsideTheGame.pick
   pure
     FromOutsideTheGame.MkFromOutsideTheGame
       { FromOutsideTheGame.count = count,
         FromOutsideTheGame.upTo = upTo,
         FromOutsideTheGame.destination = destination,
         FromOutsideTheGame.filter = filter_,
-        FromOutsideTheGame.reveal = reveal
+        FromOutsideTheGame.reveal = reveal,
+        FromOutsideTheGame.differentIn = differentIn,
+        FromOutsideTheGame.pick = pick
       }

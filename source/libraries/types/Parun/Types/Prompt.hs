@@ -407,7 +407,8 @@ data Prompt r where
   -- rather than a printing because which zone it leaves decides what triggers
   -- (CR 729.4a). Two copies of one printing are one offer, which the answer may
   -- name once per copy. Also a search's find outside the game (CR 701.23j),
-  -- asked after its find in the zones.
+  -- asked after its find in the zones, and the opponent's pick among revealed
+  -- cards (Parun.Types.OutsidePick), asked of that opponent.
   ChooseFromOutsideTheGame :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty OutsideCard.OutsideCard -> Natural.Natural -> Natural.Natural -> Prompt [OutsideCard.OutsideCard]
   -- | CR 309.5a \/ 701.49b: which arrow out of the current room a venturing
   -- player follows; the ObjectId is the dungeon card.

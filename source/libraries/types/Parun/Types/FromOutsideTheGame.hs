@@ -1,9 +1,12 @@
 module Parun.Types.FromOutsideTheGame where
 
+import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
+import qualified Parun.Types.DifferentIn as DifferentIn
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.OutsideDestination as OutsideDestination
+import qualified Parun.Types.OutsidePick as OutsidePick
 
 -- | CR 400.11c: which of the cards a player owns outside the game an
 -- instruction may bring in, how many, where it puts what it brings, and whether
@@ -40,6 +43,13 @@ data FromOutsideTheGame = MkFromOutsideTheGame
     filter :: Filter.Filter Keyword.Keyword,
     -- | Whether CR 701.20a's reveal rides along, as the wish cycle prints it and
     -- Death Wish does not.
-    reveal :: Bool
+    reveal :: Bool,
+    -- | A characteristic no two of the cards may share -- Extrapolate the
+    -- Impossible's "with different names" (CR 201.2b), Parun.Types.Search's
+    -- field. Empty where the sentence prints no such clause.
+    differentIn :: Set.Set DifferentIn.DifferentIn,
+    -- | Who chooses which of the revealed cards come in, and how many -- the
+    -- rest stay outside the game. Nothing where every card comes in.
+    pick :: Maybe OutsidePick.OutsidePick
   }
   deriving (Eq, Ord, Show)

@@ -550,6 +550,7 @@ import qualified Parun.Codec.OrElseSpec
 import qualified Parun.Codec.OutsideCardSpec
 import qualified Parun.Codec.OutsideDestinationSpec
 import qualified Parun.Codec.OutsideObjectSpec
+import qualified Parun.Codec.OutsidePickSpec
 import qualified Parun.Codec.OwnedZoneSpec
 import qualified Parun.Codec.PaidExpirySpec
 import qualified Parun.Codec.PairingSpec
@@ -1556,6 +1557,7 @@ spec s registry corpus = do
   Parun.Codec.OrElseSpec.spec s
   Parun.Codec.OutsideCardSpec.spec s
   Parun.Codec.OutsideDestinationSpec.spec s
+  Parun.Codec.OutsidePickSpec.spec s
   Parun.Codec.OutsideObjectSpec.spec s
   Parun.Codec.OwnedZoneSpec.spec s
   Parun.Codec.PaidExpirySpec.spec s
