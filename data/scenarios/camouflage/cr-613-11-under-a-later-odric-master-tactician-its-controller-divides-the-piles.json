@@ -1,0 +1,148 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "forest",
+            "ready": true
+          },
+          {
+            "card": "Odric, Master Tactician",
+            "label": "odric",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "b1",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "b2",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "b3",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Camouflage",
+            "label": "camo"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "BeginningOfCombat"
+  },
+  "description": "CR 613.11 / 509.1a Camouflage under a later Odric, Master Tactician: the Odric's controller divides the defending player's creatures into piles",
+  "note": "alice casts Camouflage in response to Odric's trigger, so Odric's effect is the later one and applies to the piles: alice, not bob, divides bob's creatures, and the DividePiles prompt is keyed by her.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$odric",
+          "$b1",
+          "$b2",
+          "$b3"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$forest"
+          ],
+          "object": "$camo"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "DividePiles",
+          "with": [
+            [
+              "$giant"
+            ],
+            [],
+            [],
+            []
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "RandomObject",
+          "with": "$b2"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "RandomObject",
+          "with": "$b1"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "RandomObject",
+          "with": "$b3"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Blockers": {
+          "attacker": "$b2",
+          "blockers": [
+            "$giant"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    }
+  ]
+}

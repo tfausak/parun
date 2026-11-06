@@ -168,6 +168,7 @@ encode p answer = case p of
   Prompt.DeclareBands {} -> Response.DeclaredBands answer
   Prompt.ChooseExert {} -> Response.ChoseExert answer
   Prompt.DeclareBlockers {} -> Response.DeclaredBlockers answer
+  Prompt.DividePiles {} -> Response.DividedPiles answer
   Prompt.AssignCombatDamage {} -> Response.AssignedCombatDamage answer
   Prompt.ChooseTargets {} -> Response.ChoseTargets answer
   Prompt.AnnounceTargets {} -> Response.AnnouncedTargets answer
@@ -509,6 +510,9 @@ decode p response = case p of
     _ -> Nothing
   Prompt.DeclareBands {} -> case response of
     Response.DeclaredBands bands -> Just bands
+    _ -> Nothing
+  Prompt.DividePiles {} -> case response of
+    Response.DividedPiles piles -> Just piles
     _ -> Nothing
   Prompt.ChooseExert {} -> case response of
     Response.ChoseExert d -> Just d
@@ -1086,6 +1090,8 @@ defaultAnswer p = case p of
   -- (Lure) can make the empty declaration illegal -- and stays total the same
   -- way, through Combat.forcedBlockDeclaration.
   Prompt.DeclareBlockers {} -> Map.empty
+  -- CR 700.3d: every pile empty, so nothing blocks.
+  Prompt.DividePiles {} -> []
   -- Must be a WELL FORMED division (Damage.wellFormedAssignment), or CR 510.1e
   -- asks again. All power onto the first recipient of the first gate -- a
   -- blocker, else the attacked planeswalker or battle, else the player --

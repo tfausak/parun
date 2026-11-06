@@ -14,8 +14,6 @@ Every expressible Unlimited Edition card has been added to `data/cards/`.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5464: Camouflage. Nothing replaces declaring blockers with piles assigned to
-  attackers at random.
 - #5463: Raging River. Nothing labels a player's piles or picks a label per
   attacker.
 - #4133: Cyclopean Tomb. Nothing remembers which lands its counters were put

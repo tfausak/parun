@@ -446,6 +446,9 @@ data Response
     -- answer a different one, and this is the only one asked in a combat phase.
     ChoseExert OptionalDecision.OptionalDecision
   | DeclaredBlockers (Map.Map ObjectId.ObjectId (Set.Set ObjectId.ObjectId))
+  | -- | CR 700.3 / Camouflage: the piles a defending player divided their
+    -- creatures into.
+    DividedPiles [Set.Set ObjectId.ObjectId]
   | AssignedCombatDamage (Map.Map Recipient.Recipient Natural.Natural)
   | ChoseTargets (Map.Map SlotName.SlotName (Set.Set Recipient.Recipient))
   | -- | CR 601.2c: how many targets a caster announced for each slot whose count
