@@ -2665,7 +2665,7 @@ pluralBoardSpec s registry = Spec.describe s "plural sources" $ do
 
 -- Parun.Engine.Claim's matching on its own, on the shape the Drum board takes:
 -- pools that meet, where the entry asked first takes an object a later one
--- needs, so only an augmenting path finds the assignment (#6413).
+-- needs, so only an augmenting path finds the assignment; see #6413.
 claimMatchingSpec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 claimMatchingSpec s = Spec.describe s "claim matching" $ do
   let claimOf count oids = Claim.Type.MkClaim {Claim.Type.axis = ClaimAxis.Tapping, Claim.Type.pool = Set.fromList (fmap ObjectId.MkObjectId oids), Claim.Type.count = count, Claim.Type.threshold = Nothing}

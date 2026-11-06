@@ -2747,7 +2747,7 @@ sourceOptions clauses admitting contends demanded needs supplies =
             -- The most activations FIRST: the walk below stops at the first board
             -- that pays, and the boards taking the most mana are the likeliest,
             -- so a Springleaf Drum beside twenty Llanowar Elves pays {20} on its
-            -- second board rather than near its 2^21st (#6413).
+            -- second board rather than near its 2^21st; see #6413.
             ceiling_ = if exclusive then minimum [times, demanded, sum (fmap snd alternatives)] else times
             counts =
               if not eats && (null claims || not contended) && life == 0 && energy == 0
