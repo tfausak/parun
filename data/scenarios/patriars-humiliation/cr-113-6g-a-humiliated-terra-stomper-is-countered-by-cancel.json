@@ -115,7 +115,8 @@
             "$stomper"
           ],
           "mana": [
-            "$p1"
+            "$p1",
+            null
           ]
         }
       }
@@ -143,7 +144,8 @@
             "$stomper"
           ],
           "mana": [
-            "$i1"
+            "$i1",
+            null
           ]
         }
       }
@@ -179,7 +181,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "$stomper",
+          "object": "Terra Stomper",
           "mana": [
             "$f1",
             "$f2",
@@ -205,7 +207,7 @@
         "Cast": {
           "object": "$cancel",
           "targets": [
-            "$stomper"
+            "Terra Stomper"
           ],
           "mana": [
             "$b1",
@@ -225,18 +227,6 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": "Pass"
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": "Pass"
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "bob",
       "do": "Pass"
     },
     {

@@ -83,7 +83,8 @@
             "$bears"
           ],
           "mana": [
-            "$p1"
+            "$p1",
+            null
           ]
         }
       }
@@ -111,7 +112,8 @@
             "$avenger"
           ],
           "mana": [
-            "$i1"
+            "$i1",
+            null
           ]
         }
       }
@@ -147,7 +149,7 @@
       "player": "alice",
       "refuse": {
         "Cast": {
-          "object": "$avenger",
+          "object": "Serra Avenger",
           "mana": [
             "$p2",
             "$p3"
