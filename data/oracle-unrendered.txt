@@ -6,6 +6,7 @@ _-o-saurus
 a-good-day-to-pie
 abomination
 abyssal-harvester
+academic-ascent
 affectionate-indrik
 alchemists-gift
 alesha-who-laughs-at-fate
@@ -392,6 +393,7 @@ call-of-the-wild
 call-to-the-grave
 caltrops
 camouflage
+campus-crier
 canopy-stalker
 cant-stay-away
 capricious-efreet
@@ -914,6 +916,7 @@ exsanguinate
 extract
 extract-a-confession
 extract-power
+extrapolate-the-impossible
 extravagant-replication
 extus-oriq-overlord-awaken-the-blood-avatar
 eye-for-an-eye
@@ -1629,6 +1632,7 @@ longstalk-brawl
 longtusk-cub
 look-skyward-and-despair
 loot-exuberant-explorer
+loot-the-anomaly
 loot-the-nexus
 loot-the-pathfinder
 lord-of-the-pit
@@ -3101,6 +3105,7 @@ waterbending-lesson
 waterknot
 wave-of-rats
 wax-wane
+way-of-the-mentor
 wear-tear
 weathered-wayfarer
 weaver-of-lies

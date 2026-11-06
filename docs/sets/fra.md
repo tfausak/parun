@@ -252,9 +252,6 @@ first.
   Pyromancer; Way of the Warlord; Way of the Wildspeaker. No keyword action
   creates or empowers a Jace planeswalker token (CR 701.71a); amass is the
   sibling.
-- #4295: Extrapolate the Impossible. Cards from outside the game can't be
-  revealed and held for an opponent's choice, nor held to "different names" (CR
-  701.23j).
 - #6494: Tomik, Orzhov Lawmage. An attack limit scopes to players, never to one
   planeswalker (CR 508.1c).
 - #6487: Infinite Coursework. No effect removes the prepared designation (CR

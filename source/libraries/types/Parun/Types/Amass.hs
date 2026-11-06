@@ -1,13 +1,15 @@
 module Parun.Types.Amass where
 
+import qualified Parun.Types.AmassKind as AmassKind
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SlotName as SlotName
-import qualified Parun.Types.Subtype as Subtype
 
--- | The payload of Parun.Types.Effect's Amass arm: CR 701.47a's two printed
--- variables, "amass [subtype] N".
+-- | The payload of Parun.Types.Effect's Amass arm: CR 701.47a's "amass
+-- [subtype] N" or CR 701.71a's "empower Jace N", the two keyword actions of one
+-- shape -- create a token if you control none of its kind, choose one, put N
+-- counters on it.
 --
--- The subtype is a printed WORD, so CR 612.1 reaches it and
+-- An amass's subtype is a printed WORD, so CR 612.1 reaches it and
 -- Parun.Engine.Projection.Rewrite.rewriteEffect swaps it; the Army type beside it is the
 -- rulebook's and appears nowhere here. CR 701.47d's older amass without a subtype
 -- has Oracle errata reading "amass Zombies N", so every printing writes one.
@@ -17,8 +19,8 @@ import qualified Parun.Types.Subtype as Subtype
 -- spell's mana value", so the count is an expression over game state.
 data Amass = MkAmass
   { quantity :: Quantity.Quantity,
-    subtype :: Subtype.Subtype,
-    -- | CR 701.47c: the Army the amassing player chose, bound for a later effect
+    kind :: AmassKind.AmassKind,
+    -- | CR 701.47c: the Army (or CR 701.71a's Jace) the player chose, bound for a later effect
     -- of the same resolution to name -- Surrounded by Orcs' "where X is the
     -- amassed Army's power". Absent for every amass nothing looks back at.
     --

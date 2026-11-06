@@ -25,12 +25,15 @@
                   {
                     "type": "Amass",
                     "value": {
+                      "kind": {
+                        "type": "Army",
+                        "value": "Orc"
+                      },
                       "quantity": {
                         "type": "Literal",
                         "value": 3
                       },
-                      "slot": "amassedArmy",
-                      "subtype": "Orc"
+                      "slot": "amassedArmy"
                     }
                   }
                 ]

@@ -1,0 +1,61 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": "Black"
+          }
+        }
+      ],
+      "name": "Extrapolate the Impossible",
+      "oracleText": "You may reveal exactly two cards you own with different names from outside the game. An opponent chooses one of them. You put that card into your hand.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "FromOutsideTheGame",
+                    "value": {
+                      "count": 2,
+                      "destination": "Hand",
+                      "differentIn": [
+                        "Names"
+                      ],
+                      "filter": {
+                        "type": "And",
+                        "value": []
+                      },
+                      "pick": {
+                        "chooser": "Opponent",
+                        "count": 1
+                      },
+                      "reveal": true,
+                      "upTo": false
+                    }
+                  }
+                ],
+                "optionality": {
+                  "type": "Optional"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          "Sorcery"
+        ]
+      }
+    }
+  ]
+}

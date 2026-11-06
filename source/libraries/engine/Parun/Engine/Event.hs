@@ -145,6 +145,7 @@ import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DestructionRewrite as DestructionRewrite
 import qualified Parun.Types.DieRollR as DieRollR
 import qualified Parun.Types.DieRollRewrite as DieRollRewrite
+import qualified Parun.Types.DifferentIn as DifferentIn
 import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.DrawCountR as DrawCountR
@@ -227,6 +228,7 @@ import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.OutsideCard as OutsideCard
 import qualified Parun.Types.OutsideDestination as OutsideDestination
 import qualified Parun.Types.OutsideObject as OutsideObject
+import qualified Parun.Types.OutsidePick as OutsidePick
 import qualified Parun.Types.PayOffer as PayOffer
 import qualified Parun.Types.PayerAnswer as PayerAnswer
 import qualified Parun.Types.PaymentDecision as PaymentDecision
@@ -1776,8 +1778,10 @@ commanderAdmits pid card gs
 -- Filter where the payload's destination says (CR 400.11b), as many as its
 -- count allows, showing each (CR 701.20a) where the payload's reveal says the
 -- card prints one -- Burning Wish's sentence, Death Wish's without the reveal,
--- The Raven's Warning's naming the top of a library instead of the hand, and
--- Research's "up to four" shuffled into the library.
+-- The Raven's Warning's naming the top of a library instead of the hand,
+-- Research's "up to four" shuffled into the library, and Extrapolate the
+-- Impossible's two with different names (CR 201.2b), of which only an
+-- opponent's pick comes in (`pickOutside`).
 --
 -- The cards are MINTED, Parun.Engine.Dungeon.enter's road: outside the game is
 -- not a zone (CR 400.11), so no object stood for a card and its arrival is not
@@ -1797,8 +1801,11 @@ commanderAdmits pid card gs
 -- one instruction prints them.
 --
 -- Not asked where the answer is forced: a count that takes every copy on offer,
--- or offers of one printing alone, whose copies are indistinguishable. An "up
--- to" is always asked, since how many is itself the choice.
+-- offers of one printing alone, whose copies are indistinguishable, or, under
+-- differentIn, a count that takes every offered card once. An "up to" is always
+-- asked, since how many is itself the choice. Under differentIn the count is
+-- as many as the offered cards can make together (CR 609.3), Search.exactly's
+-- reading.
 --
 -- A player with no eligible card reveals nothing and puts nothing anywhere,
 -- which is CR 609.3's "if an effect attempts to do something impossible,
@@ -1808,24 +1815,129 @@ commanderAdmits pid card gs
 -- same (CR 701.24d).
 --
 -- Not implemented: where the reveal is printed it happens as the card ARRIVES at
--- its destination rather than before the move as the card prints it (#2450).
+-- its destination rather than before the move as the card prints it, so a
+-- revealed card a pick leaves outside the game is never shown (#2450).
 bringInto :: FromOutsideTheGame.FromOutsideTheGame -> ObjectId -> PlayerId -> Game ()
 bringInto payload source pid = do
   gs0 <- State.get
   let arrival = FromOutsideTheGame.destination payload
-      available = outsideOffer (FromOutsideTheGame.filter payload) source pid gs0
-      atMost = min (FromOutsideTheGame.count payload) (sum (Map.elems available))
+      axes = FromOutsideTheGame.differentIn payload
+      valuesOf card = outsideDiffering axes card gs0
+      -- A card no group admits (CR 201.2b's nameless one) is not offered.
+      available = Map.filterWithKey (\card _ -> Maybe.isJust (valuesOf card)) (outsideOffer (FromOutsideTheGame.filter payload) source pid gs0)
+      kept = differingKept valuesOf
+      -- CR 609.3: as many as the cards out there can make together.
+      most = if Set.null axes then sum (Map.elems available) else mostDifferingOf (FromOutsideTheGame.count payload) (fmap valuesOf (Map.keys available))
+      atMost = min (FromOutsideTheGame.count payload) most
       atLeast = if FromOutsideTheGame.upTo payload then 0 else atMost
+      -- With no axis, taking every copy or choosing among copies of one
+      -- printing is forced; under one, taking every offered card once is.
+      forced
+        | atMost == 0 = True
+        | Set.null axes = atMost == sum (Map.elems available) || Map.size available == 1
+        | otherwise = atMost == List.genericLength (Map.keys available)
   chosen <- case NonEmpty.nonEmpty (Map.keys available) of
     Nothing -> pure []
     Just candidates
-      | atLeast == atMost && (atMost == 0 || atMost == sum (Map.elems available) || Map.size available == 1) ->
-          pure (settleOutside available atLeast atMost [])
+      | atLeast == atMost && forced ->
+          pure (settleOutside kept available atLeast atMost [])
       | otherwise -> do
           answer <- Game.choose (Prompt.ChooseFromOutsideTheGame (Decide.deciderFor pid gs0) pid candidates atLeast atMost)
-          pure (settleOutside available atLeast atMost answer)
-  _ <- bringChosen arrival (FromOutsideTheGame.reveal payload) pid chosen
+          pure (settleOutside kept available atLeast atMost answer)
+  picked <- maybe (pure chosen) (pickOutside source pid chosen) (FromOutsideTheGame.pick payload)
+  _ <- bringChosen arrival (FromOutsideTheGame.reveal payload) pid picked
   Monad.when (arrivalShuffles arrival) (shuffleLibrary pid)
+
+-- CR 608.2d: the seat the pick's relation names, chosen by the player bringing
+-- the cards in where several stand in it (CR 801.5c's nearest where none is in
+-- range), chooses which of the revealed cards come in; the rest stay outside
+-- the game (Extrapolate the Impossible's ruling). Not asked where the count
+-- takes every card, or where nobody stands in the relation (CR 101.3), which
+-- brings in nothing.
+pickOutside :: ObjectId -> PlayerId -> [OutsideCard.OutsideCard] -> OutsidePick.OutsidePick -> Game [OutsideCard.OutsideCard]
+pickOutside source pid revealed (OutsidePick.MkOutsidePick relation count) = do
+  gs <- State.get
+  let wanted = min count (List.genericLength revealed)
+      offered = Map.fromListWith (+) (fmap (\card -> (card, 1 :: Natural)) revealed)
+  if wanted == List.genericLength revealed
+    then pure revealed
+    else do
+      seat <- Players.chooseOne pid source Nothing (Players.chooserOffer pid gs relation)
+      case (seat, NonEmpty.nonEmpty (Map.keys offered)) of
+        (Just who, Just candidates)
+          | Map.size offered > 1 -> do
+              gs1 <- State.get
+              answer <- Game.choose (Prompt.ChooseFromOutsideTheGame (Decide.deciderFor who gs1) who candidates wanted wanted)
+              pure (settleOutside id offered wanted wanted answer)
+          | otherwise -> pure (settleOutside id offered wanted wanted [])
+        _ -> pure []
+
+-- CR 201.2b: one card's values on a FromOutsideTheGame's differentIn axes, read
+-- off the printed face for a card in the pool, or the face it shows out there for
+-- one in a game on hold -- `eligible`'s reading, since CR 604.3 leaves nothing
+-- else out there to read.
+outsideDiffering :: Set DifferentIn.DifferentIn -> OutsideCard.OutsideCard -> GameState.GameState -> Maybe (Set (DifferentIn.DifferentIn, Either CardName.CardName (Either Integer CardType.CardType)))
+outsideDiffering axes card gs
+  | Set.null axes = Just Set.empty
+  | otherwise = differingOf axes . Projection.viewOfCard =<< face
+  where
+    printed printingId = Game.resolveFaceFor Nothing <$> Game.cardOfPrinting printingId gs
+    face = case card of
+      OutsideCard.InPool printingId -> printed printingId
+      OutsideCard.InAnotherGame outerId -> do
+        entry <- Map.lookup outerId (GameState.outsideObjects gs)
+        case OutsideObject.facing entry of
+          Facing.FaceDown state -> Just (Card.faceDownFace (FaceDownState.listed state))
+          Facing.FaceUp -> printed (OutsideObject.printing entry)
+
+-- One card's values on a group's DifferentIn axes, keyed by axis so a power never
+-- meets a toughness, or Nothing for a card no group admits. CR 201.2b demands
+-- each card HAVE a name; a card with no power or toughness shares none.
+differingOf :: Set DifferentIn.DifferentIn -> Filter.View -> Maybe (Set (DifferentIn.DifferentIn, Either CardName.CardName (Either Integer CardType.CardType)))
+differingOf axes view =
+  if Set.member DifferentIn.Names axes && Set.null (Filter.names view)
+    then Nothing
+    else Just (foldMap valuesOf axes)
+  where
+    number axis = foldMap (Set.singleton . (,) axis . Right . Left)
+    valuesOf axis = case axis of
+      DifferentIn.Names -> Set.map ((,) axis . Left) (Filter.names view)
+      DifferentIn.Powers -> number axis (Filter.power view)
+      DifferentIn.ManaValues -> number axis (Filter.manaValue view)
+      DifferentIn.Toughnesses -> number axis (Filter.toughness view)
+      DifferentIn.CardTypes -> Set.map ((,) axis . Right . Right) (Filter.cardTypes view)
+
+-- The members, in order, that keep a group apart -- each shares no value with a
+-- member kept ahead of it.
+differingKept :: (Ord v) => (a -> Maybe (Set v)) -> [a] -> [a]
+differingKept valuesOf = go Set.empty
+  where
+    go _ [] = []
+    go seen (x : rest) = case valuesOf x of
+      Just values | Set.disjoint values seen -> x : go (values <> seen) rest
+      _ -> go seen rest
+
+-- CR 609.3: the most members, up to `cap`, that `differingKept` could keep
+-- together -- searched exhaustively rather than greedily, since a split card's two
+-- names (CR 201.2a) can block two cards a greedy pass would have kept apart.
+-- Members with the same values are one candidate, which keeps the search to the
+-- distinct ones. Exhaustive rather than greedy is a REGRESSION FENCE: no board
+-- pairs a split card with a card sharing one of its names, so a greedy count
+-- reddens nothing.
+mostDifferingOf :: (Ord v) => Natural -> [Maybe (Set v)] -> Natural
+mostDifferingOf cap found = go Set.empty 0 0 distinct
+  where
+    admitted = Maybe.catMaybes found
+    -- A member with no value at all shares none, so only the others collapse.
+    distinct = ListUtils.nubOrd (filter (not . Set.null) admitted) <> filter Set.null admitted
+    go seen n best rest
+      | n >= cap = cap
+      | n + List.genericLength rest <= best = best
+      | otherwise = case rest of
+          [] -> max n best
+          values : more ->
+            let taken = if Set.disjoint values seen then go (values <> seen) (n + 1) best more else best
+             in if taken >= cap then cap else go seen n (max best taken) more
 
 -- CR 400.11c: what `eligible` admits, with how many copies of each the player
 -- holds -- one for a card in a game on hold. `bringInto` and a search reaching
@@ -1863,19 +1975,20 @@ bringChosen arrival revealIt pid chosen = fmap concat . Monad.forM chosen $ \car
     showIt oid = Monad.when revealIt (reveal RevealCause.Ordinary pid oid)
 
 -- CR 400.11c: the cards an answer to Prompt.ChooseFromOutsideTheGame brings in,
--- FILTERED against what was offered. A name the offer did not hold, or one past
--- its copies, is dropped; past the count, ignored; and an answer naming fewer
--- than the least the instruction must bring is topped up from the first offered.
-settleOutside :: Map OutsideCard.OutsideCard Natural -> Natural -> Natural -> [OutsideCard.OutsideCard] -> [OutsideCard.OutsideCard]
-settleOutside available atLeast atMost answer =
-  let step (taken, left) card
-        | List.genericLength taken >= atMost = (taken, left)
-        | Map.findWithDefault 0 card left > 0 = (taken <> [card], Map.adjust (subtract 1) card left)
+-- FILTERED against what was offered. A name the offer did not hold, one past
+-- its copies, or one `keep` drops (a FromOutsideTheGame's differentIn) is
+-- dropped; past the count, ignored; and an answer naming fewer than the least
+-- the instruction must bring is topped up from the first offered that `keep`
+-- admits beside what was named.
+settleOutside :: ([OutsideCard.OutsideCard] -> [OutsideCard.OutsideCard]) -> Map OutsideCard.OutsideCard Natural -> Natural -> Natural -> [OutsideCard.OutsideCard] -> [OutsideCard.OutsideCard]
+settleOutside keep available atLeast atMost answer =
+  let step limit (taken, left) card
+        | List.genericLength taken >= limit = (taken, left)
+        | Map.findWithDefault 0 card left > 0 && keep (taken <> [card]) == taken <> [card] = (taken <> [card], Map.adjust (subtract 1) card left)
         | otherwise = (taken, left)
-      (named, rest) = List.foldl' step ([], available) answer
+      (named, rest) = List.foldl' (step atMost) ([], available) answer
       spare = concatMap (\(card, n) -> List.genericReplicate n card) (Map.toAscList rest)
-      shortfall = atLeast - min atLeast (List.genericLength named)
-   in named <> List.genericTake shortfall spare
+   in fst (List.foldl' (step atLeast) (named, rest) spare)
 
 -- CR 400.11b: the zone, and the end of it, an OutsideDestination names. The one
 -- place either road into the game reads that field, so a destination cannot mean

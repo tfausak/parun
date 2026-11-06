@@ -3000,7 +3000,7 @@ effectMintedFaces effect = case effect of
   Effect.FromOutsideTheGame _ -> []
   Effect.ExileThisSpell -> []
   Effect.Bolster _ -> []
-  -- The Army token is Parun.Engine.Amass.armyToken's, minted from the rulebook
+  -- The Army and Jace tokens are Parun.Engine.Amass's, minted from the rulebook
   -- rather than embedded in card data, so this arm mints no face of the card's own.
   Effect.Amass _ -> []
   Effect.Blight _ -> []
