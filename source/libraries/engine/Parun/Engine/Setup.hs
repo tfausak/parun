@@ -25,6 +25,7 @@ import qualified Parun.Engine.Mulligan as Mulligan
 import qualified Parun.Engine.Plane as Plane
 import qualified Parun.Engine.Planechase as Planechase
 import qualified Parun.Engine.Scheme as Scheme
+import qualified Parun.Engine.Seating as Seating
 import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Engine.Vanguard as Vanguard
 import qualified Parun.Extra.Natural as Natural
@@ -942,16 +943,14 @@ randomTeamFirst = do
       State.modify' (\g -> g {GameState.turnOrder = rotateTo starter (GameState.turnOrder g), GameState.activePlayer = starter})
 
 -- CR 808.4: each team's starting seat, in turn order. A team's seats run left
--- from its first seat after a non-teammate, wrapping the turn order; the seat
--- at half the run's length is the center of an odd run and the one left of an
--- even run's midpoint, turn order going left.
---
--- A team split across the table counts its run from its first such seat in
--- turn order, CR 808.2's seating being unchecked (#4497).
+-- from its first seat after a non-teammate (Seating.openings), wrapping the turn
+-- order; the seat at half the run's length is the center of an odd run and the
+-- one left of an even run's midpoint, turn order going left. A team split
+-- across the table, which Seating.misseated refuses, counts its run from its
+-- first opening.
 teamStarters :: Teams.Teams -> [PlayerId] -> [PlayerId]
 teamStarters teams order =
-  let previous = drop (length order - 1) (cycle order)
-      opening = Map.fromListWith (\_ earlier -> earlier) [(team, seat) | (seat, prior) <- zip order previous, Just team <- [Teams.teamOf teams seat], Teams.teamOf teams prior /= Just team]
+  let opening = Map.fromListWith (\_ earlier -> earlier) [(team, seat) | (seat, team) <- Seating.openings teams order]
       starterOf team open =
         let run = rotateTo open (filter ((== Just team) . Teams.teamOf teams) order)
          in Maybe.listToMaybe (drop (length run `div` 2) run)

@@ -29,8 +29,7 @@ import qualified Parun.Types.TurnMarker as TurnMarker
 -- option and CR 807.2c's options off -- and its turn markers, handed out from
 -- the active player.
 --
--- Not implemented: CR 807.3's random seating, which is the caller's and
--- unchecked (#4497).
+-- Not implemented: CR 807.3's random seating, which is the caller's (#6455).
 setUp :: GameState -> GameState
 setUp gs =
   handOut

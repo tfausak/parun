@@ -52,6 +52,7 @@ import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Script as Script
+import qualified Parun.Engine.Seating as Seating
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Engine.Subtype as Engine.Subtype
 import qualified Parun.Engine.Target as Target
@@ -373,6 +374,7 @@ stage registry board =
                     GameSettings.emperors = Emperors.MkEmperors (Map.fromList [(team, pid) | (seat, pid) <- NonEmpty.toList seated, Seat.emperor seat, Just team <- [Seat.team seat]])
                   }
               base = Setup.gameWith settings (fmap snd seated)
+              misseat = Seating.misseated base >>= \pid -> fmap (Seat.name . fst) (List.find ((== pid) . snd) (NonEmpty.toList seated))
               lives = Map.fromList (fmap (\(seat, pid) -> (pid, Seat.life seat)) (NonEmpty.toList seated))
               counters = Map.fromList (fmap (\(seat, pid) -> (pid, Seat.counters seat)) (NonEmpty.toList seated))
               orders = Map.fromList (fmap (\(seat, pid) -> (pid, Seat.graveyardOrder seat)) (NonEmpty.toList seated))
@@ -387,8 +389,11 @@ stage registry board =
                     GameState.players = Map.mapWithKey (\pid p -> p {Player.life = Map.findWithDefault (Player.life p) pid lives, Player.counters = Map.findWithDefault (Player.counters p) pid counters, Player.graveyardOrder = Map.findWithDefault (Player.graveyardOrder p) pid orders}) (GameState.players base),
                     GameState.monarch = monarch
                   }
-          placed <- placeSeats registry (NonEmpty.toList seated) (Staged.MkStaged positioned ids Map.empty)
-          pure (fmap (designateDefenders . settleStartingLife) (placed >>= attachAll (placementsOf board)))
+          case misseat of
+            Just label -> pure (Left (Failure.MkMisseated label))
+            Nothing -> do
+              placed <- placeSeats registry (NonEmpty.toList seated) (Staged.MkStaged positioned ids Map.empty)
+              pure (fmap (designateDefenders . settleStartingLife) (placed >>= attachAll (placementsOf board)))
 
 -- | CR 500.7: each seat's turns of the game on a board that starts at `turn`
 -- with `active`'s turn, as an ordinary rotation with no extra turn taken would
@@ -2018,6 +2023,7 @@ render failure = case failure of
   Failure.MkIllegalAttachment label -> Text.pack "a placement cannot be attached to " <> Label.unwrap label
   Failure.MkIllegalEmperor label -> Label.unwrap label <> Text.pack " is an emperor on no team, or not its team's only one"
   Failure.MkUnsharedLife label -> Label.unwrap label <> Text.pack "'s life differs from a teammate's, but the team shares one total"
+  Failure.MkMisseated label -> Label.unwrap label <> Text.pack " sits where the board's teams and emperors don't allow"
   Failure.MkTokenOffBattlefield name -> Text.pack "a token " <> CardName.unwrap name <> Text.pack " placed off the battlefield"
   Failure.MkUnknownMonarch label -> Label.unwrap label <> Text.pack " is the monarch but has no seat"
   Failure.MkUnknownObject ref known ->

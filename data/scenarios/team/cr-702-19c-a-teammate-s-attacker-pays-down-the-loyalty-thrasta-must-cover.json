@@ -18,6 +18,17 @@
         ]
       },
       {
+        "name": "carol",
+        "team": 1,
+        "battlefield": [
+          {
+            "card": "Goblin Piker",
+            "label": "piker",
+            "ready": true
+          }
+        ]
+      },
+      {
         "name": "bob",
         "team": 2,
         "battlefield": [
@@ -32,17 +43,6 @@
                 "value": 3
               }
             ]
-          }
-        ]
-      },
-      {
-        "name": "carol",
-        "team": 1,
-        "battlefield": [
-          {
-            "card": "Goblin Piker",
-            "label": "piker",
-            "ready": true
           }
         ]
       },

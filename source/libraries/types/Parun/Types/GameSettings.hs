@@ -57,7 +57,7 @@ data GameSettings = MkGameSettings
     --
     -- Parun.Engine.Setup.randomTeamFirst reads it for CR 808.4's starting team.
     --
-    -- Not implemented: CR 808.2's seating is unchecked (#4497). CR 808.3a's
+    -- Parun.Engine.Seating.misseated checks CR 808.2's seating. CR 808.3a's
     -- attack multiple players option is the field above, which is on by
     -- default, so a game with teams gets it without asking. CR 808.5's resources
     -- need nothing: none is shared (sharedTeamLife is CR 810's and CR 904's), and
@@ -68,10 +68,8 @@ data GameSettings = MkGameSettings
     -- the active team being an active player (CR 805.4a, 805.9). Off by
     -- default ('plain'), on in an Archenemy game
     -- (Parun.Engine.Archenemy.setUp, CR 904.2), and read through
-    -- Parun.Engine.Turn.sharesTurn.
-    --
-    -- Not implemented: CR 805.1's adjacent seating is not checked, the turn
-    -- order being the caller's list (#4497).
+    -- Parun.Engine.Turn.sharesTurn. CR 805.1's adjacent seating is
+    -- Parun.Engine.Seating.misseated's.
     sharedTeamTurns :: Bool,
     -- | CR 810.4 / 904.13b: whether each team shares one life total. Off by
     -- default ('plain'); Parun.Engine.Game.lifeSharers reads it.

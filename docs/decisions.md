@@ -1389,3 +1389,18 @@ Entries are ordered by the first rule each cites.
 - **Site**: `Parun.Engine.Engine.takeMarkedTurn`. `Parun.GrandMeleeSpec`'s
   "CR 500.11 a skipped turn passes its marker on".
 - **Issue**: #5746.
+
+## The middle seat of an even-sized Emperor team
+
+- **Question**: CR 809.2 seats each emperor "in the middle of the team", and
+  CR 809.6 allows equally sized teams of any size. Which seat is the middle of
+  a team of four?
+- **Rules**: CR 809.2, 809.6, 809.6a (CR of 2026-09-25).
+- **Decision**: Either of its two centre seats. The team picks its own order
+  (CR 809.2), so the setup refuses only an emperor off both.
+- **Rejected**: One of the two, by analogy with CR 808.4's "to the left of its
+  midpoint": that rule picks who goes first, not where anyone sits, and
+  either seat has one general on one side and two on the other.
+- **Site**: `Parun.Engine.Seating.emperorFault`. `Parun.SeatingSpec`'s "CR
+  809.6 an even-sized team's emperor sits in either centre seat".
+- **Issue**: #4497.

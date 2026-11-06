@@ -1865,6 +1865,7 @@ library engine
     Parun.Engine.Sba
     Parun.Engine.Scheme
     Parun.Engine.Script
+    Parun.Engine.Seating
     Parun.Engine.Sector
     Parun.Engine.Setup
     Parun.Engine.Snapshot
@@ -2414,6 +2415,7 @@ library test
     Parun.SaddleSpec
     Parun.SagaSpec
     Parun.ScenarioSpec
+    Parun.SeatingSpec
     Parun.SetupSpec
     Parun.ShieldCounterSpec
     Parun.SpaceSculptorSpec
