@@ -73,6 +73,7 @@ import qualified Parun.Codec.AimedPlayersSpec
 import qualified Parun.Codec.AloneUnlessSpec
 import qualified Parun.Codec.AlternativeActivationCostSpec
 import qualified Parun.Codec.AlternativeCostSpec
+import qualified Parun.Codec.AmassKindSpec
 import qualified Parun.Codec.AnchorSpec
 import qualified Parun.Codec.AnswerSpec
 import qualified Parun.Codec.AnyNumberDiscardSpec
@@ -1085,6 +1086,7 @@ spec s registry corpus = do
   Parun.Codec.AimedPlayersSpec.spec s
   Parun.Codec.AlternativeActivationCostSpec.spec s
   Parun.Codec.AlternativeCostSpec.spec s
+  Parun.Codec.AmassKindSpec.spec s
   Parun.Codec.AnswerSpec.spec s
   Parun.Codec.AnyNumberDiscardSpec.spec s
   Parun.Codec.AnyNumberMatchingSpec.spec s

@@ -20,6 +20,7 @@ import qualified Parun.Types.AffectedPlayers as AffectedPlayers
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Amass as Amass
+import qualified Parun.Types.AmassKind as AmassKind
 import qualified Parun.Types.Ante as Ante
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Parun.Types.ArrangeInLibrary as ArrangeInLibrary
@@ -2491,16 +2492,24 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.Amass (Amass.MkAmass (Quantity.Literal 3) Subtype.Zombie Nothing))
-      " {\"type\":\"Amass\",\"value\":{\"quantity\":{\"type\":\"Literal\",\"value\":3},\"subtype\":\"Zombie\"}} "
+      (Effect.Amass (Amass.MkAmass (Quantity.Literal 3) (AmassKind.Army Subtype.Zombie) Nothing))
+      " {\"type\":\"Amass\",\"value\":{\"quantity\":{\"type\":\"Literal\",\"value\":3},\"kind\":{\"type\":\"Army\",\"value\":\"Zombie\"}}} "
   -- CR 701.47c: Surrounded by Orcs names the Army it amassed in its next clause.
   Spec.it s "Amass, binding the amassed Army" $
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.Amass (Amass.MkAmass (Quantity.Literal 3) Subtype.Orc (Just (SlotName.MkSlotName (Text.pack "army")))))
-      " {\"type\":\"Amass\",\"value\":{\"quantity\":{\"type\":\"Literal\",\"value\":3},\"subtype\":\"Orc\",\"slot\":\"army\"}} "
+      (Effect.Amass (Amass.MkAmass (Quantity.Literal 3) (AmassKind.Army Subtype.Orc) (Just (SlotName.MkSlotName (Text.pack "army")))))
+      " {\"type\":\"Amass\",\"value\":{\"quantity\":{\"type\":\"Literal\",\"value\":3},\"kind\":{\"type\":\"Army\",\"value\":\"Orc\"},\"slot\":\"army\"}} "
+  -- CR 701.71a: empower Jace N prints only the count.
+  Spec.it s "Amass, empowering Jace" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (Effect.Amass (Amass.MkAmass (Quantity.Literal 2) AmassKind.EmpowerJace Nothing))
+      " {\"type\":\"Amass\",\"value\":{\"quantity\":{\"type\":\"Literal\",\"value\":2},\"kind\":{\"type\":\"EmpowerJace\"}}} "
   -- CR 701.68a: who and how many, Draw's shape -- rule 701.68a fixes the kind of
   -- counter and the candidate pool, leaving an author the blighter and N.
   Spec.it s "Blight" $

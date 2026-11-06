@@ -713,8 +713,9 @@ data Effect card ability
     -- controls with the least toughness, or tied for least, then put that many
     -- +1\/+1 counters on it. Choose, not target.
     Bolster Quantity.Quantity
-  | -- | CR 701.47a: "amass [subtype] N", performed by Parun.Engine.Amass.amass as
-    -- one procedure that cannot stop early (CR 701.47b). Choose, not target.
+  | -- | CR 701.47a / 701.71a: "amass [subtype] N" or "empower Jace N", performed
+    -- by Parun.Engine.Amass.amass as one procedure that cannot stop early (CR
+    -- 701.47b). Choose, not target.
     Amass Amass.Amass
   | -- | CR 701.68a: "blight N" -- the players the PlayerRef names each put N
     -- -1\/-1 counters on a creature they control, each asked separately. Choose,

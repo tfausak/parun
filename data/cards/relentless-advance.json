@@ -25,11 +25,14 @@
                   {
                     "type": "Amass",
                     "value": {
+                      "kind": {
+                        "type": "Army",
+                        "value": "Zombie"
+                      },
                       "quantity": {
                         "type": "Literal",
                         "value": 3
-                      },
-                      "subtype": "Zombie"
+                      }
                     }
                   }
                 ]

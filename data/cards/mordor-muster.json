@@ -51,11 +51,14 @@
                   {
                     "type": "Amass",
                     "value": {
+                      "kind": {
+                        "type": "Army",
+                        "value": "Orc"
+                      },
                       "quantity": {
                         "type": "Literal",
                         "value": 1
-                      },
-                      "subtype": "Orc"
+                      }
                     }
                   }
                 ]

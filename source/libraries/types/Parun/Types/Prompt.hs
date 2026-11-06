@@ -299,8 +299,8 @@ data Prompt r where
   -- | CR 701.39a: which of the creatures tied for least toughness is
   -- bolstered; the ObjectId is the resolving object.
   ChooseBolster :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
-  -- | CR 701.47a: which Army gets the amass counters, read after the rule's
-  -- token is created; not raised for zero (CR 701.47b).
+  -- | CR 701.47a / 701.71a: which Army or Jace token gets the counters, read
+  -- after the rule's token is created; not raised for zero (CR 701.47b).
   ChooseAmass :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
   -- | CR 701.68a: which creature is blighted, the candidates unnarrowed; not
   -- raised for zero (CR 101.3, CR 701.68b).

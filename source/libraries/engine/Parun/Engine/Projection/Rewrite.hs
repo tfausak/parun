@@ -29,6 +29,7 @@ import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.AloneUnless as AloneUnless
 import qualified Parun.Types.AlternativeCost as AlternativeCost
 import qualified Parun.Types.Amass as Amass
+import qualified Parun.Types.AmassKind as AmassKind
 import qualified Parun.Types.Ante as Ante
 import qualified Parun.Types.AnyNumberDiscard as AnyNumberDiscard
 import qualified Parun.Types.AnyNumberMatching as AnyNumberMatching
@@ -708,9 +709,10 @@ rewriteEffect pairs effect = case effect of
   Effect.ExileThisSpell -> effect
   Effect.Bolster quantity -> Effect.Bolster (rewriteQuantity pairs quantity)
   -- CR 612.1 / 612.2a: amass's subtype is a printed word of CR 205.3m's family,
-  -- and the token's own name follows it.
-  Effect.Amass (Amass.MkAmass quantity subtype slot) ->
-    Effect.Amass (Amass.MkAmass (rewriteQuantity pairs quantity) (swapWordIn WordFamily.CreatureType pairs subtype) slot)
+  -- and the token's own name follows it. Empower Jace's "Jace" names the keyword
+  -- action (CR 701.71a), and stays.
+  Effect.Amass (Amass.MkAmass quantity kind slot) ->
+    Effect.Amass (Amass.MkAmass (rewriteQuantity pairs quantity) (rewriteAmassKind pairs kind) slot)
   -- The COUNT only: a slot name is this card's own namespace and not printed text
   -- CR 612.1 can reach, which is why the Amass arm above carries its slot through
   -- untouched too.
@@ -1238,6 +1240,12 @@ swapTextWordIn :: Set.Set WordFamily.WordFamily -> [(TextWord.TextWord, TextWord
 swapTextWordIn families pairs word =
   let step s (from, to) = if s == from && any (`TextWord.Engine.inFamily` from) families then to else s
    in List.foldl' step word pairs
+
+-- An amass's subtype word (CR 612.2a); empower Jace prints none.
+rewriteAmassKind :: [(TextWord.TextWord, TextWord.TextWord)] -> AmassKind.AmassKind -> AmassKind.AmassKind
+rewriteAmassKind pairs kind = case kind of
+  AmassKind.Army subtype -> AmassKind.Army (swapWordIn WordFamily.CreatureType pairs subtype)
+  AmassKind.EmpowerJace -> AmassKind.EmpowerJace
 
 -- swapTextWordIn over a subtype word of one family.
 swapWordIn :: WordFamily.WordFamily -> [(TextWord.TextWord, TextWord.TextWord)] -> Subtype.Type.Subtype -> Subtype.Type.Subtype

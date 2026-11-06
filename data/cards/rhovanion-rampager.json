@@ -124,11 +124,14 @@
                       {
                         "type": "Amass",
                         "value": {
+                          "kind": {
+                            "type": "Army",
+                            "value": "Goblin"
+                          },
                           "quantity": {
                             "type": "Measure",
                             "value": "Power"
-                          },
-                          "subtype": "Goblin"
+                          }
                         }
                       }
                     ]
