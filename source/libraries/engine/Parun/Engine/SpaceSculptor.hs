@@ -51,7 +51,7 @@ sustained gs =
       sourceSculpts oid = case Game.abilitySourceOf oid gs of
         Nothing -> False
         Just source -> maybe False (Set.member Keyword.SpaceSculptor . Filter.keywords) (Projection.viewWithLastKnownAnywhere gs source)
-   in onBattlefield || any sourceSculpts (GameState.stack gs)
+   in onBattlefield || any sourceSculpts (Game.allStacks gs)
 
 -- The permanents, phased out ones included: a sector lapses for those too,
 -- since CR 702.158b ends it on a condition about the sculptor rather than on

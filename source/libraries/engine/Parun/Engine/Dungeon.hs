@@ -134,7 +134,7 @@ abilities gs =
 -- it is exactly the event the ability will be gathered from.
 finished :: GameState.GameState -> [ObjectId]
 finished gs =
-  let onStack oid = any (fromDungeon oid) (GameState.stack gs)
+  let onStack oid = any (fromDungeon oid) (Game.allStacks gs)
       fromDungeon oid stacked = case fmap Object.source (Game.lookupObject stacked gs) of
         Just (Source.OfTrigger triggered) -> TriggeredAbilitySource.source triggered == oid
         _ -> False

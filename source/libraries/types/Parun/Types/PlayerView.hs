@@ -1,5 +1,6 @@
 module Parun.Types.PlayerView where
 
+import qualified Data.Map.Strict as Map
 import qualified Numeric.Natural as Natural
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ObjectView as ObjectView
@@ -23,6 +24,9 @@ data PlayerView = MkPlayerView
     battlefield :: [ObjectView.ObjectView],
     -- | Top first, as GameState.stack.
     stack :: [ObjectView.ObjectView],
+    -- | CR 807.5: each parked Grand Melee turn's stack, top first, by its
+    -- marker's number (GameState.parkedTurns).
+    parkedStacks :: Map.Map Natural.Natural [ObjectView.ObjectView],
     -- | This turn's log entries the seat witnessed (CR 400.2, 701.20a, 701.20e).
     witnessed :: [LoggedEvent.LoggedEvent],
     -- | The previous turn's log entries the seat witnessed, for a client that

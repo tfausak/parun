@@ -3,6 +3,7 @@ module Parun.Engine.Turn where
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
@@ -31,6 +32,8 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.Teams as Teams
 import qualified Parun.Types.Timestamp as Timestamp
+import qualified Parun.Types.TurnMarker as TurnMarker
+import qualified Parun.Types.TurnRegisters as TurnRegisters
 import qualified Parun.Types.TurnRole as TurnRole
 import qualified Parun.Types.TurnScope as TurnScope
 
@@ -105,9 +108,40 @@ perspectiveFree (TurnScope.PlayersTurn ref) = case ref of
   _ -> False
 
 -- | CR 805.4a / 805.9: is this player an active player -- the active player, or
--- under the shared team turns option a member of the active team?
+-- under the shared team turns option a member of the active team? In Grand
+-- Melee, of the turn GameState's fields hold, an anchor read
+-- (docs/decisions.md, "Which turn a Grand Melee read of the active player
+-- means"); hasTurnRunning is the relation read.
 isActive :: GameState -> PlayerId -> Bool
 isActive gs = sharesTurn gs (GameState.activePlayer gs)
+
+-- | CR 807.4b: every running turn's active player and step, the turn
+-- GameState's fields hold first, then each parked Grand Melee turn by marker
+-- number; that one turn outside Grand Melee.
+runningTurns :: GameState -> [(PlayerId, Phase)]
+runningTurns gs =
+  [(GameState.activePlayer gs, GameState.phase gs) | null (GameState.turnMarkers gs) || Maybe.isJust (workedMarker gs)]
+    <> fmap (\r -> (TurnRegisters.activePlayer r, TurnRegisters.phase r)) (Map.elems (GameState.parkedTurns gs))
+
+-- | CR 807.4b: the Grand Melee marker whose turn GameState's fields hold --
+-- the one under way that is not parked. Nothing outside the variant, and once
+-- that turn has ended and before another is worked.
+workedMarker :: GameState -> Maybe Natural
+workedMarker gs = fmap TurnMarker.number (List.find (\m -> TurnMarker.underWay m && Map.notMember (TurnMarker.number m) (GameState.parkedTurns gs)) (GameState.turnMarkers gs))
+
+-- | CR 102.1 / 807.4: is it this player's turn -- an active player of some
+-- running turn? The relation read (docs/decisions.md, "Which turn a Grand
+-- Melee read of the active player means"); isActive outside Grand Melee.
+hasTurnRunning :: GameState -> PlayerId -> Bool
+hasTurnRunning gs pid = any (\(active, _) -> sharesTurn gs active pid) (runningTurns gs)
+
+-- | CR 102.1 / 500.1 / 807.4: does some running turn belong to the scope,
+-- and stand in the window when one is named? Both read off the same turn
+-- (docs/decisions.md, "Which turn a Grand Melee read of the active player
+-- means"); `own` is turnScopeAdmits' own.
+duringRunningTurn :: (PlayerRef.PlayerRef -> Maybe [PlayerId]) -> GameState -> Maybe PhaseSelector -> TurnScope.TurnScope -> PlayerId -> Bool
+duringRunningTurn named gs window scope own =
+  any (\(active, phase) -> maybe True (`inWindow` phase) window && turnScopeAdmits named gs scope active own) (runningTurns gs)
 
 -- | CR 500.7: how many turns this player has begun this game, extra turns
 -- included.

@@ -24,6 +24,7 @@ import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerView as PlayerView
 import qualified Parun.Types.SeatView as SeatView
+import qualified Parun.Types.TurnRegisters as TurnRegisters
 import qualified Parun.Types.Visibility as Visibility.Type
 import qualified Parun.Types.Zone as Zone
 
@@ -40,6 +41,7 @@ viewFor pid gs =
       PlayerView.seats = Maybe.mapMaybe (seatView pid gs) (GameState.turnOrder gs),
       PlayerView.battlefield = Maybe.mapMaybe (objectView pid gs) (Foldable.toList (GameState.battlefield gs)),
       PlayerView.stack = Maybe.mapMaybe (objectView pid gs) (GameState.stack gs),
+      PlayerView.parkedStacks = fmap (Maybe.mapMaybe (objectView pid gs) . TurnRegisters.stack) (GameState.parkedTurns gs),
       PlayerView.witnessed = witnessedIn (GameState.events gs),
       PlayerView.witnessedLastTurn = witnessedIn (GameState.eventsLastTurn gs),
       PlayerView.result = GameState.result gs,

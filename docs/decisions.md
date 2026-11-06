@@ -1113,9 +1113,110 @@ Entries are ordered by the first rule each cites.
   for the next player to their left.
 - **Rejected**: As they leave, which ends the effect before any turn would
   have begun.
-- **Site**: `Parun.Engine.Engine.takeMarkedTurn`'s `skipped`. No test reaches
-  it.
+- **Site**: `Parun.Engine.Engine.beginMarked`'s `departedSeats`. No test
+  reaches it.
 - **Issue**: #3003.
+
+## In what order Grand Melee's running turns are asked
+
+- **Question**: Every marker holder's turn runs at once (CR 807.4b), each over
+  its own stack (CR 807.5), so several players can hold priority at one
+  moment. Whose decision comes first?
+- **Rules**: CR 101.4, 117.3d, 117.4, 500.12, 807.4b, 807.4d, 807.4e, 807.5,
+  807.5a; CR of 2026-11-06.
+- **Decision**: One unit at a time, round robin over the running turns in
+  marker-number order from the turn worked last, a unit being a step's start,
+  one priority decision or a step's end. Turns that begin together begin in
+  number order. A turn running alone takes its step whole.
+- **Rejected**: A random order, which no rule asks for and which adds a draw to
+  every window. An order a player chooses, which no rule gives anyone. Each
+  turn running until its stack is quiet, which starves the others and makes
+  one marker win every race. Numbers are the only order the CR supplies
+  (CR 807.4b, 807.4e); CR 101.4 orders choices within one event, and CR 117.3d
+  leaves a holder only acting or passing.
+- **Site**: `Parun.Engine.Engine.runMarkedUnit` and `beginReady`.
+  `Parun.GrandMeleeSpec`'s "CR 807.4b both running turns' questions
+  alternate" and "CR 807.4d eight players take turns 0, 4, 1, 5, ...".
+- **Issue**: #6117.
+
+## Which turn a Grand Melee read of the active player means
+
+- **Question**: CR 102.1's active player is "the player whose turn it is",
+  and in Grand Melee several turns run at once (CR 807.4). Which one does a
+  question about the active player mean?
+- **Rules**: CR 102.1, 500.1, 807.4, 807.4b, 807.5; CR of 2026-11-06.
+- **Decision**: Two readings. An anchor read -- who takes the turn's actions,
+  APNAP, who gets priority first, "the active player" an effect names, a step
+  paired with its player (sorcery timing, an untap step, combat) -- is the
+  turn the question arises in, the worked one. A relation read -- "your turn",
+  a restriction's or trigger's turn scope -- holds of any running turn, a
+  window beside it read off that same turn.
+- **Rejected**: The anchor reading for both, under which Gideon Blackblade
+  stops being a creature during its controller's own turn whenever another
+  turn's question is asked. The relation reading for both, under which Siren's
+  Call's "the active player" names two players and sorcery timing pairs one
+  turn's step with another's player.
+- **Site**: `Parun.Engine.Turn.isActive`, `hasTurnRunning` and
+  `duringRunningTurn`. `Parun.GrandMeleeSpec`'s "CR 807.4 it is your turn
+  while your marker's turn runs".
+- **Issue**: #6117.
+
+## Which stack and turn a resolving Grand Melee object names
+
+- **Question**: An effect may name "the stack" or "the turn" (Time Stop, CR
+  725.1b; CR 725.2b), and in Grand Melee there is one of each per marker
+  (CR 807.5). Which?
+- **Rules**: CR 405.1, 608.2, 725.1, 725.2, 807.5, 807.5b; CR of 2026-11-06.
+- **Decision**: The resolving object's own marker's: its stack and its turn.
+- **Rejected**: Every stack, under which Time Stop exiles spells on turns it
+  doesn't end. CR 807.5b keeps a spell's targets on its own stack, and this
+  reading keeps its untargeted reach there too.
+- **Site**: `Parun.Engine.Resolve.Arms.Counters.endTurn` and
+  `Parun.Engine.Resolve.Slots`' each-spell arms, which read
+  `GameState.stack`. `Parun.GrandMeleeSpec`'s "CR 725.1b Time Stop ends only
+  its own marker's turn".
+- **Issue**: #6117.
+
+## What "this turn" and "last turn" read in Grand Melee
+
+- **Question**: With several turns running (CR 807.4b), which turn's history
+  does "this turn" read, and which turn is "last turn"?
+- **Rules**: CR 500.7, 608.2i, 807.4b; CR of 2026-11-06.
+- **Decision**: "This turn" is the worked turn, the one the question arises
+  in. "Last turn" is the turn that ended most recently.
+- **Rejected**: Every running turn's history together, which makes a tally
+  count what happened on another stack.
+- **Site**: `Parun.Types.TurnRegisters` (each turn's log) and
+  `Parun.Engine.Engine.closeTurn` (`GameState.eventsLastTurn`). No test
+  reaches it.
+- **Issue**: #6117.
+
+## Which stack a Grand Melee trigger goes on
+
+- **Question**: CR 807.5b places a trigger only for a controller with
+  priority for several stacks. Which stack does any other trigger go on?
+- **Rules**: CR 603.3, 807.5, 807.5b; CR of 2026-11-06.
+- **Decision**: The stack of the turn in which its event happened.
+- **Rejected**: A fixed marker's, such as the lowest number, which puts a
+  trigger far from the action that caused it.
+- **Site**: `Parun.Engine.Engine.performSettle`, over the worked turn's log.
+  No test reaches it.
+- **Issue**: #6117.
+
+## Whether Grand Melee's cleanup and pool emptying reach every turn
+
+- **Question**: CR 514.2 removes damage from "all permanents" and ends "until
+  end of turn" effects, and CR 500.5 empties every player's pool, as one
+  marker's step ends while other turns run (CR 807.4b). Do they reach the
+  other turns' permanents and players?
+- **Rules**: CR 500.5, 514.2, 807.4b; CR of 2026-11-06.
+- **Decision**: Yes, literally all.
+- **Rejected**: Scoping them to the ending turn's marker: scoping "until end
+  of turn" while damage stays global brings back the shrinking kill a
+  cleanup otherwise prevents (a pumped creature's damage outliving its pump).
+- **Site**: `Parun.Engine.Engine.cleanupSecondAction` and `endStep`. No test
+  reaches it.
+- **Issue**: #6117.
 
 ## Whether Alternating Teams teammates review hands across an emptied seat
 
@@ -1399,13 +1500,11 @@ Entries are ordered by the first rule each cites.
   the marker do?
 - **Rules**: CR 500.11, 614.10, 807.4c, 807.4d, 807.4i (CR of 2026-11-06).
 - **Decision**: As at the end of a turn they took: CR 807.4c's handoff runs,
-  so the marker passes left (or stays, for a pending extra turn), and the
-  next marker in number order goes first.
+  so the marker passes left (or stays, for a pending extra turn), and its new
+  holder begins when CR 807.4d lets them.
 - **Rejected**: The marker staying with the skipping player, who then has no
-  turn under it and stalls it. Passing it and letting its new holder go at
-  once, ahead of the other markers, which treats the skipped turn as never
-  scheduled rather than proceeded past.
-- **Site**: `Parun.Engine.Engine.takeMarkedTurn`. `Parun.GrandMeleeSpec`'s
+  turn under it and stalls it.
+- **Site**: `Parun.Engine.Engine.beginMarked`. `Parun.GrandMeleeSpec`'s
   "CR 500.11 a skipped turn passes its marker on".
 - **Issue**: #5746.
 

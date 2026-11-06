@@ -72,6 +72,8 @@ import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.TurnMarker as TurnMarker
+import qualified Parun.Types.TurnRegisters as TurnRegisters
+import qualified Parun.Types.TurnResume as TurnResume
 import qualified Parun.Types.Undoing as Undoing
 
 data GameState = MkGameState
@@ -104,6 +106,8 @@ data GameState = MkGameState
     -- a kind nobody holds, so a board that never had one compares equal to one
     -- that has emptied it.
     sideDecks :: Map.Map SideDeck.SideDeck (Map.Map PlayerId.PlayerId (Seq.Seq ObjectId.ObjectId)),
+    -- | CR 405.1 / 807.5: the stack, top first; in Grand Melee the stack of the
+    -- turn these fields hold, every stack being Parun.Engine.Game.allStacks.
     stack :: [ObjectId.ObjectId],
     -- | CR 610.3a / 610.3b: the first event group whose events happened after
     -- each object was put on the stack, or for a triggered ability after it
@@ -129,6 +133,10 @@ data GameState = MkGameState
     -- (Engine.handoffTurn), never by a reader. A new reader of it as history
     -- owes its construct's arm in Parun.Engine.Interchangeable.Mentions a
     -- Parun.Types.HistoryRead (CR 733.3).
+    --
+    -- Not implemented: in Grand Melee this is the worked turn's log, which a
+    -- static ability's "this turn" reads whichever turn's question is being
+    -- asked (#6538).
     events :: Seq.Seq LoggedEvent.LoggedEvent,
     -- | The group Event.recordEvent stamps on the next event; advanced per
     -- record except inside an Event.simultaneously bracket. Not reset at turn
@@ -621,6 +629,13 @@ data GameState = MkGameState
     -- | CR 807.4: a Grand Melee game's turn markers in number order, written
     -- by Parun.Engine.GrandMelee; empty in every other game.
     turnMarkers :: [TurnMarker.TurnMarker],
+    -- | CR 807.4b / 807.5: every running Grand Melee turn but the one these
+    -- fields hold, by its marker's number (Parun.Engine.Engine.runStep's
+    -- scheduler); empty in every other game.
+    parkedTurns :: Map.Map Natural.Natural TurnRegisters.TurnRegisters,
+    -- | CR 807.4b: where the turn these fields hold picks up when the
+    -- scheduler next works it; AtStepStart outside Grand Melee.
+    turnResume :: TurnResume.TurnResume,
     -- | CR 100.6a / 730.1a: how many subgames have begun this match, counting
     -- one in progress. The only match-scoped field: CR 730.1b keeps a subgame's
     -- effects out of the main game, but a match is a series of games, so this

@@ -124,6 +124,7 @@ board begun view =
   ]
     <> concatMap seat (List.sortOn ((/= PlayerView.viewer view) . SeatView.player) (PlayerView.seats view))
     <> stack
+    <> parked
   where
     seat s =
       let pid = SeatView.player s
@@ -146,6 +147,8 @@ board begun view =
             <> (if pid == PlayerView.viewer view then [] else listed view "  Seen in hand: " (handOrder view (SeatView.hand s)))
             <> listed view "  Seen in library, top first: " (SeatView.library s)
     stack = listed view "Stack, top first: " (PlayerView.stack view)
+    -- CR 807.5: each other Grand Melee turn marker's stack.
+    parked = concatMap (\(n, shown) -> listed view ("Turn marker " <> show n <> "'s stack, top first: ") shown) (Map.toList (PlayerView.parkedStacks view))
 
 -- | The deciding seat's hand.
 hand :: PlayerView.PlayerView -> [Text.Text]
@@ -286,6 +289,7 @@ objects view =
   Map.fromList . fmap (\o -> (ObjectView.object o, o)) $
     PlayerView.battlefield view
       <> PlayerView.stack view
+      <> concat (PlayerView.parkedStacks view)
       <> concatMap (\s -> SeatView.hand s <> SeatView.library s <> SeatView.graveyard s <> SeatView.exile s) (PlayerView.seats view)
 
 -- | An object by id, named as the view shows it, or else as the last witnessed
@@ -319,7 +323,7 @@ located :: PlayerView.PlayerView -> ObjectId.ObjectId -> Maybe (Zone.Zone, Objec
 located view oid =
   List.find ((== oid) . ObjectView.object . snd) $
     fmap ((,) Zone.Battlefield) (PlayerView.battlefield view)
-      <> fmap ((,) Zone.Stack) (PlayerView.stack view)
+      <> fmap ((,) Zone.Stack) (PlayerView.stack view <> concat (PlayerView.parkedStacks view))
       <> concatMap
         ( \s ->
             fmap ((,) Zone.Hand) (SeatView.hand s)

@@ -113,7 +113,7 @@ beginResolutionControl oid gs =
 -- A WhileResolving row outlives the resolution only while its spell is still on
 -- the stack: one countered or otherwise gone (CR 400.7) will never resolve.
 endResolutionControl :: GameState.GameState -> GameState.GameState
-endResolutionControl gs = gs {GameState.control = Map.mapMaybe (outlivesResolution (GameState.stack gs)) (GameState.control gs)}
+endResolutionControl gs = gs {GameState.control = Map.mapMaybe (outlivesResolution (Game.allStacks gs)) (GameState.control gs)}
 
 -- The rows of one player's control stack that a resolution ending leaves in
 -- place, or Nothing where none is left -- a player under no control has no key.

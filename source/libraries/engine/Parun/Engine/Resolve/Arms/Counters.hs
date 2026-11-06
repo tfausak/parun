@@ -1772,6 +1772,10 @@ endTurn runDamageRewriteEffect runReplacementEffects runSubgame = do
   -- 400.7 minted a fresh incarnation in exile, so changeZone's lookup of the
   -- old id finds nothing and the spell stays exiled rather than reaching a
   -- graveyard.
+  --
+  -- In Grand Melee, the stack and turn of Time Stop's own marker
+  -- (docs/decisions.md, "Which stack and turn a resolving Grand Melee object
+  -- names").
   onStack <- State.gets GameState.stack
   Foldable.traverse_ Common.exileOrCease onStack
   -- CR 725.1c: check state-based actions, granting no priority and putting no

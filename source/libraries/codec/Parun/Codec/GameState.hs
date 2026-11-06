@@ -72,6 +72,8 @@ import qualified Parun.Codec.SideDeck as SideDeck
 import qualified Parun.Codec.SpellWasCast as SpellWasCast
 import qualified Parun.Codec.Timestamp as Timestamp
 import qualified Parun.Codec.TurnMarker as TurnMarker
+import qualified Parun.Codec.TurnRegisters as TurnRegisters
+import qualified Parun.Codec.TurnResume as TurnResume
 import qualified Parun.Codec.Undoing as Undoing
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
@@ -84,6 +86,7 @@ import qualified Parun.Types.Printing as Printing.Type
 import qualified Parun.Types.PrintingId as PrintingId.Type
 import qualified Parun.Types.RestartSignal as RestartSignal.Type
 import qualified Parun.Types.SlotName as SlotName.Type
+import qualified Parun.Types.TurnResume as TurnResume.Type
 
 -- | Every field but one, in the record's own order.
 --
@@ -246,6 +249,8 @@ codec resolve = Fields.object $ do
   exilePiles <- Fields.defaulted "exilePiles" Map.empty (Common.naturalMap ObjectId.codec Timestamp.codec) GameState.exilePiles
   extraTurns <- Fields.defaulted "extraTurns" [] (Common.list ExtraTurn.codec) GameState.extraTurns
   turnMarkers <- Fields.defaulted "turnMarkers" [] (Common.list TurnMarker.codec) GameState.turnMarkers
+  parkedTurns <- Fields.defaulted "parkedTurns" Map.empty (Common.naturalMap Common.natural TurnRegisters.codec) GameState.parkedTurns
+  turnResume <- Fields.defaulted "turnResume" TurnResume.Type.AtStepStart TurnResume.codec GameState.turnResume
   subgamesThisMatch <- Fields.defaulted "subgamesThisMatch" 0 Common.natural GameState.subgamesThisMatch
   gamesThisMatch <- Fields.defaulted "gamesThisMatch" 1 Common.natural GameState.gamesThisMatch
   gameNumber <- Fields.defaulted "gameNumber" 1 Common.natural GameState.gameNumber
@@ -381,6 +386,8 @@ codec resolve = Fields.object $ do
         GameState.exilePiles = exilePiles,
         GameState.extraTurns = extraTurns,
         GameState.turnMarkers = turnMarkers,
+        GameState.parkedTurns = parkedTurns,
+        GameState.turnResume = turnResume,
         GameState.subgamesThisMatch = subgamesThisMatch,
         GameState.gamesThisMatch = gamesThisMatch,
         GameState.gameNumber = gameNumber,

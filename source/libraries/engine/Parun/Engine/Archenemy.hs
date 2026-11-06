@@ -140,7 +140,7 @@ toBottom oid gs = case Game.lookupObject oid gs of
 abandonedBySba :: GameState -> [ObjectId]
 abandonedBySba gs =
   let spent = filter (\oid -> not (Scheme.isOngoing oid gs)) (faceUp gs)
-      schemeOnStack = any fromScheme (GameState.stack gs)
+      schemeOnStack = any fromScheme (Game.allStacks gs)
       fromScheme stacked = case fmap Object.source (Game.lookupObject stacked gs) of
         Just (Source.OfTrigger triggered) -> Scheme.isScheme (TriggeredAbilitySource.source triggered) gs
         _ -> False

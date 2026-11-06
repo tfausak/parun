@@ -110,7 +110,7 @@ canForetell :: PlayerId -> ObjectId -> GameState -> Bool
 canForetell pid oid gs =
   not (null (foretellCostsOf oid gs))
     && elem oid (Game.zoneMembers Zone.Hand pid gs)
-    && Turn.isActive gs pid
+    && Turn.hasTurnRunning gs pid
     && Cost.canPay PaymentSubject.ForNeither pid oid actionCost gs
 
 -- Every card this player may foretell right now -- what Action.Foretell is built

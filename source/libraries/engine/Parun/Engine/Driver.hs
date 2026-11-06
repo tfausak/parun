@@ -59,7 +59,8 @@ match observers answerer settings orders matchup =
   Engine.runGameAsked (ask observers answerer) (Map.foldrWithKey Game.setGraveyardOrder (Setup.gameWith settings (fmap fst matchup)) orders) (Engine.playFrom matchup)
 
 -- | Whole steps (CR 500.1) from a state, until the game has a result, the
--- budget is spent, or the predicate holds.
+-- budget is spent, or the predicate holds. In Grand Melee the budget counts
+-- Engine.runStep's units instead (CR 807.4b).
 drive :: (Monad m) => [Observer.Observer m] -> Answerer.Answerer (Asked.Asked GameState.GameState) m -> Natural -> (GameState.GameState -> m Bool) -> GameState.GameState -> m GameState.GameState
 drive observers answerer budget stop gs = do
   stopping <- stop gs

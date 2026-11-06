@@ -1832,8 +1832,7 @@ restrictionMet pid oid gs restriction = case restriction of
   -- rather than shared, since the two gates differ in what else they may read
   -- (CR 307.5).
   CastingRestriction.DuringPhase (DuringPhase.MkDuringPhase window scope) ->
-    Turn.inWindow window (GameState.phase gs)
-      && Turn.turnScopeAdmits named gs scope (GameState.activePlayer gs) pid
+    Turn.duringRunningTurn named gs (Just window) scope pid
   -- CR 508.3b's question, and it lives in Parun.Engine.Turn because the ability
   -- side's clause of the same name asks exactly it: one question about the combat
   -- record, two gates that differ in what ELSE they may read (CR 307.5).
@@ -1851,10 +1850,10 @@ restrictionMet pid oid gs restriction = case restriction of
   -- phase rather than the combat record. Panic.
   CastingRestriction.DuringCombatBefore target -> Turn.duringCombatBefore target (GameState.phase gs)
   -- CR 102.1 alone: DuringPhase's second conjunct with no window.
-  CastingRestriction.DuringTurn scope -> Turn.turnScopeAdmits named gs scope (GameState.activePlayer gs) pid
+  CastingRestriction.DuringTurn scope -> Turn.duringRunningTurn named gs Nothing scope pid
   -- CR 500.7: the caster's own turns, extra ones included; another player's
   -- turn is never one of them (Serra Avenger's rulings).
-  CastingRestriction.NotDuringFirstTurns n -> not (Turn.isActive gs pid && Turn.turnsBegun pid gs <= n)
+  CastingRestriction.NotDuringFirstTurns n -> not (Turn.hasTurnRunning gs pid && Turn.turnsBegun pid gs <= n)
   -- CR 601.3's prohibition over a fact about the game, through the evaluation
   -- CR 602.5's activation rider uses (ActivationRestriction.onlyIfHolds), with
   -- the would-be caster as CR 109.5's "you". Against the board BEFORE CR

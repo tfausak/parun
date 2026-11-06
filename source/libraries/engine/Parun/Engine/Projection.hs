@@ -2370,7 +2370,7 @@ anyConditional gs =
           Just face -> any (\sa -> carriesCondition sa && statesZone zone sa) (Face.staticAbilities face)
    in any conditionalPermanent (Set.toList (GameState.battlefield gs))
         || any conditional (Set.toList (GameState.command gs))
-        || any conditional (GameState.stack gs)
+        || any conditional (Game.allStacks gs)
         -- Every card in the graveyard rather than only the ones whose ability
         -- gatherGiven will keep: a superset costs a second walk, where a subset
         -- ungates a clause.
@@ -2584,7 +2584,7 @@ gatherGiven stripped waited functioning seed gs =
                     then isSpellStatic
                     else statesZone Zone.Stack sa
              in concatMap (uncurry (gatherStatic (functioning spellId) spellId (Object.timestamp spellObj) [] (const False))) (filter (\(_, sa) -> keeps sa) (zip [0 :: Natural ..] (Face.staticAbilities face)))
-      spells = concatMap fromSpell (GameState.stack gs)
+      spells = concatMap fromSpell (Game.allStacks gs)
       fromGraveyardCard cardId = case Game.lookupObject cardId gs of
         Nothing -> []
         Just cardObj -> case abilityFaceOf cardId cardObj gs of
@@ -3678,7 +3678,7 @@ bestowGathered gs =
                 )
                 Keyword.bestowModifications
         _ -> []
-   in concatMap fromObject (Set.toList (GameState.battlefield gs) <> GameState.stack gs <> Set.toList (GameState.exile gs) <> Set.toList (GameState.command gs))
+   in concatMap fromObject (Set.toList (GameState.battlefield gs) <> Game.allStacks gs <> Set.toList (GameState.exile gs) <> Set.toList (GameState.command gs))
         <> foldZoneCards GameState.hand fromObject gs
         <> foldZoneCards GameState.graveyard fromObject gs
         <> foldZoneCards GameState.library fromObject gs
@@ -3786,7 +3786,7 @@ castGrantGathered gs =
                 gModification = Modification.GainKeyword keyword
               }
           ]
-   in concatMap fromObject (GameState.stack gs)
+   in concatMap fromObject (Game.allStacks gs)
 
 -- CR 702.99a's static ability: "for as long as this card is encoded on that
 -- creature, that creature has" the trigger Keyword.cipherTrigger builds, emitted
@@ -6240,7 +6240,7 @@ replacementsAffecting gs =
       -- a graveyard card whose ability face has no such keyword forces it.
       graveyardGrantInForce = mintingGrantInForce Keyword.graveyardReplacementsOf gs
       stated =
-        concatMap fromSpellRow (GameState.stack gs)
+        concatMap fromSpellRow (Game.allStacks gs)
           <> concatMap (statedFrom Zone.Graveyard (rowStating Zone.Graveyard)) (graveyardCards gs)
           <> concatMap mintedInGraveyard (graveyardCards gs)
           <> foldZoneCards GameState.hand (statedFrom Zone.Hand (rowStating Zone.Hand)) gs
@@ -6390,7 +6390,7 @@ elsewhereGrants p gs =
           Nothing -> False
           Just face -> any (\sa -> statesZone zone sa && writes sa) (Face.staticAbilities face)
    in any (grants Zone.Command) (Set.toList (GameState.command gs))
-        || any (grants Zone.Stack) (GameState.stack gs)
+        || any (grants Zone.Stack) (Game.allStacks gs)
         || any (grants Zone.Graveyard) (graveyardCards gs)
         || anyZoneCard GameState.hand (grantsStating Zone.Hand (staticStating Zone.Hand gs)) gs
         || anyZoneCard GameState.library (grantsStating Zone.Library (staticStating Zone.Library gs)) gs

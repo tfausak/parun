@@ -224,7 +224,7 @@ legalRecipientListGiven kind reader pools perspective unannounced bindings acqui
   let Snapshot.MkSnapshot {Snapshot.projected = pcs, Snapshot.grants = grants} = board pools
       -- CR 115.5's gate, hoisted out of the fold: one scan of the stack per
       -- slot rather than one per candidate.
-      sourceOnStack = elem source (GameState.stack gs)
+      sourceOnStack = elem source (Game.allStacks gs)
       -- CR 702.11d's "[quality] spells ... or abilities ... from [quality]
       -- sources" -- the SOURCE's characteristics, which no other targeting
       -- question here reads. `source` is already the object rule 702.11d names in

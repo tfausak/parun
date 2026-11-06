@@ -539,7 +539,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- posture about.
         Quantity.IsActivePlayer ref -> case playersOf ref of
           Nothing -> Nothing
-          Just pids -> Just (if any (Turn.isActive gs) pids then 1 else 0)
+          Just pids -> Just (if any (Turn.hasTurnRunning gs) pids then 1 else 0)
         -- CR 122.1: how many counters of a kind that player has. The third arm on
         -- LifeTotal's and Speed's terms -- live, one player only, through the same
         -- playersOf.
@@ -1996,7 +1996,7 @@ talliedThisTurn tally pid gs = case tally of
   TurnTally.CardsDrawn -> toInteger (Seq.length (Map.findWithDefault Seq.empty pid (GameState.drawsThisTurn gs)))
   TurnTally.ActionsDone acts -> toInteger (Game.actionsDoneThisTurn acts gs pid)
   TurnTally.LandsPlayed
-    | Turn.isActive gs pid -> toInteger (Map.findWithDefault 0 pid (GameState.landsPlayed gs))
+    | Turn.hasTurnRunning gs pid -> toInteger (Map.findWithDefault 0 pid (GameState.landsPlayed gs))
     | otherwise -> 0
 
 controlClockOf :: GameState -> ObjectId -> Map.Map PlayerId.PlayerId ControlClock.ControlClock

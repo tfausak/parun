@@ -480,7 +480,7 @@ standingOf gs =
         Map.fromList
           ( Projection.foldZoneCards GameState.hand (Maybe.maybeToList . statedCandidate Zone.Hand (statingIn Zone.Hand)) gs
               <> Projection.foldZoneCards GameState.library (Maybe.maybeToList . statedCandidate Zone.Library (statingIn Zone.Library)) gs
-              <> Maybe.mapMaybe (statedCandidate Zone.Stack (statingIn Zone.Stack)) (GameState.stack gs)
+              <> Maybe.mapMaybe (statedCandidate Zone.Stack (statingIn Zone.Stack)) (Game.allStacks gs)
               <> Maybe.mapMaybe (statedCandidate Zone.Command (statingIn Zone.Command)) (Set.toAscList (GameState.command gs))
               <> Maybe.mapMaybe (statedCandidate Zone.Ante (statingIn Zone.Ante)) (Set.toAscList (GameState.ante gs))
           )
@@ -3079,7 +3079,7 @@ stateTriggersOn gs
   -- together. Hoisted to the whole function because that is what the per-ability
   -- check it replaces amounted to: one unreadable stack entry suppressed every
   -- ability of every source.
-  | any (\sid -> Maybe.isNothing (Game.lookupObject sid gs)) (GameState.stack gs) = []
+  | any (\sid -> Maybe.isNothing (Game.lookupObject sid gs)) (Game.allStacks gs) = []
   | otherwise = concatMap onBattlefield (Set.toAscList (GameState.battlefield gs)) <> concatMap inCommand (Set.toAscList (GameState.command gs))
   where
     onBattlefield oid = case Projection.controllerOfGiven grants oid gs of
@@ -3121,7 +3121,7 @@ stateTriggersOn gs
             -- of this ability is an instance of it however it got here.
             Just (Source.OfTrigger triggered) -> TriggeredAbilitySource.source triggered == srcId && TriggeredAbilitySource.ability triggered == ab
             _ -> False
-       in length (filter isInstance (GameState.stack gs))
+       in length (filter isInstance (Game.allStacks gs))
     forOne oid ctrl abilities =
       let live ab = liveCondition (TriggeredAbility.condition ab)
           liveCondition condition = case condition of

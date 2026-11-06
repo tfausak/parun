@@ -2,6 +2,7 @@
 
 module Parun.Codec.PlayerView where
 
+import qualified Data.Map.Strict as Map
 import qualified Parun.Codec.LoggedEvent as LoggedEvent
 import qualified Parun.Codec.ObjectView as ObjectView
 import qualified Parun.Codec.Phase as Phase
@@ -27,6 +28,7 @@ codec = Fields.object $ do
   seats <- Fields.required "seats" (Common.list SeatView.codec) PlayerView.seats
   battlefield <- Fields.required "battlefield" (Common.list ObjectView.codec) PlayerView.battlefield
   stack <- Fields.required "stack" (Common.list ObjectView.codec) PlayerView.stack
+  parkedStacks <- Fields.defaulted "parkedStacks" Map.empty (Common.naturalMap Common.natural (Common.list ObjectView.codec)) PlayerView.parkedStacks
   witnessed <- Fields.required "witnessed" (Common.list LoggedEvent.codec) PlayerView.witnessed
   witnessedLastTurn <- Fields.required "witnessedLastTurn" (Common.list LoggedEvent.codec) PlayerView.witnessedLastTurn
   result <- Fields.required "result" (Common.maybe Result.codec) PlayerView.result
@@ -42,6 +44,7 @@ codec = Fields.object $ do
         PlayerView.seats = seats,
         PlayerView.battlefield = battlefield,
         PlayerView.stack = stack,
+        PlayerView.parkedStacks = parkedStacks,
         PlayerView.witnessed = witnessed,
         PlayerView.witnessedLastTurn = witnessedLastTurn,
         PlayerView.result = result,

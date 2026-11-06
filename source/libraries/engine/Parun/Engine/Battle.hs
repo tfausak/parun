@@ -373,7 +373,7 @@ awaitingAbility pending gs oid =
   let onStack sid = case fmap Object.source (Game.lookupObject sid gs) of
         Just (Source.OfTrigger triggered) -> TriggeredAbilitySource.source triggered == oid
         _ -> False
-   in any onStack (GameState.stack gs) || Set.member oid pending
+   in any onStack (Game.allStacks gs) || Set.member oid pending
 
 -- CR 310.7 / CR 704.5v and CR 310.8 / CR 704.5w: the battles put into their owners'
 -- graveyards at defense 0. The state-based action's CLASSIFIER half, taking the

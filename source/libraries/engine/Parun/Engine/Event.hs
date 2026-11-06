@@ -9069,7 +9069,7 @@ findDeclinedMadness old new gs =
               | Set.member slot declared = binding
               | otherwise = Binding.renameObject old new binding
          in Map.adjust (\obj -> obj {Object.bindings = Map.mapWithKey rename (Object.bindings obj)}) oid
-   in gs {GameState.objects = foldr follow (GameState.objects gs) (GameState.stack gs)}
+   in gs {GameState.objects = foldr follow (GameState.objects gs) (Game.allStacks gs)}
 
 -- carryOver's damage-row half, and CR 400.7c's whole of it: a floating damage row
 -- watching the spell watches the permanent instead. DamagePattern.whichSource is
