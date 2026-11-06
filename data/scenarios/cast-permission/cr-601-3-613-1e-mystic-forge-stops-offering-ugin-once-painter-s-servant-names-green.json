@@ -8,16 +8,6 @@
             "card": "Mystic Forge",
             "label": "forge",
             "ready": true
-          },
-          {
-            "card": "Island",
-            "label": "w1",
-            "ready": true
-          },
-          {
-            "card": "Island",
-            "label": "w2",
-            "ready": true
           }
         ],
         "hand": [
@@ -47,7 +37,7 @@
             "card": "Island"
           }
         ],
-        "manaPool": "CCCCCCCC",
+        "manaPool": "CCCCCCCCCC",
         "name": "alice"
       },
       {
@@ -83,9 +73,7 @@
             "Pass",
             "Cast $servant",
             "Cast $ugin",
-            "Activate $forge",
-            "ActivateManaAbility $w1",
-            "ActivateManaAbility $w2"
+            "Activate $forge"
           ],
           "of": "Offered",
           "player": "alice"
@@ -98,10 +86,6 @@
     {
       "do": {
         "Cast": {
-          "mana": [
-            "$w1",
-            "$w2"
-          ],
           "object": "$servant"
         }
       },
