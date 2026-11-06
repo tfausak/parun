@@ -1116,6 +1116,8 @@ library codec
     Parun.Codec.MoveSpec
     Parun.Codec.MoveToZone
     Parun.Codec.MoveToZoneSpec
+    Parun.Codec.MulliganDecision
+    Parun.Codec.MulliganDeclared
     Parun.Codec.NameChooser
     Parun.Codec.NameChooserSpec
     Parun.Codec.NameInsertion
@@ -3034,6 +3036,7 @@ library types
     Parun.Types.MoveSpread
     Parun.Types.MoveToZone
     Parun.Types.MulliganDecision
+    Parun.Types.MulliganDeclared
     Parun.Types.MulliganOffer
     Parun.Types.MutateSide
     Parun.Types.NameChooser

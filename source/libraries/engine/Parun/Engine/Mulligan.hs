@@ -21,6 +21,7 @@ import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.Face as Face
 import Parun.Types.Game (Game)
+import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.HandAction as HandAction
@@ -28,6 +29,7 @@ import qualified Parun.Types.HandActionIndex as HandActionIndex
 import Parun.Types.HandActionPerformer (HandActionPerformer)
 import qualified Parun.Types.HandWindowCap as HandWindowCap
 import qualified Parun.Types.MulliganDecision as MulliganDecision
+import qualified Parun.Types.MulliganDeclared as MulliganDeclared
 import qualified Parun.Types.MulliganOffer as MulliganOffer
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.ObjectRef as ObjectRef
@@ -263,6 +265,10 @@ mulliganRounds perform counts deciding = do
         decider <- State.gets (Decide.deciderFor pid)
         offer <- State.gets (offerFor counts pid)
         decision <- Game.choose (Prompt.DeclareMulligan decider pid offer)
+        -- CR 103.5: a declaration is public, so it is logged as it is made; a
+        -- forced keep above is no declaration. Proved by MulliganSpec's "CR
+        -- 103.5 each declaration is logged, with the cards a mulligan bottoms".
+        State.modify' (Event.recordEvent (GameEvent.MulliganDeclared (declared pid decision offer)))
         pure (pid, decision)
   let mulliganers = fmap fst (filter (\(_, d) -> d == MulliganDecision.Mulligan) decisions)
   case mulliganers of
@@ -277,6 +283,18 @@ mulliganRounds perform counts deciding = do
       -- Kept players have dropped out; only this round's mulliganers decide
       -- again.
       mulliganRounds perform counts2 mulliganers
+
+-- CR 103.5: the logged declaration. A keep bottoms nothing; a mulligan bottoms
+-- what the offer promised, the number takeMulligan bottoms.
+declared :: PlayerId -> MulliganDecision.MulliganDecision -> MulliganOffer.MulliganOffer -> MulliganDeclared.MulliganDeclared
+declared pid decision offer =
+  MulliganDeclared.MkMulliganDeclared
+    { MulliganDeclared.player = pid,
+      MulliganDeclared.decision = decision,
+      MulliganDeclared.bottomCount = case decision of
+        MulliganDecision.Keep -> 0
+        MulliganDecision.Mulligan -> MulliganOffer.bottomCount offer
+    }
 
 -- CR 103.5c / CR 800.6: how many of a player's mulligans are free -- do not
 -- count toward the cards bottomed or the mulligans allowed.

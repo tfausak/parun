@@ -879,6 +879,7 @@ snapshotView viewOf gs shape event = case event of
       castView = viewOfSnapshot False (Just caster) (Game.ownerWithLastKnown spell gs) False Map.empty Zone.Stack Zone.Battlefield lapsed snapshot
   GameEvent.BecameMonarch _ -> Nothing
   GameEvent.TookInitiative _ -> Nothing
+  GameEvent.MulliganDeclared _ -> Nothing
   -- CR 702.29c's cycling records no characteristics snapshot -- the Moved event
   -- the same discard emits is what carries one -- so there is nothing here for
   -- an EventShape to match against.

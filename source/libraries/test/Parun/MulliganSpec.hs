@@ -36,8 +36,10 @@ import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.HandActionIndex as HandActionIndex
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
+import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.MulliganDecision as MulliganDecision
+import qualified Parun.Types.MulliganDeclared as MulliganDeclared
 import qualified Parun.Types.MulliganOffer as MulliganOffer
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
@@ -994,6 +996,30 @@ spec s registry =
         "two seats: every mulligan costs, from the first"
         (offersIn [S.alice, S.bob] (libraryGame mountain 20))
         [(0, 1), (1, 2), (2, 3)]
+    Spec.it s "CR 103.5 each declaration is logged, with the cards a mulligan bottoms" $ do
+      -- Three seats, so alice's first mulligan is free (CR 103.5c) and her
+      -- second bottoms one; bob and carol keep at once.
+      mountain <- S.printingOf s registry "Mountain"
+      let answer :: Prompt.Prompt r -> r
+          answer p = case p of
+            Prompt.DeclareMulligan _ pid offer
+              | pid == S.alice && MulliganOffer.taken offer < 2 -> MulliganDecision.Mulligan
+              | otherwise -> MulliganDecision.Keep
+            _ -> S.identityAnswer p
+          after = run3 answer (libraryGame3 mountain 20)
+          declarations = [(d, Visibility.witnessed S.bob logged) | logged <- foldr (:) [] (GameState.events after), GameEvent.MulliganDeclared d <- [LoggedEvent.event logged]]
+          declaredBy pid decision n = (MulliganDeclared.MkMulliganDeclared pid decision n, Visibility.Type.Visible)
+      Spec.assertEqWith
+        s
+        "every declaration, in order, each public to bob"
+        declarations
+        [ declaredBy S.alice MulliganDecision.Mulligan 0,
+          declaredBy S.bob MulliganDecision.Keep 0,
+          declaredBy S.carol MulliganDecision.Keep 0,
+          declaredBy S.alice MulliganDecision.Mulligan 1,
+          declaredBy S.alice MulliganDecision.Keep 0
+        ]
+      Spec.assertEqWith s "and the second mulligan bottomed what it said" (S.handSize S.alice after) 6
     Spec.it s "CR 103.6: the window opens only once the mulligan process is complete" $ do
       leyline <- S.printingOf s registry "Leyline of the Void"
       mountain <- S.printingOf s registry "Mountain"

@@ -45,6 +45,7 @@ import qualified Parun.Codec.ManifestedDread as ManifestedDread
 import qualified Parun.Codec.Mentored as Mentored
 import qualified Parun.Codec.Milled as Milled
 import qualified Parun.Codec.Moved as Moved
+import qualified Parun.Codec.MulliganDeclared as MulliganDeclared
 import qualified Parun.Codec.ObjectId as ObjectId
 import qualified Parun.Codec.PermanentActed as PermanentActed
 import qualified Parun.Codec.PermanentWasSacrificed as PermanentWasSacrificed
@@ -129,6 +130,7 @@ codec =
       Arm.payload "ArrivedUnseen" ObjectId.codec GameEvent.ArrivedUnseen (\x -> case x of GameEvent.ArrivedUnseen y -> Just y; _ -> Nothing),
       Arm.payload "LostTheGame" PlayerId.codec GameEvent.LostTheGame (\x -> case x of GameEvent.LostTheGame y -> Just y; _ -> Nothing),
       Arm.payload "PlayerActed" (PlayerActed.codec PlayerId.codec) GameEvent.PlayerActed (\x -> case x of GameEvent.PlayerActed y -> Just y; _ -> Nothing),
+      Arm.payload "MulliganDeclared" MulliganDeclared.codec GameEvent.MulliganDeclared (\x -> case x of GameEvent.MulliganDeclared y -> Just y; _ -> Nothing),
       Arm.payload "LandPlayed" LandPlayed.codec GameEvent.LandPlayed (\x -> case x of GameEvent.LandPlayed y -> Just y; _ -> Nothing),
       Arm.payload "ManifestedDread" ManifestedDread.codec GameEvent.ManifestedDread (\x -> case x of GameEvent.ManifestedDread y -> Just y; _ -> Nothing),
       Arm.payload "DieResultSettled" (DieResult.codec PlayerId.codec) GameEvent.DieResultSettled (\x -> case x of GameEvent.DieResultSettled y -> Just y; _ -> Nothing),
@@ -206,6 +208,7 @@ tagOf x = case x of
   GameEvent.ArrivedUnseen {} -> "ArrivedUnseen"
   GameEvent.LostTheGame {} -> "LostTheGame"
   GameEvent.LandPlayed {} -> "LandPlayed"
+  GameEvent.MulliganDeclared {} -> "MulliganDeclared"
   GameEvent.PlayerActed {} -> "PlayerActed"
   GameEvent.ManifestedDread {} -> "ManifestedDread"
   GameEvent.DieResultSettled {} -> "DieResultSettled"

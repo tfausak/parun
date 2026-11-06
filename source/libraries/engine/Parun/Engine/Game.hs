@@ -3186,6 +3186,7 @@ castOf event = case event of
   GameEvent.StepBegan {} -> Nothing
   GameEvent.BecameMonarch _ -> Nothing
   GameEvent.TookInitiative _ -> Nothing
+  GameEvent.MulliganDeclared _ -> Nothing
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
@@ -3314,6 +3315,7 @@ abilityResolved event = case event of
   GameEvent.StepBegan {} -> Nothing
   GameEvent.BecameMonarch _ -> Nothing
   GameEvent.TookInitiative _ -> Nothing
+  GameEvent.MulliganDeclared _ -> Nothing
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
@@ -3404,6 +3406,7 @@ discardOf event = case event of
   GameEvent.StepBegan {} -> Nothing
   GameEvent.BecameMonarch _ -> Nothing
   GameEvent.TookInitiative _ -> Nothing
+  GameEvent.MulliganDeclared _ -> Nothing
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
   GameEvent.Voted {} -> Nothing
@@ -3568,6 +3571,7 @@ movedChange event = case event of
   GameEvent.StepBegan {} -> Nothing
   GameEvent.BecameMonarch _ -> Nothing
   GameEvent.TookInitiative _ -> Nothing
+  GameEvent.MulliganDeclared _ -> Nothing
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
   GameEvent.Voted {} -> Nothing
@@ -3677,6 +3681,7 @@ damageDealt event = case event of
   GameEvent.StepBegan {} -> Nothing
   GameEvent.BecameMonarch _ -> Nothing
   GameEvent.TookInitiative _ -> Nothing
+  GameEvent.MulliganDeclared _ -> Nothing
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
   GameEvent.Voted {} -> Nothing
@@ -3970,6 +3975,7 @@ lifeChangeOf direction event = case event of
   GameEvent.StepBegan {} -> Nothing
   GameEvent.BecameMonarch _ -> Nothing
   GameEvent.TookInitiative _ -> Nothing
+  GameEvent.MulliganDeclared _ -> Nothing
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
   GameEvent.Voted {} -> Nothing
