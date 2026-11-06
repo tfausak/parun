@@ -762,14 +762,14 @@ search settle performManaAbility runSubgame resolving source controller legal (S
               -- a searcher looking through their OWN library, which CR
               -- 101.2's prohibition above can take away.
               ownLibrary = searcher == owner && Set.member Zone.Library searchedZones
-          -- CR 723.2: for the rest of this searcher's pass, the player whose
-          -- row says so makes their decisions (CR 723.5) -- the find, and CR
+          -- CR 724.2: for the rest of this searcher's pass, the player whose
+          -- row says so makes their decisions (CR 724.5) -- the find, and CR
           -- 601.3's offer. A control row rather than a local decider, so every
           -- prompt raised inside the pass, the offered cast's included, reads
           -- it through Decide.deciderFor. Derived as the pass begins: nothing
           -- inside one search instruction can end it, since state-based
           -- actions wait for priority (CR 704.3) and the controlled player
-          -- pays only with their own resources (CR 723.5a).
+          -- pays only with their own resources (CR 724.5a).
           searchController <-
             if ownLibrary
               then State.gets (PlayerEffect.searchingController searcher)
@@ -1065,15 +1065,15 @@ noteManaSpent resolving source = do
   spent <- State.gets (foldMap (Mana.Type.unwrap . Object.manaSpent) . Game.lookupObject resolving)
   State.modify' (\gs -> gs {GameState.notedMana = Map.insert source (Seq.fromList (fmap ManaUnit.manaType spent)) (GameState.notedMana gs)})
 
--- CR 727.1/727.1a: restart the game, with this ability's controller as the new
+-- CR 728.1/728.1a: restart the game, with this ability's controller as the new
 -- starting player; the rebuild lives in Setup, reached through a generic opcode
--- rather than Karn's identity. CR 727.4: this resolves several frames deep, and
+-- rather than Karn's identity. CR 728.4: this resolves several frames deep, and
 -- the rebuild replaces the game those frames are running, so
--- GameState.restartSignal is how they unwind. CR 727.5: the exempted cards are
+-- GameState.restartSignal is how they unwind. CR 728.5: the exempted cards are
 -- swept BEFORE the rebuild, the only state in which the exemption can be read;
 -- putting them back is a separate effect of the same ability.
 --
--- CR 727.6 needs no code of its own: a subgame runs in its own frame
+-- CR 728.6 needs no code of its own: a subgame runs in its own frame
 -- (Parun.Engine.Engine.playSubgame), which a restart inside it cannot reach
 -- out of, and the game loop exits the instant GameState.result is Just, so a
 -- main-game effect can only ever read the restarted subgame's winner.
@@ -1085,9 +1085,9 @@ restartGame performHandAction runSubgame resolving source controller legal exemp
         Just ref -> Set.fromList (objectRefObjects legal resolving controller source gs ref)
   Setup.restartGame (performHandAction runSubgame) exempted controller
 
--- CR 729.1/729.5: run the nested game to completion, then bind its outcome.
+-- CR 730.1/730.5: run the nested game to completion, then bind its outcome.
 --
--- CR 729.1b: what the main game may read is the subgame's WINNER, so the slot
+-- CR 730.1b: what the main game may read is the subgame's WINNER, so the slot
 -- holds the winners (a player, or CR 104.2c's whole team) and a Drawn
 -- subgame binds nothing -- Shahrazad's "each player who doesn't win" is
 -- PlayerRef.EachPlayerExcept over that slot, and gets the drawn case for
@@ -1102,10 +1102,10 @@ restartGame performHandAction runSubgame resolving source controller legal exemp
 -- came from (CR 113.7) -- so binding onto `source` left an ability's follow-on
 -- reading an unbound slot; see #137.
 --
--- That object may not survive the subgame it started: CR 729.4 offers the main
+-- That object may not survive the subgame it started: CR 730.4 offers the main
 -- game's stack to a wish cast inside, so the subgame can take this very spell's
 -- card. bindPlayerSlot files the winner off-object when that has happened and
--- liveBindings reads it back, which is CR 729.5's "finishes resolving, even if
+-- liveBindings reads it back, which is CR 730.5's "finishes resolving, even if
 -- it was created by a spell card that's no longer on the stack".
 playSubgame :: Game Result -> ObjectId -> SlotName -> Game ()
 playSubgame runSubgame resolving slot = do
@@ -1362,7 +1362,7 @@ rollDieArm throwDice runSubgame resolving source controller legal rollDie = do
         gs <- State.get
         -- CR 706.4: WHICH result the instruction uses, where it threw more
         -- than one ("roll two d6 and choose one result"). A choice and not a
-        -- roll, so it goes through Game.choose and CR 723.5's controller may
+        -- roll, so it goes through Game.choose and CR 724.5's controller may
         -- make it. Elided where every result is the same number: both
         -- bindings below come out the same whichever die is named, so no
         -- board can tell the answers apart. FILTERED, NOT TRUSTED, the
@@ -1513,7 +1513,7 @@ flipCoinArm throwForCoin runSubgame resolving source controller legal flipCoin =
           -- CR 705.2's first sentence: the effect cares only about the face, so
           -- no Prompt.CallCoin is asked -- "no player wins or loses a coin flip
           -- for this kind of effect", so there is no call to make and nothing
-          -- for a CR 723 controller to usurp. The flip is recorded with no
+          -- for a CR 724 controller to usurp. The flip is recorded with no
           -- outcome, which is what keeps rule 705.2's first sentence honest
           -- against TriggerCondition's two coin-flip conditions, neither of
           -- which matches an outcome of Nothing; see
@@ -1549,15 +1549,15 @@ controlPlayerNextTurn controller legal slot =
   State.modify' $ \gs ->
     case legalOne slot legal of
       Just (Recipient.ToPlayer target) ->
-        -- CR 723.1: schedule control of `target` by this ability's controller
-        -- (CR 723.5). Map.insert overwrites a prior pending control (CR 723.1a),
+        -- CR 724.1: schedule control of `target` by this ability's controller
+        -- (CR 724.5). Map.insert overwrites a prior pending control (CR 724.1a),
         -- and the row is stamped NOW, as the effect is created.
         let (stamp, stamped) = Game.freshTimestamp gs
             row =
               PlayerControl.MkPlayerControl
                 { PlayerControl.decider = Decider.MkDecider controller,
                   PlayerControl.duration = ControlDuration.UntilTurnEnds,
-                  -- CR 723.7: Mindslaver prints no restriction.
+                  -- CR 724.7: Mindslaver prints no restriction.
                   PlayerControl.manaFromLandsOnly = False,
                   PlayerControl.timestamp = stamp
                 }
@@ -1566,13 +1566,13 @@ controlPlayerNextTurn controller legal slot =
       -- Not a player recipient or an illegal slot (CR 608.2b): no-op.
       _ -> gs
 
--- CR 723.2: control that takes hold NOW and lapses when this object finishes
+-- CR 724.2: control that takes hold NOW and lapses when this object finishes
 -- resolving, which Parun.Engine.Stack.resolveTopWith is what performs -- the
 -- one place that knows a resolution has ended.
 --
 -- Written into the live GameState.control rather than scheduled, which is the
--- whole difference from the arm above: rule 723.1b's control waits for a turn,
--- and this one is spent inside the resolution that installed it. CR 723.1a is
+-- whole difference from the arm above: rule 724.1b's control waits for a turn,
+-- and this one is spent inside the resolution that installed it. CR 724.1a is
 -- pushControl's, not Map.insert's -- a live control on the same player is
 -- layered under rather than destroyed.
 controlPlayerThisResolution :: PlayerId -> Map.Map SlotName (Set Recipient) -> ControlPlayer.ControlPlayer -> Game ()
@@ -1636,9 +1636,9 @@ destroy settle resolving source controller legal chosen (Destroy.MkDestroy ref r
   -- which is exactly what "IF a creature card is put into a graveyard this way"
   -- asks for.
   --
-  -- EVERY arrival of each destruction, not just the first: CR 712.21c gives an
+  -- EVERY arrival of each destruction, not just the first: CR 713.8c gives an
   -- effect that finds what a melded permanent becomes both cards, and CR
-  -- 712.21e counts a melded permanent as two CARDS put into a graveyard where
+  -- 713.8e counts a melded permanent as two CARDS put into a graveyard where
   -- the amount slot above counts it as one OBJECT destroyed.
   Monad.forM_ mBuried $ \slot -> do
     after <- State.get
@@ -1729,7 +1729,7 @@ turnFaceDown resolving source controller legal (TurnFaceDown.MkTurnFaceDown ref 
   -- different question: which of the simultaneous CR 613.7f stamps is earlier.
   --
   -- A permanent already face down is turned no further, and neither is one
-  -- CR 712.16 / 730.2j forbids (Game.isDoubleFacedPermanent), both read off
+  -- CR 712.13 / 731.2j forbids (Game.isDoubleFacedPermanent), both read off
   -- the gather's board rather than the fold's; the two agree, turning one
   -- permanent face down leaving another's facing and cards alone.
   --

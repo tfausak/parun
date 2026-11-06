@@ -184,7 +184,7 @@ spec s registry = Spec.describe s "Protocol" $ do
         Spec.assertBool s (Maybe.isJust second) "second"
       _ -> Spec.assertFailure s "fewer than two discard lines"
 
-  Spec.it s "CR 733.1 a seat's view says why its cast was reversed, until it chooses its next action" $ do
+  Spec.it s "CR 734.1 a seat's view says why its cast was reversed, until it chooses its next action" $ do
     gs <- started s registry
     bears <- S.printingOf s registry "Grizzly Bears"
     forest <- S.printingOf s registry "Forest"

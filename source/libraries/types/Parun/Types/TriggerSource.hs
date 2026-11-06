@@ -6,7 +6,7 @@ import qualified Parun.Types.ObjectId as ObjectId
 --
 -- CR 113.7 makes the source the object whose ability triggered -- `OfObject`,
 -- every trigger a card bears. The exceptions are the INHERENT abilities the
--- rulebook states without a card: CR 725.2's monarch pair and CR 702.179d's
+-- rulebook states without a card: CR 726.2's monarch pair and CR 702.179d's
 -- speed increase have no source, so there is no id to name.
 --
 -- The split exists so that ONE list can carry both kinds through CR 603.3b's

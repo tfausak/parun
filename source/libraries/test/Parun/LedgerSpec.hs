@@ -184,7 +184,7 @@ spec s registry = Spec.describe s "Ledger" $ do
         untapped = setTapped land TapState.Untapped handedOff
     Spec.assertEqWith s "the tap last turn is read" (Ledger.discrepancies before handedOff) []
     Spec.assertEqWith s "an unlogged untap this turn is named" (Ledger.discrepancies before untapped) [Discrepancy.MkTapState land TapState.Tapped TapState.Untapped]
-  Spec.it s "CR 727.1: states from different games are not compared" $ do
+  Spec.it s "CR 728.1: states from different games are not compared" $ do
     plains <- S.printingOf s registry "Plains"
     let (land, before) = S.addPermanent plains S.alice (S.landsInPlay plains 0)
         after = (setTapped land TapState.Tapped before) {GameState.gameNumber = GameState.gameNumber before + 1}

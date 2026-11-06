@@ -254,7 +254,7 @@ thisPhase phase remaining = case lastStepOf phase >>= \step -> Seq.elemIndexL st
   Nothing -> (Seq.empty, remaining)
   Just i -> Seq.splitAt (i + 1) remaining
 
--- CR 500.11 / CR 724.2d: everything left of the turn AFTER this phase. The other
+-- CR 500.11 / CR 725.2d: everything left of the turn AFTER this phase. The other
 -- half of `thisPhase`'s split, and the shape both a SKIPPED phase
 -- (Engine.skipWholePhase) and one an effect ENDED (Resolve's
 -- Effect.EndCombatPhase arm) want. Positional for the same CR 500.8 reason:
@@ -319,9 +319,9 @@ inWindow selector phase = selector == PhaseSelector.Step phase || wholePhaseOf p
 -- the start of the end of combat step.
 --
 -- Answers from the step alone, which is why every road out of a phase has to
--- ask: Parun.Engine.Resolve's CR 724.1 and CR 724.2 arms sweep the phase they end
+-- ask: Parun.Engine.Resolve's CR 725.1 and CR 725.2 arms sweep the phase they end
 -- themselves, having no last step to ask; Engine.skipStep asks this of a step a
--- CR 614.1b skip removed, since CR 724.2e ends the phase even though its last
+-- CR 614.1b skip removed, since CR 725.2e ends the phase even though its last
 -- step did not happen; and a phase skipped whole never ends at all (CR 500.11,
 -- at Engine.skipWholePhase), so it never asks.
 phaseEndingAt :: Phase -> Maybe PhaseSelector
@@ -362,20 +362,20 @@ spliceSecondDamage remaining = Phase.Combat CombatStep.CombatDamage Seq.<| remai
 spliceExtraCleanup :: Seq Phase -> Seq Phase
 spliceExtraCleanup remaining = Phase.Ending EndingStep.Cleanup Seq.<| remaining
 
--- CR 724.1d: what is left of the turn once an effect ends it -- the cleanup step
+-- CR 725.1d: what is left of the turn once an effect ends it -- the cleanup step
 -- and everything scheduled after it, with every phase and step between here and
 -- that cleanup step skipped.
 --
 -- Positional, and NOT a truncation to a lone cleanup step: CR 500.8 lets an
 -- effect add a phase after the ending phase, and those entries sit BEHIND the
--- cleanup step in `remaining`. Rule 724.1d skips what lies between this step and
+-- cleanup step in `remaining`. Rule 725.1d skips what lies between this step and
 -- the cleanup step and says nothing about what is scheduled after it.
 --
 -- A schedule holding no cleanup step gets one rather than emptying the turn: the
 -- rule says the game skips straight TO the cleanup step, so there is one to skip
 -- to even where Engine.skipWholePhase dropped the ending phase.
 --
--- The caller handles CR 724.1d's own exception -- ending the turn DURING the
+-- The caller handles CR 725.1d's own exception -- ending the turn DURING the
 -- cleanup step, where spliceExtraCleanup's new step is what the rule asks for.
 jumpToCleanup :: Seq Phase -> Seq Phase
 jumpToCleanup remaining = case Seq.elemIndexL (Phase.Ending EndingStep.Cleanup) remaining of
@@ -448,7 +448,7 @@ attackedThisStep pid gs =
 -- Parun.Engine.Combat.declareBlockers is the only writer and Combat.clearCombat
 -- the only clearer, and every road out of a combat phase runs that clearer --
 -- Engine.endPhase for a phase the game leaves with or without its last step, and
--- Parun.Engine.Resolve's CR 724.2d arm for one an effect ends part-way through.
+-- Parun.Engine.Resolve's CR 725.2d arm for one an effect ends part-way through.
 afterBlockersDeclared :: GameState -> Bool
 afterBlockersDeclared = Combat.blockersDeclared . GameState.combat
 

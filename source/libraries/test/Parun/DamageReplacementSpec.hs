@@ -740,7 +740,7 @@ proteanHydraSpec s registry = Spec.describe s "Protean Hydra (CR 107.3m, CR 615.
 -- 3/3): "If damage would be dealt to Jared Carthalion while you're the monarch,
 -- prevent that damage and put that many +1/+1 counters on it."
 --
--- THREE SEATS, because CR 725.3 makes the monarch a designation exactly one
+-- THREE SEATS, because CR 726.3 makes the monarch a designation exactly one
 -- player holds -- on a two-seat board "the monarch" and "your opponent" are the
 -- same player, and a gate reading either would pass. Jared is BOB's, the Firebolt
 -- is ALICE's, and the seat that is monarch on the negative board is CAROL's: a
@@ -754,7 +754,7 @@ jaredCarthalionSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 jaredCarthalionSpec s registry = Spec.describe s "Jared Carthalion, True Heir (CR 604.2)" $ do
   -- alice holds `n` Firebolts over one Mountain apiece, bob's Jared is on the
   -- battlefield, and carol is the third seat. Jared is placed rather than cast,
-  -- so his own CR 725.1 enters trigger never fires and each case names the
+  -- so his own CR 726.1 enters trigger never fires and each case names the
   -- monarch itself.
   let board n = do
         mountain <- S.printingOf s registry "Mountain"

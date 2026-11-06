@@ -1748,7 +1748,7 @@ orderingSpec s registry =
               Spec.assertEqWith s "the active player's (alice's) is at the bottom -- placed first" (controllerOf bottom) (Just S.alice)
             other -> Spec.assertFailure s ("expected exactly two triggers on the stack, got " <> show (length other))
 
--- CR 725.2: the monarch's two inherent abilities "have no source and are
+-- CR 726.2: the monarch's two inherent abilities "have no source and are
 -- controlled by the player who was the monarch at the time the abilities
 -- triggered" -- triggered abilities in every other respect, so CR 603.3b's
 -- own-order choice covers them exactly as it covers an object's trigger. The
@@ -1775,7 +1775,7 @@ monarchOrderingSpec s registry =
             entered = ZoneChange.MkZoneChange jailer jailer Zone.Stack Zone.Battlefield
          in beginEndStep (resolveAll (S.withEvents [GameEvent.Moved (Moved.moved entered (Projection.project jailer gs3))] gs3))
       -- Records every ordering payload's SOURCES, in order, answering
-      -- canonically. The sources are what this group is about (CR 725.2's
+      -- canonically. The sources are what this group is about (CR 726.2's
       -- absent one beside a borne one); Parun.KeywordTriggerSpec's battleCrySpec
       -- asserts on the ability half of the same entries.
       recordPayloads :: Prompt.Prompt r -> State.State [[TriggerSource.TriggerSource]] r
@@ -1784,7 +1784,7 @@ monarchOrderingSpec s registry =
           State.modify' (<> [fmap TriggerEntry.source entries])
           pure (zipWith const [0 ..] entries)
         _ -> pure (S.identityAnswer p)
-      -- Puts the SOURCELESS entry -- CR 725.2's inherent draw, named by what it
+      -- Puts the SOURCELESS entry -- CR 726.2's inherent draw, named by what it
       -- is rather than by where it sits -- at the front of the permutation, so it
       -- goes on the stack FIRST and, the stack being LIFO, resolves LAST. That is
       -- the direction the old two-pass placement could not express: it appended
@@ -1805,7 +1805,7 @@ monarchOrderingSpec s registry =
         _ -> Nothing
    in Spec.describe s "MonarchTriggerOrdering" $ do
         -- The collision itself: both triggers reach ONE CR 603.3b choice.
-        Spec.it s "CR 603.3b/725.2 the inherent end-step draw is offered in the same ordering choice as the Ghoul's trigger" $ do
+        Spec.it s "CR 603.3b/726.2 the inherent end-step draw is offered in the same ordering choice as the Ghoul's trigger" $ do
           palaceJailer <- S.printingOf s registry "Palace Jailer"
           khabalGhoul <- S.printingOf s registry "Khabál Ghoul"
           piker <- S.printingOf s registry "Goblin Piker"
@@ -1817,7 +1817,7 @@ monarchOrderingSpec s registry =
         -- The order is HONOURED, in the direction the old two-pass placement
         -- could not reach: the inherent draw goes on the stack first, so it sits
         -- at the BOTTOM and resolves last.
-        Spec.it s "CR 603.3b/725.2 putting the inherent draw on the stack first leaves it at the bottom, resolving last" $ do
+        Spec.it s "CR 603.3b/726.2 putting the inherent draw on the stack first leaves it at the bottom, resolving last" $ do
           palaceJailer <- S.printingOf s registry "Palace Jailer"
           khabalGhoul <- S.printingOf s registry "Khabál Ghoul"
           piker <- S.printingOf s registry "Goblin Piker"
@@ -1832,7 +1832,7 @@ monarchOrderingSpec s registry =
         -- Same board, opposite answer: the inherent draw goes on the stack
         -- last, so it is on top and resolves first. This is what the old engine
         -- forced unconditionally; here it is a choice.
-        Spec.it s "CR 603.3b/725.2 putting the inherent draw on the stack last leaves it on top, resolving first" $ do
+        Spec.it s "CR 603.3b/726.2 putting the inherent draw on the stack last leaves it on top, resolving first" $ do
           palaceJailer <- S.printingOf s registry "Palace Jailer"
           khabalGhoul <- S.printingOf s registry "Khabál Ghoul"
           piker <- S.printingOf s registry "Goblin Piker"
@@ -2247,8 +2247,8 @@ runToTurnStep turn phase answer gs0 =
 -- ability of a Saga you control triggers, create a 4/4 white Angel creature token
 -- with flying and vigilance", paired with History of Benalia.
 --
--- Two lore counters on the Saga and alice's precombat main phase: CR 714.3c's
--- turn-based action puts the third on, chapter III triggers (CR 714.2b), and the
+-- Two lore counters on the Saga and alice's precombat main phase: CR 715.3c's
+-- turn-based action puts the third on, chapter III triggers (CR 715.2b), and the
 -- Boon's second ability triggers off THAT triggering. Chapter III is first-class
 -- and the Boon second-class, so the Boon goes on the stack above it and resolves
 -- first, whatever order alice would have preferred.
@@ -2346,7 +2346,7 @@ secondPlacementPassSpec s registry =
 -- the classes in one ability. Historian's Boon, the nearest, writes
 -- them as two.
 --
--- One batch holds both: chapter III (CR 714.2b) and a Hill Giant token entering.
+-- One batch holds both: chapter III (CR 715.2b) and a Hill Giant token entering.
 -- The Chronicle triggers twice, once per clause. Its entering trigger is
 -- first-class and shares alice's first-pass ordering with chapter III; its
 -- chapter trigger is second-class and goes on top alone. `chronicleFirst`
@@ -2464,7 +2464,7 @@ chronicleWardenSpec s registry =
 -- turn", standing on three lore counters; Volt Charge, {2}{R} Instant, "Volt
 -- Charge deals 3 damage to any target. Proliferate." One resolution marks lethal
 -- damage on the 3/3 and then proliferates the fourth lore counter, which fires
--- chapter IV -- its final chapter (CR 714.2d). Historian's Boon watches that.
+-- chapter IV -- its final chapter (CR 715.2d). Historian's Boon watches that.
 --
 -- THE PAIR differs in exactly one thing, whom Volt Charge is aimed at. Aimed at
 -- the Saga it is gone by the scan and the Boon can only answer from last known
@@ -2537,7 +2537,7 @@ sagaDiesBeforeScanSpec s registry =
               Spec.assertEqWith s "while the original never took one" (S.counterOf CounterKind.Lore originalId burned) 0
 
 -- The chapter numbers of `oid`'s own chapter abilities currently on the stack (CR
--- 714.2, CR 704.5s).
+-- 715.2, CR 704.5s).
 chaptersOnStackFrom :: ObjectId.ObjectId -> GameState.GameState -> [Natural]
 chaptersOnStackFrom oid gs =
   let from sid = case fmap Object.source (Game.lookupObject sid gs) of
@@ -2585,7 +2585,7 @@ maulerSpec s registry =
       -- nothing, and this direction makes carol's limb load-bearing -- she ends
       -- on the not-paid branch only because CR 118.3 never offered her the cost,
       -- since an offer she received would have been accepted here. The Decider
-      -- is checked beside the player because CR 723.1 can part them; nothing
+      -- is checked beside the player because CR 724.1 can part them; nothing
       -- here controls anybody, so they must agree.
       everyoneButAlicePays :: Prompt.Prompt r -> r
       everyoneButAlicePays p = case p of

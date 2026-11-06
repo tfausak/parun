@@ -945,7 +945,7 @@ boundedFuseXSpec s registry = Spec.describe s "BoundedFuseX" $ do
 -- "When Victor Mancha enters, exile target card from your graveyard. You may
 -- play it for as long as you control Victor Mancha." An Effect-granted
 -- permission to play a card from exile (CR 601.3) with a STATED duration -- CR
--- 715.3d's states none, so Parun.AdventureSpec cannot reach the sweep this group
+-- 716.3d's states none, so Parun.AdventureSpec cannot reach the sweep this group
 -- exercises. Hostage Taker below is the other stated duration.
 --
 -- Its target slot names CardsInGraveyard with no filter, so the permitted card
@@ -1120,7 +1120,7 @@ victorManchaSpec s registry = Spec.describe s "VictorMancha" $ do
           (Just Nothing)
         Spec.assertBool s (not (offeredCast exiledId benalishHeroName after)) "and it is not castable from exile"
       other -> Spec.assertFailure s ("expected exactly one exiled Hero, got " <> show (length other))
-  -- CR 715.3d's verb is PLAY, and CR 305.1 makes playing a land a special action
+  -- CR 716.3d's verb is PLAY, and CR 305.1 makes playing a land a special action
   -- rather than a cast (CR 601.1 is the rule that "play" once meant casting).
   -- Victor's target slot is CardsInGraveyard with no filter, so a land card is a
   -- legal target and this is the board that follows.
@@ -1173,18 +1173,18 @@ victorManchaSpec s registry = Spec.describe s "VictorMancha" $ do
         Spec.assertBool s (elem exiledId (Game.zoneMembers Zone.Exile S.alice swept)) "the Swamp is still in exile"
         Spec.assertEqWith s "and only her hand is offered now" (offeredPlays S.alice swept) [A.Play herMountain Nothing]
       other -> Spec.assertFailure s ("expected exactly one exiled card, got " <> show (length other))
-  -- CR 715.3d's closing clause: "it can't be cast as an Adventure THIS WAY,
+  -- CR 716.3d's closing clause: "it can't be cast as an Adventure THIS WAY,
   -- although other effects that allow a player to cast it may allow a player to
   -- cast it as an Adventure". Victor is one of those other effects, so the
-  -- adventurer card he exiles offers BOTH halves -- CR 715.3 having the player
+  -- adventurer card he exiles offers BOTH halves -- CR 716.3 having the player
   -- choose between them wherever the card is playable.
   --
-  -- The paired negative is Parun.AdventureSpec's "CR 715.3d from exile the
+  -- The paired negative is Parun.AdventureSpec's "CR 716.3d from exile the
   -- creature is castable and the Adventure is not": the SAME card, in exile, in
   -- a sorcery window, asked of by the same player -- differing only in which
   -- rule wrote the permission. Neither board alone tells "the origin is read"
   -- from "the exclusion was dropped".
-  Spec.it s "CR 715.3d another effect's permission allows the Adventure half" $ do
+  Spec.it s "CR 716.3d another effect's permission allows the Adventure half" $ do
     mountain <- S.printingOf s registry "Mountain"
     victor <- S.printingOf s registry "Victor Mancha, Runaway"
     shieldbreaker <- S.printingOf s registry "Embereth Shieldbreaker"
@@ -1203,8 +1203,8 @@ victorManchaSpec s registry = Spec.describe s "VictorMancha" $ do
     case Game.zoneMembers Zone.Exile S.alice after of
       [exiledId] -> do
         Spec.assertEqWith s "two Mountains untapped, so neither half is priced out" (S.tappedCount S.alice after) 5
-        Spec.assertBool s (offeredCast exiledId shieldbreakerName after) "the creature half is offered, as it would be under CR 715.3d's own permission too"
-        Spec.assertBool s (offeredCast exiledId battleDisplayName after) "and so is the Adventure half, which CR 715.3d's own permission would refuse"
+        Spec.assertBool s (offeredCast exiledId shieldbreakerName after) "the creature half is offered, as it would be under CR 716.3d's own permission too"
+        Spec.assertBool s (offeredCast exiledId battleDisplayName after) "and so is the Adventure half, which CR 716.3d's own permission would refuse"
       other -> Spec.assertFailure s ("expected exactly one exiled card, got " <> show (length other))
 
 -- Dire Fleet Daredevil {1}{R} Creature -- Human Pirate 2/1: "First strike. When
@@ -2245,7 +2245,7 @@ offeredTo pid gs = Action.legalActions pid (gs {GameState.priority = Just pid})
 -- The first sentence is the effect DSL's road out of the stack into exile: a
 -- Pool.Spells target slot feeding Effect.MoveToZone with a zone of Exile. The two nearest things
 -- data/cards had before it reach neither end of that -- reprieve.json is the
--- same slot into Hand, and CR 724.1b's Time Stop sweep reaches exile with no
+-- same slot into Hand, and CR 725.1b's Time Stop sweep reaches exile with no
 -- slot and no target. The group is here rather than beside Kellan Joins Up's
 -- plot cases because what it proves is a SPELL leaving the stack; the plot stamp
 -- rides along on the same MoveToZone.

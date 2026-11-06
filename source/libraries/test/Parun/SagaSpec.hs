@@ -1,17 +1,17 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- Covers Parun.Engine.Saga, rule 714: the chapter ability CR 714.2b writes out,
--- the lore counter CR 714.3a makes a Saga enter with, the turn-based action CR
--- 505.4 / 703.4f / 714.3c runs as a precombat main phase begins, and the
+-- Covers Parun.Engine.Saga, rule 715: the chapter ability CR 715.2b writes out,
+-- the lore counter CR 715.3a makes a Saga enter with, the turn-based action CR
+-- 505.4 / 703.4f / 715.3c runs as a precombat main phase begins, and the
 -- state-based action CR 704.5s performs once the story is told.
 --
--- Also the pieces rule 714 needed underneath it, exercised here because this is
+-- Also the pieces rule 715 needed underneath it, exercised here because this is
 -- where a card reaches them: CounterKind.Lore, GameEvent.CountersPut (the CR
 -- 122.6 record) and TriggerCondition.CountersChange's threshold.
 --
 -- History of Benalia carries every group but the last: chapters I and II create a
--- 2/2 white Knight token with vigilance -- CR 714.2c's "I, II --" shorthand,
+-- 2/2 white Knight token with vigilance -- CR 715.2c's "I, II --" shorthand,
 -- written as the two abilities that rule says it means -- and chapter III gives
 -- Knights its controller controls +2/+1 until end of turn. Love Song of Night and
 -- Day carries the Read ahead group, and rule 702.155 is the whole reason it is
@@ -22,7 +22,7 @@
 -- t:saga o:"would be put into a graveyard", 2026-09-14, that one hit).
 --
 -- Old Fat Spider Can't See Me's four chapters run under Parun.ExpirySpec's
--- OldFatSpiderCantSeeMe group: rule 714 is read here, and that group reads what
+-- OldFatSpiderCantSeeMe group: rule 715 is read here, and that group reads what
 -- its chapters' CR 611.2b durations do.
 module Parun.SagaSpec where
 
@@ -62,12 +62,12 @@ spec s registry = Spec.describe s "Saga" $ do
 knightToken :: CardName.CardName
 knightToken = CardName.MkCardName (Text.pack "Knight Token")
 
--- One lore counter goes on as the Saga enters (CR 714.3a), which fires chapter I
--- (CR 714.2b). Both halves are visible from a cast, which is what makes this the
+-- One lore counter goes on as the Saga enters (CR 715.3a), which fires chapter I
+-- (CR 715.2b). Both halves are visible from a cast, which is what makes this the
 -- gameplay-level test rather than a projection one.
 entrySpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 entrySpec s registry = Spec.describe s "Entry" $ do
-  -- CR 714.3a's "each Saga" reaching a permanent that is one only because layer 4
+  -- CR 715.3a's "each Saga" reaching a permanent that is one only because layer 4
   -- says so (CR 613.1d / 205.1b). Synthetic Chronicle Weaving grants the subtype
   -- to the other enchantments its controller has, and High Ground -- printed as a
   -- plain enchantment, with no replacement effect and no minting keyword on its
@@ -77,7 +77,7 @@ entrySpec s registry = Spec.describe s "Entry" $ do
   -- replacement effect, so Projection.replacementsAffecting's short-circuit is
   -- what decides, and reading the granted subtype off the printed face answers
   -- zero here.
-  Spec.it s "CR 714.3a a permanent granted the Saga subtype enters with a lore counter too" $ do
+  Spec.it s "CR 715.3a a permanent granted the Saga subtype enters with a lore counter too" $ do
     plains <- S.printingOf s registry "Plains"
     weaving <- S.printingOf s registry "Synthetic Chronicle Weaving"
     highGround <- S.printingOf s registry "High Ground"
@@ -89,16 +89,16 @@ entrySpec s registry = Spec.describe s "Entry" $ do
       Nothing -> Spec.assertFailure s "High Ground did not become a Saga on the battlefield"
       Just oid -> Spec.assertEqWith s "one lore counter on the granted Saga" (S.counterOf CounterKind.Lore oid after) 1
     -- The same board without the granter, differing in that one permanent: High
-    -- Ground is no Saga and CR 714.3a mints nothing for it.
+    -- Ground is no Saga and CR 715.3a mints nothing for it.
     let alone = enter gs
     Spec.assertEqWith s "and no Saga at all without the granter" (Maybe.isJust (sagaOf alone)) False
 
--- CR 714.2b's threshold crossing, at the level Parun.Engine.Saga states it. These
+-- CR 715.2b's threshold crossing, at the level Parun.Engine.Saga states it. These
 -- are the arithmetic THE SBA AND THE TRIGGER MATCHER SHARE, so a drift between
 -- them shows up here first.
 chapterSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 chapterSpec s registry = Spec.describe s "Chapters" $ do
-  Spec.it s "CR 714.2b a chapter is crossed going up through it and never again" $ do
+  Spec.it s "CR 715.2b a chapter is crossed going up through it and never again" $ do
     -- Chapter II: crossed by 1 -> 2 and by 0 -> 3, not by 2 -> 3 or 2 -> 2.
     Spec.assertBool s (Saga.crossed 1 2 2) "1 -> 2 crosses II"
     Spec.assertBool s (Saga.crossed 0 3 2) "0 -> 3 crosses II as well as I and III"
@@ -107,7 +107,7 @@ chapterSpec s registry = Spec.describe s "Chapters" $ do
     -- THE FALSIFIER for writing the condition as "the count is now at least N",
     -- which would re-fire every chapter on every later counter.
     Spec.assertBool s (not (Saga.crossed 3 4 1)) "chapter I is not re-crossed at four counters"
-  Spec.it s "CR 714.2d the final chapter number is the greatest chapter, and 0 with none" $ do
+  Spec.it s "CR 715.2d the final chapter number is the greatest chapter, and 0 with none" $ do
     benalia <- S.printingOf s registry "History of Benalia"
     plains <- S.printingOf s registry "Plains"
     let (oid, gs) = S.addPermanent benalia S.alice (Setup.emptyGame S.bothPlayers)
@@ -120,7 +120,7 @@ chapterSpec s registry = Spec.describe s "Chapters" $ do
         Spec.assertEqWith s "final chapter III" (Saga.finalChapterOf pc) 3
         Spec.assertBool s (Saga.isSaga pc) "and it is a Saga"
         Spec.assertBool s (Saga.tracksLore pc) "with chapter abilities, so it advances"
-    -- CR 714.2d's second sentence, on a permanent that is no Saga at all: the
+    -- CR 715.2d's second sentence, on a permanent that is no Saga at all: the
     -- fold answers 0 rather than being undefined over an empty set, which is the
     -- rule legislating the empty maximum card-shape by card-shape.
     case Map.lookup landId pcs of
@@ -130,7 +130,7 @@ chapterSpec s registry = Spec.describe s "Chapters" $ do
         Spec.assertBool s (not (Saga.isSaga pc)) "and is not a Saga"
         Spec.assertBool s (not (Saga.tracksLore pc)) "so nothing advances it"
 
--- CR 505.4 / 703.4f / 714.3c: the turn-based action.
+-- CR 505.4 / 703.4f / 715.3c: the turn-based action.
 advanceSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 advanceSpec s registry = Spec.describe s "The precombat main phase" $ do
   -- Driven through Engine.runStep rather than by calling runTurnBasedActions,
@@ -145,7 +145,7 @@ advanceSpec s registry = Spec.describe s "The precombat main phase" $ do
         after = S.runPure S.identityAnswer gs Engine.runStep
     Spec.assertEqWith s "the step put the second lore counter on" (S.counterOf CounterKind.Lore oid after) 2
     Spec.assertEqWith s "and the step really was the precombat main phase" (GameState.phase gs) Phase.PrecombatMain
-  Spec.it s "CR 714.3c and it fires the chapter that counter crossed, not the ones below it" $ do
+  Spec.it s "CR 715.3c and it fires the chapter that counter crossed, not the ones below it" $ do
     benalia <- S.printingOf s registry "History of Benalia"
     let (oid, base) = S.addPermanent benalia S.alice (Setup.emptyGame S.bothPlayers)
         withCounter = S.addCounter CounterKind.Lore 1 oid base
@@ -153,11 +153,11 @@ advanceSpec s registry = Spec.describe s "The precombat main phase" $ do
         advanced = S.runPure S.identityAnswer gs (Engine.runTurnBasedActions Phase.PrecombatMain)
         after = S.runPure S.identityAnswer advanced Engine.priorityLoop
     -- Chapter II made one Knight. Chapter I did NOT fire again, which is the
-    -- whole content of CR 714.2b's "was less than N": the count went 1 -> 2, and
+    -- whole content of CR 715.2b's "was less than N": the count went 1 -> 2, and
     -- one is not less than one.
     Spec.assertEqWith s "exactly one Knight token" (S.countOnBattlefieldByName knightToken S.alice after) 1
   -- CR 614.16 decides which of the two placements Doubling Season reaches, and
-  -- they differ: the ENTRY counter comes from CR 714.3a's replacement effect, which
+  -- they differ: the ENTRY counter comes from CR 715.3a's replacement effect, which
   -- CR 614.16 admits by name ("they also apply if another replacement or prevention
   -- effect does so"), while the turn-based action is the result of no spell or
   -- ability at all (CR 609.1) and so is reached by nothing.
@@ -175,7 +175,7 @@ advanceSpec s registry = Spec.describe s "The precombat main phase" $ do
     case sagaOf entered of
       Nothing -> Spec.assertFailure s "History of Benalia did not reach the battlefield"
       Just oid -> do
-        -- CR 714.3a's one counter, doubled: chapters I and II both cross at once.
+        -- CR 715.3a's one counter, doubled: chapters I and II both cross at once.
         Spec.assertEqWith s "two lore counters on entry" (S.counterOf CounterKind.Lore oid entered) 2
         let advanced = S.runPure S.identityAnswer (precombatMainOf S.alice entered) (Engine.runTurnBasedActions Phase.PrecombatMain)
         -- Three, not four. A doubled turn-based action would land on four and take
@@ -183,10 +183,10 @@ advanceSpec s registry = Spec.describe s "The precombat main phase" $ do
         Spec.assertEqWith s "and the turn-based action adds ONE, not two" (S.counterOf CounterKind.Lore oid advanced) 3
   -- The OTHER side of the same distinction, and why the cause reaches the rows
   -- rather than the funnel's door (#847): Vorinclex, Monstrous Raider says "if YOU
-  -- would put one or more counters on a permanent", and CR 714.3c has "that
+  -- would put one or more counters on a permanent", and CR 715.3c has "that
   -- player" put the turn-based lore counter -- so this clause reaches it where
   -- Doubling Season's "if an effect would" does not.
-  Spec.it s "CR 714.3c Vorinclex DOES double the turn-based lore counter" $ do
+  Spec.it s "CR 715.3c Vorinclex DOES double the turn-based lore counter" $ do
     benalia <- S.printingOf s registry "History of Benalia"
     vorinclex <- S.printingOf s registry "Vorinclex, Monstrous Raider"
     let (oid, base) = S.addPermanent benalia S.alice (Setup.emptyGame S.bothPlayers)
@@ -197,7 +197,7 @@ advanceSpec s registry = Spec.describe s "The precombat main phase" $ do
     Spec.assertEqWith s "two lore counters, not one" (S.counterOf CounterKind.Lore oid after) 2
     Spec.assertEqWith s "and one without the praetor" (S.counterOf CounterKind.Lore oid bare) 1
 
--- CR 704.5s / 714.4: the state-based action.
+-- CR 704.5s / 715.4: the state-based action.
 sacrificeSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 sacrificeSpec s registry = Spec.describe s "The final chapter" $ do
   Spec.it s "CR 704.5s a Saga at its final chapter number is sacrificed by its controller" $ do
@@ -209,7 +209,7 @@ sacrificeSpec s registry = Spec.describe s "The final chapter" $ do
         after = S.settleSba gs
     Spec.assertBool s (not (S.onBattlefield oid after)) "the Saga left the battlefield"
     Spec.assertEqWith s "and is in its owner's graveyard, a sacrifice being a move to it (CR 701.21a)" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 1
-  -- CR 704.3 / 714.4: two Sagas finishing on the same check are sacrificed as ONE
+  -- CR 704.3 / 715.4: two Sagas finishing on the same check are sacrificed as ONE
   -- event, so each member's CR 616.1 loop reads the board the pass began on. The
   -- Reliquary is the only producer of a Saga-borne graveyard replacement -- no
   -- printing carries one, which is why it is synthetic -- and it goes FIRST, so
@@ -218,12 +218,12 @@ sacrificeSpec s registry = Spec.describe s "The final chapter" $ do
   --
   -- "Another permanent", so the Reliquary's own move is NOT replaced: alice's
   -- graveyard then holds exactly it, which is what parts the two readings.
-  Spec.it s "CR 704.3 / 714.4 two Sagas finishing together are sacrificed as one event" $ do
+  Spec.it s "CR 704.3 / 715.4 two Sagas finishing together are sacrificed as one event" $ do
     reliquary <- S.printingOf s registry "Synthetic Saga Reliquary"
     benalia <- S.printingOf s registry "History of Benalia"
     let (reliquaryId, g0) = S.addPermanent reliquary S.alice (Setup.emptyGame S.bothPlayers)
         (benaliaId, g1) = S.addPermanent benalia S.alice g0
-        -- Counters placed directly, so no CR 714.2b chapter ability has triggered
+        -- Counters placed directly, so no CR 715.2b chapter ability has triggered
         -- and rule 704.5s's third conjunct is satisfied for both.
         gs = S.addCounter CounterKind.Lore 3 benaliaId (S.addCounter CounterKind.Lore 3 reliquaryId g1)
         after = S.settleSba gs
@@ -258,7 +258,7 @@ sacrificeSpec s registry = Spec.describe s "The final chapter" $ do
   -- The whole story, chapter by chapter, which is the case that proves the four
   -- rules hang together rather than each working alone. Two precombat main
   -- phases, so the Knight chapter III pumps is one chapter II actually made.
-  Spec.it s "CR 714 the Saga runs II then III, pumps its own Knight, and is sacrificed" $ do
+  Spec.it s "CR 715 the Saga runs II then III, pumps its own Knight, and is sacrificed" $ do
     benalia <- S.printingOf s registry "History of Benalia"
     piker <- S.printingOf s registry "Goblin Piker"
     let (sagaId, base) = S.addPermanent benalia S.alice (Setup.emptyGame S.bothPlayers)
@@ -282,7 +282,7 @@ sacrificeSpec s registry = Spec.describe s "The final chapter" $ do
     Spec.assertEqWith s "the Goblin Piker, no Knight, is untouched at 2/1" (S.powerToughnessOf pikerId afterThree) (Just (2, 1))
     Spec.assertBool s (not (S.onBattlefield sagaId afterThree)) "and CR 704.5s has taken the Saga, its final chapter told"
 
--- The battlefield's one History of Benalia, by the subtype rule 714 keys on.
+-- The battlefield's one History of Benalia, by the subtype rule 715 keys on.
 sagaOf :: GameState.GameState -> Maybe ObjectId.ObjectId
 sagaOf gs =
   let pcs = Projection.projectAll gs

@@ -192,7 +192,7 @@ namedUncut given gs ref =
         PlayerRef.Relative relation -> related' relation
         -- Every player minus every player the slot names (CR 104.2c's winning
         -- team is several). A source that existed and then ceased, which CR
-        -- 729.5 leaves a resumed resolution holding, is not looked up: the
+        -- 730.5 leaves a resumed resolution holding, is not looked up: the
         -- resolution's context carries the slot, read through
         -- Parun.Engine.Resolve.liveBindings. Parun.OutsideTheGameSpec's Synthetic
         -- Subgame Tithe case proves it.
@@ -216,7 +216,7 @@ namedUncut given gs ref =
         PlayerRef.EachInSlot name -> slotPlayers given name
         -- The baked seat. Not filtered against the roster: it names one specific
         -- player, and what a departed seat can still be TRUE of is the reader's
-        -- question -- CR 725.4 takes the crown off a player as they leave, so
+        -- question -- CR 726.4 takes the crown off a player as they leave, so
         -- Quantity.IsMonarch reads 0 for one and Garland's duration ends.
         PlayerRef.Specific pid -> Just [pid]
         -- The fold's own candidate, which is a fact about the member being read

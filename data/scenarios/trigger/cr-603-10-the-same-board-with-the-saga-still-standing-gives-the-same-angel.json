@@ -1,6 +1,6 @@
 {
   "description": "CR 603.10 the same board with the Saga still standing gives the same Angel",
-  "note": "Volt Charge at bob proliferates Summon: Choco/Mog to its fourth lore counter, so chapter IV and Historian's Boon trigger with the Saga still on the battlefield, and alice gets the Angel. Cast in the beginning of combat step, since the board stands where the Haskell test puts it and entering the precombat main phase would add CR 714.3b's lore counter.",
+  "note": "Volt Charge at bob proliferates Summon: Choco/Mog to its fourth lore counter, so chapter IV and Historian's Boon trigger with the Saga still on the battlefield, and alice gets the Angel. Cast in the beginning of combat step, since the board stands where the Haskell test puts it and entering the precombat main phase would add CR 715.3b's lore counter.",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",

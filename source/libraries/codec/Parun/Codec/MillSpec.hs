@@ -15,7 +15,7 @@ import qualified Parun.Types.SlotName as SlotName
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.Mill" $ do
-  -- Every mill in the pool but rule 728.1's looks back at nothing, so the tally
+  -- Every mill in the pool but rule 729.1's looks back at nothing, so the tally
   -- key is absent here and present below.
   Spec.it s "MkMill, no tally: the key is omitted" $
     Common.assertCodec
@@ -23,7 +23,7 @@ spec s = Spec.describe s "Parun.Codec.Mill" $ do
       Mill.codec
       (Mill.MkMill (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 3) Nothing Nothing)
       " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"quantity\":{\"type\":\"Literal\",\"value\":3}} "
-  Spec.it s "MkMill, CR 728.1's tally: the key is written" $
+  Spec.it s "MkMill, CR 729.1's tally: the key is written" $
     Common.assertCodec
       s
       Mill.codec

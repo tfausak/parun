@@ -12,7 +12,7 @@ Entries take `docs/decisions.md`'s format and order.
 
 - **Question**: CR 614.10a takes a skipped cleanup step's actions with it, but the
   turn still ends. Does marked damage come off?
-- **Rules**: CR 120.6, 500.11, 514.2, 611.2a, 614.10a; CR of 2026-09-25.
+- **Rules**: CR 120.6, 500.11, 514.2, 611.2a, 614.10a; CR of 2026-11-06.
 - **Decision**: Yes, with the durations, as one action. A 5/4 (pumped 2/1) with 3
   damage survives as a 2/1 with no damage.
 - **Rejected**: Durations end and damage stays, so the 2/1 dies to CR 704.5g. The
@@ -29,7 +29,7 @@ Entries take `docs/decisions.md`'s format and order.
   casting a spell or activating an ability "isn't revealed until after that cost
   is fully paid". Its "that cost" has no antecedent for a target, and no rule orders
   a reveal. Is the card revealed at all?
-- **Rules**: CR 406.4, 601.2i, 602.2b, 701.20a; CR of 2026-09-25.
+- **Rules**: CR 406.4, 601.2i, 602.2b, 701.20a; CR of 2026-11-06.
 - **Decision**: Yes. Once the cost is paid and the spell becomes cast (CR 601.2i),
   or the ability becomes activated (CR 602.2b), the caster reveals the drawn card
   to every player. Until then nobody sees it, the caster included.
@@ -49,7 +49,7 @@ Entries take `docs/decisions.md`'s format and order.
   than the stack (Synthetic Stack Interdiction). Does the cast rewind, stop,
   or complete?
 - **Rules**: CR 601.2i, 601.2a, 601.2e, 614.6, 709.3a, 709.4; CR of
-  2026-09-25.
+  2026-11-06.
 - **Decision**: Only the arrival is replaced. CR 601.2b-i run on: targets
   chosen, costs paid, and the spell becomes cast, so "whenever you cast"
   triggers fire. The card shows CR 709.4's combined view where it lands.
@@ -67,7 +67,7 @@ Entries take `docs/decisions.md`'s format and order.
 
 - **Question**: CR 605.1a disqualifies a mana ability whose effect moves a
   card to or from a library. A conjured card comes from no zone.
-- **Rules**: CR 605.1a; no rule names conjure; CR of 2026-09-25.
+- **Rules**: CR 605.1a; no rule names conjure; CR of 2026-11-06.
 - **Decision**: The destination decides: conjuring into a library is a
   library move, conjuring anywhere else is not.
 - **Rejected**: Nothing moves, since the card was in no zone. It loses
@@ -87,7 +87,7 @@ Entries take `docs/decisions.md`'s format and order.
   CR 101.3's no-op? Where some creature can take them, CR 608.2d forbids
   choosing one that can't.
 - **Rules**: CR 608.2d, 609.3, 701.68a, 701.68b, 701.68c, 701.68d; High Perfect
-  Morcant's and Shadow Urchin's rulings of 2025-11-17; CR of 2026-09-25.
+  Morcant's and Shadow Urchin's rulings of 2025-11-17; CR of 2026-11-06.
 - **Decision**: The player chooses among every creature they control, nothing
   is put, and they have blighted: the chosen creature is CR 701.68c's
   "blighted creature" and "whenever a player blights" triggers.
@@ -109,7 +109,7 @@ Entries take `docs/decisions.md`'s format and order.
 
 - **Question**: Two effects each say a mana may be spent "only as though it
   were" a different type. Which types may it be spent as?
-- **Rules**: CR 609.4b, 101.2, 613.11; CR of 2026-09-25.
+- **Rules**: CR 609.4b, 101.2, 613.11; CR of 2026-11-06.
 - **Decision**: The union of the clauses' sets, unordered. An "only" clause
   names permitted types rather than saying "can't".
 - **Rejected**: Each "only" as a prohibition, which pulls in CR 101.2 and has
@@ -127,7 +127,7 @@ Entries take `docs/decisions.md`'s format and order.
   once. Which half answers when both print one, or when both halves'
   characteristic-defining abilities define it?
 - **Rules**: CR 709.4, 208.1, 208.5, 604.3, 613.4, 613.4a, 613.7a, 613.8,
-  709.4a, 709.4b, 709.4c; CR of 2026-09-25.
+  709.4a, 709.4b, 709.4c; CR of 2026-11-06.
 - **Decision**: The left half's printed box, and for two
   characteristic-defining abilities on one box, the left half's ability.
   Disjoint boxes take each half's own.

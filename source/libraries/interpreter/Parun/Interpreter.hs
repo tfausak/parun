@@ -90,7 +90,7 @@ admitsName gs chooser restriction found = case found of
 -- CR 201.4: the face a chosen name answers to, which CR 201.4a's
 -- characteristics are read off. A face of the card the registry answers with,
 -- else CR 201.4e's combined back face of a meld pair. No card prints that face
--- whole (CR 712.4b), so the registry never answers to it and a deck list or
+-- whole (CR 713.1b), so the registry never answers to it and a deck list or
 -- Prompt.LookUpCard never finds it: the reference's meld cards are walked for
 -- it instead, and only when the name is no face's.
 chosenFace :: (Monad m) => Registry.Registry m -> CardName.CardName -> m (Either InvalidCorpus.InvalidCorpus (Maybe (Face.Face Card.Type.Card)))

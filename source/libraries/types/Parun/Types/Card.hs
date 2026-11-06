@@ -11,17 +11,17 @@ import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Layout as Layout
 
 data Card = MkCard
-  { -- | CR 709-722: how this card's faces combine. Normal for every card with
+  { -- | CR 709-723: how this card's faces combine. Normal for every card with
     -- exactly one face.
     layout :: Layout.Layout,
-    -- | CR 709.2 / 715.2c: one CARD, however many faces it prints. NonEmpty
+    -- | CR 709.2 / 716.2c: one CARD, however many faces it prints. NonEmpty
     -- rather than the Seq that Parun.Types.Modal uses for its own non-empty
     -- invariant, because Parun.Engine.Card.combined must be TOTAL -- a Maybe
     -- there would infect every characteristic read in the engine, where
     -- Modal's by-index lookup is honestly partial.
     --
     -- Printed order. Several layouts have positional rules -- CR 709.5's left
-    -- and right halves, CR 710.1a's top half and CR 710.1b's bottom, CR 712.8a's
+    -- and right halves, CR 710.1a's top half and CR 710.1b's bottom, CR 712.6a's
     -- front face -- so the ORDER lives here even though a face is REFERRED to by
     -- name.
     faces :: NonEmpty.NonEmpty (Face.Face Card)

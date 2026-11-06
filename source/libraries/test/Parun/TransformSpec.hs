@@ -1,29 +1,29 @@
 {-# LANGUAGE GADTs #-}
 
 -- Covers CR 701.27 transform end to end: Parun.Types.Layout's Transforming arm
--- and the three Parun.Engine.Card functions that read it (CR 712.8a/712.8d's
--- combined view, CR 712.11's castable half, CR 701.27a's turnedOver), the
--- Effect.Transform arm of Parun.Engine.Resolve with CR 701.27f's already-turned
+-- and the three Parun.Engine.Card functions that read it (CR 712.6a/712.6c's
+-- combined view, CR 712.8's castable half, CR 701.27a's turnedOver), the
+-- Effect.Transform arm of Parun.Engine.Resolve with CR 701.27g's already-turned
 -- gate (alreadyTurnedFor over Object.turnedOverAt), and
--- Parun.Engine.Game.manaCostFacesOf (CR 712.8e).
+-- Parun.Engine.Game.manaCostFacesOf (CR 712.6d).
 --
--- Also CR 712.14a's enter-transformed instruction, which reaches the same back
+-- Also CR 712.11a's enter-transformed instruction, which reaches the same back
 -- face by a different road: Parun.Types.EntryRiders carries it and
 -- Parun.Engine.Event.changeZoneEntering applies it. See enterTransformedSpec.
 --
--- Also CR 701.27e's "transforms into", the trigger condition a CARD names:
+-- Also CR 701.27f's "transforms into", the trigger condition a CARD names:
 -- Parun.Types.TriggerCondition's Transforms, Self subject, against the
 -- GameEvent.Transformed that Parun.Engine.Event.recordTransformed writes. See
 -- transformTriggerSpec, whose fixture is Blightreaper Thallid // Blightsower
 -- Thallid, the Gargoyle printing no text on its back face to trigger with.
 --
--- Also CR 702.162a's more than meets the eye -- CR 712.11a's "converted" cast,
--- offered by Parun.Engine.Card.castableFaces (CR 712.11d) and priced by
+-- Also CR 702.162a's more than meets the eye -- CR 712.8a's "converted" cast,
+-- offered by Parun.Engine.Card.castableFaces (CR 712.8d) and priced by
 -- Parun.Engine.Cost.candidateCostsFor. See moreThanMeetsTheEyeSpec, which shares
 -- convertSpec's Ratchet.
 --
 -- Also CR 702.146a's disturb, which reaches that same back face through that same
--- CR 712.11d exception and adds rule 702.146a's own zone: the CR 601.3 permission
+-- CR 712.8d exception and adds rule 702.146a's own zone: the CR 601.3 permission
 -- is Parun.Engine.Cast.permitsDisturb's and the price is the graveyard half of
 -- Parun.Engine.Cost.candidateCostsGiven's converted offer. See disturbSpec, whose
 -- fixture is Baithook Angler // Hook-Haunt Drifter.
@@ -41,12 +41,12 @@
 -- sample. See equippedTransformSpec, whose fixture is Neglected Heirloom //
 -- Ashmouth Blade on that same Ratchet.
 --
--- Also CR 701.27g's "transformed permanent", the phrase a CARD asks rather than
+-- Also CR 701.27h's "transformed permanent", the phrase a CARD asks rather than
 -- the engine: Parun.Types.Filter's Transformed atom, filled by
 -- Parun.Engine.Projection.View.viewOfCharacteristics. See transformedPermanentSpec,
 -- whose fixture is Tovolar and Mutagen Connoisseur rather than the Gargoyle.
 --
--- Also CR 701.27f's SECOND sentence, which measures a DELAYED triggered
+-- Also CR 701.27g's SECOND sentence, which measures a DELAYED triggered
 -- ability's transform from when that ability was created rather than from when
 -- it reached the stack. Its pair of cases needs a permanent whose own delayed
 -- ability turns it over and something else able to turn it over in between, so
@@ -60,7 +60,7 @@
 -- Gargoyle Horror with flying and no text. It was picked because its whole text
 -- IS the transform: every characteristic that differs across the two faces is
 -- one parun already reads, so a case that fails here fails about transform and
--- about nothing else. CR 712.14a's group needs an effect that instructs the
+-- about nothing else. CR 712.11a's group needs an effect that instructs the
 -- move, so it adds Befriending the Moths // Imperial Moth.
 module Parun.TransformSpec where
 
@@ -138,14 +138,14 @@ import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerSource as TriggerSource
 import qualified Parun.Types.Zone as Zone
 
--- CR 701.27g's fixture, which is not the Gargoyle's: Tovolar, Dire Overlord //
+-- CR 701.27h's fixture, which is not the Gargoyle's: Tovolar, Dire Overlord //
 -- Tovolar, the Midnight Scourge and Mutagen Connoisseur. See
 -- transformedPermanentSpec.
 tovolarFront, tovolarBack :: CardName.CardName
 tovolarFront = CardName.MkCardName (Text.pack "Tovolar, Dire Overlord")
 tovolarBack = CardName.MkCardName (Text.pack "Tovolar, the Midnight Scourge")
 
--- The two names the card prints. CR 712.8a gives the card only its front face's
+-- The two names the card prints. CR 712.6a gives the card only its front face's
 -- characteristics off the battlefield, so the second names a face rather than
 -- the card -- which CR 201.4d is what lets a player choose all the same.
 gargoyleName, antagonizerName :: CardName.CardName
@@ -174,7 +174,7 @@ frontFace, backFace :: (Set.Set CardName.CardName, Maybe (Integer, Integer), Set
 frontFace = (Set.singleton gargoyleName, Just (2, 2), Set.singleton Subtype.Gargoyle, True, False, 1)
 backFace = (Set.singleton antagonizerName, Just (4, 2), Set.fromList [Subtype.Gargoyle, Subtype.Horror], False, True, 0)
 
--- CR 701.27f's SECOND sentence needs a permanent whose own DELAYED ability turns
+-- CR 701.27g's SECOND sentence needs a permanent whose own DELAYED ability turns
 -- it over, and something else able to turn it over in between. Aang, at the
 -- Crossroads // Aang, Destined Savior is that permanent, and Moonmist is that
 -- something else: of the Transform opcodes in `data/cards/`, Moonmist's is the
@@ -250,7 +250,7 @@ transformEveryCreature = Effect.Transform (ObjectRef.EachMatching (Filter.Type.H
 emptyBoard :: GameState.GameState
 emptyBoard = Setup.emptyGame S.bothPlayers
 
--- The sweep as some named object's resolution. `resolving` is what CR 701.27f
+-- The sweep as some named object's resolution. `resolving` is what CR 701.27g
 -- asks about -- whether the thing turning the permanent over is an ABILITY of
 -- that permanent -- so it is a parameter rather than baked in.
 sweepFrom :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
@@ -261,7 +261,7 @@ sweepFrom resolving gs = S.runPure S.identityAnswer gs (Resolve.applyEffect reso
 sweep :: GameState.GameState -> GameState.GameState
 sweep = sweepFrom S.noSource
 
--- CR 608.2d and CR 701.27c: "you may transform Aang, Master of Elements. If you
+-- CR 608.2d and CR 701.27d: "you may transform Aang, Master of Elements. If you
 -- do, ..." is not offered to a Clone of him. A Clone copying the back face is
 -- not a double-faced card, so the transform would do nothing, and a player can't
 -- choose an impossible option. The pair is on one board. At alice's upkeep her
@@ -308,12 +308,12 @@ spec s registry = Spec.describe s "Transform" $ do
   disturbSpec s registry
   spellsCastLastTurnSpec s registry
   restampSpec s registry
-  -- CR 712.15a: "while face down, a double-faced permanent can't transform".
+  -- CR 712.12a: "while face down, a double-faced permanent can't transform".
   -- Maskwood Nexus makes every creature alice controls a Human, a face-down 2/2
   -- included, so Moonmist's "transform all Humans" names both of her Blightreaper
   -- Thallids. The face-up one turns over; the manifested one does not, and once
   -- turned face up it shows its front face.
-  Spec.it s "CR 712.15a Moonmist does not transform a face-down Thallid that Maskwood Nexus made a Human" $ do
+  Spec.it s "CR 712.12a Moonmist does not transform a face-down Thallid that Maskwood Nexus made a Human" $ do
     thallid <- S.printingOf s registry "Blightreaper Thallid"
     nexus <- S.printingOf s registry "Maskwood Nexus"
     moonmist <- S.printingOf s registry "Moonmist"
@@ -327,20 +327,20 @@ spec s registry = Spec.describe s "Transform" $ do
         turnedUp = S.runPure S.identityAnswer misted (Event.performTurnFaceUp Nothing Nothing faceDownId)
         blightreaper = CardName.MkCardName (Text.pack "Blightreaper Thallid")
         blightsower = CardName.MkCardName (Text.pack "Blightsower Thallid")
-    Spec.assertEqWith s "CR 712.15a turned face up, it shows its front face: Blightreaper Thallid, a 2/2" (Projection.namesOf faceDownId turnedUp, S.powerToughnessOf faceDownId turnedUp) (Set.singleton blightreaper, Just (2, 2))
+    Spec.assertEqWith s "CR 712.12a turned face up, it shows its front face: Blightreaper Thallid, a 2/2" (Projection.namesOf faceDownId turnedUp, S.powerToughnessOf faceDownId turnedUp) (Set.singleton blightreaper, Just (2, 2))
     Spec.assertEqWith s "CR 701.27a the face-up Thallid turned over" (Projection.namesOf faceUpId misted, S.powerToughnessOf faceUpId misted) (Set.singleton blightsower, Just (3, 3))
     Spec.assertBool s (maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject faceDownId misted)) "setup: the manifested Thallid was face down when Moonmist resolved"
     Spec.assertEqWith s "setup: CR 613.1d Maskwood Nexus made the face-down 2/2 a Human" (Set.member Subtype.Human (PC.subtypes (Projection.project faceDownId manifested))) True
-  -- CR 712.8d: "While a double-faced permanent has its front face up, it has
+  -- CR 712.6c: "While a double-faced permanent has its front face up, it has
   -- only the characteristics of its front face." Nothing has turned this one
-  -- over, so CR 712.8a's front face is what Parun.Engine.Card.combined answers
+  -- over, so CR 712.6a's front face is what Parun.Engine.Card.combined answers
   -- with.
   --
   -- The falsifier is CR 709.4's reading, which is what the pool's OTHER
   -- two-faced layouts would take: a combined view would name this permanent
   -- "Thraben Gargoyle//Stonewing Antagonizer", give it flying AND defender, and
   -- put Horror on its type line while it is still a Gargoyle.
-  Spec.it s "CR 712.8d a double-faced permanent shows its front face and only that" $ do
+  Spec.it s "CR 712.6c a double-faced permanent shows its front face and only that" $ do
     gargoyle <- S.printingOf s registry "Thraben Gargoyle"
     let (oid, gs) = S.addPermanent gargoyle S.alice emptyBoard
     Spec.assertEqWith s "every reader sees Thraben Gargoyle" (faceReadings oid gs) frontFace
@@ -349,12 +349,12 @@ spec s registry = Spec.describe s "Transform" $ do
       "and it is an artifact creature on both faces, so the type line is not what changes"
       (Projection.cardTypesOf oid gs)
       (Set.fromList [CardType.Artifact, CardType.Creature])
-  -- CR 712.11: "A double-faced spell is cast with its front face up by default."
-  -- ONE name offered from a hand, where CR 715.3's adventurer card offers two and
+  -- CR 712.8: "A double-faced spell is cast with its front face up by default."
+  -- ONE name offered from a hand, where CR 716.3's adventurer card offers two and
   -- CR 709.3's split card offers two -- the whole difference between the layouts
   -- at the point of casting.
   --
-  -- Asserted TWICE, because the offer list alone cannot tell CR 712.11 from an
+  -- Asserted TWICE, because the offer list alone cannot tell CR 712.8 from an
   -- accident: Stonewing Antagonizer prints no mana cost, and CR 202.1b's "having
   -- no mana cost represents an unpayable cost" is not a free one
   -- (Parun.Engine.Cost.canPay's Nothing arm), so a back face proposed all the way
@@ -363,19 +363,19 @@ spec s registry = Spec.describe s "Transform" $ do
   -- NonEmpty, as it does for Split and Adventure -- is caught only by asking
   -- that function directly, so both are here and neither stands alone.
   --
-  -- The Gargoyle and not Ratchet, because CR 712.11's "by default" has a printed
+  -- The Gargoyle and not Ratchet, because CR 712.8's "by default" has a printed
   -- exception and Ratchet prints it: a transforming card whose front face has
-  -- more than meets the eye offers two names, which is CR 712.11d and is
+  -- more than meets the eye offers two names, which is CR 712.8d and is
   -- moreThanMeetsTheEyeSpec's. This case is about a card that has no such
-  -- ability, which is what leaves CR 712.11's default the whole answer.
-  Spec.it s "CR 712.11 only the front face is offered from a hand" $ do
+  -- ability, which is what leaves CR 712.8's default the whole answer.
+  Spec.it s "CR 712.8 only the front face is offered from a hand" $ do
     gargoyle <- S.printingOf s registry "Thraben Gargoyle"
     island <- S.printingOf s registry "Island"
     let (gs, _) = S.handOne gargoyle (S.landsInPlay island 1)
         namesOffered = Maybe.mapMaybe (\action -> case action of A.Cast _ n _ -> Just n; _ -> Nothing) (Action.legalActions S.alice gs)
     Spec.assertEqWith
       s
-      "CR 712.11: the card proposes its front face and no other"
+      "CR 712.8: the card proposes its front face and no other"
       (fmap Face.name (Card.castableFaces (Printing.card gargoyle)))
       [gargoyleName]
     Spec.assertEqWith s "and the action list offers that one cast" namesOffered [gargoyleName]
@@ -410,7 +410,7 @@ spec s registry = Spec.describe s "Transform" $ do
           (Projection.cardTypesOf oid after)
           (Set.fromList [CardType.Artifact, CardType.Creature])
       abilities -> Spec.assertFailure s ("expected one activated ability, got " <> show (length abilities))
-  -- CR 701.27f: "If an activated or triggered ability of a permanent that isn't a
+  -- CR 701.27g: "If an activated or triggered ability of a permanent that isn't a
   -- delayed triggered ability of that permanent tries to transform it, the
   -- permanent does so only if it hasn't transformed or converted since the
   -- ability was put onto the stack. ... if the permanent has already transformed
@@ -422,9 +422,9 @@ spec s registry = Spec.describe s "Transform" $ do
   --
   -- The falsifier is the whole point: without the rule the two resolutions turn
   -- the permanent over and then straight back, and the case ends on the FRONT
-  -- face. `backFace` here is therefore an assertion about CR 701.27f and not a
+  -- face. `backFace` here is therefore an assertion about CR 701.27g and not a
   -- restatement of the case above.
-  Spec.it s "CR 701.27f two of the Gargoyle's own abilities on the stack turn it over once" $ do
+  Spec.it s "CR 701.27g two of the Gargoyle's own abilities on the stack turn it over once" $ do
     gargoyle <- S.printingOf s registry "Thraben Gargoyle"
     island <- S.printingOf s registry "Island"
     let (oid, g0) = S.addPermanent gargoyle S.alice (S.landsInPlay island 12)
@@ -442,7 +442,7 @@ spec s registry = Spec.describe s "Transform" $ do
         Spec.assertEqWith s "the first to resolve turns it over" (faceReadings oid once) backFace
         Spec.assertEqWith s "and the second is ignored, so it stays turned over" (faceReadings oid twice) backFace
         Spec.assertEqWith s "with nothing left on the stack" (length (GameState.stack twice)) 0
-  -- The other half of CR 701.27f, and the reason it cannot be written as a
+  -- The other half of CR 701.27g, and the reason it cannot be written as a
   -- once-per-anything: the gate is only for "an activated or triggered ability of
   -- a permanent ... [that] tries to transform IT". A SPELL is not one, so Moonmist
   -- turns a permanent over however recently its own ability did.
@@ -452,7 +452,7 @@ spec s registry = Spec.describe s "Transform" $ do
   -- (CR 112.1's spell shape) rather than an ability, and must be exempt. Widening
   -- alreadyTurnedFor to fire for any resolving object leaves this case ending on
   -- the back face.
-  Spec.it s "CR 701.27f the gate is only for the permanent's own abilities" $ do
+  Spec.it s "CR 701.27g the gate is only for the permanent's own abilities" $ do
     gargoyle <- S.printingOf s registry "Thraben Gargoyle"
     island <- S.printingOf s registry "Island"
     let (oid, g0) = S.addPermanent gargoyle S.alice (S.landsInPlay island 6)
@@ -465,7 +465,7 @@ spec s registry = Spec.describe s "Transform" $ do
         Spec.assertEqWith s "its own {6} turned it over" (faceReadings oid byItsOwnAbility) backFace
         Spec.assertEqWith s "and a spell turns it straight back, same turn" (faceReadings oid thenBySomethingElse) frontFace
       abilities -> Spec.assertFailure s ("expected one activated ability, got " <> show (length abilities))
-  -- CR 701.27f's SECOND sentence: "If a delayed triggered ability of a permanent
+  -- CR 701.27g's SECOND sentence: "If a delayed triggered ability of a permanent
   -- tries to transform that permanent, the permanent does so only if it hasn't
   -- transformed or converted since that delayed triggered ability was created."
   --
@@ -480,7 +480,7 @@ spec s registry = Spec.describe s "Transform" $ do
   -- measured from CREATION it is later and the instruction is ignored, leaving
   -- the 4/4 back face up. The case below is its pair -- same board, no Moonmist
   -- -- and shows the delayed transform is not simply refused.
-  Spec.it s "CR 701.27f a delayed transform is measured from when the ability was created" $ do
+  Spec.it s "CR 701.27g a delayed transform is measured from when the ability was created" $ do
     aang <- S.printingOf s registry "Aang, at the Crossroads"
     piker <- S.printingOf s registry "Goblin Piker"
     moonmist <- S.printingOf s registry "Moonmist"
@@ -494,18 +494,18 @@ spec s registry = Spec.describe s "Transform" $ do
     Spec.assertEqWith s "and Moonmist then turned it over, Aang being a Human" (aangReadings aangId turned) aangBackUp
     Spec.assertEqWith
       s
-      "CR 701.27f: Aang turned over since the delayed ability was created, so the instruction is ignored and the back face stays up"
+      "CR 701.27g: Aang turned over since the delayed ability was created, so the instruction is ignored and the back face stays up"
       (aangReadings aangId fired)
       aangBackUp
     Spec.assertEqWith s "with the delayed ability spent and nothing left on the stack" (Seq.length (GameState.delayedTriggers fired), length (GameState.stack fired)) (0, 0)
   -- The pair to the case above, differing in exactly one thing: no Moonmist, so
   -- nothing turns Aang over between the delayed ability's creation and its
-  -- resolution. CR 701.27f then has nothing to ignore and the delayed ability
+  -- resolution. CR 701.27g then has nothing to ignore and the delayed ability
   -- does transform the permanent.
   --
   -- Without this, a gate that refused EVERY delayed transform would pass the
   -- case above.
-  Spec.it s "CR 701.27f a delayed transform of a permanent that has not turned over still happens" $ do
+  Spec.it s "CR 701.27g a delayed transform of a permanent that has not turned over still happens" $ do
     aang <- S.printingOf s registry "Aang, at the Crossroads"
     piker <- S.printingOf s registry "Goblin Piker"
     moonmist <- S.printingOf s registry "Moonmist"
@@ -517,11 +517,11 @@ spec s registry = Spec.describe s "Transform" $ do
     Spec.assertEqWith s "and nothing turned Aang over in the meantime" (Maybe.isNothing (Game.lookupObject aangId armed >>= Object.turnedOverAt)) True
     Spec.assertEqWith
       s
-      "CR 701.27f: the delayed ability turns Aang over, so the 4/4 back face is up"
+      "CR 701.27g: the delayed ability turns Aang over, so the 4/4 back face is up"
       (aangReadings aangId fired)
       aangBackUp
     Spec.assertEqWith s "with the delayed ability spent and nothing left on the stack" (Seq.length (GameState.delayedTriggers fired), length (GameState.stack fired)) (0, 0)
-  -- CR 712.8e: "While a nonmodal double-faced permanent has its back face up, it
+  -- CR 712.6d: "While a nonmodal double-faced permanent has its back face up, it
   -- has only the characteristics of its back face. However, its mana value is
   -- calculated using the mana cost of its front face." CR 202.3a exempts that
   -- back face by name from the mana value of 0 an object with no mana cost has.
@@ -530,7 +530,7 @@ spec s registry = Spec.describe s "Transform" $ do
   -- live face like every other characteristic -- is 0, and the rule's answer is
   -- the front face's 1. Both readers parun has are asserted, because they are two
   -- call sites and only one of them feeds a card's Quantity.
-  Spec.it s "CR 712.8e a transformed permanent keeps its front face's mana value" $ do
+  Spec.it s "CR 712.6d a transformed permanent keeps its front face's mana value" $ do
     gargoyle <- S.printingOf s registry "Thraben Gargoyle"
     let (oid, before) = S.addPermanent gargoyle S.alice emptyBoard
         after = sweep before
@@ -538,16 +538,16 @@ spec s registry = Spec.describe s "Transform" $ do
     Spec.assertEqWith s "it is the back face that is up" (faceReadings oid after) backFace
     Spec.assertEqWith s "back face up: still 1, not the 0 its own empty cost would give" (sum (fmap Quantity.manaValueOf (Game.manaCostFacesOf oid after))) 1
     Spec.assertEqWith s "and a filter reading a mana value agrees" (Filter.manaValue (Projection.viewOfObject oid after)) (Just 1)
-  -- CR 701.27c: "If a spell or ability instructs a player to transform a
+  -- CR 701.27d: "If a spell or ability instructs a player to transform a
   -- permanent that isn't represented by a double-faced token or a double-faced
-  -- card, nothing happens." CR 712.9 says it again and adds the Example this
-  -- stands on: a Clone that copied a double-faced permanent still can't
+  -- card, nothing happens." CR 712.7 says it again, and the rule's Example is what
+  -- this stands on: a Clone that copied a double-faced permanent still can't
   -- transform, because the CARD is what the rule asks about.
   --
   -- One sweep over "each creature", two creatures: the answer is a fact about
   -- each permanent's layout rather than about the effect, so both go through the
   -- same instruction and only one turns over.
-  Spec.it s "CR 701.27c a creature that is not double-faced is not turned over" $ do
+  Spec.it s "CR 701.27d a creature that is not double-faced is not turned over" $ do
     gargoyle <- S.printingOf s registry "Thraben Gargoyle"
     piker <- S.printingOf s registry "Goblin Piker"
     let (gargoyleId, g0) = S.addPermanent gargoyle S.alice emptyBoard
@@ -562,7 +562,7 @@ spec s registry = Spec.describe s "Transform" $ do
       Nothing
   -- CR 701.27a's "its other face" over the two faces CR 712.1 gives a
   -- double-faced card: a second transform turns the permanent back. Nothing
-  -- remembers that it was ever the Gargoyle -- CR 701.27g is explicit that a
+  -- remembers that it was ever the Gargoyle -- CR 701.27h is explicit that a
   -- permanent with its front face up is never a transformed permanent "even if
   -- it had its back face up previously" -- which transformedPermanentSpec below
   -- proves through a card that asks the question.
@@ -576,7 +576,7 @@ spec s registry = Spec.describe s "Transform" $ do
         twice = sweep once
     Spec.assertEqWith s "once: the back face" (faceReadings oid once) backFace
     Spec.assertEqWith s "twice: the front face again, {6} and all" (faceReadings oid twice) frontFace
-  -- CR 712.18 states it positively -- "when a double-faced permanent transforms
+  -- CR 712.15 states it positively -- "when a double-faced permanent transforms
   -- or converts, it doesn't become a new object. Any effects that applied to that
   -- permanent will continue to apply to it" -- and CR 400.7 is the negative half:
   -- this is not a zone change, so nothing mints an incarnation. The permanent
@@ -600,17 +600,17 @@ spec s registry = Spec.describe s "Transform" $ do
     Spec.assertEqWith s "the back face is up" (Projection.namesOf oid after) (Set.singleton antagonizerName)
     Spec.assertEqWith s "the 1 damage marked on the Gargoyle is still marked" (S.damageOf oid after) (Just 1)
     Spec.assertEqWith s "and its +1/+1 counter survived the turn" (fmap (Map.findWithDefault 0 CounterKind.PlusOnePlusOne . Object.counters) (Game.lookupObject oid after)) (Just 1)
-    -- 4/2 from the back face plus the counter layer 7d still applies (CR 712.18).
+    -- 4/2 from the back face plus the counter layer 7d still applies (CR 712.15).
     Spec.assertEqWith s "so the back face reads 5/3, not the printed 4/2" (S.powerToughnessOf oid after) (Just (5, 3))
     Spec.assertEqWith s "and the battlefield holds one permanent, not a replacement" (length (Game.zoneMembers Zone.Battlefield S.alice after)) 1
 
--- The name of the one face that reaches the battlefield below. CR 712.8a keeps
+-- The name of the one face that reaches the battlefield below. CR 712.6a keeps
 -- it off every reading of the card in a hand or a graveyard, so a permanent that
 -- answers to it can only have entered showing its back face.
 mothName :: CardName.CardName
 mothName = CardName.MkCardName (Text.pack "Imperial Moth")
 
--- A board sitting in `pid`'s precombat main phase, the moment CR 505.4 / 714.3c
+-- A board sitting in `pid`'s precombat main phase, the moment CR 505.4 / 715.3c
 -- puts a lore counter on each of their Sagas.
 precombatMainOf :: PlayerId.PlayerId -> GameState.GameState -> GameState.GameState
 precombatMainOf pid gs =
@@ -620,7 +620,7 @@ precombatMainOf pid gs =
       GameState.priority = Just pid
     }
 
--- CR 712.14a: "If a spell or ability puts a double-faced card onto the
+-- CR 712.11a: "If a spell or ability puts a double-faced card onto the
 -- battlefield 'transformed' or 'converted', it enters the battlefield with its
 -- back face up. If a player is instructed to put a card that isn't a
 -- double-faced card onto the battlefield transformed or converted, that card
@@ -632,9 +632,9 @@ precombatMainOf pid gs =
 --
 -- The producer this group uses is Befriending the Moths // Imperial Moth, a
 -- Kamigawa: Neon Dynasty Saga whose chapter III reads "Exile this Saga, then
--- return it to the battlefield transformed under your control" -- CR 712.14a's
+-- return it to the battlefield transformed under your control" -- CR 712.11a's
 -- wording on a card rather than on a spell, which is what makes it this rule's
--- producer and not CR 712.13a's. It is no longer the pool's only one: CR
+-- producer and not CR 701.27j's. It is no longer the pool's only one: CR
 -- 702.167a's craft mints the same instruction in the engine
 -- (Parun.Engine.Keyword.craft), which Parun.ActivateSpec's Craft group proves. Its back face is a 2/4 white Enchantment Creature -- Insect with
 -- flying, and every one of those readings belongs to that face alone: the front
@@ -642,12 +642,12 @@ precombatMainOf pid gs =
 -- creature type. A case that passed with the FRONT face up would fail every line.
 enterTransformedSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 enterTransformedSpec s registry = Spec.describe s "Entering the battlefield transformed" $ do
-  Spec.it s "CR 712.14a a Saga returned transformed comes back as its back face" $ do
+  Spec.it s "CR 712.11a a Saga returned transformed comes back as its back face" $ do
     moths <- S.printingOf s registry "Befriending the Moths"
     let (sagaId, base) = S.addPermanent moths S.alice emptyBoard
         -- Two lore counters placed outright, so nothing has crossed a chapter
-        -- yet: CR 714.3c's turn-based action then takes the count from two to
-        -- three, and CR 714.2b's "was less than N and became at least N" makes
+        -- yet: CR 715.3c's turn-based action then takes the count from two to
+        -- three, and CR 715.2b's "was less than N and became at least N" makes
         -- chapter III the only one that fires.
         withCounters = S.addCounter CounterKind.Lore 2 sagaId base
         advanced = S.runPure S.identityAnswer (precombatMainOf S.alice withCounters) (Engine.runTurnBasedActions Phase.PrecombatMain)
@@ -666,7 +666,7 @@ enterTransformedSpec s registry = Spec.describe s "Entering the battlefield tran
         Spec.assertEqWith s "an enchantment CREATURE" (Projection.cardTypesOf oid after) (Set.fromList [CardType.Creature, CardType.Enchantment])
         Spec.assertBool s (Projection.hasKeyword Keyword.Flying oid after) "with the back face's flying"
       other -> Spec.assertFailure s ("expected exactly one permanent, got " <> show (length other))
-  -- CR 712.14a's second sentence, which has no printing: every card that prints
+  -- CR 712.11a's second sentence, which has no printing: every card that prints
   -- the "transformed" wording returns ITSELF, and each of them is double-faced.
   -- So the instruction is issued straight at the door, once per layout.
   --
@@ -674,8 +674,8 @@ enterTransformedSpec s registry = Spec.describe s "Entering the battlefield tran
   -- transformed and once not -- so "nothing was ever put onto the battlefield by
   -- this call" cannot be why the refusal reads as one. Thraben Gargoyle is the
   -- other control: the same call, the same board shape, a double-faced card, and
-  -- it enters showing the face CR 712.14a names.
-  Spec.it s "CR 712.14a a card that isn't double-faced stays in its current zone" $ do
+  -- it enters showing the face CR 712.11a names.
+  Spec.it s "CR 712.11a a card that isn't double-faced stays in its current zone" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     gargoyle <- S.printingOf s registry "Thraben Gargoyle"
     let transformed = EntryRiders.defaultValue {EntryRiders.transformed = True}
@@ -691,7 +691,7 @@ enterTransformedSpec s registry = Spec.describe s "Entering the battlefield tran
     Spec.assertEqWith s "and a double-faced card enters showing its back face" (fmap (\oid -> Projection.namesOf oid turned) (Game.zoneMembers Zone.Battlefield S.alice turned)) [Set.singleton antagonizerName]
 
 -- The face this permanent is showing, by name (CR 709.4a): Object.face is the
--- one field CR 701.27a writes, and CR 712.8d/e make every characteristic follow
+-- one field CR 701.27a writes, and CR 712.6c/e make every characteristic follow
 -- it. Parun.DaytimeSpec keeps its own copy for the same reason.
 faceNameOf :: ObjectId.ObjectId -> GameState.GameState -> Maybe CardName.CardName
 faceNameOf oid gs = fmap Face.name (Game.faceOf oid gs)
@@ -719,7 +719,7 @@ untapStepAfter :: Natural.Natural -> GameState.GameState -> GameState.GameState
 untapStepAfter n gs =
   S.runPure S.identityAnswer (gs {GameState.spellsCastLastTurn = n}) (Engine.runTurnBasedActions (Phase.Beginning BeginningStep.Untap))
 
--- alice's board for CR 701.27g: Tovolar, two Russet Wolves, Mutagen Connoisseur
+-- alice's board for CR 701.27h: Tovolar, two Russet Wolves, Mutagen Connoisseur
 -- and a Thraben Gargoyle, settled so CR 702.145d has made it day.
 --
 -- Two Wolves and no more because CR 603.4's intervening "if" wants three Wolves
@@ -738,7 +738,7 @@ transformedBoard tovolar wolf connoisseur gargoyle =
       (_, withGargoyle) = S.addPermanent gargoyle S.alice withConnoisseur
    in (tovolarId, connoisseurId, settleDaytime withGargoyle)
 
--- CR 701.27g, "transformed permanent", asked by a CARD rather than by the
+-- CR 701.27h, "transformed permanent", asked by a CARD rather than by the
 -- engine: Mutagen Connoisseur's "this creature gets +1/+0 for each transformed
 -- permanent you control" is `Filter.Transformed` conjoined with `HeldBy Controller
 -- You` under a Count over the battlefield, so its power IS the tally and every
@@ -747,7 +747,7 @@ transformedBoard tovolar wolf connoisseur gargoyle =
 -- Tovolar, Dire Overlord // Tovolar, the Midnight Scourge is the permanent that
 -- moves. CR 702.145c/f turn him over and back through the rules alone, which is
 -- the pool's only road to a permanent that is front face up AND has been back
--- face up before -- the one board on which CR 701.27g's first exclusion is
+-- face up before -- the one board on which CR 701.27h's first exclusion is
 -- distinguishable from a reading off Object.turnedOverAt.
 --
 -- Thraben Gargoyle is on the board and never turns, so a reading of "transformed
@@ -755,19 +755,19 @@ transformedBoard tovolar wolf connoisseur gargoyle =
 -- two Russet Wolves are single-faced and contribute nothing under any reading;
 -- they are there to reach Tovolar's trigger.
 --
--- CR 701.27g's SECOND exclusion -- an object represented by more than one card
+-- CR 701.27h's SECOND exclusion -- an object represented by more than one card
 -- is never a transformed permanent -- is asserted in Parun.MeldSpec instead, on
--- the board that reaches one: "CR 701.27g a melded permanent is not a
+-- the board that reaches one: "CR 701.27h a melded permanent is not a
 -- transformed permanent" puts this same Connoisseur beside a melded Hanweir and
 -- a Thraben Gargoyle, and counts the Gargoyle alone. The rule's other half, a
 -- MERGED permanent, takes the same Game.componentsOf read, and no case builds
 -- that board: Cubwarden over a transformed Blightreaper Thallid would.
 transformedPermanentSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 transformedPermanentSpec s registry = Spec.describe s "TransformedPermanent" $ do
-  -- CR 701.27g's positive: a double-faced permanent on the battlefield with its
+  -- CR 701.27h's positive: a double-faced permanent on the battlefield with its
   -- BACK face up is a transformed permanent, and the Connoisseur counts exactly
   -- one of them although two double-faced permanents are on the board.
-  Spec.it s "CR 701.27g a permanent with its back face up is a transformed permanent" $ do
+  Spec.it s "CR 701.27h a permanent with its back face up is a transformed permanent" $ do
     tovolar <- S.printingOf s registry "Tovolar, Dire Overlord"
     wolf <- S.printingOf s registry "Russet Wolves"
     connoisseur <- S.printingOf s registry "Mutagen Connoisseur"
@@ -777,11 +777,11 @@ transformedPermanentSpec s registry = Spec.describe s "TransformedPermanent" $ d
     Spec.assertEqWith s "the Connoisseur counts the one transformed permanent" (S.powerToughnessOf connoisseurId night) (Just (1, 5))
     Spec.assertEqWith s "it is night" (GameState.daytime night) (Just Daytime.Night)
     Spec.assertEqWith s "and Tovolar is the permanent showing a back face" (faceNameOf tovolarId night) (Just tovolarBack)
-  -- CR 701.27g's first sentence read the other way: with every double-faced
+  -- CR 701.27h's first sentence read the other way: with every double-faced
   -- permanent front face up the tally is zero, although the board holds two of
   -- them. The falsifier for "a double-faced permanent is a transformed
   -- permanent", which would answer 2 here.
-  Spec.it s "CR 701.27g a permanent with its front face up is not one" $ do
+  Spec.it s "CR 701.27h a permanent with its front face up is not one" $ do
     tovolar <- S.printingOf s registry "Tovolar, Dire Overlord"
     wolf <- S.printingOf s registry "Russet Wolves"
     connoisseur <- S.printingOf s registry "Mutagen Connoisseur"
@@ -790,7 +790,7 @@ transformedPermanentSpec s registry = Spec.describe s "TransformedPermanent" $ d
     Spec.assertEqWith s "the Connoisseur counts none" (S.powerToughnessOf connoisseurId day) (Just (0, 5))
     Spec.assertEqWith s "it is day" (GameState.daytime day) (Just Daytime.Day)
     Spec.assertEqWith s "and Tovolar shows his front face" (faceNameOf tovolarId day) (Just tovolarFront)
-  -- CR 701.27g's second sentence: "even if it had its back face up previously".
+  -- CR 701.27h's second sentence: "even if it had its back face up previously".
   -- Tovolar goes day -> night -> day, so at the read he is front face up with
   -- Object.turnedOverAt set twice over. The falsifier for an answer read off
   -- that field instead of off Object.face, which would count him here.
@@ -798,7 +798,7 @@ transformedPermanentSpec s registry = Spec.describe s "TransformedPermanent" $ d
   -- The turnedOverAt assertion is the case's PRECONDITION and is read straight
   -- off the object, so no change to the atom can move it -- without it this case
   -- is the one above with extra steps.
-  Spec.it s "CR 701.27g not one even if it had its back face up previously" $ do
+  Spec.it s "CR 701.27h not one even if it had its back face up previously" $ do
     tovolar <- S.printingOf s registry "Tovolar, Dire Overlord"
     wolf <- S.printingOf s registry "Russet Wolves"
     connoisseur <- S.printingOf s registry "Mutagen Connoisseur"
@@ -812,7 +812,7 @@ transformedPermanentSpec s registry = Spec.describe s "TransformedPermanent" $ d
     Spec.assertEqWith s "and Tovolar is back on his front face" (faceNameOf tovolarId again) (Just tovolarFront)
 
 -- The two names Blightreaper Thallid // Blightsower Thallid prints, and the
--- token its back face makes. CR 701.27e's group reads all three.
+-- token its back face makes. CR 701.27f's group reads all three.
 thallidFront, thallidBack, saprolingToken :: CardName.CardName
 thallidFront = CardName.MkCardName (Text.pack "Blightreaper Thallid")
 thallidBack = CardName.MkCardName (Text.pack "Blightsower Thallid")
@@ -828,7 +828,7 @@ wolfToken = CardName.MkCardName (Text.pack "Wolf Token")
 howlerName :: CardName.CardName
 howlerName = CardName.MkCardName (Text.pack "Wildsong Howler")
 
--- alice's board for CR 701.27e: one Blightreaper Thallid and `n` Forests, in her
+-- alice's board for CR 701.27f: one Blightreaper Thallid and `n` Forests, in her
 -- own precombat main phase with priority, since CR 307.5 is what the card's
 -- "Activate only as a sorcery" rider asks for.
 --
@@ -857,7 +857,7 @@ resolveTop gs = S.runPure S.identityAnswer gs Stack.resolveTop
 
 -- Resolve EVERYTHING the gather put on the stack, not just its top. A count of
 -- tokens after one resolveTop cannot tell "one trigger fired" from "two fired
--- and one is still waiting", which is exactly the pair the CR 701.27f case
+-- and one is still waiting", which is exactly the pair the CR 701.27g case
 -- exists to separate. One pass per object already there, since nothing these
 -- boards resolve puts anything back.
 resolveStack :: GameState.GameState -> GameState.GameState
@@ -914,7 +914,7 @@ zoneNames zone gs =
     (\oid -> maybe "?" (Text.unpack . CardName.unwrap . Face.name) (Game.faceOf oid gs))
     (Game.zoneMembers zone S.alice gs)
 
--- CR 701.27e, "transforms into", the phrase a CARD asks: Blightreaper Thallid //
+-- CR 701.27f, "transforms into", the phrase a CARD asks: Blightreaper Thallid //
 -- Blightsower Thallid, {1}{B} 2/2 Creature -- Fungus with "{3}{G/P}: Transform
 -- this creature. Activate only as a sorcery.", whose back face is a 3/3 Creature
 -- -- Phyrexian Fungus reading "When this creature transforms into Blightsower
@@ -943,15 +943,15 @@ zoneNames zone gs =
 -- that road rather than fencing it.
 transformTriggerSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 transformTriggerSpec s registry = Spec.describe s "TransformsInto" $ do
-  -- CR 701.27f from the event's side: the second resolution is IGNORED, so it is
+  -- CR 701.27g from the event's side: the second resolution is IGNORED, so it is
   -- not an event and nothing triggers on it. Eight Forests put both activations
-  -- on the stack before either resolves, TransformSpec's own CR 701.27f board.
+  -- on the stack before either resolves, TransformSpec's own CR 701.27g board.
   --
   -- The falsifier is an implementation that records the event for every victim
   -- the instruction NAMED rather than for the ones that turned: it makes two
   -- Saprolings here, and one everywhere else, so this is the only case that can
   -- tell the two apart.
-  Spec.it s "CR 701.27f a turn that was ignored triggers nothing" $ do
+  Spec.it s "CR 701.27g a turn that was ignored triggers nothing" $ do
     thallid <- S.printingOf s registry "Blightreaper Thallid"
     forest <- S.printingOf s registry "Forest"
     let (oid, gs) = thallidBoard thallid forest 8
@@ -972,7 +972,7 @@ transformTriggerSpec s registry = Spec.describe s "TransformsInto" $ do
   -- Saprolings.
   --
   -- A SPELL does the turning (S.noSource resolving, TransformSpec's `sweep`), so
-  -- CR 701.27f's gate is not what makes the count one apiece -- that rule is only
+  -- CR 701.27g's gate is not what makes the count one apiece -- that rule is only
   -- for a permanent's own ability.
   Spec.it s "CR 608.2f two Thallids turned at once trigger once each" $ do
     thallid <- S.printingOf s registry "Blightreaper Thallid"
@@ -984,14 +984,14 @@ transformTriggerSpec s registry = Spec.describe s "TransformsInto" $ do
     Spec.assertEqWith s "one Saproling apiece, not one per event apiece" (S.countOnBattlefieldByName saprolingToken S.alice after) 2
     Spec.assertEqWith s "the settle placed two triggers" (length (GameState.stack settled)) 2
     Spec.assertEqWith s "and both really turned over" (fmap (\oid -> faceNameOf oid turned) [first, second]) [Just thallidBack, Just thallidBack]
-  -- CR 701.27e's "with a specified characteristic", asked of the match alone,
+  -- CR 701.27f's "with a specified characteristic", asked of the match alone,
   -- because no BOARD can ask it: Parun.Engine.Card gives a transforming permanent
   -- only the shown face's abilities, so a "transforms into X" trigger exists
   -- exactly when the permanent is showing X and every printed pair matches. The
   -- name becomes load-bearing under a copy effect, which is why the check is
   -- here rather than dropped -- a UNIT fence, stated as one, since the gameplay
   -- cases above stay green without it.
-  Spec.it s "CR 701.27e the condition refuses an event naming a different face" $ do
+  Spec.it s "CR 701.27f the condition refuses an event naming a different face" $ do
     let board = emptyBoard
         bearer = S.noSource
         event into = GameEvent.Transformed Transformed.MkTransformed {Transformed.object = bearer, Transformed.characteristics = S.emptyCharacteristics {PC.names = Set.singleton into}, Transformed.controller = Nothing, Transformed.attachments = Set.empty, Transformed.lapsedGrants = Set.empty}
@@ -1038,7 +1038,7 @@ transformTriggerSpec s registry = Spec.describe s "TransformsInto" $ do
   --
   -- `howlerDeck` above says why the library is nine cards and how they are
   -- chosen.
-  Spec.it s "CR 702.145c/701.27e nightfall turns the Piper over and the back face's trigger fires" $ do
+  Spec.it s "CR 702.145c/701.27f nightfall turns the Piper over and the back face's trigger fires" $ do
     piper <- S.printingOf s registry "Howlpack Piper"
     deck <- mapM (S.printingOf s registry) howlerDeck
     let (piperId, placed) = S.addPermanent piper S.alice emptyBoard
@@ -1059,7 +1059,7 @@ transformTriggerSpec s registry = Spec.describe s "TransformsInto" $ do
     Spec.assertEqWith s "and it was day before the untap step, so CR 502.2 had a designation to change" (GameState.daytime day) (Just Daytime.Day)
   -- The printed condition's OTHER limb, so the AnyOf is not proved by one side
   -- alone -- the pair the Thallid cases above make with CR 700.4's "or dies".
-  -- CR 712.13a through CR 702.145b's first static ability gets there on the same
+  -- CR 701.27j through CR 702.145b's first static ability gets there on the same
   -- card: the Piper is CAST at night, so it ENTERS as Wildsong Howler and the
   -- Self Enters limb fires without the Piper ever transforming.
   --
@@ -1072,13 +1072,13 @@ transformTriggerSpec s registry = Spec.describe s "TransformsInto" $ do
   -- back face's abilities are an upkeep trigger and a combat-damage trigger.
   --
   -- The face assertion comes FIRST because the payload assertions cannot tell the
-  -- limbs apart on their own: an engine that skipped CR 712.13a would put the
+  -- limbs apart on their own: an engine that skipped CR 701.27j would put the
   -- Piper on the battlefield front face up, and the settle's CR 702.145c sweep
   -- would then turn it over and fire the SAME trigger on its transform limb.
   -- `entered` is read before that settle, and stripping the record from
   -- Daytime.turnDue leaves this case green, which is the other half of the
   -- separation.
-  Spec.it s "CR 712.13a/701.27e the same trigger's enters limb fires on a Piper cast at night" $ do
+  Spec.it s "CR 701.27j/701.27f the same trigger's enters limb fires on a Piper cast at night" $ do
     tovolar <- S.printingOf s registry "Tovolar, Dire Overlord"
     forest <- S.printingOf s registry "Forest"
     piper <- S.printingOf s registry "Howlpack Piper"
@@ -1091,7 +1091,7 @@ transformTriggerSpec s registry = Spec.describe s "TransformsInto" $ do
         after = resolveStackTakingTheMay (gatherTakingTheMay entered)
     -- Read on `entered`, the board the spell's resolution leaves, which is BEFORE
     -- the settle the CR 702.145c sweep runs in. The FACES, not
-    -- S.countOnBattlefieldByName: that helper reads the card's name (CR 712.8a's
+    -- S.countOnBattlefieldByName: that helper reads the card's name (CR 712.6a's
     -- front face), which cannot tell the two faces apart. The whole battlefield,
     -- so "Howlpack Piper" is asserted absent as well as "Wildsong Howler"
     -- present.
@@ -1100,7 +1100,7 @@ transformTriggerSpec s registry = Spec.describe s "TransformsInto" $ do
     Spec.assertEqWith s "the three cards under the looked-at six are now the top three" (take 3 (zoneNames Zone.Library after)) ["Lightning Bolt", "Ancestral Recall", "Giant Growth"]
     Spec.assertEqWith s "it was night when the spell resolved" (GameState.daytime night) (Just Daytime.Night)
 
--- CR 701.27e read by a BYSTANDER, which is the other half of that rule: "Some
+-- CR 701.27f read by a BYSTANDER, which is the other half of that rule: "Some
 -- triggered abilities trigger when an object 'transforms into' an object with a
 -- specified characteristic." The fixture is Cult of the Waxing Moon, a {4}{G}
 -- 5/4 Creature -- Human Shaman reading "Whenever a permanent you control
@@ -1116,16 +1116,16 @@ transformTriggerSpec s registry = Spec.describe s "TransformsInto" $ do
 -- count. The first three differ from each other in one thing apiece; the last is
 -- the one board on which the sample and a live read part company.
 --
--- The Cult itself is a creature the sweep names, and CR 701.27c leaves it alone:
+-- The Cult itself is a creature the sweep names, and CR 701.27d leaves it alone:
 -- it is not double-faced, so no event is recorded for it. Were one recorded, the
 -- Cult is a Human and the filter would decline it anyway.
 bystanderTransformSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 bystanderTransformSpec s registry = Spec.describe s "TransformsIntoWatched" $ do
   -- The rule's own case. Aang is a Human on the face it turns FROM and not one on
   -- the face it turns INTO, so a match reading the pre-transform characteristics
-  -- makes no Wolf at all -- which is what pins the sample to CR 701.27e's
+  -- makes no Wolf at all -- which is what pins the sample to CR 701.27f's
   -- "immediately after it does so" rather than to the moment the instruction ran.
-  Spec.it s "CR 701.27e a permanent alice controls turning into a non-Human creature makes the Wolf" $ do
+  Spec.it s "CR 701.27f a permanent alice controls turning into a non-Human creature makes the Wolf" $ do
     cult <- S.printingOf s registry "Cult of the Waxing Moon"
     aang <- S.printingOf s registry "Aang, at the Crossroads"
     let (_, withCult) = S.addPermanent cult S.alice emptyBoard
@@ -1157,7 +1157,7 @@ bystanderTransformSpec s registry = Spec.describe s "TransformsIntoWatched" $ do
   -- turn with CR 702.161a's living metal switched off, not one on the face it
   -- turns INTO. So a match reading the pre-transform characteristics makes a Wolf
   -- here, where the rule makes none.
-  Spec.it s "CR 701.27e / 702.161a a permanent turning into a noncreature on bob's turn makes none" $ do
+  Spec.it s "CR 701.27f / 702.161a a permanent turning into a noncreature on bob's turn makes none" $ do
     cult <- S.printingOf s registry "Cult of the Waxing Moon"
     ratchet <- S.printingOf s registry "Ratchet, Field Medic"
     let (_, withCult) = S.addPermanent cult S.alice emptyBoard
@@ -1172,14 +1172,14 @@ bystanderTransformSpec s registry = Spec.describe s "TransformsIntoWatched" $ do
   -- The only board that can tell the SAMPLE from a live read, and the one
   -- Parun.Types.Transformed's own argument names: a permanent that turns twice
   -- before the CR 117.5 scan. Two turns is one resolution's two clauses -- CR
-  -- 701.27f's gate is only for a permanent's own ability, and `sweep` is neither
+  -- 701.27g's gate is only for a permanent's own ability, and `sweep` is neither
   -- -- so both events wait for the same scan, at which the board shows the front
   -- face and nothing else.
   --
-  -- CR 701.27e reads each event at its own turn, so exactly one of the two is a
+  -- CR 701.27f reads each event at its own turn, so exactly one of the two is a
   -- turn into a non-Human creature. An arm re-deriving the characteristics at the
   -- scan sees a Human twice over and makes no Wolf at all.
-  Spec.it s "CR 701.27e each event is read at its own turn, not at the scan" $ do
+  Spec.it s "CR 701.27f each event is read at its own turn, not at the scan" $ do
     cult <- S.printingOf s registry "Cult of the Waxing Moon"
     aang <- S.printingOf s registry "Aang, at the Crossroads"
     let (_, withCult) = S.addPermanent cult S.alice emptyBoard
@@ -1302,7 +1302,7 @@ castAndResolve pid oid gs =
 -- whose intervening "if" reads how many spells each player cast LAST turn.
 --
 -- The card is an Innistrad werewolf and carries NO daybound or nightbound
--- keyword, so it is not on CR 731's day/night road at all: GameState.daytime
+-- keyword, so it is not on CR 732's day/night road at all: GameState.daytime
 -- stays Nothing, CR 502.2's untap check returns immediately, and every flip below
 -- is the printed trigger's doing. That is a fixture constraint -- a daybound
 -- permanent on this board would hand the flips to Parun.Engine.Daytime -- so the
@@ -1352,14 +1352,14 @@ ratchetReadings oid gs =
 -- alice's Ratchet with its BACK face up, which is the only board its printed
 -- convert trigger functions on. Written onto Object.face directly rather than
 -- played out, which keeps these cases about CR 701.28a and nothing else: one of
--- the two printed roads to a back-face-up Ratchet now exists -- CR 712.11a's cast
+-- the two printed roads to a back-face-up Ratchet now exists -- CR 712.8a's cast
 -- "converted", which moreThanMeetsTheEyeSpec below plays out of a hand -- and
 -- routing the fixture through it would make every case here also a case about
 -- casting. The other road, the front face's own optional convert, is played out
 -- in data/scenarios/transform/, and routing this fixture through THAT one would
 -- make every case here a case about gaining life as well.
 --
--- Object.turnedOverAt is deliberately left unset. CR 701.27f -- which CR 701.28e
+-- Object.turnedOverAt is deliberately left unset. CR 701.27g -- which CR 701.28f
 -- restates for convert -- ignores an instruction from an ability of a permanent
 -- that has already turned over since that ability was put onto the stack, so a
 -- fixture that stamped one would gate the very behaviour these cases assert.
@@ -1410,8 +1410,8 @@ convertSpec s registry = Spec.describe s "Convert" $ do
   -- CR 701.27b, which CR 701.28b restates for convert: turning over is its own
   -- game action, so it records CR 701.27a's event rather than a second one of its
   -- own -- the same GameEvent.Transformed a transform writes, which is what makes
-  -- CR 701.27e's "transforms into" trigger fire on a convert.
-  Spec.it s "CR 701.27e / 701.28a a convert records the transform event, not one of its own" $ do
+  -- CR 701.27f's "transforms into" trigger fire on a convert.
+  Spec.it s "CR 701.27f / 701.28a a convert records the transform event, not one of its own" $ do
     ratchet <- S.printingOf s registry "Ratchet, Field Medic"
     golem <- S.printingOf s registry "Icehide Golem"
     let (ratchetId, withRatchet) = racerBoard ratchet emptyBoard
@@ -1491,8 +1491,8 @@ anglerBack = CardName.MkCardName (Text.pack "Hook-Haunt Drifter")
 -- reading below is rule 702.146a alone.
 --
 -- More than meets the eye's near twin, one clause apart, and the clause is the
--- ZONE. Both rules put the BACK face on the stack (CR 712.11a) through the same
--- CR 712.11d exception, and CR 712.13 carries it onto the battlefield, which rule
+-- ZONE. Both rules put the BACK face on the stack (CR 712.8a) through the same
+-- CR 712.8d exception, and CR 712.10 carries it onto the battlefield, which rule
 -- 702.146b states again in its own words. Where rule 702.162a names no zone, rule
 -- 702.146a names the graveyard -- so the disturb cast is a CR 601.3 permission as
 -- well as a cost, and neither half reaches the front face.
@@ -1514,7 +1514,7 @@ disturbSpec s registry = Spec.describe s "Disturb" $ do
         (buried, graveyardBoard) = fmap onTurn (S.addGraveyardCard angler S.alice lands)
         (held, handBoard) = fmap onTurn (S.addHandCard angler S.alice lands)
         -- Which halves of that object the player is actually offered, CR
-        -- 712.11d's own reading: an assertion on Cost.costsFor alone would pass
+        -- 712.8d's own reading: an assertion on Cost.costsFor alone would pass
         -- on a face nobody could propose.
         offeredNames oid gs =
           List.sort
@@ -1529,9 +1529,9 @@ disturbSpec s registry = Spec.describe s "Disturb" $ do
         -- The permanent found by the CARD behind it rather than by a name, since
         -- which name it answers to is the thing under test.
         anglerIn gs = filter (\o -> fmap S.nameOf (Game.cardOf o gs) == Just (S.printingName angler)) (Game.zoneMembers Zone.Battlefield S.alice gs)
-    Spec.assertEqWith s "CR 712.11a / 702.146b the disturbed spell arrives with its back face up: the 1/2 Spirit, not the 2/1 Human" (fmap (\o -> (Projection.namesOf o resolved, S.powerToughnessOf o resolved)) (anglerIn resolved)) [(Set.singleton anglerBack, Just (1, 2))]
-    Spec.assertEqWith s "CR 702.146a / 712.11d the graveyard offers the back face and only it" (offeredNames buried graveyardBoard) [anglerBack]
-    Spec.assertEqWith s "CR 712.11 her hand offers the front face and only it, the same two Islands paying either cost" (offeredNames held handBoard) [anglerFront]
+    Spec.assertEqWith s "CR 712.8a / 702.146b the disturbed spell arrives with its back face up: the 1/2 Spirit, not the 2/1 Human" (fmap (\o -> (Projection.namesOf o resolved, S.powerToughnessOf o resolved)) (anglerIn resolved)) [(Set.singleton anglerBack, Just (1, 2))]
+    Spec.assertEqWith s "CR 702.146a / 712.8d the graveyard offers the back face and only it" (offeredNames buried graveyardBoard) [anglerBack]
+    Spec.assertEqWith s "CR 712.8 her hand offers the front face and only it, the same two Islands paying either cost" (offeredNames held handBoard) [anglerFront]
   -- CR 613.1f in a graveyard: Yixlid Jailer ("Cards in graveyards lose all
   -- abilities.", api.scryfall.com 2026-09-30, whose ruling names a card's own
   -- flashback as stopped) takes disturb off the buried front face, so CR 601.3
@@ -1557,7 +1557,7 @@ disturbSpec s registry = Spec.describe s "Disturb" $ do
   -- Vigil {2}{U} Enchantment, "Creature cards in your graveyard have disturb
   -- {1}{U}", over Thraben Gargoyle {1} 2/2 // Stonewing Antagonizer 4/2, which
   -- prints no disturb. CR 613.1f gives the buried front face the ability, and CR
-  -- 712.11d lets it reach the back face. A pair of boards differing only in the
+  -- 712.8d lets it reach the back face. A pair of boards differing only in the
   -- Vigil; two Islands pay the granted {1}{U}, and the Gargoyle's own {1} is no
   -- route out of a graveyard at all.
   Spec.it s "CR 702.146a a disturb granted to a card in a graveyard casts it transformed" $ do
@@ -1571,7 +1571,7 @@ disturbSpec s registry = Spec.describe s "Disturb" $ do
         offeredNames gs = [n | A.Cast o n _ <- Action.legalActions S.alice gs, o == buried]
         resolved = S.runPure S.identityAnswer (S.runPure S.identityAnswer granted (Cast.castSpell S.manaPerformer S.alice buried antagonizer Facing.FaceUp)) Stack.resolveTop
         gargoyleIn gs = filter (\o -> fmap S.nameOf (Game.cardOf o gs) == Just (S.printingName gargoyle)) (Game.zoneMembers Zone.Battlefield S.alice gs)
-    Spec.assertEqWith s "CR 712.11a / 702.146b it arrives back face up: the 4/2 Antagonizer" (fmap (\o -> (Projection.namesOf o resolved, S.powerToughnessOf o resolved)) (gargoyleIn resolved)) [(Set.singleton antagonizer, Just (4, 2))]
+    Spec.assertEqWith s "CR 712.8a / 702.146b it arrives back face up: the 4/2 Antagonizer" (fmap (\o -> (Projection.namesOf o resolved, S.powerToughnessOf o resolved)) (gargoyleIn resolved)) [(Set.singleton antagonizer, Just (4, 2))]
     Spec.assertEqWith s "CR 613.1f the Vigil offers the back face, and without it the graveyard offers nothing" (offeredNames granted, offeredNames without) ([antagonizer], [])
 
 -- CR 702.162a: more than meets the eye, on the same Ratchet, Field Medic //
@@ -1580,14 +1580,14 @@ disturbSpec s registry = Spec.describe s "Disturb" $ do
 --
 -- The rule has two limbs and a case that proves one is half a proof. The first is
 -- a CHEAPER COST (CR 118.9, CR 601.2b's alternative-cost announcement); the
--- second is that what arrives is the BACK FACE (CR 712.11a: "if a double-faced
+-- second is that what arrives is the BACK FACE (CR 712.8a: "if a double-faced
 -- card ... is cast as a spell 'transformed' or 'converted,' it's put on the stack
--- with its back face up"), which CR 712.13 then carries onto the battlefield. So
+-- with its back face up"), which CR 712.10 then carries onto the battlefield. So
 -- both are asserted, and the cast for the PRINTED cost is the control that tells
 -- the permission from the timing class: the same card, the same board, the same
 -- seat, and a front-face permanent at the end of it.
 --
--- CR 712.11d is what makes the converted cast an ordinary legal action rather
+-- CR 712.8d is what makes the converted cast an ordinary legal action rather
 -- than something an effect has to offer: "if an ability of a double-faced card's
 -- front face allows it to be cast ... 'converted,' that ability is also
 -- considered when evaluating that spell to determine if it can be cast." The
@@ -1596,7 +1596,7 @@ disturbSpec s registry = Spec.describe s "Disturb" $ do
 -- face name directly, which no player ever does.
 moreThanMeetsTheEyeSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 moreThanMeetsTheEyeSpec s registry = Spec.describe s "MoreThanMeetsTheEye" $ do
-  Spec.it s "CR 702.162a / 712.11a Ratchet cast converted costs {1}{W} and arrives with its back face up" $ do
+  Spec.it s "CR 702.162a / 712.8a Ratchet cast converted costs {1}{W} and arrives with its back face up" $ do
     ratchet <- S.printingOf s registry "Ratchet, Field Medic"
     plains <- S.printingOf s registry "Plains"
     -- THREE Plains, so both costs are payable on ONE board: mana, seats, timing
@@ -1614,7 +1614,7 @@ moreThanMeetsTheEyeSpec s registry = Spec.describe s "MoreThanMeetsTheEye" $ do
     Spec.assertEqWith s "printed cost: the front face is the permanent" (readingsIn (resolveAs ratchetFront)) [ratchetFrontReadings]
     Spec.assertEqWith s "converted: {1}{W} tapped two of the three Plains" (S.tappedCount S.alice (castAs ratchetBack)) 2
     Spec.assertEqWith s "printed cost: {2}{W} tapped all three" (S.tappedCount S.alice (castAs ratchetFront)) 3
-    -- CR 712.11d, and the reason CR 702.162a is a keyword rather than a rider on
+    -- CR 712.8d, and the reason CR 702.162a is a keyword rather than a rider on
     -- some opcode: the converted cast is offered to the player from the hand,
     -- beside the ordinary one.
     Spec.assertEqWith
@@ -1635,7 +1635,7 @@ moreThanMeetsTheEyeSpec s registry = Spec.describe s "MoreThanMeetsTheEye" $ do
   -- rule 702.162a's the only one the spell could take, so the converted face is
   -- still on offer and still costs {1}{W}; an offer that DOES state one --
   -- "without paying its mana cost" -- takes the spell's single alternative, so CR
-  -- 712.11's default front face is the whole answer. Parun.InvestigateSpec's "CR
+  -- 712.8's default front face is the whole answer. Parun.InvestigateSpec's "CR
   -- 118.9a a free offer does not also offer the converted face" plays the second
   -- of those out of a printed card, Wild Evocation.
   --
@@ -1686,7 +1686,7 @@ moreThanMeetsTheEyeSpec s registry = Spec.describe s "MoreThanMeetsTheEye" $ do
     Spec.assertEqWith s "and the free cast paid nothing" (S.tappedCount S.alice (under free)) 0
 
 -- CR 613.7g: "a double-faced permanent receives a new timestamp each time it
--- transforms or converts". Rule 712.18 says the permanent is not a new object,
+-- transforms or converts". Rule 712.15 says the permanent is not a new object,
 -- which settles the id and not the stamp.
 --
 -- WHAT READS THE STAMP. CR 701.60c's suspected grant is the rulebook's rather

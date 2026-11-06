@@ -145,7 +145,7 @@ combatReplaySpec s =
       damagePrompt = Prompt.AssignCombatDamage decider S.alice oid (Map.singleton (Recipient.ToCreature oid) 0) 2
       -- CR 118.12a: Mana Leak's {3}, the cost Prompt.ChooseToPay carries.
       genericThree = Cost.Type.MkCost {Cost.Type.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 3]), Cost.Type.components = []}
-      -- CR 725.2's own pair, one borne and one sourceless: the crown steal hung
+      -- CR 726.2's own pair, one borne and one sourceless: the crown steal hung
       -- on an object and the inherent end-step draw hung on nothing.
       orderEntries =
         [ TriggerEntry.MkTriggerEntry (TriggerSource.OfObject oid) Monarch.crownSteal,
@@ -469,7 +469,7 @@ combatReplaySpec s =
         -- attacker keeps its next untap step.
         Spec.it s "defaultAnswer declines the exert" $
           Spec.assertEqWith s "declines" (Replay.defaultAnswer (Prompt.ChooseExert decider S.alice oid)) OptionalDecision.Declines
-        -- CR 733.1: the OptionalDecision-valued prompt asked while an illegal
+        -- CR 734.1: the OptionalDecision-valued prompt asked while an illegal
         -- payment is being reversed, and the only arm of Replay.defaultAnswer
         -- that answers Exercises rather than Declines. The others are
         -- rejected explicitly for ChoosePayLifeOnEntry's reason, and the boards a
@@ -481,7 +481,7 @@ combatReplaySpec s =
           Spec.assertEqWith s "a riot answer is not an answer to it" (Replay.decode p (Response.ChoseRiot OptionalDecision.Exercises)) Nothing
           Spec.assertEqWith s "nor is an exert" (Replay.decode p (Response.ChoseExert OptionalDecision.Exercises)) Nothing
           Spec.assertEqWith s "nor is a printed may" (Replay.decode p (Response.ChoseOptional OptionalDecision.Exercises)) Nothing
-        -- CR 733.1: a transcript that runs short REVERSES them, the one may
+        -- CR 734.1: a transcript that runs short REVERSES them, the one may
         -- whose short answer is Exercises -- it is the half that leaves the board
         -- as the illegal action found it, and a transcript that ran out must not
         -- float mana into a game that never made it.
@@ -513,7 +513,7 @@ combatReplaySpec s =
         -- five.
         Spec.it s "defaultAnswer chooses Mountain" $
           Spec.assertEqWith s "Mountain" (Replay.defaultAnswer (Prompt.ChooseBasicLandType decider S.alice oid)) Subtype.Mountain
-        -- CR 702.155b / 714.3b: the chapter a Saga with read ahead enters on.
+        -- CR 702.155b / 715.3b: the chapter a Saga with read ahead enters on.
         -- Round-tripped at 2 and 3 rather than at 1, since 1 is what
         -- defaultAnswer falls back to and a collapsing codec would hide behind
         -- it -- the same trap ChooseBasicLandType's Mountain names.
@@ -636,10 +636,10 @@ combatReplaySpec s =
           -- rejected by validation and deal no damage at all.
           Spec.assertEqWith s "all to one blocker" (Replay.defaultAnswer damagePrompt) (Map.singleton (Recipient.ToCreature oid) 2)
         -- The payload mixes both kinds of entry (CR 113.7's borne trigger and
-        -- CR 725.2's sourceless one), which is what the batch really looks like
+        -- CR 726.2's sourceless one), which is what the batch really looks like
         -- when the monarch controls a trigger of her own at the same moment.
         -- Each entry carries the ABILITY as well as the source (#61), so the two
-        -- named here are CR 725.2's own pair.
+        -- named here are CR 726.2's own pair.
         Spec.it s "OrderTriggers records and replays a permutation" $ do
           let p = Prompt.OrderTriggers decider S.alice orderEntries
               answer = [1, 0] :: [Natural.Natural]
@@ -725,7 +725,7 @@ combatReplaySpec s =
             "identity permutation"
             (Replay.defaultAnswer (Prompt.OrderCombatTolls decider S.alice [oid, ObjectId.MkObjectId 8]))
             [0, 1 :: Natural.Natural]
-        -- CR 712.21a's arrangement, the fifth prompt carrying a [Natural]
+        -- CR 713.8a's arrangement, the fifth prompt carrying a [Natural]
         -- permutation, and discriminating against the four above for their own
         -- stated reason: a shared Response constructor would let a payment's
         -- transcript entry rearrange a melded permanent's two cards.
@@ -898,7 +898,7 @@ combatReplaySpec s =
             "the printed one"
             (Replay.defaultAnswer (Prompt.ChooseCost decider S.alice oid [printed, alternative] Seq.empty))
             printed
-        -- #136 / CR 729.2: "Randomly determine which player goes first." The
+        -- #136 / CR 730.2: "Randomly determine which player goes first." The
         -- determination is randomness, not a choice, so the prompt carries NO
         -- Decider -- Shuffle, RandomObject, RandomPlayer and RandomCard below
         -- are the others. Recording it is what keeps a subgame replayable: the
@@ -1098,7 +1098,7 @@ combatReplaySpec s =
           -- constructor. Both carry a PlayerId, so the types would not object.
           let p = Prompt.ChooseDefender decider S.alice (S.bob NonEmpty.:| [S.carol])
           Spec.assertEqWith s "mismatch" (Replay.decode p (Response.DeterminedFirstPlayer S.bob)) Nothing
-        -- CR 725.4 / 726.4 with CR 805.2: which active player takes a departing
+        -- CR 726.4 / 727.4 with CR 805.2: which active player takes a departing
         -- holder's designation. Its answer has ChoosePlayer's shape, so each
         -- rejects the other's response.
         Spec.it s "ChooseActivePlayer round-trips, and rejects a chosen player" $ do
@@ -1430,7 +1430,7 @@ combatReplaySpec s =
           -- transcript of one from replaying as the other.
           Spec.assertEqWith s "a dungeon choice does not decode as this one" (Replay.decode p (Response.ChoseDungeon (PrintingId.MkPrintingId 7))) Nothing
           Spec.assertEqWith s "a short transcript brings in the fewest allowed, from the front of the offer" (Replay.defaultAnswer p) [a]
-        -- CR 601.3 / 709.3 / 712.11b / 715.3: which cast a player chose to make
+        -- CR 601.3 / 709.3 / 712.8b / 716.3: which cast a player chose to make
         -- off an offer is a decision, so it has to survive a transcript like any
         -- other.
         Spec.it s "ChooseOfferedCastSpell round-trips through the transcript" $ do
@@ -1454,7 +1454,7 @@ combatReplaySpec s =
               p = Prompt.ChooseOfferedCastSpell decider S.alice ((oid, a) NonEmpty.:| [])
           Spec.assertEqWith s "mismatch" (Replay.decode p (Response.ChoseCardName a)) Nothing
         Spec.it s "a short transcript casts the first cast offered" $
-          -- CR 601.3 / 709.3a / 712.11c: every offered cast was gated on its own,
+          -- CR 601.3 / 709.3a / 712.8c: every offered cast was gated on its own,
           -- so the first is legal.
           Spec.assertEqWith
             s
@@ -2305,7 +2305,7 @@ combatReplaySpec s =
             (Replay.defaultAnswer (Prompt.ChooseDefender decider S.alice (S.bob NonEmpty.:| [S.carol])))
             S.bob
         -- #133: the concede channel round-trips like every other prompt. Note
-        -- the prompt takes a PlayerId and NO Decider (CR 723.6).
+        -- the prompt takes a PlayerId and NO Decider (CR 724.6).
         Spec.it s "Concede round-trips both ways" $ do
           let p = Prompt.Concede S.alice
           Spec.assertEqWith s "concedes" (Replay.decode p (Replay.encode p Concession.Concedes)) (Just Concession.Concedes)

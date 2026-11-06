@@ -360,20 +360,20 @@ threePlayers = alice NonEmpty.:| [bob, carol]
 threePlayerGame :: GameState.GameState
 threePlayerGame = Setup.emptyGame threePlayers
 
--- CR 723.1's control row as GameState.control holds it: `decider` makes
--- `controlled`'s choices for a whole turn, with no CR 723.7 restriction. What
+-- CR 724.1's control row as GameState.control holds it: `decider` makes
+-- `controlled`'s choices for a whole turn, with no CR 724.7 restriction. What
 -- Mindslaver installs, and what a test hand-building a controlled board wants.
 turnControl :: PlayerId.PlayerId -> PlayerId.PlayerId -> Map.Map PlayerId.PlayerId (NonEmpty.NonEmpty PlayerControl.PlayerControl)
 turnControl decider controlled = Map.singleton controlled (pure (turnControlRow decider))
 
 -- GameState.control with every row's creation stamp zeroed, so a board an
 -- effect stamped compares against turnControl's hand-built rows; the order the
--- stamps give is asserted where CR 723.1a is the subject.
+-- stamps give is asserted where CR 724.1a is the subject.
 unstamped :: Map.Map PlayerId.PlayerId (NonEmpty.NonEmpty PlayerControl.PlayerControl) -> Map.Map PlayerId.PlayerId (NonEmpty.NonEmpty PlayerControl.PlayerControl)
 unstamped = fmap (fmap (\row -> row {PlayerControl.timestamp = Timestamp.MkTimestamp 0}))
 
 -- turnControl's one row, unkeyed: also what GameState.pendingControl holds
--- before the controlled player's turn promotes it (CR 723.1b).
+-- before the controlled player's turn promotes it (CR 724.1b).
 turnControlRow :: PlayerId.PlayerId -> PlayerControl.PlayerControl
 turnControlRow decider =
   PlayerControl.MkPlayerControl
@@ -383,8 +383,8 @@ turnControlRow decider =
       PlayerControl.timestamp = Timestamp.MkTimestamp 0
     }
 
--- CR 723.2's row, the one Word of Command installs: `decider` decides for its
--- key until the object that wrote it finishes resolving, and rule 723.7's mana
+-- CR 724.2's row, the one Word of Command installs: `decider` decides for its
+-- key until the object that wrote it finishes resolving, and rule 724.7's mana
 -- restriction rides with it. Unkeyed, since the controlled player is whoever
 -- the caller puts it under.
 resolutionControl :: PlayerId.PlayerId -> PlayerControl.PlayerControl
@@ -480,7 +480,7 @@ nightmareJson :: IO Text.Text
 nightmareJson = committedJson "nightmare.json"
 
 -- The committed Encouraging Aviator // Jump file, whose prepare spell is named
--- for a real card (CR 722.4), and that card's own file: the pair a throwaway
+-- for a real card (CR 723.4), and that card's own file: the pair a throwaway
 -- corpus needs to set an own name against an alternative one.
 aviatorJson :: IO Text.Text
 aviatorJson = committedJson "encouraging-aviator-jump.json"
@@ -1487,13 +1487,13 @@ withGroupedEvents groups gs =
 -- Set the monarch directly, for tests that need the designation without
 -- resolving the effect that grants it.
 -- The monarch designation, seeded straight onto the board. NOT a crowning: it
--- records no CR 725.1 event and marks no CR 725 exile watch, so a test about
+-- records no CR 726.1 event and marks no CR 726 exile watch, so a test about
 -- what happens AS a player becomes the monarch calls Parun.Engine.Monarch.crown
 -- instead.
 withMonarch :: PlayerId.PlayerId -> GameState.GameState -> GameState.GameState
 withMonarch pid gs = gs {GameState.monarch = Just pid}
 
--- CR 726.1: the initiative, S.withMonarch's sibling one designation over.
+-- CR 727.1: the initiative, S.withMonarch's sibling one designation over.
 withInitiative :: PlayerId.PlayerId -> GameState.GameState -> GameState.GameState
 withInitiative pid gs = gs {GameState.initiative = Just pid}
 
@@ -1899,7 +1899,7 @@ stubView table oid =
                 Filter.faceDown = False,
                 Filter.representedCard = Nothing,
                 Filter.exiledFaceDown = False,
-                -- CR 701.27g: the table registers no face, and this stub stands
+                -- CR 701.27h: the table registers no face, and this stub stands
                 -- for a card outside the game rather than a permanent.
                 Filter.transformed = False,
                 Filter.counters = Map.empty,

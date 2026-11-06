@@ -122,7 +122,7 @@
 -- Synthetic Veiled Witness is the watcher of CR 701.27b's turned-face-down
 -- event: Scryfall `o:"turned face down" include:extras`, 2026-09-10, answers
 -- Vesuvan Shapeshifter alone, whose clause is a duration (Expiry.OnEvent,
--- proved in data/scenarios/copy). Thraben Gargoyle is CR 712.16's double-faced
+-- proved in data/scenarios/copy). Thraben Gargoyle is CR 712.13's double-faced
 -- permanent. turnedFaceDownSpec has both.
 --
 -- Synthetic Unmasking Witness is the watcher of CR 708.9's departure reveal:
@@ -1147,9 +1147,9 @@ turnedFaceDownSpec s registry = Spec.describe s "Turned face down" $ do
         Spec.assertEqWith s "setup: CR 701.27a the Gargoyle transformed" (Projection.namesOf dfc turned) (Set.singleton (CardName.MkCardName (Text.pack "Stonewing Antagonizer")))
       abilities -> Spec.assertFailure s ("expected one activated ability, got " <> show (length abilities))
 
-  -- CR 712.16: a double-faced permanent can't be turned face down. The pair is
+  -- CR 712.13: a double-faced permanent can't be turned face down. The pair is
   -- one cast from one board at two targets, the Gargoyle and the one-faced Piker.
-  Spec.it s "CR 712.16 Cyber Conversion does nothing to a double-faced permanent" $ do
+  Spec.it s "CR 712.13 Cyber Conversion does nothing to a double-faced permanent" $ do
     island <- S.printingOf s registry "Island"
     cyber <- S.printingOf s registry "Cyber Conversion"
     gargoyle <- S.printingOf s registry "Thraben Gargoyle"
@@ -1158,15 +1158,29 @@ turnedFaceDownSpec s registry = Spec.describe s "Turned face down" $ do
     let (gs, spell, dfc, bystander) = gargoyleBoard island cyber gargoyle piker witness
         after = castAtAndSettle cyber spell dfc gs
         control = castAtAndSettle cyber spell bystander gs
-    Spec.assertEqWith s "CR 712.16 the Gargoyle is still face up" (fmap Object.facing (Game.lookupObject dfc after)) (Just Facing.FaceUp)
-    Spec.assertEqWith s "CR 712.16 and still a Gargoyle, not a Cyberman" (Projection.subtypesOf dfc after) (Set.singleton Subtype.Gargoyle)
+    Spec.assertEqWith s "CR 712.13 the Gargoyle is still face up" (fmap Object.facing (Game.lookupObject dfc after)) (Just Facing.FaceUp)
+    Spec.assertEqWith s "CR 712.13 and still a Gargoyle, not a Cyberman" (Projection.subtypesOf dfc after) (Set.singleton Subtype.Gargoyle)
     Spec.assertEqWith s "nothing turned, so nothing drawn" (libraryCount gs - libraryCount after) 0
     Spec.assertBool s (isFaceDown bystander control) "the Conversion turns the Piker face down"
 
-  -- CR 712.9's Example read against CR 712.16: a Clone copying the Gargoyle is a
+  -- CR 713.7: a meld card on the battlefield can't be turned face down either,
+  -- though CR 713.1 no longer counts it double-faced. Same board and control.
+  Spec.it s "CR 713.7 Cyber Conversion does nothing to a meld card" $ do
+    island <- S.printingOf s registry "Island"
+    cyber <- S.printingOf s registry "Cyber Conversion"
+    garrison <- S.printingOf s registry "Hanweir Garrison"
+    piker <- S.printingOf s registry "Goblin Piker"
+    witness <- S.printingOf s registry "Synthetic Veiled Witness"
+    let (gs, spell, meld, bystander) = gargoyleBoard island cyber garrison piker witness
+        after = castAtAndSettle cyber spell meld gs
+        control = castAtAndSettle cyber spell bystander gs
+    Spec.assertEqWith s "CR 713.7 the Garrison is still face up" (fmap Object.facing (Game.lookupObject meld after)) (Just Facing.FaceUp)
+    Spec.assertBool s (isFaceDown bystander control) "the Conversion turns the Piker face down"
+
+  -- CR 701.27d's first Example read against CR 712.13: a Clone copying the Gargoyle is a
   -- one-faced card, so it CAN be turned face down. The tripwire for a guard that
   -- read the projection instead of the card.
-  Spec.it s "CR 712.9 a Clone copying the Gargoyle is one-faced, so it turns face down" $ do
+  Spec.it s "CR 701.27d a Clone copying the Gargoyle is one-faced, so it turns face down" $ do
     island <- S.printingOf s registry "Island"
     cyber <- S.printingOf s registry "Cyber Conversion"
     gargoyle <- S.printingOf s registry "Thraben Gargoyle"
@@ -1180,7 +1194,7 @@ turnedFaceDownSpec s registry = Spec.describe s "Turned face down" $ do
       Nothing -> Spec.assertFailure s "the Clone did not reach the battlefield"
       Just copy -> do
         let after = castAtAndSettle cyber spell copy cloned
-        Spec.assertBool s (isFaceDown copy after) "CR 712.9 the Clone is face down"
+        Spec.assertBool s (isFaceDown copy after) "CR 701.27d the Clone is face down"
         Spec.assertEqWith s "CR 701.27b and the Witness drew one" (libraryCount cloned - libraryCount after) 1
         Spec.assertEqWith s "setup: the Clone copied the Gargoyle" (Projection.namesOf copy cloned) (Set.singleton (CardName.MkCardName (Text.pack "Thraben Gargoyle")))
 
@@ -2108,7 +2122,7 @@ putOntoBattlefield faceDown oid gs =
   let riders = EntryRiders.defaultValue {EntryRiders.faceDown = faceDown}
       (entered, moved) = Engine.runGamePure S.identityAnswer gs (Event.changeZoneEntering (pure ()) oid Zone.Battlefield LibraryPosition.defaultValue riders (Just S.alice))
    in -- At most ONE arrival: the funnel answers with several only for a melded
-      -- permanent leaving the battlefield (CR 712.21), and this move enters one.
+      -- permanent leaving the battlefield (CR 713.8), and this move enters one.
       (S.runPure S.identityAnswer moved Engine.priorityLoop, Maybe.listToMaybe (Foldable.toList entered))
 
 -- A resolved face-down permanent of a morph printing on a board of `n` lands,
@@ -2958,7 +2972,7 @@ unmaskingSpec s registry = Spec.describe s "Revealed as it leaves (CR 708.9)" $ 
     Spec.assertEqWith s "a countered face-up spell reveals nothing" (spellReveals control) []
     Spec.assertEqWith s "setup: both spells were countered" (fmap (Game.zoneMembers Zone.Stack S.alice) [countered, control]) [[], []]
 
-  -- CR 708.9's first sentence over CR 729.4a's crossing: a subgame's wish takes
+  -- CR 708.9's first sentence over CR 730.4a's crossing: a subgame's wish takes
   -- bob's permanent, which moves from the main-game battlefield to a subgame
   -- zone. Event.leavingReveal shared with the departure case above; the
   -- negative leg is the same crossing with the Forest face up.
@@ -3066,8 +3080,8 @@ floating pid gs = case Game.poolOf pid gs of
   Mana.Type.MkMana units -> length units
 
 -- Turn `permanent` face up with alice tapping `taps` of the mana sources the CR
--- 605.3a window offers and answering CR 733.1's question with `decision`. The
--- Int counts the CR 733.1 questions raised.
+-- 605.3a window offers and answering CR 734.1's question with `decision`. The
+-- Int counts the CR 734.1 questions raised.
 --
 -- alice is named on both prompts rather than answered for whoever asks, so an
 -- engine that put either question to the wrong player falls through to the
@@ -3094,7 +3108,7 @@ attemptTurnUp taps decision permanent gs =
       ((_, after), (_, asked)) = State.runState (Engine.runGame answerer gs (FaceDown.turnFaceUp S.manaPerformer S.alice TurnUpProcedure.Morph permanent)) (0, 0)
    in (after, asked)
 
--- CR 733.1: a special action a player starts and cannot legally complete is
+-- CR 734.1: a special action a player starts and cannot legally complete is
 -- reversed and its payments cancelled, but "each player may also reverse any
 -- legal mana abilities that player activated while making the illegal play" --
 -- so that half is a question and not the engine's to settle. Parun.CostSpec's
@@ -3112,7 +3126,7 @@ attemptTurnUp taps decision permanent gs =
 -- anything at all.
 turnUpReversalSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 turnUpReversalSpec s registry = Spec.describe s "Reversal at a special action" $ do
-  Spec.it s "CR 733.1 the payer may keep the mana ability they activated while making the illegal play" $ do
+  Spec.it s "CR 734.1 the payer may keep the mana ability they activated while making the illegal play" $ do
     plains <- S.printingOf s registry "Plains"
     kirin <- S.printingOf s registry "Misthoof Kirin"
     case faceDownWith plains kirin 5 of
@@ -3125,29 +3139,29 @@ turnUpReversalSpec s registry = Spec.describe s "Reversal at a special action" $
         Spec.assertEqWith s "CR 702.37e the Kirin is still face down, the cost having gone unpaid" (fmap Object.facing (Game.lookupObject permanent after)) (Just (Facing.faceDown FaceDownReason.Morphed))
         Spec.assertEqWith s "alice was asked once whether to reverse it" asked 1
 
-  Spec.it s "CR 733.1 the payer who reverses it gets the mana and the tap back" $ do
+  Spec.it s "CR 734.1 the payer who reverses it gets the mana and the tap back" $ do
     plains <- S.printingOf s registry "Plains"
     kirin <- S.printingOf s registry "Misthoof Kirin"
     case faceDownWith plains kirin 5 of
       Nothing -> Spec.assertFailure s "the megamorph cast did not reach the battlefield"
       Just (before, permanent) -> do
         let (after, asked) = attemptTurnUp 1 OptionalDecision.Exercises permanent before
-        Spec.assertEqWith s "CR 733.1 the fourth Plains is untapped again" (S.tappedCount S.alice after) 3
+        Spec.assertEqWith s "CR 734.1 the fourth Plains is untapped again" (S.tappedCount S.alice after) 3
         Spec.assertEqWith s "and nothing of alice's is floating" (floating S.alice after) 0
         Spec.assertEqWith s "CR 702.37e the Kirin is face down either way" (fmap Object.facing (Game.lookupObject permanent after)) (Just (Facing.faceDown FaceDownReason.Morphed))
         Spec.assertEqWith s "and the same one question was raised" asked 1
 
-  -- The control, and the elision CR 733.1 itself states: what the rule offers
+  -- The control, and the elision CR 734.1 itself states: what the rule offers
   -- back is the mana abilities the player ACTIVATED, so a window that activated
   -- none leaves nothing to decide.
-  Spec.it s "CR 733.1 a window that activated nothing asks nobody" $ do
+  Spec.it s "CR 734.1 a window that activated nothing asks nobody" $ do
     plains <- S.printingOf s registry "Plains"
     kirin <- S.printingOf s registry "Misthoof Kirin"
     case faceDownWith plains kirin 5 of
       Nothing -> Spec.assertFailure s "the megamorph cast did not reach the battlefield"
       Just (before, permanent) -> do
         let (after, asked) = attemptTurnUp 0 OptionalDecision.Declines permanent before
-        Spec.assertEqWith s "CR 733.1 nobody was asked whether to reverse anything" asked 0
+        Spec.assertEqWith s "CR 734.1 nobody was asked whether to reverse anything" asked 0
         Spec.assertEqWith s "no fourth Plains was tapped" (S.tappedCount S.alice after) 3
         Spec.assertEqWith s "nothing is floating" (floating S.alice after) 0
         Spec.assertEqWith s "CR 702.37e and the Kirin is face down all the same" (fmap Object.facing (Game.lookupObject permanent after)) (Just (Facing.faceDown FaceDownReason.Morphed))

@@ -83,7 +83,7 @@ order oids = do
         _ -> pure group
   fmap concat (traverse ask groups)
 
--- | CR 712.21b / 730.3b: the exception to `order` -- ONE player, the one who
+-- | CR 713.8b / 731.3b: the exception to `order` -- ONE player, the one who
 -- exiled a melded or merged permanent, orders the cards it became, which have
 -- just been put into exile with stamps from `start` on. Permutes those stamps in
 -- place (`reassign`); asked at two or more, filtered by Game.permute.
@@ -111,7 +111,7 @@ orderFor pid start arrivals = case arrivals of
 --
 -- Battlefield arrivals only. Elsewhere an object's stamp is read by
 -- Quantity.lastCardExiledWith, whose reader (Duplicant) links one target per
--- exile, so its only simultaneous batch is CR 712.21b's, which `orderFor` asks;
+-- exile, so its only simultaneous batch is CR 713.8b's, which `orderFor` asks;
 -- and by its own static abilities functioning there (CR 113.6, CR 613.7a), and no
 -- printing's such ability writes a characteristic an order could change (MTGJSON
 -- 2026-08-23, text "As long as/While ... is in a graveyard/in exile/in your

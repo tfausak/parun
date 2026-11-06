@@ -69,7 +69,7 @@ data OfferCast = MkOfferCast
     -- a player 'may cast' those objects allows that player to choose
     -- individually, for each of those objects, whether or not to cast it".
     copied :: Bool,
-    -- | CR 723.2: the resolving controller controls the caster while the spell
+    -- | CR 724.2: the resolving controller controls the caster while the spell
     -- this offer casts resolves (Word of Command).
     controlWhileResolving :: Bool,
     -- | CR 400.7h: the slot the SPELL this offer's cast puts on the stack is

@@ -1,12 +1,12 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- Covers CR 715 end to end: Parun.Types.Layout's Adventure arm, the two
--- Parun.Engine.Card arms that read it (CR 715.4's combined view and CR 715.3's
+-- Covers CR 716 end to end: Parun.Types.Layout's Adventure arm, the two
+-- Parun.Engine.Card arms that read it (CR 716.4's combined view and CR 716.3's
 -- castable halves) plus Card.isAdventure, Parun.Engine.Resolve.finishSpell (CR
--- 715.3d's exile), Parun.Engine.Cast.permitsCastFromExile -- the pool's only
+-- 716.3d's exile), Parun.Engine.Cast.permitsCastFromExile -- the pool's only
 -- route to playing a card from exile at all -- and Parun.Engine.Cast.asProposed,
--- which is what makes CR 715.3a's "only the alternative characteristics are
+-- which is what makes CR 716.3a's "only the alternative characteristics are
 -- evaluated" reach CR 601.2f's cost adjustments and not just the mana cost.
 --
 -- Every case runs against the printed Embereth Shieldbreaker // Battle Display:
@@ -63,11 +63,11 @@ import qualified Parun.Types.ReplacementEntry as ReplacementEntry
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Zone as Zone
 
--- The two names the card prints (CR 715.2). The first is the card's own name
--- under CR 715.4; the second names only the alternative characteristics, and CR
--- 715.5 is what lets a player choose it where a name is asked for --
+-- The two names the card prints (CR 716.2). The first is the card's own name
+-- under CR 716.4; the second names only the alternative characteristics, and CR
+-- 716.5 is what lets a player choose it where a name is asked for --
 -- Prompt.ChooseCardName offers no candidate list, so it is the answerer's to
--- pick. What the CARD has is CR 715.4's normal name alone off the stack, which
+-- pick. What the CARD has is CR 716.4's normal name alone off the stack, which
 -- is what the first case here asserts.
 shieldbreakerName, battleDisplayName :: CardName.CardName
 shieldbreakerName = CardName.MkCardName (Text.pack "Embereth Shieldbreaker")
@@ -84,7 +84,7 @@ adventureRaceBoard shieldbreaker mountain bonesplitter restInPeace =
    in (gs, oid, restId)
 
 -- CR 616.1e's order: take the candidate Rest in Peace SOURCES when `restFirst`,
--- and rule 715.3d's row -- whose source is the spell's own stack incarnation, an
+-- and rule 716.3d's row -- whose source is the spell's own stack incarnation, an
 -- id no fixture holds -- when not. Pinned by source rather than by index, so
 -- neither answer can turn into the other under a change to the engine's canonical
 -- candidate order.
@@ -114,14 +114,14 @@ adventureRace answer gs oid =
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Adventure" $ do
-  -- CR 715.4: "In every zone except the stack, and while on the stack not as an
+  -- CR 716.4: "In every zone except the stack, and while on the stack not as an
   -- Adventure, an adventurer card has only its normal characteristics."
   --
   -- The falsifier is CR 709.4's reading, which is what the pool's OTHER
   -- multi-face layout takes: a combined view would name this card
   -- "Embereth Shieldbreaker//Battle Display", give it both card types, and
   -- price it at the concatenated {1}{R}{R} for mana value 3.
-  Spec.it s "CR 715.4 in a hand the card is only its normal half" $ do
+  Spec.it s "CR 716.4 in a hand the card is only its normal half" $ do
     shieldbreaker <- S.printingOf s registry "Embereth Shieldbreaker"
     let (gs, oid) = S.handOne shieldbreaker (Setup.emptyGame S.bothPlayers)
     case Game.faceOf oid gs of
@@ -131,10 +131,10 @@ spec s registry = Spec.describe s "Adventure" $ do
         Spec.assertEqWith s "mana value 2, not the two halves' 3" (Quantity.manaValueOf face) 2
         Spec.assertBool s (Set.member CardType.Creature (Projection.cardTypesOf oid gs)) "a creature card"
         Spec.assertBool s (not (Set.member CardType.Sorcery (Projection.cardTypesOf oid gs))) "and not a sorcery"
-  -- CR 715.3: "As a player plays an adventurer card, the player chooses whether
+  -- CR 716.3: "As a player plays an adventurer card, the player chooses whether
   -- they play the card normally or as an Adventure." Both halves offered, and
   -- the choice left to the player.
-  Spec.it s "CR 715.3 both halves are offered from a hand" $ do
+  Spec.it s "CR 716.3 both halves are offered from a hand" $ do
     shieldbreaker <- S.printingOf s registry "Embereth Shieldbreaker"
     mountain <- S.printingOf s registry "Mountain"
     bonesplitter <- S.printingOf s registry "Bonesplitter"
@@ -145,12 +145,12 @@ spec s registry = Spec.describe s "Adventure" $ do
         (both, _) = S.handOne shieldbreaker board
         (one, _) = S.handOne shieldbreaker (snd (S.addPermanent bonesplitter S.alice (S.landsInPlay mountain 1)))
     Spec.assertEqWith s "two Mountains: both halves" (namesOffered both) [shieldbreakerName, battleDisplayName]
-    -- CR 715.3a: "only the alternative characteristics are evaluated to see if
+    -- CR 716.3a: "only the alternative characteristics are evaluated to see if
     -- it can be cast". One Mountain pays Battle Display's {R} and cannot pay the
     -- creature's {1}{R}, so an engine pricing either half off the other offers
     -- the wrong one -- or, if it priced both off a combined cost, neither.
     Spec.assertEqWith s "one Mountain: only the Adventure" (namesOffered one) [battleDisplayName]
-  -- CR 715.3a's "only the alternative characteristics are evaluated to see if it
+  -- CR 716.3a's "only the alternative characteristics are evaluated to see if it
   -- can be cast", read for the COST rather than for the mana cost alone. Thalia,
   -- Guardian of Thraben's "noncreature spells cost {1} more to cast"
   -- (AnyPlayer-scoped, so her own controller pays it) is what makes CR 601.2f's
@@ -159,13 +159,13 @@ spec s registry = Spec.describe s "Adventure" $ do
   -- ONE card sitting in ONE hand.
   --
   -- The falsifier is pricing the offer off the card's hand characteristics, which
-  -- CR 715.4 makes the CREATURE half: Battle Display would then dodge the tax and
+  -- CR 716.4 makes the CREATURE half: Battle Display would then dodge the tax and
   -- be offered at {R}, a cast the player cannot actually pay for.
   --
   -- THE ARITHMETIC. Taxed, Battle Display's {R} totals {1}{R}; the creature's
   -- {1}{R} is untaxed and stays {1}{R}. So two Mountains buy either half and one
   -- Mountain buys neither.
-  Spec.it s "CR 715.3a/601.2f Thalia taxes the Adventure half and not the creature half" $ do
+  Spec.it s "CR 716.3a/601.2f Thalia taxes the Adventure half and not the creature half" $ do
     shieldbreaker <- S.printingOf s registry "Embereth Shieldbreaker"
     mountain <- S.printingOf s registry "Mountain"
     bonesplitter <- S.printingOf s registry "Bonesplitter"
@@ -197,9 +197,9 @@ spec s registry = Spec.describe s "Adventure" $ do
         cast = snd (Engine.runGamePure S.identityAnswer gs (Cast.castSpell S.manaPerformer S.alice oid battleDisplayName Facing.FaceUp))
     Spec.assertEqWith s "the Adventure is on the stack" (length (GameState.stack cast)) 1
     Spec.assertEqWith s "both Mountains paid {R} plus Thalia's {1}" (S.tappedCount S.alice cast) 2
-  -- CR 715.3d: "Instead of putting a spell that was cast as an Adventure into
+  -- CR 716.3d: "Instead of putting a spell that was cast as an Adventure into
   -- its owner's graveyard as it resolves, its controller exiles it."
-  Spec.it s "CR 715.3d the resolved Adventure destroys the artifact and is exiled" $ do
+  Spec.it s "CR 716.3d the resolved Adventure destroys the artifact and is exiled" $ do
     shieldbreaker <- S.printingOf s registry "Embereth Shieldbreaker"
     mountain <- S.printingOf s registry "Mountain"
     bonesplitter <- S.printingOf s registry "Bonesplitter"
@@ -210,7 +210,7 @@ spec s registry = Spec.describe s "Adventure" $ do
     Spec.assertBool s (S.onBattlefield bonesplitterId gs) "the Bonesplitter starts on the battlefield"
     Spec.assertBool s (not (S.onBattlefield bonesplitterId resolved)) "and Battle Display destroys it"
     -- BY NAME, since the destroyed Bonesplitter is in the graveyard too: what
-    -- this asserts is which of the two cards went where, and CR 715.4 is what
+    -- this asserts is which of the two cards went where, and CR 716.4 is what
     -- makes the exiled one answer to the creature's name.
     Spec.assertEqWith
       s
@@ -222,7 +222,7 @@ spec s registry = Spec.describe s "Adventure" $ do
       "and the graveyard holds only its target"
       (fmap (\o -> Projection.namesOf o resolved) (Game.zoneMembers Zone.Graveyard S.alice resolved))
       [Set.singleton (CardName.MkCardName (Text.pack "Bonesplitter"))]
-  -- CR 616.1e: rule 715.3d's rewrite is a replacement effect (CR 614.1a), so a row
+  -- CR 616.1e: rule 716.3d's rewrite is a replacement effect (CR 614.1a), so a row
   -- another OBJECT contributes to the same CR 608.2n move races it. Rest in Peace
   -- ({1}{W} Enchantment, "When this enchantment enters, exile all graveyards. / If
   -- a card or token would be put into a graveyard from anywhere, exile it instead"
@@ -233,8 +233,8 @@ spec s registry = Spec.describe s "Adventure" $ do
   -- effects of static abilities (CR 604.2), so neither is CR 614.15's
   -- self-replacement -- and CR 616.1e leaves the choice to the affected object's
   -- controller. BOTH orders put the card in exile, so the zone is not what tells
-  -- them apart: rule 715.3d's own exile carries its second sentence's permission,
-  -- and Rest in Peace's does not -- CR 614.6 leaving rule 715.3d no graveyard move
+  -- them apart: rule 716.3d's own exile carries its second sentence's permission,
+  -- and Rest in Peace's does not -- CR 614.6 leaving rule 716.3d no graveyard move
   -- to replace, which is the mechanic's own ruling that a card exiled any other
   -- way permits nothing.
   Spec.it s "CR 616.1e the Adventure taken before Rest in Peace leaves its own permission on the exiled card" $ do
@@ -248,11 +248,11 @@ spec s registry = Spec.describe s "Adventure" $ do
     case adventurer of
       Nothing -> Spec.assertFailure s "expected the adventurer card in exile"
       Just exiledId -> do
-        Spec.assertBool s (Cast.castable S.alice exiledId shieldbreakerName Facing.FaceUp after) "CR 715.3d: the creature is castable from exile"
+        Spec.assertBool s (Cast.castable S.alice exiledId shieldbreakerName Facing.FaceUp after) "CR 716.3d: the creature is castable from exile"
         Spec.assertBool s (Maybe.isJust (Object.playPermission =<< Game.lookupObject exiledId after)) "the permission is on the card"
     Spec.assertEqWith s "CR 616.1e: the spell's controller was asked, once" asked [S.alice]
   -- The same board and the same answerer for the ONE answer: taking Rest in Peace
-  -- first exiles the card with no CR 715.3d permission on it -- the outcome parun
+  -- first exiles the card with no CR 716.3d permission on it -- the outcome parun
   -- could not reach while finishSpell named the exile itself. Three Mountains are
   -- untapped for the creature's {1}{R}, so the refusal below is the permission and
   -- not mana.
@@ -270,23 +270,23 @@ spec s registry = Spec.describe s "Adventure" $ do
         Spec.assertBool s (not (Cast.castable S.alice exiledId shieldbreakerName Facing.FaceUp after)) "CR 614.6: the creature is not castable from this exile"
         Spec.assertEqWith s "and no permission was written onto the card" (fmap Object.playPermission (Game.lookupObject exiledId after)) (Just Nothing)
     Spec.assertEqWith s "CR 616.1e: alice was asked here as well" asked [S.alice]
-  -- CR 715.3d's second and third sentences, which are one question asked of the
+  -- CR 716.3d's second and third sentences, which are one question asked of the
   -- same exiled card: "For as long as that card remains exiled, that player may
   -- play it. It can't be cast as an Adventure this way."
   --
   -- The contrast with the hand case above is the whole point: the same card
   -- offers TWO halves from a hand and exactly ONE from THIS exile. "This way"
-  -- scopes the exclusion to the permission rule 715.3d itself grants, so an
+  -- scopes the exclusion to the permission rule 716.3d itself grants, so an
   -- adventurer card exiled under some other effect's permission offers both --
-  -- Parun.CastSpec's "CR 715.3d another effect's permission allows the Adventure
+  -- Parun.CastSpec's "CR 716.3d another effect's permission allows the Adventure
   -- half" is that board, and the two are read together or not at all.
-  Spec.it s "CR 715.3d from exile the creature is castable and the Adventure is not" $ do
+  Spec.it s "CR 716.3d from exile the creature is castable and the Adventure is not" $ do
     shieldbreaker <- S.printingOf s registry "Embereth Shieldbreaker"
     mountain <- S.printingOf s registry "Mountain"
     bonesplitter <- S.printingOf s registry "Bonesplitter"
     -- TWO artifacts, and the Adventure destroys only one. Without the survivor
     -- this case proves nothing: Battle Display would be gated out for having no
-    -- legal target, and an engine that had forgotten CR 715.3d's "it can't be
+    -- legal target, and an engine that had forgotten CR 716.3d's "it can't be
     -- cast as an Adventure this way" entirely would still pass.
     let (_, oneArtifact) = S.addPermanent bonesplitter S.alice (S.landsInPlay mountain 3)
         (_, board) = S.addPermanent bonesplitter S.alice oneArtifact
@@ -306,13 +306,13 @@ spec s registry = Spec.describe s "Adventure" $ do
       [exiledId] -> do
         Spec.assertBool s (Cast.castable S.alice exiledId shieldbreakerName Facing.FaceUp resolved) "the creature is castable from exile"
         Spec.assertBool s (not (Cast.castable S.alice exiledId battleDisplayName Facing.FaceUp resolved)) "the Adventure is not"
-        -- The permission names its player (CR 715.3d's "that player"), so it is
+        -- The permission names its player (CR 716.3d's "that player"), so it is
         -- not an offer to the table.
         Spec.assertBool s (not (Cast.castable S.bob exiledId shieldbreakerName Facing.FaceUp resolved)) "and bob may not cast it"
       other -> Spec.assertFailure s ("expected exactly one exiled card, got " <> show (length other))
   -- The whole loop, which is what the mechanic IS: the Adventure resolves, and
   -- the creature it left in exile is cast from there onto the battlefield.
-  Spec.it s "CR 715.3d the creature is cast from exile onto the battlefield" $ do
+  Spec.it s "CR 716.3d the creature is cast from exile onto the battlefield" $ do
     shieldbreaker <- S.printingOf s registry "Embereth Shieldbreaker"
     mountain <- S.printingOf s registry "Mountain"
     bonesplitter <- S.printingOf s registry "Bonesplitter"
@@ -331,7 +331,7 @@ spec s registry = Spec.describe s "Adventure" $ do
         Spec.assertEqWith s "exile is empty again" (Game.zoneMembers Zone.Exile S.alice entered) []
         case knights of
           [knightId] -> do
-            -- CR 715.4 again, on the far side of the loop: what entered is the
+            -- CR 716.4 again, on the far side of the loop: what entered is the
             -- 2/1 creature and not the sorcery it was cast through.
             Spec.assertEqWith s "a 2/1 on the battlefield" (S.powerToughnessOf knightId entered) (Just (2, 1))
             Spec.assertEqWith s "named for the creature" (Projection.namesOf knightId entered) (Set.singleton shieldbreakerName)
@@ -359,7 +359,7 @@ spec s registry = Spec.describe s "Adventure" $ do
     Spec.assertBool s (not (Cast.castable S.alice exiledId battleDisplayName Facing.FaceUp gs)) "nor is the Adventure"
   -- The same ruling's other half: an Adventure spell that leaves the stack "by
   -- failing to resolve because its targets have all become illegal" is NOT
-  -- exiled. CR 608.2b's fizzle is the path, and CR 715.3d's "as it resolves"
+  -- exiled. CR 608.2b's fizzle is the path, and CR 716.3d's "as it resolves"
   -- never reaches it.
   Spec.it s "CR 608.2b a fizzled Adventure goes to the graveyard, not exile" $ do
     shieldbreaker <- S.printingOf s registry "Embereth Shieldbreaker"
@@ -377,7 +377,7 @@ spec s registry = Spec.describe s "Adventure" $ do
   -- CR 702.85a's SECOND condition, which an adventurer card is the only thing in
   -- the pool that can tell from its first: "you may cast that card without paying
   -- its mana cost IF THE RESULTING SPELL's mana value is less than this spell's
-  -- mana value". Rule 715.3's two halves have two mana values -- the creature's 2
+  -- mana value". Rule 716.3's two halves have two mana values -- the creature's 2
   -- and the Adventure's 1 -- so a bound of 3 admits both and a bound of 2 admits
   -- only the Adventure, which is the offer's restriction being asked per half (CR
   -- 709.3a's posture).

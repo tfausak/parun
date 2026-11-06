@@ -2780,10 +2780,10 @@ predatorBoard s registry = do
 -- with the Predator itself (CR 115.3: the same object may be chosen for each
 -- instance of the word "target"), then the ability resolves and SBAs settle.
 --
--- The ability is read off the object's CURRENT face (CR 712.8: each face has its
+-- The ability is read off the object's CURRENT face (CR 712.6: each face has its
 -- own characteristics), so a board whose Ranger never transformed would activate
 -- the front face's ping instead and mark no damage on the Ranger at all. The id
--- survives the flip because CR 712.18 says a transformed permanent is not a new
+-- survives the flip because CR 712.15 says a transformed permanent is not a new
 -- object.
 selfFight :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 selfFight oid gs = case Game.faceOf oid gs of

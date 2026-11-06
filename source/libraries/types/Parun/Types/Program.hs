@@ -36,7 +36,7 @@ prompt i = Then i Return
 -- is already half built.
 --
 -- The one caller is Engine.playSubgame, which uses it to name the game each
--- suspension came from (CR 729.1a): a subgame runs as a nested StateT over THIS
+-- suspension came from (CR 730.1a): a subgame runs as a nested StateT over THIS
 -- program, so its instructions pass outward through the parent's frame and can
 -- be told there, from outside, which game raised them.
 mapProgram :: (forall b. instr b -> instr2 b) -> Program instr a -> Program instr2 a

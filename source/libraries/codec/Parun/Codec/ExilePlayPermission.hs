@@ -21,7 +21,7 @@ import qualified Parun.Types.ExilePlayPermission as ExilePlayPermission
 -- give: `spending` is CR 118.14's rider, `alternativeCost` is CR 118.9's,
 -- `increase` and `landEnters` are CR 601.2f's and CR 614.1d's, `budget` is
 -- CR 601.3's count of plays left, and `origin`
--- is CR 715.3d's own question -- a permission written without any of them
+-- is CR 716.3d's own question -- a permission written without any of them
 -- would decode as a different permission rather than as an incomplete
 -- one. The type's haddock argues each field. Unlike
 -- Parun.Codec.GrantPlayFromExile's opcode, which elides its riders at their

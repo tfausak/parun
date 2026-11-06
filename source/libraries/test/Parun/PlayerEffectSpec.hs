@@ -2130,7 +2130,7 @@ ringsAndRestoration ringsFirst plains island tenRings restoration =
       stockLibrary g _ = snd (S.addLibraryCard plains S.alice g)
       -- Seven Islands, because the sorcery costs {4}{U}{U}{U} and is CAST rather
       -- than placed on the stack: a modal double-faced card put there by hand has
-      -- no chosen half, and CR 712.11b makes that choice part of casting it.
+      -- no chosen half, and CR 712.8b makes that choice part of casting it.
       withLands = List.foldl' (add island) gs0 [1 .. 7 :: Int]
       stocked = List.foldl' stockLibrary (List.foldl' stockHand withLands [1 .. 5 :: Int]) [1 .. 10 :: Int]
       (spellId, withSpell) = S.addHandCard restoration S.alice stocked

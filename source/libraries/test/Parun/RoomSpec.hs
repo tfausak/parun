@@ -205,7 +205,7 @@ roomPermanent gs =
 
 -- The riders an effect that merely puts a permanent onto the battlefield asks
 -- for: CR 110.5b's untapped and face up, no CR 508.1 attacking entry, and CR
--- 712.14's untransformed default.
+-- 712.11's untransformed default.
 plainEntry :: EntryRiders.EntryRiders Natural ability
 plainEntry = EntryRiders.defaultValue
 
@@ -424,7 +424,7 @@ spec s registry = Spec.describe s "Room" $ do
           (fmap Object.unlockedHalves (Game.lookupObject permId after))
           (Just (Set.singleton RoomHalf.LeftHalf))
         -- CR 709.5c gives a Room designations rather than a face that is up, so
-        -- the field CR 712.13 would have written stays empty.
+        -- the field CR 712.10 would have written stays empty.
         Spec.assertEqWith
           s
           "and it shows no single face"
@@ -810,7 +810,7 @@ spec s registry = Spec.describe s "Room" $ do
   -- because Parun.Engine.Event.changeZoneAttaching writes the field on every move
   -- as well (CR 709.5d) and would mask the forgetting on the funnel path. The
   -- three hand-written movers that call newIncarnation and not the funnel --
-  -- Setup's CR 727.2 restart and CR 729.5 funnel-back, and Departure's CR 800.4a
+  -- Setup's CR 728.2 restart and CR 730.5 funnel-back, and Departure's CR 800.4a
   -- exile -- are what this covers.
   Spec.it s "CR 400.7 a new incarnation of a Room has neither designation" $ do
     (roomId, _, gs) <- setUp s registry

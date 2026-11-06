@@ -95,10 +95,10 @@ import qualified Parun.Types.Zone as Zone
 -- one candidate a real fork.
 data Prompt r where
   ChooseAction :: Decider.Decider -> PlayerId.PlayerId -> [Action.Action] -> Prompt Action.Action
-  -- | CR 104.3a. No Decider: CR 723.6 needs the ask to reach the true player.
+  -- | CR 104.3a. No Decider: CR 724.6 needs the ask to reach the true player.
   Concede :: PlayerId.PlayerId -> Prompt Concession.Concession
   Shuffle :: [ObjectId.ObjectId] -> Prompt [ObjectId.ObjectId]
-  -- | CR 729.2 \/ 103.1c: a starting player drawn at random from these
+  -- | CR 730.2 \/ 103.1c: a starting player drawn at random from these
   -- players -- a subgame's seats, or the players claiming to be the starting
   -- player -- and the turn order is then rotated to begin with them. No
   -- Decider: randomness is not a choice.
@@ -265,7 +265,7 @@ data Prompt r where
   -- covers the cost, or Nothing to pay; never elided, floating being
   -- observable, and collapsed as ChooseManaSource is.
   ChooseExtraManaSource :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt (Maybe ObjectId.ObjectId)
-  -- | CR 733.1: whether one mana ability activated while making a reversed
+  -- | CR 734.1: whether one mana ability activated while making a reversed
   -- action is reversed too, asked per activation, newest first
   -- (Parun.Engine.Cost.reverseIllegal).
   ReverseManaAbilities :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision
@@ -347,8 +347,8 @@ data Prompt r where
   -- that floor means, and the Maybe its bound, the answer clamped to the
   -- bound. Answers as Response.ChoseNumber.
   ChooseNumber :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> NumberFloor.NumberFloor -> Maybe Natural.Natural -> Prompt Natural.Natural
-  -- | CR 702.155b / 714.3b: which chapter a Saga with read ahead enters on; the
-  -- Natural is the final chapter (CR 714.2d), the answer clamped into the
+  -- | CR 702.155b / 715.3b: which chapter a Saga with read ahead enters on; the
+  -- Natural is the final chapter (CR 715.2d), the answer clamped into the
   -- range. Not raised for a range of one, nor for a bound of 0.
   ChooseReadAheadChapter :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt Natural.Natural
   -- | CR 609.7a: which source of damage a prevention or redirection effect
@@ -395,17 +395,17 @@ data Prompt r where
   -- | CR 103.2b \/ 702.139a: which card, if any, a player reveals from outside
   -- the game as their companion, before the game begins. An OutsideCard for
   -- ChooseFromOutsideTheGame's reason: in a subgame a main-game object is
-  -- outside the game too (CR 729.4), and which copy is revealed decides what
-  -- CR 116.2g's {3} later takes out of the main game (CR 729.4a).
+  -- outside the game too (CR 730.4), and which copy is revealed decides what
+  -- CR 116.2g's {3} later takes out of the main game (CR 730.4a).
   --
   -- A Maybe, unlike every other pre-game choice: rule 103.2b's "if any players
   -- WISH to reveal" makes declining an answer, so the prompt is raised even where
   -- one card is offered.
   ChooseCompanion :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty OutsideCard.OutsideCard -> Prompt (Maybe OutsideCard.OutsideCard)
-  -- | CR 400.11c \/ 729.4: which cards a player brings in from outside the
+  -- | CR 400.11c \/ 730.4: which cards a player brings in from outside the
   -- game, at least the first Natural and at most the second; an OutsideCard
   -- rather than a printing because which zone it leaves decides what triggers
-  -- (CR 729.4a). Two copies of one printing are one offer, which the answer may
+  -- (CR 730.4a). Two copies of one printing are one offer, which the answer may
   -- name once per copy. Also a search's find outside the game (CR 701.23j),
   -- asked after its find in the zones, and the opponent's pick among revealed
   -- cards (Parun.Types.OutsidePick), asked of that opponent.
@@ -506,7 +506,7 @@ data Prompt r where
   -- for CR 101.1's card-stated ceiling).
   --
   -- Advisory: the answer is filtered against neither. Announcing past what the
-  -- player can pay is answered by CR 733.1's reversal of a failed CR 601.2h
+  -- player can pay is answered by CR 734.1's reversal of a failed CR 601.2h
   -- payment (#741); outside what the card permits, by the caller's own gate (CR
   -- 101.1, CR 101.2).
   ChooseX :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> SlotName.SlotName -> Natural.Natural -> Natural.Natural -> Prompt Natural.Natural
@@ -516,7 +516,7 @@ data Prompt r where
   -- | CR 702.140c: which side of the target creature a mutating creature spell
   -- is put on, asked as the spell RESOLVES (CR 702.140c) and not at CR 601.2b's
   -- announcement -- the ObjectIds are the resolving spell and the creature it
-  -- merges with. Never elided: CR 730.2a makes the two answers differ in the
+  -- merges with. Never elided: CR 731.2a makes the two answers differ in the
   -- merged permanent's every characteristic.
   ChooseMutateSide :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt MutateSide.MutateSide
   -- | CR 701.61a: which half of forage the forager takes -- the ObjectId is the
@@ -714,7 +714,7 @@ data Prompt r where
   -- come from the caller, and this constructor rather than ChooseOpponent above
   -- is the one raised exactly when they include the chooser.
   ChoosePlayer :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
-  -- | CR 725.4 / 726.4 with CR 805.2: which active player takes a departing
+  -- | CR 726.4 / 727.4 with CR 805.2: which active player takes a departing
   -- holder's monarch, then initiative, under the shared team turns option.
   ChooseActivePlayer :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
   -- | An order over one player's triggered abilities, a permutation of the
@@ -903,8 +903,8 @@ data Prompt r where
   -- entry per taxing permanent; asked only where observable
   -- (Parun.Engine.Cost.tollOrderObservable).
   OrderCombatTolls :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt [Natural.Natural]
-  -- | CR 712.21a: the order the owner puts a melded permanent's component cards
-  -- into their graveyard or library, first named put in first. CR 730.3a says
+  -- | CR 713.8a: the order the owner puts a melded permanent's component cards
+  -- into their graveyard or library, first named put in first. CR 731.3a says
   -- the sentence again for a merged permanent, so the name is the
   -- leaving permanent's components rather than meld's.
   OrderComponentCards :: Decider.Decider -> PlayerId.PlayerId -> Zone.Zone -> [PrintingId.PrintingId] -> Prompt [Natural.Natural]
@@ -930,7 +930,7 @@ data Prompt r where
   -- | CR 613.7m: the relative order of the timestamps one player's objects
   -- receive at one moment, first named stamped earlier; asked by
   -- Parun.Engine.Restamp.order, per group in APNAP order, for two or more not
-  -- all interchangeable. CR 712.21b / 730.3b ask it of the exiler instead
+  -- all interchangeable. CR 713.8b / 731.3b ask it of the exiler instead
   -- (Parun.Engine.Restamp.orderFor).
   OrderTimestamps :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt [Natural.Natural]
   -- | CR 605.3, which fixes no order: the order one player activates a batch of
@@ -978,10 +978,10 @@ data Prompt r where
   -- answer settles all three outcomes (Parun.Engine.Resolve.chosenBranch).
   ChooseClause :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ModeIndex.ModeIndex -> NonEmpty.NonEmpty ClauseIndex.ClauseIndex -> Bool -> Seq.Seq (PlayerId.PlayerId, Maybe ClauseIndex.ClauseIndex) -> Prompt (Maybe ClauseIndex.ClauseIndex)
   -- | CR 608.2g: whether the player casts the card a resolving effect allows
-  -- them to (CR 310.12b), the CardName being the half CR 712.11a puts on the
+  -- them to (CR 310.12b), the CardName being the half CR 712.8a puts on the
   -- stack; never elided, and not raised for CR 608.2g's "instructs".
   OfferedCast :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> CardName.CardName -> Prompt OptionalDecision.OptionalDecision
-  -- | CR 601.3 / 709.3 / 712.11b / 715.3: WHICH CAST an OfferedCast makes, from
+  -- | CR 601.3 / 709.3 / 712.8b / 716.3: WHICH CAST an OfferedCast makes, from
   -- those Cast.castableWhenOffered admits; asked before the "may".
   --
   -- An object AND a name per option, because CR 601.3's offer ranges over a set

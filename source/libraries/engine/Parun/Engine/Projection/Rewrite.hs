@@ -1136,7 +1136,7 @@ rewriteEffect pairs effect = case effect of
   -- covers it unchanged.
   --
   -- The rest name no word a pair could reach: the caster is a PlayerRef,
-  -- `transformed` is CR 712.11a's Bool, `withoutPayingManaCost` is CR 118.9's
+  -- `transformed` is CR 712.8a's Bool, `withoutPayingManaCost` is CR 118.9's
   -- other wording and states no cost of its own, and `spending` is CR 118.14's
   -- ManaSpending, which names no mana type a card writes as a word.
   --
@@ -1354,7 +1354,7 @@ rewriteCopyTargets pairs targets = case targets of
 -- unconditionally, and an emblem is why: CR 114.3 leaves it no type line at all.
 -- Recursive, and terminating because a Card is a finite first-order value and
 -- every step descends into a strict subterm. Every FACE, since a card's printed
--- subtypes, name and text are per-face (CR 712.8).
+-- subtypes, name and text are per-face (CR 712.6).
 rewriteCard :: [(TextWord.TextWord, TextWord.TextWord)] -> Card.Type.Card -> Card.Type.Card
 rewriteCard pairs card = card {Card.Type.faces = fmap (rewriteFace pairs) (Card.Type.faces card)}
 
@@ -1931,7 +1931,7 @@ rewriteEntryRewrite pairs rewrite = case rewrite of
   EntryRewrite.ChooseQuality _ -> rewrite
   EntryRewrite.ChoosePlayer _ -> rewrite
   -- CR 702.155b's offer is a range of NUMBERS, read off the entering Saga's own
-  -- chapter symbols (CR 714.2d), so the rewrite prints no word either.
+  -- chapter symbols (CR 715.2d), so the rewrite prints no word either.
   EntryRewrite.ReadAhead -> rewrite
   -- CR 201.4a's restriction on which names may be named.
   EntryRewrite.ChooseCardNames f -> EntryRewrite.ChooseCardNames (Filter.rewrite pairs f)
@@ -2193,7 +2193,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.AnyOf conditions -> TriggerCondition.AnyOf (fmap (rewriteTriggerCondition pairs) conditions)
   TriggerCondition.CausedBy narrowed -> TriggerCondition.CausedBy narrowed {CausedBy.condition = rewriteTriggerCondition pairs (CausedBy.condition narrowed)}
   TriggerCondition.TurnedFaceUp permanent -> TriggerCondition.TurnedFaceUp (acting permanent)
-  -- CR 701.27e's face is a NAME, which CR 612.2's second sentence keeps a swap
+  -- CR 701.27f's face is a NAME, which CR 612.2's second sentence keeps a swap
   -- off, so only the subject is rewritten. SelfHalfUnlocked's answer for its own
   -- door.
   TriggerCondition.Transforms (TransformTrigger.MkTransformTrigger permanent into) -> TriggerCondition.Transforms (TransformTrigger.MkTransformTrigger (acting permanent) into)

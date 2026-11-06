@@ -33,7 +33,7 @@ import qualified Parun.Types.WithCounters as WithCounters
 -- SacrificeAnyNumber, ExileFromGraveyard, OrTapped's life price and
 -- SacrificeToEnter are the constructors whose choice SPENDS something. Each is paid inside the
 -- entry loop that made it, so the next member of a batch cannot choose what an
--- earlier one already spent (CR 614.13b). The first three cannot be left owing
+-- earlier one already spent (CR 614.13a). The first three cannot be left owing
 -- what they cannot pay; SacrificeToEnter's fixed count can, so its arm carries
 -- CR 614.12b's forward check -- Parun.Engine.Event states it. CR 614.13a is a
 -- separate exclusion and does NOT fall out with it --
@@ -67,7 +67,7 @@ data EntryRewrite ability effect
     -- chooses one card name matching the Filter, written to Object.chosenNames.
     ChooseCardName (Filter.Filter Keyword.Keyword)
   | -- | CR 614.1c / Barkhide Troll: "[This permanent] enters with ..." counters,
-    -- printed or minted (CR 306.5b's loyalty, CR 310.4b's defense, CR 714.3a's
+    -- printed or minted (CR 306.5b's loyalty, CR 310.4b's defense, CR 715.3a's
     -- lore counter).
     WithCounters WithCounters.WithCounters
   | -- | CR 614.1c / Faerie Squadron: "[This permanent] enters with [counters] ...
@@ -117,9 +117,9 @@ data EntryRewrite ability effect
   | -- | CR 702.136a via CR 614.1c: riot, minted from the projection rather than
     -- written by a card.
     Riot
-  | -- | CR 702.155b / 714.3b via CR 614.1c: read ahead's pair of intrinsic
-    -- abilities, minted by Parun.Engine.Saga.entryReplacementsOf because rule 714.3b
-    -- REPLACES CR 714.3a's lore-counter ability rather than adding to it.
+  | -- | CR 702.155b / 715.3b via CR 614.1c: read ahead's pair of intrinsic
+    -- abilities, minted by Parun.Engine.Saga.entryReplacementsOf because rule 715.3b
+    -- REPLACES CR 715.3a's lore-counter ability rather than adding to it.
     ReadAhead
   | -- | CR 702.98a via CR 614.1c: unleash's first static ability, minted from the
     -- projection -- riot's arm with the declining half deleted.
@@ -167,7 +167,7 @@ data EntryRewrite ability effect
     -- stamped on the entering incarnation rather than routed through the tap
     -- funnel, so no becomes-tapped event exists (CR 110.5b).
     Tapped
-  | -- | CR 722.3a / 614.1d / Pompous Battlemage: "This creature enters prepared".
+  | -- | CR 723.3a / 614.1d / Pompous Battlemage: "This creature enters prepared".
     Prepared
   | -- | CR 614.1c / Razorgrass Field, Rustic Clachan: "you may [price]. If you
     -- don't, it enters tapped" -- the arm above's rewrite with a price on
@@ -175,7 +175,7 @@ data EntryRewrite ability effect
     OrTapped EntryPrice.EntryPrice
   | -- | CR 702.145b via CR 614.1d: daybound's static ability making a permanent
     -- enter transformed, ranked its own CR 616.1d bucket. Collected on every entry
-    -- and not only the stack's, which is what lets Parun.MeldSpec's "CR 701.27g a
+    -- and not only the stack's, which is what lets Parun.MeldSpec's "CR 701.27h a
     -- melded permanent that entered with its back face up is still not one" reach
     -- it from exile.
     EntersTransformed

@@ -654,7 +654,7 @@ masterThiefSpec s registry = Spec.describe s "MasterThief" $ do
     Spec.assertEqWith s "no stored effect survives the departure itself" (GameState.continuousEffects gone) []
     Spec.assertEqWith s "CR 104.2a: two survivors, so the game continues" (GameState.result gone) Nothing
 
--- CR 725.2: the monarch's inherent end-step draw -- a triggered ability that
+-- CR 726.2: the monarch's inherent end-step draw -- a triggered ability that
 -- belongs to NO object. The falsifier: no permanents on the battlefield at all,
 -- so the draw cannot hang on a bearer.
 monarchSettle :: GameState.GameState -> GameState.GameState
@@ -665,13 +665,13 @@ monarchResolveAll gs = S.runPure S.identityAnswer gs Engine.priorityLoop
 
 monarchSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 monarchSpec s registry = Spec.describe s "Monarch" $ do
-  Spec.it s "CR 725.2 the monarch draws at the beginning of their own end step" $ do
+  Spec.it s "CR 726.2 the monarch draws at the beginning of their own end step" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (_, gs0) = S.addLibraryCard piker S.alice (S.withMonarch S.alice (Setup.emptyGame S.bothPlayers))
         began = S.withEvents [GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Ending EndingStep.EndStep) S.alice)] gs0
         after = monarchResolveAll (monarchSettle began)
     Spec.assertEqWith s "alice drew (one card now in hand)" (length (Game.zoneMembers Zone.Hand S.alice after)) 1
-  Spec.it s "CR 725 Palace Jailer: ETB makes the caster monarch and exiles an opponent's creature until an opponent takes the crown" $ do
+  Spec.it s "CR 726 Palace Jailer: ETB makes the caster monarch and exiles an opponent's creature until an opponent takes the crown" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     palaceJailer <- S.printingOf s registry "Palace Jailer"
     let gs0 = Setup.emptyGame S.bothPlayers
@@ -692,10 +692,10 @@ monarchSpec s registry = Spec.describe s "Monarch" $ do
     Spec.assertBool s (not (Map.null (GameState.movedUntil heldExiled))) "still exiled while alice stays monarch"
     Spec.assertEqWith s "a creature is back on the battlefield once bob is monarch" (length (Game.zoneMembers Zone.Battlefield S.bob afterSteal)) 1
     Spec.assertEqWith s "return cleared the exile register" (Map.null (GameState.movedUntil afterSteal)) True
-  Spec.it s "M5.6c gate: the monarch holding a Palace Jailer exile leaves, CR 725.4 crowns the active player, and the prisoner comes home" $ do
+  Spec.it s "M5.6c gate: the monarch holding a Palace Jailer exile leaves, CR 726.4 crowns the active player, and the prisoner comes home" $ do
     -- Alice, bob, carol. Alice's Palace Jailer has entered: alice is the
-    -- monarch and bob's Piker is exiled under the CR 725 watch. Carol is the
-    -- active player, so CR 725.4's FIRST sentence applies when alice leaves.
+    -- monarch and bob's Piker is exiled under the CR 726 watch. Carol is the
+    -- active player, so CR 726.4's FIRST sentence applies when alice leaves.
     --
     -- Three rules meet here:
     --   * CR 800.4a removes alice's Palace Jailer (she owns it) but NOT bob's
@@ -705,7 +705,7 @@ monarchSpec s registry = Spec.describe s "Monarch" $ do
     --     won't cause the exiled creature to return. The game will continue to
     --     watch for the next time an opponent becomes the monarch."
     --     (2021-03-19)
-    --   * CR 725.4 crowns carol "at the same time as that player leaves the
+    --   * CR 726.4 crowns carol "at the same time as that player leaves the
     --     game."
     --   * CR 800.4i freezes what "an opponent" of departed alice means to the
     --     last known information -- in a free-for-all with no teams, every
@@ -725,10 +725,10 @@ monarchSpec s registry = Spec.describe s "Monarch" $ do
     Spec.assertEqWith s "the original is off the battlefield" (length (filter (== victim) (Set.toList (GameState.battlefield afterEtb)))) 0
     -- CR 800.4a: alice's own object leaves; bob's exiled card does not.
     Spec.assertEqWith s "Palace Jailer left the game with alice" (Game.lookupObject jailer gone) Nothing
-    -- CR 725.4's crowning goes through Monarch.crown like any other, so the
+    -- CR 726.4's crowning goes through Monarch.crown like any other, so the
     -- watch is marked as carol takes the crown, before this settle returns it.
     Spec.assertEqWith s "but the watch survived her departure, still keyed to her and now marked by carol's crowning" [(MonarchWatch.controller watch, Maybe.isJust (MonarchWatch.due watch)) | ReturnEnding.OpponentCrowned watch <- fmap ReturnWatch.ending (Map.elems (GameState.movedUntil gone))] [(S.alice, True)]
-    -- CR 725.4, first sentence.
+    -- CR 726.4, first sentence.
     Spec.assertEqWith s "carol, the active player, is the monarch" (GameState.monarch gone) (Just S.carol)
     -- CR 800.4i: carol is in departed alice's frozen opponent set, so the
     -- watch fires at the next settle (CR 704.3 fixes that as the coarsest
@@ -762,7 +762,7 @@ garlandBoard piker garland =
       entered = ZoneChange.MkZoneChange entrant entrant Zone.Stack Zone.Battlefield
    in (bobs, carols, S.withEvents [GameEvent.Moved (Moved.moved entered (Projection.project entrant gs3))] gs3)
 
--- The condition Garland's duration stores, AS STORED: CR 725.1's designation
+-- The condition Garland's duration stores, AS STORED: CR 726.1's designation
 -- read of one PARTICULAR player, baked out of the `thatPlayer` slot the crowning
 -- bound (Parun.Engine.Condition.bakeBound). Spelled with bob because bob is who
 -- the fixture crowns.
@@ -799,7 +799,7 @@ garlandSpec s registry = Spec.describe s "GarlandRoyalKidnapper" $ do
     garland <- S.printingOf s registry "Garland, Royal Kidnapper"
     let (bobs, carols, entering) = garlandBoard piker garland
         stolen = S.runPure garlandPlan (monarchSettle entering) Engine.priorityLoop
-    Spec.assertEqWith s "CR 725.1: Garland's own entry crowned bob" (GameState.monarch stolen) (Just S.bob)
+    Spec.assertEqWith s "CR 726.1: Garland's own entry crowned bob" (GameState.monarch stolen) (Just S.bob)
     Spec.assertEqWith s "so alice controls bob's creature" (Projection.controllerOf bobs stolen) (Just S.alice)
     Spec.assertEqWith s "and carol's is untouched" (Projection.controllerOf carols stolen) (Just S.carol)
     Spec.assertEqWith
@@ -821,7 +821,7 @@ garlandSpec s registry = Spec.describe s "GarlandRoyalKidnapper" $ do
         pastCleanup = monarchSettle (Expiry.dropAtCleanup swept)
     Spec.assertEqWith s "still alice's at the next settle" (Projection.controllerOf bobs swept) (Just S.alice)
     Spec.assertEqWith s "and after the turn ends" (Projection.controllerOf bobs pastCleanup) (Just S.alice)
-  -- CR 725.3: as carol becomes the monarch, bob ceases to be, so the condition
+  -- CR 726.3: as carol becomes the monarch, bob ceases to be, so the condition
   -- the duration named stops holding. THE case a two-player board cannot state:
   -- there is still a monarch and it is still not alice, so only a duration that
   -- names BOB ends here.
@@ -1832,16 +1832,16 @@ dovinSpec s registry = Spec.describe s "DovinHandOfControl" $ do
 -- the same source on the CONTINUOUS-EFFECT carrier, which is the contrast the
 -- group's last case reads.
 --
--- CR 714.4's sacrifice after the final chapter is what gives the condition an
+-- CR 715.4's sacrifice after the final chapter is what gives the condition an
 -- ending inside one game, and the card supplies it itself: the shield goes up at
 -- chapter II and the Saga is gone two chapters later, so both halves of CR
 -- 611.2b -- the duration holding, and the duration over -- are read off one
 -- board and one batch of damage.
 --
--- "III, IV --" is CR 714.2c's shorthand for two abilities sharing one effect, so
+-- "III, IV --" is CR 715.2c's shorthand for two abilities sharing one effect, so
 -- parun's card writes the two entries that rule says it means.
 
--- One precombat main phase of alice's: CR 505.4 / 714.3c's turn-based action puts
+-- One precombat main phase of alice's: CR 505.4 / 715.3c's turn-based action puts
 -- the next lore counter on, and the priority loop resolves the chapter that
 -- counter crossed.
 advanceSaga :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> GameState.GameState
@@ -1914,7 +1914,7 @@ oldFatSpiderSpec s registry = Spec.describe s "OldFatSpiderCantSeeMe" $ do
       Spec.assertBool s (S.onBattlefield sagaId gs) "and the Saga is still telling its story"
   -- The OTHER half of CR 611.2b, and the one an expiring duration exists for: the
   -- same board, the same batch, after the condition has stopped holding.
-  Spec.it s "CR 611.2b / 714.4 the Saga tells the rest of its story, is sacrificed, and the same damage then lands"
+  Spec.it s "CR 611.2b / 715.4 the Saga tells the rest of its story, is sacrificed, and the same damage then lands"
     . withBoard
     $ \(sagaId, shielded, control, gs) -> do
       let told = advanceSaga S.identityAnswer (advanceSaga S.identityAnswer gs)
@@ -1932,7 +1932,7 @@ oldFatSpiderSpec s registry = Spec.describe s "OldFatSpiderCantSeeMe" $ do
       Spec.assertEqWith s "one floating replacement" (length (GameState.replacements gs)) 1
       Spec.assertBool s (all (isWhile . ActiveReplacement.expiry) (GameState.replacements gs)) "armed to a While, not to a turn or a cleanup"
       Spec.assertEqWith s "CR 514.2's cleanup leaves it alone" (length (GameState.replacements (Expiry.dropAtCleanup gs))) 1
-  -- Chapter I, from a CAST, so the entering lore counter (CR 714.3a) is what
+  -- Chapter I, from a CAST, so the entering lore counter (CR 715.3a) is what
   -- fires it. Same printed duration, same source, other carrier: the grant is a
   -- ContinuousEffect where chapter II's shield is an ActiveReplacement, and the
   -- one sweep ends both.

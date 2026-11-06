@@ -28,13 +28,13 @@ data Placement = MkPlacement
     attached :: Maybe Label.Label,
     -- | CR 903.3: its owner's commander.
     commander :: Bool,
-    -- | CR 712.8e / 712.8f: the face it shows, when not the one the layout decides.
+    -- | CR 712.6d / 712.6e: the face it shows, when not the one the layout decides.
     face :: Maybe CardName.CardName,
     -- | CR 708.2a: face down, by the rules that allowed it (CR 708.6).
     faceDown :: Maybe FaceDownReason.FaceDownReason,
     -- | CR 310.9: the seat protecting it, a battle.
     protector :: Maybe Label.Label,
-    -- | CR 717.1: the numbers lit up on its printing, an Attraction's.
+    -- | CR 718.1: the numbers lit up on its printing, an Attraction's.
     lights :: Set.Set Natural
   }
   deriving (Eq, Ord, Show)

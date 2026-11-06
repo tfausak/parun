@@ -9,10 +9,10 @@ import qualified Parun.Types.Result as Result
 import qualified Parun.Types.SeatView as SeatView
 import qualified Parun.Types.Undoing as Undoing
 
--- | CR 400.2 / 723.4: everything one seat may see of a game, and nothing else.
+-- | CR 400.2 / 724.4: everything one seat may see of a game, and nothing else.
 data PlayerView = MkPlayerView
   { viewer :: PlayerId.PlayerId,
-    -- | CR 727.1 / 729.1a: which game of the match this is
+    -- | CR 728.1 / 730.1a: which game of the match this is
     -- (GameState.gameNumber), whose turns `turn` counts.
     game :: Natural.Natural,
     turn :: Natural.Natural,
@@ -29,7 +29,7 @@ data PlayerView = MkPlayerView
     -- last looked before that turn ended (CR 514.1's discard, for one).
     witnessedLastTurn :: [LoggedEvent.LoggedEvent],
     result :: Maybe Result.Result,
-    -- | CR 733.1: why the seat's last cast, activation or combat declaration
+    -- | CR 734.1: why the seat's last cast, activation or combat declaration
     -- was reversed, until it next chooses one (GameState.undone).
     undone :: Maybe Undoing.Undoing
   }

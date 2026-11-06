@@ -225,7 +225,7 @@ turnableFaceUp pid gs =
 -- The SHOWING is not a reveal and logs nothing: CR 701.20a reveals a card,
 -- and these rules show a cost or that the card is a creature card. A paid cost
 -- turns the card face up anyway, and a payment that cannot be completed
--- reverses the whole action (CR 733.1), the showing with it.
+-- reverses the whole action (CR 734.1), the showing with it.
 --
 -- REJECT-NOT-REPAIR, the posture Cast.castSpell and Activate.activateAbility
 -- both take: a payment that fails restores the state from before it was
@@ -233,7 +233,7 @@ turnableFaceUp pid gs =
 -- that correct rather than merely tidy -- the cost is paid BEFORE the permanent
 -- turns over, so a failed payment has turned nothing over to undo.
 --
--- The UNPAID branch is quiet, and for a reason of its own: CR 733.1's
+-- The UNPAID branch is quiet, and for a reason of its own: CR 734.1's
 -- reversal restores the state the attempt began with, log and all, and
 -- CR 708.2 leaves the still-face-down permanent with no ability watching a
 -- payment anyway -- disguise's listed ward (CR 702.168b) watches CR 702.21a's

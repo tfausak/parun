@@ -76,7 +76,7 @@ codec =
   Arm.tagged
     tagOf
     [ Arm.payload "Moved" Moved.codec GameEvent.Moved (\x -> case x of GameEvent.Moved y -> Just y; _ -> Nothing),
-      -- CR 712.21's second card. A bare ZoneChange and no snapshot: the
+      -- CR 713.8's second card. A bare ZoneChange and no snapshot: the
       -- characteristics CR 608.2h wants are the departing permanent's, which the
       -- Moved event beside this one already carries.
       Arm.payload "CardArrived" ZoneChange.codec GameEvent.CardArrived (\x -> case x of GameEvent.CardArrived y -> Just y; _ -> Nothing),

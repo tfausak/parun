@@ -1,5 +1,5 @@
 {
-  "description": "CR 611.3a/730.2a Metamorphic Alteration moved off a merged permanent takes its copy along",
+  "description": "CR 611.3a/731.2a Metamorphic Alteration moved off a merged permanent takes its copy along",
   "note": "Alice's Metamorphic Alteration makes her Goblin Piker a War Mammoth, Cubwarden mutates under it, and Crown of the Ages moves the Aura to her Grizzly Bears. The Aura's copy now applies to the Bears alone (CR 611.3a), so the merge is applied over the Piker's own values: a 2/1 Goblin Piker with Cubwarden's lifelink and nothing of the Mammoth's trample, which is what a Clone of it then copies (CR 707.3). Distinct printed pairs: the Piker's 2/1, the Mammoth's 3/3, the Bears' 2/2, Cubwarden's 3/5.",
   "board": {
     "seats": [

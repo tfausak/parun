@@ -26,13 +26,13 @@
 --
 -- CR 710.5's alternative name needs nothing here: Prompt.ChooseCardName offers
 -- no candidate list, so a player may already choose it -- Parun.AdventureSpec
--- says the same of CR 715.5.
+-- says the same of CR 716.5.
 --
 -- CR 707.2 / 707.3's copies of it are the Clone cases at the end, and CR
 -- 707.9b's exceptions on a copy that flips are the Sakashima case after them.
 -- CR 110.5c's flipped permanent that copies a Room is the Mirrorweave case last.
 --
--- CR 730.2h's merged permanent containing a flip card is Parun.MutateSpec's, this
+-- CR 731.2h's merged permanent containing a flip card is Parun.MutateSpec's, this
 -- card being the pool's only flip printing and Cubwarden what merges with it.
 module Parun.FlipSpec where
 

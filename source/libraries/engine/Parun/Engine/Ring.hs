@@ -13,7 +13,7 @@
 --
 -- Where they DIVERGE is WHAT the designation is on, and the two rules say so in
 -- the same words about different things: CR 701.54b, "Ring-bearer is a designation
--- A PERMANENT can have", against CR 725.1, "the monarch is a designation A PLAYER
+-- A PERMANENT can have", against CR 726.1, "the monarch is a designation A PLAYER
 -- can have". The storage follows from that rather than the other way round -- this
 -- rides Object.ringBearerFor and GameState grows no field, where the monarch is a
 -- GameState field. The count rides Player.ringTemptations, being a player's.

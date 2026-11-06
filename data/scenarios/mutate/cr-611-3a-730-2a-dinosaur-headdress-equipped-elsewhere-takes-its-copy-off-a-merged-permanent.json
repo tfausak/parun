@@ -1,5 +1,5 @@
 {
-  "description": "CR 611.3a/730.2a Dinosaur Headdress equipped elsewhere takes its copy off a merged permanent",
+  "description": "CR 611.3a/731.2a Dinosaur Headdress equipped elsewhere takes its copy off a merged permanent",
   "note": "Crafted from Goblin Piker and Craw Wurm, the Headdress makes alice's Hill Giant a Craw Wurm; Cubwarden mutates under the Giant, and equip moves the Headdress to her Grizzly Bears choosing the Piker. The Headdress's copy now applies to the Bears alone (CR 611.3a, 301.5), so the merge is applied over the Giant's own values: a 3/3 Hill Giant with Cubwarden's lifelink. Distinct printed pairs: the Giant's 3/3, the Wurm's 6/4, the Piker's 2/1, the Bears' 2/2, Cubwarden's 3/5.",
   "board": {
     "active": "alice",

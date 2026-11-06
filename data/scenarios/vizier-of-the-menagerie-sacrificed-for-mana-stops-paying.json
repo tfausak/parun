@@ -55,7 +55,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "CR 604.2 / 733.1: a Vizier of the Menagerie sacrificed mid-payment stops applying, so its own mana cannot pay the white spell and the cast is reversed",
+  "description": "CR 604.2 / 734.1: a Vizier of the Menagerie sacrificed mid-payment stops applying, so its own mana cannot pay the white spell and the cast is reversed",
   "note": "Ashnod's Altar's {C}{C} could pay Savannah Lions' {W} only under the Vizier it sacrifices. The cast is reversed and the Vizier is back.",
   "timeline": [
     {

@@ -8,26 +8,26 @@ import qualified Parun.Types.PrintingId as PrintingId
 -- represented by two cards". The printing the combined back face was interned
 -- as, plus the cards representing it, each with its own identity (CR 108.3).
 --
--- The RESULT is what CR 712.8g reads: the object "has only the characteristics of
+-- The RESULT is what CR 713.5c reads: the object "has only the characteristics of
 -- the combined back face", so every characteristic read in the engine resolves
 -- through this field and needs to know nothing about meld. The ability that melds
 -- is what fills it in, and what it interns there is the combined back face rather
--- than either component -- CR 712.4b leaves a meld card's own half of the
+-- than either component -- CR 713.1b leaves a meld card's own half of the
 -- oversized face meaningless on its own, so that face is carried inline by the
 -- ability and is never a card in anyone's deck. Nothing here enforces that: this
 -- is plain data, and MkMeldSource will take any printing.
 --
 -- The COMPONENTS are read by the rules that look past those characteristics to
 -- the cards themselves: CR 202.3c's mana value ("as though it had the combined
--- mana cost of the front faces of each card that represents it"), CR 712.21's
+-- mana cost of the front faces of each card that represents it"), CR 713.8's
 -- departure (one permanent leaves the battlefield and two cards are put into the
--- appropriate zone) and CR 701.27g's exclusion of an object represented by more
+-- appropriate zone) and CR 701.27h's exclusion of an object represented by more
 -- than one card from being a transformed permanent.
 --
--- NonEmpty rather than a pair: CR 701.42a and CR 712.4a say "two cards" of a
+-- NonEmpty rather than a pair: CR 701.42a and CR 713.1a say "two cards" of a
 -- meld pair, but the readers above all quantify over "each card that represents
 -- it", so none depends on the count. Parun.Engine.Game's
--- componentsOf is the shared reader, and CR 730.3's merged permanents answer it
+-- componentsOf is the shared reader, and CR 731.3's merged permanents answer it
 -- the same way (Parun.Types.Source's OfMerge arm).
 --
 -- A record rather than positional fields, for Parun.Types.ActivatedAbilitySource's

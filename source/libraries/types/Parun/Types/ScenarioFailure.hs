@@ -31,7 +31,7 @@ data ScenarioFailure
     MkUnreadableDeck Label.Label Text.Text
   | -- | A placement's protector names no seat (CR 310.9).
     MkUnknownProtector Label.Label
-  | -- | A placement shows a face its card does not have (CR 712.8), card first.
+  | -- | A placement shows a face its card does not have (CR 712.6), card first.
     MkUnknownFace CardName.CardName CardName.CardName
   | -- | A placement attached to a label that names nothing on the board, or to
     -- something CR 301.5 / 303.4 forbid it from being attached to.
@@ -74,7 +74,7 @@ data ScenarioFailure
     -- prompt asked next (Nothing when none was), not the one it answered.
     MkUnrefusedMove When.When Move.Move (Maybe Text.Text)
   | -- | A move the timeline took at priority that the engine never made: the
-    -- next priority prompt found it unmade (CR 733.1).
+    -- next priority prompt found it unmade (CR 734.1).
     MkUnmadeMove When.When Move.Move
   | -- | Between two priority prompts, the event log failed to account for the
     -- board (Parun.Engine.Ledger), at the turn and step of the later prompt.

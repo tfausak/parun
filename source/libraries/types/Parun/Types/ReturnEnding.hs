@@ -8,6 +8,6 @@ import qualified Parun.Types.ObjectId as ObjectId
 data ReturnEnding
   = -- | CR 610.3 / 400.7: this incarnation of the move's source leaves the battlefield.
     SourceLeaves ObjectId.ObjectId
-  | -- | CR 725: an opponent of the watch's controller becomes the monarch.
+  | -- | CR 726: an opponent of the watch's controller becomes the monarch.
     OpponentCrowned MonarchWatch.MonarchWatch
   deriving (Eq, Ord, Show)

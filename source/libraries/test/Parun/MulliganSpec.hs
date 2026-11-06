@@ -826,7 +826,7 @@ spec s registry =
         "alice library ORDER matches"
         (Game.zoneMembers Zone.Library S.alice recorded)
         (Game.zoneMembers Zone.Library S.alice replayed)
-    Spec.it s "CR 727.3/729.3: a short deck still flags drewFromEmpty through the CR 103.5b action" $ do
+    Spec.it s "CR 728.3/730.3: a short deck still flags drewFromEmpty through the CR 103.5b action" $ do
       -- alice's whole library is one opening hand. Taking the action exiles
       -- all seven and redraws from an empty library, which flags the failed
       -- draw and leaves her with nothing -- a forced keep under CR 103.5's
@@ -903,11 +903,11 @@ spec s registry =
         "alice library ORDER matches"
         (Game.zoneMembers Zone.Library S.alice recorded)
         (Game.zoneMembers Zone.Library S.alice replayed)
-    Spec.it s "CR 727.3/729.3: a short library still flags drewFromEmpty through the mulligan path" $ do
+    Spec.it s "CR 728.3/730.3: a short library still flags drewFromEmpty through the mulligan path" $ do
       -- bob has a 5-card library; his 7-card opening draw empties it and flags
       -- the failed draw. Driven by an actual mulligan (mulliganUpTo 1) so the
       -- flag is shown to SURVIVE the shuffle-back-and-redraw path, not merely
-      -- the initial draw -- "regardless of any mulligans" (CR 727.3 / 729.3).
+      -- the initial draw -- "regardless of any mulligans" (CR 728.3 / 730.3).
       mountain <- S.printingOf s registry "Mountain"
       let g0 = Setup.emptyGame S.bothPlayers
           addMany pid n g = List.foldl' (\h _ -> snd (S.addPermanent mountain pid h)) g (replicate n ())

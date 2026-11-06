@@ -299,7 +299,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
   -- CR 805.4 with CR 801.7/801.11: under shared team turns the team's step is
   -- dave's own step, though the event names bob, the active player, two seats
   -- from dave. So dave's printed upkeep trigger (Bitterblossom) and his
-  -- inherent end step draw as the monarch (CR 725.2) both fire at range 1.
+  -- inherent end step draw as the monarch (CR 726.2) both fire at range 1.
   -- Paired with the same boards at an unlimited range.
   Spec.it s "CR 805.4/801.7 a teammate two seats from the active player still sees the team's own step begin" $ do
     bitterblossom <- S.printingOf s registry "Bitterblossom"
@@ -319,7 +319,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
         handOf gs = length (Game.zoneMembers Zone.Hand S.dave gs)
     Spec.assertBool s (not (Game.wasInRangeOf S.dave S.bob (S.withRange 1 teamed))) "at range 1 bob is outside dave's range"
     Spec.assertEqWith s "CR 805.4/801.7 Bitterblossom cost dave a life at the team's upkeep" (S.lifeOf S.dave (settle (S.withRange 1 upkeep))) (fmap (subtract 1) (S.lifeOf S.dave upkeep))
-    Spec.assertEqWith s "CR 725.2/801.11 dave, the monarch, drew at the team's end step" (handOf (settle (S.withRange 1 endStep))) (handOf endStep + 1)
+    Spec.assertEqWith s "CR 726.2/801.11 dave, the monarch, drew at the team's end step" (handOf (settle (S.withRange 1 endStep))) (handOf endStep + 1)
     Spec.assertEqWith s "as he does at an unlimited range" (handOf (settle endStep)) (handOf endStep + 1)
 
   -- CR 805.4/805.4d with CR 801.7: the team's upkeep is each member's upkeep,

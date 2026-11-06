@@ -257,7 +257,7 @@ spec s registry = Spec.describe s "PlayerView" $ do
         asked script = State.execState (Engine.runGameAsked answer board script) []
     Spec.assertEqWith s "at the first grant" (asked (S.cast S.alice spell >> Engine.priorityLoop)) [(S.alice, Nothing)]
     Spec.assertEqWith s "after her cast" (asked Engine.priorityLoop) [(S.alice, Nothing)]
-  Spec.it s "CR 723.4 a seat making another player's decisions sees that player's hand" $ do
+  Spec.it s "CR 724.4 a seat making another player's decisions sees that player's hand" $ do
     started0 <- started s registry
     let row =
           PlayerControl.MkPlayerControl

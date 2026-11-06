@@ -15,7 +15,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerSource" $ do
       TriggerSource.codec
       (TriggerSource.OfObject (ObjectId.MkObjectId 4))
       " {\"type\":\"OfObject\",\"value\":4} "
-  -- CR 725.2 / CR 702.179d: no object to name.
+  -- CR 726.2 / CR 702.179d: no object to name.
   Spec.it s "Sourceless" $
     Common.assertCodec
       s

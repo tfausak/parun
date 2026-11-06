@@ -136,10 +136,10 @@ plottable pid gs =
 -- the action, exile included, and the card stays where it was.
 --
 -- CR 107.3d's X, which a mana cost granted as a plot cost can hold, is named
--- in Cost.payAction, with CR 118.13c's announcement and CR 733.1's reversal.
+-- in Cost.payAction, with CR 118.13c's announcement and CR 734.1's reversal.
 --
 -- The stamp is written onto the id the move RETURNS and never onto `oid`, the
--- reading Resolve.finishSpell gives CR 715.3d's permission: CR 400.7 mints a
+-- reading Resolve.finishSpell gives CR 716.3d's permission: CR 400.7 mints a
 -- fresh incarnation in exile and deletes the one it left, so the plotted
 -- designation belongs to the new object. Nothing comes back when the move was
 -- cancelled, and then there is no exiled card to be plotted.
@@ -164,7 +164,7 @@ plot perform pid oid printed = do
     case paid of
       Nothing -> State.put before
       -- One stamp per arrival: the funnel answers with more than one only for a
-      -- melded permanent leaving the battlefield (CR 712.21), and this special
+      -- melded permanent leaving the battlefield (CR 713.8), and this special
       -- action exiles a card from a hand or a library.
       Just _ -> Monad.forM_ exiled (State.modify' . becomePlotted)
 

@@ -1,6 +1,6 @@
 {
   "description": "CR 601.2 a mis-coloured mana answer unwinds the whole cast",
-  "note": "The Birds' activation answers green against the Bolt's {R}, so the payment fails and the cast is rewound; CR 733.1's ReverseManaAbilities is answered Exercises, as the Haskell answerer does, so the Birds ends untapped. Answering red, the cast stands.",
+  "note": "The Birds' activation answers green against the Bolt's {R}, so the payment fails and the cast is rewound; CR 734.1's ReverseManaAbilities is answered Exercises, as the Haskell answerer does, so the Birds ends untapped. Answering red, the cast stands.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",

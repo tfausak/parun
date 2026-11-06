@@ -27,7 +27,7 @@ data CounterPattern = MkCounterPattern
     -- riding the event.
     --
     -- Not a Maybe and not defaulted in the codec: which subject a card names is
-    -- the difference between Doubling Season leaving CR 714.3c's lore counter
+    -- the difference between Doubling Season leaving CR 715.3c's lore counter
     -- alone and Vizier of Remedies shrinking what CR 120.3d's wither damage
     -- leaves, and a silently narrow default is what made two cards narrower than
     -- printed; see #1232.

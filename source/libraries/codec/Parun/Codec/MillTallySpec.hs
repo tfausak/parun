@@ -11,7 +11,7 @@ import qualified Parun.Types.SlotName as SlotName
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.MillTally" $ do
-  -- CR 728.1's own tally: "for each NONLAND card milled this way".
+  -- CR 729.1's own tally: "for each NONLAND card milled this way".
   Spec.it s "MkMillTally, a slot and a filter" $
     Common.assertCodec
       s

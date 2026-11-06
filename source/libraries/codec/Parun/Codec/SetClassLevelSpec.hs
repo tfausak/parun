@@ -10,7 +10,7 @@ import qualified Parun.Types.SlotName as SlotName
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.SetClassLevel" $ do
-  -- CR 716.2a: "[Cost]: This Class's level becomes N."
+  -- CR 717.2a: "[Cost]: This Class's level becomes N."
   Spec.it s "MkSetClassLevel, both keys" $
     Common.assertCodec
       s

@@ -195,7 +195,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- (Projection.fullView vs. Projection.viewWithLastKnown). Mana value too,
         -- since CR 707.2 makes mana cost copiable: a Clone entering as a copy of
         -- Darksteel Myr has mana value 3 and not the 4 its own printed {3}{U} would
-        -- give. Which face the printed cost came off (CR 712.8e, CR 708.2a) is
+        -- give. Which face the printed cost came off (CR 712.6d, CR 708.2a) is
         -- settled at the projection's seed.
         --
         -- Nothing when the view cannot say: no object to ask, no power or toughness
@@ -272,7 +272,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- permanent never carries the X its spell was cast for.
         --
         -- A holder that no longer exists is read off GameState.detachedBindings,
-        -- CR 729.5's resumed resolution: a wish inside the subgame took the
+        -- CR 730.5's resumed resolution: a wish inside the subgame took the
         -- spell's own card, and what the resolution bound since is filed there.
         -- Parun.OutsideTheGameSpec's Synthetic Subgame Tithe case proves it.
         Quantity.InSlot slot ->
@@ -478,8 +478,8 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         Quantity.Speed ref -> case playersOf ref of
           Just [pid] -> fmap (maybe 0 toInteger . Player.speed) (Map.lookup pid (GameState.players gs))
           _ -> Nothing
-        -- CR 725.1: is that player the monarch? LifeTotal's and Speed's arm in what it
-        -- reads and how the reference is resolved, but NOT in arity: CR 725.3 makes the
+        -- CR 726.1: is that player the monarch? LifeTotal's and Speed's arm in what it
+        -- reads and how the reference is resolved, but NOT in arity: CR 726.3 makes the
         -- monarch unique, so a disjunction over the named players and a sum over them
         -- agree on every board, and Queen Marchesa's "if an opponent is the monarch" is
         -- answerable at any number of seats. The siblings keep their one-player
@@ -488,11 +488,11 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- departure (CR 800.4) can leave behind answers 0. Nothing stays reserved for a
         -- reference that could not be resolved at all.
         --
-        -- CR 725.5 is applied HERE and only here: NO MONARCH answers Just 0, not
-        -- Nothing. GameState.monarch of Nothing means CR 725.1's "there is no monarch
+        -- CR 726.5 is applied HERE and only here: NO MONARCH answers Just 0, not
+        -- Nothing. GameState.monarch of Nothing means CR 726.1's "there is no monarch
         -- in a game until an effect instructs a player to become the monarch", and a
         -- 0 on the measured side of a static ability's "as long as" clause makes that
-        -- ability's continuous effect do nothing -- which is exactly what CR 725.5
+        -- ability's continuous effect do nothing -- which is exactly what CR 726.5
         -- prescribes. Nothing would instead collapse to False through
         -- Condition.holds' undeterminable path, which reaches the same answer for
         -- this comparison by accident and would be the wrong claim about the rule.
@@ -501,7 +501,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
           Just pids -> Just (if any (\pid -> GameState.monarch gs == Just pid) pids then 1 else 0)
         -- CR 702.131c / 702.195b: does that player have that rest-of-game mark?
         -- IsMonarch's arm in shape and in arity, reaching that arity from the
-        -- opposite premise: rule 725.3 makes the monarch unique, so a disjunction
+        -- opposite premise: rule 726.3 makes the monarch unique, so a disjunction
         -- over the named seats and a sum over them agree there, while CR 702.131c
         -- and CR 702.195b let every player hold the mark at once and the two come
         -- apart. The disjunction is still what a card asks -- "you have the city's
@@ -628,7 +628,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- every designation but a "Monstrosity X" is.
         Quantity.DesignationValue d -> fmap (toInteger . Map.findWithDefault 0 d . Filter.designationValues) mView
         Quantity.StoredResultsOfSameValue -> fmap (toInteger . greatestOfOneValue . Filter.storedResults) mView
-        -- CR 716.2d is applied HERE and nowhere else: a permanent with no level reads
+        -- CR 717.2d is applied HERE and nowhere else: a permanent with no level reads
         -- as level 1 for every rule and effect that asks, so the default belongs at the
         -- one read rather than in the field Filter.classLevel reports.
         Quantity.ClassLevel -> fmap (toInteger . ClassLevel.defaulted . Filter.classLevel) mView
@@ -993,10 +993,10 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         Quantity.SpellsCastUsingThisTurn family ->
           let casts = Maybe.mapMaybe (Game.castOf . LoggedEvent.event) (Foldable.toList (GameState.events gs))
            in Just (toInteger (length (filter (\c -> (Keyword.familyOf =<< SpellWasCast.castUsing c) == Just family) casts)))
-        -- CR 100.6a / 729.1a: how many subgames have begun this match. Read off the
+        -- CR 100.6a / 730.1a: how many subgames have begun this match. Read off the
         -- stored tally and not the log, PermanentsDiedThisTurn's arm's opposite on
         -- that point: GameState.events is cleared at turn handoff and a subgame
-        -- outlives it, and CR 729.1b keeps the subgame's own log out of this one
+        -- outlives it, and CR 730.1b keeps the subgame's own log out of this one
         -- entirely.
         --
         -- Always a number, never Nothing: nothing here is read off an object, so an
@@ -1831,7 +1831,7 @@ manaValueOf :: Face.Face Card.Card -> Integer
 manaValueOf face = maybe 0 manaCostValue (Face.manaCost face)
 
 -- manaValueOf's arithmetic on a bare cost, for the one reader that holds a mana
--- cost no face prints: CR 718.2's inset frame
+-- cost no face prints: CR 719.2's inset frame
 -- (Parun.Engine.Projection.View.withPrototype).
 manaCostValue :: ManaCost.ManaCost -> Integer
 manaCostValue (ManaCost.MkManaCost symbols) = sum (fmap symbolValue symbols)

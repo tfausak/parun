@@ -38,7 +38,7 @@ import qualified Parun.Types.Zone as Zone
 
 -- The land plays this player may make right now: CR 305.1's land cards in their
 -- hand plus the ones an effect lets them play from elsewhere, minus the ones an
--- effect prohibits, each paired with CR 712.12's chosen face (Nothing where no
+-- effect prohibits, each paired with CR 712.9's chosen face (Nothing where no
 -- face is chosen -- see Parun.Engine.Card.landFaces).
 --
 -- ONE LIST PER SOURCE, because CR 305.1's "from their hand" is the rule's own
@@ -47,7 +47,7 @@ import qualified Parun.Types.Zone as Zone
 -- both the zone and whose copy of it (Crucible of Worlds and Yawgmoth's Will
 -- their own graveyard, Sen Triplets an opponent's hand) -- or, for a Play-verb
 -- permission (Serra Paragon), a pile narrowed card by card; and exile is the
--- object-borne permission CR 715.3d and Effect.GrantPlayFromExile write; and a
+-- object-borne permission CR 716.3d and Effect.GrantPlayFromExile write; and a
 -- graveyard card may carry its own (CR 702.187c's mayhem,
 -- CastingPermission.PlayFromGraveyard). That
 -- split is the same one Parun.Engine.Cast.permittedFrom draws for the cast side,
@@ -66,7 +66,7 @@ import qualified Parun.Types.Zone as Zone
 -- (CR 702.170d, CR 702.143a), where CR 601.1a makes playing a card either
 -- playing it as a land or casting it -- and this is the first of those.
 --
--- ONE CARD MAY APPEAR TWICE, in principle: CR 712.12 has the player choose among
+-- ONE CARD MAY APPEAR TWICE, in principle: CR 712.9 has the player choose among
 -- "its faces that's a land", so a modal double-faced card with two land faces
 -- would offer both. That shape falls out of landFaces returning a list; no
 -- printing reaches it.
@@ -77,10 +77,10 @@ import qualified Parun.Types.Zone as Zone
 -- the land's name and stops one card while leaving the rest playable.
 --
 -- Asked against the name of the CARD IN THE ZONE it is played from, and not
--- against the face chosen to be played: CR 712.8a gives a double-faced card
+-- against the face chosen to be played: CR 712.6a gives a double-faced card
 -- "only the characteristics of its front face" while it is anywhere but the
 -- battlefield or the stack -- which is every zone this list draws from -- so the
--- land a player is playing is named by that face while they play it. CR 712.19
+-- land a player is playing is named by that face while they play it. CR 712.16
 -- does let the chooser name the OTHER face -- "the player may choose the name of
 -- either face of a double-faced card but not both" -- and naming it prohibits
 -- nothing here, which is the same reading from the other side rather than a
@@ -118,11 +118,11 @@ playableLands pid gs =
       fromGranted = ListUtils.nubOrd (concatMap (\(zone, owner) -> Cast.pileCandidates zone owner gs) (PlayerEffect.playLandPiles pid gs))
       -- CR 305.1 / 601.3: a Play-verb permission (Serra Paragon) narrows by
       -- card and has a budget, so each land in the piles it opens is asked
-      -- whether a use is left for it, and CR 712.12's chosen face is what is
+      -- whether a use is left for it, and CR 712.9's chosen face is what is
       -- asked: Muldrotha's land row admits Zof Consumption as Zof Bloodbog.
       permitted oid mName = maybe False (\obj -> not (null (PlayerEffect.landPermissionsFrom pid (Object.zone obj) oid (Cast.asPlayed oid mName gs)))) (Game.lookupObject oid gs)
       fromPermitted = concatMap (\(zone, owner) -> Cast.pileCandidates zone owner gs) (PlayerEffect.playPermissionPiles pid gs)
-      -- Per card instead, because CR 715.3d's permission is state on ONE exiled
+      -- Per card instead, because CR 716.3d's permission is state on ONE exiled
       -- incarnation naming ONE player.
       fromExile = filter (\oid -> Cast.permitsLandPlayFromExile pid oid gs) (Cast.zoneCandidates Zone.Exile pid gs)
       -- CR 702.187c: per card as well, the permission being the card's own
@@ -179,7 +179,7 @@ legalActions pid gs =
       -- casting it, whichever is appropriate. Read through Cast.flashOn, the same
       -- function Cast.instantSpeed reads for the cast half of that sentence, so
       -- the two halves cannot disagree about where flash is read from. The face
-      -- is the one this play would put onto the battlefield (CR 712.12), resolved
+      -- is the one this play would put onto the battlefield (CR 712.9), resolved
       -- the way Cast.proposedFace resolves the half being cast.
       --
       -- The CR 613.11 player axis's "as though it had flash" (CR 601.3b),

@@ -103,9 +103,9 @@ data Deck = MkDeck
     -- A multiset for `sideboard`'s reason: two copies of one conspiracy are two
     -- cards, and each functions (CR 315.5).
     conspiracies :: Map.Map Printing.Printing Natural.Natural,
-    -- | CR 717.2 \/ 901.3 \/ 904.3 and the Unstable FAQ: the supplementary
+    -- | CR 718.2 \/ 901.3 \/ 904.3 and the Unstable FAQ: the supplementary
     -- decks, which begin in the command zone rather than among `cards`, keyed
-    -- by which deck (Parun.Types.SideDeck). A multiset apiece: CR 717.2b lets a
+    -- by which deck (Parun.Types.SideDeck). A multiset apiece: CR 718.2b lets a
     -- limited Attraction deck repeat a name, CR 904.3 two schemes of a name,
     -- and the FAQ a limited Contraption deck its duplicates. CR 901.3's
     -- one-of-each planar deck is deck construction, which this type does not

@@ -4,7 +4,7 @@
 -- module graph.
 --
 -- Also where a Card is resolved to the Face whose characteristics are live,
--- since CR 709.4 / 712.8a / 715.4 make that a question about the card's layout
+-- since CR 709.4 / 712.6a / 716.4 make that a question about the card's layout
 -- and never about which card it is.
 module Parun.Engine.Card where
 
@@ -176,8 +176,8 @@ faceDownFace listed =
 
 -- The face a card shows where nothing has singled out one half for itself. WHICH
 -- face that is, is exactly what the layout decides, and the three rules disagree:
--- CR 709.4 gives a split card its two halves COMBINED, CR 712.8a gives a
--- double-faced card its FRONT face alone, CR 715.4 gives an adventurer card its
+-- CR 709.4 gives a split card its two halves COMBINED, CR 712.6a gives a
+-- double-faced card its FRONT face alone, CR 716.4 gives an adventurer card its
 -- NORMAL characteristics alone. Under Normal there is one face and all three name
 -- it; the layouts that make them differ each have their arm below.
 --
@@ -208,7 +208,7 @@ combinedNames = Set.fromList . fmap Face.name . NonEmpty.toList . combinedFaces
 
 -- CR 612.7 / 108.1: each name a card of the Oracle card reference has, paired
 -- with the characteristics a "nonlegendary creature card" test judges it by. A
--- card is judged as it is off the stack (CR 709.4, 712.8a), so a split card's
+-- card is judged as it is off the stack (CR 709.4, 712.6a), so a split card's
 -- two names share its combined view and a type line from either half (CR
 -- 709.4a/c). Spy Kit's ruling adds each back face of a double-faced card,
 -- judged alone.
@@ -223,14 +223,14 @@ referenceViews card =
         Layout.Normal -> []
         Layout.Split -> []
         Layout.Room -> []
-        -- CR 710.2 / 715.4 / 720.4 / 722.4: the inset or flipped half is no
+        -- CR 710.2 / 716.4 / 721.4 / 723.4: the inset or flipped half is no
         -- characteristic of the card where the reference holds it.
         Layout.Flip -> []
         Layout.Adventure -> []
         Layout.Omen -> []
         Layout.Preparation -> []
         -- The combined back face is the melded card's own printing, not a face of
-        -- either meld card (CR 712.4a).
+        -- either meld card (CR 713.1a).
         Layout.Meld {} -> []
 
 -- Which halves `combined` folds -- the layout's own answer to "what does a card
@@ -265,55 +265,55 @@ combinedFaces card = case Card.layout card of
   -- chosen face, so `flippedFace` below is where it is read and
   -- Parun.Engine.Game.resolveFaceFor is what chooses between the two.
   Layout.Flip -> pure (NonEmpty.head (Card.faces card))
-  -- CR 715.4: "In every zone except the stack, and while on the stack not as an
+  -- CR 716.4: "In every zone except the stack, and while on the stack not as an
   -- Adventure, an adventurer card has only its normal characteristics." The
-  -- alternative characteristics of CR 715.2 are reached ONLY through
-  -- Object.face, which CR 715.3b writes for the stack incarnation and CR 715.3a's
+  -- alternative characteristics of CR 716.2 are reached ONLY through
+  -- Object.face, which CR 716.3b writes for the stack incarnation and CR 716.3a's
   -- offer writes speculatively (Cast.asProposed) --
   -- so the face this returns is the normal one, and the same expression Normal
   -- takes is a different claim: that a card with TWO printed sets of
   -- characteristics shows one of them, rather than that a card with one shows
   -- it.
   Layout.Adventure -> pure (NonEmpty.head (Card.faces card))
-  -- CR 720.4, which is CR 715.4's sentence over the other inset-frame layout:
+  -- CR 721.4, which is CR 716.4's sentence over the other inset-frame layout:
   -- "In every zone except the stack, and while on the stack not as an Omen, an
   -- omen card has only its normal characteristics." So the same expression the
   -- Adventure arm above takes, for the same reason.
   Layout.Omen -> pure (NonEmpty.head (Card.faces card))
-  -- CR 722.4 is CR 715.4's and CR 720.4's sentence with their exception taken
+  -- CR 723.4 is CR 716.4's and CR 721.4's sentence with their exception taken
   -- out: "in every zone, a preparation card has only its normal
-  -- characteristics" -- no carve-out for the stack, because CR 722.3 never
+  -- characteristics" -- no carve-out for the stack, because CR 723.3 never
   -- lets the inset half be cast in the first place. So the same expression
   -- the two arms above take, and here it is the WHOLE answer rather than the
   -- zone-dependent half of one: the alternative characteristics are reached
-  -- only by the copy CR 722.3c mints, which is a different object with a
+  -- only by the copy CR 723.3c mints, which is a different object with a
   -- printing of its own (Parun.Engine.Prepare.mint).
   Layout.Preparation -> pure (NonEmpty.head (Card.faces card))
-  -- CR 712.8a: "While a double-faced card is outside the game or in a zone other
+  -- CR 712.6a: "While a double-faced card is outside the game or in a zone other
   -- than the battlefield or stack, it has only the characteristics of its front
-  -- face", and CR 712.8d says the same of a permanent showing that face. The
+  -- face", and CR 712.6c says the same of a permanent showing that face. The
   -- front face is the first (Parun.Types.Layout.Transforming), so this is
   -- Adventure's expression again over a different claim: what a nonmodal
   -- double-faced card shows where nothing has turned it over.
   --
   -- The BACK face is reached only through Object.face, which CR 701.27a writes.
   Layout.Transforming -> pure (NonEmpty.head (Card.faces card))
-  -- CR 712.8a again, whose scope is every double-faced card and not just the
+  -- CR 712.6a again, whose scope is every double-faced card and not just the
   -- nonmodal one above: a modal double-faced card in a hand, a graveyard or a
   -- library has only its front face's characteristics. So this is one card that
   -- offers two casts (castableFaces below) while showing exactly one set of
   -- characteristics where it sits -- which is what makes it neither Split nor
   -- Adventure.
   --
-  -- The BACK face is reached only through Object.face, which CR 712.11b's choice
-  -- writes as the spell is put onto the stack and CR 712.13 carries onto the
+  -- The BACK face is reached only through Object.face, which CR 712.8b's choice
+  -- writes as the spell is put onto the stack and CR 712.10 carries onto the
   -- permanent (enteringFace below).
   Layout.ModalDoubleFaced -> pure (NonEmpty.head (Card.faces card))
-  -- CR 712.4b: a meld card away from a melded permanent shows the one Magic card
+  -- CR 713.1b: a meld card away from a melded permanent shows the one Magic card
   -- face it prints, because its half of the oversized face "fails to determine
   -- its characteristics" there. Not Transforming's expression over a different
   -- claim but the SAME claim Normal makes, and the arm exists because the layout
-  -- is a different classification (CR 701.42b / 712.4c) rather than because the
+  -- is a different classification (CR 701.42b / 713.1c) rather than because the
   -- answer differs.
   Layout.Meld {} -> pure (NonEmpty.head (Card.faces card))
 
@@ -370,37 +370,37 @@ flippedFace card =
                 }
         Layout.Adventure -> Nothing
         Layout.Omen -> Nothing
-        -- CR 710.1's flip frame and CR 722.1's inset frame are different printings
+        -- CR 710.1's flip frame and CR 723.1's inset frame are different printings
         -- of different rules: a preparation card's alternative characteristics are
-        -- a SPELL's (CR 722.2), never a permanent's, so no status of the permanent
+        -- a SPELL's (CR 723.2), never a permanent's, so no status of the permanent
         -- reaches them.
         Layout.Preparation -> Nothing
         Layout.Transforming -> Nothing
         Layout.ModalDoubleFaced -> Nothing
         Layout.Meld {} -> Nothing
 
--- CR 722.2a's PREPARE SPELL: the inset frame of a preparation card, whose text
+-- CR 723.2a's PREPARE SPELL: the inset frame of a preparation card, whose text
 -- "defines alternative characteristics that the object may have while it's a
--- spell" (CR 722.2). Nothing for every other layout, and for a preparation card
+-- spell" (CR 723.2). Nothing for every other layout, and for a preparation card
 -- printed with no second face -- which Parun.EffectLintSpec's two-face lint rules out of
 -- the corpus, so the arm is a total function's tail rather than a case a card can
 -- reach.
 --
 -- UNMODIFIED, where flippedFace above keeps two of the normal half's
--- characteristics: CR 722.3c says the copy "has only the characteristics of that
+-- characteristics: CR 723.3c says the copy "has only the characteristics of that
 -- permanent's prepare spell, ignoring other exceptions to the copying process
 -- that apply to that permanent", so there is nothing of the normal half to carry
 -- over and nothing of the permanent's own state either. CR 710.1c is what makes
 -- the flip case different, and it has no counterpart here.
 --
--- The FIRST alternative half, and one is enough for CR 722.1's reason and
+-- The FIRST alternative half, and one is enough for CR 723.1's reason and
 -- flippedFace's: the inset frame is one set of characteristics.
 -- docs/design.md section 2.11's rule against baking arity in is what makes this a
 -- `tail` rather than a pair.
 --
 -- A read of the CARD and not of an object: the printed half of
 -- Game.prepareSpellOf, its one engine caller, which answers for the object as CR
--- 722.2b asks.
+-- 723.2b asks.
 prepareFace :: Card.Card -> Maybe (Face.Face Card.Card)
 prepareFace card = case Card.layout card of
   Layout.Normal -> Nothing
@@ -416,10 +416,10 @@ prepareFace card = case Card.layout card of
   Layout.ModalDoubleFaced -> Nothing
   Layout.Meld {} -> Nothing
 
--- CR 715.2 / 720.2: the Adventure or Omen half -- the alternative
+-- CR 716.2 / 721.2: the Adventure or Omen half -- the alternative
 -- characteristics "the object may have while it's a spell" -- and Nothing for
--- every other layout. prepareFace's shape, one rule over: CR 715.2b and CR
--- 720.2b make it a copiable value, which Game.alternativeSpellOf reads.
+-- every other layout. prepareFace's shape, one rule over: CR 716.2b and CR
+-- 721.2b make it a copiable value, which Game.alternativeSpellOf reads.
 alternativeSpellFace :: Card.Card -> Maybe (Face.Face Card.Card)
 alternativeSpellFace card = case Card.layout card of
   Layout.Normal -> Nothing
@@ -764,57 +764,57 @@ castableFaces card = case Card.layout card of
   -- entirely: they are used "only if the permanent is on the battlefield and only
   -- if the permanent is flipped", and a card being cast is neither. So a flip
   -- card offers its normal half and nothing else -- Normal's expression, where
-  -- Adventure below offers both halves because CR 715.3 gives the caster a
+  -- Adventure below offers both halves because CR 716.3 gives the caster a
   -- choice and CR 710 gives none.
   Layout.Flip -> [NonEmpty.head (Card.faces card)]
-  -- CR 715.3: "As a player plays an adventurer card, the player chooses whether
+  -- CR 716.3: "As a player plays an adventurer card, the player chooses whether
   -- they play the card normally or as an Adventure." Both, for Split's reason:
   -- the choice is the player's, and offering each half as its own legal action
   -- is how the engine avoids making it. WHICH of them a given zone allows is not
-  -- this function's question -- CR 715.3d's exile permission excludes the
+  -- this function's question -- CR 716.3d's exile permission excludes the
   -- Adventure half, and Parun.Engine.Cast is where that is read.
   Layout.Adventure -> NonEmpty.toList (Card.faces card)
-  -- CR 720.3: "As a player casts an omen card, the player chooses whether they
+  -- CR 721.3: "As a player casts an omen card, the player chooses whether they
   -- cast the card normally or as an Omen." Both, for Split's and Adventure's
   -- reason: the choice is the player's, and offering each as its own legal action
-  -- is how the engine avoids making it. CR 720.3a is what makes each offer stand
+  -- is how the engine avoids making it. CR 721.3a is what makes each offer stand
   -- on its own -- "only the alternative characteristics are evaluated to see if it
   -- can be cast" -- which is how Parun.Engine.Cast prices and gates a proposal.
   --
-  -- Unlike CR 715.3d's Adventure, nothing narrows the list by zone: CR 720.3d
+  -- Unlike CR 716.3d's Adventure, nothing narrows the list by zone: CR 721.3d
   -- shuffles a resolved Omen back into its owner's library rather than exiling it
   -- with a permission attached, so there is no exiled incarnation for a later cast
   -- to be excluded from (Parun.Engine.Resolve.finishSpell).
   Layout.Omen -> NonEmpty.toList (Card.faces card)
-  -- CR 722.3: "Preparation cards can't be cast using the alternative
+  -- CR 723.3: "Preparation cards can't be cast using the alternative
   -- characteristics found within their inset frames. Rather, these
   -- characteristics are used to define characteristics of copies which may be
   -- cast." Flip's expression, and the sentence right after Adventure's and
   -- Omen's opposite one: the two arms above offer both halves because CR
-  -- 715.3 and CR 720.3 give the caster a choice, and this rule gives none.
-  -- The inset half is reached only as the copy CR 722.3c mints, which is its
+  -- 716.3 and CR 721.3 give the caster a choice, and this rule gives none.
+  -- The inset half is reached only as the copy CR 723.3c mints, which is its
   -- own object with its own one-faced printing and so comes back through the
   -- Normal arm above.
   Layout.Preparation -> [NonEmpty.head (Card.faces card)]
-  -- CR 712.11: "A double-faced spell is cast with its front face up by default.
+  -- CR 712.8: "A double-faced spell is cast with its front face up by default.
   -- The front face always, and the BACK face as a second option exactly when the
   -- front prints an ability allowing the card to be cast transformed or converted
   -- -- CR 702.162a's more than meets the eye, or CR 702.146a's disturb. CR
-  -- 712.11d is the rule that puts it in this list rather than leaving it to an
+  -- 712.8d is the rule that puts it in this list rather than leaving it to an
   -- effect: "if an ability of a double-faced card's FRONT FACE allows it to be
   -- cast 'transformed' or 'converted', that ability is also considered when
   -- evaluating that spell to determine if it can be cast. This is an exception to
-  -- 712.11c." So the ability is the card's own and the offer is the card's own,
+  -- 712.8c." So the ability is the card's own and the offer is the card's own,
   -- which is what makes it a second entry here beside the front rather than a
   -- rider some opcode carries.
   --
   -- Two entries and never a choice the engine makes, Split's reason: casting for
   -- the printed cost and casting transformed are two different casts of one card,
   -- so they are two actions and the player picks (Parun.Engine.Cast.castableSpells
-  -- gates each on its own, CR 712.11c). Parun.Engine.Cost.candidateCostsFor is
+  -- gates each on its own, CR 712.8c). Parun.Engine.Cost.candidateCostsFor is
   -- where the second one is priced at rule 702.162a's or rule 702.146a's cost,
   -- and `enteringFace` below carries the chosen face onto the battlefield (CR
-  -- 712.13), which is CR 702.146b.
+  -- 712.10), which is CR 702.146b.
   --
   -- That second entry is `convertedFace` below, named because a reader who
   -- cannot pay that cost cannot have it: CR 118.9a gives a spell one alternative
@@ -829,18 +829,18 @@ castableFaces card = case Card.layout card of
   -- The other roads to a back face still do not come through this list. An effect
   -- allowing the card to be cast "transformed" names the face itself --
   -- Effect.OfferCast carries CR 310.12b's rider and Parun.Engine.Resolve answers it
-  -- with `backFace` below. CR 712.14a's wording reaches a back face with none on
+  -- with `backFace` below. CR 712.11a's wording reaches a back face with none on
   -- the stack: Parun.Types.EntryRiders carries it and
-  -- Parun.Engine.Event.changeZoneEntering applies it. CR 712.13a's ability causing
+  -- Parun.Engine.Event.changeZoneEntering applies it. CR 701.27j's ability causing
   -- a double-faced spell already on the stack to enter transformed is a
   -- replacement effect, EntryRewrite.EntersTransformed. CR 701.28's convert
   -- OPCODE turns a permanent already on the battlefield over.
   Layout.Transforming -> NonEmpty.head (Card.faces card) : Maybe.maybeToList (convertedFace card)
-  -- CR 712.11b: "A player casting a modal double-faced card or a copy of a modal
+  -- CR 712.8b: "A player casting a modal double-faced card or a copy of a modal
   -- double-faced card as a spell chooses which face they are casting before
   -- putting it onto the stack." EVERY face, for Split's and Adventure's reason:
   -- the choice is the player's, and offering each as its own legal action is how
-  -- the engine avoids making it. CR 712.11c is what makes each offer stand on
+  -- the engine avoids making it. CR 712.8c is what makes each offer stand on
   -- its own -- "Only the face that will be face up on the stack is evaluated to
   -- determine if it can be cast" -- which is exactly how Parun.Engine.Cast prices
   -- and gates a proposal.
@@ -848,14 +848,14 @@ castableFaces card = case Card.layout card of
   -- A LAND face is among them, and needs no arm of its own to stay uncastable:
   -- CR 202.1b gives it no mana cost, which CR 118.6 makes an unpayable one, so
   -- Parun.Engine.Cost.canPay drops it at the affordability gate the way it drops
-  -- any other land (see Cost.costsFor's own note). CR 712.12's other half -- a
+  -- any other land (see Cost.costsFor's own note). CR 712.9's other half -- a
   -- player PLAYING such a face as a land -- is landFaces below.
   Layout.ModalDoubleFaced -> NonEmpty.toList (Card.faces card)
-  -- CR 712.8b, which is the stack's own sentence about this layout and needs no
-  -- reading from the two above: "A meld card on the stack has only the
-  -- characteristics of its front face." So there is one face to offer, and no
-  -- back face a cast could reach -- CR 712.11a's "transformed" cast and CR
-  -- 712.4c's refusal to transform both land on `backFace` and `turnedOver`
+  -- CR 713.5a, which is this layout's own sentence and needs no reading from the
+  -- two above: "While a meld card is outside the game or in a zone other than the
+  -- battlefield, it has only the characteristics of its front face." So there is one face to offer, and no
+  -- back face a cast could reach -- CR 712.8a's "transformed" cast and CR
+  -- 713.1c's refusal to transform both land on `backFace` and `turnedOver`
   -- below, and both answer Nothing for this layout.
   Layout.Meld {} -> [NonEmpty.head (Card.faces card)]
 
@@ -984,14 +984,14 @@ mergeDisjointModes l r =
           }
     else Nothing
 
--- The face `castableFaces` above offers only because CR 712.11d's kind of
+-- The face `castableFaces` above offers only because CR 712.8d's kind of
 -- ability put it there: the back face of a nonmodal transforming card whose
 -- FRONT face prints one that "allows it to be cast 'transformed' or
 -- 'converted'". Nothing for every other card and every other layout.
 --
 -- TWO rules print such an ability. CR 702.162a's more than meets the eye says
 -- "converted" and names no zone; CR 702.146a's disturb says "transformed" and
--- names the graveyard. The ZONE half is not asked here, because rule 712.11d is
+-- names the graveyard. The ZONE half is not asked here, because rule 712.8d is
 -- about which face may be evaluated at all -- Parun.Engine.Cost.candidateCostsGiven
 -- offers disturb's cost in a graveyard and nowhere else, and
 -- Parun.Engine.Cast.permitsCastFromGraveyard is what turns rule 702.146a into the
@@ -1020,27 +1020,27 @@ convertedFaceGiven front card = case Card.layout card of
         backFace card
   _ -> Nothing
 
--- CR 305.1 / 712.12: the faces of this card a player may PLAY as a land, each
+-- CR 305.1 / 712.9: the faces of this card a player may PLAY as a land, each
 -- paired with the name the play carries -- the castableFaces of the special
 -- action rather than of the cast, and the same shape for the same reason. A
--- LIST of options and never a choice: CR 712.12 has the player choose "one of
+-- LIST of options and never a choice: CR 712.9 has the player choose "one of
 -- its faces that's a land", and offering each as its own legal action is how
 -- the engine avoids choosing for them.
 --
 -- The pairing is with a MAYBE name because the two halves of the answer are not
--- the same kind of thing. A chosen face is named, which is what CR 712.12's
+-- the same kind of thing. A chosen face is named, which is what CR 712.9's
 -- "with that face up" needs written onto the permanent; the default view is not
 -- a chosen face at all, and for CR 709.4's split card it is not any single
 -- face's name either. See Parun.Types.Action's Play.
 --
 -- FILTERED to lands here rather than by the caller, so CR 305.1's "land card"
--- and CR 712.12's "faces that's a land" are asked once. What is NOT asked here
+-- and CR 712.9's "faces that's a land" are asked once. What is NOT asked here
 -- is anything about the player or the board -- prohibitions and CR 305.2's
 -- allowance are Parun.Engine.Action's, which is what keeps this a fact about a
 -- card.
 landFaces :: Card.Card -> [(Maybe CardName.CardName, Face.Face Card.Card)]
 landFaces card =
-  let -- CR 712.8a's default view, which every layout but the modal one plays as:
+  let -- CR 712.6a's default view, which every layout but the modal one plays as:
       -- a card with one face plays as that face, and CR 709.4's split card has no
       -- printing whose halves are lands, so nothing here can tell the combined
       -- view from a chosen half.
@@ -1062,19 +1062,19 @@ landFaces card =
         -- empty), so the filter below drops the pair either way.
         Layout.Flip -> byDefault
         Layout.Adventure -> byDefault
-        -- CR 720.4 leaves an omen card in a hand showing only its normal
-        -- characteristics, exactly as CR 715.4 does an adventurer card, so the
+        -- CR 721.4 leaves an omen card in a hand showing only its normal
+        -- characteristics, exactly as CR 716.4 does an adventurer card, so the
         -- default view is what a player would play as a land. No omen card prints
-        -- a land face -- CR 720.2's inset frame holds a spell -- so the filter
+        -- a land face -- CR 721.2's inset frame holds a spell -- so the filter
         -- below drops the pair either way.
         Layout.Omen -> byDefault
-        -- CR 722.4 leaves a preparation card in a hand showing only its normal
-        -- characteristics, as CR 715.4 and CR 720.4 do their layouts, so the default
+        -- CR 723.4 leaves a preparation card in a hand showing only its normal
+        -- characteristics, as CR 716.4 and CR 721.4 do their layouts, so the default
         -- view is what a player would play as a land. No preparation card prints a
-        -- land face -- CR 722.2's inset frame holds a spell -- so the filter below
+        -- land face -- CR 723.2's inset frame holds a spell -- so the filter below
         -- drops the pair either way.
         Layout.Preparation -> byDefault
-        -- CR 712.8a again, and CR 712.12 names the MODAL kind alone: a nonmodal
+        -- CR 712.6a again, and CR 712.9 names the MODAL kind alone: a nonmodal
         -- double-faced card in a hand is only its front face, so a back face that
         -- is a land is not something its controller may elect to play. Westvale
         -- Abbey // Ormendahl, Profane Prince is the shape that makes the arm say
@@ -1082,31 +1082,30 @@ landFaces card =
         -- face like any other land.
         Layout.Transforming -> byDefault
         Layout.ModalDoubleFaced -> fmap named (NonEmpty.toList (Card.faces card))
-        -- CR 712.12 names the MODAL kind alone, and a meld card is not it (CR
-        -- 712.1 lists the three kinds separately). The default view is the one
+        -- CR 712.9 names the MODAL kind alone, and a meld card is not it (CR
+        -- 713.1 does not count it double-faced at all). The default view is the one
         -- face anyway, so Hanweir Battlements is played as the land it prints
         -- exactly as Radiant Fountain is.
         Layout.Meld {} -> byDefault
    in filter (isLand . snd) offered
 
--- CR 712.14b: "If a player is instructed to put a modal double-faced card onto
--- the battlefield and its front face isn't a permanent card, the card stays in
--- its current zone." True when this card is one the instruction does nothing to.
+-- CR 712.11b: "If a player is instructed to put a double-faced card onto the
+-- battlefield with an instant or sorcery face up, that card stays in its current
+-- zone." True when this card is one the instruction does nothing to.
 --
 -- A layout classification, like every other function here, and NOT a question
--- about the effect doing the instructing: the rule turns on the card's front
--- face alone. Parun.Engine.Event.changeZoneEntering is the one door it gates,
+-- about the effect doing the instructing: the rule turns on the face the card
+-- would enter with, its front face by default (CR 712.11). Parun.Engine.Event.changeZoneEntering is the one door it gates,
 -- since that is the door an effect that puts an object onto the battlefield goes
--- through. CR 712.12's land play deliberately does not: playing a land is a
+-- through. CR 712.9's land play deliberately does not: playing a land is a
 -- special action the player takes (CR 305.1), not an instruction to put a card
--- onto the battlefield, and CR 712.12 permits it in as many words.
+-- onto the battlefield, and CR 712.9 permits it in as many words.
 --
--- False for every other layout, and that is the rule rather than a gap. CR
--- 712.14b names the modal double-faced card and nothing else; a nonmodal one is
--- covered by CR 712.14's default (front face up) and by CR 712.14a's
--- "transformed" wording, whose own refusal -- a card that isn't double-faced
--- stays put -- is the same door's, read off `backFace` and `isDoubleFaced`
--- rather than off this.
+-- False for every other layout. A nonmodal double-faced card's front face is
+-- `Card.combined`, which the same door's CR 400.4a refusal already reads; its
+-- back face is reached only by CR 712.11a's "transformed" wording, whose own
+-- refusal -- a card that isn't double-faced stays put -- is the same door's,
+-- read off `backFace` and `isDoubleFaced` rather than off this.
 staysWhenPutOntoBattlefield :: Card.Card -> Bool
 staysWhenPutOntoBattlefield card = case Card.layout card of
   Layout.Normal -> False
@@ -1118,14 +1117,13 @@ staysWhenPutOntoBattlefield card = case Card.layout card of
   Layout.Preparation -> False
   Layout.Transforming -> False
   Layout.ModalDoubleFaced -> not (isPermanent (NonEmpty.head (Card.faces card)))
-  -- CR 712.14b is written about a modal double-faced card and reaches no other
-  -- layout; CR 712.14's default puts a meld card onto the battlefield with its
-  -- one face up. Every meld card in the pool prints a permanent face, so
-  -- the rule would have nothing to turn away here even if it did reach.
+  -- CR 712.11b is written about a double-faced card, which a meld card is not
+  -- (CR 713.1). Every meld card in the pool prints a permanent face, so the
+  -- rule would have nothing to turn away here even if it did reach.
   Layout.Meld {} -> False
 
--- CR 712.8a / 712.11: the FRONT face of a card -- the face a double-faced card
--- shows wherever nothing has turned it over, and the face CR 712.11 makes a
+-- CR 712.6a / 712.8: the FRONT face of a card -- the face a double-faced card
+-- shows wherever nothing has turned it over, and the face CR 712.8 makes a
 -- double-faced spell be cast with by default.
 --
 -- The first, which is the ordering Parun.Types.Layout's Transforming and
@@ -1136,12 +1134,12 @@ staysWhenPutOntoBattlefield card = case Card.layout card of
 frontFace :: Card.Card -> Face.Face Card.Card
 frontFace = NonEmpty.head . Card.faces
 
--- CR 712.1 / 712.11a: the BACK face of a double-faced card -- the one "if a
+-- CR 712.1 / 712.8a: the BACK face of a double-faced card -- the one "if a
 -- double-faced card ... is cast as a spell 'transformed' ... it's put on the
 -- stack with its back face up" names, and whose characteristics the resulting
--- spell then has (CR 712.8c for the nonmodal kind, CR 712.8f for the modal one).
+-- spell then has (CR 712.6b for the nonmodal kind, CR 712.6e for the modal one).
 --
--- Nothing for every layout that has no back face. CR 712.14a states the same
+-- Nothing for every layout that has no back face. CR 712.11a states the same
 -- answer one zone over -- "if a player is instructed to put a card that isn't a
 -- double-faced card onto the battlefield transformed or converted, that card
 -- stays in its current zone" -- so an offer to cast such a card transformed
@@ -1153,7 +1151,7 @@ frontFace = NonEmpty.head . Card.faces
 -- longer list rotate rather than fail. Written separately from `turnedOver`
 -- because that function answers CR 701.27a's question about a PERMANENT already
 -- showing a face, and this one answers a question about a CARD in a zone where
--- CR 712.8a says it shows only its front.
+-- CR 712.6a says it shows only its front.
 backFace :: Card.Card -> Maybe (Face.Face Card.Card)
 backFace card =
   let successor = case NonEmpty.tail (Card.faces card) of
@@ -1163,7 +1161,7 @@ backFace card =
         Layout.Normal -> Nothing
         Layout.Split -> Nothing
         -- A Room's halves are not faces of a double-faced card: CR 712.1 lists
-        -- the kinds and a shared type line is not among them, so CR 712.14a's
+        -- the kinds and a shared type line is not among them, so CR 712.11a's
         -- "a card that isn't a double-faced card ... stays in its current zone"
         -- is the answer, and Nothing is how this function says it.
         Layout.Room -> Nothing
@@ -1175,27 +1173,27 @@ backFace card =
         Layout.Flip -> Nothing
         Layout.Adventure -> Nothing
         Layout.Omen -> Nothing
-        -- CR 722.1's two-part frame is printed on one side, so CR 712.1 does not
-        -- count a preparation card among the double-faced cards and CR 712.14a's
+        -- CR 723.1's two-part frame is printed on one side, so CR 712.1 does not
+        -- count a preparation card among the double-faced cards and CR 712.11a's
         -- "a card that isn't a double-faced card ... stays in its current zone" is
         -- the answer, as it is for a Room and a flip card above.
         Layout.Preparation -> Nothing
         Layout.Transforming -> successor
-        -- The SAME answer, because CR 712.11a says "a double-faced card" and CR
+        -- The SAME answer, because CR 712.8a says "a double-faced card" and CR
         -- 712.1 counts the modal kind among them: a card cast "transformed" is
         -- put on the stack with its back face up whichever kind it is, and CR
-        -- 712.9 lets a modal double-faced permanent turn over for the same
+        -- 712.7 lets a modal double-faced permanent turn over for the same
         -- reason.
         --
         -- NOT how a modal double-faced card's back face is ordinarily reached,
-        -- and that distinction is the whole point of the arm. CR 712.11b --
+        -- and that distinction is the whole point of the arm. CR 712.8b --
         -- "chooses which face they are casting before putting it onto the
         -- stack" -- makes that a CHOICE the caster makes at every cast, which is
         -- `castableFaces` offering every face above; routing it through a
         -- "transformed" rider instead would turn the player's choice into an
         -- effect's instruction and make the front face the only ordinary offer.
         -- The two rules answer different questions and this arm answers only CR
-        -- 712.11a's.
+        -- 712.8a's.
         --
         -- No printing reaches it today. The pool's only producer of a cast
         -- "transformed" is CR 310.12b's defeated Siege, and no battle is a modal
@@ -1206,18 +1204,15 @@ backFace card =
         -- double-faced card printing that keyword would be the card that reaches
         -- this arm, and CR 712.3 permits one.
         Layout.ModalDoubleFaced -> successor
-        -- CR 712.4b: the back face of a meld card determines nothing off a
+        -- CR 713.1b: the back face of a meld card determines nothing off a
         -- melded permanent, so there is none to answer with -- and parun stores
         -- none, which is what Parun.Types.Layout's Meld arm records.
         --
-        -- CR 712.14a's "transformed" rider reads this same answer, and Nothing is
-        -- what CR 712.4c asks for there too: a meld card IS a double-faced card
-        -- (CR 712.1), so 712.14a's second sentence is not what excludes it --
-        -- "unlike other double-faced cards, meld cards cannot be transformed or
-        -- converted. Any instructions to do so are ignored" is. Such a card
-        -- enters showing its front face under CR 712.14's default, and
-        -- Parun.Engine.Event's `refused` reads `isDoubleFaced` beside this
-        -- Nothing to let it; Parun.MeldSpec's Biolume Egg case is the proof.
+        -- CR 712.11a's "transformed" rider reads this same answer: a meld card
+        -- is not a double-faced card (CR 713.1), so the rule's second sentence
+        -- keeps it in its current zone, and Parun.Engine.Event's `refused` reads
+        -- `isDoubleFaced` beside this Nothing to say so. Parun.MeldSpec's
+        -- Biolume Egg case is the proof.
         Layout.Meld {} -> Nothing
 
 -- CR 701.27a: "To transform a permanent, turn it over so that its other face is
@@ -1225,28 +1220,28 @@ backFace card =
 -- the whole of what a transform writes.
 --
 -- Takes the face the permanent shows now (Nothing being its front face, CR
--- 712.8d) and answers the one it would show after. Nothing wherever the rules
+-- 712.6c) and answers the one it would show after. Nothing wherever the rules
 -- say nothing happens instead:
 --
---   * CR 701.27c / 712.9: "If a spell or ability instructs a player to transform
+--   * CR 701.27d / 712.7: "If a spell or ability instructs a player to transform
 --     ... any permanent that isn't represented by a double-faced token or a
 --     double-faced card, nothing happens" -- every layout that is not a
 --     double-faced card, which here is every one but Transforming and
---     ModalDoubleFaced. CR 712.9's first sentence is what puts the modal kind on
+--     ModalDoubleFaced. CR 712.7 is what puts the modal kind on
 --     the permitted side: "Only permanents represented by double-faced tokens and
---     double-faced cards that are not meld cards can transform or convert", and
+--     double-faced cards can transform or convert", and
 --     CR 712.3 says the same from the card's side ("they may have an ability that
 --     allows them to 'transform' or 'convert' on either face"). A Clone that
---     copied a double-faced permanent is one of the forbidden ones (CR 712.9's own
+--     copied a double-faced permanent is one of the forbidden ones (CR 701.27d's
 --     first Example), and falls out of the layout being read off the object's
 --     stored card rather than off the projection.
---   * CR 701.27d / 712.10: "the face that permanent would transform into is an
+--   * CR 701.27e: "the face that permanent would transform into is an
 --     instant or sorcery face" -- read off the face this would land on. No card
 --     in the pool has such a back face, so that guard is written for the cost of
 --     one type-line read rather than exercised.
 --
 -- Not read here, and the reason this answers a NAME rather than performing the
--- turn: CR 701.27f ignores the instruction outright when the permanent has
+-- turn: CR 701.27g ignores the instruction outright when the permanent has
 -- already turned over since the asking ability was put on the stack, which is a
 -- question about two OBJECTS rather than about a card. Parun.Engine.Resolve's
 -- alreadyTurnedFor asks it, and a Just from here is still only a candidate.
@@ -1260,11 +1255,11 @@ turnedOver :: Maybe CardName.CardName -> Card.Card -> Maybe CardName.CardName
 turnedOver mName card = case Card.layout card of
   Layout.Normal -> Nothing
   Layout.Split -> Nothing
-  -- CR 701.27c / 712.9: a Room is not represented by a double-faced token or a
+  -- CR 701.27d / 712.7: a Room is not represented by a double-faced token or a
   -- double-faced card, so an instruction to transform one does nothing. Its two
   -- halves are both on the front, which is what a shared type line means.
   Layout.Room -> Nothing
-  -- CR 701.27c / 712.9 again, and CR 710.1's normal Magic card back is why a
+  -- CR 701.27d / 712.7 again, and CR 710.1's normal Magic card back is why a
   -- flip card is not represented by a double-faced card: an instruction to
   -- transform one does nothing. Flipping is a different act entirely -- a change
   -- of status (CR 110.5, CR 710.2) rather than a turn -- and
@@ -1272,22 +1267,20 @@ turnedOver mName card = case Card.layout card of
   Layout.Flip -> Nothing
   Layout.Adventure -> Nothing
   Layout.Omen -> Nothing
-  -- CR 701.27c / 712.9 again: a preparation card is not represented by a
+  -- CR 701.27d / 712.7 again: a preparation card is not represented by a
   -- double-faced card, so an instruction to transform one does nothing.
-  -- Becoming prepared is not a turn either -- CR 722.3a makes it a
+  -- Becoming prepared is not a turn either -- CR 723.3a makes it a
   -- designation, which Parun.Engine.Prepare writes.
   Layout.Preparation -> Nothing
   Layout.Transforming -> nextFace mName card
   Layout.ModalDoubleFaced -> nextFace mName card
-  -- CR 712.4c: "Unlike other double-faced cards, meld cards cannot be transformed
-  -- or converted. Any instructions to do so are ignored." CR 712.9 says it again
-  -- from the permanent's side, excluding meld cards by name from the double-faced
-  -- cards that can turn over. This is the one arm where the layout's answer
-  -- differs from the double-faced ones above rather than agreeing with Normal by
-  -- accident.
+  -- CR 713.1c: "Meld cards cannot be transformed or converted. Any instructions
+  -- to do so are ignored." CR 712.7 says it again from the permanent's side,
+  -- since a meld card is not a double-faced card (CR 713.1). Its back face is
+  -- half of the combined face (CR 713.1b), not a face to turn over onto.
   Layout.Meld {} -> Nothing
 
--- turnedOver's rotation, for the two layouts CR 712.9 lets a permanent turn
+-- turnedOver's rotation, for the two layouts CR 712.7 lets a permanent turn
 -- over. Shared rather than written twice because the two differ about which
 -- face is live and about which faces may be cast, and about this not at all:
 -- "its other face" is one sentence (CR 701.27a) and reads the same whichever
@@ -1304,21 +1297,21 @@ nextFace mName card =
         [] -> Nothing
         next : _ -> if isInstant next || isSorcery next then Nothing else Just (Face.name next)
 
--- CR 712.13: "By default, a resolving double-faced spell that becomes a
+-- CR 712.10: "By default, a resolving double-faced spell that becomes a
 -- permanent is put onto the battlefield with the same face up that was face up
 -- on the stack." Takes the face the SPELL showed on the stack (Object.face) and
 -- answers the half that survives the move onto the battlefield.
 --
 -- WHAT THE ANSWER IS FOR differs by layout, which is why it is worded as a half
 -- surviving rather than as the face the permanent shows. For a double-faced card
--- CR 712.13 leaves the permanent showing it, and Object.face is where
+-- CR 712.10 leaves the permanent showing it, and Object.face is where
 -- Parun.Engine.Event.changeZoneAttaching writes it. For a Room, CR 709.5d spends
 -- it on an unlocked DESIGNATION instead -- see the Room arm below, and
 -- hasSharedTypeLine, which is what that move reads to tell the two apart.
 --
 -- Nothing for every layout neither rule names, and that is a claim rather than a
 -- shrug: CR 400.7 makes the resolving spell a new object, so the default is that
--- nothing about the stack incarnation survives, and CR 709.4 and CR 715.4 say
+-- nothing about the stack incarnation survives, and CR 709.4 and CR 716.4 say
 -- outright that a split card and an adventurer card have their combined and
 -- normal characteristics respectively in every zone but the stack. Dropping the
 -- face is what gives them that.
@@ -1327,13 +1320,13 @@ enteringFace :: Card.Card -> Maybe CardName.CardName -> Maybe CardName.CardName
 enteringFace card shown = case Card.layout card of
   Layout.Normal -> Nothing
   Layout.Split -> Nothing
-  -- CR 709.5d asks for the same carry-through CR 712.13 does -- "A permanent
+  -- CR 709.5d asks for the same carry-through CR 712.10 does -- "A permanent
   -- with a shared type line is given the 'left half unlocked' designation as it
   -- enters the battlefield if its left half was cast as a spell" -- so the half
   -- the spell showed has to survive the move, and this is the one channel that
   -- carries it.
   --
-  -- What the permanent does with it is where the two rules part. CR 712.13
+  -- What the permanent does with it is where the two rules part. CR 712.10
   -- leaves a double-faced permanent SHOWING the face, which Object.face records;
   -- CR 709.5c's answer is a DESIGNATION, and a Room shows both halves at once
   -- whichever doors are open. So Parun.Engine.Event.changeZoneAttaching spends
@@ -1346,43 +1339,43 @@ enteringFace card shown = case Card.layout card of
   -- 110.5b is the rest of it: the permanent enters unflipped.
   Layout.Flip -> Nothing
   Layout.Adventure -> Nothing
-  -- CR 720.4's "in every zone except the stack" is CR 715.4's claim again, and an
-  -- Omen never becomes a permanent at all -- CR 720.3d shuffles it into its
+  -- CR 721.4's "in every zone except the stack" is CR 716.4's claim again, and an
+  -- Omen never becomes a permanent at all -- CR 721.3d shuffles it into its
   -- owner's library as it resolves -- so no chosen face survives the move.
   Layout.Omen -> Nothing
-  -- CR 722.4 gives a preparation card only its normal characteristics in every
+  -- CR 723.4 gives a preparation card only its normal characteristics in every
   -- zone, and only the normal half was ever castable (castableFaces above), so
   -- there is no half for this move to carry.
   Layout.Preparation -> Nothing
-  -- CR 712.11 casts one with its front face up, so for an ordinary cast `shown`
-  -- IS the front face and CR 712.8d would resolve Nothing to that same face. The
-  -- two answers part where CR 712.11a's cast does put a back face on the stack.
+  -- CR 712.8 casts one with its front face up, so for an ordinary cast `shown`
+  -- IS the front face and CR 712.6c would resolve Nothing to that same face. The
+  -- two answers part where CR 712.8a's cast does put a back face on the stack.
   -- Both of that rule's wordings reach it: "transformed", which CR 310.12b's
   -- defeated Siege reaches (Parun.BattleSpec's "she may then cast it TRANSFORMED
   -- and FREE" is the proof), and "converted", which CR 702.162a's more than meets
-  -- the eye reaches (Parun.TransformSpec's "CR 702.162a / 712.11a Ratchet cast
+  -- the eye reaches (Parun.TransformSpec's "CR 702.162a / 712.8a Ratchet cast
   -- converted costs {1}{W} and arrives with its back face up" is the proof).
   Layout.Transforming -> shown
-  -- The arm CR 712.13 is written for in this pool: CR 712.11b let the caster
+  -- The arm CR 712.10 is written for in this pool: CR 712.8b let the caster
   -- choose either face, so the face that was up on the stack is genuinely a
   -- choice and dropping it would put the OTHER face's permanent onto the
   -- battlefield.
   Layout.ModalDoubleFaced -> shown
-  -- Nothing, meaning the one face this card has. CR 712.13 is the rule this
+  -- Nothing, meaning the one face this card has. CR 712.10 is the rule this
   -- function serves -- "a resolving double-faced spell that becomes a permanent
   -- is put onto the battlefield with the same face up that was face up on the
-  -- stack" -- and CR 712.8b settles which face that was: "A meld card on the
-  -- stack has only the characteristics of its front face." So there is no chosen
+  -- stack" -- and a meld card is not double-faced (CR 713.1): CR 713.5a gives it
+  -- only its front face's characteristics on the stack. So there is no chosen
   -- face for the move to carry through, and dropping `shown` loses nothing. The
-  -- OTHER road into the battlefield agrees: CR 712.14's default is front face up.
+  -- OTHER road into the battlefield agrees: CR 712.11's default is front face up.
   --
-  -- CR 701.42a's melded permanent does not come through here at all. CR 712.14c
+  -- CR 701.42a's melded permanent does not come through here at all. CR 713.6
   -- puts the pair onto the battlefield "as a single permanent with their back
   -- faces up", which is one object arriving rather than either component card
   -- entering with a face chosen.
   Layout.Meld {} -> Nothing
 
--- CR 202.3b / 712.8e: the face a MANA VALUE is read from, which is not always
+-- CR 202.3b / 712.6d: the face a MANA VALUE is read from, which is not always
 -- the face whose other characteristics are live. "While a nonmodal double-faced
 -- permanent has its back face up, it has only the characteristics of its back
 -- face. However, its mana value is calculated using the mana cost of its front
@@ -1405,35 +1398,35 @@ manaCostFace card live = case Card.layout card of
   -- The live face, which for a Room permanent is roomFace's subtracted view: CR
   -- 709.5 takes a locked half's MANA COST away along with its name and rules
   -- text, so the mana value of a Room with one door open is that door's alone.
-  -- CR 712.8e's exception is written about a nonmodal double-faced permanent and
+  -- CR 712.6d's exception is written about a nonmodal double-faced permanent and
   -- reaches nothing here.
   Layout.Room -> live
   -- The live face, which for a flipped permanent is `flippedFace` above --
   -- already carrying the NORMAL half's mana cost, which is CR 710.1c's "a flip
   -- card's color and mana cost don't change if the permanent is flipped". So
-  -- this arm needs no exception of CR 712.8e's shape: the swap kept the cost
+  -- this arm needs no exception of CR 712.6d's shape: the swap kept the cost
   -- rather than replacing it, and mana value falls out of it (CR 202.3).
   Layout.Flip -> live
   Layout.Adventure -> live
   Layout.Omen -> live
   Layout.Preparation -> live
   Layout.Transforming -> NonEmpty.head (Card.faces card)
-  -- The live face, and NOT the front one: CR 712.8e's mana-value exception is
-  -- written about a nonmodal double-faced permanent alone, and CR 712.8f states
+  -- The live face, and NOT the front one: CR 712.6d's mana-value exception is
+  -- written about a nonmodal double-faced permanent alone, and CR 712.6e states
   -- the modal rule with no exception at all -- "While a modal double-faced spell
   -- is on the stack or a modal double-faced permanent is on the battlefield, it
   -- has only the characteristics of the face that's up." Mana cost is a
   -- characteristic (CR 109.3) and mana value derives from it (CR 202.3), so the
   -- face that's up is where it is read from.
   Layout.ModalDoubleFaced -> live
-  -- The live face, there being one. CR 712.8e's exception is written about a
-  -- nonmodal double-faced permanent; CR 712.8g states the meld rule separately
+  -- The live face, there being one. CR 712.6d's exception is written about a
+  -- nonmodal double-faced permanent; CR 713.5c states the meld rule separately
   -- and is about the MELDED permanent's mana value -- the sum of the two front
   -- faces' -- which is a question about an object represented by two cards and
   -- not one this function can be asked. Parun.Engine.Game.manaCostFacesOf is
   -- where CR 202.3c reads the pair, off the object's own source; what reaches
   -- this arm is a meld CARD that is not part of a melded permanent, whose own
-  -- front face is all there is (CR 712.4b, CR 712.8b).
+  -- front face is all there is (CR 713.1b, CR 713.5a).
   Layout.Meld {} -> live
 
 -- CR 202.3b, second sentence: is this card, showing this face, "the back face of
@@ -1448,13 +1441,13 @@ manaCostFace card live = case Card.layout card of
 --
 -- NONMODAL is CR 712.2's kind, which in this pool is Layout.Transforming alone.
 -- The modal layout is excluded by the rule's own word and not by an oversight:
--- CR 712.8f gives a modal double-faced permanent only "the characteristics of
+-- CR 712.6e gives a modal double-faced permanent only "the characteristics of
 -- the face that's up", its back face prints a mana cost of its own, and CR
 -- 202.3b's first sentence never reached it either.
 --
 -- CR 202.3c states the identical rule for a copy of a MELDED permanent, and that
 -- one is NOT answered here: a melded permanent shows the interned combined face
--- (CR 712.8g), whose layout carries nothing about the pair, so the question is
+-- (CR 713.5c), whose layout carries nothing about the pair, so the question is
 -- about the object's SOURCE rather than about a card and a face.
 -- Parun.Engine.Event's copiedSnapshot asks it there, beside the answer this gives.
 --
@@ -1478,7 +1471,7 @@ showsBackFace card mName = case Card.layout card of
   Layout.ModalDoubleFaced -> False
   -- CR 202.3b names the NONMODAL kind, and CR 202.3c states the copy rule for a
   -- melded permanent separately. A meld CARD is neither: it shows the one face it
-  -- prints (CR 712.4b), so it is never the back face of anything.
+  -- prints (CR 713.1b), so it is never the back face of anything.
   Layout.Meld {} -> False
 
 -- CR 709.5: does this card have a SHARED TYPE LINE -- is it a Room? "Some split
@@ -1503,21 +1496,36 @@ hasSharedTypeLine card = case Card.layout card of
   Layout.Flip -> False
   Layout.Adventure -> False
   Layout.Omen -> False
-  -- CR 722.1's inset frame is not CR 709.5's shared type line, for the reason
-  -- CR 715.1's and CR 720.1's are not: the inset half prints a type line of its
-  -- own, and CR 722.4 keeps it out of every zone's reading of the card.
+  -- CR 723.1's inset frame is not CR 709.5's shared type line, for the reason
+  -- CR 716.1's and CR 721.1's are not: the inset half prints a type line of its
+  -- own, and CR 723.4 keeps it out of every zone's reading of the card.
   Layout.Preparation -> False
   Layout.Transforming -> False
   Layout.ModalDoubleFaced -> False
-  -- CR 709.5's shared type line belongs to a split card, and CR 712.1 counts a
-  -- meld card among the double-faced ones instead: its two sides are two sides,
-  -- not two halves of one printed line.
+  -- CR 709.5's shared type line belongs to a split card, and a meld card's two
+  -- sides are two sides (CR 713.1), not two halves of one printed line.
   Layout.Meld {} -> False
 
--- CR 712.1: is this a double-faced card -- nonmodal, modal or meld. A layout
--- read; CR 712.16 and CR 730.2j are its readers.
+-- CR 712.1: is this a double-faced card -- nonmodal or modal. A meld card is not
+-- one (CR 713.1). A layout read; CR 712.11a, 712.13 and 731.2j are its readers.
 isDoubleFaced :: Card.Card -> Bool
 isDoubleFaced card = case Card.layout card of
+  Layout.Normal -> False
+  Layout.Split -> False
+  Layout.Room -> False
+  Layout.Flip -> False
+  Layout.Adventure -> False
+  Layout.Omen -> False
+  Layout.Preparation -> False
+  Layout.Transforming -> True
+  Layout.ModalDoubleFaced -> True
+  Layout.Meld {} -> False
+
+-- CR 712.13 / 713.7: can a permanent this card represents never be turned face
+-- down -- a double-faced card, or a meld card, which CR 713.7 names apart now
+-- that CR 713.1 does not count it double-faced.
+refusesFaceDown :: Card.Card -> Bool
+refusesFaceDown card = case Card.layout card of
   Layout.Normal -> False
   Layout.Split -> False
   Layout.Room -> False
@@ -1836,22 +1844,22 @@ isAura f = Set.member Subtype.Aura (TypeLine.subtypes (Face.typeLine f))
 
 -- CR 205.3k: is this face the ADVENTURE half of an adventurer card? The same
 -- printed-subtype read isAura is, and the reason "cast as an Adventure" is
--- answerable at all: CR 715.3b puts one named face on the stack, and this is
+-- answerable at all: CR 716.3b puts one named face on the stack, and this is
 -- what says which kind of face that is.
 --
--- A subtype and not a position, though CR 715.2's frames are positional and
+-- A subtype and not a position, though CR 716.2's frames are positional and
 -- `combined` above does read the position. The two questions differ: which face
 -- is NORMAL is a fact about the card's layout, while "was this spell cast as an
--- Adventure" is a fact about the object on the stack, and CR 715.3d asks the
+-- Adventure" is a fact about the object on the stack, and CR 716.3d asks the
 -- second of a face that has already been chosen.
 isAdventure :: Face.Face Card.Card -> Bool
 isAdventure f = Set.member Subtype.Adventure (TypeLine.subtypes (Face.typeLine f))
 
 -- CR 205.3k: is this face the OMEN half of an omen card? isAdventure's reading
--- one rule section over, and for the same reason -- CR 720.3b puts one named face
--- on the stack, and CR 720.3d asks of the face already chosen whether the spell
+-- one rule section over, and for the same reason -- CR 721.3b puts one named face
+-- on the stack, and CR 721.3d asks of the face already chosen whether the spell
 -- resolving is an Omen. Parun.Engine.Resolve.finishSpell is the one reader, and
--- Parun.OmenSpec's "CR 720.3d Signaling Roar is shuffled into its owner's library"
+-- Parun.OmenSpec's "CR 721.3d Signaling Roar is shuffled into its owner's library"
 -- is what proves it.
 isOmen :: Face.Face Card.Card -> Bool
 isOmen f = Set.member Subtype.Omen (TypeLine.subtypes (Face.typeLine f))

@@ -7,7 +7,7 @@ module Parun.Types.SideDeck where
 -- face-down pile per player, head on top, shuffled before the game begins (CR
 -- 103.3a).
 data SideDeck
-  = -- | CR 717.2: the Attraction deck.
+  = -- | CR 718.2: the Attraction deck.
     Attraction
   | -- | The Contraption deck, from the Unstable FAQ rather than the rules: CR
     -- 701.45a leaves Unstable's mechanics out of them.

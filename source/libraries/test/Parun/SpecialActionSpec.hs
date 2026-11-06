@@ -871,11 +871,11 @@ makeForetold s registry = Spec.describe s "CR 702.143d Ethereal Valkyrie" $ do
 -- ({4}{R}), whose two faces print mana costs four apart -- checked against
 -- Scryfall, 2026-09-15.
 --
--- That gap is the whole case. CR 712.11b lets either face be cast, and rule
+-- That gap is the whole case. CR 712.8b lets either face be cast, and rule
 -- 702.143d's granted cost is the mana cost of the face CAST -- the Valkyrie's own
 -- ruling says so outright -- so the same exiled card owes {R} as Birgi and
 -- {2}{R} as Harnfel. An implementation settling ONE cost when the effect
--- resolved can only have settled the front face's (CR 712.8a), and then Harnfel
+-- resolved can only have settled the front face's (CR 712.6a), and then Harnfel
 -- is offered Birgi's {R}.
 --
 -- THREE MOUNTAINS and no other untapped land: the Valkyrie's own six are spent to
@@ -947,7 +947,7 @@ makeForetoldPerFace s registry = Spec.describe s "CR 702.143d Ethereal Valkyrie 
   -- The back-face cast taken rather than merely asked about: Harnfel reaches the
   -- battlefield and all three Mountains go down with it, which is the {2}{R}
   -- observed. An implementation pricing it off the front face taps one.
-  Spec.it s "CR 712.11b casting the back face pays the back face's granted cost" $ do
+  Spec.it s "CR 712.8b casting the back face pays the back face's granted cost" $ do
     plains <- S.printingOf s registry "Plains"
     island <- S.printingOf s registry "Island"
     mountain <- S.printingOf s registry "Mountain"
@@ -958,20 +958,20 @@ makeForetoldPerFace s registry = Spec.describe s "CR 702.143d Ethereal Valkyrie 
     Spec.assertBool s (Maybe.isJust (soleExile after)) "the card was exiled, so the case below runs at all"
     Monad.forM_ (soleExile after) $ \exiledId -> do
       let resolved = S.runPure S.castAnswer later (Cast.castSpell S.manaPerformer S.alice exiledId harnfelName Facing.FaceUp >> Stack.resolveTop)
-      -- Read off Object.face, which is where CR 712.13 carries rule 712.11b's
-      -- choice: S.countOnBattlefieldByName asks Card.combined, and CR 712.8a
+      -- Read off Object.face, which is where CR 712.10 carries rule 712.8b's
+      -- choice: S.countOnBattlefieldByName asks Card.combined, and CR 712.6a
       -- makes that the FRONT face for every incarnation of this card.
       let facesUp = Maybe.mapMaybe (\oid -> Game.lookupObject oid resolved >>= Object.face) (Game.zoneMembers Zone.Battlefield S.alice resolved)
       Spec.assertEqWith
         s
-        "Harnfel is on the battlefield, the back face CR 712.13 put there"
+        "Harnfel is on the battlefield, the back face CR 712.10 put there"
         (filter (== harnfelName) facesUp)
         [harnfelName]
       Spec.assertEqWith s "exile is empty" (length (GameState.exile resolved)) 0
       Spec.assertEqWith s "and all nine lands are tapped: six for the Valkyrie, {2}{R} for the cast" (S.tappedCount S.alice resolved) 9
 
 -- The two halves of Birgi, God of Storytelling // Harnfel, Horn of Bounty, named
--- rather than read off the card: CR 712.11b's choice is the test's to make.
+-- rather than read off the card: CR 712.8b's choice is the test's to make.
 birgiName :: CardName.CardName
 birgiName = CardName.MkCardName (Text.pack "Birgi, God of Storytelling")
 
@@ -1422,7 +1422,7 @@ delaying s registry = Spec.describe s "CR 702.62a Delay" $ do
       (S.countOnBattlefieldByName (S.printingName piker) S.bob thirdUpkeep, GameState.turnNumber thirdUpkeep)
       (1, 6)
   -- CR 702.62a's "PLAY it": Delay counters bob's Sea Gate Restoration, whose
-  -- back face is a land (CR 712.12). The last counter comes off at bob's own
+  -- back face is a land (CR 712.9). The last counter comes off at bob's own
   -- upkeep with his land play unused (CR 305.2a), and he plays Sea Gate, Reborn
   -- rather than casting the sorcery -- a cast would leave his battlefield empty.
   Spec.it s "Delay on Sea Gate Restoration: the land back face is played when the last counter comes off" $ do

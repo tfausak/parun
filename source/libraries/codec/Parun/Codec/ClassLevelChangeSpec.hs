@@ -9,7 +9,7 @@ import qualified Parun.Types.ObjectId as ObjectId
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.ClassLevelChange" $ do
-  -- CR 716.2a's crossing: a level set from 1 straight to 3 crosses "becomes level
+  -- CR 717.2a's crossing: a level set from 1 straight to 3 crosses "becomes level
   -- 2" and "becomes level 3" at once, which neither level alone can say. BEFORE
   -- and AFTER deliberately differ here -- a symmetric fixture would round-trip a
   -- codec that swapped them.

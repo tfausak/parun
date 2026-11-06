@@ -687,13 +687,13 @@ dutifulKnowledgeSeekerSpec s registry =
               (settled, after) = settleAfter (Event.changeZone (pure ()) tokenId Zone.Library) gs
           Spec.assertEqWith s "the Seeker is still the printed 2/2" (Projection.powerOf seekerId after, Projection.toughnessOf seekerId after) (Just 2, Just 2)
           Spec.assertEqWith s "nothing reached the stack" (GameState.stack settled) []
-        -- CR 730.3 puts every component of a merged permanent into the zone, and
-        -- CR 730.2d makes the permanent a token when its topmost component is
+        -- CR 731.3 puts every component of a merged permanent into the zone, and
+        -- CR 731.2d makes the permanent a token when its topmost component is
         -- one. Cubwarden {3}{W} (mutate {2}{W}{W}) mutated UNDER alice's Goblin
         -- token is that permanent: a token on the battlefield, one of whose
         -- components is a card. The filter has to read each ARRIVAL, not the
         -- departed token.
-        Spec.it s "CR 730.3 a merged token put into a library still puts its Cubwarden card there, and the Seeker grows" $ do
+        Spec.it s "CR 731.3 a merged token put into a library still puts its Cubwarden card there, and the Seeker grows" $ do
           seeker <- S.printingOf s registry "Dutiful Knowledge Seeker"
           cubwarden <- S.printingOf s registry "Cubwarden"
           plains <- S.printingOf s registry "Plains"
@@ -712,8 +712,8 @@ dutifulKnowledgeSeekerSpec s registry =
                 _ -> S.identityAnswer p
               merged = resolveWholeStack (S.runPure under (S.runPure under main (S.cast S.alice spellId)) (Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority))
               (_, after) = settleAfter (Event.changeZone (pure ()) tokenId Zone.Library) merged
-          Spec.assertEqWith s "CR 730.3 the Cubwarden card entered a library, so the printed 2/2 is a 3/3" (Projection.powerOf seekerId after, Projection.toughnessOf seekerId after) (Just 3, Just 3)
-          Spec.assertBool s (Game.isToken tokenId merged) "CR 730.2d the merged permanent was a token"
+          Spec.assertEqWith s "CR 731.3 the Cubwarden card entered a library, so the printed 2/2 is a 3/3" (Projection.powerOf seekerId after, Projection.toughnessOf seekerId after) (Just 3, Just 3)
+          Spec.assertBool s (Game.isToken tokenId merged) "CR 731.2d the merged permanent was a token"
           Spec.assertEqWith s "and the Cubwarden is in alice's library" (fmap S.nameOf (Maybe.mapMaybe (`Game.cardOf` after) (Game.zoneMembers Zone.Library S.alice after))) [S.printingName cubwarden]
         -- A library card moved into a library arrives nowhere new (Wan Shi Tong,
         -- All-Knowing's ruling: reordering a library does not trigger). CR
@@ -3849,7 +3849,7 @@ biolumeEggSpec s registry =
       eggName = CardName.MkCardName (Text.pack "Biolume Egg")
       serpentName = CardName.MkCardName (Text.pack "Biolume Serpent")
       -- By NAME, since CR 400.7 mints a fresh id at each move: the projected
-      -- name on the battlefield, where CR 712.8e makes it the face shown, and
+      -- name on the battlefield, where CR 712.6d makes it the face shown, and
       -- the card's own face elsewhere.
       named name zone gs =
         let nameOf oid = case zone of
@@ -3867,7 +3867,7 @@ biolumeEggSpec s registry =
           (eggId, _, g) <- board
           let placed = settle (S.runPure S.identityAnswer g (Event.sacrifice (pure ()) S.alice eggId))
               after = throughEndStep (resolveTop placed)
-          Spec.assertEqWith s "CR 712.14a the Serpent is on the battlefield" (length (named serpentName Zone.Battlefield after)) 1
+          Spec.assertEqWith s "CR 712.11a the Serpent is on the battlefield" (length (named serpentName Zone.Battlefield after)) 1
           -- The preconditions, AFTER the assertion so none absorbs a mutation.
           Spec.assertEqWith s "the sacrifice trigger reached the stack" (length (GameState.stack placed)) 1
           Spec.assertEqWith s "the Egg really left first" (Game.lookupObject eggId placed) Nothing
@@ -3879,7 +3879,7 @@ biolumeEggSpec s registry =
           let (_, g') = S.addPermanent restInPeace S.alice g
               placed = settle (S.runPure S.identityAnswer g' (Event.sacrifice (pure ()) S.alice eggId))
               after = throughEndStep (resolveTop placed)
-          Spec.assertEqWith s "CR 712.14a the Serpent is on the battlefield" (length (named serpentName Zone.Battlefield after)) 1
+          Spec.assertEqWith s "CR 712.11a the Serpent is on the battlefield" (length (named serpentName Zone.Battlefield after)) 1
           Spec.assertEqWith s "the sacrifice trigger reached the stack" (length (GameState.stack placed)) 1
           Spec.assertEqWith s "CR 614.1 the Egg went to exile, not the graveyard" (length (named eggName Zone.Exile placed), length (named eggName Zone.Graveyard placed)) (1, 0)
           Spec.assertEqWith s "and no Egg card is left in exile" (length (named eggName Zone.Exile after)) 0

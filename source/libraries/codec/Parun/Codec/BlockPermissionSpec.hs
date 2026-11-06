@@ -38,7 +38,7 @@ spec s = Spec.describe s "Parun.Codec.BlockPermission" $ do
       BlockPermission.codec
       (BlockPermission.MkBlockPermission (Affected.Matching Filter.IsSource) Nothing Nothing)
       " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"additional\":null} "
-  -- Entourage of Trest's: "as long as you're the monarch" (CR 611.3a, 725.1).
+  -- Entourage of Trest's: "as long as you're the monarch" (CR 611.3a, 726.1).
   Spec.it s "a gated permission" $
     Common.assertCodec
       s

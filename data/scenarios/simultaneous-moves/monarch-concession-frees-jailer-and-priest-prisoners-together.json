@@ -1,5 +1,5 @@
 {
-  "description": "CR 610.3d / 725.4 / 800.4a the monarch conceding crowns the active player as their Banisher Priest leaves, so its prisoner and their Palace Jailer's return as one event and each Soul Warden sees the other enter",
+  "description": "CR 610.3d / 726.4 / 800.4a the monarch conceding crowns the active player as their Banisher Priest leaves, so its prisoner and their Palace Jailer's return as one event and each Soul Warden sees the other enter",
   "note": "alice's Palace Jailer holds carol's Warden until an opponent becomes the monarch; her Banisher Priest holds bob's until it leaves. alice concedes on carol's turn: the Priest leaves the game with her and carol is crowned at the same moment. Returned apart, only the later Warden sees the earlier one, leaving bob or carol one life short. bob's Warden being back when carol next gets priority in the same step is CR 117.5's settle after a concession.",
   "board": {
     "active": "alice",

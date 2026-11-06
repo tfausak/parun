@@ -27,7 +27,7 @@ import qualified Parun.Types.SeatView as SeatView
 import qualified Parun.Types.Visibility as Visibility.Type
 import qualified Parun.Types.Zone as Zone
 
--- | CR 400.2 / 723.4: everything `pid` may see of the game.
+-- | CR 400.2 / 724.4: everything `pid` may see of the game.
 viewFor :: PlayerId.PlayerId -> GameState.GameState -> PlayerView.PlayerView
 viewFor pid gs =
   PlayerView.MkPlayerView

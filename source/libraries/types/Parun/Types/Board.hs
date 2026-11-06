@@ -15,7 +15,7 @@ data Board = MkBoard
     -- | CR 500.1: which turn of the game it is.
     turn :: Natural,
     phase :: Phase.Phase,
-    -- | CR 725.1: the seat holding the monarch designation, if any.
+    -- | CR 726.1: the seat holding the monarch designation, if any.
     monarch :: Maybe Label.Label,
     -- | CR 806.2b: the attack option the game uses; Nothing is CR 507.1's
     -- choice among every opponent.

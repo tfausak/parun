@@ -27,7 +27,7 @@ barred :: GameSettings.GameSettings -> Face.Face card -> Bool
 barred settings face = Face.anteOnly face && not (GameSettings.ante settings)
 
 -- | CR 108.3: the cards an object is, each with its printing and identity. A
--- merged or melded permanent (CR 730.2, 701.42a) is one object made of several
+-- merged or melded permanent (CR 731.2, 701.42a) is one object made of several
 -- cards, each with its own identity (Parun.Types.ComponentCard). A token, an
 -- emblem and a copy carry no identity, so are none.
 cardsOf :: Object.Object -> [(PrintingId.PrintingId, CardIdentity.CardIdentity)]
@@ -46,7 +46,7 @@ ownerChanged obj = any (\(_, identity) -> CardIdentity.startingOwner identity /=
 -- game owning it, one row per card: each card of an object in the game, owned
 -- by the object's owner, the one owner parun keeps for a merged or melded
 -- permanent, and each card that left the game with its owner (CR 800.4a,
--- GameState.departedCards). The scenario "CR 108.3 / 730.2 a merged permanent
+-- GameState.departedCards). The scenario "CR 108.3 / 731.2 a merged permanent
 -- on the battlefield reports the card whose owner changed" proves the merged
 -- case, and "CR 800.4a Tempest Efreet's new owner concedes and the report still
 -- lists it" the departed one.

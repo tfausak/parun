@@ -49,7 +49,7 @@ import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 -- exception is `lostAllAbilities`, for the abilities with no list: the
 -- intrinsic ones the rules mint from the type line rather than store -- CR
 -- 305.6's mana ability, CR 306.5b's loyalty, CR 310.4b's defense, CR 310.12b's
--- Siege trigger and CR 714.3's lore counter.
+-- Siege trigger and CR 715.3's lore counter.
 data ProjectedCharacteristics = MkProjectedCharacteristics
   { -- | CR 201.1: the object's names after the layer fold. Copiable (CR 707.2),
     -- which is what earns them a place here rather than a read of the printed
@@ -286,7 +286,7 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- | CR 613.1f: has a layer-6 "loses all abilities" effect applied to this
     -- object? Recorded rather than left implicit because the intrinsic
     -- abilities -- CR 305.6's "{T}: Add [mana symbol]", CR 306.5b's, CR
-    -- 310.4b's, CR 310.12b's and CR 714.3's -- are minted from `cardTypes` and
+    -- 310.4b's, CR 310.12b's and CR 715.3's -- are minted from `cardTypes` and
     -- `subtypes` instead of being stored in a list above, so emptying the lists
     -- says nothing about them.
     --
@@ -405,27 +405,27 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- (Parun.Engine.Projection.View.withMergedAbilities). Read only where `halves`
     -- is rebuilt, which re-grafts them.
     mergedDonors :: [ProjectedCharacteristics],
-    -- | CR 722.2b: the PREPARE SPELL this object has -- "the existence and values
+    -- | CR 723.2b: the PREPARE SPELL this object has -- "the existence and values
     -- of these alternative characteristics are part of the object's copiable
     -- values" -- and Nothing for an object with no inset frame. `halves` above's
-    -- shape and for its reason: rule 722.2b puts the alternative characteristics
+    -- shape and for its reason: rule 723.2b puts the alternative characteristics
     -- among the copiable values in as many words, so a permanent that COPIED a
     -- preparation card has a prepare spell and one that copied something else has
     -- none, whatever card is printed underneath either.
     --
     -- A whole FACE rather than a name, because the readers need the
-    -- characteristics: CR 722.3c mints a copy whose card is this face alone, and
-    -- CR 722.3a's gate asks only whether one exists.
+    -- characteristics: CR 723.3c mints a copy whose card is this face alone, and
+    -- CR 723.3a's gate asks only whether one exists.
     --
-    -- The prepared DESIGNATION is not here, and that is no omission: CR 722.3a
+    -- The prepared DESIGNATION is not here, and that is no omission: CR 723.3a
     -- makes it a designation, no part of the printed text CR 707.2 derives copiable
     -- values from (Parun.Types.Designation's argument), so a permanent that copies
     -- a prepared one is not prepared and mints nothing.
     prepare :: Maybe (Face.Face Card.Card),
-    -- | CR 715.2b / 720.2b: the Adventure or Omen half this object has, copiable
+    -- | CR 716.2b / 721.2b: the Adventure or Omen half this object has, copiable
     -- like `prepare`, and read by Game.castableFacesOf.
     alternativeSpell :: Maybe (Face.Face Card.Card),
-    -- | CR 718.2a / 718.3d: these copiable values are a prototyped spell's or
+    -- | CR 719.2a / 719.3d: these copiable values are a prototyped spell's or
     -- permanent's, or a copy's of one. Set where
     -- Parun.Engine.Projection.View.withPrototype swaps the inset frame in, and
     -- by Parun.Engine.Event.copiedReading off the copied object's own record.

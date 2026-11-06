@@ -13,7 +13,7 @@ data CounterSubject
     -- -- Doubling Season. CR 614.16 admits exactly two causes for this subject,
     -- a resolving spell or ability's effect and another replacement or prevention
     -- effect, and CR 609.1 makes a turn-based action neither. So this subject
-    -- misses CR 714.3c's lore counter and CR 120.3's damage results.
+    -- misses CR 715.3c's lore counter and CR 120.3's damage results.
     ByEffect
   | -- | "If YOU would put", "if an OPPONENT would put" -- Vorinclex, Monstrous
     -- Raider. CR 109.5 reads the relation against the candidate's "you". Every

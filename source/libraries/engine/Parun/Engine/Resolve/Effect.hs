@@ -210,8 +210,8 @@ offerOutsideCopy runSubgame context caster printingId offer = do
 --
 --   1. IS THERE ANYTHING TO OFFER -- an id the reference named (CR 400.7) may no
 --      longer resolve to an object (CR 603.7c).
---   2. WHICH FACE: CR 712.11a for the `transformed` rider, otherwise
---      Game.castableFacesOf (CR 709.3, CR 712.11b, CR 715.3, CR 720.3) plus CR
+--   2. WHICH FACE: CR 712.8a for the `transformed` rider, otherwise
+--      Game.castableFacesOf (CR 709.3, CR 712.8b, CR 716.3, CR 721.3) plus CR
 --      702.102a's fused face for a fuse card in the caster's hand, less the face
 --      CR 702.162a's or CR 702.146a's alternative cost is the only road to, when
 --      this offer states an alternative cost of its own (CR 118.9a).
@@ -224,7 +224,7 @@ offerOutsideCopy runSubgame context caster printingId offer = do
 --      the resulting spell (CR 702.85a).
 --
 -- Questions 3 and 4 are asked of EACH half of EACH named card separately (CR
--- 709.3a, CR 712.11c); where more than one survives, CR 608.2d's choice is put
+-- 709.3a, CR 712.8c); where more than one survives, CR 608.2d's choice is put
 -- to the caster before
 -- the "may" below, since CR 118.8c's excuse is a property of the spell being
 -- cast. At CastObligation.Mandatory the cast is not a decision, so
@@ -243,7 +243,7 @@ offerOutsideCopy runSubgame context caster printingId offer = do
 -- Parun.GameSpec's "CR 305.2a gameplay: Word of Command makes bob play a land
 -- on his turn" proves it.
 --
--- `retake` is CR 723.2's second span: the player who controls the caster while
+-- `retake` is CR 724.2's second span: the player who controls the caster while
 -- the spell this cast makes resolves (Word of Command). Keyed to the spell's
 -- own id, which is the one object CR 608.2g puts on top of the stack.
 offerCastOnce :: Game Result -> Filter.Context -> [ObjectId] -> PlayerId -> CastObligation.CastObligation -> PermissionVerb.PermissionVerb -> Maybe PlayerId -> CastOffer.CastOffer -> Game (Maybe (ObjectId, Maybe ObjectId))
@@ -251,19 +251,19 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
   gs <- State.get
   let -- Whether this offer states CR 118.9's alternative cost, in either of the
       -- two wordings `applied` below reads. NOT `transformed`, which is CR
-      -- 712.11a's rider about which face goes on the stack and says nothing about
+      -- 712.8a's rider about which face goes on the stack and says nothing about
       -- payment.
       alternative = CastOffer.withoutPayingManaCost offer || Maybe.isJust (CastOffer.payingInstead offer)
-      -- CR 712.11a for the transformed rider; CR 709.3, CR 712.11b, CR 715.3 and
-      -- CR 720.3 otherwise, via Game.castableFacesOf. Nothing for a card with no back face,
-      -- CR 712.11a's cast having no face to put on the stack: an offer that cannot
+      -- CR 712.8a for the transformed rider; CR 709.3, CR 712.8b, CR 716.3 and
+      -- CR 721.3 otherwise, via Game.castableFacesOf. Nothing for a card with no back face,
+      -- CR 712.8a's cast having no face to put on the stack: an offer that cannot
       -- be made is not made.
       --
       -- Less Card.convertedFace under an alternative, which is CR 118.9a: a spell
       -- takes one alternative cost, and that face is on the list only because CR
       -- 702.162a's or CR 702.146a's alternative cost put it there, so an offer
       -- spending the spell's one alternative on something else cannot also reach
-      -- it. CR 712.11's default -- the front face -- is then the whole answer.
+      -- it. CR 712.8's default -- the front face -- is then the whole answer.
       --
       -- Unobserved for rule 702.146a's half: no board in the pool offers a cast
       -- of a disturb card under an alternative cost of the offer's own, so only
@@ -307,7 +307,7 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
         | CastOffer.transformed offer = fmap pure (Card.backFace card)
         | alternative = Just (filter (\face -> fmap Face.name (Card.convertedFace card) /= Just (Face.name face)) (Game.castableFacesOfId oid gs) <> fusedFaces oid)
         | otherwise = Just (Cast.castableFacesFor oid gs <> fusedFaces oid)
-      -- One proposal per half, gated on its own (CR 709.3a, CR 712.11c), which
+      -- One proposal per half, gated on its own (CR 709.3a, CR 712.8c), which
       -- is why the whole tuple is built per face rather than once per card.
       --
       -- The excuse below being the HALF's and not the card's is what CR 709.3a
@@ -389,7 +389,7 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
               fmap (Maybe.mapMaybe (proposal oid)) (faces oid card)
           )
           named
-      -- One entry per land face (CR 712.12), beside the spells above, which
+      -- One entry per land face (CR 712.9), beside the spells above, which
       -- hold no land face (CR 305.9, Cast.printedRestrictionsOk), so no pair is
       -- offered both ways.
       landOffers
@@ -447,7 +447,7 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
             let spell = case stackAfter of
                   sid : _ | notElem sid stackBefore -> Just sid
                   _ -> Nothing
-            -- CR 723.2's second span, dormant until the spell resolves
+            -- CR 724.2's second span, dormant until the spell resolves
             -- (Parun.Engine.Stack.resolveTopWith). A reversed cast waits on
             -- nothing.
             case (retake, spell) of
@@ -459,7 +459,7 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
                     PlayerControl.MkPlayerControl
                       { PlayerControl.decider = Decider.MkDecider controller,
                         PlayerControl.duration = ControlDuration.WhileResolving sid,
-                        -- CR 723.7: Word of Command's mana clause is
+                        -- CR 724.7: Word of Command's mana clause is
                         -- "while doing so", the playing of the card.
                         PlayerControl.manaFromLandsOnly = False,
                         PlayerControl.timestamp = stamp
@@ -1123,7 +1123,7 @@ throwSettled runSubgame roll perDie = do
       -- application: a declined or failed payment leaves the number standing.
       --
       -- DuringResolution, payGatePaidBy's moment and for its reason -- the
-      -- roll is a resolution being followed -- so the payment is CR 733.1's
+      -- roll is a resolution being followed -- so the payment is CR 734.1's
       -- own reversible action and the CR 605.3a window it opens is the
       -- payer's to keep.
       --
@@ -1229,10 +1229,10 @@ throwSettled runSubgame roll perDie = do
 -- 706 roll Pokey, the Scallywagg makes for a cost's coin flip (throwForCoin),
 -- and CR 614.11a's settle for a life payment's draws.
 --
--- `runSubgame` is CR 729.1a's runner for a subgame either one starts. Only the
+-- `runSubgame` is CR 730.1a's runner for a subgame either one starts. Only the
 -- triggered half can: CR 605.1a's library clause (ManaAbility.movesLibraryCard)
 -- keeps an activated ability that plays one off the mana-ability road, and CR
--- 605.1b has no such clause. Parun.GameSpec's "CR 605.4a / 729.1b gameplay: a
+-- 605.1b has no such clause. Parun.GameSpec's "CR 605.4a / 730.1b gameplay: a
 -- triggered mana ability's subgame winner draws a card" proves the triggered road.
 performManaAbility :: Game Result -> ManaAbilityPerformer.ManaAbilityPerformer
 performManaAbility runSubgame =
@@ -1382,7 +1382,7 @@ activateWhileRolling runSubgame pid oid ability = do
   adjustments <- Cost.announceReductions pid oid before announced gathered
   (payment, _) <- Cost.paySubstituting (const False) (performManaAbility runSubgame) before [] PaymentMoment.OutsideResolution (PaymentSubject.Activating oid stamp spendable) Nothing ManaSpending.AsProduced pid oid (Cost.announceSubstitutions Cost.waterbendSubstitutions pid oid) (Cost.totalWith adjustments announced)
   case payment of
-    -- CR 733.1: the payment reversed the activation back to `before` itself.
+    -- CR 734.1: the payment reversed the activation back to `before` itself.
     Payment.Unpaid -> pure False
     -- Not implemented: this activation records no GameEvent.AbilityActivated,
     -- so nothing triggers on it (#5733).
@@ -1510,8 +1510,8 @@ payGatePaid runSubgame resolving source controller idx cIdx legal announced comm
 -- ONE payment (Cost.together), which is those rulings' "then pays that amount"
 -- and CR 101.4's "Then the actions happen simultaneously": Killing Wave paid for
 -- three creatures is one loss of 3X life, not three. A payer whose combined
--- payment fails has paid for none of them, and is asked again (CR 733.1,
--- payAgain): the scenario "CR 733.1 a Spirit owner whose payment for Cut the
+-- payment fails has paid for none of them, and is asked again (CR 734.1,
+-- payAgain): the scenario "CR 734.1 a Spirit owner whose payment for Cut the
 -- Tethers fails is asked again" proves it. No body runs until every payment
 -- is made, and what the payments bound is folded on first (foldPaid). Proved
 -- by Parun.ResolveSpec's "an offer per member" group, whose Exquisite Blood case
@@ -1532,7 +1532,7 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
         agreed <- Common.payGateAgreed resolving source (PayOffer.ForMember member) earlier payer gate slots owed options
         pure (payer, member, fmap ((,) slots) agreed)
       -- One payer's offers answered again, in place, each against what was
-      -- answered before it; later payers' answers stand, CR 733.1 reversing
+      -- answered before it; later payers' answers stand, CR 734.1 reversing
       -- this payer's action alone.
       reagree payer answers =
         Monad.foldM
@@ -1602,11 +1602,11 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
 -- The answer is each attempt at the payment, the slots and cost it was made
 -- against and how it was answered (payGateCost's record), for payGatePaid to make
 -- again, and what the last one bound, if it was paid. A failed attempt counts: a
--- mana ability the payer kept stands (CR 733.1).
+-- mana ability the payer kept stands (CR 734.1).
 payGatePaidBy :: Game Result -> ObjectId -> ObjectId -> PlayerId -> PayOffer.PayOffer -> Seq.Seq (PlayerId, PayerAnswer.PayerAnswer) -> Map.Map SlotName (Set Recipient) -> PlayerId -> PayGate.PayGate -> Game (Seq.Seq (Map.Map SlotName (Set Recipient), Cost.Type.Cost Keyword.Type.Keyword, [Response.Response]), Maybe (Map.Map SlotName Binding.Type.Binding))
 payGatePaidBy runSubgame resolving source controller offer earlier legal payer gate = attempt Seq.empty Set.empty
   where
-    -- CR 733.1 / 118.12a: a payment that fails is reversed, which returns the
+    -- CR 734.1 / 118.12a: a payment that fails is reversed, which returns the
     -- payer to the choice, so they are asked again (payAgain).
     attempt tried failed = do
       (slots, options) <- State.gets (Common.gateCostOf resolving source controller legal gate)
@@ -1652,7 +1652,7 @@ payGateCostThen runSubgame slots payer source cost = do
   (announced, _) <- Cost.announce PaymentSubject.ForNeither ManaSpending.AsProduced payer source (Cost.substitutedManas (Cost.waterbendSubstitutions (Cost.Type.components cost) slots payer source gs) pure) cost
   -- DuringResolution: rule 118.12's cost is paid as the spell or ability
   -- resolves, so its events keep the resolution's cause (Cost.payComponent).
-  -- CR 733.1's reversal base: rule 118.12's payment IS the whole of
+  -- CR 734.1's reversal base: rule 118.12's payment IS the whole of
   -- the action that can fail, so the state it begins in is where a
   -- failure returns to and the CR 605.3a window is the payer's to keep
   -- (Cost.pay). Taken after the announcement above, which writes no

@@ -67,7 +67,7 @@ data DelayedTrigger = MkDelayedTrigger
     expiry :: Maybe Expiry.Expiry,
     -- | CR 603.7a: the moment this ability was CREATED. Not the moment it fires,
     -- and not the moment the ability it becomes reaches the stack -- both are
-    -- later, and CR 701.27f/701.28e measure a delayed ability's own transform or
+    -- later, and CR 701.27g/701.28f measure a delayed ability's own transform or
     -- convert from this one.
     --
     -- A Timestamp from the same GameState.nextTimestamp counter every other

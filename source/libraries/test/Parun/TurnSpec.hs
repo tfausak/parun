@@ -10,7 +10,7 @@
 -- and Savor the Moment, the pool's creators of any -- and with Savor the Moment
 -- CR 500.11's skip scoped to ONE of them.
 --
--- And CR 724's two procedures, which rewrite the schedule from inside a
+-- And CR 725's two procedures, which rewrite the schedule from inside a
 -- resolution -- Time Stop for the turn and Mandate of Peace for the combat
 -- phase.
 module Parun.TurnSpec where
@@ -1021,7 +1021,7 @@ aimCreature oid p = case p of
   _ -> S.identityAnswer p
 
 -- Casts the first castable spell offered and passes otherwise, deferring every
--- other prompt to S.identityAnswer. This is the CR 724.1f discriminator: under a
+-- other prompt to S.identityAnswer. This is the CR 725.1f discriminator: under a
 -- correct implementation alice never gets a priority window with an empty stack
 -- in her precombat main phase, so her sorcery stays in hand; an implementation
 -- that rewrites the schedule but grants the window anyway lets her cast it.
@@ -1051,16 +1051,16 @@ namesIn zone pid gs = fmap (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Game.zo
 --
 --   * Sinister Gnarlbark's only ability is "at the beginning of your end step,
 --     draw a card and blight 1" -- unconditional, and observable as a library
---     count and a -1/-1 counter rather than as a flag. It is CR 724.1e's
+--     count and a -1/-1 counter rather than as a flag. It is CR 725.1e's
 --     negative.
 --   * bob's Burst Lightning is a SECOND object on the stack, owned by the other
---     seat, so CR 724.1b's exile cannot be confused with the resolving spell's
+--     seat, so CR 725.1b's exile cannot be confused with the resolving spell's
 --     own CR 608.2n move to a graveyard.
 --   * bob's activated Brothers of Fire ability is a THIRD object on the stack,
---     and the one that is not represented by a card: CR 724.1b's second sentence
+--     and the one that is not represented by a card: CR 725.1b's second sentence
 --     says it ceases to exist, so it must NOT show up in bob's exile.
 --   * Divination is a SORCERY, so it is uncastable while bob's spell sits on the
---     stack and becomes castable only in a priority window CR 724.1f forbids.
+--     stack and becomes castable only in a priority window CR 725.1f forbids.
 --   * The precombat main phase leaves more than one entry between here and the
 --     cleanup step, so an implementation that advanced once would not pass.
 --
@@ -1096,7 +1096,7 @@ timeStopBoard island mountain gnarlbark timeStop divination burst brothers =
         Just ability -> snd (Engine.runGamePure (aimPlayer S.alice) cast (Activate.activateAbility S.bob shaman ability))
    in (activated {GameState.priority = Just S.alice, GameState.passed = Set.empty}, tree, divine)
 
--- CR 724.1, end to end, through the pool's simplest producer: Time Stop
+-- CR 725.1, end to end, through the pool's simplest producer: Time Stop
 -- ({4}{U}{U} Instant, "End the turn.").
 endTurnSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 endTurnSpec s registry = Spec.describe s "EndTheTurn" $ do
@@ -1109,25 +1109,25 @@ endTurnSpec s registry = Spec.describe s "EndTheTurn" $ do
         burst <- S.printingOf s registry "Burst Lightning"
         brothers <- S.printingOf s registry "Brothers of Fire"
         pure (timeStopBoard island mountain gnarlbark timeStop divination burst brothers, S.printingName timeStop, S.printingName burst)
-  -- CR 724.1d/724.1e: the schedule assertions, in their own case so no zone
+  -- CR 725.1d/725.1e: the schedule assertions, in their own case so no zone
   -- assertion can absorb a mutation to the jump.
-  Spec.it s "CR 724.1d ending the turn skips straight to the cleanup step" $ do
+  Spec.it s "CR 725.1d ending the turn skips straight to the cleanup step" $ do
     ((gs, _, _), _, _) <- board
     let phases = snd (runTurn castingFirst gs)
     Spec.assertEqWith s "the postcombat main phase and the end step never ran" phases [Phase.PrecombatMain, Phase.Ending EndingStep.Cleanup]
-  -- CR 724.1f: no player gets priority during this process, and CR 724.1d has
+  -- CR 725.1f: no player gets priority during this process, and CR 725.1d has
   -- ended the step, so the window a sorcery would need never opens. The one
   -- assertion that separates a correct implementation from one that rewrites the
   -- schedule and settles anyway.
-  Spec.it s "CR 724.1f no player gets priority once the turn has ended" $ do
+  Spec.it s "CR 725.1f no player gets priority once the turn has ended" $ do
     ((gs, _, divine), _, _) <- board
     let after = fst (runTurn castingFirst gs)
     Spec.assertEqWith s "alice's Divination is still in her hand" (fmap Object.zone (Game.lookupObject divine after)) (Just Zone.Hand)
-  -- CR 724.1a, through Ultima ({3}{W}{W} Sorcery, "Destroy all artifacts and
+  -- CR 725.1a, through Ultima ({3}{W}{W} Sorcery, "Destroy all artifacts and
   -- creatures. End the turn."): Doomed Traveler's dies ability triggers during the
   -- first sentence and is still pending when the second begins, so it ceases to
   -- exist and no Spirit is ever made.
-  Spec.it s "CR 724.1a a trigger pending when the turn ends ceases to exist" $ do
+  Spec.it s "CR 725.1a a trigger pending when the turn ends ceases to exist" $ do
     plains <- S.printingOf s registry "Plains"
     ultima <- S.printingOf s registry "Ultima"
     traveler <- S.printingOf s registry "Doomed Traveler"
@@ -1157,17 +1157,17 @@ endTurnSpec s registry = Spec.describe s "EndTheTurn" $ do
 --   * Jade Statue is ANIMATED, by its own {2} ability, after attackers were
 --     declared -- so it is a 3/6 Golem "until end of combat" (CR 500.5a) and is
 --     NOT in combat. It is the pool's only producer of that duration, and the
---     one quantity that tells CR 724.2d's expiry from its schedule rewrite.
---   * The attacker is what CR 724.2d's "remove all creatures from combat" acts
+--     one quantity that tells CR 725.2d's expiry from its schedule rewrite.
+--   * The attacker is what CR 725.2d's "remove all creatures from combat" acts
 --     on, and bob's Piker blocks it, so the removal has a subject on each side.
 --   * bob's stacked Burst Lightning is a SECOND object on the stack, owned by
---     the other seat, so CR 724.2b's exile cannot be confused with the resolving
+--     the other seat, so CR 725.2b's exile cannot be confused with the resolving
 --     spell's own CR 608.2n move to a graveyard. It is genuinely CAST, aimed at
 --     alice, so "nothing on the stack resolved" is a claim a life total can
 --     falsify rather than one an empty binding map satisfies for free.
 --   * The two hand-held Burst Lightnings are the "your opponents can't cast
 --     spells this turn" clause's pair: after the combat phase ends alice may
---     still cast hers and bob may not cast his, which is what proves CR 724.2d's
+--     still cast hers and bob may not cast his, which is what proves CR 725.2d's
 --     expiry swept by EQUALITY on the combat phase rather than everything.
 --   * The declare blockers step leaves two combat steps between here and the
 --     postcombat main phase, so an implementation that advanced once would not
@@ -1196,7 +1196,7 @@ mandateBoard plains mountain piker statue mandate burst =
       (his, gs5) = S.addHandCard burst S.bob gs4
       stock g pid = List.foldl' (\g1 _ -> snd (S.addLibraryCard mountain pid g1)) g [1 .. (10 :: Int)]
       -- Attackers are declared BEFORE the Jade Statue is animated, so the Statue
-      -- stays out of combat and CR 724.2d's expiry is observable on a permanent
+      -- stays out of combat and CR 725.2d's expiry is observable on a permanent
       -- its removal-from-combat clause never touches.
       attacking = S.runToStep (Phase.Combat CombatStep.DeclareBlockers) S.aggressiveAnswer (stock (stock gs5 S.alice) S.bob)
       animated = case Face.activatedAbilities (S.combinedFace statue) of
@@ -1220,19 +1220,19 @@ castingMandate spell p = case p of
   _ -> S.aggressiveAnswer p
 
 -- The same board with Time Stop and the six untapped Islands its {4}{U}{U}
--- wants. CR 724.1d's "the current phase and/or step ends" is CR 724.2d's clause
+-- wants. CR 725.1d's "the current phase and/or step ends" is CR 725.2d's clause
 -- on a different phase, and this board is where an "until end of combat" effect
 -- exists to observe it; the arms are separate, so both are asserted.
 withTimeStop :: Printing.Printing -> Printing.Printing -> GameState.GameState -> (ObjectId, GameState.GameState)
 withTimeStop island timeStop gs = S.addHandCard timeStop S.alice (S.landsFor island S.alice 6 gs)
 
 -- The board as the postcombat main phase begins, WITHOUT running it -- the
--- moment CR 724.2d's expiry and the ordinary CR 500.5a sweep disagree. Read at
+-- moment CR 725.2d's expiry and the ordinary CR 500.5a sweep disagree. Read at
 -- the end of the turn the two agree, CR 514.2 having dropped everything.
 atPostcombatMain :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> GameState.GameState
 atPostcombatMain = S.runToStep Phase.PostcombatMain
 
--- CR 724.2, end to end, through the one card rule 724.2 says ends a combat
+-- CR 725.2, end to end, through the one card rule 725.2 says ends a combat
 -- phase: Mandate of Peace.
 endCombatPhaseSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 endCombatPhaseSpec s registry = Spec.describe s "EndTheCombatPhase" $ do
@@ -1244,19 +1244,19 @@ endCombatPhaseSpec s registry = Spec.describe s "EndTheCombatPhase" $ do
         mandate <- S.printingOf s registry "Mandate of Peace"
         burst <- S.printingOf s registry "Burst Lightning"
         pure (mandateBoard plains mountain piker statue mandate burst, S.printingName mandate, (S.printingName burst, S.printingName piker))
-  -- CR 724.2d/724.2e: the schedule assertion, in its own case so no zone
+  -- CR 725.2d/725.2e: the schedule assertion, in its own case so no zone
   -- assertion can absorb a mutation to the jump. The combat damage and end of
-  -- combat steps never run, which is the whole of CR 724.2e in parun -- an "at end
+  -- combat steps never run, which is the whole of CR 725.2e in parun -- an "at end
   -- of combat" trigger fires from Engine.startStep and nowhere else.
-  Spec.it s "CR 724.2d ending the combat phase skips straight to the next phase" $ do
+  Spec.it s "CR 725.2d ending the combat phase skips straight to the next phase" $ do
     ((gs, _, _, spell, _, _), _, _) <- board
     let phases = snd (runTurn (castingMandate spell) gs)
     Spec.assertEqWith s "the combat damage and end of combat steps never ran" phases [Phase.Combat CombatStep.DeclareBlockers, Phase.PostcombatMain, Phase.Ending EndingStep.EndStep, Phase.Ending EndingStep.Cleanup]
-  -- CR 724.1d's half of the same clause, on the same board: ending the TURN
+  -- CR 725.1d's half of the same clause, on the same board: ending the TURN
   -- during combat ends that combat phase too, so its expiries expire. Read as the
   -- cleanup step begins, since CR 514.2's own sweep does not reach an
   -- Expiry.AtEndOf and the two implementations agree nowhere later.
-  Spec.it s "CR 724.1d ending the turn during combat expires that phase's effects" $ do
+  Spec.it s "CR 725.1d ending the turn during combat expires that phase's effects" $ do
     ((gs, jade, _, _, _, _), _, _) <- board
     island <- S.printingOf s registry "Island"
     timeStop <- S.printingOf s registry "Time Stop"
@@ -1265,12 +1265,12 @@ endCombatPhaseSpec s registry = Spec.describe s "EndTheCombatPhase" $ do
     Spec.assertEqWith s "the turn jumped to the cleanup step" (GameState.phase after) (Phase.Ending EndingStep.Cleanup)
     Spec.assertBool s (not (Projection.isCreatureOf jade after)) "and Jade Statue is no longer a creature"
     Spec.assertEqWith s "with no power or toughness" (S.powerToughnessOf jade after) Nothing
-  -- CR 724.2f: no player gets priority during the process. The seats that were
+  -- CR 725.2f: no player gets priority during the process. The seats that were
   -- offered an action in the declare blockers step, in order -- alice casts,
   -- alice passes, bob passes, and the process runs with the round closed. An
   -- implementation that rewrites the schedule and settles anyway hands alice a
   -- fourth window inside the combat phase it just ended.
-  Spec.it s "CR 724.2f no player gets priority once the combat phase has ended" $ do
+  Spec.it s "CR 725.2f no player gets priority once the combat phase has ended" $ do
     ((gs, _, _, spell, _, _), _, _) <- board
     let recording :: Prompt.Prompt r -> State.State [PlayerId.PlayerId] r
         recording p = case p of
@@ -1280,10 +1280,10 @@ endCombatPhaseSpec s registry = Spec.describe s "EndTheCombatPhase" $ do
           _ -> pure (castingMandate spell p)
         seats = State.execState (Engine.runGame recording gs Engine.runStep) []
     Spec.assertEqWith s "alice cast, alice passed, bob passed, and nobody else was asked" seats [S.alice, S.alice, S.bob]
-  -- CR 724.2g: outside a combat phase nothing happens at all -- not the exile,
+  -- CR 725.2g: outside a combat phase nothing happens at all -- not the exile,
   -- not the schedule rewrite. Reached by applying the effect directly, since the
   -- card's own rider correctly refuses the cast.
-  Spec.it s "CR 724.2g ending the combat phase outside one does nothing" $ do
+  Spec.it s "CR 725.2g ending the combat phase outside one does nothing" $ do
     ((gs, _, _, _, _, _), _, _) <- board
     let staged = gs {GameState.phase = Phase.PrecombatMain, GameState.remaining = afterPrecombatMain}
         source = ObjectId.MkObjectId 0
@@ -1340,7 +1340,7 @@ truncateBoard island piker wall statue fray =
            in snd (Engine.runGamePure S.identityAnswer activated Stack.resolveTop)
    in (animated, jade, attacker, blocker, spell)
 
--- CR 500.11 / CR 614.1b: a phase's LAST step skipped on its own. CR 724.2e is
+-- CR 500.11 / CR 614.1b: a phase's LAST step skipped on its own. CR 725.2e is
 -- the CR's own precedent for the split this asks for -- "even though the combat
 -- phase ends, 'at end of combat' triggered abilities don't trigger because the
 -- end of combat step is skipped" -- read there off a phase an effect ended, and

@@ -1,9 +1,9 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- Covers CR 712.4's meld cards: Parun.Types.Layout's Meld arm and the
+-- Covers CR 713.1's meld cards: Parun.Types.Layout's Meld arm and the
 -- Parun.Engine.Card functions that read it. A meld card carries its front face
--- alone (CR 712.4b), so what this spec pins first is that the front face plays
+-- alone (CR 713.1b), so what this spec pins first is that the front face plays
 -- exactly as a one-faced card's does -- the mana ability and the targeted grant
 -- printed on Hanweir Battlements, reached through Parun.Engine.Cost.tapForMana
 -- and Parun.Engine.Activate.activateAbility. Then the melding ability itself --
@@ -11,7 +11,7 @@
 -- choice its exile makes -- driven through the printed card.
 --
 -- Hanweir Battlements and Hanweir Garrison are the pair most cases use, and the
--- Battlements is the half CR 712.4a puts the melding ability on. Graf Rats and
+-- Battlements is the half CR 713.1a puts the melding ability on. Graf Rats and
 -- Midnight Scavengers are the second pair, which CR 701.42b's pair membership
 -- needs.
 module Parun.MeldSpec where
@@ -140,14 +140,14 @@ sparingAsked oid asked = pure (sparing oid S.identityAnswer (Asked.prompt asked)
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Meld" $ do
-  -- CR 712.8's second sentence gives a meld card's front face "its own set of
-  -- characteristics", and CR 712.8d makes those the live ones here: "While a
-  -- double-faced permanent has its front face up, it has only the characteristics
-  -- of its front face." CR 712.4b is why there is nothing else to show -- the
+  -- CR 713.5 gives a meld card's front face "its own set of characteristics",
+  -- and CR 713.5b makes those the live ones here: "While a meld card is on the
+  -- battlefield with its front face up, it has only the characteristics of its
+  -- front face." CR 713.1b is why there is nothing else to show -- the
   -- back face determines nothing off a melded permanent, so parun prints each half
   -- of the pair as its front face alone. The printed "{T}: Add {C}" is an
   -- ordinary activated mana ability (CR 605.1a).
-  Spec.it s "CR 712.8d a meld card on the battlefield has its front face's characteristics: Hanweir Battlements taps for {C}" $ do
+  Spec.it s "CR 713.5b a meld card on the battlefield has its front face's characteristics: Hanweir Battlements taps for {C}" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     let (battlementsId, gs) = S.addPermanent battlements S.alice (Setup.emptyGame S.bothPlayers)
         after = S.runPure S.identityAnswer gs (S.tapForMana battlementsId)
@@ -157,10 +157,10 @@ spec s registry = Spec.describe s "Meld" $ do
       (Game.poolOf S.alice after)
       (Mana.Type.MkMana [ManaUnit.MkManaUnit {ManaUnit.manaType = ManaType.Colorless, ManaUnit.tags = Set.empty, ManaUnit.retention = ManaRetention.Ordinary, ManaUnit.restriction = Nothing, ManaUnit.rider = Nothing, ManaUnit.spendTrigger = Nothing, ManaUnit.sourceChoices = Nothing, ManaUnit.sourceLastExiled = Nothing}])
     Spec.assertEqWith s "and the land is tapped" (S.tappedCount S.alice after) 1
-  -- The same front face's second printed ability, which targets: CR 712.8d again,
+  -- The same front face's second printed ability, which targets: CR 713.5b again,
   -- and the case that shows the front face's TEXT is live rather than just its
   -- type line. The Mountain is what pays the {R}.
-  Spec.it s "CR 712.8d Hanweir Battlements' {R}, {T} grants haste to the creature it targets" $ do
+  Spec.it s "CR 713.5b Hanweir Battlements' {R}, {T} grants haste to the creature it targets" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     mountain <- S.printingOf s registry "Mountain"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -178,7 +178,7 @@ spec s registry = Spec.describe s "Meld" $ do
   -- CR 701.42a: "the resulting permanent is a single object represented by two
   -- cards", and Game.componentsOf is the one reader that can name them. Pure and
   -- over a hand-built Source rather than a board, because the classifier is the
-  -- shared thing CR 202.3c, CR 712.21 and CR 701.27g each read: the components in
+  -- shared thing CR 202.3c, CR 713.8 and CR 701.27h each read: the components in
   -- the order the meld recorded them, and nothing at all for a source that one
   -- card represents.
   Spec.it s "CR 701.42a the cards representing a melded permanent, and none for anything else" $ do
@@ -191,7 +191,7 @@ spec s registry = Spec.describe s "Meld" $ do
                 MeldSource.components = ComponentCard.MkComponentCard garrison Nothing Nothing NonEmpty.:| [ComponentCard.MkComponentCard battlements Nothing Nothing]
               }
     Spec.assertEqWith s "the two cards, in order" (Game.componentsOf township) (Seq.fromList [MergeComponent.OfCard (ComponentCard.MkComponentCard garrison Nothing Nothing), MergeComponent.OfCard (ComponentCard.MkComponentCard battlements Nothing Nothing)])
-    -- CR 712.8g: the combined back face is NOT one of them, so a reader summing
+    -- CR 713.5c: the combined back face is NOT one of them, so a reader summing
     -- the components under CR 202.3c cannot pick up the result's own cost.
     Spec.assertBool s (Seq.null (Seq.filter ((== PrintingId.MkPrintingId 8) . Game.printingOfComponent) (Game.componentsOf township))) "the result is not a component"
     Spec.assertEqWith s "CR 108.2 an ordinary card represents only itself" (Game.componentsOf (Source.OfCard garrison)) Seq.empty
@@ -211,11 +211,11 @@ spec s registry = Spec.describe s "Meld" $ do
     let (bId, gId, after) = melded battlements garrison piker
     case Set.toList (GameState.battlefield after) of
       [meldedId] -> do
-        -- CR 712.8g: "the object represented by those cards has only the
+        -- CR 713.5c: "the object represented by those cards has only the
         -- characteristics of the combined back face."
         Spec.assertEqWith s "the melded permanent shows the combined back face" (Game.cardOf meldedId after) (Just (Printing.card piker))
         -- CR 701.42a's "single object represented by two cards", read back through
-        -- the classifier CR 202.3c, CR 712.21 and CR 701.27g share. Two DISTINCT
+        -- the classifier CR 202.3c, CR 713.8 and CR 701.27h share. Two DISTINCT
         -- printings, in the order the objects were named.
         Spec.assertEqWith
           s
@@ -264,7 +264,7 @@ spec s registry = Spec.describe s "Meld" $ do
     let (bId, pId, after) = melded battlements piker piker
     Spec.assertEqWith s "both cards are still in exile" (List.sort (Game.zoneMembers Zone.Exile S.alice after)) (List.sort [bId, pId])
     Spec.assertEqWith s "nothing entered the battlefield" (Set.size (GameState.battlefield after)) 0
-  -- CR 712.14c: "those cards enter the battlefield as a single permanent with
+  -- CR 713.6: "those cards enter the battlefield as a single permanent with
   -- their back faces up" -- an ENTRY, so CR 616.1's entry replacement loop must
   -- run over it. bob's Kismet rewrites an opponent's entering creature to tapped
   -- (CR 614.1d), and it is the only thing separating this board from the untapped
@@ -307,7 +307,7 @@ spec s registry = Spec.describe s "Meld" $ do
 
   -- The printed ability, end to end: "{3}{R}{R}, {T}: If you both own and control
   -- this land and a creature named Hanweir Garrison, exile them, then meld them
-  -- into Hanweir, the Writhing Township." CR 712.4a puts that ability on this
+  -- into Hanweir, the Writhing Township." CR 713.1a puts that ability on this
   -- half of the pair, and the five Mountains are what pay for it.
   --
   -- The exile is the CARD's instruction and the meld is CR 701.42a's, which is the
@@ -331,13 +331,13 @@ spec s registry = Spec.describe s "Meld" $ do
         Spec.assertEqWith s "one permanent named Hanweir, the Writhing Township" (S.countOnBattlefieldByName townshipName S.alice after) 1
         case namedTownship after (Game.zoneMembers Zone.Battlefield S.alice after) of
           [meldedId] -> do
-            -- CR 712.8g: the melded permanent has only the combined back face's
+            -- CR 713.5c: the melded permanent has only the combined back face's
             -- characteristics, which is where the 7/4 and the two keywords are.
-            Spec.assertEqWith s "CR 712.8g it is the combined back face's 7/4" (S.powerToughnessOf meldedId after) (Just (7, 4))
+            Spec.assertEqWith s "CR 713.5c it is the combined back face's 7/4" (S.powerToughnessOf meldedId after) (Just (7, 4))
             Spec.assertBool s (Projection.hasKeyword Keyword.Trample meldedId after) "with trample"
             Spec.assertBool s (Projection.hasKeyword Keyword.Haste meldedId after) "and haste"
             -- CR 701.42a's "single object represented by two cards", read back
-            -- through the classifier CR 202.3c and CR 712.21 share.
+            -- through the classifier CR 202.3c and CR 713.8 share.
             Spec.assertEqWith
               s
               "CR 701.42a both cards represent it"
@@ -351,7 +351,7 @@ spec s registry = Spec.describe s "Meld" $ do
         Spec.assertEqWith s "and nothing is left in exile" (Game.zoneMembers Zone.Exile S.alice after) []
         Spec.assertEqWith s "setup: the pair was on the battlefield before the ability resolved" (S.countOnBattlefieldByName townshipName S.alice board) 0
       abilities -> Spec.assertFailure s ("expected three activated abilities on Hanweir Battlements, got " <> show (length abilities))
-  -- CR 701.42a / CR 712.14c: the two cards leave exile as ONE event, which names
+  -- CR 701.42a / CR 713.6: the two cards leave exile as ONE event, which names
   -- both. Synthetic Exile Tally ("Whenever one or more cards leave exile, you gain
   -- 1 life for each of them.") is the reader, no printing firing on a card
   -- leaving exile; it carries no filter, so CR 603.10's reach cannot bite.
@@ -515,12 +515,11 @@ spec s registry = Spec.describe s "Meld" $ do
         Spec.assertEqWith s "control: choosing the real Garrison melds the Township" (S.countOnBattlefieldByName townshipName S.alice control) 1
       _ -> Spec.assertFailure s "expected three activated abilities on Hanweir Battlements"
 
-  -- CR 712.4c / 712.14: a meld card told to enter "transformed" ignores the
-  -- instruction and enters front face up, since it IS double-faced (CR 712.1)
-  -- and CR 712.14a's refusal is for a card that isn't. Mirrorweave makes the
-  -- Garrison a copy of Biolume Egg; sacrificed, the Egg's trigger returns the
-  -- Garrison card transformed at the next end step.
-  Spec.it s "CR 712.4c a meld card returned transformed enters front face up" $ do
+  -- CR 712.11a: a card that isn't double-faced, told to enter "transformed",
+  -- stays in its current zone, and a meld card is not double-faced (CR 713.1).
+  -- Mirrorweave makes the Garrison a copy of Biolume Egg; sacrificed, the Egg's
+  -- trigger returns the Garrison card transformed at the next end step.
+  Spec.it s "CR 712.11a a meld card returned transformed stays in the graveyard" $ do
     garrison <- S.printingOf s registry "Hanweir Garrison"
     egg <- S.printingOf s registry "Biolume Egg"
     mirrorweave <- S.printingOf s registry "Mirrorweave"
@@ -538,12 +537,8 @@ spec s registry = Spec.describe s "Meld" $ do
         garrisonName = S.nameOf (Printing.card garrison)
         eggName = S.nameOf (Printing.card egg)
         returned = filter (\oid -> fmap S.nameOf (Game.cardOf oid after) == Just garrisonName) (Game.zoneMembers Zone.Battlefield S.alice after)
-    case returned of
-      [rId] -> do
-        Spec.assertEqWith s "CR 712.14 it shows its front face" (Projection.namesOf rId after) (Set.singleton garrisonName)
-        Spec.assertEqWith s "with no face turned over" (fmap Object.face (Game.lookupObject rId after)) (Just Nothing)
-        Spec.assertEqWith s "under its owner" (Projection.controllerOf rId after) (Just S.alice)
-      other -> Spec.assertFailure s ("expected the Garrison back on the battlefield, got " <> show (length other))
+    Spec.assertEqWith s "CR 712.11a the Garrison did not enter" (length returned) 0
+    Spec.assertEqWith s "it is still in the graveyard" (filter (== garrisonName) (graveyardNames after)) [garrisonName]
     -- The preconditions, AFTER the assertion so none absorbs a mutation.
     Spec.assertEqWith s "setup: Mirrorweave made the Garrison a Biolume Egg" (Projection.namesOf gId woven) (Set.singleton eggName)
     Spec.assertEqWith s "setup: the sacrifice trigger reached the stack" (length (GameState.stack sacrificed)) 1
@@ -567,7 +562,7 @@ spec s registry = Spec.describe s "Meld" $ do
         hosts = filter (\oid -> fmap S.nameOf (Game.cardOf oid after) == Just hostName) (Game.zoneMembers Zone.Battlefield S.alice after)
     case hosts of
       [hostId] -> do
-        Spec.assertEqWith s "CR 712.8g it is the combined back face's 5/6" (S.powerToughnessOf hostId after) (Just (5, 6))
+        Spec.assertEqWith s "CR 713.5c it is the combined back face's 5/6" (S.powerToughnessOf hostId after) (Just (5, 6))
         Spec.assertBool s (Projection.hasKeyword Keyword.Haste hostId after && Projection.hasKeyword Keyword.Menace hostId after) "with haste and menace"
         Spec.assertEqWith s "CR 603.6a its enters trigger gave the Piker +1/+0" (S.powerToughnessOf pikerId after) (Just (3, 1))
         Spec.assertBool s (Projection.hasKeyword Keyword.Menace pikerId after) "and menace"
@@ -637,7 +632,7 @@ spec s registry = Spec.describe s "Meld" $ do
       Nothing -> Spec.assertFailure s "the pair should have melded"
   -- CR 202.3c's second sentence: "if a permanent is a copy of a melded permanent
   -- (even if that copy is represented by two other meld cards), the mana value of
-  -- the copy is 0" -- CR 712.8g says it again. So the melded permanent and its
+  -- the copy is 0" -- CR 713.5c says it again. So the melded permanent and its
   -- copy report DIFFERENT numbers, and the Winnower reads both off one board:
   -- 3 is odd and blocks, the copy's 0 is even and cannot. Cackling Counterpart
   -- ("create a token that's a copy of target creature you control") is the copy,
@@ -664,7 +659,7 @@ spec s registry = Spec.describe s "Meld" $ do
             Spec.assertEqWith s "and the copy is the melded permanent in every other respect" (Projection.namesOf tokenId copied) (Set.singleton townshipName)
           tokens -> Spec.assertFailure s ("expected exactly one token, got " <> show (length tokens))
       Nothing -> Spec.assertFailure s "the pair should have melded"
-  -- CR 701.27g: "an object represented by more than one card, such as a melded or
+  -- CR 701.27h: "an object represented by more than one card, such as a melded or
   -- merged permanent, is never considered a transformed permanent, even if it has
   -- components that are back face up." Mutagen Connoisseur's "for each
   -- transformed permanent you control" is the card that asks, as it does
@@ -672,7 +667,7 @@ spec s registry = Spec.describe s "Meld" $ do
   -- Gargoyle beside it is turned over by the same instruction and IS one, so the
   -- Connoisseur's power separates a tally that counts the melded permanent (2)
   -- from the rule's answer (1).
-  Spec.it s "CR 701.27g a melded permanent is not a transformed permanent" $ do
+  Spec.it s "CR 701.27h a melded permanent is not a transformed permanent" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
     mountain <- S.printingOf s registry "Mountain"
@@ -684,23 +679,23 @@ spec s registry = Spec.describe s "Meld" $ do
     case mMelded of
       Just meldedId -> do
         let turned = transforming [gargoyleId, meldedId] after
-        Spec.assertEqWith s "CR 701.27g the Connoisseur counts the Gargoyle alone" (S.powerToughnessOf connoisseurId turned) (Just (1, 5))
+        Spec.assertEqWith s "CR 701.27h the Connoisseur counts the Gargoyle alone" (S.powerToughnessOf connoisseurId turned) (Just (1, 5))
         -- The control: the instruction really ran, and the permanent that CAN
         -- turn over did, so the tally above is 1 rather than 0 by accident.
         Spec.assertEqWith s "CR 701.27a the Gargoyle turned over" (Projection.namesOf gargoyleId turned) (Set.singleton (CardName.MkCardName (Text.pack "Stonewing Antagonizer")))
         Spec.assertEqWith s "and the melded permanent is still on the battlefield to be counted" (S.countOnBattlefieldByName townshipName S.alice turned) 1
       Nothing -> Spec.assertFailure s "the pair should have melded"
-  -- CR 712.4c: "unlike other double-faced cards, meld cards cannot be transformed
-  -- or converted. Any instructions to do so are ignored", and CR 712.9 excludes
-  -- meld cards by name from the permanents that can turn over. The instruction is
+  -- CR 713.1c: "Meld cards cannot be transformed or converted. Any instructions
+  -- to do so are ignored", and CR 712.7 lets only a double-faced card turn over,
+  -- which a meld card is not (CR 713.1). The instruction is
   -- Parun.Types.Effect's Transform over a slot naming the melded permanent, which
   -- is the shape any card's "transform target permanent" reaches the opcode in.
   --
   -- The refusal is OVER-DETERMINED on this board and the case is a regression
   -- fence rather than a proof: the pool's combined face prints one face, so
   -- Parun.Engine.Card.turnedOver would decline it as a one-faced card whatever CR
-  -- 712.4c said. The case below is the one that separates the two readings.
-  Spec.it s "CR 712.4c/712.9 the melded permanent ignores an instruction to transform" $ do
+  -- 713.1c said. The case below is the one that separates the two readings.
+  Spec.it s "CR 713.1c/712.7 the melded permanent ignores an instruction to transform" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
     mountain <- S.printingOf s registry "Mountain"
@@ -709,12 +704,12 @@ spec s registry = Spec.describe s "Meld" $ do
       Just meldedId -> do
         let turned = transforming [meldedId] after
         Spec.assertEqWith s "its name is the combined face's still" (Projection.namesOf meldedId turned) (Set.singleton townshipName)
-        Spec.assertEqWith s "CR 712.8g and so is its 7/4" (S.powerToughnessOf meldedId turned) (Just (7, 4))
+        Spec.assertEqWith s "CR 713.5c and so is its 7/4" (S.powerToughnessOf meldedId turned) (Just (7, 4))
         Spec.assertEqWith s "and its type line" (PC.subtypes (Projection.project meldedId turned)) (Set.fromList [Subtype.Eldrazi, Subtype.Ooze])
       Nothing -> Spec.assertFailure s "the pair should have melded"
-  -- CR 712.4c asked of the OBJECT rather than of a card, which is the whole of
+  -- CR 713.1c asked of the OBJECT rather than of a card, which is the whole of
   -- the rule: the melded permanent's own card is the interned combined face (CR
-  -- 712.8g), and nothing about that card says what pair it came from. So the
+  -- 713.5c), and nothing about that card says what pair it came from. So the
   -- board is the opcode-level meld with a DOUBLE-FACED card standing in for the
   -- combined face -- Parun.Engine.Card.turnedOver would turn a Thraben Gargoyle
   -- over on sight -- and the only thing refusing is the two cards representing
@@ -724,7 +719,7 @@ spec s registry = Spec.describe s "Meld" $ do
   -- face is card DATA the opcode carries); no printed meld pair combines into a
   -- double-faced card, so this is the board that makes the rule readable rather
   -- than a board Magic can reach.
-  Spec.it s "CR 712.4c a melded permanent refuses the turn its own card would allow" $ do
+  Spec.it s "CR 713.1c a melded permanent refuses the turn its own card would allow" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
     gargoyle <- S.printingOf s registry "Thraben Gargoyle"
@@ -733,27 +728,27 @@ spec s registry = Spec.describe s "Meld" $ do
       [meldedId] -> do
         let turned = transforming [meldedId] after
             (loneId, alone) = S.addPermanent gargoyle S.alice (Setup.emptyGame S.bothPlayers)
-        Spec.assertEqWith s "CR 712.4c the melded permanent did not turn over" (Projection.namesOf meldedId turned) (Set.singleton (CardName.MkCardName (Text.pack "Thraben Gargoyle")))
-        Spec.assertEqWith s "CR 712.8g nor did its 2/2 become the back face's 4/2" (S.powerToughnessOf meldedId turned) (Just (2, 2))
+        Spec.assertEqWith s "CR 713.1c the melded permanent did not turn over" (Projection.namesOf meldedId turned) (Set.singleton (CardName.MkCardName (Text.pack "Thraben Gargoyle")))
+        Spec.assertEqWith s "CR 713.5c nor did its 2/2 become the back face's 4/2" (S.powerToughnessOf meldedId turned) (Just (2, 2))
         Spec.assertEqWith s "nor its type line" (PC.subtypes (Projection.project meldedId turned)) (Set.singleton Subtype.Gargoyle)
         -- The pair: the same card, one card representing it, same instruction.
         -- CR 701.27a turns that one over, so the refusal above is the meld's.
         Spec.assertEqWith s "CR 701.27a an ordinary Thraben Gargoyle turns over" (Projection.namesOf loneId (transforming [loneId] alone)) (Set.singleton (CardName.MkCardName (Text.pack "Stonewing Antagonizer")))
-        -- CR 712.4c and CR 712.9 both name converting beside transforming, and CR
-        -- 701.28f says a permanent that can't transform can't convert either. So
+        -- CR 713.1c and CR 712.7 both name converting beside transforming, and CR
+        -- 701.28g says a permanent that can't transform can't convert either. So
         -- the other opcode gets the same board and the same pair: the melded
         -- permanent refuses, and the lone Gargoyle -- one card, same card --
         -- turns over, which is what keeps the refusal from being a convert that
         -- does nothing anywhere.
-        Spec.assertEqWith s "CR 701.28f/712.9 nor does an instruction to convert turn it over" (Projection.namesOf meldedId (converting [meldedId] after)) (Set.singleton (CardName.MkCardName (Text.pack "Thraben Gargoyle")))
+        Spec.assertEqWith s "CR 701.28g/712.7 nor does an instruction to convert turn it over" (Projection.namesOf meldedId (converting [meldedId] after)) (Set.singleton (CardName.MkCardName (Text.pack "Thraben Gargoyle")))
         Spec.assertEqWith s "CR 701.28a while an ordinary Thraben Gargoyle converts" (Projection.namesOf loneId (converting [loneId] alone)) (Set.singleton (CardName.MkCardName (Text.pack "Stonewing Antagonizer")))
       other -> Spec.assertFailure s ("expected exactly one permanent, got " <> show (length other))
 
-  -- CR 701.27g's second exclusion where nothing else answers: a melded permanent
+  -- CR 701.27h's second exclusion where nothing else answers: a melded permanent
   -- that is BACK FACE UP. Daybound's first static ability (CR 702.145b: "if it
   -- is night and this permanent is represented by a double-faced card, it enters
   -- transformed") is the one entry rewrite that writes Object.face -- CR 616.1d
-  -- ranks it, and it is not CR 712.13a, which governs only a resolving
+  -- ranks it, and it is not CR 701.27j, which governs only a resolving
   -- double-faced spell. CR 616.1
   -- runs over a melded permanent like any other entry -- so a combined face
   -- printing daybound enters with its back face up, `Game.isFrontFaceUp` answers
@@ -762,13 +757,13 @@ spec s registry = Spec.describe s "Meld" $ do
   -- reached from the other side.
   --
   -- The combined face is Tovolar, Dire Overlord // Tovolar, the Midnight Scourge,
-  -- the same stand-in liberty the CR 712.4c case takes: no printed meld pair
+  -- the same stand-in liberty the CR 713.1c case takes: no printed meld pair
   -- combines into a daybound double-faced card, and the opcode carries the
   -- combined face as card data. The Thraben Gargoyle beside it is turned over by
   -- an ordinary instruction and IS a transformed permanent, so the Connoisseur's
   -- power separates a tally that counts the melded permanent (2) from the rule's
   -- answer (1).
-  Spec.it s "CR 701.27g a melded permanent that entered with its back face up is still not one" $ do
+  Spec.it s "CR 701.27h a melded permanent that entered with its back face up is still not one" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
     tovolar <- S.printingOf s registry "Tovolar, Dire Overlord"
@@ -781,7 +776,7 @@ spec s registry = Spec.describe s "Meld" $ do
     case filter (\oid -> oid /= connoisseurId && oid /= gargoyleId) (Set.toList (GameState.battlefield after)) of
       [meldedId] -> do
         let turned = transforming [gargoyleId] after
-        Spec.assertEqWith s "CR 701.27g the Connoisseur counts the Gargoyle alone" (S.powerToughnessOf connoisseurId turned) (Just (1, 5))
+        Spec.assertEqWith s "CR 701.27h the Connoisseur counts the Gargoyle alone" (S.powerToughnessOf connoisseurId turned) (Just (1, 5))
         -- What makes that assertion mean anything: the melded permanent really is
         -- back face up, so the first exclusion has stopped answering for it.
         Spec.assertEqWith s "CR 702.145b and the melded permanent entered transformed" (fmap Object.face (Game.lookupObject meldedId turned)) (Just (Just (CardName.MkCardName (Text.pack "Tovolar, the Midnight Scourge"))))
@@ -789,7 +784,7 @@ spec s registry = Spec.describe s "Meld" $ do
         -- counted, so the 1 is a tally rather than a floor.
         Spec.assertEqWith s "CR 701.27a the Gargoyle is the one it counts" (Projection.namesOf gargoyleId turned) (Set.singleton (CardName.MkCardName (Text.pack "Stonewing Antagonizer")))
       other -> Spec.assertFailure s ("expected exactly one melded permanent, got " <> show (length other))
-  -- CR 712.21 and the rule's own Example, with Hanweir in place of Chittering
+  -- CR 713.8 and the rule's own Example, with Hanweir in place of Chittering
   -- Host: "one permanent leaves the battlefield and two cards are put into the
   -- appropriate zone", so an ability that triggers "whenever a creature dies"
   -- triggers ONCE while two cards arrive in the graveyard.
@@ -800,7 +795,7 @@ spec s registry = Spec.describe s "Meld" $ do
   -- opposite directions: a split that minted one incarnation would leave one card
   -- in the graveyard, and a split that recorded one departure per card would give
   -- alice two counters.
-  Spec.it s "CR 712.21 a melded permanent dies as one permanent and arrives as two cards" $ do
+  Spec.it s "CR 713.8 a melded permanent dies as one permanent and arrives as two cards" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
     mountain <- S.printingOf s registry "Mountain"
@@ -815,10 +810,10 @@ spec s registry = Spec.describe s "Meld" $ do
             after = S.runPure S.identityAnswer settled (Stack.resolveTop >> Stack.resolveTop)
         Spec.assertEqWith
           s
-          "CR 712.21 two cards are put into alice's graveyard"
+          "CR 713.8 two cards are put into alice's graveyard"
           (List.sort (graveyardNames dead))
           (List.sort [CardName.MkCardName (Text.pack "Hanweir Battlements"), CardName.MkCardName (Text.pack "Hanweir Garrison")])
-        Spec.assertEqWith s "CR 712.21 and Meren saw exactly one creature die" (S.playerCounterOf PlayerCounterKind.Experience S.alice after) 1
+        Spec.assertEqWith s "CR 713.8 and Meren saw exactly one creature die" (S.playerCounterOf PlayerCounterKind.Experience S.alice after) 1
         -- The proxy behind that count, kept AFTER it: one trigger reached the
         -- stack, so the 1 above is not two triggers of which one went unresolved.
         Spec.assertEqWith s "one death trigger reached the stack" (length (GameState.stack settled)) 1
@@ -831,7 +826,7 @@ spec s registry = Spec.describe s "Meld" $ do
   -- keeps its own identity, so the ownership report names the Garrison alone,
   -- both while melded and after; one identity for both would name both cards or
   -- neither.
-  Spec.it s "CR 108.3/712.21 each card a melded permanent becomes keeps its own identity" $ do
+  Spec.it s "CR 108.3/713.8 each card a melded permanent becomes keeps its own identity" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
     mountain <- S.printingOf s registry "Mountain"
@@ -847,10 +842,10 @@ spec s registry = Spec.describe s "Meld" $ do
         Spec.assertEqWith s "CR 108.3/701.42a and so it is while melded, a card of the one permanent" whileMelded [(Just (CardName.MkCardName (Text.pack "Hanweir Garrison")), meldedId)]
         Spec.assertEqWith
           s
-          "CR 712.21 two cards are put into alice's graveyard"
+          "CR 713.8 two cards are put into alice's graveyard"
           (List.sort (graveyardNames dead))
           (List.sort [CardName.MkCardName (Text.pack "Hanweir Battlements"), CardName.MkCardName (Text.pack "Hanweir Garrison")])
-  -- CR 712.21's Example, taken whole and on ONE board: "An ability that triggers
+  -- CR 713.8's Example, taken whole and on ONE board: "An ability that triggers
   -- 'whenever a creature dies' triggers once. An ability that triggers 'whenever
   -- a card is put into a graveyard from anywhere' triggers twice."
   --
@@ -860,7 +855,7 @@ spec s registry = Spec.describe s "Meld" $ do
   -- tally: firing once would leave one of the two cards in alice's graveyard,
   -- and a second DEPARTURE event -- the other way to reach two triggers -- would
   -- hand alice a second experience counter.
-  Spec.it s "CR 712.21 a melded permanent's death fires a dies trigger once and a card-arrival trigger twice" $ do
+  Spec.it s "CR 713.8 a melded permanent's death fires a dies trigger once and a card-arrival trigger twice" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
     mountain <- S.printingOf s registry "Mountain"
@@ -881,8 +876,8 @@ spec s registry = Spec.describe s "Meld" $ do
             -- the count pass for the wrong reason. Stack.resolveTop over an
             -- empty stack is a no-op.
             after = S.runPure S.identityAnswer settled (Monad.replicateM_ 6 Stack.resolveTop)
-        Spec.assertEqWith s "CR 712.21 the card-arrival trigger fired twice, so both cards were exiled" (List.sort (exileNames after)) bothNames
-        Spec.assertEqWith s "CR 712.21 and the dies trigger fired once" (S.playerCounterOf PlayerCounterKind.Experience S.alice after) 1
+        Spec.assertEqWith s "CR 713.8 the card-arrival trigger fired twice, so both cards were exiled" (List.sort (exileNames after)) bothNames
+        Spec.assertEqWith s "CR 713.8 and the dies trigger fired once" (S.playerCounterOf PlayerCounterKind.Experience S.alice after) 1
         Spec.assertEqWith s "and neither card was left in the graveyard" (graveyardNames after) []
         -- The proxies, all after the two behaviours: three triggers reached the
         -- stack (one death, two arrivals), and both cards really were in the
@@ -890,7 +885,7 @@ spec s registry = Spec.describe s "Meld" $ do
         Spec.assertEqWith s "three triggers reached the stack" (length (GameState.stack settled)) 3
         Spec.assertEqWith s "setup: both cards were in the graveyard when they resolved" (List.sort (graveyardNames settled)) bothNames
         Spec.assertEqWith s "setup: exile was empty once the meld had consumed the pair" (exileNames settled) []
-  -- CR 712.21e, both halves on ONE board: "if an effect needs to know the number
+  -- CR 713.8e, both halves on ONE board: "if an effect needs to know the number
   -- of objects that changed zones, a melded permanent among those objects counts
   -- as one object that moved. If the effect needs to know the number of cards
   -- that changed zones, that melded permanent counts as two cards that moved."
@@ -907,7 +902,7 @@ spec s registry = Spec.describe s "Meld" $ do
   -- what makes the pair discriminating: an engine folding the arrivals under
   -- EventShape.MovedBetween would answer 2 to both, and one that answered neither
   -- would answer 1 to both.
-  Spec.it s "CR 712.21e a melded permanent's death is two cards put into a graveyard and one object that moved" $ do
+  Spec.it s "CR 713.8e a melded permanent's death is two cards put into a graveyard and one object that moved" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
     mountain <- S.printingOf s registry "Mountain"
@@ -921,14 +916,14 @@ spec s registry = Spec.describe s "Meld" $ do
       (Just meldedId, [ability]) -> do
         let tallied gs victims = S.runPure S.identityAnswer (S.runPure S.identityAnswer gs (Event.destroy (pure ()) Regenerability.Regenerable victims)) (do Activate.activateAbility S.alice censusId ability; Stack.resolveTop)
             dead = S.runPure S.identityAnswer board (Event.destroy (pure ()) Regenerability.Regenerable [meldedId])
-        Spec.assertEqWith s "CR 712.21e the melded permanent is two cards put into a graveyard, so alice gains 2" (S.lifeOf S.alice (tallied board [meldedId])) (Just 22)
-        Spec.assertEqWith s "CR 712.21e and one object that changed zones" (objectsMovedTo Zone.Graveyard dead) (Just 1)
+        Spec.assertEqWith s "CR 713.8e the melded permanent is two cards put into a graveyard, so alice gains 2" (S.lifeOf S.alice (tallied board [meldedId])) (Just 22)
+        Spec.assertEqWith s "CR 713.8e and one object that changed zones" (objectsMovedTo Zone.Graveyard dead) (Just 1)
         -- CR 111.6's "a token isn't a card", off a board differing in ONE thing:
         -- a Goblin Piker token dying beside the melded permanent puts a third
         -- object into the graveyard and still no third card, which is the
         -- conjunct Synthetic Grave Census prints as "cards".
         Spec.assertEqWith s "CR 111.6 a token dying beside them is not a card, so still 2" (S.lifeOf S.alice (tallied withToken [meldedId, tokenId])) (Just 22)
-        Spec.assertEqWith s "CR 712.21e and the token IS an object that changed zones, so 2 there" (objectsMovedTo Zone.Graveyard (S.runPure S.identityAnswer withToken (Event.destroy (pure ()) Regenerability.Regenerable [meldedId, tokenId]))) (Just 2)
+        Spec.assertEqWith s "CR 713.8e and the token IS an object that changed zones, so 2 there" (objectsMovedTo Zone.Graveyard (S.runPure S.identityAnswer withToken (Event.destroy (pure ()) Regenerability.Regenerable [meldedId, tokenId]))) (Just 2)
         -- The proxies, after every behaviour: alice really was at 20 when the
         -- ability resolved, and the two cards really were in her graveyard for
         -- the fold to find.
@@ -937,15 +932,15 @@ spec s registry = Spec.describe s "Meld" $ do
         Spec.assertEqWith s "setup: the token was on the battlefield to be destroyed" (fmap Object.zone (Game.lookupObject tokenId withToken)) (Just Zone.Battlefield)
       (Nothing, _) -> Spec.assertFailure s "expected the melding ability to put one permanent onto the battlefield"
       (_, other) -> Spec.assertFailure s ("expected one ability on Synthetic Grave Census, got " <> show (length other))
-  -- CR 712.21e with CR 400.7: each of the two cards is an object of its own,
+  -- CR 713.8e with CR 400.7: each of the two cards is an object of its own,
   -- with its own card's characteristics, so Hanweir the Writhing Township's
   -- death is ONE creature card (Hanweir Garrison) and one land card (Hanweir
   -- Battlements). Case of the Gorgon's Kiss solves on three or more creature
-  -- cards put into graveyards this turn (CR 719.3a), and a Goblin Piker dying
+  -- cards put into graveyards this turn (CR 720.3a), and a Goblin Piker dying
   -- beside the Township makes two under the rule and three under a reading that
   -- gives both cards the melded permanent's characteristics. The second board
   -- adds one more Piker, so the negative is not a Case that never solves.
-  Spec.it s "CR 712.21e each card of a melded permanent is counted as its own card type" $ do
+  Spec.it s "CR 713.8e each card of a melded permanent is counted as its own card type" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
     mountain <- S.printingOf s registry "Mountain"
@@ -963,20 +958,20 @@ spec s registry = Spec.describe s "Meld" $ do
       Just meldedId -> do
         let two = atEndStep (dead [meldedId, firstPiker])
             three = atEndStep (dead [meldedId, firstPiker, secondPiker])
-        Spec.assertEqWith s "CR 712.21e Garrison and one Piker are two creature cards, so the Case stays unsolved and is no creature" (Projection.isCreatureOf caseId two) False
-        Spec.assertEqWith s "CR 719.3a a second Piker makes three, so the Case is solved into a 4/4" (S.powerToughnessOf caseId three) (Just (4, 4))
+        Spec.assertEqWith s "CR 713.8e Garrison and one Piker are two creature cards, so the Case stays unsolved and is no creature" (Projection.isCreatureOf caseId two) False
+        Spec.assertEqWith s "CR 720.3a a second Piker makes three, so the Case is solved into a 4/4" (S.powerToughnessOf caseId three) (Just (4, 4))
         -- The proxies, after both behaviours: three cards and four reached the
         -- graveyard, so the Township really did split into two.
         Spec.assertEqWith s "setup: the Township and one Piker are three cards in the graveyard" (length (graveyardNames two)) 3
         Spec.assertEqWith s "setup: and with the second Piker, four" (length (graveyardNames three)) 4
-  -- CR 712.21 with CR 700.4: each card of a dead melded permanent was put into
+  -- CR 713.8 with CR 700.4: each card of a dead melded permanent was put into
   -- the graveyard from the battlefield this turn, the arrival after the leading
   -- one included (GameEvent.CardArrived). No Rest for the Wicked returns the
   -- creature card, Hanweir Garrison, and leaves the land card, Hanweir
-  -- Battlements. CR 712.21a's arrangement [1, 0] is the discriminating one: it
+  -- Battlements. CR 713.8a's arrangement [1, 0] is the discriminating one: it
   -- puts the Battlements down first and leaves the Garrison trailing. [0, 1] is
   -- the leading-card control beside it.
-  Spec.it s "CR 712.21 No Rest for the Wicked finds a melded permanent's creature card" $ do
+  Spec.it s "CR 713.8 No Rest for the Wicked finds a melded permanent's creature card" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
     mountain <- S.printingOf s registry "Mountain"
@@ -988,13 +983,13 @@ spec s registry = Spec.describe s "Meld" $ do
       (Just meldedId, [ability]) -> do
         let dead order = S.runPure (ordering order) board (Event.destroy (pure ()) Regenerability.Regenerable [meldedId])
             after order = S.runPure S.identityAnswer (dead order) (do Activate.activateAbility S.alice noRestId ability; Stack.resolveTop)
-        Spec.assertEqWith s "CR 712.21 / 700.4 the trailing Garrison returns to alice's hand" (handNames (after [1, 0])) [S.printingName garrison]
+        Spec.assertEqWith s "CR 713.8 / 700.4 the trailing Garrison returns to alice's hand" (handNames (after [1, 0])) [S.printingName garrison]
         Spec.assertEqWith s "and so does the leading one, on the other arrangement" (handNames (after [0, 1])) [S.printingName garrison]
         Spec.assertEqWith s "and the Battlements, a land card, stay" (List.sort (graveyardNames (after [1, 0]))) (List.sort [S.printingName battlements, S.printingName noRest])
         Spec.assertEqWith s "setup: both cards reached her graveyard" (List.sort (graveyardNames (dead [1, 0]))) (List.sort [S.printingName battlements, S.printingName garrison])
       (Nothing, _) -> Spec.assertFailure s "expected the melding ability to put one permanent onto the battlefield"
       (_, other) -> Spec.assertFailure s ("expected one ability on No Rest for the Wicked, got " <> show (length other))
-  -- CR 712.21c: "If an effect can find the new object that a melded permanent
+  -- CR 713.8c: "If an effect can find the new object that a melded permanent
   -- becomes as it leaves the battlefield, it finds both cards. (See rule 400.7.)
   -- If that effect causes actions to be taken upon those cards, the same actions
   -- are taken upon each of them." The rule's own Mimic Vat Example is this shape
@@ -1002,10 +997,10 @@ spec s registry = Spec.describe s "Meld" $ do
   --
   -- Promise of Tomorrow is the pool's producer: "whenever a creature you control
   -- dies, exile IT", where "it" is CR 400.7e's `became` slot. The trigger fires
-  -- ONCE (CR 712.21's first clause) and exiles TWO cards, so the two halves of
+  -- ONCE (CR 713.8's first clause) and exiles TWO cards, so the two halves of
   -- the assertion discriminate in opposite directions -- a payload that acted on
   -- the first arrival alone would leave Hanweir Battlements in the graveyard.
-  Spec.it s "CR 712.21c a trigger that exiles what the melded permanent became exiles both cards" $ do
+  Spec.it s "CR 713.8c a trigger that exiles what the melded permanent became exiles both cards" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
     mountain <- S.printingOf s registry "Mountain"
@@ -1019,7 +1014,7 @@ spec s registry = Spec.describe s "Meld" $ do
         let dead = S.runPure S.identityAnswer board (Event.destroy (pure ()) Regenerability.Regenerable [meldedId])
             settled = S.runPure S.identityAnswer dead Engine.settleForPriority
             after = S.runPure S.identityAnswer settled Stack.resolveTop
-        Spec.assertEqWith s "CR 712.21c the trigger exiled both cards" (List.sort (exileNames after)) bothNames
+        Spec.assertEqWith s "CR 713.8c the trigger exiled both cards" (List.sort (exileNames after)) bothNames
         Spec.assertEqWith s "and left neither behind in the graveyard" (graveyardNames after) []
         -- The proxies behind that, both AFTER it: the trigger really did fire,
         -- exactly once, and both cards really were in the graveyard for it to
@@ -1027,13 +1022,13 @@ spec s registry = Spec.describe s "Meld" $ do
         Spec.assertEqWith s "one trigger reached the stack" (length (GameState.stack settled)) 1
         Spec.assertEqWith s "setup: both cards were in the graveyard when it resolved" (List.sort (graveyardNames settled)) bothNames
         Spec.assertEqWith s "setup: exile was empty once the meld had consumed the pair" (exileNames settled) []
-  -- CR 712.21c again, over Alchemy's "perpetually" -- the one stored effect that
+  -- CR 713.8c again, over Alchemy's "perpetually" -- the one stored effect that
   -- follows its objects through a zone change at all
   -- (Parun.Engine.Event.perpetuate). The rule settles what the digital-only word
   -- does not: an effect that can find what a melded permanent became finds BOTH
   -- cards, so the effect follows the arrangement's trailing card as well as its
   -- leading one. No rule of the CR names "perpetually"; the printed sentence is
-  -- the authority for the following, and CR 712.21c only for how many cards the
+  -- the authority for the following, and CR 713.8c only for how many cards the
   -- following reaches.
   --
   -- Pearl Collector's "{2}{W}: Another target creature perpetually gains
@@ -1046,7 +1041,7 @@ spec s registry = Spec.describe s "Meld" $ do
   -- observe lifelink, since CR 702.15b pays off damage its source deals and the
   -- Battlements is a land. [0, 1] is the leading-card control beside it, and the
   -- two boards differ in nothing else. That the arrangement is honoured AT ALL is
-  -- the CR 712.21a library case below, which reads two different cards back off
+  -- the CR 713.8a library case below, which reads two different cards back off
   -- the same two permutations; what this case adds is that the perpetual effect
   -- reaches whichever card the arrangement left second.
   --
@@ -1055,7 +1050,7 @@ spec s registry = Spec.describe s "Meld" $ do
   -- function is where CR 702.15b's rider is classified off the source's projected
   -- keywords, and the Garrison's own attack trigger would put two tokens into the
   -- same life arithmetic.
-  Spec.it s "CR 712.21c a perpetual grant on a melded permanent follows both cards it becomes" $ do
+  Spec.it s "CR 713.8c a perpetual grant on a melded permanent follows both cards it becomes" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
     mountain <- S.printingOf s registry "Mountain"
@@ -1069,7 +1064,7 @@ spec s registry = Spec.describe s "Meld" $ do
         let byCard = S.runPure (aimedAt meldedId) board (do Activate.activateAbility S.alice collectorId ability; Stack.resolveTop)
             byHand expiry = lifelinkUnder expiry meldedId board
             gained gs order = fmap (\g -> (S.lifeOf S.alice g, S.lifeOf S.bob g)) (garrisonPings garrison meldedId order gs)
-        Spec.assertEqWith s "CR 712.21c the trailing card came back with the perpetual lifelink" (gained byCard [1, 0]) (Just (Just 22, Just 18))
+        Spec.assertEqWith s "CR 713.8c the trailing card came back with the perpetual lifelink" (gained byCard [1, 0]) (Just (Just 22, Just 18))
         Spec.assertEqWith s "and the leading card does too, which is the same grant on the other arrangement" (gained byCard [0, 1]) (Just (Just 22, Just 18))
         -- The pair that differs in EXACTLY one thing: the same stand-in grant, the
         -- same affected set, the same board, and only the expiry changes. CR
@@ -1158,7 +1153,7 @@ spec s registry = Spec.describe s "Meld" $ do
         Spec.assertBool s (not (Projection.hasKeyword Keyword.Lifelink garrisonId board)) "setup: and did not before the ability resolved"
         Spec.assertEqWith s "setup: the pair melded into one permanent named Hanweir, the Writhing Township" (fmap (\(oid, after) -> fmap S.nameOf (Game.cardOf oid after)) (melds board)) (Just (Just townshipName))
       [] -> Spec.assertFailure s "Pearl Collector should declare one activated ability"
-  -- CR 903.9a over CR 712.21's split, and NOT CR 903.9c -- that rule governs only
+  -- CR 903.9a over CR 713.8's split, and NOT CR 903.9c -- that rule governs only
   -- the CR 903.9b replacement, the hand and library redirect the two cases below
   -- cover. What runs here is rule 903.9a's
   -- state-based action: "if a commander is in a graveyard or in exile and that
@@ -1197,10 +1192,10 @@ spec s registry = Spec.describe s "Meld" $ do
   -- effect described in rule 903.9b, that permanent and each component
   -- representing it that isn't a commander are put into the appropriate zone,
   -- and the card that represents it and is a commander is put into the command
-  -- zone." CR 712.21d points here for the melded case.
+  -- zone." CR 713.8d points here for the melded case.
   --
   -- The road CR 903.9a's case above is not: that rule is a state-based action
-  -- asked of cards ALREADY in a graveyard, where CR 712.21's split has run and
+  -- asked of cards ALREADY in a graveyard, where CR 713.8's split has run and
   -- each component is an object of its own. Here the CR 903.9b replacement
   -- settles the destination before anything has become a card, so the two zones
   -- have to be decided for one object.
@@ -1234,7 +1229,7 @@ spec s registry = Spec.describe s "Meld" $ do
           Spec.assertEqWith s "CR 903.9c naming the second component splits off THAT card instead" (commandNames (run secondPid)) (nameOf secondPid)
           Spec.assertEqWith s "and its partner is the one left in the library" (libraryNames (run secondPid)) (nameOf firstPid)
           -- CR 903.9b is a "may", so the pair of boards differing in the ANSWER
-          -- alone: declining leaves CR 712.21 alone to put both cards in the
+          -- alone: declining leaves CR 713.8 alone to put both cards in the
           -- library, which is what keeps the four assertions above from passing
           -- on an engine that split without asking.
           Spec.assertEqWith s "CR 903.9b declining leaves both cards in the library" (List.sort (libraryNames (declined firstPid))) (List.sort (nameOf firstPid <> nameOf secondPid))
@@ -1244,7 +1239,7 @@ spec s registry = Spec.describe s "Meld" $ do
           Spec.assertEqWith s "setup: the components are the Garrison then the Battlements" (nameOf firstPid <> nameOf secondPid) [S.printingName garrison, S.printingName battlements]
           Spec.assertEqWith s "setup: alice's library and the command zone were both empty" (libraryNames board <> commandNames board) []
         other -> Spec.assertFailure s ("expected two components, got " <> show (length other))
-  -- CR 903.9c against CR 712.21e's second half: the component that splits off to
+  -- CR 903.9c against CR 713.8e's second half: the component that splits off to
   -- the command zone is NOT one of the cards put into the zone the rest of the
   -- move was headed for. Counted by each card's OWN destination, which is the
   -- only place that split is recorded -- Parun.Types.Moved's `others` carries the
@@ -1253,10 +1248,10 @@ spec s registry = Spec.describe s "Meld" $ do
   --
   -- TWO BOARDS DIFFERING IN ONE ANSWER, the library case above's pair: accepting
   -- rule 903.9b's offer puts one card in the library and one in the command zone,
-  -- declining leaves CR 712.21 alone to put both in the library. An engine
+  -- declining leaves CR 713.8 alone to put both in the library. An engine
   -- counting the arrivals off the move's own destination would answer 2 to both.
   --
-  -- Read through the fold rather than through a card, unlike the CR 712.21e case
+  -- Read through the fold rather than through a card, unlike the CR 713.8e case
   -- above: no card in data/cards/ counts arrivals in a library or a command zone,
   -- and Synthetic Grave Census names the graveyard, which this move never
   -- reaches.
@@ -1278,11 +1273,11 @@ spec s registry = Spec.describe s "Meld" $ do
               declined = S.runPure (arranging meldedId [0, 1]) designated (do S.cast S.alice griptideId; Stack.resolveTop)
           Spec.assertEqWith s "CR 903.9c one card was put into the library" (cardsArrivingIn Zone.Library split) (Just 1)
           Spec.assertEqWith s "CR 903.9c and the other into the command zone" (cardsArrivingIn Zone.Command split) (Just 1)
-          Spec.assertEqWith s "CR 712.21 declining rule 903.9b's offer puts both cards into the library" (cardsArrivingIn Zone.Library declined) (Just 2)
+          Spec.assertEqWith s "CR 713.8 declining rule 903.9b's offer puts both cards into the library" (cardsArrivingIn Zone.Library declined) (Just 2)
           Spec.assertEqWith s "and none into the command zone" (cardsArrivingIn Zone.Command declined) (Just 0)
-          -- CR 712.21e's first half over the same pair of boards, the case above's
+          -- CR 713.8e's first half over the same pair of boards, the case above's
           -- contrast: one object changed zones either way.
-          Spec.assertEqWith s "CR 712.21e one object moved to the library on both boards" (fmap (objectsMovedTo Zone.Library) [split, declined]) [Just 1, Just 1]
+          Spec.assertEqWith s "CR 713.8e one object moved to the library on both boards" (fmap (objectsMovedTo Zone.Library) [split, declined]) [Just 1, Just 1]
           -- The proxies, kept after them: the split really did put the cards in
           -- two different zones.
           Spec.assertEqWith s "setup: the command zone holds one card and the library the other" (fmap length [commandNames split, libraryNames split]) [1, 1]
@@ -1343,7 +1338,7 @@ spec s registry = Spec.describe s "Meld" $ do
           Spec.assertEqWith s "and nothing is tallied when she designated neither half" (tally (pings board)) 0
           Spec.assertEqWith s "setup: bob took the 2 either way" (fmap (S.lifeOf S.bob) [pings designated, pings board]) [Just 18, Just 18]
         other -> Spec.assertFailure s ("expected two components, got " <> show (length other))
-  -- CR 712.21a: "if a melded permanent is put into its owner's graveyard or
+  -- CR 713.8a: "if a melded permanent is put into its owner's graveyard or
   -- library, that player may arrange the two cards in any order. If it's put
   -- into its owner's library, that player doesn't reveal the order."
   --
@@ -1360,7 +1355,7 @@ spec s registry = Spec.describe s "Meld" $ do
   -- Parun.Engine.Game.insertIntoZone PREPENDS a LibraryPosition.Top arrival, so
   -- the card put down SECOND is the one on top -- which is why the identity
   -- answer, the order the pair melded in, draws the Battlements.
-  Spec.it s "CR 712.21a the owner arranges the two cards her melded permanent becomes on top of her library" $ do
+  Spec.it s "CR 713.8a the owner arranges the two cards her melded permanent becomes on top of her library" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
     mountain <- S.printingOf s registry "Mountain"
@@ -1375,19 +1370,19 @@ spec s registry = Spec.describe s "Meld" $ do
         let bounced order = S.runPure (arranging meldedId order) board (do S.cast S.alice griptideId; Stack.resolveTop)
             drawn order = S.runPure (arranging meldedId order) (bounced order) (Event.drawCard (pure ()) S.alice)
             handNames gs = Maybe.mapMaybe (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Game.zoneMembers Zone.Hand S.alice gs)
-        Spec.assertEqWith s "CR 712.21a the melded order puts the Garrison down first, so alice draws the Battlements" (handNames (drawn [0, 1])) [S.printingName battlements]
-        Spec.assertEqWith s "CR 712.21a and the arrangement alice chose instead puts the Garrison on top" (handNames (drawn [1, 0])) [S.printingName garrison]
+        Spec.assertEqWith s "CR 713.8a the melded order puts the Garrison down first, so alice draws the Battlements" (handNames (drawn [0, 1])) [S.printingName battlements]
+        Spec.assertEqWith s "CR 713.8a and the arrangement alice chose instead puts the Garrison on top" (handNames (drawn [1, 0])) [S.printingName garrison]
         -- The proxies behind those, kept AFTER them: both cards really did reach
         -- alice's library, her hand was empty for the draw to fill, and the
         -- melded permanent really left the battlefield -- so the names above are
         -- the arrangement's work and not a Griptide that fizzled.
-        Spec.assertEqWith s "CR 712.21 two cards are put into alice's library" (List.sort (libraryNames (bounced [0, 1]))) (List.sort [S.printingName battlements, S.printingName garrison])
+        Spec.assertEqWith s "CR 713.8 two cards are put into alice's library" (List.sort (libraryNames (bounced [0, 1]))) (List.sort [S.printingName battlements, S.printingName garrison])
         Spec.assertEqWith s "and the same two whichever arrangement she chose" (List.sort (libraryNames (bounced [1, 0]))) (List.sort [S.printingName battlements, S.printingName garrison])
         Spec.assertEqWith s "setup: alice's hand was empty once the Griptide had been cast" (handNames (bounced [0, 1])) []
         Spec.assertEqWith s "setup: the melded permanent left the battlefield" (Game.lookupObject meldedId (bounced [0, 1])) Nothing
         Spec.assertEqWith s "setup: alice's library was empty before it went there" (libraryNames board) []
 
-  -- CR 712.21b's own Example: Duplicant's imprint exiles Chittering Host, and
+  -- CR 713.8b's own Example: Duplicant's imprint exiles Chittering Host, and
   -- Duplicant's controller chooses which of Graf Rats (2/1 Rat) and Midnight
   -- Scavengers (3/3 Human Rogue) is the last creature card exiled with it.
   --
@@ -1395,7 +1390,7 @@ spec s registry = Spec.describe s "Meld" $ do
   -- OrderTimestamps is answered with the swap: a road that asked alice would
   -- leave both boards on the melded order. The two boards differ in that one
   -- answer.
-  Spec.it s "CR 712.21b the player exiling a melded permanent picks which card Duplicant copies" $ do
+  Spec.it s "CR 713.8b the player exiling a melded permanent picks which card Duplicant copies" $ do
     rats <- S.printingOf s registry "Graf Rats"
     scavengers <- S.printingOf s registry "Midnight Scavengers"
     duplicant <- S.printingOf s registry "Duplicant"
@@ -1414,22 +1409,22 @@ spec s registry = Spec.describe s "Meld" $ do
             (staged, melded_) = imprinted [0, 1]
             swapped = snd (imprinted [1, 0])
             creatureTypes gs = Set.filter Subtype.Engine.isCreatureType (Projection.subtypesOf duplicantId gs)
-        Spec.assertEqWith s "CR 712.21b in the melded order the Rats is exiled last: Duplicant is 2/1" (S.powerToughnessOf duplicantId melded_) (Just (2, 1))
+        Spec.assertEqWith s "CR 713.8b in the melded order the Rats is exiled last: Duplicant is 2/1" (S.powerToughnessOf duplicantId melded_) (Just (2, 1))
         Spec.assertEqWith s "and a Rat, still a Shapeshifter" (creatureTypes melded_) (Set.fromList [Subtype.Rat, Subtype.Shapeshifter])
-        Spec.assertEqWith s "CR 712.21b bob's swap makes the Scavengers the last: Duplicant is 3/3" (S.powerToughnessOf duplicantId swapped) (Just (3, 3))
+        Spec.assertEqWith s "CR 713.8b bob's swap makes the Scavengers the last: Duplicant is 3/3" (S.powerToughnessOf duplicantId swapped) (Just (3, 3))
         Spec.assertEqWith s "and a Human Rogue, still a Shapeshifter" (creatureTypes swapped) (Set.fromList [Subtype.Human, Subtype.Rogue, Subtype.Shapeshifter])
         -- The proxies behind those, kept AFTER them: both cards really are in
         -- exile under either answer, and before the trigger resolved Duplicant
         -- was its printed 2/4 Shapeshifter, so the values above are the static
         -- ability's reading of the link and not a printed box.
-        Spec.assertEqWith s "CR 712.21 both cards were exiled" (List.sort (exileNames melded_)) (List.sort [S.printingName rats, S.printingName scavengers])
+        Spec.assertEqWith s "CR 713.8 both cards were exiled" (List.sort (exileNames melded_)) (List.sort [S.printingName rats, S.printingName scavengers])
         Spec.assertEqWith s "under either order" (List.sort (exileNames swapped)) (List.sort [S.printingName rats, S.printingName scavengers])
         Spec.assertEqWith s "setup: printed 2/4 while the trigger waits" (S.powerToughnessOf duplicantId staged) (Just (2, 4))
         Spec.assertEqWith s "setup: a Shapeshifter alone" (creatureTypes staged) (Set.singleton Subtype.Shapeshifter)
       other -> Spec.assertFailure s ("expected exactly one Chittering Host, got " <> show (length other))
 
 -- Duplicant's imprint aimed at the melded permanent by FILTERING the offered set,
--- its "you may" exercised, and bob's CR 712.21b order pinned by index. Every
+-- its "you may" exercised, and bob's CR 713.8b order pinned by index. Every
 -- other prompt -- alice's included -- gets the identity answer, so the order is
 -- the one thing a caller varies.
 duplicating :: ObjectId.ObjectId -> [Natural.Natural] -> Prompt.Prompt r -> r
@@ -1439,7 +1434,7 @@ duplicating victim order p = case p of
   Prompt.OrderTimestamps _ pid _ | pid == S.bob -> order
   _ -> S.identityAnswer p
 
--- The melded permanent destroyed under a given CR 712.21a arrangement: the board
+-- The melded permanent destroyed under a given CR 713.8a arrangement: the board
 -- on which its two cards have arrived in alice's graveyard.
 splitOff :: ObjectId.ObjectId -> [Natural.Natural] -> GameState.GameState -> GameState.GameState
 splitOff meldedId order gs = S.runPure (ordering order) gs (Event.destroy (pure ()) Regenerability.Regenerable [meldedId])
@@ -1461,7 +1456,7 @@ garrisonPings garrison meldedId order gs =
             _ -> Nothing
         _ -> Nothing
 
--- CR 712.21a's arrangement pinned by INDEX, with nothing else answered specially:
+-- CR 713.8a's arrangement pinned by INDEX, with nothing else answered specially:
 -- the arrangement is the only prompt the boards above raise once the grant is in
 -- place.
 ordering :: [Natural.Natural] -> Prompt.Prompt r -> r
@@ -1494,7 +1489,7 @@ transforming :: [ObjectId.ObjectId] -> GameState.GameState -> GameState.GameStat
 transforming = turningOver Effect.Transform
 
 -- CR 701.28a's word for the same instruction, which that rule routes through
--- rules 701.27a-f and 712.9-10 unchanged. A SEPARATE opcode reaching one
+-- rules 701.27a-g and 712.7 unchanged. A SEPARATE opcode reaching one
 -- Parun.Engine.Resolve.Common.turnPermanentsOver, so a case run through both asserts
 -- that the shared path is shared rather than that two implementations agree.
 converting :: [ObjectId.ObjectId] -> GameState.GameState -> GameState.GameState
@@ -1536,7 +1531,7 @@ meldedThroughWith adjust base battlements garrison mountain =
         _ -> (Nothing, board)
 
 -- The name printed on Hanweir Battlements' combined back face, which is what the
--- permanent that pair melds into answers to (CR 712.8g). Spelled once here
+-- permanent that pair melds into answers to (CR 713.5c). Spelled once here
 -- rather than at each reader, since it is card data no printing in the pool
 -- exposes under a name of its own. A meld into a stand-in combined face answers
 -- to that card's name instead.
@@ -1546,7 +1541,7 @@ townshipName = CardName.MkCardName (Text.pack "Hanweir, the Writhing Township")
 namedTownship :: GameState.GameState -> [ObjectId.ObjectId] -> [ObjectId.ObjectId]
 namedTownship gs = filter (\oid -> fmap S.nameOf (Game.cardOf oid gs) == Just townshipName)
 
--- CR 712.21e's second half read straight off the fold: how many CARDS were put
+-- CR 713.8e's second half read straight off the fold: how many CARDS were put
 -- into `zone` this turn, over every card alice's board can have moved. The
 -- filter admits everything a card is -- Parun.Types.Filter.IsToken is how CR
 -- 111.6 keeps a token out, and Synthetic Grave Census writes it, but nothing on
@@ -1560,7 +1555,7 @@ cardsArrivingIn zone gs =
     gs
     (Count.Type.MkCount (Scope.InHistory (EventShape.CardArrivedIn (CardArrivedIn.MkCardArrivedIn zone Set.empty))) (Filter.Type.And []) Aggregation.Members)
 
--- cardsArrivingIn's first-half twin (CR 712.21e): how many OBJECTS moved from the
+-- cardsArrivingIn's first-half twin (CR 713.8e): how many OBJECTS moved from the
 -- battlefield into `zone`, which is the shape Khabal Ghoul's "each creature that
 -- died this turn" counts through.
 objectsMovedTo :: Zone.Zone -> GameState.GameState -> Maybe Integer
@@ -1577,7 +1572,7 @@ objectsMovedTo zone gs =
 exileNames :: GameState.GameState -> [CardName.CardName]
 exileNames gs = Maybe.mapMaybe (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Game.zoneMembers Zone.Exile S.alice gs)
 
--- exileNames' graveyard twin, for CR 712.21's "two cards are put into the
+-- exileNames' graveyard twin, for CR 713.8's "two cards are put into the
 -- appropriate zone": the names alice's graveyard holds, since each arrival is a
 -- CR 400.7 incarnation with an id the board never saw.
 graveyardNames :: GameState.GameState -> [CardName.CardName]
@@ -1594,7 +1589,7 @@ readyFor mountain gs =
       GameState.priority = Just S.alice
     }
 
--- CR 712.21a's arrangement pinned by INDEX, over a board whose Griptide aims at
+-- CR 713.8a's arrangement pinned by INDEX, over a board whose Griptide aims at
 -- the melded permanent by identity. The permutation is the one thing a caller
 -- varies; every other prompt -- the target, the mana -- is answered the same way
 -- for both, so the two runs differ in the arrangement alone.
@@ -1605,7 +1600,7 @@ arranging victim order p = case p of
   _ -> S.identityAnswer p
 
 -- graveyardNames' library twin, ordered TOP FIRST as Parun.Engine.Game.zoneMembers
--- answers it -- which is the order CR 712.21a's arrangement decides.
+-- answers it -- which is the order CR 713.8a's arrangement decides.
 libraryNames :: GameState.GameState -> [CardName.CardName]
 libraryNames gs = Maybe.mapMaybe (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Game.zoneMembers Zone.Library S.alice gs)
 
@@ -1614,7 +1609,7 @@ commandNames :: GameState.GameState -> [CardName.CardName]
 commandNames gs = Maybe.mapMaybe (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Set.toList (GameState.command gs))
 
 -- CR 903.9b's offer accepted, over a board whose bounce spell aims at the melded
--- permanent by identity. CR 712.21a's arrangement is answered too, so a run that
+-- permanent by identity. CR 713.8a's arrangement is answered too, so a run that
 -- WRONGLY asked for one -- which it would if both cards still went to the library
 -- -- is answered rather than crashing, and the split is then read off the zones.
 returningComponent :: ObjectId.ObjectId -> Prompt.Prompt r -> r
@@ -1647,8 +1642,8 @@ melded = meldedOn (Setup.emptyGame S.bothPlayers)
 thirdOf :: (a, b, c) -> c
 thirdOf (_, _, c) = c
 
--- CR 712.21: the printings of the cards representing a melded permanent.
--- Game.componentsOf answers in components, which carry CR 730.2d's card-or-token
+-- CR 713.8: the printings of the cards representing a melded permanent.
+-- Game.componentsOf answers in components, which carry CR 731.2d's card-or-token
 -- kind; a meld pair is two cards (CR 701.42b), so the kind says nothing here and
 -- the printing is the whole of what these cases read.
 -- CR 903.3: alice's deck designates the card printed as `pid` among `oid`'s

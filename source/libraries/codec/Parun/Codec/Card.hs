@@ -35,7 +35,7 @@ fields project = do
   -- invariant is enforced -- the UnsafeX posture Parun.Types.Modal's modes field
   -- documents.
   faces <- Fields.required "faces" (Common.nonEmpty (Face.codec codec)) (Card.faces . project)
-  -- CR 709-722: Normal is the absence of a card saying otherwise, so it is a
+  -- CR 709-723: Normal is the absence of a card saying otherwise, so it is a
   -- default rather than a required key and most single-face files say nothing
   -- about it.
   layout <- Fields.defaulted "layout" Layout.Normal Layout.codec (Card.layout . project)

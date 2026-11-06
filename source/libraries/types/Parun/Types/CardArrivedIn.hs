@@ -3,7 +3,7 @@ module Parun.Types.CardArrivedIn where
 import qualified Data.Set as Set
 import qualified Parun.Types.Zone as Zone
 
--- | CR 712.21e's second half: which zone the cards arrived in. The origins
+-- | CR 713.8e's second half: which zone the cards arrived in. The origins
 -- that do not count are the printed template's. The payload of
 -- Parun.Types.EventShape's arm of the same name, which documents why the
 -- destination is the load-bearing half.
@@ -11,7 +11,7 @@ data CardArrivedIn = MkCardArrivedIn
   { to :: Zone.Zone,
     -- | The origins an arrival is NOT counted from -- Dimir Strandcatcher's
     -- "from anywhere other than the battlefield". Empty is "from anywhere",
-    -- which is what CR 712.21e's "changed zones" puts no condition on and what
+    -- which is what CR 713.8e's "changed zones" puts no condition on and what
     -- every other producer in the pool asks.
     --
     -- An EXCLUSION rather than the inclusive origin set Parun.Types.MovedBetween

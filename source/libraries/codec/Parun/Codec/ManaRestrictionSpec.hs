@@ -38,7 +38,7 @@ spec s = Spec.describe s "Parun.Codec.ManaRestriction" $ do
         }
       " {\"casts\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"},\"activations\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}} "
   -- Sorcerer Class's "only to cast an instant or sorcery spell or to gain a
-  -- Class level": a cast key beside CR 716.2c's ability key.
+  -- Class level": a cast key beside CR 717.2c's ability key.
   Spec.it s "casts and keyword activations" $
     Common.assertCodec
       s

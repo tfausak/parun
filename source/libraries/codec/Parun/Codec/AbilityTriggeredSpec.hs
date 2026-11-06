@@ -23,7 +23,7 @@ spec s = Spec.describe s "Parun.Codec.AbilityTriggered" $ do
           }
       )
       " {\"source\":{\"type\":\"OfObject\",\"value\":1},\"controller\":0,\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}}} "
-  -- CR 725.2 / CR 702.179d: the same record for an inherent ability with no
+  -- CR 726.2 / CR 702.179d: the same record for an inherent ability with no
   -- object behind it, where the controller is what tells two players' instances
   -- of the one ability apart.
   Spec.it s "a sourceless ability names its controller and nothing else" $

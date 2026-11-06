@@ -9,7 +9,7 @@ import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.LeftTheGame" $ do
-  -- CR 729.4a: a card a subgame took out of a main-game graveyard.
+  -- CR 730.4a: a card a subgame took out of a main-game graveyard.
   Spec.it s "MkLeftTheGame, both keys" $
     Common.assertCodec
       s

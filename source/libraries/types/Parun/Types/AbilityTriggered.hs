@@ -17,8 +17,8 @@ import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 -- abilities, TriggerEntry's haddock giving both reasons.
 --
 -- `source` is a Parun.Types.TriggerSource and not an object id, so a SOURCELESS
--- inherent ability the rulebook states without a card (CR 725.2's monarch pair,
--- CR 702.179d's speed increase, CR 728.1's rad counters) gets a record too.
+-- inherent ability the rulebook states without a card (CR 726.2's monarch pair,
+-- CR 702.179d's speed increase, CR 729.1's rad counters) gets a record too.
 -- `controller` is what tells two players' instances of one such ability apart,
 -- there being no object to name.
 data AbilityTriggered = MkAbilityTriggered

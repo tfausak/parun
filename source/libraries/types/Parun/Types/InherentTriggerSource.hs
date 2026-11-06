@@ -5,7 +5,7 @@ import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 
--- | CR 725.2 / CR 702.179d: a triggered ability with no object source,
+-- | CR 726.2 / CR 702.179d: a triggered ability with no object source,
 -- controlled by a specific player baked in at trigger time (like
 -- DelayedTrigger's controller). Its customers are the abilities the rulebook
 -- states without a card to bear them -- the monarch's pair, and the speed

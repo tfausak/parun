@@ -2,7 +2,7 @@
 -- answer before it may offer one of them in place of both.
 --
 -- The engine never makes a player's choice, so an elision is legitimate only
--- where the options are genuinely indistinguishable. CR 732.2a puts a shortcut
+-- where the options are genuinely indistinguishable. CR 733.2a puts a shortcut
 -- in the hands of the player with priority rather than the game, so nothing in
 -- the rules AUTHORISES this; what it does say is that a shortcut is sound only
 -- when its results are predictable, which is the bar met here.
@@ -243,7 +243,7 @@ representatives pcs gs candidates =
 --     one object says about another is namedByAnother's question.
 --   * GameState.players, GameState.manaPool, GameState.pendingControl,
 --     GameState.control (keyed by a player, and every PlayerControl on the stack
---     names a Decider, a lifetime and rule 723.7's restriction -- no object),
+--     names a Decider, a lifetime and rule 724.7's restriction -- no object),
 --     GameState.monarch, GameState.initiative, GameState.drewFromEmpty,
 --     GameState.loopInvolvement, GameState.extraTurns, GameState.turnMarkers
 --     and the per-player
@@ -258,7 +258,7 @@ representatives pcs gs candidates =
 --     its bindings are read only on behalf of a stack object or a delayed
 --     trigger (CR 608.2h), which namedByAnother and namedByStored already
 --     cover. GameState.departedCards holds cards that have left the game (CR
---     800.4a), read only by the ownership report and CR 729.5's return.
+--     800.4a), read only by the ownership report and CR 730.5's return.
 --   * GameState.damagePreventedBy is read only for the source of the ability
 --     resolving, a spell already gone from the stack, never for a candidate.
 --   * GameState.drawsThisTurn names cards, and is read here through the same two
@@ -283,7 +283,7 @@ representatives pcs gs candidates =
 --   * GameState.permanentsAsTurnBegan is keyed by every permanent, but no
 --     choice this turn can change it and it is read only by a Count over the
 --     whole record, so what two candidates' entries say cannot separate them.
---   * GameState.outsideObjects (CR 729.4) is keyed by ids belonging to a game
+--   * GameState.outsideObjects (CR 730.4) is keyed by ids belonging to a game
 --     this one is nested inside, and its value names no object -- an owner, a
 --     printing and a face-up/face-down status (CR 110.5); the id supplies of
 --     the two games are disjoint (Setup.funnelBack takes the max), so no key of
@@ -304,7 +304,7 @@ representatives pcs gs candidates =
 -- listed below because each holds ObjectIds, and NOT because any board reaches
 -- this with one of them non-empty: the first two are empty outside an entry
 -- loop, the next three outside a CR 608.2f action or an arrival, the sixth
--- outside a state-based action check, and the last two are CR 729's subgame
+-- outside a state-based action check, and the last two are CR 730's subgame
 -- bookkeeping. They are in the list rather than in the account above because
 -- requiring a field empty is the direction that cannot make a player's choice,
 -- so an unreachable row is the cheap side to be wrong on.
@@ -528,7 +528,7 @@ affectedNames oid source gs affected = case affected of
 --     value the player it phased out under.
 --   * GameState.movedUntil (CR 610.3), keyed by the object a move with a
 --     duration put in another zone, its value the event that brings it back --
---     a source leaving the battlefield, or CR 725's watching player and whether
+--     a source leaving the battlefield, or CR 726's watching player and whether
 --     the crown has moved -- plus the zone it came from.
 --   * GameState.haunting (CR 702.55b), keyed by the haunting card in exile, its
 --     value the object that card haunts.
@@ -546,7 +546,7 @@ affectedNames oid source gs affected = case affected of
 --     602.5b), castPermissionsUsedThisTurn (CR 601.3), rollModifiersUsedThisTurn
 --     (CR 706.2), namedCopyChoices (CR 707.13), notedCards (CR 707.14),
 --     notedMana (CR 607.2e), keptFaceDown (CR 121.8), announcedTops and
---     actionTops (CR 401.5), loopPicks (CR 101.4b), repeatPicks (CR 732.3),
+--     actionTops (CR 401.5), loopPicks (CR 101.4b), repeatPicks (CR 733.3),
 --     revealedTops (CR 401.6) and outsideCopies (CR 400.11), each keyed by the
 --     object it is about; and
 --     the logs triggeredThisGame (a "triggers only once" rider's spent
@@ -631,7 +631,7 @@ phasedOutNames row = case row of
   PhasedOut.Orphaned _under -> Set.empty
 
 -- The objects a GameState.movedUntil row names beyond its key: CR 610.3's
--- source, whose leaving the battlefield ends the move, and nothing for a CR 725
+-- source, whose leaving the battlefield ends the move, and nothing for a CR 726
 -- crowning watch, whose value is a player and an event group. Positional for
 -- phasedOutNames' reason.
 returnWatchNames :: ReturnWatch.ReturnWatch -> Set.Set ObjectId

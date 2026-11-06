@@ -651,15 +651,15 @@ data View = MkView
     -- False for every candidate with no object behind it: a printed face, a
     -- player, an event snapshot. Each says so at its own site.
     exiledFaceDown :: Bool,
-    -- | CR 701.27g's "transformed permanent": a double-faced permanent on the
+    -- | CR 701.27h's "transformed permanent": a double-faced permanent on the
     -- battlefield with its back face up. Not a characteristic either (CR
-    -- 712.8d/e make which face is up the thing characteristics are read off), so
+    -- 712.6c/e make which face is up the thing characteristics are read off), so
     -- no projection writes it -- Parun.Engine.Projection.View.viewOfCharacteristics
     -- reads the CURRENT face off the object and the battlefield off the board.
     --
     -- False for every candidate with no object on the battlefield behind it: a
     -- printed face, a player, an event snapshot. Each says so at its own site,
-    -- and none of the three is a lost distinction -- CR 701.27g asks about a
+    -- and none of the three is a lost distinction -- CR 701.27h asks about a
     -- permanent, and none of them is one.
     transformed :: Bool,
     -- | CR 122.1: the counters on the candidate, counted per kind. Not a
@@ -740,17 +740,17 @@ data View = MkView
     -- `designationValues` above's route. Its one reader is Parun.Engine.Quantity's
     -- StoredResultsOfSameValue arm (Centaur of Attention).
     storedResults :: Map.Map StoredResult.StoredResult Natural.Natural,
-    -- CR 716.2b: the level designation on this candidate, or Nothing for the
+    -- CR 717.2b: the level designation on this candidate, or Nothing for the
     -- overwhelming majority of permanents, which have never been given one. Read
     -- straight off Object.classLevel, for `designations` above's reason -- rule
-    -- 716.2b makes it a designation rather than a characteristic, so no projection
+    -- 717.2b makes it a designation rather than a characteristic, so no projection
     -- writes it -- and a Maybe rather than a member of that Set because it is a
     -- NUMBER, which is also why it needs its own field rather than a fifth
     -- Parun.Types.Designation constructor with a `designationValues` entry: CR
-    -- 716.2d gives an unlevelled permanent a level, where an unset mark has no
+    -- 717.2d gives an unlevelled permanent a level, where an unset mark has no
     -- value (see Parun.Types.Designation).
     --
-    -- CR 716.2d's "treated as though its level is 1" is deliberately NOT applied
+    -- CR 717.2d's "treated as though its level is 1" is deliberately NOT applied
     -- here: this field reports the mark, and Parun.Engine.Quantity's ClassLevel arm
     -- defaults at the read, so the one asker the rule speaks to is the one place
     -- that defaults.
@@ -791,14 +791,14 @@ data View = MkView
     -- carries onto the stack, and False where there is no live object, as
     -- `castUsing` above. Parun.Engine.Quantity's WasForetold arm is the reader.
     foretold :: Bool,
-    -- CR 718.3c / 718.3d: is this candidate a prototyped spell, or a permanent
+    -- CR 719.3c / 719.3d: is this candidate a prototyped spell, or a permanent
     -- that was one, or a copy of either? PC.prototyped off the projection, which
     -- is how a Clone of one answers (its own Object.prototyped is False), or'd
     -- with Object.prototyped, which a spell copy carries (CR 707.10) and which
     -- answers for an original whose copiable values are something else's.
     -- Filter.IsPrototyped is the reader.
     prototyped :: Bool,
-    -- CR 722.3c / 722.3d: was this candidate cast as a prepare spell, or is it a
+    -- CR 723.3c / 723.3d: was this candidate cast as a prepare spell, or is it a
     -- copy of one? Read off Object.castPrepared, and False where there is no live
     -- object, as `castUsing` above. Filter.IsPreparedSpell is the reader.
     preparedSpell :: Bool,
@@ -1035,7 +1035,7 @@ playerView pid =
       -- CR 406.2's exiled card is a CARD, and CR 109.1 makes a player none of
       -- those either.
       exiledFaceDown = False,
-      -- CR 701.27g asks about a PERMANENT, and CR 109.1 makes a player none.
+      -- CR 701.27h asks about a PERMANENT, and CR 109.1 makes a player none.
       transformed = False,
       -- CR 122.1 puts counters on an object OR a player, and a player's are
       -- Player.counters, read by Quantity.PlayerCounters. This field is the
@@ -1044,19 +1044,19 @@ playerView pid =
       -- CR 123.1: a sticker is on an object, and CR 109.1 makes a player none.
       stickers = Seq.empty,
       -- CR 701.54b: Ring-bearer is a designation A PERMANENT can have, and a
-      -- player is not one -- the same shape CR 725.1's monarch has with the two
+      -- player is not one -- the same shape CR 726.1's monarch has with the two
       -- sides swapped.
       ringBearerFor = Nothing,
       paired = Nothing,
       -- CR 702.112b: "only permanents can be or become renowned", CR 701.37b,
-      -- CR 701.60b and CR 719.3b saying the same of the other marks, and a
+      -- CR 701.60b and CR 720.3b saying the same of the other marks, and a
       -- player is not one.
       designations = Set.empty,
       -- CR 701.37c's X belongs to a mark a player cannot have -- `designations`
       -- above, same sentence.
       designationValues = Map.empty,
       storedResults = Map.empty,
-      -- CR 716.2b: a level is a designation A PERMANENT can have, and a player is
+      -- CR 717.2b: a level is a designation A PERMANENT can have, and a player is
       -- not one -- `designations` above, same sentence.
       classLevel = Nothing,
       paidCosts = Map.empty,
@@ -2468,7 +2468,7 @@ matches context view predicate = case predicate of
   Filter.HostOfSubjectHasCardType cardType -> Set.member cardType (subjectHostCardTypes context)
   -- CR 111.6: a token isn't a card. A live read of what the object is
   -- represented by (Object.source), never a stamp on the candidate, because CR
-  -- 730.2d can change the answer as a permanent merges.
+  -- 731.2d can change the answer as a permanent merges.
   Filter.IsToken -> token view
   -- CR 903.3's designation, read off the owner's deck rather than off the
   -- candidate: `token` above's posture, and immutable for the same kind of
@@ -2500,7 +2500,7 @@ matches context view predicate = case predicate of
   -- CR 406.3, which is NOT the status one line up: CR 110.5d says the two have
   -- no correlation, and the fields differ accordingly.
   Filter.IsExiledFaceDown -> exiledFaceDown view
-  -- CR 701.27g, both exclusions inside the field: see the atom's own comment in
+  -- CR 701.27h, both exclusions inside the field: see the atom's own comment in
   -- Parun.Types.Filter, and the field below.
   Filter.Transformed -> transformed view
   -- CR 602.1 with CR 605.1a's classification, applied by the builder that holds
@@ -3144,7 +3144,7 @@ rewriteKeyword pairs keyword = case keyword of
   -- CR 702.147a names no word CR 612.2 can swap: "end of combat" is the rules'
   -- own step and the ability it arms is written in Parun.Engine.Keyword.
   Keyword.Type.Decayed -> keyword
-  -- CR 718.1's inset frame is a mana cost and a printed box: no word for CR
+  -- CR 719.1's inset frame is a mana cost and a printed box: no word for CR
   -- 612.1 to change.
   Keyword.Type.Prototype _ -> keyword
   Keyword.Type.Toxic _ -> keyword
@@ -3198,7 +3198,7 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Boast -> keyword
   Keyword.Type.Forecast -> keyword
   Keyword.Type.PowerUp -> keyword
-  -- CR 716.2 names no quality: the level is a number, so CR 612.2 has nothing
+  -- CR 717.2 names no quality: the level is a number, so CR 612.2 has nothing
   -- here to swap.
   Keyword.Type.ClassLevel _ -> keyword
   Keyword.Type.StartYourEngines -> keyword

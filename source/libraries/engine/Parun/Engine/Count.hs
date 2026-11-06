@@ -829,7 +829,7 @@ snapshotView viewOf gs shape event = case event of
     -- re-exiled card (Game.leftOrigin).
     EventShape.MovedFrom from ->
       if ZoneChange.from zc == from && Game.leftOrigin zc then Just (departedView viewOf gs zc snapshot) else Nothing
-    -- CR 712.21e's second half, whose unit is the CARD: this event announces the
+    -- CR 713.8e's second half, whose unit is the CARD: this event announces the
     -- move's LEADING arrival (Parun.Engine.Event.changeZoneAttaching), so it is
     -- worth one card here and each arrival after it is worth another through the
     -- CardArrived arm below. An ordinary move has no arrival after the leading
@@ -943,7 +943,7 @@ snapshotView viewOf gs shape event = case event of
   GameEvent.BecameUnattached {} -> Nothing
   -- CR 701.17a names its cards by id and snapshots no characteristics.
   GameEvent.Milled {} -> Nothing
-  -- CR 603.6c's other road off the battlefield, and CR 729.4a's out of any
+  -- CR 603.6c's other road off the battlefield, and CR 730.4a's out of any
   -- main-game zone: this event answers MovedFrom the zone it records and nothing
   -- else, read off the CR 608.2h record filed under its id.
   GameEvent.LeftTheGame (LeftTheGame.MkLeftTheGame oid from) -> case shape of
@@ -974,7 +974,7 @@ snapshotView viewOf gs shape event = case event of
   GameEvent.StickerPut _ -> Nothing
   GameEvent.ActivatedAbilityResolved _ -> Nothing
   GameEvent.TriggeredAbilityResolved _ -> Nothing
-  -- CR 712.21e's second half: every arrival AFTER the leading one, which is what
+  -- CR 713.8e's second half: every arrival AFTER the leading one, which is what
   -- makes a melded permanent two cards where the Moved arm above makes it one
   -- object. Read under the card shape alone -- answering it under MovedBetween
   -- would make Khabal Ghoul's "each creature that died this turn" see a melded
@@ -985,7 +985,7 @@ snapshotView viewOf gs shape event = case event of
   -- the rest of the move goes where it was headed, and only the card that
   -- arrived in the named zone is counted (Parun.MeldSpec).
   GameEvent.CardArrived zc -> case shape of
-    -- The ARRIVED card, which CR 712.21e is the whole point of here: each
+    -- The ARRIVED card, which CR 713.8e is the whole point of here: each
     -- component of a melded permanent is a card of its own, and reading the
     -- record filed under the DEPARTED id would give both of them the melded
     -- permanent's characteristics.
@@ -1008,14 +1008,14 @@ snapshotView viewOf gs shape event = case event of
     EventShape.MovedFrom {} -> Nothing
     EventShape.SpellCast _ -> Nothing
 
--- CR 712.21e's destination narrowed by the printed clause's origin: the arrival
+-- CR 713.8e's destination narrowed by the printed clause's origin: the arrival
 -- landed in the named zone, and it did not come from one this shape excludes. An
 -- empty exclusion is "from anywhere", which is every producer but Dimir
 -- Strandcatcher.
 --
 -- Read off the ARRIVAL's own zone change rather than the move's, which CR 903.9c
 -- makes different for a melded commander (Parun.MeldSpec); the origin is the same
--- for every arrival of one move, CR 712.21 having one permanent leave.
+-- for every arrival of one move, CR 713.8 having one permanent leave.
 arrivalMatches :: CardArrivedIn.CardArrivedIn -> ZoneChange.ZoneChange -> Bool
 arrivalMatches arrival zc =
   ZoneChange.to zc == CardArrivedIn.to arrival
@@ -1134,7 +1134,7 @@ lastKnownView peers oid gs lastKnown =
           -- the live view reads them. _____ Balls of Fire destroyed in response
           -- (Parun.StickerSpec) is the proof.
           Filter.stickers = Game.stickerContents (LastKnown.stickers lastKnown) gs,
-          -- CR 718.3d: the copiable record or the object's own, viewOfCharacteristics'
+          -- CR 719.3d: the copiable record or the object's own, viewOfCharacteristics'
           -- disjunction. A regression fence: no card asks it of a departed object.
           Filter.prototyped = PC.prototyped (LastKnown.characteristics lastKnown) || LastKnown.prototyped lastKnown,
           Filter.declaredThisTurn = declaredThisTurn oid gs,
@@ -1289,7 +1289,7 @@ convokedThisTurn oid gs =
 
 -- CR 400.7d's "the spell that became that permanent", asked the other way
 -- round: the permanents one object became by resolving off the stack, read
--- off the move log. A list rather than a Maybe for CR 712.21's several arrivals,
+-- off the move log. A list rather than a Maybe for CR 713.8's several arrivals,
 -- which no permanent spell reaches today.
 becamePermanents :: ObjectId -> [GameEvent.GameEvent] -> [ObjectId]
 becamePermanents spell events =
@@ -1528,7 +1528,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       -- into exile, and a snapshot holds no object -- `faceDown` above's reason,
       -- one rule over.
       Filter.exiledFaceDown = False,
-      -- CR 701.27g asks about a permanent ON THE BATTLEFIELD, and a snapshot is
+      -- CR 701.27h asks about a permanent ON THE BATTLEFIELD, and a snapshot is
       -- a record of a past event rather than an object standing on one -- there
       -- is no id here to ask which face is up. No card in the pool counts
       -- transformed permanents through Scope.InHistory, so nothing observes the
@@ -1559,7 +1559,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       -- `designations` above, same sentence.
       Filter.designationValues = Map.empty,
       Filter.storedResults = Map.empty,
-      -- CR 716.2b: a designation too, which a ProjectedCharacteristics does not
+      -- CR 717.2b: a designation too, which a ProjectedCharacteristics does not
       -- carry and never could, so a past event records none -- `designations`
       -- above, same sentence.
       Filter.classLevel = Nothing,
@@ -1571,11 +1571,11 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       Filter.castUsing = Nothing,
       -- CR 702.143c's record is a field of an OBJECT -- `tributePaid` above.
       Filter.foretold = False,
-      -- CR 718.3c / 718.3d off the snapshot, which carries a copy's answer. The
+      -- CR 719.3c / 719.3d off the snapshot, which carries a copy's answer. The
       -- object's own flag is a field of an OBJECT, which lastKnownView adds. A
       -- regression fence: no card asks it of a snapshot.
       Filter.prototyped = PC.prototyped snapshot,
-      -- CR 722.3c's record is a field of an OBJECT -- `tributePaid` above.
+      -- CR 723.3c's record is a field of an OBJECT -- `tributePaid` above.
       Filter.preparedSpell = False,
       -- CR 400.7d's mana record is a field of an OBJECT, which a
       -- ProjectedCharacteristics does not carry -- `designations` above, same
@@ -1611,7 +1611,7 @@ grantHeld lapsed = maybe True (`Set.notMember` lapsed) . ActivatedAbility.condit
 
 -- | The live view of an object with a sample's CHARACTERISTICS written over it,
 -- for an event whose object is still there to be asked about but whose
--- characteristics the rule pins to the moment of the event -- CR 701.27e's "has
+-- characteristics the rule pins to the moment of the event -- CR 701.27f's "has
 -- the specified characteristic immediately after it does so", read by
 -- Parun.Engine.Event.Match's TriggerCondition.Transforms arm, Matching subject.
 --

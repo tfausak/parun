@@ -11,7 +11,7 @@ import qualified Parun.Types.Timestamp as Timestamp
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.PlayerControl" $ do
-  -- CR 723.1's control, which is what Mindslaver installs: no rule 723.7
+  -- CR 724.1's control, which is what Mindslaver installs: no rule 724.7
   -- restriction, so the key is elided.
   Spec.it s "MkPlayerControl, restriction elided" $
     Common.assertCodec
@@ -25,7 +25,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerControl" $ do
           }
       )
       " {\"decider\":1,\"duration\":{\"type\":\"UntilTurnEnds\"},\"timestamp\":4} "
-  -- CR 723.2's, with rule 723.7's restriction written: Word of Command's row.
+  -- CR 724.2's, with rule 724.7's restriction written: Word of Command's row.
   Spec.it s "MkPlayerControl, restriction written" $
     Common.assertCodec
       s

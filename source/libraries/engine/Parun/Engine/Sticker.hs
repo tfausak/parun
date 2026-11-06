@@ -47,8 +47,8 @@ refsOn pid slot sheet =
 -- | CR 123.3 / 123.2c: the stickers of these kinds on the player's chosen
 -- sheets that are on no object they own, in any zone. CR 123.3 reads current
 -- ownership, so a stickered card that changed owners frees its sticker, and CR
--- 729.4 puts main-game objects outside a subgame, so they use none up there.
--- Parun.StickerSpec's "CR 123.3 a stickered card changing owners" and "CR 729.4"
+-- 730.4 puts main-game objects outside a subgame, so they use none up there.
+-- Parun.StickerSpec's "CR 123.3 a stickered card changing owners" and "CR 730.4"
 -- prove them.
 available :: PlayerId -> Set.Set StickerKind.StickerKind -> GameState -> [StickerRef.StickerRef]
 available pid kinds gs = case Map.lookup pid (GameState.players gs) of

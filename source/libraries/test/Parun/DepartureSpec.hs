@@ -85,7 +85,7 @@ isPayDecision response = case response of
 statusOf :: PlayerId.PlayerId -> GameState.GameState -> Maybe Status.Status
 statusOf pid gs = fmap Player.status (Map.lookup pid (GameState.players gs))
 
--- The players CR 725.1's event says were crowned, in order -- so a CR 725.4 case
+-- The players CR 726.1's event says were crowned, in order -- so a CR 726.4 case
 -- can assert both who took the crown and that nothing else was recorded.
 crownings :: GameState.GameState -> [PlayerId.PlayerId]
 crownings gs = Maybe.mapMaybe crownedIn (S.eventsOf gs)
@@ -96,7 +96,7 @@ crownedIn event = case event of
   _ -> Nothing
 
 -- CR 603.6a: one permanent already on the battlefield having its entry gathered
--- and its trigger resolved. What the two CR 725.4 eligibility cases below build
+-- and its trigger resolved. What the two CR 726.4 eligibility cases below build
 -- their boards out of, Jared Carthalion's ETB being the only way to get a
 -- restricted player.
 entersResolved :: ObjectId -> GameState.GameState -> GameState.GameState
@@ -221,9 +221,9 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
     Spec.assertEqWith s "bob keeps his seat" (GameState.turnOrder after) [S.alice, S.bob, S.carol]
     Spec.assertEqWith s "but is no longer playing" (Game.stillPlaying after) [S.alice, S.carol]
 
-  -- CR 725.4: "If the monarch leaves the game, the active player becomes the
+  -- CR 726.4: "If the monarch leaves the game, the active player becomes the
   -- monarch at the same time as that player leaves the game."
-  Spec.it s "CR 725.4 the monarch departs on someone else's turn: the active player takes the crown" $ do
+  Spec.it s "CR 726.4 the monarch departs on someone else's turn: the active player takes the crown" $ do
     let board = S.withMonarch S.bob S.threePlayerGame
         gone = S.departs Departure.Type.Conceded S.bob board
     Spec.assertEqWith s "alice is the active player on this board" (GameState.activePlayer board) S.alice
@@ -234,16 +234,16 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
     -- case is the gameplay-level proof.
     Spec.assertEqWith s "and exactly one crowning was recorded, naming her" (crownings gone) [S.alice]
 
-  -- CR 725.4: "If the active player is leaving the game or if there is no
+  -- CR 726.4: "If the active player is leaving the game or if there is no
   -- active player, the next player in turn order who can become the monarch
   -- becomes the monarch."
-  Spec.it s "CR 725.4 the monarch departs on their own turn: the next seat in turn order takes the crown" $ do
+  Spec.it s "CR 726.4 the monarch departs on their own turn: the next seat in turn order takes the crown" $ do
     let board = S.withMonarch S.alice S.threePlayerGame
         gone = S.departs Departure.Type.Conceded S.alice board
     Spec.assertEqWith s "bob, the seat after alice's" (GameState.monarch gone) (Just S.bob)
     Spec.assertEqWith s "and the crowning names him, so the walk's branch records too" (crownings gone) [S.bob]
 
-  Spec.it s "CR 725.4 the walk past the active player's seat skips a seat that has already departed" $ do
+  Spec.it s "CR 726.4 the walk past the active player's seat skips a seat that has already departed" $ do
     -- alice is the active player and has already left, so there is no active
     -- player to crown; carol is the monarch and leaves too. This pins that a
     -- departed active player falls through to the walk at all (the first
@@ -258,7 +258,7 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
     Spec.assertEqWith s "alice is still the active player's seat (CR 800.4j)" (GameState.activePlayer gone) S.alice
     Spec.assertEqWith s "bob takes the crown" (GameState.monarch gone) (Just S.bob)
 
-  -- CR 725.4: the anchor-discriminating case. Four seats, not three: once the
+  -- CR 726.4: the anchor-discriminating case. Four seats, not three: once the
   -- active player and the monarch have both departed, three seats leave only
   -- one still-playing candidate (see the previous case's comment), so any
   -- anchor lands on it. Here, after alice (active) and carol (monarch) both
@@ -269,20 +269,20 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
   -- and dave is first still playing. Swapping this module's
   -- `List.break (== active)` for `List.break (== leaving)` makes this fail
   -- with "expected: Just bob, got: Just dave".
-  Spec.it s "CR 725.4 four seats: the walk is anchored on the active player's seat, not the departing monarch's" $ do
+  Spec.it s "CR 726.4 four seats: the walk is anchored on the active player's seat, not the departing monarch's" $ do
     let aliceGone = S.departs Departure.Type.Conceded S.alice S.fourPlayerGame
         board = S.withMonarch S.carol aliceGone
         gone = S.departs Departure.Type.Conceded S.carol board
     Spec.assertEqWith s "bob, the seat after alice's -- dave would be the seat after carol's" (GameState.monarch gone) (Just S.bob)
 
-  -- CR 725.4's OTHER half: "the next player in turn order WHO CAN BECOME THE
+  -- CR 726.4's OTHER half: "the next player in turn order WHO CAN BECOME THE
   -- MONARCH". Jared Carthalion, True Heir is the only printing that makes that
   -- clause bite, and his own ETB builds the whole board: alice's Jared enters,
   -- crowns the first opponent his target slot offers (bob) and stores "You can't
   -- become the monarch this turn" on alice. Then the monarch leaves.
   --
   -- Three seats, and they are what makes this discriminating. Alice is the active
-  -- player, so CR 725.4's FIRST sentence would hand her the crown -- which is
+  -- player, so CR 726.4's FIRST sentence would hand her the crown -- which is
   -- exactly what the unrestricted board in "the monarch departs on someone else's
   -- turn" above shows. Here she cannot take it, so the walk anchored on her seat
   -- runs on to carol. Two seats would answer "no monarch" instead: distinguishable
@@ -291,7 +291,7 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
   --
   -- PlayerEffectSpec's Jared group carries the primary observable (two seats, no
   -- departure) and the note on what the card omits.
-  Spec.it s "CR 725.4 the crown skips a seat that can't become the monarch" $ do
+  Spec.it s "CR 726.4 the crown skips a seat that can't become the monarch" $ do
     jared <- S.printingOf s registry "Jared Carthalion, True Heir"
     let (jaredId, gs1) = S.addPermanent jared S.alice S.threePlayerGame
         board = entersResolved jaredId gs1
@@ -311,7 +311,7 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
   --
   -- The board is also where PlayerScope.Related You is observable on this axis: each
   -- Jared restricts its OWN controller, so carol and dave are untouched by either.
-  Spec.it s "CR 725.4 the walk itself skips a still-playing seat that can't become the monarch" $ do
+  Spec.it s "CR 726.4 the walk itself skips a still-playing seat that can't become the monarch" $ do
     jared <- S.printingOf s registry "Jared Carthalion, True Heir"
     let (alicesJared, gs1) = S.addPermanent jared S.alice S.fourPlayerGame
         (bobsJared, gs2) = S.addPermanent jared S.bob gs1
@@ -324,9 +324,9 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
     Spec.assertEqWith s "bob still holds the crown alice's Jared gave him" (GameState.monarch board) (Just S.bob)
     Spec.assertEqWith s "dave takes the crown: alice and bob are both restricted, and carol is leaving" (GameState.monarch gone) (Just S.dave)
 
-  -- CR 725.4: "If no player still in the game can become the monarch, the
+  -- CR 726.4: "If no player still in the game can become the monarch, the
   -- game continues with no monarch."
-  Spec.it s "CR 725.4 the last player standing is the monarch and leaves: no monarch, and no partial head" $ do
+  Spec.it s "CR 726.4 the last player standing is the monarch and leaves: no monarch, and no partial head" $ do
     let twoGone =
           S.departs
             Departure.Type.Conceded
@@ -463,7 +463,7 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
         gone = S.departs Departure.Type.Conceded S.bob snapshotted
     Spec.assertEqWith s "bob's id is pruned from the CR 510.4 first-strike snapshot" (Combat.Type.struckFirst (GameState.combat gone)) (Just Set.empty)
 
-  Spec.it s "CR 725 a crowning watch KEYED on the departing player's own object is dropped" $ do
+  Spec.it s "CR 726 a crowning watch KEYED on the departing player's own object is dropped" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (onField, g1) = S.addPermanent piker S.bob S.threePlayerGame
         exiled = g1 {GameState.movedUntil = Map.singleton onField (ReturnWatch.MkReturnWatch (ReturnEnding.OpponentCrowned MonarchWatch.MkMonarchWatch {MonarchWatch.controller = S.alice, MonarchWatch.due = Nothing}) Zone.Battlefield)}
@@ -495,7 +495,7 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
     -- CR 800.1: "A multiplayer game is a game that begins with more than two
     -- players." CR 104.2a ends a two-player game the moment a player leaves,
     -- so nothing INSIDE that game can see the difference -- but a two-player
-    -- SUBGAME is read after it ends. CR 729.5 has each player take the cards
+    -- SUBGAME is read after it ends. CR 730.5 has each player take the cards
     -- they own in the subgame into their main-game library, and
     -- Setup.funnelBack does that from the finished subgame's object pool. If
     -- the loser's cards left the game, funnelBack would have nothing to
@@ -512,8 +512,8 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
   -- CR 800.4a: "any effects which give that player control of any objects or
   -- players end." Mindslaver's opcode is Effect.ControlPlayerNextTurn, whose
   -- effect lives in GameState.pendingControl until the controlled player's
-  -- turn begins (CR 723.1b) and in GameState.control during it
-  -- (CR 723.1/723.3). Both are effects giving the departing player control of
+  -- turn begins (CR 724.1b) and in GameState.control during it
+  -- (CR 724.1/724.3). Both are effects giving the departing player control of
   -- a PLAYER, so both end.
   Spec.it s "CR 800.4a a Mindslaver controller departing releases their victim, pending and active alike" $ do
     let pending = S.threePlayerGame {GameState.pendingControl = Map.singleton S.carol (S.turnControlRow S.bob)}

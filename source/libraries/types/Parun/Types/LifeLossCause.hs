@@ -43,11 +43,11 @@ data LifeLossCause
     -- Parun.ReplacementSpec's Ashiok group is what proves the grain: a payment is
     -- replaced where damage on the same board is not.
     ByPayment
-  | -- | CR 728.1a: the life rule 728.1's inherent triggered ability costs a
+  | -- | CR 729.1a: the life rule 729.1's inherent triggered ability costs a
     -- player, which is the whole of what a card means by "from radiation" --
     -- Parun.Engine.Rad.ability, carried on the Parun.Types.LifeLoss it builds.
     --
-    -- Its own arm rather than ByEffect's, because rule 728.1a says a printed
+    -- Its own arm rather than ByEffect's, because rule 729.1a says a printed
     -- clause narrows by exactly this grain: Strong, the Brutish Thespian gains
     -- life rather than losing it to radiation, where an ordinary effect's loss
     -- still takes life. Parun.RadSpec's Strong group is what proves it.

@@ -191,7 +191,7 @@ revealing s registry = Spec.describe s "CR 103.2b the reveal" $ do
     Spec.assertBool s (Maybe.isJust (companionOf S.alice revealed)) "the same deck can reveal"
     Spec.assertEqWith s "CR 103.2b: and declining is an answer" (companionOf S.alice declined) Nothing
 
--- CR 727.1 / 729.2: a restart and a subgame each start a new game following rule
+-- CR 728.1 / 730.2: a restart and a subgame each start a new game following rule
 -- 103, so CR 103.2a's starting deck is taken again from the cards the new game is
 -- built from and CR 103.2b's reveal is put again.
 --
@@ -199,12 +199,12 @@ revealing s registry = Spec.describe s "CR 103.2b the reveal" $ do
 -- deck, and the pairs differ in ONE Doomed Traveler: where it sits, or whether it
 -- is there at all.
 newGames :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
-newGames s registry = Spec.describe s "CR 727.1 / 729.2 a new game" $ do
-  -- CR 727.2 involves every card alice owns that was in the game, a card a wish
+newGames s registry = Spec.describe s "CR 728.1 / 730.2 a new game" $ do
+  -- CR 728.2 involves every card alice owns that was in the game, a card a wish
   -- brought in among them; the Traveler on the battlefield stands for that card.
   -- So the restarted game's deck holds a permanent card with no activated
   -- ability, and CR 103.2b no longer lets her reveal Zirda.
-  Spec.it s "CR 727.2 a restart reads its starting deck again and re-asks the reveal" $ do
+  Spec.it s "CR 728.2 a restart reads its starting deck again and re-asks the reveal" $ do
     (zirda, aliceDeck, _) <- decks s registry
     traveler <- S.printingOf s registry "Doomed Traveler"
     let revealed = setup revealingAnswer aliceDeck aliceDeck
@@ -230,17 +230,17 @@ newGames s registry = Spec.describe s "CR 727.1 / 729.2 a new game" $ do
 
   -- CR 103.2b's "if any players WISH to reveal" is asked anew: a player who
   -- declined in the restarted game may reveal in the new one.
-  Spec.it s "CR 727.1 a player who declined may reveal after a restart" $ do
+  Spec.it s "CR 728.1 a player who declined may reveal after a restart" $ do
     (zirda, aliceDeck, _) <- decks s registry
     let declined = setup S.identityAnswer aliceDeck aliceDeck
         restarted = S.runPure revealingAnswer declined (Setup.restartGame S.performer Set.empty S.alice)
     Spec.assertEqWith s "CR 103.2b: she reveals Zirda in the new game" (companionOf S.alice restarted) (fmap OutsideCard.InPool (Map.lookup zirda (GameState.printingIds restarted)))
     Spec.assertEqWith s "having revealed nothing in the first" (companionOf S.alice declined) Nothing
 
-  -- CR 729.2: the subgame's deck is the main-game LIBRARY and nothing else, so a
+  -- CR 730.2: the subgame's deck is the main-game LIBRARY and nothing else, so a
   -- Traveler in alice's main-game hand stays out of it while one in her library
-  -- is in it. CR 729.1b: the main game's companion is untouched by the subgame.
-  Spec.it s "CR 729.2 a subgame's starting deck is the main-game library" $ do
+  -- is in it. CR 730.1b: the main game's companion is untouched by the subgame.
+  Spec.it s "CR 730.2 a subgame's starting deck is the main-game library" $ do
     (zirda, aliceDeck, _) <- decks s registry
     traveler <- S.printingOf s registry "Doomed Traveler"
     let parentOf place = snd (place traveler S.alice (setup revealingAnswer aliceDeck aliceDeck))
@@ -250,20 +250,20 @@ newGames s registry = Spec.describe s "CR 727.1 / 729.2 a new game" $ do
         idOf gs printing = Map.lookup printing (GameState.printingIds gs)
         hidden = subOf inLibrary
     Spec.assertEqWith s "CR 103.2b: a Traveler in her main-game library bars Zirda in the subgame" (companionOf S.alice hidden) Nothing
-    Spec.assertEqWith s "CR 729.2: one in her main-game hand does not" (companionOf S.alice (subOf inHand)) (fmap OutsideCard.InPool (idOf inHand zirda))
-    Spec.assertEqWith s "CR 729.1b: the main game still has Zirda as her companion afterwards" (companionOf S.alice (Setup.funnelBack hidden inLibrary)) (fmap OutsideCard.InPool (idOf inLibrary zirda))
+    Spec.assertEqWith s "CR 730.2: one in her main-game hand does not" (companionOf S.alice (subOf inHand)) (fmap OutsideCard.InPool (idOf inHand zirda))
+    Spec.assertEqWith s "CR 730.1b: the main game still has Zirda as her companion afterwards" (companionOf S.alice (Setup.funnelBack hidden inLibrary)) (fmap OutsideCard.InPool (idOf inLibrary zirda))
 
--- CR 729.4: inside a subgame every main-game object is outside the game, so a
+-- CR 730.4: inside a subgame every main-game object is outside the game, so a
 -- companion card alice owns in her main-game HAND is one CR 103.2b lets her
 -- reveal. Her sideboard is empty, so that object is the only candidate there is.
--- CR 116.2g's {3} then brings that very object in, which CR 729.4a takes out of
+-- CR 116.2g's {3} then brings that very object in, which CR 730.4a takes out of
 -- the main game once the subgame ends.
 --
 -- A FACE-DOWN main-game Zirda beside it is the control: CR 708.2 leaves it no
 -- companion ability, so it is never offered.
 mainGameCompanion :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
-mainGameCompanion s registry = Spec.describe s "CR 729.4 a subgame's companion" $ do
-  Spec.it s "CR 729.4 a main-game companion card may be revealed and taken in a subgame" $ do
+mainGameCompanion s registry = Spec.describe s "CR 730.4 a subgame's companion" $ do
+  Spec.it s "CR 730.4 a main-game companion card may be revealed and taken in a subgame" $ do
     zirda <- S.printingOf s registry "Zirda, the Dawnwaker"
     mountain <- S.printingOf s registry "Mountain"
     birds <- S.printingOf s registry "Birds of Paradise"
@@ -278,9 +278,9 @@ mainGameCompanion s registry = Spec.describe s "CR 729.4 a subgame's companion" 
         ready = withLands {GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
         taken = S.runPure S.identityAnswer ready (Companion.take S.manaPerformer S.alice)
         zirdasInHand gs = filter (\oid -> fmap S.nameOf (Game.cardOf oid gs) == Just (CardName.MkCardName (Text.pack "Zirda, the Dawnwaker"))) (Game.zoneMembers Zone.Hand S.alice gs)
-    Spec.assertEqWith s "CR 103.2b / 729.4: she reveals the Zirda in her main-game hand, not the face-down one" (companionOf S.alice sub) (Just (OutsideCard.InAnotherGame zirdaInHand))
+    Spec.assertEqWith s "CR 103.2b / 730.4: she reveals the Zirda in her main-game hand, not the face-down one" (companionOf S.alice sub) (Just (OutsideCard.InAnotherGame zirdaInHand))
     Spec.assertEqWith s "CR 116.2g: paying {3} puts it into her subgame hand" (length (zirdasInHand taken)) 1
-    Spec.assertBool s (List.notElem zirdaInHand (Game.zoneMembers Zone.Hand S.alice (Setup.applyCrossings taken hidden))) "CR 729.4a: and the main game has lost it"
+    Spec.assertBool s (List.notElem zirdaInHand (Game.zoneMembers Zone.Hand S.alice (Setup.applyCrossings taken hidden))) "CR 730.4a: and the main game has lost it"
 
 -- alice with `lands` Mountains untapped in her precombat main phase holding
 -- priority, TWO Zirdas outside the game, and `chosen` saying whether CR 103.2b's

@@ -95,7 +95,7 @@
     "step": "PostcombatMain"
   },
   "description": "CR 707.2 a copy of an Attraction rolls but lights nothing, and is no Astrotorium card",
-  "note": "The copy tripwire: a Phyrexian Metamorph copying Bumper Cars 202a is an Attraction named Bumper Cars with the visit ability, but its card lights nothing (CR 109.3, 707.2) and has a traditional back (CR 717.6). The original is Disenchanted into the junkyard, so the copy is alice's only Attraction: on turn 3 she rolls a d6 for it (CR 717.4), and a 3 visits nothing, so no target is asked for and bob may decline to block. Disenchanting the copy then puts the Metamorph card into her graveyard.",
+  "note": "The copy tripwire: a Phyrexian Metamorph copying Bumper Cars 202a is an Attraction named Bumper Cars with the visit ability, but its card lights nothing (CR 109.3, 707.2) and has a traditional back (CR 718.6). The original is Disenchanted into the junkyard, so the copy is alice's only Attraction: on turn 3 she rolls a d6 for it (CR 718.4), and a 3 visits nothing, so no target is asked for and bob may decline to block. Disenchanting the copy then puts the Metamorph card into her graveyard.",
   "timeline": [
     {
       "do": {

@@ -3,7 +3,7 @@ module Parun.Types.MonarchWatch where
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.PlayerId as PlayerId
 
--- | CR 725 (Palace Jailer): one object exiled "until an opponent becomes the
+-- | CR 726 (Palace Jailer): one object exiled "until an opponent becomes the
 -- monarch", and what the game must remember to know when that has happened.
 --
 -- The card's rulings make this an EVENT, not a state: the creature does not

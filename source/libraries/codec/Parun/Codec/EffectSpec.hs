@@ -392,7 +392,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       fromJson
       (Effect.RestartGame Nothing)
       " {\"type\":\"RestartGame\"} "
-  -- CR 727.5's exemption, the shape Karn Liberated writes.
+  -- CR 728.5's exemption, the shape Karn Liberated writes.
   Spec.it s "RestartGame exempting cards" $
     Common.assertJsonCodec
       s
@@ -407,7 +407,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       fromJson
       (Effect.ControlPlayerNextTurn (SlotName.MkSlotName (Text.pack "target")))
       " {\"type\":\"ControlPlayerNextTurn\",\"value\":\"target\"} "
-  -- CR 723.2's arm, with rule 723.7's restriction written: Word of Command's.
+  -- CR 724.2's arm, with rule 724.7's restriction written: Word of Command's.
   Spec.it s "ControlPlayerThisResolution" $
     Common.assertJsonCodec
       s
@@ -786,7 +786,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       fromJson
       (Effect.Mill (Mill.MkMill (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (Quantity.Literal 2) Nothing Nothing))
       " {\"type\":\"Mill\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"quantity\":{\"type\":\"Literal\",\"value\":2}}} "
-  -- CR 728.1's mill, which counts the nonland cards it put in the graveyard.
+  -- CR 729.1's mill, which counts the nonland cards it put in the graveyard.
   Spec.it s "Mill, with a tally" $
     Common.assertJsonCodec
       s
@@ -1529,7 +1529,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       fromJson
       (Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))) PlayerCounterKind.Poison (Quantity.Literal 3)))
       " {\"type\":\"GainPlayerCounters\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"kind\":\"Poison\",\"quantity\":{\"type\":\"Literal\",\"value\":3}}} "
-  -- The mirror opcode, on the same wire shape and a DIFFERENT tag: CR 728.1's
+  -- The mirror opcode, on the same wire shape and a DIFFERENT tag: CR 729.1's
   -- removal must never decode as a gain.
   Spec.it s "RemovePlayerCounters" $
     Common.assertJsonCodec
@@ -1901,7 +1901,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       fromJson
       (Effect.AddPhases [ExtraPhase.ExtraCombat, ExtraPhase.ExtraCombat])
       " {\"type\":\"AddPhases\",\"value\":[\"ExtraCombat\",\"ExtraCombat\"]} "
-  -- CR 724.1: nullary for TemptWithTheRing's reason -- rule 724.1's six steps
+  -- CR 725.1: nullary for TemptWithTheRing's reason -- rule 725.1's six steps
   -- fix the whole procedure, leaving an author nothing to write.
   Spec.it s "EndTurn" $
     Common.assertJsonCodec
@@ -1910,7 +1910,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       fromJson
       Effect.EndTurn
       " {\"type\":\"EndTurn\"} "
-  -- CR 724.2: nullary for the same reason, and hand-written for the reason every
+  -- CR 725.2: nullary for the same reason, and hand-written for the reason every
   -- arm here is -- Arm.tagged forces the TAG of a new constructor and not its
   -- arm, so a constructor with no arm encodes as {} and decodes from nothing
   -- without a warning.
@@ -2249,7 +2249,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       fromJson
       (Effect.Designate (Designate.MkDesignate Designation.Suspected (SlotName.MkSlotName (Text.pack "self")) Nothing))
       " {\"type\":\"Designate\",\"value\":{\"designation\":\"Suspected\",\"slot\":\"self\"}} "
-  -- CR 716.2a's first half. Designate's shape with a number where that has a
+  -- CR 717.2a's first half. Designate's shape with a number where that has a
   -- designation tag.
   Spec.it s "SetClassLevel" $
     Common.assertJsonCodec

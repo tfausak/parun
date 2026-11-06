@@ -21,7 +21,7 @@ spec s = Spec.describe s "Parun.Codec.CounterTrigger" $ do
       CounterTrigger.codec
       (CounterTrigger.MkCounterTrigger CounterKind.Loyalty CounterMotion.Removed CounterHolder.Self Nothing CounterGrouping.EachPermanent)
       " {\"kind\":{\"type\":\"Loyalty\"},\"motion\":{\"type\":\"Removed\"}} "
-  -- CR 714.2b's chapter III.
+  -- CR 715.2b's chapter III.
   Spec.it s "a threshold writes its key" $
     Common.assertCodec
       s

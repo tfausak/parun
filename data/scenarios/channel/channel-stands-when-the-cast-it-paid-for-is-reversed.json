@@ -1,5 +1,5 @@
 {
-  "description": "CR 733.1 Channel is no mana ability: the life stays paid and the mana stays floating when the cast is reversed",
+  "description": "CR 734.1 Channel is no mana ability: the life stays paid and the mana stays floating when the cast is reversed",
   "note": "Only the Forest's mana ability is offered back, once: a second ReverseManaAbilities would fail the scenario. The Forest reverses, Channel's payment stands.",
   "board": {
     "active": "alice",

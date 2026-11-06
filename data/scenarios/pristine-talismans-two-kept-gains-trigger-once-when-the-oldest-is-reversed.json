@@ -1,6 +1,6 @@
 {
   "description": "Two gains kept after the oldest Pristine Talisman is reversed trigger Vanguard Seraph once.",
-  "note": "CR 733.1: only the earlier kept gain becomes the first, so the restamp reads the log up to each entry.",
+  "note": "CR 734.1: only the earlier kept gain becomes the first, so the restamp reads the log up to each entry.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",

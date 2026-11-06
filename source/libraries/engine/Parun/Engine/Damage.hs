@@ -1256,7 +1256,7 @@ processDamage settle events = do
       -- "another replacement or prevention effect", which are CR 614.16's two
       -- admitted causes. So a clause naming a player (Vorinclex) reaches these,
       -- and rule 614.16's own subject (Doubling Season) does not -- the same split
-      -- CR 714.3c's lore counter falls on.
+      -- CR 715.3c's lore counter falls on.
       --
       -- Read against `board` for both the putter and the recipient's card types,
       -- so every event in the batch answers CR 510.2's questions off one state.

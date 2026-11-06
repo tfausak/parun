@@ -83,7 +83,7 @@ spec s = Spec.describe s "Parun.Codec.Printing" $ do
       (Printing.reference (const (Just impostor)))
       (Printing.ofCard CardSpec.mountainCard)
       (" {\"type\":\"Inline\",\"value\":" <> mountainJson <> "} ")
-  -- CR 717.1: lights sit beside the card's keys.
+  -- CR 718.1: lights sit beside the card's keys.
   Spec.it s "a printing's lights are written beside the card" $
     Common.assertCodec
       s

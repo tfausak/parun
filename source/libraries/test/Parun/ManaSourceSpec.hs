@@ -857,7 +857,7 @@ avatarRokuSpec s registry =
           (gs, [rokuId], [pikerId]) -> pure (Just (rokuId, pikerId, gs))
           _ -> pure Nothing
    in Spec.describe s "Avatar Roku, Firebender" $ do
-        -- CR 724.1d: Time Stop ({4}{U}{U} Instant, "End
+        -- CR 725.1d: Time Stop ({4}{U}{U} Instant, "End
         -- the turn.") ends the current phase as well as the step, and the game
         -- skips straight to the cleanup step. The retention is scoped to the
         -- combat phase, which has just ended, so the mana goes at that step's own
@@ -870,7 +870,7 @@ avatarRokuSpec s registry =
         --
         -- BOB casts it: {4}{U}{U} is six mana, and alice paying any of it out of
         -- the retained {R} would leave her under {R}{R}{R} whatever the sweep did.
-        Spec.it s "CR 724.1d ending the turn during combat takes the retained mana before cleanup" $ do
+        Spec.it s "CR 725.1d ending the turn during combat takes the retained mana before cleanup" $ do
           built <- fixture
           case built of
             Just (rokuId, _, gs) -> do

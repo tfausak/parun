@@ -1,4 +1,4 @@
--- | CR 709.1 / 712.8 / 715.2: one set of printed characteristics. A card has one
+-- | CR 709.1 / 712.6 / 716.2: one set of printed characteristics. A card has one
 -- or more of these; which of them are live depends on the card's Layout and on
 -- where the object is, which is Parun.Engine.Card's question and not this
 -- module's.

@@ -315,11 +315,11 @@ scrapyardSpec s registry = Spec.describe s "Scrapyard" $ do
     Spec.assertEqWith s "nothing went to the scrapyard" (GameState.command entered) Set.empty
     Spec.assertBool s (Set.member original (GameState.battlefield entered)) "and the assembled Depot stayed"
 
--- The Contraption deck across CR 727's restart and CR 729's subgames, read as
--- CR 727.2 and CR 729.2a / 729.5a read the Attraction deck.
+-- The Contraption deck across CR 728's restart and CR 730's subgames, read as
+-- CR 728.2 and CR 730.2a / 730.5a read the Attraction deck.
 newGameSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 newGameSpec s registry = Spec.describe s "A new game" $ do
-  Spec.it s "CR 727.2 a restart puts every Contraption card back in its owner's Contraption deck" $ do
+  Spec.it s "CR 728.2 a restart puts every Contraption card back in its owner's Contraption deck" $ do
     depot <- S.printingOf s registry "Arms Depot"
     piker <- S.printingOf s registry "Goblin Piker"
     let (gs, _, pikerId) = crankBoard depot piker Designation.Sprocket1
@@ -331,7 +331,7 @@ newGameSpec s registry = Spec.describe s "A new game" $ do
     Spec.assertEqWith s "both Depots are in alice's Contraption deck" (length (Game.sideDeckOf SideDeck.Contraption S.alice restarted)) 2
     Spec.assertEqWith s "and neither is on the battlefield" (S.countOnBattlefieldByName armsDepot S.alice restarted) 0
     Spec.assertEqWith s "the CRANK! counter is back on the third sprocket" (Contraption.crankCounterOf S.alice restarted) Designation.Sprocket3
-  Spec.it s "CR 729.2a a subgame takes the Contraption deck, and CR 729.5a gives it back" $ do
+  Spec.it s "CR 730.2a a subgame takes the Contraption deck, and CR 730.5a gives it back" $ do
     depot <- S.printingOf s registry "Arms Depot"
     piker <- S.printingOf s registry "Goblin Piker"
     let (gs, assembled, pikerId) = crankBoard depot piker Designation.Sprocket1
@@ -339,9 +339,9 @@ newGameSpec s registry = Spec.describe s "A new game" $ do
         parent = withDepots depot 1 S.alice cranked
         sub = S.runPure S.identityAnswer (Setup.subgameStateFrom S.alice parent) (Setup.startGameFromCards (Resolve.performHandAction Resolve.noSubgame) Set.empty)
         back = Setup.funnelBack sub parent
-    Spec.assertEqWith s "CR 729.2a: the deck is in the subgame" (length (Game.sideDeckOf SideDeck.Contraption S.alice sub)) 1
+    Spec.assertEqWith s "CR 730.2a: the deck is in the subgame" (length (Game.sideDeckOf SideDeck.Contraption S.alice sub)) 1
     Spec.assertBool s (Maybe.isNothing (Game.lookupObject assembled sub)) "and the assembled one stayed behind"
-    Spec.assertEqWith s "CR 729.5a: the deck is back" (length (Game.sideDeckOf SideDeck.Contraption S.alice back)) 1
+    Spec.assertEqWith s "CR 730.5a: the deck is back" (length (Game.sideDeckOf SideDeck.Contraption S.alice back)) 1
     Spec.assertEqWith s "and the assembled one never moved" (Game.zoneOf assembled back) (Just Zone.Battlefield)
     Spec.assertEqWith s "the subgame's CRANK! counter starts on the third sprocket" (Contraption.crankCounterOf S.alice sub) Designation.Sprocket3
     Spec.assertEqWith s "and the main game's is where it was" (Contraption.crankCounterOf S.alice back) Designation.Sprocket1

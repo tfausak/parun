@@ -87,7 +87,7 @@ data Keyword
     -- characteristic-defining one (CR 604.3).
     LivingMetal
   | -- | 702.162a: "You may cast this card converted by paying [cost] rather than
-    -- its mana cost", read off the front face (CR 712.11d).
+    -- its mana cost", read off the front face (CR 712.8d).
     MoreThanMeetsTheEye (Cost.Cost Keyword)
   | -- | 702.16a: four prohibitions under one key -- targeting (702.16b), damage
     -- (702.16e), blocking (702.16f), and attachment (702.16c, 702.16d).
@@ -673,7 +673,7 @@ data Keyword
     Demonstrate
   | -- | 702.145b: daybound, the front-face half of rule 702.145's pair, and three
     -- static abilities read by Parun.Engine.Daytime rather than minted. Day and
-    -- night themselves are on the game (CR 731.1).
+    -- night themselves are on the game (CR 732.1).
     Daybound
   | -- | 702.145e: nightbound, daybound's back-face mirror and two static
     -- abilities rather than three (CR 702.145a, CR 702.145b).
@@ -710,7 +710,7 @@ data Keyword
     Casualty Natural.Natural
   | -- | 702.155a: chapter abilities of this Saga can't trigger the turn it
     -- entered unless it has exactly that chapter's number of lore counters; rule
-    -- 714.3b REPLACES rule 714.3a's ability rather than adding to it.
+    -- 715.3b REPLACES rule 715.3a's ability rather than adding to it.
     ReadAhead
   | -- | 702.156a: "This permanent enters with X +1\/+1 counters on it" and "When
     -- this permanent enters, if X is 5 or more, draw a card", both X being CR
@@ -727,7 +727,7 @@ data Keyword
     -- 702.158b's sectors (Parun.Engine.SpaceSculptor).
     SpaceSculptor
   | -- | 702.160a: a second mana cost, power and toughness the caster may choose
-    -- instead of the printed ones as the card is cast (CR 718.3).
+    -- instead of the printed ones as the card is cast (CR 719.3).
     Prototype Prototype.Prototype
   | -- | 702.163a: "When this Equipment enters, create a 2\/2 red Rebel creature
     -- token, then attach this Equipment to it."
@@ -815,7 +815,7 @@ data Keyword
     -- -- exhaust's "activate only once", plus a reduction by the permanent's mana
     -- cost if it entered this turn (Parun.Engine.PlayerEffect's activation gather).
     PowerUp
-  | -- | 716.2: a class level bar, written on the activated ability it indicates.
+  | -- | 717.2: a class level bar, written on the activated ability it indicates.
     ClassLevel ClassLevel.ClassLevel
   | -- | 702.57a: a forecast ability is the activated ability printed after it,
     -- activatable only from a hand, during its owner's upkeep, once each turn
@@ -858,7 +858,7 @@ data Keyword
   | -- | 702.140a: "mutate [cost]" -- "you may pay [cost] rather than pay this
     -- spell's mana cost. If you do, it becomes a mutating creature spell and
     -- targets a non-Human creature with the same owner as this spell". The
-    -- target slot and CR 730's merge are minted from this constructor rather
+    -- target slot and CR 731's merge are minted from this constructor rather
     -- than printed.
     Mutate (Cost.Cost Keyword)
   | -- | 702.89a: "If enchanted permanent would be destroyed, instead remove all
@@ -945,11 +945,11 @@ data Keyword
     -- cast it from exile on a later turn (CR 702.185b's warped card).
     Warp (Cost.Cost Keyword)
   | -- | 702.146a: disturb [cost] -- cast this card TRANSFORMED from your
-    -- graveyard for [cost] rather than its mana cost (CR 712.8c). The ability is
+    -- graveyard for [cost] rather than its mana cost (CR 712.6b). The ability is
     -- the FRONT face's and the spell is the BACK face, which is why
     -- Parun.Engine.Card.convertedFace and
     -- Parun.Engine.Cast.permitsCastFromGraveyard both read it off the front face
-    -- of the card being cast (CR 712.11d).
+    -- of the card being cast (CR 712.8d).
     Disturb (Cost.Cost Keyword)
   | -- | 702.180a: harmonize [cost] -- three static abilities, all minted from
     -- this constructor: cast this card from your graveyard for [cost] plus

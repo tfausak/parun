@@ -1,6 +1,6 @@
 {
   "description": "Codie does not copy a Jump cast from hand, which is no prepared spell",
-  "note": "The printed Jump shares the prepare spell's name and text, so the only difference between it and the Aviator's copy is CR 722.3c's road to the stack. alice casts it from hand at the Piker; had Codie triggered, its copy would be a second Jump on the stack after the first pass.",
+  "note": "The printed Jump shares the prepare spell's name and text, so the only difference between it and the Aviator's copy is CR 723.3c's road to the stack. alice casts it from hand at the Piker; had Codie triggered, its copy would be a second Jump on the stack after the first pass.",
   "board": {
     "seats": [
       {

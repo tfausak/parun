@@ -38,21 +38,21 @@ spec s = Spec.describe s "Parun.Codec.Layout" $ do
       Layout.codec
       Layout.Flip
       " {\"type\":\"Flip\"} "
-  -- CR 715.1.
+  -- CR 716.1.
   Spec.it s "Adventure" $
     Common.assertCodec
       s
       Layout.codec
       Layout.Adventure
       " {\"type\":\"Adventure\"} "
-  -- CR 720.1.
+  -- CR 721.1.
   Spec.it s "Omen" $
     Common.assertCodec
       s
       Layout.codec
       Layout.Omen
       " {\"type\":\"Omen\"} "
-  -- CR 722.1.
+  -- CR 723.1.
   Spec.it s "Preparation" $
     Common.assertCodec
       s
@@ -73,7 +73,7 @@ spec s = Spec.describe s "Parun.Codec.Layout" $ do
       Layout.codec
       Layout.ModalDoubleFaced
       " {\"type\":\"ModalDoubleFaced\"} "
-  -- CR 712.4.
+  -- CR 713.1.
   Spec.it s "Meld" $
     Common.assertCodec
       s

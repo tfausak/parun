@@ -107,7 +107,7 @@ check swamp n comparison threshold =
 
 -- Queen Marchesa's upkeep trigger: "if an opponent is the monarch" is
 -- Quantity.IsMonarch (Relative Opponent), which names EVERY opponent -- one
--- player on two seats, two on three. CR 725.3 makes the monarch unique, so the
+-- player on two seats, two on three. CR 726.3 makes the monarch unique, so the
 -- honest reading is a disjunction over them.
 monarchSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 monarchSpec s registry =
@@ -132,7 +132,7 @@ monarchSpec s registry =
    in Spec.describe s "IsMonarch" $ do
         -- Three seats: Relative Opponent names bob AND carol, which is the whole
         -- bug. On two seats the pre-change code already passed.
-        Spec.it s "CR 725.3 an opponent is the monarch on three seats" $ do
+        Spec.it s "CR 726.3 an opponent is the monarch on three seats" $ do
           marchesa <- S.printingOf s registry "Queen Marchesa"
           oneAssassin (upkeepWith marchesa S.threePlayers (S.withMonarch S.carol))
         -- The same board with the crown moved to alice: this is what says the
@@ -140,19 +140,19 @@ monarchSpec s registry =
         Spec.it s "CR 603.4 the controller holding the crown makes the clause false" $ do
           marchesa <- S.printingOf s registry "Queen Marchesa"
           noToken (upkeepWith marchesa S.threePlayers (S.withMonarch S.alice))
-        -- Regression fence for the existing CR 725.5 arm: no monarch answers 0,
+        -- Regression fence for the existing CR 726.5 arm: no monarch answers 0,
         -- not "undeterminable".
-        Spec.it s "CR 725.5 no monarch at all makes the clause false" $ do
+        Spec.it s "CR 726.5 no monarch at all makes the clause false" $ do
           marchesa <- S.printingOf s registry "Queen Marchesa"
           noToken (upkeepWith marchesa S.threePlayers id)
         -- Two seats, where the old arity restriction already answered: the fix
         -- must not move this.
-        Spec.it s "CR 725.3 the two-seat answer is unchanged" $ do
+        Spec.it s "CR 726.3 the two-seat answer is unchanged" $ do
           marchesa <- S.printingOf s registry "Queen Marchesa"
           oneAssassin (upkeepWith marchesa S.bothPlayers (S.withMonarch S.bob))
         -- The whole card, crowned by its own resolved ETB rather than by a
         -- fixture write.
-        Spec.it s "CR 725.1 her enters trigger crowns her controller, so no token follows" $ do
+        Spec.it s "CR 726.1 her enters trigger crowns her controller, so no token follows" $ do
           marchesa <- S.printingOf s registry "Queen Marchesa"
           let (oid, gs0) = S.addPermanent marchesa S.alice (Setup.emptyGame S.threePlayers)
               entered = ZoneChange.MkZoneChange oid oid Zone.Stack Zone.Battlefield

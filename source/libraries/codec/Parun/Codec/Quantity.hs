@@ -95,7 +95,7 @@ codec =
       Arm.payload "LifeTotal" PlayerRef.codec Quantity.LifeTotal (\x -> case x of Quantity.LifeTotal y -> Just y; _ -> Nothing),
       Arm.payload "StartingLifeTotal" PlayerRef.codec Quantity.StartingLifeTotal (\x -> case x of Quantity.StartingLifeTotal y -> Just y; _ -> Nothing),
       Arm.payload "Speed" PlayerRef.codec Quantity.Speed (\x -> case x of Quantity.Speed y -> Just y; _ -> Nothing),
-      -- CR 725.1's designation, with only a PlayerRef on the wire: the answer is
+      -- CR 726.1's designation, with only a PlayerRef on the wire: the answer is
       -- a 0/1 rather than a stored number, so there is nothing beside the
       -- reference.
       Arm.payload "IsMonarch" PlayerRef.codec Quantity.IsMonarch (\x -> case x of Quantity.IsMonarch y -> Just y; _ -> Nothing),

@@ -14,7 +14,7 @@ data CounterTrigger = MkCounterTrigger
   { kind :: CounterKind.CounterKind Keyword.Keyword,
     motion :: CounterMotion.CounterMotion,
     holder :: CounterHolder.CounterHolder,
-    -- | The count crossing N the way the counters moved: CR 714.2b's "was less
+    -- | The count crossing N the way the counters moved: CR 715.2b's "was less
     -- than N and became at least N" going on, CR 310.12b's last counter (N = 0)
     -- coming off. Nothing reads no count.
     threshold :: Maybe Natural.Natural,

@@ -2420,7 +2420,7 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     Spec.it s "a player candidate is vacuously false" $ do
       Spec.assertBool s (not (Filter.matches self aPlayer Filter.Type.IsExiledFaceDown)) "player"
 
-  -- CR 701.27g. The atom itself is a bare field read; both of the rule's
+  -- CR 701.27h. The atom itself is a bare field read; both of the rule's
   -- exclusions live in the BUILDER that fills the field, so the gameplay-level
   -- proof is Parun.TransformSpec's TransformedPermanent group.
   Spec.describe s "Transformed" $ do
@@ -2428,12 +2428,12 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
       Spec.assertBool s (Filter.matches self (blackCreature {Filter.transformed = True}) Filter.Type.Transformed) "transformed"
       Spec.assertBool s (not (Filter.matches self blackCreature Filter.Type.Transformed)) "front face up"
 
-    -- CR 712.8d/e: which face is up is what the characteristics are read OFF,
+    -- CR 712.6c/e: which face is up is what the characteristics are read OFF,
     -- not one of them, so nothing on the characteristic axes implies it.
     Spec.it s "is independent of every characteristic axis" $ do
       Spec.assertBool s (not (Filter.matches self devoidBigCreature Filter.Type.Transformed)) "power does not imply transformed"
 
-    -- CR 701.27g asks about a PERMANENT, and CR 109.1 makes a player none.
+    -- CR 701.27h asks about a PERMANENT, and CR 109.1 makes a player none.
     Spec.it s "a player candidate is vacuously false" $ do
       Spec.assertBool s (not (Filter.matches self aPlayer Filter.Type.Transformed)) "player"
 

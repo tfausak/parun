@@ -125,7 +125,7 @@ activateAbility pid srcId ability = Monad.void (activateAbilityWith (const False
 --
 -- `runSubgame` is the injected nested-game runner, for a subgame a triggered
 -- mana ability starts while the cost is paid (CR 605.4a). `refused` names the
--- completions CR 732.3 forbids (Parun.Engine.Fragmented.forbidden). Answers
+-- completions CR 733.3 forbids (Parun.Engine.Fragmented.forbidden). Answers
 -- how a completed activation was announced and paid, and Nothing for one
 -- rejected.
 activateAbilityWith :: (Completion.Completion -> Bool) -> Game Result -> PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Game (Maybe Completion.Completion)
@@ -423,7 +423,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
               -- Cast.castProposed's lock of a computed amount, one road over.
               boundGs <- State.get
               let paidCost = Cost.fixComputedIn chosen boundGs (Cost.totalWith adjustments announcedCost)
-              -- CR 732.3: the announcement and the payment as the game choice
+              -- CR 733.3: the announcement and the payment as the game choice
               -- they complete, refused where a fragmented loop has already made
               -- it here (Parun.Engine.Fragmented.forbidden). Asked of the state
               -- the payment leaves, and refused as an unpaid cost is.
@@ -439,7 +439,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
               -- mana ability activated to pay it is logged after it (Tezzeret,
               -- Betrayer of Flesh's ruling) -- and off `announced`, CR 601.2c's
               -- board, before a cost can sacrifice the source. A payment that
-              -- reverses restores `before`, and CR 733.1's partial reversal
+              -- reverses restores `before`, and CR 734.1's partial reversal
               -- drops the announcement's segment (Parun.Engine.Reversal).
               State.modify' (ActivationRestriction.logActivation announced pid srcId (Just ability) AbilityKind.NonManaAbility aimedAt)
               -- CR 601.2g/h via Parun.Engine.Cost.pay: the mana window, then the
@@ -447,7 +447,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
               -- this ability -- but Unpaid is reachable all the same, because the
               -- mana window then asks the player to make those choices and a
               -- mis-tapped colour is a choice the engine must honour (Cost.payMana).
-              -- An unpaid cost reverses the whole activation (CR 733.1),
+              -- An unpaid cost reverses the whole activation (CR 734.1),
               -- including the ability object this function put on the stack.
               -- CR 701.67a's offer is handed to the PAYMENT rather than made
               -- here, Cast.castSpellWith's posture and for its reason: CR
@@ -522,9 +522,9 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
                   -- reveal is offered.
                   Event.turnUpKeptDraws
                   pure (Just completed)
-                -- CR 733.1: the payment reversed the activation back to
+                -- CR 734.1: the payment reversed the activation back to
                 -- `before` itself, keeping what the payer chose to keep of the
-                -- mana window. A CR 732.3 refusal has noted itself there, and
+                -- mana window. A CR 733.3 refusal has noted itself there, and
                 -- the priority loop cleared any older note before this action.
                 Payment.Unpaid -> do
                   noted <- State.gets (Map.lookup pid . GameState.undone)

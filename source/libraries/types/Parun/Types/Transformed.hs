@@ -10,7 +10,7 @@ import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristic
 -- into.
 
 -- The characteristics are the object's PROJECTED ones (CR 613's layer fold), sampled
--- the instant the turn finished, which is what CR 701.27e's "has the specified
+-- the instant the turn finished, which is what CR 701.27f's "has the specified
 -- characteristic immediately after it does so" asks for. The whole record and
 -- not the names alone, because that rule's "specified characteristic" is any of
 -- them: Cult of the Waxing Moon asks for a creature that is not a Human.

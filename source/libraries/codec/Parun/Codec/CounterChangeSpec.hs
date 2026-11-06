@@ -9,7 +9,7 @@ import qualified Parun.Types.ObjectId as ObjectId
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.CounterChange" $ do
-  -- CR 714.2b's threshold crossing: a Saga going from one lore counter to three
+  -- CR 715.2b's threshold crossing: a Saga going from one lore counter to three
   -- crosses two at once, which neither count alone can say. BEFORE and AFTER are
   -- both a Natural and deliberately differ here -- a symmetric fixture would
   -- round-trip a codec that swapped them.

@@ -62,7 +62,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "CR 732.3 / Thieves' Auction's 2005 ruling: when both players choose an Aura with nothing to enchant, the auction goes on and the active player must choose differently",
+  "description": "CR 733.3 / Thieves' Auction's 2005 ruling: when both players choose an Aura with nothing to enchant, the auction goes on and the active player must choose differently",
   "note": "Alice's Grizzly Bears, Holy Strength and Forest and bob's Mountain are exiled. Both choose the Strength, which stays exiled, so the round leaves the state it began in. Alice is then not offered the Strength and the engine's fallback takes her first card; bob takes the Strength, the Bears now being on the battlefield. Stopping after the stranded round would leave all four exiled.",
   "timeline": [
     {

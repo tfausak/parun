@@ -1,6 +1,6 @@
 {
   "description": "Vanguard Seraph triggers on a kept Pristine Talisman's gain when the older one before it is reversed.",
-  "note": "CR 733.1: alice taps two, CR 601.2h refuses the Goblin Piker, and she reverses the older (asked newest first). The undone gain never happened, so the kept one is her first of the turn.",
+  "note": "CR 734.1: alice taps two, CR 601.2h refuses the Goblin Piker, and she reverses the older (asked newest first). The undone gain never happened, so the kept one is her first of the turn.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",

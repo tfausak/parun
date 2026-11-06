@@ -16,16 +16,16 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   408.1) and `ante` (CR 407) placements (a
   library top card first; an exiled card face up and linked to nothing), and
   `sideDecks`, each a supplementary deck of placements top first, face down
-  in the command zone (CR 717.2, 904.3): `[{ "key": "Scheme", "value":
+  in the command zone (CR 718.2, 904.3): `[{ "key": "Scheme", "value":
   [...] }]`. A
   placement names its `card` and may give a `label`, `tapped`, `ready` (CR
   302.6), `damage`, `counters`, `token` (CR 111.1, battlefield only), a
   `controller`, the label of the object or seat it is `attached` to, and
   `commander` (CR 903.3: its owner's commander), the name of the `face` it
-  shows (CR 712.8e, `"Nightfall Predator"`), `faceDown` with the reason it is
+  shows (CR 712.6d, `"Nightfall Predator"`), `faceDown` with the reason it is
   (CR 708.2a / 708.6, `"Manifested"`), a battle's `protector`
   seat (CR 310.9) and the numbers its printing has `lights` up on, an
-  Attraction's (CR 717.1, `[2, 3, 6]`). `active` names a seat;
+  Attraction's (CR 718.1, `[2, 3, 6]`). `active` names a seat;
   `turn` (default 1) and `step` are where the game starts; `monarch` optionally names a seat;
   `attackOption` (CR 806.2b) is `MultiplePlayers` unless given, and `null` is
   CR 507.1's choice among every opponent; `brawl` (CR 903.12a),
@@ -62,7 +62,7 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   resolving or the object whose ability is; it answers CR 614.1a's optional
   redirect and optional substitution (Pokey's) too, its `source` the object
   whose replacement it is, and CR
-  733.1's question whether a reversed action's mana abilities are reversed
+  734.1's question whether a reversed action's mana abilities are reversed
   too, with no `source`: `Exercises` reverses them. `ChooseToPay`
   answers a cost a resolving object offers (CR 118.12a), or a draw
   replacement (Zur's Weirding), keyed the same way:
@@ -101,7 +101,7 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   for a sourceless one such as the monarch's draw, in the order they go on the
   stack, so the last named resolves first (CR 603.3b).
   An entry carrying `refuse` in place of `do` answers its prompt with a move
-  the engine must reverse and ask for again (CR 733.1), such as an illegal
+  the engine must reverse and ask for again (CR 734.1), such as an illegal
   block declaration; the move standing fails the scenario, and the prompt
   asked again takes the next entry at that key. A `do` at priority the engine
   reverses fails the scenario: the next priority prompt must find the move
@@ -146,9 +146,9 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   or melded permanent's cards each by name), `Seers`
   (the seats that may see an `object`'s face, in turn order: CR 400.2's hidden
   zones, CR 406.3's face-down exile, CR 708.5's face-down spells and
-  permanents, and CR 723.4's control of a player), `Witnessed` (the names of this turn's
+  permanents, and CR 724.4's control of a player), `Witnessed` (the names of this turn's
   cards a `player` was shown, in order: every reveal, and each look whose
-  audience held the player, CR 701.20e and CR 723.4; and each ballot it showed
+  audience held the player, CR 701.20e and CR 724.4; and each ballot it showed
   them, CR 701.38a, as `"alice voted Hill Giant"` -- an object by its name as
   voted for, a word bare -- with a secret vote's reveal one such entry per
   ballot, in voting order); an object is named as the

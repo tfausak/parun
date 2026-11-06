@@ -14,7 +14,7 @@ import qualified Parun.Types.Zone as Zone
 -- leaves-the-battlefield abilities needs.
 --
 -- ONE id each way, and a meld is where that stops being the whole answer: a
--- melded permanent's departure mints one card per component (CR 712.21), and its
+-- melded permanent's departure mints one card per component (CR 713.8), and its
 -- entry consumes one card per component (CR 701.42a). Parun.Types.Moved's
 -- `otherArrivals` and `otherDepartures` carry the rest, and Moved.arrivals and
 -- Moved.departures are the plural reads; each arrival after the first is also

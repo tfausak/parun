@@ -23,7 +23,7 @@ import qualified Parun.Types.TurnUpProcedure as TurnUpProcedure
 data Action
   = Pass
   | -- | CR 305.1's special action: put this land card onto the battlefield. The
-    -- CardName is CR 712.12's chosen face -- "a player playing a modal
+    -- CardName is CR 712.9's chosen face -- "a player playing a modal
     -- double-faced card ... as a land chooses one of its faces that's a land
     -- BEFORE putting it onto the battlefield" -- so the choice rides on the
     -- action for the reason Cast's does below, and the same argument picks a
@@ -33,7 +33,7 @@ data Action
     -- (CR 709.4a), but the face a one-faced land is played as is not a chosen
     -- one at all, and CR 709.4's COMBINED view of a split card is not any single
     -- face's either -- so Nothing is "no face was chosen", which
-    -- Parun.Engine.Game.resolveFace already reads as CR 712.8a's default.
+    -- Parun.Engine.Game.resolveFace already reads as CR 712.6a's default.
     Play ObjectId.ObjectId (Maybe CardName.CardName)
   | -- | CR 709.3: which half of a split card is being cast is chosen BEFORE the
     -- card is put onto the stack, so the choice rides on the ACTION rather than

@@ -12,7 +12,7 @@ import qualified Parun.Types.Prototype as Prototype
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.Prototype" $ do
-  -- CR 718.1: Autonomous Assembler's inset frame, "Prototype {1}{W} -- 2/2".
+  -- CR 719.1: Autonomous Assembler's inset frame, "Prototype {1}{W} -- 2/2".
   Spec.it s "MkPrototype" $
     Common.assertCodec
       s
@@ -24,7 +24,7 @@ spec s = Spec.describe s "Parun.Codec.Prototype" $ do
           }
       )
       " {\"cost\":[{\"type\":\"Generic\",\"value\":1},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"White\"}}],\"power\":2,\"toughness\":2} "
-  -- CR 718.3b: the coloured symbol is what makes a prototyped Autonomous
+  -- CR 719.3b: the coloured symbol is what makes a prototyped Autonomous
   -- Assembler white, so an encoding that dropped it would still round-trip the
   -- box above. Told apart from the same frame written colourless.
   Spec.it s "the inset cost's colour survives the round trip" $

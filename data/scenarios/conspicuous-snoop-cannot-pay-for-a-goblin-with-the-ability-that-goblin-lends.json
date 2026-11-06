@@ -1,6 +1,6 @@
 {
   "description": "CR 601.2a / 613.1f: casting the top card takes its abilities off Conspicuous Snoop before the payment, so they can only pay if activated first",
-  "note": "Skirk Prospector's mana ability can't pay for the Prospector itself, which is on the stack by then, so with no other mana the cast reverses (CR 733.1). Activated first at priority (CR 605.3a), its {R} pays.",
+  "note": "Skirk Prospector's mana ability can't pay for the Prospector itself, which is on the stack by then, so with no other mana the cast reverses (CR 734.1). Activated first at priority (CR 605.3a), its {R} pays.",
   "board": {
     "seats": [
       {

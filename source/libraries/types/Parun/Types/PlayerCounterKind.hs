@@ -24,7 +24,7 @@ data PlayerCounterKind
   | -- | CR 122.1i. The one player counter the rules attach a whole ABILITY to:
     -- "one or more rad counters on a player cause a triggered ability to trigger
     -- at the beginning of that player's precombat main phase", whose text rule
-    -- 728.1 writes out and Parun.Engine.Rad mints. So unlike Experience below,
+    -- 729.1 writes out and Parun.Engine.Rad mints. So unlike Experience below,
     -- this constructor is not vocabulary alone -- the closed half reads it,
     -- exactly as it reads Poison for CR 704.5c.
     Rad

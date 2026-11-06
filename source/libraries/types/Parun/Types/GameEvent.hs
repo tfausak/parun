@@ -73,14 +73,14 @@ data GameEvent
     -- strict snapshot of the moved object as it last existed in the zone it LEFT
     -- (CR 608.2h) rather than a re-derivation from the printed card.
     Moved Moved.Moved
-  | -- | CR 712.21 / CR 730.3: one of the further OBJECTS a zone change put into
+  | -- | CR 713.8 / CR 731.3: one of the further OBJECTS a zone change put into
     -- a zone, other than the one the Moved event above already names -- a melded
     -- permanent's second card, and any component of a merged permanent, which
-    -- rule 730.3 lets be a token as well as a card. The ZoneChange's `departed`
+    -- rule 731.3 lets be a token as well as a card. The ZoneChange's `departed`
     -- is the object that left and `to` is where this one landed, which CR 903.9c
     -- can make a different zone from the Moved event's.
     --
-    -- Recorded only where one departure minted several arrivals, so CR 712.21's
+    -- Recorded only where one departure minted several arrivals, so CR 713.8's
     -- first clause keeps its arity -- one permanent left the battlefield, and a
     -- condition watching for that sees one Moved and no CardArrived.
     CardArrived ZoneChange.ZoneChange
@@ -108,12 +108,12 @@ data GameEvent
   | -- | CR 707.10: a copy of a spell was put onto the stack. Not a cast, so no
     -- reader of SpellCast above sees it.
     SpellCopied SpellWasCopied.SpellWasCopied
-  | -- | CR 725.1: a player became the monarch. What Palace Jailer's exile duration
+  | -- | CR 726.1: a player became the monarch. What Palace Jailer's exile duration
     -- keys off, and the substrate for any future "whenever a player becomes the
     -- monarch" trigger.
     BecameMonarch PlayerId.PlayerId
-  | -- | CR 726.1/726.5: a player took the initiative, recorded whether or not
-    -- they already held it -- CR 726.5 re-triggers on a re-take, which is why
+  | -- | CR 727.1/727.5: a player took the initiative, recorded whether or not
+    -- they already held it -- CR 727.5 re-triggers on a re-take, which is why
     -- this is not GameEvent.BecameMonarch's shape.
     TookInitiative PlayerId.PlayerId
   | -- | CR 701.9a: a card was DISCARDED, by the discarding player, naming the
@@ -288,7 +288,7 @@ data GameEvent
   | -- | CR 122.6: one or more counters were PUT onto an object -- who put them (CR
     -- 122.6a), the object, the kind, and the counts of that kind on it BEFORE and
     -- AFTER. The pair rather
-    -- than one amount because CR 714.2b's chapter ability asks whether the number
+    -- than one amount because CR 715.2b's chapter ability asks whether the number
     -- "was less than N and became at least N", a threshold crossing neither the
     -- amount nor the total alone can answer. Before is strictly less than after,
     -- a placement that landed nothing recording no event; removal is
@@ -318,13 +318,13 @@ data GameEvent
     -- describes it.
     TurnedFaceUp TurnedFaceUp.TurnedFaceUp
   | -- | CR 701.27a: a double-faced permanent TRANSFORMED. CR 701.27b makes that a
-    -- different game action from TurnedFaceUp above and CR 712.18 keeps it the
+    -- different game action from TurnedFaceUp above and CR 712.15 keeps it the
     -- same object, so nothing else in this list carries it. Recorded through
     -- Parun.Engine.Event.recordTransformed by CR 701.27a's opcode and CR
     -- 702.145c/f's day/night sweep, and only for a permanent that ACTUALLY turned
     -- -- never for daybound's "enters transformed" (CR 702.145b).
     --
-    -- CR 701.28a routes convert through CR 701.27a-f, so a convert records this
+    -- CR 701.28a routes convert through CR 701.27a-g, so a convert records this
     -- event and no second one; Parun.TransformSpec's "a convert records the
     -- transform event, not one of its own" is what proves it.
     Transformed Transformed.Transformed
@@ -421,14 +421,14 @@ data GameEvent
     -- BecameAttached carries.
     BecameUnattached BecameUnattached.BecameUnattached
   | -- | An object left the GAME rather than moving between zones, by CR 800.4a's
-    -- road (its owner having left) or CR 729.4a's (a subgame having brought the
+    -- road (its owner having left) or CR 730.4a's (a subgame having brought the
     -- card in). Not a Moved event: there is no destination zone to name, and an
     -- invented one would answer CR 700.4's "dies" with a fiction.
     --
     -- Emitted for a PHASED-IN BATTLEFIELD permanent by both roads -- CR 603.6c's
     -- second trigger event for the first, and CR 702.26b for the second, to which
-    -- rule 729.4a states no exception -- and by CR 729.4a's road for a card in
-    -- any other main-game zone too, since rule 729.4a's main-game abilities
+    -- rule 730.4a states no exception -- and by CR 730.4a's road for a card in
+    -- any other main-game zone too, since rule 730.4a's main-game abilities
     -- trigger on objects leaving a main-game ZONE. Parun.OutsideTheGameSpec's
     -- Spirit Mascot case proves the graveyard leg.
     LeftTheGame LeftTheGame.LeftTheGame
@@ -461,11 +461,11 @@ data GameEvent
   | -- | CR 311.7: chaos ensued, by the planar die's chaos symbol (CR 901.9b) or a
     -- resolving spell or ability saying so.
     ChaosEnsued
-  | -- | CR 716.2a: a permanent's class level BECAME something -- the level BEFORE
-    -- and the level AFTER, CountersPut's shape and for CR 714.2b's reason, since
+  | -- | CR 717.2a: a permanent's class level BECAME something -- the level BEFORE
+    -- and the level AFTER, CountersPut's shape and for CR 715.2b's reason, since
     -- "becomes level N" is a threshold crossing. Recorded by Parun.Engine.Resolve's
     -- Effect.SetClassLevel arm, the only writer of Object.classLevel, and only on
-    -- a TRANSITION. No cause tag: CR 716.2b makes the level a designation of the
+    -- a TRANSITION. No cause tag: CR 717.2b makes the level a designation of the
     -- permanent rather than of the effect.
     ClassLevelSet ClassLevelChange.ClassLevelChange
   | -- | CR 702.170a: a card became a plotted card. The ObjectId is the card AS IT

@@ -245,7 +245,7 @@ moveToZone settle resolving source controller legal chosen (MoveToZone.MkMoveToZ
           -- it (Parun.Engine.MoveDuration.endingOf), and against the zone it came
           -- from (rule 610.3's "its previous zone"). Parun.Engine.MoveDuration is
           -- where the second one-shot effect that reads this happens; nothing a
-          -- card prints performs it. Per ARRIVAL, which is CR 712.21c: a melded
+          -- card prints performs it. Per ARRIVAL, which is CR 713.8c: a melded
           -- permanent leaves as two cards and both come back.
           let watched = do
                 lasting <- duration
@@ -605,7 +605,7 @@ exchangeCardZones settle resolving source controller legal chosen (ExchangeCardZ
 -- The slot binds the library incarnations (CR 400.7), for a later count:
 -- Winds of Change's "draws that many", each player's own -- proved by
 -- Parun.MassEffectSpec's Winds of Change group. One per object moved, the
--- move's leading arrival, since that count is of objects: CR 712.21e and The
+-- move's leading arrival, since that count is of objects: CR 713.8e and The
 -- Great Aurora's and Warp World's rulings count a melded or merged permanent
 -- once -- proved by the scenario
 -- the-great-aurora-counts-a-melded-permanent-once.
@@ -637,7 +637,7 @@ setOwner resolving source controller legal (SetOwner.MkSetOwner player ref) = do
 
 -- CR 701.12a / 108.3: the objects each ref names trade owners, each taking the
 -- other side's former owner. A side names several where "from anywhere" found
--- a merged permanent's every component (CR 730.3c), and the writes are one
+-- a merged permanent's every component (CR 731.3c), and the writes are one
 -- simultaneous action (CR 608.2f), so each owner is read from the objects as
 -- they stand before any write. All or nothing: an empty side, an object on
 -- both sides, or a side with more than one owner exchanges nothing. No zone
@@ -721,7 +721,7 @@ offerCastArm offerCast runSubgame resolving source controller legal chosen (Offe
       -- Object.manaSpent less what paid the rest of the total
       -- (Object.manaSpentOnX), so a cost increase's mana is not counted, and
       -- the payer said which mana that was as the payment settled. The CARD's
-      -- mana cost, which in a hand is Card.combined's (CR 709.4, 712.8a, 715.4).
+      -- mana cost, which in a hand is Card.combined's (CR 709.4, 712.6a, 716.4).
       ability = Game.lookupObject resolving gs
       spent = maybe (Mana.Type.MkMana []) Object.manaSpent ability
       onX = Maybe.fromMaybe spent (ability >>= Object.manaSpentOnX)
@@ -790,7 +790,7 @@ grantPlayFromExile resolving source controller legal (GrantPlayFromExile.MkGrant
     case filter (inZone gs) (objectRefObjects legal resolving controller source gs ref) of
       [] -> gs
       targets -> case playerRefPlayers legal resolving source controller gs player of
-        -- CR 715.3d's "that player" is ONE seat and
+        -- CR 716.3d's "that player" is ONE seat and
         -- Object.playPermission holds one, so a reference naming nobody --
         -- or naming several -- grants nothing, PlayerRef.InSlot's own
         -- collapse.
@@ -810,9 +810,9 @@ grantPlayFromExile resolving source controller legal (GrantPlayFromExile.MkGrant
                       -- BAKED, Expiry.arm's ForAsLongAs reason: the permission
                       -- outlives this resolution's slots.
                       ExilePlayPermission.condition = fmap (Condition.bakeBound legal) condition,
-                      -- The default's Granted origin is CR 715.3d's "other
+                      -- The default's Granted origin is CR 716.3d's "other
                       -- effects that allow a player to cast it": a card said
-                      -- this, not rule 715.3d, so the Adventure exclusion does
+                      -- this, not rule 716.3d, so the Adventure exclusion does
                       -- not reach it.
                       ExilePlayPermission.verb = verb,
                       -- CR 601.2f and CR 614.1d, carried from the opcode
@@ -1105,7 +1105,7 @@ repeatArm applyLoopBody runSubgame resolving source controller legal chosen (Rep
 -- The condition's views carry Filter.View.hasEntryHost, which no other reader
 -- fills (Attach.hasEntryHost).
 --
--- CR 732.3: a run that begins in the state the previous run began in
+-- CR 733.3: a run that begins in the state the previous run began in
 -- (Fragmented.digest) closes a fragmented loop, and the first player in APNAP
 -- order who picked in that run (Common.pickByChooser) may not pick the same
 -- again while the state recurs (GameState.repeatPicks). A run that changes the
@@ -1256,7 +1256,7 @@ mill settle resolving source controller legal (Mill.MkMill ref quantity mTally m
   -- new ids. Each milled card is judged by its own CR 613 projection: rule
   -- 613.1 starts from the actual object and names no zone, so a library card is
   -- folded exactly as a permanent is, and a layer-4 type change (CR 613.1d)
-  -- decides rule 728.1's "nonland card" there. Every milled id names a card in
+  -- decides rule 729.1's "nonland card" there. Every milled id names a card in
   -- a library, so there is no faceless object for the projection to answer
   -- blankly about.
   --
@@ -1693,7 +1693,7 @@ loseLife settle resolving source controller legal (LifeLoss.MkLifeLoss ref quant
             --
             -- Through Event.resolveLifeLoss, CR 614.1's funnel for the class,
             -- carrying the opcode's own cause -- CR 119.3's ByEffect for every
-            -- printing, CR 728.1a's ByRadiation for the one ability
+            -- printing, CR 729.1a's ByRadiation for the one ability
             -- Parun.Engine.Rad mints: a row scoped to damage does not reach this
             -- road, which is Worship's own ruling ("Worship does not prevent loss
             -- of life, so loss of life bypasses Worship") and what

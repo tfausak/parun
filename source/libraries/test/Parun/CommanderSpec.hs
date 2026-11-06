@@ -9,8 +9,8 @@
 -- 702.124k's Background designation and the Filter.IsCommander atom that reads
 -- it, the Zone.Command arm of Parun.Engine.Cast.permittedFrom, and the CR 903.8
 -- increase Parun.Engine.Cost.spellAdjustments folds into CR 601.2f. Also the
--- commander half of Parun.Engine.Setup's subgame pair -- CR 729.2c in and CR
--- 729.5c out -- and the commander half of its restart, CR 727.5a. Those live
+-- commander half of Parun.Engine.Setup's subgame pair -- CR 730.2c in and CR
+-- 730.5c out -- and the commander half of its restart, CR 728.5a. Those live
 -- here rather than in Parun.SetupSpec because they need a designated commander
 -- and this is the file that builds one.
 --
@@ -1318,7 +1318,7 @@ subgameParent mountain shimatsu =
   let deck = Deck.MkDeck {Deck.cards = Map.singleton mountain 5, Deck.commander = Set.singleton shimatsu, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
    in S.runPure S.identityAnswer (S.landsInPlay mountain 2) (Setup.createDeck S.alice deck)
 
--- The subgame as playSubgame builds it: CR 729.2 / 729.2c's move in, then CR
+-- The subgame as playSubgame builds it: CR 730.2 / 730.2c's move in, then CR
 -- 103's setup. Both halves, because startGameFromCards is what would funnel a
 -- commander that entered the subgame's command zone straight into a library.
 playedSubgame :: GameState.GameState -> GameState.GameState
@@ -1326,8 +1326,8 @@ playedSubgame parent =
   snd (Engine.runGamePure S.identityAnswer (Setup.subgameStateFrom S.alice parent) (Setup.startGameFromCards S.performer Set.empty))
 
 -- Take the commander out of the subgame's command zone and put it in alice's
--- subgame graveyard, which is CR 729.5c's "(if it's there)" being false. Written
--- by hand rather than cast and killed: what rule 729.5 reads is the ZONE the
+-- subgame graveyard, which is CR 730.5c's "(if it's there)" being false. Written
+-- by hand rather than cast and killed: what rule 730.5 reads is the ZONE the
 -- card is in as the subgame ends, and a subgame cast is a different unit's path.
 --
 -- Under a FRESH id, because CR 400.7 mints one on every zone change and a
@@ -1351,11 +1351,11 @@ outOfCommandZone gs = case inCommandZone gs of
 
 subgameSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 subgameSpec s registry = Spec.describe s "Subgame" $ do
-  -- CR 729.2c: "as a subgame of a Commander game starts, each player moves their
+  -- CR 730.2c: "as a subgame of a Commander game starts, each player moves their
   -- commander from the main-game command zone (if it's there) to the subgame
-  -- command zone". CR 729.2's pool is the library cards, so the commander is the
+  -- command zone". CR 730.2's pool is the library cards, so the commander is the
   -- one card that enters a subgame from anywhere else.
-  Spec.it s "CR 729.2c the commander enters the subgame's command zone" $ do
+  Spec.it s "CR 730.2c the commander enters the subgame's command zone" $ do
     mountain <- S.printingOf s registry "Mountain"
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
     let parent = subgameParent mountain shimatsu
@@ -1366,22 +1366,22 @@ subgameSpec s registry = Spec.describe s "Subgame" $ do
     Spec.assertEqWith s "the parent really has one commander in its command zone" (length (inCommandZone parent)) 1
     Spec.assertEqWith s "and a five-card library to tell it apart from" (length (Game.zoneMembers Zone.Library S.alice parent)) 5
     -- The move itself, before CR 103's setup runs: subgameStateFrom is the half
-    -- of playSubgame that rule 729.2c names, and it has to leave the subgame
+    -- of playSubgame that rule 730.2c names, and it has to leave the subgame
     -- state self-consistent -- the object in the pool AND in the zone set.
     Spec.assertEqWith s "the moved-in state already has it in the subgame command zone" (inCommandZone moved) (inCommandZone parent)
     Spec.assertEqWith s "and the object came with it" (fmap (`Map.member` GameState.objects moved) (inCommandZone parent)) [True]
     Spec.assertEqWith s "the subgame's command zone holds one card too" (length (inCommandZone sub)) 1
     Spec.assertEqWith s "the subgame knows it as alice's commander" (fmap (\oid -> Commander.isCommander oid sub) (inCommandZone sub)) [True]
     Spec.assertEqWith s "and it sits in the subgame's command zone, not a library" (fmap (\oid -> fmap Object.zone (Game.lookupObject oid sub)) (inCommandZone sub)) [Just Zone.Command]
-    -- CR 729.1a: the parent is untouched while the subgame runs, so the move in
+    -- CR 730.1a: the parent is untouched while the subgame runs, so the move in
     -- is a copy at this point; funnelBack is what settles where the card ends up.
     Spec.assertEqWith s "the main-game command zone is unchanged by the subgame" (inCommandZone parent) (inCommandZone (subgameParent mountain shimatsu))
-  -- CR 729.5c: "at the end of a subgame of a Commander game, each player moves
+  -- CR 730.5c: "at the end of a subgame of a Commander game, each player moves
   -- their commander from the subgame command zone (if it's there) to the
-  -- main-game command zone" -- and CR 729.5's first sentence excludes it from the
+  -- main-game command zone" -- and CR 730.5's first sentence excludes it from the
   -- cards that go to the library. The library is the destination the old code
   -- chose, so the two counts together are what discriminate.
-  Spec.it s "CR 729.5/729.5c a commander in the subgame command zone comes back to the main-game command zone" $ do
+  Spec.it s "CR 730.5/730.5c a commander in the subgame command zone comes back to the main-game command zone" $ do
     mountain <- S.printingOf s registry "Mountain"
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
     let parent = subgameParent mountain shimatsu
@@ -1395,13 +1395,13 @@ subgameSpec s registry = Spec.describe s "Subgame" $ do
       "alice's library is exactly the size it was, so the commander is not in it"
       (length (Game.zoneMembers Zone.Library S.alice after))
       (length (Game.zoneMembers Zone.Library S.alice parent))
-    Spec.assertEqWith s "the parent's two battlefield lands survived (CR 729.5's untouched main game)" (Set.size (GameState.battlefield after)) 2
+    Spec.assertEqWith s "the parent's two battlefield lands survived (CR 730.5's untouched main game)" (Set.size (GameState.battlefield after)) 2
     Spec.assertEqWith s "and no object id collides: the card is in exactly one zone" (Map.size (GameState.objects after)) (2 + 5 + 1)
-  -- CR 729.5c's "(if it's there)" is a real condition, not a licence to spare
+  -- CR 730.5c's "(if it's there)" is a real condition, not a licence to spare
   -- every commander: one that ended the subgame anywhere else is an ordinary
-  -- traditional card and CR 729.5's first sentence puts it in the main-game
+  -- traditional card and CR 730.5's first sentence puts it in the main-game
   -- library. The board differs from the case above in the subgame ZONE alone.
-  Spec.it s "CR 729.5 a commander that left the subgame command zone goes to the main-game library" $ do
+  Spec.it s "CR 730.5 a commander that left the subgame command zone goes to the main-game library" $ do
     mountain <- S.printingOf s registry "Mountain"
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
     let parent = subgameParent mountain shimatsu
@@ -1421,13 +1421,13 @@ subgameSpec s registry = Spec.describe s "Subgame" $ do
       (length (Game.zoneMembers Zone.Library S.alice parent) + 1)
     Spec.assertEqWith s "she is still designated it (CR 903.3 survives the subgame)" (fmap (commanderPrintingsOf after) (Map.lookup S.alice (GameState.players after))) (Just [shimatsu])
     Spec.assertEqWith s "and no copy is left behind" (Map.size (GameState.objects after)) (2 + 5 + 1)
-  -- CR 729.1b: nothing that happened in the subgame means anything in the main
+  -- CR 730.1b: nothing that happened in the subgame means anything in the main
   -- game, so a player who LOST the subgame is still playing the main one and
   -- their commander is still in its command zone. Three seats, because CR 800.1
   -- makes only a multiplayer subgame reach CR 800.4a's object removal -- which
   -- deletes bob's subgame commander outright, leaving funnelBack nothing to move
   -- back and the parent's own copy as the only source.
-  Spec.it s "CR 729.5c a commander whose owner departed inside a multiplayer subgame is still in the main-game command zone" $ do
+  Spec.it s "CR 730.5c a commander whose owner departed inside a multiplayer subgame is still in the main-game command zone" $ do
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
     jedit <- S.printingOf s registry "Jedit Ojanen"
     let parent = designating [(S.alice, shimatsu), (S.bob, jedit)] (Setup.emptyGame S.threePlayers)
@@ -1443,7 +1443,7 @@ subgameSpec s registry = Spec.describe s "Subgame" $ do
 
 restartSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 restartSpec s registry = Spec.describe s "Restart" $ do
-  -- CR 727.5a: "in a Commander game, a commander that has been exempted from the
+  -- CR 728.5a: "in a Commander game, a commander that has been exempted from the
   -- procedure that restarts the game won't begin the new game in the command
   -- zone. However, it remains that deck's commander for the new game."
   --
@@ -1453,13 +1453,13 @@ restartSpec s registry = Spec.describe s "Restart" $ do
   -- exempt objects before it picks each owner's commander out of the rebuilt
   -- pool; the second in resetPlayers, which deliberately leaves Player.commander
   -- alone.
-  Spec.it s "CR 727.5a an exempted commander does not begin the new game in the command zone but is still the deck's commander" $ do
+  Spec.it s "CR 728.5a an exempted commander does not begin the new game in the command zone but is still the deck's commander" $ do
     mountain <- S.printingOf s registry "Mountain"
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
     let gs = commanderBoard mountain shimatsu 4
     case inCommandZone gs of
       [cmd] -> do
-        -- Exile first, because CR 727.5's only producer (Karn Liberated)
+        -- Exile first, because CR 728.5's only producer (Karn Liberated)
         -- exiles before it restarts, and because startGameFromCards intersects
         -- the exempt set with GameState.exile -- an exemption naming a card in
         -- the command zone reaches nothing at all.
@@ -1475,10 +1475,10 @@ restartSpec s registry = Spec.describe s "Restart" $ do
         -- because there was no commander in exile to exempt.
         Spec.assertEqWith s "the commander really reached exile, as one object" (Set.size (GameState.exile exiled)) 1
         Spec.assertEqWith s "and is still alice's commander there" (Commander.isCommander oid exiled) True
-        -- CR 727.5a's first sentence: the discriminating assertion.
+        -- CR 728.5a's first sentence: the discriminating assertion.
         Spec.assertEqWith s "the exempted commander is not in the new game's command zone" (inCommandZone after) []
-        Spec.assertEqWith s "CR 727.5: it stayed in exile, where the exemption left it" (Set.member oid (GameState.exile after)) True
-        -- CR 727.5a's second sentence, read both off the player and off the
+        Spec.assertEqWith s "CR 728.5: it stayed in exile, where the exemption left it" (Set.member oid (GameState.exile after)) True
+        -- CR 728.5a's second sentence, read both off the player and off the
         -- object, since Commander.isCommander is what every other rule asks.
         Spec.assertEqWith s "it remains that deck's commander" (fmap (commanderPrintingsOf after) (Map.lookup S.alice (GameState.players after))) (Just [shimatsu])
         Spec.assertEqWith s "so the exiled card is still recognised as her commander" (Commander.isCommander oid after) True

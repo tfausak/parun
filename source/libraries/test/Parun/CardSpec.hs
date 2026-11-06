@@ -1149,7 +1149,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- CR 708.7's carries at most a Filter, which holds no Count for Matching
   -- Enters' reason.
   TriggerCondition.TurnedFaceUp _ -> []
-  -- CR 701.27e's names a face, a CardName and not a Quantity, beside a subject
+  -- CR 701.27f's names a face, a CardName and not a Quantity, beside a subject
   -- whose Filter holds no Count either.
   TriggerCondition.Transforms _ -> []
   -- PermanentActs carries an action and, for a bystander, a Filter -- which
@@ -1205,7 +1205,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- none of which holds a Count.
   TriggerCondition.Discards _ -> []
   TriggerCondition.PlayerDrawsNthCard {} -> []
-  -- CR 725.1's crowning condition is a PlayerRelation too.
+  -- CR 726.1's crowning condition is a PlayerRelation too.
   TriggerCondition.PlayerBecomesMonarch _ -> []
   -- CR 603.7's slot-named subject holds a SlotName, which is no Count, and CR
   -- 603.10d's self subject carries nothing at all.
@@ -1247,7 +1247,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfBecomesClassLevel _ -> []
   -- CR 601.2i's Filter is a predicate over the spell that was cast, and a Filter
   -- holds no Count, exactly as CR 603.6a's does above. Its ordinal is a bare
-  -- Natural, as CR 714.2b's is.
+  -- Natural, as CR 715.2b's is.
   TriggerCondition.SpellCast {} -> []
   -- CR 602.2b's activation carries a Filter, which holds no Count.
   TriggerCondition.AbilityActivated _ -> []
@@ -2960,7 +2960,7 @@ data MintedKind
   = MintedToken
   | MintedEmblem
   | -- | CR 701.42a's combined back face, which the melding ability carries
-    -- inline. A face like a token's for this lint's purposes: CR 712.8g gives
+    -- inline. A face like a token's for this lint's purposes: CR 713.5c gives
     -- the melded permanent that face's characteristics, card types included.
     MintedMeld
   | -- | Alchemy's conjured card, which Parun.Types.Conjure carries inline -- every
@@ -3230,7 +3230,7 @@ reservedDeclarations = Set.intersection reservedSlots . declaredTargetSlots
 --
 -- ownDeclaredTargetSlots' sibling and the other half of the same question.
 -- Declaring a target slot is not the only way a card names a slot: MoveToZone and Create
--- name the incarnation CR 400.7 mints, PlaySubgame names CR 729.1b's winner, and
+-- name the incarnation CR 400.7 mints, PlaySubgame names CR 730.1b's winner, and
 -- Destroy names how many it destroyed.
 --
 -- The base case of boundSlots below, named so the self-test can hold it against
@@ -3882,7 +3882,7 @@ keywordPayloadFilters keyword = case keyword of
   Keyword.Forecast -> []
   -- CR 702.193a is payload-free for exhaust's reason: the ability is the CARD's.
   Keyword.PowerUp -> []
-  -- CR 716.2's payload is a level; the ability it indicates is the CARD's.
+  -- CR 717.2's payload is a level; the ability it indicates is the CARD's.
   Keyword.ClassLevel _ -> []
   Keyword.StartYourEngines -> []
   -- CR 701.43d is payload-free: the linked trigger it permits is the CARD's own
@@ -3916,7 +3916,7 @@ keywordPayloadFilters keyword = case keyword of
   -- Parun.Engine.Keyword mints.
   Keyword.Graft _ -> []
   Keyword.Absorb _ -> []
-  -- CR 718.1's inset frame is a mana cost and a printed box; neither reaches a
+  -- CR 719.1's inset frame is a mana cost and a printed box; neither reaches a
   -- Filter, and rule 702.160a's ability names no quality.
   Keyword.Prototype _ -> []
   Keyword.Toxic _ -> []
@@ -4574,7 +4574,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.TurnedFaceUp subject -> case subject of
     ActingPermanent.Matching f -> unframed [f]
     ActingPermanent.Self -> []
-  -- CR 701.27e's face is a name and no Filter; a bystander subject carries one
+  -- CR 701.27f's face is a name and no Filter; a bystander subject carries one
   -- -- Cult of the Waxing Moon's "a permanent you control ... into a non-Human
   -- creature".
   TriggerCondition.Transforms t -> actingFilters (TransformTrigger.permanent t)
@@ -4610,7 +4610,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- CR 701.21a's Filter narrows the sacrificed permanent -- Vengeful Tracker's
   -- "an artifact" -- and is swept like Leaves' below.
   TriggerCondition.PermanentSacrificed payload -> unframed [PlayerActsOn.filter payload]
-  -- CR 603.3b's names a PlayerRelation; the Saga is found through CR 714.2d's
+  -- CR 603.3b's names a PlayerRelation; the Saga is found through CR 715.2d's
   -- final chapter number rather than through a Filter.
   TriggerCondition.SagaFinalChapterTriggers _ -> []
   -- A card-zone trigger's Matching card is card text like any other: Planar
@@ -4676,7 +4676,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
     DiscardSubject.Self -> []
     DiscardSubject.Discarder payload -> unframed [PlayerActsOn.filter payload]
   TriggerCondition.PlayerDrawsNthCard {} -> []
-  -- CR 725.1's crowning condition is a PlayerRelation, which holds no Filter.
+  -- CR 726.1's crowning condition is a PlayerRelation, which holds no Filter.
   TriggerCondition.PlayerBecomesMonarch _ -> []
   -- CR 603.7's slot-named subject holds a SlotName, which is no Filter -- what
   -- the slot holds was selected by the arming spell's own target slot -- and CR
@@ -4948,7 +4948,7 @@ playerEffectFilters playerEffect = case playerEffect of
   -- CR 702.16a's quality IS a Filter the card writes (The Stasis Coffin's
   -- rule 702.16j "everything"), so it is linted like every other written one.
   PlayerEffect.HasProtectionFrom f -> [f]
-  -- CR 725 names no quality either: the designation has no parts (Jared
+  -- CR 726 names no quality either: the designation has no parts (Jared
   -- Carthalion, True Heir).
   PlayerEffect.CantBecomeMonarch -> []
   PlayerEffect.LegendRuleDoesntApply -> []
@@ -5982,7 +5982,7 @@ effectFilters effect = case effect of
   Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities _ f) -> unframed [f]
   -- No filter: CR 106.13 moves a pool, and a pool is not a set of objects.
   Effect.MoveMana _ -> []
-  -- CR 727.5's exemption is an ObjectRef like every other, and Karn Liberated's
+  -- CR 728.5's exemption is an ObjectRef like every other, and Karn Liberated's
   -- "all non-Aura permanent cards exiled with Karn" states characteristics in it
   -- -- so an empty list here took a Filter a card author writes out of the lint.
   Effect.RestartGame mRef -> frame SourceHostFramed (concatMap objectRefFilters (Maybe.maybeToList mRef))
@@ -6000,7 +6000,7 @@ effectFilters effect = case effect of
   Effect.MoveToZone (MoveToZone.MkMoveToZone ref _ riders _ _ placement _) -> frame SourceHostFramed (objectRefFilters ref) <> frame Unframed (riderFilters riders <> concatMap quantityFilters (Resolve.placementQuantities placement))
   Effect.Draw (Draw.MkDraw _ quantity _) -> frame Unframed (quantityFilters quantity)
   -- The tally's Filter is a position a card author writes, so the lint reaches
-  -- it: rule 728.1's "nonland card" is one of these, and Predict's chosen name
+  -- it: rule 729.1's "nonland card" is one of these, and Predict's chosen name
   -- another -- which is why the tally carries a framing of its own.
   Effect.Mill (Mill.MkMill _ quantity mTally _) -> frame Unframed (quantityFilters quantity) <> millTallyFramed (fmap MillTally.filter (Maybe.maybeToList mTally))
   -- The ObjectRef's Filter is a position a card author writes, so the lint
@@ -6707,7 +6707,7 @@ cardFilters card =
 oneFaced :: Face.Face Card.Type.Card -> Card.Type.Card
 oneFaced face = Card.Type.MkCard {Card.Type.layout = Layout.Normal, Card.Type.faces = NonEmpty.singleton face}
 
--- CR 709.2 / 712.8: every lint below is stated about ONE face's printed text,
+-- CR 709.2 / 712.6: every lint below is stated about ONE face's printed text,
 -- and a card offends when ANY of its faces does. Every card in the pool but
 -- Wax // Wane has exactly one face, so this mostly fans out over a singleton --
 -- and it is what keeps the second half of a card going unlinted from being

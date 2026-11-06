@@ -23,7 +23,7 @@ import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 -- Flash's two entries are equal in the same way and are NOT interchangeable, and
 -- it is that function, not this type, that tells them apart.
 --
--- `source` is what the ability hangs on (CR 113.7), or CR 725.2's absence of one.
+-- `source` is what the ability hangs on (CR 113.7), or CR 726.2's absence of one.
 -- `ability` is the DISCRIMINATOR (#61): a source with two DISTINCT triggered
 -- abilities keyed on one event puts two entries into a single choice -- Hero of
 -- Bladehold's battle cry (CR 702.91a) beside its printed attack trigger, whose

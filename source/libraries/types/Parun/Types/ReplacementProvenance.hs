@@ -22,7 +22,7 @@ data ReplacementProvenance
     Printed
   | -- | Minted onto the permanent by a rule: CR 122.1c's shield pair, CR 122.1d's
     -- and CR 122.1h's counter rows, CR 306.5b's and CR 310.4b's intrinsic entry
-    -- replacements, CR 714.3a's lore counter, and every row rule 702 gives a
+    -- replacements, CR 715.3a's lore counter, and every row rule 702 gives a
     -- keyword (Parun.Engine.Keyword.mintedReplacementsOf).
     Minted
   deriving (Bounded, Enum, Eq, Ord, Show)

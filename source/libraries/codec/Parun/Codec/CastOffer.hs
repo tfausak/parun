@@ -39,7 +39,7 @@ codec = Fields.object $ do
 
 -- | The value the codec elides entirely: an offer that transforms nothing,
 -- applies no alternative cost, widens no payment and narrows no half is an
--- ordinary cast of the card (CR 712.11's default face, CR 601.2b's own
+-- ordinary cast of the card (CR 712.8's default face, CR 601.2b's own
 -- candidates, CR 118.14 unsaid, CR 709.3a's halves all offered, and no keyword
 -- ability behind the cost, and nothing taken off it).
 defaultValue :: CastOffer.CastOffer

@@ -252,7 +252,7 @@ fileBoards gs =
 movedOf :: GameEvent -> Maybe ZoneChange
 movedOf event = case event of
   GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) -> Just zc
-  -- CR 712.21 / CR 730.3: each component card after the leading one DID change
+  -- CR 713.8 / CR 731.3: each component card after the leading one DID change
   -- zones, so the event that announces it answers with its zone change like any
   -- other. That is what puts it in front of the two graveyard candidate sources
   -- below -- CR 603.10's subtraction of a card that reached a graveyard later,
@@ -538,7 +538,7 @@ looksBack condition = case condition of
   TriggerCondition.SelfBecomesPlotted -> False
   -- Not on CR 603.10a's list, and no zone change: a permanent acts where it
   -- stands -- CR 701.43c can only exert one ON the battlefield, CR 702.100b's
-  -- and CR 702.149a's counters go on a permanent there, and CR 730.2c keeps a
+  -- and CR 702.149a's counters go on a permanent there, and CR 731.2c keeps a
   -- mutated permanent the same object. An explore or connive moves cards, but
   -- its event says the keyword action COMPLETED, not that anything left a zone.
   -- Phasing out is CR 603.10b's own entry; phasing in is not on the list.
@@ -627,7 +627,7 @@ looksBack condition = case condition of
   -- for a look-back to recover and the live read is what CR 603.10's first
   -- sentence asks for. Either subject.
   TriggerCondition.TurnedFaceUp _ -> False
-  -- CR 712.18 is the same claim about transforming, and states it outright: the
+  -- CR 712.15 is the same claim about transforming, and states it outright: the
   -- permanent "doesn't become a new object", so there is no departure for CR
   -- 603.10a to look back at, whoever is watching it.
   TriggerCondition.Transforms _ -> False
@@ -706,7 +706,7 @@ looksBack condition = case condition of
   -- bearer is a permanent standing on the battlefield watching a Saga, and CR
   -- 603.10's first sentence is what reads it.
   TriggerCondition.SagaFinalChapterTriggers _ -> False
-  -- CR 725.1's crowning names no zone change either -- it moves a DESIGNATION,
+  -- CR 726.1's crowning names no zone change either -- it moves a DESIGNATION,
   -- not an object -- so none of CR 603.10a's four families reaches it.
   TriggerCondition.PlayerBecomesMonarch _ -> False
   -- CR 603.10d: a Self subject's bearer stays, but under the controller it
@@ -843,10 +843,10 @@ batchScoped condition = case condition of
   -- (Event.Binding's batchPartition) -- where DealsDamage naming a player is
   -- CR 603.2c's second sentence and fires once per damager.
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> True
-  -- CR 725.2 prints "whenever A CREATURE deals combat damage to the monarch",
+  -- CR 726.2 prints "whenever A CREATURE deals combat damage to the monarch",
   -- CR 603.2c's second sentence: one trigger per damaging creature.
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
-  -- CR 726.2's own "one or more creatures a player controls deal combat
+  -- CR 727.2's own "one or more creatures a player controls deal combat
   -- damage", the True beside PermanentsDealCombatDamageToPlayer's, split per
   -- damagers' controller by batchPartition. A take is one occurrence per
   -- taker, so the arm below is False.
@@ -1233,7 +1233,7 @@ eventTriggers events gs =
         -- for it to become -- and it too no longer exists, so this collides with
         -- no other source.
         --
-        -- Battlefield only: CR 729.4a's crossing records the event for a card
+        -- Battlefield only: CR 730.4a's crossing records the event for a card
         -- leaving any main-game zone, and a card in a graveyard has no
         -- battlefield abilities to offer.
         GameEvent.LeftTheGame (LeftTheGame.MkLeftTheGame oid from)
@@ -2370,7 +2370,7 @@ oncePerBatch joinOn entries =
             | otherwise -> joinedFor batch trigger : go (Set.insert batch seen) rest
    in go Set.empty entries
 
--- CR 725.2, 726.2, 702.179d, 728.1, 901.8 and 309.4c: the triggered abilities
+-- CR 726.2, 727.2, 702.179d, 729.1, 901.8 and 309.4c: the triggered abilities
 -- the rulebook rather than a card writes out, each with what it hangs on and the
 -- player who controls it, matched against a batch of events the way
 -- eventTriggers matches an object's: the same matcher (matchesTriggerGiven), the
@@ -2947,7 +2947,7 @@ zonesTriggeredFrom cond =
         -- to receive the counter its own ability puts on it, and Exquisite Blood
         -- functions only where the permanent is.
         TriggerCondition.LifeChanges _ -> battlefield
-        -- CR 113.6's default: CR 122.1 puts counters on objects, CR 714.3 keeps a
+        -- CR 113.6's default: CR 122.1 puts counters on objects, CR 715.3 keeps a
         -- Saga's lore counters on the permanent, and a bystander watches from the
         -- battlefield. Benalish Commander's
         -- "while it's exiled" is the ability stating its zone
@@ -3166,7 +3166,7 @@ stateTriggersOn gs
             -- TURNED over, so there is no state here to read at all.
             TriggerCondition.TurnedFaceUp _ -> False
             -- CR 701.27a is an EVENT trigger for that reason exactly: CR
-            -- 712.18 leaves the permanent on its new face thereafter, so a
+            -- 712.15 leaves the permanent on its new face thereafter, so a
             -- state read would fire it again on every settle. The bystander's
             -- form likewise: a board showing a permanent on its back face says
             -- nothing about when it turned over.
@@ -3211,7 +3211,7 @@ stateTriggersOn gs
             -- fires on the moment the permanent is sacrificed, and the board
             -- afterwards holds no state a read could recover.
             TriggerCondition.PermanentSacrificed {} -> False
-            -- CR 714.2b is an EVENT trigger too: it fires on the moment counters
+            -- CR 715.2b is an EVENT trigger too: it fires on the moment counters
             -- are PUT ON, not on the count standing at or above N -- which is
             -- exactly the difference CR 603.8 draws, and the reason a Saga does
             -- not re-run its final chapter for as long as it sits there.
@@ -3259,7 +3259,7 @@ stateTriggersOn gs
 -- ability, CR 603.8 holding it back until it has left the stack. The live
 -- reading comes first and keeps its order. data/scenarios/trigger's City in a
 -- Bottle scenario proves it, and data/scenarios/turn's Synthetic Final
--- Raising one the boards CR 724.1c's check hands on (GameState.heldBoards).
+-- Raising one the boards CR 725.1c's check hands on (GameState.heldBoards).
 stateTriggers :: [GameState] -> GameState -> [PendingTrigger]
 stateTriggers boards live = List.foldl' widen (armedOn live) (reverse boards)
   where
@@ -3298,7 +3298,7 @@ delayedArmed gs entry = case DelayedTrigger.window entry of
 -- pay-gate branch that actually ran, and from
 -- Resolve.applyClauseEffects, which skips the arm when the preceding
 -- instruction neither recorded an event nor changed the state (CR 603.12,
--- 701.28e) -- and
+-- 701.28f) -- and
 -- Parun.Engine.Combat.declareAttackers appends one only where CR 702.154a's
 -- enlist cost was actually paid, so the entry's
 -- EXISTENCE is the affirmative answer and no event is needed. It
@@ -3327,7 +3327,7 @@ reflexiveFiring gs entry =
     (DelayedTrigger.bindings entry)
     -- CR 603.12: a reflexive ability follows CR 603.7, so it carries the
     -- creation moment too. No card exercises the pairing -- nothing
-    -- reflexive transforms -- so this is CR 701.27f as the rule states it
+    -- reflexive transforms -- so this is CR 701.27g as the rule states it
     -- rather than a behaviour a test pins.
     (Just (DelayedTrigger.createdAt entry))
     -- CR 603.12: the entry's existence is the affirmative answer, so there
@@ -3605,7 +3605,7 @@ delayedPending grouped gs =
 -- scenarios prove it.
 --
 -- A SOURCELESS pending trigger (inherentTriggers) is asked too: CR 702.179d's
--- "if your speed is less than 4" and CR 728.1's "if that player has one or more
+-- "if your speed is less than 4" and CR 729.1's "if that player has one or more
 -- rad counters" are intervening clauses like any printed one.
 --
 -- CR 608.2h supplies the view rather than fullView, which for a look-back trigger

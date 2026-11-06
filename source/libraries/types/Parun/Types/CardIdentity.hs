@@ -4,7 +4,7 @@ import qualified Numeric.Natural as Natural
 import qualified Parun.Types.PlayerId as PlayerId
 
 -- | CR 108.3: one card through every new object it becomes (CR 400.7), a
--- restart (CR 727.2) and a subgame (CR 729.2, 729.5).
+-- restart (CR 728.2) and a subgame (CR 730.2, 730.5).
 data CardIdentity = MkCardIdentity
   { -- | The number of the id the card was first minted under; no rule reads it.
     serial :: Natural.Natural,

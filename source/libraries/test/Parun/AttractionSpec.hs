@@ -1,18 +1,18 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- Covers: CR 717 Attractions -- Parun.Engine.Attraction, CR 701.51's
+-- Covers: CR 718 Attractions -- Parun.Engine.Attraction, CR 701.51's
 -- Effect.OpenAttraction, CR 701.52a's roll to visit (Resolve.rollToVisit, run by
 -- Engine.runTurnBasedActions as CR 703.4g's action), CR 702.159a's
--- TriggerCondition.Visit, CR 717.6's junkyard (Event.toJunkyard), the
--- Attraction deck across CR 727's restart and CR 729's subgames, and the two
+-- TriggerCondition.Visit, CR 718.6's junkyard (Event.toJunkyard), the
+-- Attraction deck across CR 728's restart and CR 730's subgames, and the two
 -- Attraction triggers: CR 701.51c's PlayerAction.OpenAttraction and CR 702.159b's
 -- Effect.ClaimPrize read as PlayerAction.ClaimPrize.
 --
 -- Deadbeat Attendant ("When this creature enters, open an Attraction") and
 -- Bumper Cars ("Visit -- Target creature must be blocked this turn if able") are
 -- the producers, with Pick-a-Beeble's prize and The Most Dangerous Gamer's
--- triggers. Bumper Cars is printed with six light patterns (CR 717.1);
+-- triggers. Bumper Cars is printed with six light patterns (CR 718.1);
 -- 202a lights 2, 3 and 6 and 202f lights 4, 5 and 6, so a 3 visits the one and
 -- not the other.
 module Parun.AttractionSpec where
@@ -83,7 +83,7 @@ spec s registry = Spec.describe s "Attraction" $ do
 bumperCars :: CardName.CardName
 bumperCars = CardName.MkCardName (Text.pack "Bumper Cars")
 
--- A printing of `card` with these lights (CR 717.1).
+-- A printing of `card` with these lights (CR 718.1).
 lit :: [Natural] -> Printing.Printing -> Printing.Printing
 lit numbers card = card {Printing.lights = Set.fromList numbers}
 
@@ -113,7 +113,7 @@ openSpec s registry = Spec.describe s "Open an Attraction" $ do
     Spec.assertEqWith s "CR 708.5: neither player, owner included, sees the deck before the open" (fmap (sight gs) (Attraction.deckOf S.alice gs)) [obscured, obscured]
     Spec.assertEqWith s "CR 708.5: nor the card left in it after" (fmap (sight after) (Attraction.deckOf S.alice after)) [obscured]
     Spec.assertEqWith s "CR 701.51b: while both see the card opened" (fmap (sight after) opened) [[Visibility.Type.Visible, Visibility.Type.Visible]]
-  Spec.it s "CR 717.2 / 103.3a the Attraction deck is shuffled before the game begins" $ do
+  Spec.it s "CR 718.2 / 103.3a the Attraction deck is shuffled before the game begins" $ do
     swamp <- S.printingOf s registry "Swamp"
     cars <- S.printingOf s registry "Bumper Cars"
     let (gs, shuffles) = started swamp [carsA cars, carsF cars]
@@ -122,7 +122,7 @@ openSpec s registry = Spec.describe s "Open an Attraction" $ do
     Spec.assertEqWith s "CR 103.3a: the shuffle's order is the deck's" (fmap (`Game.lightsOf` gs) deck) [Set.fromList [4, 5, 6], Set.fromList [2, 3, 6]]
     Spec.assertEqWith s "asked once, over exactly the deck" (filter ((== Set.fromList deck) . Set.fromList) shuffles) [reverse deck]
     Spec.assertEqWith s "and three shuffles in all: two libraries and the one deck" (length shuffles) 3
-  Spec.it s "CR 717.2 the Attraction deck is in the command zone, not the library or the starting deck" $ do
+  Spec.it s "CR 718.2 the Attraction deck is in the command zone, not the library or the starting deck" $ do
     cars <- S.printingOf s registry "Bumper Cars"
     let gs = withAttractions S.alice [carsA cars] (Setup.emptyGame S.bothPlayers)
     Spec.assertEqWith s "one card in the deck" (length (Attraction.deckOf S.alice gs)) 1
@@ -175,10 +175,10 @@ visitWith :: [Natural] -> ObjectId -> GameState.GameState -> (GameState.GameStat
 visitWith rolls target gs =
   rolling rolls target gs (Engine.runTurnBasedActions Phase.PrecombatMain >> Engine.priorityLoop)
 
--- CR 717.4: rolling to visit.
+-- CR 718.4: rolling to visit.
 visitSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 visitSpec s registry = Spec.describe s "Roll to visit" $ do
-  Spec.it s "CR 717.4 a player who controls no Attraction does not roll" $ do
+  Spec.it s "CR 718.4 a player who controls no Attraction does not roll" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     cars <- S.printingOf s registry "Bumper Cars"
     let (gs, mine, _, _) = visitBoard piker (carsA cars)
@@ -187,10 +187,10 @@ visitSpec s registry = Spec.describe s "Roll to visit" $ do
     Spec.assertEqWith s "alice rolls one d6 on her turn" (snd (visitWith [3] mine gs)) [6]
     Spec.assertEqWith s "bob rolls nothing on his" (snd (visitWith [3] mine bobs)) []
 
--- CR 717.6: the junkyard.
+-- CR 718.6: the junkyard.
 junkyardSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 junkyardSpec s registry = Spec.describe s "The junkyard" $ do
-  Spec.it s "CR 717.6 an Attraction bound for the graveyard goes to the command zone" $ do
+  Spec.it s "CR 718.6 an Attraction bound for the graveyard goes to the command zone" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     cars <- S.printingOf s registry "Bumper Cars"
     let (gs, mine, _, attraction) = visitBoard piker (carsA cars)
@@ -198,29 +198,29 @@ junkyardSpec s registry = Spec.describe s "The junkyard" $ do
         exiled = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) attraction Zone.Exile)
         creature = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) mine Zone.Graveyard)
         faceUp = Set.toList (GameState.command binned)
-    Spec.assertEqWith s "CR 717.6: not in the graveyard" (Game.zoneMembers Zone.Graveyard S.alice binned) []
-    Spec.assertEqWith s "CR 717.6a: face up in the command zone, still lit" (fmap (`Game.lightsOf` binned) faceUp) [Set.fromList [2, 3, 6]]
+    Spec.assertEqWith s "CR 718.6: not in the graveyard" (Game.zoneMembers Zone.Graveyard S.alice binned) []
+    Spec.assertEqWith s "CR 718.6a: face up in the command zone, still lit" (fmap (`Game.lightsOf` binned) faceUp) [Set.fromList [2, 3, 6]]
     Spec.assertEqWith s "owned by alice" (fmap (fmap Object.owner . (`Game.lookupObject` binned)) faceUp) [Just S.alice]
-    Spec.assertEqWith s "CR 717.6: exile is not redirected" (length (Game.zoneMembers Zone.Exile S.alice exiled)) 1
+    Spec.assertEqWith s "CR 718.6: exile is not redirected" (length (Game.zoneMembers Zone.Exile S.alice exiled)) 1
     Spec.assertEqWith s "and a creature card still dies" (length (Game.zoneMembers Zone.Graveyard S.alice creature)) 1
-  Spec.it s "CR 717.6 an Attraction bound for its owner's hand goes to the command zone" $ do
+  Spec.it s "CR 718.6 an Attraction bound for its owner's hand goes to the command zone" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     cars <- S.printingOf s registry "Bumper Cars"
     let (gs, _, _, attraction) = visitBoard piker (carsA cars)
         bounced = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) attraction Zone.Hand)
     Spec.assertEqWith s "not in hand" (Game.zoneMembers Zone.Hand S.alice bounced) []
     Spec.assertEqWith s "but in the command zone" (Set.size (GameState.command bounced)) 1
-  Spec.it s "CR 717.6a a junkyard card does not function" $ do
+  Spec.it s "CR 718.6a a junkyard card does not function" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     cars <- S.printingOf s registry "Bumper Cars"
     let (gs, mine, _, attraction) = visitBoard piker (carsA cars)
         binned = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) attraction Zone.Graveyard)
     Spec.assertEqWith s "no roll: alice controls no Attraction" (snd (visitWith [3] mine binned)) []
 
--- CR 727.2 / 729.2a / 729.5a: a new game.
+-- CR 728.2 / 730.2a / 730.5a: a new game.
 newGameSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 newGameSpec s registry = Spec.describe s "A new game" $ do
-  Spec.it s "CR 727.2 a restart puts every Attraction card back in its owner's Attraction deck" $ do
+  Spec.it s "CR 728.2 a restart puts every Attraction card back in its owner's Attraction deck" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     cars <- S.printingOf s registry "Bumper Cars"
     let (board, _, _, _) = visitBoard piker (carsA cars)
@@ -230,16 +230,16 @@ newGameSpec s registry = Spec.describe s "A new game" $ do
     Spec.assertEqWith s "both Bumper Cars are in alice's Attraction deck" lights (Set.fromList [Set.fromList [2, 3, 6], Set.fromList [4, 5, 6]])
     Spec.assertEqWith s "and neither is on the battlefield" (S.countOnBattlefieldByName bumperCars S.alice restarted) 0
     Spec.assertEqWith s "the Piker went to the library, the Attraction did not" (length (Game.zoneMembers Zone.Library S.alice restarted) + length (Game.zoneMembers Zone.Hand S.alice restarted)) 1
-  Spec.it s "CR 729.2a a subgame takes the Attraction deck, and CR 729.5a gives it back" $ do
+  Spec.it s "CR 730.2a a subgame takes the Attraction deck, and CR 730.5a gives it back" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     cars <- S.printingOf s registry "Bumper Cars"
     let (board, _, _, faceUp) = visitBoard piker (carsA cars)
         parent = withAttractions S.alice [carsF cars] board
         sub = S.runPure S.identityAnswer (Setup.subgameStateFrom S.alice parent) (Setup.startGameFromCards (Resolve.performHandAction Resolve.noSubgame) Set.empty)
         back = Setup.funnelBack sub parent
-    Spec.assertEqWith s "CR 729.2a: the deck is in the subgame" (fmap (`Game.lightsOf` sub) (Attraction.deckOf S.alice sub)) [Set.fromList [4, 5, 6]]
+    Spec.assertEqWith s "CR 730.2a: the deck is in the subgame" (fmap (`Game.lightsOf` sub) (Attraction.deckOf S.alice sub)) [Set.fromList [4, 5, 6]]
     Spec.assertBool s (Maybe.isNothing (Game.lookupObject faceUp sub)) "and the face-up one stayed behind"
-    Spec.assertEqWith s "CR 729.5a: the deck is back" (fmap (`Game.lightsOf` back) (Attraction.deckOf S.alice back)) [Set.fromList [4, 5, 6]]
+    Spec.assertEqWith s "CR 730.5a: the deck is back" (fmap (`Game.lightsOf` back) (Attraction.deckOf S.alice back)) [Set.fromList [4, 5, 6]]
     Spec.assertEqWith s "not in the library" (filter (\oid -> Game.lightsOf oid back /= Set.empty) (Game.zoneMembers Zone.Library S.alice back)) []
     Spec.assertEqWith s "and the face-up one never moved" (Game.zoneOf faceUp back) (Just Zone.Battlefield)
 

@@ -15,7 +15,7 @@ import qualified Parun.Types.Timestamp as Timestamp
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.PendingSkipEffect" $ do
-  -- CR 614.10b / 732.3: the queued action and the turns to come as it was queued.
+  -- CR 614.10b / 733.3: the queued action and the turns to come as it was queued.
   Spec.it s "a queued skip action and the turn position it was queued at" $
     Common.assertCodec
       s
@@ -33,7 +33,7 @@ spec s = Spec.describe s "Parun.Codec.PendingSkipEffect" $ do
           PendingSkipEffect.replacements = Set.empty
         }
       " {\"pending\":{\"effects\":[{\"type\":\"Proliferate\"}],\"targets\":{},\"controller\":1,\"source\":3}} "
-  -- CR 732.3: the floating replacement rows standing as it was queued.
+  -- CR 733.3: the floating replacement rows standing as it was queued.
   Spec.it s "a queued skip action and the replacement rows it was queued beside" $
     Common.assertCodec
       s

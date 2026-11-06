@@ -1,6 +1,6 @@
 {
   "description": "CR 608.2h the watcher reads the dead Saga's last known information",
-  "note": "Volt Charge at the 3/3 Saga proliferates it to its fourth lore counter; CR 704.5g puts it in the graveyard before the triggers are placed, yet chapter IV's and Historian's Boon's triggers both go on the stack (which is what shows the fourth counter landed: at chapter III the Boon does not trigger) and alice gets the Angel. The Haskell test's 3 damage marked before the SBA has no priority moment; the Saga dying is its witness. Cast in the beginning of combat step, since entering the precombat main phase would add CR 714.3b's lore counter.",
+  "note": "Volt Charge at the 3/3 Saga proliferates it to its fourth lore counter; CR 704.5g puts it in the graveyard before the triggers are placed, yet chapter IV's and Historian's Boon's triggers both go on the stack (which is what shows the fourth counter landed: at chapter III the Boon does not trigger) and alice gets the Angel. The Haskell test's 3 damage marked before the SBA has no priority moment; the Saga dying is its witness. Cast in the beginning of combat step, since entering the precombat main phase would add CR 715.3b's lore counter.",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",

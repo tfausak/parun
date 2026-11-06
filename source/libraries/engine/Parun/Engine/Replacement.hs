@@ -805,11 +805,11 @@ confinedToSource pat = case pat of
   Filter.Type.And fs -> any confinedToSource fs
   _ -> False
 
--- CR 730.3e: does this filter, failing a merged permanent that is a token (CR
--- 730.2d), still reach the cards among its components? It does when it fails
+-- CR 731.3e: does this filter, failing a merged permanent that is a token (CR
+-- 731.2d), still reach the cards among its components? It does when it fails
 -- the permanent only for being a token: the rest of what it names is read off
 -- the permanent, whose components have no characteristics apart from it until
--- they arrive (docs/decisions.md's "Which rows CR 730.3e counts as reaching
+-- they arrive (docs/decisions.md's "Which rows CR 731.3e counts as reaching
 -- only cards"). The rule's first sentence needs nothing here, since a filter
 -- that excludes tokens already admits a merged permanent that is no token.
 reachesCardComponents :: (ObjectId -> Filter.View) -> GameState -> ReplacementCandidate -> Filter.Type.Filter Keyword.Type.Keyword -> ObjectId -> Bool
@@ -818,7 +818,7 @@ reachesCardComponents viewOf gs candidate filter_ oid =
     && maybe False (not . all Game.componentIsToken . Game.componentsOf . Object.source) (Game.lookupObject oid gs)
     && Filter.matches (candidateContext gs candidate) ((viewOf oid) {Filter.token = False}) filter_
 
--- CR 730.3e: is this zone-change row applicable to the moving object only
+-- CR 731.3e: is this zone-change row applicable to the moving object only
 -- through its card components, so that it moves those and leaves the rest of
 -- the merged permanent headed where it was? Asked of a candidate `applicable`
 -- already offered, under the same board.
@@ -1415,9 +1415,9 @@ admitsEntry gs oid rewrite = case rewrite of
   -- enters, and both of the questions it asks are players'.
   EntryRewrite.Tribute _ -> True
   EntryRewrite.Tapped -> True
-  -- CR 722.3a's first gate, "if that permanent has the alternative
+  -- CR 723.3a's first gate, "if that permanent has the alternative
   -- characteristics of a prepare spell", read off the copiable values the
-  -- entry has settled so far (CR 722.2b).
+  -- entry has settled so far (CR 723.2b).
   EntryRewrite.Prepared -> Prepare.hasPrepareSpell oid gs
   EntryRewrite.OrTapped _ -> True
   -- CR 614.1c's "as [this permanent] enters, [do something]". No condition here
@@ -1437,8 +1437,8 @@ admitsEntry gs oid rewrite = case rewrite of
   -- of a rewrite that had something to do.
   --
   -- The layout half is Card.backFace, which is Nothing for the cards CR
-  -- 712.1 does not count as double-faced and for a meld card, which CR 712.4c says
-  -- cannot be transformed -- the same question CR 712.14a asks one
+  -- 712.1 does not count as double-faced, a meld card among them (CR 713.1,
+  -- 713.1c) -- the same question CR 712.11a asks one
   -- rule over (Parun.Engine.Event.changeZoneEntering). It is asked at all because
   -- daybound can be GRANTED: nothing stops a static ability from putting it on a
   -- permanent with no second face, and the rule's condition is what says nothing
@@ -1452,13 +1452,13 @@ admitsEntry gs oid rewrite = case rewrite of
 --
 -- ByEffect is rule 614.16's own subject, "if an EFFECT would put one or more
 -- counters" -- so it admits exactly that rule's two causes and no others. CR 609.1
--- makes CR 714.3c's turn-based action neither, which is what keeps Doubling Season
+-- makes CR 715.3c's turn-based action neither, which is what keeps Doubling Season
 -- off a Saga's advancing lore counter, and it makes a cost paid under CR 601.2h
 -- neither for the same reason, which keeps Doubling Season off Soul Immolation's
 -- "blight X".
 --
 -- ByPlayer is a clause naming a PLAYER instead (Vorinclex, Monstrous Raider's "if
--- you would put", "if an opponent would put"). Rule 714.3c has "that player" put
+-- you would put", "if an opponent would put"). Rule 715.3c has "that player" put
 -- the lore counter, so such a clause reaches it: the two subjects disagree about
 -- exactly this case, which is why the cause rides the event to here rather than
 -- being spent at the funnel's door (#847).
@@ -1507,7 +1507,7 @@ subsetsOf 0 _ = [[]]
 subsetsOf _ [] = []
 subsetsOf n (x : xs) = fmap (x :) (subsetsOf (n - 1) xs) <> subsetsOf n xs
 
--- CR 614.12b with CR 614.13b: can every demand, each a count out of its own
+-- CR 614.12b with CR 614.13a: can every demand, each a count out of its own
 -- candidates, still be paid from what `used` has not already taken, no
 -- permanent paying twice?
 jointlyPayable :: Set ObjectId -> [(Natural, [ObjectId])] -> Bool
@@ -2126,7 +2126,7 @@ bucketOfEffect re = case re of
   -- STATUS the permanent enters with (CR 110.5b), never whose it is, what it
   -- copies or which face is up. So CR 616.1e.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Tapped) -> ReplacementBucket.Other
-  -- CR 722.3a's designation is none of CR 616.1a-d either: a marker, not
+  -- CR 723.3a's designation is none of CR 616.1a-d either: a marker, not
   -- control, a copy or a face. So CR 616.1e.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Prepared) -> ReplacementBucket.Other
   -- CR 614.1c's priced variant of the same rewrite is none of CR 616.1a-d
@@ -2287,7 +2287,7 @@ readsApplier re = case re of
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.EntersAttachedTo _)) -> False
   -- CR 702.155b: the chooser is the ENTERING Saga's controller, read live off
   -- the board for riot's reason below, and the bound is the entering Saga's own
-  -- final chapter number (CR 714.2d) rather than anything the row carries -- so
+  -- final chapter number (CR 715.2d) rather than anything the row carries -- so
   -- nothing about this rewrite is read off the applier.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ReadAhead) -> False
   -- CR 702.136a: riot's chooser is the ENTERING object's controller, read live
@@ -2328,8 +2328,8 @@ readsApplier re = case re of
   -- the object the event already named (CR 110.5b), so it applies the same way
   -- whoever's row is applying it. Two such rows are the same write twice.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Tapped) -> False
-  -- CR 722.3a: Tapped's reason -- one marker on the object the event named, and
-  -- CR 722.3a's second gate makes a second row a no-op.
+  -- CR 723.3a: Tapped's reason -- one marker on the object the event named, and
+  -- CR 723.3a's second gate makes a second row a no-op.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Prepared) -> False
   -- CR 614.1c: NO despite spending a resource, for SacrificeAnyNumber's reason.
   -- The payer is the ENTERING object's controller -- "you" in an "as this
@@ -4817,14 +4817,14 @@ installBuybackReturn = installSpellMoveRow Zone.Hand False
 installReboundExile :: ObjectId -> PlayerId -> GameState -> (Timestamp, GameState)
 installReboundExile = installSpellMoveRow Zone.Exile False
 
--- CR 715.3d's first sentence: "Instead of putting a spell that was cast as an
+-- CR 716.3d's first sentence: "Instead of putting a spell that was cast as an
 -- Adventure into its owner's graveyard as it resolves, its controller exiles it."
 -- Its second sentence -- the permission on the exiled card -- is finishSpell's,
 -- armed off `rowApplied` the way rule 702.88a's delayed ability is.
 installAdventureExile :: ObjectId -> PlayerId -> GameState -> (Timestamp, GameState)
 installAdventureExile = installSpellMoveRow Zone.Exile False
 
--- CR 720.3d: "As an Omen spell resolves, its controller shuffles it into its
+-- CR 721.3d: "As an Omen spell resolves, its controller shuffles it into its
 -- owner's library instead of putting it into its owner's graveyard as it
 -- resolves." CR 701.24a's randomisation is the row's own `shuffling` rider --
 -- Nexus of Fate's -- which is what keeps the shuffle from happening on an order

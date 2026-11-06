@@ -404,7 +404,7 @@ chooseCardName resolving source controller legal (ChooseCardName.MkChooseCardNam
   -- CR 201.4a: a slot confines the offer to the names of its cards the
   -- restriction admits (Alhammarret, High Arbiter), Common.chooseNameAmong's
   -- list. Every face's name, each judged by that face alone off the printed
-  -- card, since CR 201.4a reads Oracle text: CR 201.4b/d and 715.5, so an
+  -- card, since CR 201.4a reads Oracle text: CR 201.4b/d and 716.5, so an
   -- Adventure's name is offered and a land back face is not. data/scenarios'
   -- Alhammarret scenarios prove it.
   confined <- Monad.forM among $ \slot -> do
@@ -1638,7 +1638,7 @@ doesNotUntapNext resolving source controller legal payload =
 transform :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
 transform resolving source controller legal chosen = Common.turnPermanentsOver legal chosen resolving controller source
 
--- CR 701.28a routes a convert through rules 701.27a-f unchanged, so it is the
+-- CR 701.28a routes a convert through rules 701.27a-g unchanged, so it is the
 -- SAME call and not a similar one. The two opcodes stay distinct in the card
 -- data (Parun.Types.Effect.Convert) and identical in behaviour here.
 convert :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
@@ -1654,7 +1654,7 @@ flipArm resolving source controller legal ref =
     -- is Effect.Tap's discipline and costs nothing to keep.
     --
     -- Not turnPermanentsOver's shape, though both change what a permanent
-    -- shows. CR 701.27f's already-turned gate belongs to a TURN and has no
+    -- shows. CR 701.27g's already-turned gate belongs to a TURN and has no
     -- flip counterpart -- CR 710.4 makes flipping one-way, so a second flip is
     -- an assignment of the value already there rather than something a rule
     -- must ignore -- and CR 613.7 grants a flip no new timestamp, so there is
@@ -1703,18 +1703,18 @@ addPhases extras =
   State.modify' $ \gs ->
     gs {GameState.remaining = Turn.splicePhases (GameState.phase gs) extras (GameState.remaining gs)}
 
--- CR 724.1: end the turn (Time Stop). Rule 724.1's six steps, in its own order,
+-- CR 725.1: end the turn (Time Stop). Rule 725.1's six steps, in its own order,
 -- and deliberately NOT the CR 608 process the fold around this is running.
 endTurn :: (Game Result -> PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> (Game Result -> Game ()) -> Game Result -> Game ()
 endTurn runDamageRewriteEffect runReplacementEffects runSubgame = do
-  -- CR 724.1a: an ability that triggered before this process began but is not
+  -- CR 725.1a: an ability that triggered before this process began but is not
   -- yet on the stack ceases to exist. There is no pending queue to flush -- a
   -- pending trigger is DERIVED from GameState.events behind the CR 117.5
   -- watermark -- so this is a watermark bump, which is also what makes rule
-  -- 724.1f's exception fall out: everything recorded after this line is an
+  -- 725.1f's exception fall out: everything recorded after this line is an
   -- ability that triggered DURING the process, and stays unscanned until the
   -- cleanup step settles. Ultima over a Doomed Traveler proves it
-  -- (Parun.TurnSpec, "CR 724.1a a trigger pending when the turn ends ceases to
+  -- (Parun.TurnSpec, "CR 725.1a a trigger pending when the turn ends ceases to
   -- exist").
   State.modify' $ \gs ->
     gs
@@ -1724,14 +1724,14 @@ endTurn runDamageRewriteEffect runReplacementEffects runSubgame = do
         GameState.battlefieldWhenTriggered = Map.empty,
         GameState.heldBoards = []
       }
-  -- CR 724.1b: exile every object on the stack, INCLUDING the one that is
+  -- CR 725.1b: exile every object on the stack, INCLUDING the one that is
   -- resolving -- which is still on GameState.stack, Stack.resolveTopWith
   -- leaving it there until CR 608.2n moves it. A real zone change, so an
-  -- ability that triggers off one is CR 724.1f's.
+  -- ability that triggers off one is CR 725.1f's.
   --
-  -- Rule 724.1b's second sentence -- an object not represented by a card ceases
+  -- Rule 725.1b's second sentence -- an object not represented by a card ceases
   -- to exist at the next check -- is taken HERE for an ability rather than at
-  -- CR 724.1c, and the two are indistinguishable: nothing happens between the
+  -- CR 725.1c, and the two are indistinguishable: nothing happens between the
   -- exile and that check, and Game.cease is already what CR 608.2n, CR 603.3c
   -- and CR 701.6a use for an ability, which is not a card and so has no zone to
   -- arrive in (CR 400.7 mints nothing). A token, and a copy of a spell, DO go
@@ -1744,7 +1744,7 @@ endTurn runDamageRewriteEffect runReplacementEffects runSubgame = do
   -- graveyard.
   onStack <- State.gets GameState.stack
   Foldable.traverse_ Common.exileOrCease onStack
-  -- CR 724.1c: check state-based actions, granting no priority and putting no
+  -- CR 725.1c: check state-based actions, granting no priority and putting no
   -- triggered ability on the stack -- so Parun.Engine.Sba's own pass and not
   -- Engine.performSettle, which places triggers. (Engine is unreachable from
   -- here in any case: Engine imports Stack imports Resolve.)
@@ -1758,7 +1758,7 @@ endTurn runDamageRewriteEffect runReplacementEffects runSubgame = do
   -- (runDamageRewriteEffect), and a pass that replaces it forever is CR
   -- 104.4b's draw (Departure.checkMandatoryLoop).
   Common.checkWithoutPriority runDamageRewriteEffect runReplacementEffects runSubgame
-  -- CR 724.1d: the current phase and/or step ends; creatures and planeswalkers
+  -- CR 725.1d: the current phase and/or step ends; creatures and planeswalkers
   -- leave combat if this happened during one; the game skips straight to the
   -- cleanup step, or to a NEW cleanup step if this IS one.
   --
@@ -1768,7 +1768,7 @@ endTurn runDamageRewriteEffect runReplacementEffects runSubgame = do
   -- itself. Nothing of that is duplicated here.
   --
   -- The PHASE-scoped half of CR 500.5 is taken here and not there, on rule
-  -- 724.1d's "the current phase and/or step ends": Turn.phaseEndingAt answers
+  -- 725.1d's "the current phase and/or step ends": Turn.phaseEndingAt answers
   -- from the last step alone, and the step this ends is not it, so an "until
   -- end of combat" effect would otherwise outlive a turn ended during combat.
   -- The phase does NOT end when the jump stays inside it -- CR 512.1 puts the
@@ -1791,32 +1791,32 @@ endTurn runDamageRewriteEffect runReplacementEffects runSubgame = do
           Phase.Ending EndingStep.Cleanup -> Turn.spliceExtraCleanup (GameState.remaining gs)
           _ -> Turn.jumpToCleanup (GameState.remaining gs)
      in expired {GameState.remaining = jumped}
-  -- CR 724.1f: no player gets priority during this process. Engine.priorityLoop
+  -- CR 725.1f: no player gets priority during this process. Engine.priorityLoop
   -- reads this and returns without settling and without granting another round,
   -- so the exiles above stay unscanned until the cleanup step's own CR 514.3a
   -- settle puts them on the stack. Engine.runStep lowers it there.
   State.modify' (\gs -> gs {GameState.endTurnSignal = EndTurnSignal.Ended})
 
--- CR 724.2: end the combat phase (Mandate of Peace). Rule 724.2's seven steps,
+-- CR 725.2: end the combat phase (Mandate of Peace). Rule 725.2's seven steps,
 -- in its own order, and deliberately NOT the CR 608 process around it. The arm
--- above is its sibling and not its implementation: the two agree on 724.2a-c
--- and differ on what 724.2d leaves at the head of the schedule.
+-- above is its sibling and not its implementation: the two agree on 725.2a-c
+-- and differ on what 725.2d leaves at the head of the schedule.
 endCombatPhase :: (Game Result -> PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> (Game Result -> Game ()) -> Game Result -> Game ()
 endCombatPhase runDamageRewriteEffect runReplacementEffects runSubgame = do
   phase <- State.gets GameState.phase
   case phase of
-    -- CR 724.2g: attempted at a time that is not a combat phase, nothing
-    -- happens -- not even the exile of the stack, since rule 724.2's steps are
+    -- CR 725.2g: attempted at a time that is not a combat phase, nothing
+    -- happens -- not even the exile of the stack, since rule 725.2's steps are
     -- the whole of what "ends the combat phase" does. No CAST reaches it today:
     -- Mandate of Peace's own rider admits only a combat phase, and nothing
     -- between the cast and the resolution can leave one, this being the only
-    -- card that ends a combat phase. The guard is rule 724.2g's own sentence
+    -- card that ends a combat phase. The guard is rule 725.2g's own sentence
     -- rather than a defence against a board parun can build, and
-    -- Parun.TurnSpec's CR 724.2g case reaches it by applying the effect
+    -- Parun.TurnSpec's CR 725.2g case reaches it by applying the effect
     -- directly.
     Phase.Combat _ -> do
-      -- CR 724.2a, exactly as CR 724.1a: a watermark bump rather than a queue
-      -- flush, which is also what makes 724.2f's exception fall out. UNOBSERVED
+      -- CR 725.2a, exactly as CR 725.1a: a watermark bump rather than a queue
+      -- flush, which is also what makes 725.2f's exception fall out. UNOBSERVED
       -- for the same reason the arm above says: resolution follows a settle, so
       -- nothing is pending here.
       State.modify' $ \gs ->
@@ -1827,44 +1827,44 @@ endCombatPhase runDamageRewriteEffect runReplacementEffects runSubgame = do
             GameState.battlefieldWhenTriggered = Map.empty,
             GameState.heldBoards = []
           }
-      -- CR 724.2b: exile every object on the stack, the resolving one included.
+      -- CR 725.2b: exile every object on the stack, the resolving one included.
       -- Shared with the arm above down to the CR 400.7 detail that leaves
       -- finishSpell a no-op afterwards.
       onStack <- State.gets GameState.stack
       Foldable.traverse_ Common.exileOrCease onStack
-      -- CR 724.2c: check state-based actions, granting no priority and putting
+      -- CR 725.2c: check state-based actions, granting no priority and putting
       -- no triggered ability on the stack. To a fixpoint on CR 704.3's
       -- authority, as above.
       Common.checkWithoutPriority runDamageRewriteEffect runReplacementEffects runSubgame
-      -- CR 724.2d, in the rule's own sentence order: the phase ends, creatures
+      -- CR 725.2d, in the rule's own sentence order: the phase ends, creatures
       -- and planeswalkers leave combat, "until end of combat" effects expire,
       -- and the game skips the steps between here and the next phase.
       --
       -- The expiry is this rule's, not CR 500.5's through
       -- Engine.endStep: that sweep asks Turn.phaseEndingAt, which
-      -- answers from the phase's last step, and CR 724.2e is precisely the
+      -- answers from the phase's last step, and CR 725.2e is precisely the
       -- claim that the end of combat step never runs. EQUALITY on
       -- PhaseSelector.CombatPhase, so an "until end of turn" effect installed
       -- by the same card survives (Expiry.dropAtEndOf says why).
       --
       -- Where the game lands is whatever `remaining` holds after this phase --
-      -- CR 724.2d's "usually the postcombat main phase", and a CR 500.8 extra
+      -- CR 725.2d's "usually the postcombat main phase", and a CR 500.8 extra
       -- combat phase later in the turn is untouched, Turn.dropRestOfPhase being
       -- positional.
       State.modify' $ \gs ->
         let cleared = Combat.clearCombat gs
             skipped = cleared {GameState.remaining = Turn.dropRestOfPhase phase (GameState.remaining gs)}
-         in -- Both sweeps, the CR 724.1d arm's reason above: an "until end of
+         in -- Both sweeps, the CR 725.1d arm's reason above: an "until end of
             -- combat" mana retention rides the UNIT and carries no Expiry, so
             -- the phase ending here has to end it too. The mana goes with this
             -- step's own CR 500.5 sweep in Engine.endStep.
             Mana.endRetentionAtEndOf PhaseSelector.CombatPhase (Expiry.dropAtEndOf PhaseSelector.CombatPhase skipped)
-      -- CR 724.2f: no player gets priority during this process. The SAME signal
-      -- CR 724.1f raises, because the two rules want the same thing of
+      -- CR 725.2f: no player gets priority during this process. The SAME signal
+      -- CR 725.1f raises, because the two rules want the same thing of
       -- Engine.priorityLoop -- return without settling and without granting
       -- another round -- and differ only in which step Engine.runStep lowers it
-      -- at. CR 724.1d leaves the cleanup step at the head of the schedule and
-      -- CR 724.2d the following phase, so "the abilities that triggered during
+      -- at. CR 725.1d leaves the cleanup step at the head of the schedule and
+      -- CR 725.2d the following phase, so "the abilities that triggered during
       -- this process are put onto the stack there" is one mechanism, not two.
       State.modify' (\gs -> gs {GameState.endTurnSignal = EndTurnSignal.Ended})
     _ -> pure ()

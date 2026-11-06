@@ -131,7 +131,7 @@ overSlots f quantity =
         Quantity.StartingLifeTotal _ -> pure quantity
         -- And a fourth: LifeTotal's sibling carries a PlayerRef in the same position.
         Quantity.Speed _ -> pure quantity
-        -- And a fifth, CR 725.1's designation -- a PlayerRef and nothing else.
+        -- And a fifth, CR 726.1's designation -- a PlayerRef and nothing else.
         Quantity.IsMonarch _ -> pure quantity
         Quantity.HasPlayerDesignation {} -> pure quantity
         -- And a sixth, CR 103.1's -- the same position again.

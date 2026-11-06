@@ -1019,7 +1019,7 @@ archnemesisSpec s registry =
 -- this spec rather than being split. The first is CR 603.6a's second written
 -- form ("whenever a [type] enters") narrowed by a POWER CEILING, and the second is
 -- a CR 603.2b step trigger whose Quantity is Quantity.PlayerCounters -- the arm
--- CR 728.1's rad mill already used for a rule, aimed for the first time at a
+-- CR 729.1's rad mill already used for a rule, aimed for the first time at a
 -- counter kind only card text can see.
 --
 -- Every number on these boards is arranged not to coincide, because arithmetic
@@ -1238,10 +1238,10 @@ savantiRomeroSpec s registry =
 -- sacrifices a creature of their choice." Both printed sentences are in
 -- data/cards/custodi-lich.json; nothing is omitted.
 --
--- The pool's producer for TriggerCondition.PlayerBecomesMonarch (CR 725.1). The
+-- The pool's producer for TriggerCondition.PlayerBecomesMonarch (CR 726.1). The
 -- card is its own trigger's cause -- the first ability crowns its controller and
 -- the second watches that crowning -- which makes the whole chain observable off
--- one entry, and CR 725.2's crown steal reaches the same condition by a route
+-- one entry, and CR 726.2's crown steal reaches the same condition by a route
 -- the card has nothing to do with.
 --
 -- THREE SEATS throughout. At two players "you" and "an opponent" name
@@ -1253,7 +1253,7 @@ savantiRomeroSpec s registry =
 -- Goblin Piker 2/1, Bird Maiden 1/2, Bog Wraith 3/3) so no assertion below can
 -- pass on a numeric coincidence, and the edict's victim always holds TWO
 -- creatures so CR 701.21a's choice is a real prompt rather than a forced single
--- candidate -- bob in most cases, carol in the CR 725.4 one, where bob leaves.
+-- candidate -- bob in most cases, carol in the CR 726.4 one, where bob leaves.
 monarchTriggerSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 monarchTriggerSpec s registry =
   let -- Names `victim` for every target slot that offers them. S.identityAnswer
@@ -1272,16 +1272,16 @@ monarchTriggerSpec s registry =
         let (_, g1) = S.addPermanent piker S.bob base
             (_, g2) = S.addPermanent birdMaiden S.bob g1
          in snd (S.addPermanent bogWraith S.carol g2)
-      -- CR 725.2's crown steal, driven by the damage EVENT rather than by a full
+      -- CR 726.2's crown steal, driven by the damage EVENT rather than by a full
       -- combat: Event.Trigger.inherentTriggers reads the recorded DamageEvent, and
       -- ExpirySpec's monarch group drives the same rule the same way.
       combatDamageTo monarch damager =
         S.withEvents [GameEvent.DamageDealt (DamageEvent.MkDamageEvent damager (Recipient.ToPlayer monarch) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Combat)]
    in Spec.describe s "MonarchTrigger" $ do
         -- The whole chain off one entry: CR 603.6a's entry trigger crowns alice,
-        -- Effect.BecomeMonarch records CR 725.1's event, and the second ability
+        -- Effect.BecomeMonarch records CR 726.1's event, and the second ability
         -- matches it.
-        Spec.it s "CR 725.1 Custodi Lich whole card: entering crowns alice, and that crowning fires her edict" $ do
+        Spec.it s "CR 726.1 Custodi Lich whole card: entering crowns alice, and that crowning fires her edict" $ do
           custodiLich <- S.printingOf s registry "Custodi Lich"
           piker <- S.printingOf s registry "Goblin Piker"
           birdMaiden <- S.printingOf s registry "Bird Maiden"
@@ -1290,7 +1290,7 @@ monarchTriggerSpec s registry =
               (lich, gs) = S.entersWithTrigger custodiLich S.alice base
               after = resolveAll (targetsPlayer S.bob) gs
           Spec.assertEqWith s "no monarch before the Lich resolved its entry trigger" (GameState.monarch gs) Nothing
-          Spec.assertEqWith s "CR 725.1 alice is the monarch" (GameState.monarch after) (Just S.alice)
+          Spec.assertEqWith s "CR 726.1 alice is the monarch" (GameState.monarch after) (Just S.alice)
           Spec.assertBool s (elem (GameEvent.BecameMonarch S.alice) (S.eventsOf after)) "and the crowning recorded its event"
           Spec.assertEqWith s "CR 701.21a the targeted bob lost exactly one of his two" (S.creaturesInPlay S.bob after) 1
           Spec.assertEqWith s "carol, untargeted, lost none" (S.creaturesInPlay S.carol after) 1
@@ -1302,14 +1302,14 @@ monarchTriggerSpec s registry =
         -- Lich enters the battlefield, its last ability won't trigger." So a
         -- crowning of the player who already holds the crown is not an event at
         -- all, and Monarch.crown records nothing for it -- which is also what
-        -- keeps this reading and CR 725's exile watch (Palace Jailer's "until an
+        -- keeps this reading and CR 726's exile watch (Palace Jailer's "until an
         -- opponent becomes the monarch") answering the same question the same
         -- way.
         --
         -- The case above is the exact paired control: same card, same seats, same
         -- answerer, and the one difference is who holds the crown as the Lich
         -- enters.
-        Spec.it s "CR 725.3 a player who is ALREADY the monarch does not become the monarch, so the Lich's edict stays silent" $ do
+        Spec.it s "CR 726.3 a player who is ALREADY the monarch does not become the monarch, so the Lich's edict stays silent" $ do
           custodiLich <- S.printingOf s registry "Custodi Lich"
           piker <- S.printingOf s registry "Goblin Piker"
           birdMaiden <- S.printingOf s registry "Bird Maiden"
@@ -1324,12 +1324,12 @@ monarchTriggerSpec s registry =
           Spec.assertBool s (notElem (GameEvent.BecameMonarch S.alice) (S.eventsOf after)) "and recorded no crowning, because nobody became the monarch"
           Spec.assertBool s (S.onBattlefield lich after) "the Lich itself is on the battlefield"
           Spec.assertEqWith s "the stack is empty, so nothing is still pending" (GameState.stack after) []
-        -- CR 725.2's crown steal reaches the SAME condition by a route the card
+        -- CR 726.2's crown steal reaches the SAME condition by a route the card
         -- has nothing to do with: the inherent ability has no source, and
         -- Event.Trigger.inherentTriggers rather than the scan over objects is
         -- what gathers it. What the Lich matches is the crowning, not the entry
         -- that usually causes one.
-        Spec.it s "CR 725.2 a stolen crown is a crowning, and fires the same trigger" $ do
+        Spec.it s "CR 726.2 a stolen crown is a crowning, and fires the same trigger" $ do
           custodiLich <- S.printingOf s registry "Custodi Lich"
           boggartBrute <- S.printingOf s registry "Boggart Brute"
           piker <- S.printingOf s registry "Goblin Piker"
@@ -1340,16 +1340,16 @@ monarchTriggerSpec s registry =
               (brute, gs) = S.addPermanent boggartBrute S.alice g1
               after = resolveAll (targetsPlayer S.bob) (combatDamageTo S.bob brute gs)
           Spec.assertEqWith s "bob wore the crown going in" (GameState.monarch gs) (Just S.bob)
-          Spec.assertEqWith s "CR 725.2 alice's creature took it off him" (GameState.monarch after) (Just S.alice)
+          Spec.assertEqWith s "CR 726.2 alice's creature took it off him" (GameState.monarch after) (Just S.alice)
           Spec.assertBool s (S.onBattlefield lich after) "the Lich watched from the battlefield"
-          Spec.assertEqWith s "CR 725.1 alice's trigger fired: the targeted bob sacrificed one" (S.creaturesInPlay S.bob after) 1
+          Spec.assertEqWith s "CR 726.1 alice's trigger fired: the targeted bob sacrificed one" (S.creaturesInPlay S.bob after) 1
           Spec.assertEqWith s "carol lost none" (S.creaturesInPlay S.carol after) 1
           Spec.assertEqWith s "the stack is empty" (GameState.stack after) []
         -- The discriminating twin of the test above: the SAME board, the same
         -- inherent ability, the same event shape -- only the creature that dealt
         -- the damage differs, so the crown lands on carol instead of alice. An
         -- arm that ignored the relation would fire here too.
-        Spec.it s "CR 725.2/109.5 a crown stolen by carol does not fire alice's trigger" $ do
+        Spec.it s "CR 726.2/109.5 a crown stolen by carol does not fire alice's trigger" $ do
           custodiLich <- S.printingOf s registry "Custodi Lich"
           boggartBrute <- S.printingOf s registry "Boggart Brute"
           piker <- S.printingOf s registry "Goblin Piker"
@@ -1362,13 +1362,13 @@ monarchTriggerSpec s registry =
                 oid : _ -> oid
                 [] -> S.noSource
               after = resolveAll (targetsPlayer S.bob) (combatDamageTo S.bob wraith gs)
-          Spec.assertEqWith s "CR 725.2 carol took the crown" (GameState.monarch after) (Just S.carol)
+          Spec.assertEqWith s "CR 726.2 carol took the crown" (GameState.monarch after) (Just S.carol)
           Spec.assertBool s (elem (GameEvent.BecameMonarch S.carol) (S.eventsOf after)) "and the crowning event names carol"
           Spec.assertBool s (S.onBattlefield lich after) "alice's Lich is still there, and still silent"
           Spec.assertEqWith s "bob kept both of his" (S.creaturesInPlay S.bob after) 2
           Spec.assertEqWith s "carol kept hers" (S.creaturesInPlay S.carol after) 1
           Spec.assertEqWith s "the stack is empty" (GameState.stack after) []
-        -- CR 725.4's third route into the crown: no effect and no inherent
+        -- CR 726.4's third route into the crown: no effect and no inherent
         -- ability, just the monarch leaving the game. Three seats are mandatory
         -- twice over -- Departure.continuesAfterDeparture skips all of CR 800.4a
         -- at two (CR 800.1), and the edict's victim has to be somebody other
@@ -1377,7 +1377,7 @@ monarchTriggerSpec s registry =
         -- The bystanders helper is not used: its two creatures sit with bob, who
         -- is the one leaving here, so carol holds the pair instead (Goblin Piker
         -- 2/1, Bird Maiden 1/2) and CR 701.21a's choice stays a real prompt.
-        Spec.it s "CR 725.4 a departure crowns alice, and that crowning fires her edict" $ do
+        Spec.it s "CR 726.4 a departure crowns alice, and that crowning fires her edict" $ do
           custodiLich <- S.printingOf s registry "Custodi Lich"
           piker <- S.printingOf s registry "Goblin Piker"
           birdMaiden <- S.printingOf s registry "Bird Maiden"
@@ -1390,8 +1390,8 @@ monarchTriggerSpec s registry =
               departed = S.runPure S.identityAnswer gs (Departure.leaveGame Departure.Type.Conceded S.bob)
               after = resolveAll (targetsPlayer S.carol) departed
           Spec.assertEqWith s "bob wore the crown going in" (GameState.monarch gs) (Just S.bob)
-          Spec.assertEqWith s "alice is the active player, so CR 725.4's first sentence crowns her" (GameState.activePlayer gs) S.alice
-          Spec.assertEqWith s "CR 725.4 alice is the monarch" (GameState.monarch after) (Just S.alice)
+          Spec.assertEqWith s "alice is the active player, so CR 726.4's first sentence crowns her" (GameState.activePlayer gs) S.alice
+          Spec.assertEqWith s "CR 726.4 alice is the monarch" (GameState.monarch after) (Just S.alice)
           Spec.assertBool s (S.onBattlefield lich after) "alice's Lich watched from the battlefield"
           -- Asserted BEFORE the event, so a run with the record deleted fails
           -- here rather than on the event and the payload is what is pinned.
@@ -1400,10 +1400,10 @@ monarchTriggerSpec s registry =
           Spec.assertBool s (elem (GameEvent.BecameMonarch S.alice) (S.eventsOf after)) "and the reassignment recorded its crowning"
           Spec.assertEqWith s "CR 104.2a two survivors, so the game is still going" (GameState.result after) Nothing
           Spec.assertEqWith s "the stack is empty, so nothing is still pending" (GameState.stack after) []
-        -- CR 725.2 makes the crown steal "controlled by the player who was the
+        -- CR 726.2 makes the crown steal "controlled by the player who was the
         -- monarch at the time the abilities triggered", so when the damage that
         -- triggers it also kills the monarch, CR 800.4d keeps it off the stack
-        -- and CR 725.4 alone moves the crown -- to the ACTIVE player, not the
+        -- and CR 726.4 alone moves the crown -- to the ACTIVE player, not the
         -- damager's controller. Gatherer's Court of Grace ruling says the same:
         -- the steal "doesn't resolve", and the attacker's controller usually
         -- ends up monarch only because "it is likely their turn". #3148 claimed
@@ -1415,7 +1415,7 @@ monarchTriggerSpec s registry =
         -- controller change removes a creature from combat), so the damage is a
         -- hand-written event and bob's life total is written down by hand at
         -- what the 2 it records would have left him with.
-        Spec.it s "CR 725.4/800.4d lethal combat damage to the monarch crowns the active player, not the damager's controller" $ do
+        Spec.it s "CR 726.4/800.4d lethal combat damage to the monarch crowns the active player, not the damager's controller" $ do
           piker <- S.printingOf s registry "Goblin Piker"
           birdMaiden <- S.printingOf s registry "Bird Maiden"
           bogWraith <- S.printingOf s registry "Bog Wraith"
@@ -1427,8 +1427,8 @@ monarchTriggerSpec s registry =
               after = resolveAll S.identityAnswer (combatDamageTo S.bob wraith dying)
           Spec.assertEqWith s "bob wore the crown going in" (GameState.monarch base) (Just S.bob)
           Spec.assertEqWith s "alice is the active player, and carol's Wraith dealt the damage" (GameState.activePlayer base, Projection.controllerOf wraith base) (S.alice, Just S.carol)
-          -- The rule: CR 725.4's hand-off is the only crowning.
-          Spec.assertEqWith s "CR 725.4 alice, the active player, is the monarch" (GameState.monarch after) (Just S.alice)
+          -- The rule: CR 726.4's hand-off is the only crowning.
+          Spec.assertEqWith s "CR 726.4 alice, the active player, is the monarch" (GameState.monarch after) (Just S.alice)
           Spec.assertEqWith s "CR 800.4d carol was never crowned: bob's steal trigger did not reach the stack" (filter (== GameEvent.BecameMonarch S.carol) (S.eventsOf after)) []
           Spec.assertBool s (elem (GameEvent.BecameMonarch S.alice) (S.eventsOf after)) "and the hand-off recorded its crowning, naming her"
           Spec.assertEqWith s "CR 704.5a bob lost the game" (Game.stillPlaying after) [S.alice, S.carol]

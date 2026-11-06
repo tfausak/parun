@@ -34,7 +34,7 @@ spec s = Spec.describe s "Parun.Codec.CastOffer" $ do
       CastOffer.codec
       CastOffer.defaultValue
       " {} "
-  -- The two riders are independent (CR 712.11a is about a face, CR 118.9 about a
+  -- The two riders are independent (CR 712.8a is about a face, CR 118.9 about a
   -- cost), so each must survive on its own -- which is also what makes the
   -- elision above unambiguous.
   Spec.it s "MkCastOffer, transformed alone" $

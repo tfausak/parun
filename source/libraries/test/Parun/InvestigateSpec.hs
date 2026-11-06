@@ -1113,7 +1113,7 @@ wildEvocationSpec s registry =
           Spec.assertEqWith s "nothing was revealed" (revealed after) []
           Spec.assertEqWith s "bob's hand is still empty" (bobsHand after) []
           Spec.assertEqWith s "stack empty: the trigger resolved" (length (GameState.stack after)) 0
-        -- CR 709.3a / 715.3a: the offer is evaluated PER HALF, so a prohibition
+        -- CR 709.3a / 716.3a: the offer is evaluated PER HALF, so a prohibition
         -- that stops one half leaves the other on offer. Void Winnower forbids
         -- bob casting a spell with an even mana value; Embereth Shieldbreaker's
         -- {1}{R} is 2 and its Adventure half Battle Display's {R} is 1, so exactly
@@ -1134,12 +1134,12 @@ wildEvocationSpec s registry =
               (bonesplitterId, gs) = S.addPermanent bonesplitter S.alice withWinnower
               after = runBobsUpkeep (rolling 0) gs
           Spec.assertEqWith s "the Adventure half was cast, and it destroyed the Bonesplitter" (S.onBattlefield bonesplitterId gs, S.onBattlefield bonesplitterId after) (True, False)
-          -- BY NAME, and CR 715.4 is why the exiled card answers to the creature's
-          -- name. Transcribed from Parun.AdventureSpec's CR 715.3d case, with bob's
+          -- BY NAME, and CR 716.4 is why the exiled card answers to the creature's
+          -- name. Transcribed from Parun.AdventureSpec's CR 716.3d case, with bob's
           -- exile because bob owns the card (CR 108.3).
           Spec.assertEqWith
             s
-            "CR 715.3d: the adventurer card was exiled rather than put into a graveyard"
+            "CR 716.3d: the adventurer card was exiled rather than put into a graveyard"
             (fmap (\o -> Projection.namesOf o after) (Game.zoneMembers Zone.Exile S.bob after))
             [Set.singleton (named "Embereth Shieldbreaker")]
           Spec.assertEqWith s "the front half was never cast, so no creature entered" (S.countOnBattlefieldByName (named "Embereth Shieldbreaker") S.bob after) 0
@@ -1166,7 +1166,7 @@ wildEvocationSpec s registry =
           Spec.assertEqWith s "CR 608.2g: the creature half resolved under BOB's control, not alice's" (controllerOfNamed "Embereth Shieldbreaker" creatureLeg) (Just S.bob)
           Spec.assertEqWith
             s
-            "CR 715.3d: only the leg that cast the Adventure exiles the card"
+            "CR 716.3d: only the leg that cast the Adventure exiles the card"
             ( fmap (\o -> Projection.namesOf o adventureLeg) (Game.zoneMembers Zone.Exile S.bob adventureLeg),
               Game.zoneMembers Zone.Exile S.bob creatureLeg
             )
@@ -1179,8 +1179,8 @@ wildEvocationSpec s registry =
         -- only one, so rule 702.162a's converted cast is not on offer beside it.
         -- Ratchet, Field Medic prints more than meets the eye, so
         -- Parun.Engine.Card.castableFaces hands Resolve.offerCast two faces (CR
-        -- 712.11d) and the back one is reachable only by paying the keyword's own
-        -- alternative cost. CR 712.11 leaves the front face as the whole answer.
+        -- 712.8d) and the back one is reachable only by paying the keyword's own
+        -- alternative cost. CR 712.8 leaves the front face as the whole answer.
         --
         -- The answerer ASKS for the back face and must not get it: Resolve
         -- rejects rather than repairs, so a leg whose half stopped being offered

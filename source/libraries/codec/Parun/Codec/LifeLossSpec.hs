@@ -26,8 +26,8 @@ spec s = Spec.describe s "Parun.Codec.LifeLoss" $ do
           LifeLoss.tally = Nothing
         }
       " {\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"quantity\":{\"type\":\"Literal\",\"value\":2}} "
-  -- CR 728.1a, which only Parun.Engine.Rad mints.
-  Spec.it s "rule 728.1's loss writes its cause" $
+  -- CR 729.1a, which only Parun.Engine.Rad mints.
+  Spec.it s "rule 729.1's loss writes its cause" $
     Common.assertCodec
       s
       LifeLoss.codec

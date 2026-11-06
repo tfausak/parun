@@ -22,7 +22,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "CR 201.4a / 201.4d / 715.5: Alhammarret, High Arbiter's controller may name a revealed adventurer card's Adventure, judged by the Adventure alone, but not a modal double-faced card's land back face",
+  "description": "CR 201.4a / 201.4d / 716.5: Alhammarret, High Arbiter's controller may name a revealed adventurer card's Adventure, judged by the Adventure alone, but not a modal double-faced card's land back face",
   "note": "Bob reveals Embereth Shieldbreaker // Battle Display, Razorgrass Ambush // Razorgrass Field and an Island. Alice may not name Razorgrass Field, a land face; she names Battle Display, so bob can't cast it but can still cast Embereth Shieldbreaker.",
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$alh" } } },

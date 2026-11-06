@@ -17,12 +17,12 @@ import qualified Parun.Types.SlotName as SlotName
 -- the rules core may read it: Parun.Engine.Replacement.applies narrows a row by
 -- exactly this grain. No printing in data\/cards\/ states it -- they all lose
 -- life as ordinary effects and the codec elides the default -- and the one caller
--- that sets it is Parun.Engine.Rad, which builds rule 728.1's ability out of
--- ordinary opcodes and must still say that its loss is CR 728.1a's.
+-- that sets it is Parun.Engine.Rad, which builds rule 729.1's ability out of
+-- ordinary opcodes and must still say that its loss is CR 729.1a's.
 data LifeLoss = MkLifeLoss
   { player :: PlayerRef.PlayerRef,
     quantity :: Quantity.Quantity,
-    -- | CR 119.3 for anything a card prints; CR 728.1a for rule 728.1's ability.
+    -- | CR 119.3 for anything a card prints; CR 729.1a for rule 729.1's ability.
     cause :: LifeLossCause.LifeLossCause,
     -- | Where to record how much life was ACTUALLY lost, summed over every
     -- player this instruction named, for a later effect of the same resolution

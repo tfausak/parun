@@ -157,7 +157,7 @@ choosesDefender who p = case p of
   _ -> pure (S.identityAnswer p)
 
 -- Sibling of choosesDefender that records the prompt's Decider instead of its
--- PlayerId subject. CR 723.1/723.5: while a player is controlled, their
+-- PlayerId subject. CR 724.1/724.5: while a player is controlled, their
 -- controller makes their choices, and Combat.designateDefenders's
 -- `Decide.deciderFor pid gs` is what routes ChooseDefender there. choosesDefender
 -- above discards the Decider entirely, so it cannot tell that routing apart from
@@ -319,20 +319,20 @@ attackMultiplePlayersSpec s registry = Spec.describe s "AttackMultiplePlayers" $
 -- defenderSpec, which is the Defender KEYWORD (CR 702.3b).
 defendingPlayerSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 defendingPlayerSpec s registry = Spec.describe s "DefendingPlayer" $ do
-  Spec.it s "CR 723.1 a controlled active player's choice of defender routes to their controller" $ do
+  Spec.it s "CR 724.1 a controlled active player's choice of defender routes to their controller" $ do
     -- THREE seats (alice active, bob, carol) with carol controlling alice
     -- (Mindslaver-style: GameState.control names carol as alice's decider),
     -- the established fixture idiom for a controlled player -- the same shape
-    -- GameSpec's CR 723.6 concede test (GameSpec.hs:811-858) and DecideSpec's
-    -- CR 723.3 case (DecideSpec.hs:19-23) both set up. Three seats, not two, so
+    -- GameSpec's CR 724.6 concede test (GameSpec.hs:811-858) and DecideSpec's
+    -- CR 724.3 case (DecideSpec.hs:19-23) both set up. Three seats, not two, so
     -- attackableOpponents is [bob, carol] -- a REAL choice -- rather than
     -- CR 506.2's one-candidate elision, which would never build a prompt at all
     -- and so could never discriminate the Decider on one.
     --
-    -- CR 723.1: "The affected player is controlled during the entire turn"
+    -- CR 724.1: "The affected player is controlled during the entire turn"
     -- (the rest of the rule scopes this to the player's own next turn, which
-    -- does not change the point here). Combined with CR 723.5 (the controller
-    -- makes the controlled player's choices) and CR 723.3 (the controlled
+    -- does not change the point here). Combined with CR 724.5 (the controller
+    -- makes the controlled player's choices) and CR 724.3 (the controlled
     -- player is still the active player), alice remains the active player
     -- named in the prompt but carol is who must be asked. Combat.designateDefenders
     -- gets this right by computing `Decide.deciderFor pid gs` rather than
@@ -341,7 +341,7 @@ defendingPlayerSpec s registry = Spec.describe s "DefendingPlayer" $ do
     -- Discriminates exactly that regression: a `designateDefenders` that used
     -- `Decider.MkDecider pid` (the raw active player, alice) instead of
     -- `Decide.deciderFor pid gs` would record `[Decider.MkDecider S.alice]`
-    -- below -- handing alice's own choice back to her, which is the CR 723.1
+    -- below -- handing alice's own choice back to her, which is the CR 724.1
     -- violation this test exists to catch -- and no other case in this group
     -- sets GameState.control, so none of them would notice.
     let controlled = (S.oneDefendingPlayer S.threePlayerGame) {GameState.control = S.turnControl S.carol S.alice}

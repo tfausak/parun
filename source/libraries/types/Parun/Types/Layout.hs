@@ -1,4 +1,4 @@
--- | CR 709-722: the comprehensive rules' own enumeration of card layouts. One
+-- | CR 709-723: the comprehensive rules' own enumeration of card layouts. One
 -- constructor per layout that has actually landed; casing on this in the closed
 -- half is the same act as casing on a Phase or a Keyword (design.md section 1),
 -- since these are numbered sections of the rulebook rather than the identity of
@@ -45,18 +45,18 @@ data Layout
     -- the permanent is on the battlefield and only if the permanent is flipped"
     -- (CR 710.1b).
     --
-    -- Neither of the two-frame shapes above. CR 715.2's inset frame gives a SPELL
+    -- Neither of the two-frame shapes above. CR 716.2's inset frame gives a SPELL
     -- alternative characteristics, where this one gives them to a PERMANENT, and
     -- reaching them is a change of STATUS (CR 110.5) rather than a way of casting
     -- -- so nothing about a flip card is a second cast, and Card.castableFaces
     -- offers only the normal half. It is not Transforming either: CR 710.1's
     -- "the back of a flip card is the normal Magic card back" excludes it from
-    -- CR 712.1's double-faced cards, and CR 701.27c therefore withholds a
+    -- CR 712.1's double-faced cards, and CR 701.27d therefore withholds a
     -- transform from it.
     --
     -- Its own arm rather than a reading of Transforming for a second reason the
     -- rules state outright. CR 710.1c: "a flip card's color and mana cost don't
-    -- change if the permanent is flipped", where CR 712.8e gives a turned-over
+    -- change if the permanent is flipped", where CR 712.6d gives a turned-over
     -- permanent "only the characteristics of its back face". So the flipped
     -- read is PER-CHARACTERISTIC and not a face swap, which is
     -- Parun.Engine.Card.flippedFace.
@@ -66,59 +66,59 @@ data Layout
     -- TOP of the frame and CR 710.1b the alternative at the bottom, which is a
     -- printing fact Parun.Types.Card.faces' order stands in for.
     Flip
-  | -- | CR 715.1: a card with "a two-part card frame, with a smaller frame
-    -- inset within their text box". CR 715.2 makes the inset frame's text a set
+  | -- | CR 716.1: a card with "a two-part card frame, with a smaller frame
+    -- inset within their text box". CR 716.2 makes the inset frame's text a set
     -- of ALTERNATIVE characteristics the object may have while it is a spell,
     -- which is what separates this from Split: a split card's halves are peers
-    -- and CR 709.4 combines them, where CR 715.4 says an adventurer card has
+    -- and CR 709.4 combines them, where CR 716.4 says an adventurer card has
     -- only its NORMAL characteristics everywhere but the stack.
     --
     -- FIRST face normal, the rest alternative. The rules give the two frames
-    -- fixed positions (CR 715.2's inset frame on the left, the card's own on the
+    -- fixed positions (CR 716.2's inset frame on the left, the card's own on the
     -- right) rather than names, so the order Parun.Types.Card.faces already
     -- carries is what says which is which -- the same positional reading CR
-    -- 712.8a's front face takes below.
+    -- 712.6a's front face takes below.
     Adventure
-  | -- | CR 720.1: a card with "a two-part card frame, with a smaller frame inset
+  | -- | CR 721.1: a card with "a two-part card frame, with a smaller frame inset
     -- within their text box", whose inset text is a set of ALTERNATIVE
-    -- characteristics the object may have while it is a spell (CR 720.2). The
-    -- same shape as Adventure above, and CR 720.4 states the same claim CR 715.4
+    -- characteristics the object may have while it is a spell (CR 721.2). The
+    -- same shape as Adventure above, and CR 721.4 states the same claim CR 716.4
     -- does: everywhere but the stack, and on the stack when not cast as an Omen,
     -- an omen card has only its normal characteristics.
     --
     -- Its own constructor rather than a second reading of Adventure, because of
-    -- one sentence. CR 720.3d: "As an Omen spell resolves, its controller
+    -- one sentence. CR 721.3d: "As an Omen spell resolves, its controller
     -- shuffles it into its owner's library instead of putting it into its
-    -- owner's graveyard as it resolves", where CR 715.3d exiles the adventurer
+    -- owner's graveyard as it resolves", where CR 716.3d exiles the adventurer
     -- card instead -- two different destinations that the layout, not the card's
     -- printed text, decides.
     --
     -- FIRST face normal, the rest alternative -- the positional reading Adventure
-    -- above takes. CR 720.2 puts the inset frame on the LEFT where CR 715.2 puts
+    -- above takes. CR 721.2 puts the inset frame on the LEFT where CR 716.2 puts
     -- an Adventure's on the left too; either way position is a printing fact and
     -- Parun.Types.Card.faces' order is what says which is which.
     Omen
-  | -- | CR 722.1: a card with "a two-part card frame, with a smaller frame inset
-    -- within their text box", whose inset text -- CR 722.2a's "prepare spell" --
+  | -- | CR 723.1: a card with "a two-part card frame, with a smaller frame inset
+    -- within their text box", whose inset text -- CR 723.2a's "prepare spell" --
     -- defines ALTERNATIVE characteristics the object may have while it is a
-    -- spell (CR 722.2). The frame Adventure and Omen above print, and the one
+    -- spell (CR 723.2). The frame Adventure and Omen above print, and the one
     -- sentence that makes it a third arm rather than a reading of either is CR
-    -- 722.3: "preparation cards can't be cast using the alternative
-    -- characteristics found within their inset frames". Where CR 715.3 and CR
-    -- 720.3 offer the inset half at cast time, this layout never does; the half
-    -- is reached only through the COPY CR 722.3c mints in exile, which
+    -- 723.3: "preparation cards can't be cast using the alternative
+    -- characteristics found within their inset frames". Where CR 716.3 and CR
+    -- 721.3 offer the inset half at cast time, this layout never does; the half
+    -- is reached only through the COPY CR 723.3c mints in exile, which
     -- Parun.Engine.Prepare creates and Parun.Engine.Card.prepareFace supplies the
     -- characteristics of.
     --
-    -- CR 722.4 is the second separation and is stricter than either sibling:
+    -- CR 723.4 is the second separation and is stricter than either sibling:
     -- "in every zone, a preparation card has only its normal characteristics",
-    -- where CR 715.4 and CR 720.4 both carve the stack out. So every layout case
+    -- where CR 716.4 and CR 721.4 both carve the stack out. So every layout case
     -- in Parun.Engine.Card answers for this arm the way it answers for Flip --
     -- the head face and nothing else -- and castableFaces in particular offers
     -- only the normal half.
     --
     -- FIRST face normal, the rest alternative -- the positional reading Adventure
-    -- above takes. CR 722.2 puts the inset frame on the right and the card's own
+    -- above takes. CR 723.2 puts the inset frame on the right and the card's own
     -- on the left, which is a printing fact Parun.Types.Card.faces' order stands
     -- in for.
     Preparation
@@ -127,17 +127,17 @@ data Layout
     -- constructor keeps the name CR 712.1 records as the older one for the same
     -- kind of card ("previously called 'transforming double-faced cards'"),
     -- since turning over is exactly what separates it from CR 712.3's modal kind
-    -- here: CR 712.11b lets a player choose which face of a MODAL card they cast,
-    -- where CR 712.11 casts this one with its front face up by DEFAULT. Not
-    -- always -- CR 712.11a's cast "transformed" or "converted" puts a back face
+    -- here: CR 712.8b lets a player choose which face of a MODAL card they cast,
+    -- where CR 712.8 casts this one with its front face up by DEFAULT. Not
+    -- always -- CR 712.8a's cast "transformed" or "converted" puts a back face
     -- on the stack, and CR 702.162a's more than meets the eye and CR 702.146a's
     -- disturb are the abilities a card prints to reach it -- but the default is
-    -- what CR 712.11b displaces and so is what separates the two layouts.
+    -- what CR 712.8b displaces and so is what separates the two layouts.
     --
     -- FIRST face front, the rest back -- the positional reading Adventure above
     -- already takes. CR 712.2a/712.2b give the two faces printed SYMBOLS rather
     -- than an order, so Parun.Types.Card.faces' printed order is what stands in
-    -- for them, and CR 712.8a/712.8d is what makes the front face the one
+    -- for them, and CR 712.6a/712.6c is what makes the front face the one
     -- Parun.Engine.Card.combined answers with.
     Transforming
   | -- | CR 712.3: a MODAL double-faced card -- "Modal double-faced cards have a
@@ -146,12 +146,12 @@ data Layout
     -- 'convert' on either face."
     --
     -- Independent is the whole of what separates it from Transforming above.
-    -- CR 712.11b lets a player choose which face they are casting where CR
-    -- 712.11 gives a nonmodal card its front face by default (CR 712.11a's
+    -- CR 712.8b lets a player choose which face they are casting where CR
+    -- 712.8 gives a nonmodal card its front face by default (CR 712.8a's
     -- "converted" cast being the printed exception, more than meets the eye), and
-    -- CR 712.8f gives the
+    -- CR 712.6e gives the
     -- resulting spell or permanent "only the characteristics of the face that's
-    -- up" with none of CR 712.8e's mana-value exception carried over.
+    -- up" with none of CR 712.6d's mana-value exception carried over.
     --
     -- FIRST face front, the rest back -- the positional reading Adventure and
     -- Transforming above already take, and CR 712.3a/712.3b's printed symbols
@@ -161,14 +161,14 @@ data Layout
     -- modal spells everywhere else in parun (Parun.Types.Modal, Parun.Engine.Modal,
     -- Face.spell's modes) and the two have nothing to do with each other.
     ModalDoubleFaced
-  | -- | CR 712.4: "Meld cards have a Magic card face on one side and half of an
+  | -- | CR 713.1: "Meld cards have a Magic card face on one side and half of an
     -- oversized card face on the other." A COMPONENT card of a meld pair -- CR
-    -- 712.4a's "one card in each meld pair has an ability that exiles both that
+    -- 713.1a's "one card in each meld pair has an ability that exiles both that
     -- object and its counterpart and melds them", and its counterpart -- and
     -- never the combined back face, which is that rule's "resulting permanent"
     -- rather than a printing.
     --
-    -- ONE face, where the two double-faced arms above carry two, and CR 712.4b is
+    -- ONE face, where the two double-faced arms above carry two, and CR 713.1b is
     -- why nothing is lost: a meld card's half of the oversized face "fails to
     -- determine its characteristics" anywhere but on a melded permanent, so there
     -- is nothing for parun to store and no reader that could ask for it. Where the
@@ -178,11 +178,11 @@ data Layout
     -- Two rules need the classification, and they are the whole of what this
     -- constructor buys over Normal. CR 701.42b: "Tokens, cards that aren't meld
     -- cards, or meld cards that don't form a meld pair can't be melded" -- the
-    -- payload is the counterpart's printed name (CR 712.5's pairs, the printed
+    -- payload is the counterpart's printed name (CR 713.2's pairs, the printed
     -- "(Melds with ...)"), and two cards form a pair when each names the other. CR
-    -- 712.4c: "Unlike other double-faced cards, meld cards cannot be transformed
-    -- or converted. Any instructions to do so are ignored" -- which CR 712.9
-    -- states again from the permanent's side, and which is what keeps this arm off
+    -- 713.1c: "Meld cards cannot be transformed or converted. Any instructions
+    -- to do so are ignored" -- which CR 712.7 states again from the permanent's
+    -- side, and which is what keeps this arm off
     -- Parun.Engine.Card.turnedOver's permitted pair.
     --
     -- The keyword action itself (CR 701.42a) is Parun.Types.Effect's Meld, and

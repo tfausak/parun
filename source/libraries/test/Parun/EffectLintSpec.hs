@@ -1,7 +1,7 @@
 -- Parun.Engine.Card's lints over the shape of a printed effect and face: power
 -- and toughness boxes, Aura pools, mana no payment could spend, zone-bound
 -- opcodes, baked engine-minted shapes, riders, and what each card kind's face
--- must carry (CR 205.1, CR 208.1, CR 309, CR 709.5a, CR 712.4b). Split out of
+-- must carry (CR 205.1, CR 208.1, CR 309, CR 709.5a, CR 713.1b). Split out of
 -- Parun.CardSpec, which keeps the machinery.
 module Parun.EffectLintSpec where
 
@@ -903,7 +903,7 @@ isPhaseR replacement = case replacement of
 -- PhaseR over a whole turn, static or floating, has no count of its own (a card
 -- writes a SkipPhase, whose `count` and `uses` are that count), and an Unlimited
 -- SkipPhase of a whole turn is never spent. An optional one (Time Vault) ends
--- when its controller declines, which CR 732.3 forces of a loop.
+-- when its controller declines, which CR 733.3 forces of a loop.
 turnSkipOffends :: Face.Face Card.Type.Card -> Bool
 turnSkipOffends card =
   any isTurnPhaseR (cardReplacementEffects card) || any unspentTurnSkip (cardAuthoredEffects card)
@@ -1580,7 +1580,7 @@ effectObjectRefs effect =
         Effect.PlayerSacrifices {} -> []
         Effect.Vote {} -> []
         Effect.Bid {} -> []
-        -- CR 727.5's exemption, optional: a card saying nothing about it exempts
+        -- CR 728.5's exemption, optional: a card saying nothing about it exempts
         -- nothing.
         Effect.RestartGame mRef -> read_ (Maybe.maybeToList mRef)
         Effect.ControlPlayerNextTurn {} -> []
@@ -1696,7 +1696,7 @@ effectObjectRefs effect =
         Effect.MakeWarped ref -> read_ [ref]
         Effect.DoesNotUntapNext payload -> read_ [DoesNotUntapNext.ref payload]
         Effect.Transform ref -> [(permanentQuestions, ref)]
-        -- The SAME gather, CR 701.28a routing a convert through CR 701.27a-f and
+        -- The SAME gather, CR 701.28a routing a convert through CR 701.27a-g and
         -- Parun.Engine.Resolve applying both opcodes through one turnPermanentsOver.
         Effect.Convert ref -> [(permanentQuestions, ref)]
         -- A plain READ, unlike the two above: CR 710 states no "any number" flip, and
@@ -1862,7 +1862,7 @@ sharedTypeLineOffends card =
   let lines_ = fmap Face.typeLine (Card.Type.faces card)
    in Card.hasSharedTypeLine card && any (/= NonEmpty.head lines_) lines_
 
--- CR 712.4b: the back face of a meld card "fails to determine its
+-- CR 713.1b: the back face of a meld card "fails to determine its
 -- characteristics" anywhere but on a melded permanent on the battlefield, so
 -- parun stores each half of a meld pair as its front face alone
 -- (Parun.Types.Layout's Meld arm). A file that gave one a second face would be
@@ -1872,7 +1872,7 @@ sharedTypeLineOffends card =
 --
 -- A match on Layout.Meld rather than an engine classifier, unlike
 -- sharedTypeLineOffends above: nothing in Parun.Engine.Card asks "is this a meld
--- card?" -- CR 701.42b's and CR 712.4c's readers case on the layout directly --
+-- card?" -- CR 701.42b's and CR 713.1c's readers case on the layout directly --
 -- so there is no shared answer for the lint to range over.
 --
 -- Over the whole card rather than through anyFace, for distinctFaceNamesOffends'
@@ -1886,7 +1886,7 @@ isMeld card = case Card.Type.layout card of
   Layout.Meld {} -> True
   _ -> False
 
--- CR 712.5's pairs, as the files spell them: each meld card's counterpart is a
+-- CR 713.2's pairs, as the files spell them: each meld card's counterpart is a
 -- meld card in the pool naming it back. A one-sided or misspelt counterpart
 -- would leave Parun.Engine.Event.meldable refusing the real pair (CR 701.42b).
 -- Answers each meld card's name whose counterpart does not name it back.
@@ -2099,14 +2099,14 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertBool s (printsArm True) "the pool has a card adding a subtype outside both families"
     Spec.assertBool s (printsArm False) "the pool has a card removing a subtype outside both families"
     Spec.assertEqWith s "a land type or a creature type belongs on its own family's arm" (fmap (S.nameOf . Printing.card) offenders) []
-  -- CR 712.14a's rider is about a double-faced CARD, and CR 111.1 makes a token
+  -- CR 712.11a's rider is about a double-faced CARD, and CR 111.1 makes a token
   -- no card at all -- so an Effect.Create that carried it would be asking for a
   -- face-turn no rule performs. Parun.Engine.Resolve's Create arm accordingly does
   -- not read the field, and this is what holds the corpus to that reading. A lint
   -- rather than a per-opcode rider type: CR 110.5b's tap state and CR 508.4's
   -- attacking genuinely are common to Create and MoveToZone, so splitting the
   -- record to keep one field off one opcode would duplicate the other two.
-  Spec.it s "no Create carries CR 712.14a's transformed entry rider" $ do
+  Spec.it s "no Create carries CR 712.11a's transformed entry rider" $ do
     ps <- S.allPrintings s corpus
     let creates effect = case effect of
           Effect.Create (Create.MkCreate _ _ riders _ _ _) -> EntryRiders.transformed riders
@@ -2635,7 +2635,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertBool s (clashes [destruction, removal destroyedSlot]) "a singular read outside TurnFaceUp is caught"
     Spec.assertBool s (not (clashes [destruction, removal elsewhereSlot])) "a singular read of another slot is left alone"
     -- One effect, both postures: ExileHaunting's host is a legalOne read and
-    -- its haunting card a group-tolerant one (slotGroup first, CR 730.3c), so
+    -- its haunting card a group-tolerant one (slotGroup first, CR 731.3c), so
     -- the same two slot names swapped are the pair. AttachBound is the second
     -- group-tolerant read, its subject going through objectRefObjects.
     Spec.assertBool s (clashes [destruction, Effect.ExileHaunting (ExileHaunting.MkExileHaunting elsewhereSlot destroyedSlot)]) "a legalOne read of a plurally bound slot is caught"
@@ -3126,7 +3126,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- The sibling lint for the OTHER face-down rider, one field over and pointed
   -- at the opposite zone: CR 708.3 is a rule about entering the BATTLEFIELD, so
   -- on any other destination it is inert card data. Inert on a Create outright,
-  -- for the reason CR 712.14a's transformed rider is -- a token is not a card,
+  -- for the reason CR 712.11a's transformed rider is -- a token is not a card,
   -- and no rule puts one onto the battlefield face down.
   -- Event.changeZoneEntering gates on the destination, so this lints an
   -- authoring mistake rather than guarding the engine.
@@ -3851,12 +3851,12 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
         offenders = filter (offends . Printing.card) ps
     Spec.assertBool s (any ((== Layout.Flip) . Card.Type.layout . Printing.card) ps) "the pool has a flip card to lint"
     Spec.assertEqWith s "every flip card has two halves" (fmap (S.nameOf . Printing.card) offenders) []
-  -- CR 722.1 with CR 722.2: a preparation card's frame has the card's own text
+  -- CR 723.1 with CR 723.2: a preparation card's frame has the card's own text
   -- box and one inset frame, so it prints exactly two faces. The flip lint's
   -- sentence one layout over, and it does the same job: it is what makes
   -- Parun.Engine.Card.prepareFace's empty-tail arm unreachable, where a one-faced
   -- preparation card would become prepared and mint nothing.
-  Spec.it s "CR 722.1 a preparation card prints exactly two faces" $ do
+  Spec.it s "CR 723.1 a preparation card prints exactly two faces" $ do
     ps <- S.allPrintings s corpus
     let offends card = Card.Type.layout card == Layout.Preparation && length (Card.Type.faces card) /= 2
         offenders = filter (offends . Printing.card) ps
@@ -3937,9 +3937,9 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- authoring rather than a defect.
     victory <- S.printingOf s registry "Onward"
     Spec.assertBool s (not (sharedTypeLineOffends (Printing.card victory))) "a Split card's halves may differ"
-  -- CR 712.4b, swept over the pool. See meldFaceCountOffends for what the rule
+  -- CR 713.1b, swept over the pool. See meldFaceCountOffends for what the rule
   -- asks and why the check is a face count.
-  Spec.it s "CR 712.4b a meld card carries its front face alone" $ do
+  Spec.it s "CR 713.1b a meld card carries its front face alone" $ do
     ps <- S.allPrintings s corpus
     let melds = filter (isMeld . Printing.card) ps
         offenders = filter (meldFaceCountOffends . Printing.card) ps
@@ -3947,8 +3947,8 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- sweep counts nothing.
     Spec.assertBool s (not (null melds)) "the pool has a meld card to lint"
     Spec.assertEqWith s "no meld card prints a second face" (fmap (S.nameOf . Printing.card) offenders) []
-  -- CR 712.5, swept over the pool. See unpairedMelds.
-  Spec.it s "CR 712.5 every meld card's counterpart names it back" $ do
+  -- CR 713.2, swept over the pool. See unpairedMelds.
+  Spec.it s "CR 713.2 every meld card's counterpart names it back" $ do
     ps <- S.allPrintings s corpus
     let cards = fmap Printing.card ps
     Spec.assertBool s (length (filter isMeld cards) >= 4) "the pool has two meld pairs to lint"
@@ -3970,7 +3970,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
         stitched = card {Card.Type.faces = NonEmpty.head (Card.Type.faces card) NonEmpty.:| [NonEmpty.head (Card.Type.faces (Printing.card garrison))]}
     Spec.assertBool s (not (meldFaceCountOffends card)) "the real Hanweir Battlements is accepted"
     Spec.assertBool s (meldFaceCountOffends stitched) "a meld card carrying a second face is rejected"
-    -- NOT an offence on the layouts CR 712.1 lists alongside this one: a
+    -- NOT an offence on the double-faced layouts CR 712.1 lists: a
     -- nonmodal double-faced card prints two Magic card faces and stores both.
     Spec.assertBool s (not (meldFaceCountOffends (Printing.card ranger))) "a Transforming card may print two faces"
   -- CR 611.2a, swept over the pool. See untilUsedOffends.

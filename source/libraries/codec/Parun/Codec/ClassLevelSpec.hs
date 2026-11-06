@@ -10,7 +10,7 @@ import qualified Parun.Types.ClassLevel as ClassLevel
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.ClassLevel" $ do
-  -- CR 716.2b: the level designation, as a class level bar prints its number.
+  -- CR 717.2b: the level designation, as a class level bar prints its number.
   Spec.it s "MkClassLevel" $
     Common.assertCodec
       s

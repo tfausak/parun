@@ -117,7 +117,7 @@ fulfilled predicate pid gs =
 -- 103.2b runs AFTER rule 103.2a has set the sideboard aside; Parun.Engine.Setup.createDeck
 -- is what interns it into the pool this reads.
 --
--- In a subgame, CR 729.4's main-game objects (GameState.outsideObjects) are
+-- In a subgame, CR 730.4's main-game objects (GameState.outsideObjects) are
 -- outside the game too, so each one this player owns is offered on the same
 -- terms -- Parun.Engine.Event.eligible's two sources. A FACE-DOWN one is not:
 -- CR 708.2 leaves it no abilities, so it has no companion ability to reveal.
@@ -230,7 +230,7 @@ canTake pid gs = case Map.lookup pid (GameState.players gs) of
 --
 -- Event.bringChosen and not a zone change, Event.bringIn's reason: no object
 -- stood for the card, so the card is MINTED into the hand. That call spends the
--- pool entry, or for a main-game object records CR 729.4a's crossing, which is
+-- pool entry, or for a main-game object records CR 730.4a's crossing, which is
 -- CR 702.139c -- the card "remains in the game until the game ends", so a
 -- second action could not find it again even if the flag below did not stop
 -- one.
@@ -243,7 +243,7 @@ take perform pid = do
       Nothing -> pure ()
       Just card -> do
         -- `before` is taken ahead of `freshObjectId`, which bumps
-        -- GameState.nextObjectId, so CR 733.1's reversal inside Cost.payAction
+        -- GameState.nextObjectId, so CR 734.1's reversal inside Cost.payAction
         -- puts the counter back with the rest. Nothing observes it either way:
         -- an object id is opaque and the counter only ever rises.
         noSource <- State.state Game.freshObjectId

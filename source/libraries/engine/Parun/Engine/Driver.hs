@@ -34,7 +34,7 @@ bySeat seats fallback = Answerer.MkAnswerer $ \asked ->
   let answerer = Maybe.fromMaybe fallback (deciderOf (Asked.prompt asked) >>= (`Map.lookup` seats))
    in Answerer.unwrap answerer asked
 
--- | CR 400.2 / 723.4: a prompt some seat decides goes to `answerer` as that
+-- | CR 400.2 / 724.4: a prompt some seat decides goes to `answerer` as that
 -- seat may see it, never the whole game; every other prompt, chance
 -- included, goes to the fallback. Parun.PlayerViewSpec's "CR 400.2 a seat
 -- answers from its own view" is the proof.
@@ -69,10 +69,10 @@ drive observers answerer budget stop gs = do
       (_, next) <- Engine.runGameAsked (ask observers answerer) gs Engine.runStep
       drive observers answerer (budget - 1) stop next
 
--- WHO ANSWERS a prompt: the Decider it carries, which CR 723.5 makes the seat
+-- WHO ANSWERS a prompt: the Decider it carries, which CR 724.5 makes the seat
 -- that makes every choice a controlled player would make. Not the PlayerId the
--- prompt is about; the two differ only while a CR 723.1 or CR 723.2 effect is
--- running. Prompt.Concede is the exception CR 723.6 names and answers with its
+-- prompt is about; the two differ only while a CR 724.1 or CR 724.2 effect is
+-- running. Prompt.Concede is the exception CR 724.6 names and answers with its
 -- own seat, and the random and shuffle prompts answer Nothing -- randomness is
 -- not a choice, so no seat makes it.
 --

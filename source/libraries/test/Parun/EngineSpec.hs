@@ -43,10 +43,10 @@ cardBackedCount gs =
   let fromCard obj = case Object.source obj of
         Source.OfCard _ -> True
         -- CR 108.2: a melded permanent is backed by cards -- two of them, where
-        -- this counts OBJECTS, so CR 712.21's split is what changes the tally.
+        -- this counts OBJECTS, so CR 713.8's split is what changes the tally.
         Source.OfMeld _ -> True
-        -- CR 730.2: a merged permanent is backed by the cards its components
-        -- are, CR 730.3's split being what changes the tally.
+        -- CR 731.2: a merged permanent is backed by the cards its components
+        -- are, CR 731.3's split being what changes the tally.
         Source.OfMerge _ -> True
         Source.OfToken _ -> False
         Source.OfAbility _ -> False

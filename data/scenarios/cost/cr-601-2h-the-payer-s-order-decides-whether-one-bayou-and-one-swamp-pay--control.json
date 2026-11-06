@@ -1,6 +1,6 @@
 {
   "description": "CR 601.2h the payer's order decides whether one Bayou and one Swamp pay for a Swamp and a Forest",
-  "note": "Control: the printed order pays the Swamp half first, alice gives it the Bayou, and no Forest is left for the other half; the payment is reversed (CR 733.1), both lands stay and Jarad stays in the graveyard.",
+  "note": "Control: the printed order pays the Swamp half first, alice gives it the Bayou, and no Forest is left for the other half; the payment is reversed (CR 734.1), both lands stay and Jarad stays in the graveyard.",
   "board": {
     "seats": [
       {

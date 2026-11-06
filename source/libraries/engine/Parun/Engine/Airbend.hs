@@ -79,10 +79,10 @@ exile ref =
 --
 -- Expiry.Never is CR 611.2a's default for a permission stating no duration, and
 -- "for as long as it remains exiled" is not one: CR 400.7 ends it for free, since
--- leaving exile mints an incarnation that carries no permission. CR 715.3d's
+-- leaving exile mints an incarnation that carries no permission. CR 716.3d's
 -- Adventure permission is written the same way for the same reason.
 --
--- Origin.Granted, not Adventure: rule 715.3d's closing clause excludes its OWN
+-- Origin.Granted, not Adventure: rule 716.3d's closing clause excludes its OWN
 -- permission from casting an Adventure half, and this is not it.
 --
 -- No CR 118.14 rider: rule 701.65a says nothing about what mana may be spent, so

@@ -139,7 +139,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Discontinuity's cost reduction (CR 601.2f) applies during its controller's turn; ending the turn (CR 724.1) exiles the stack, itself and bob's Bolt included.",
+  "description": "Discontinuity's cost reduction (CR 601.2f) applies during its controller's turn; ending the turn (CR 725.1) exiles the stack, itself and bob's Bolt included.",
   "timeline": [
     {
       "do": "Pass",

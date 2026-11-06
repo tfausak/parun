@@ -6,13 +6,13 @@ import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PrintingId as PrintingId
 
--- | CR 729.4: one object in a game that is on hold, as the game being played sees
+-- | CR 730.4: one object in a game that is on hold, as the game being played sees
 -- it -- "all objects in the main game ... are considered outside the subgame".
 -- Keyed in GameState.outsideObjects by the id the card has OUT THERE, which is
 -- the only handle the outer frame needs to apply the departure when this game
 -- ends.
 --
--- No characteristics of its own beyond the status below: CR 729.1b gives a
+-- No characteristics of its own beyond the status below: CR 730.1b gives a
 -- main-game effect no meaning here, so the card is read from its PRINTED FACE
 -- (Parun.Engine.Projection.View.viewOfCard), exactly as CR 103.2a's sideboard pool is.
 -- The owner is carried because CR 108.3b scopes every reach outside the game to
@@ -21,7 +21,7 @@ data OutsideObject = MkOutsideObject
   { owner :: PlayerId.PlayerId,
     printing :: PrintingId.PrintingId,
     -- | CR 110.5: the out-there object's face-up/face-down STATUS, which is the
-    -- one thing about it CR 729.1b does not keep out. A status is not an effect
+    -- one thing about it CR 730.1b does not keep out. A status is not an effect
     -- or a definition -- and CR 708.2a gives a permanent with that status these
     -- values -- so it travels with the object the way ownership
     -- does, and Parun.Engine.Event.eligible reads a face-down entry
@@ -31,10 +31,10 @@ data OutsideObject = MkOutsideObject
     -- the owner reveal a face-down permanent as it leaves the battlefield, and
     -- CR 400.7 makes the card that arrives in the other game a new object.
     facing :: Facing.Facing,
-    -- | CR 712.21 / 730.3: the cards that arrive if it is brought in -- one for
+    -- | CR 713.8 / 731.3: the cards that arrive if it is brought in -- one for
     -- a card, every card component of a melded or merged permanent, in the
-    -- order its source lists them, each keeping its identity (CR 108.3, 729.4a).
-    -- `printing` above is the face `eligible` reads, CR 712.8g's combined face
+    -- order its source lists them, each keeping its identity (CR 108.3, 730.4a).
+    -- `printing` above is the face `eligible` reads, CR 713.5c's combined face
     -- for a melded one.
     cards :: NonEmpty.NonEmpty ComponentCard.ComponentCard
   }

@@ -823,7 +823,7 @@ decode p response = case p of
 defaultAnswer :: Prompt r -> r
 defaultAnswer p = case p of
   Prompt.Shuffle ids -> ids
-  -- CR 729.2: the head of the turn order is always a legal starting player.
+  -- CR 730.2: the head of the turn order is always a legal starting player.
   Prompt.RandomFirstPlayer order -> NonEmpty.head order
   -- The head of the offer is always one of the offered objects. Legal, and
   -- FIXED -- so a spec asserting WHICH card randomness named must supply its own
@@ -926,7 +926,7 @@ defaultAnswer p = case p of
   -- The cost is already covered, so floating more is the eventful answer and
   -- closing the window is the quiet one.
   Prompt.ChooseExtraManaSource {} -> Nothing
-  -- CR 733.1: reversing them, which is the half that leaves the board as the
+  -- CR 734.1: reversing them, which is the half that leaves the board as the
   -- illegal action found it -- a transcript that ran out cannot float mana into
   -- a game that never made it.
   Prompt.ReverseManaAbilities {} -> OptionalDecision.Exercises
@@ -1229,7 +1229,7 @@ defaultAnswer p = case p of
   -- CR 102.1: every candidate is a player in the game, so the head is legal --
   -- the same filter-not-trust fallback Event's arm applies to a wrong answer.
   Prompt.ChoosePlayer _ _ _ candidates -> NonEmpty.head candidates
-  -- CR 725.4 / 726.4: every candidate is a live active player who may take it.
+  -- CR 726.4 / 727.4: every candidate is a live active player who may take it.
   Prompt.ChooseActivePlayer _ _ candidates -> NonEmpty.head candidates
   -- CR 305.6: any of the five basic land types is legal.
   Prompt.ChooseBasicLandType {} -> Subtype.Mountain
@@ -1251,7 +1251,7 @@ defaultAnswer p = case p of
   -- CR 508.1j / 509.1f: likewise, and it is the order the charges were gathered
   -- in -- what parun paid in before the order became the payer's to choose.
   Prompt.OrderCombatTolls _ _ tags -> zipWith const [0 ..] tags
-  -- CR 712.21a: likewise, and it is the order the cards melded in -- what parun
+  -- CR 713.8a: likewise, and it is the order the cards melded in -- what parun
   -- put them down in before the arrangement became the owner's to choose. The
   -- rule says "MAY arrange", so this identity is a real answer rather than a
   -- stand-in for one.
@@ -1353,7 +1353,7 @@ defaultAnswer p = case p of
   -- CR 608.2g: declining an offered cast is always legal, and it leaves the card
   -- exactly where the resolving effect put it.
   Prompt.OfferedCast {} -> OptionalDecision.Declines
-  -- CR 601.3 / 709.3a / 712.11c: every offered cast was gated on its own before
+  -- CR 601.3 / 709.3a / 712.8c: every offered cast was gated on its own before
   -- it reached the prompt, so the first is legal. Printed order within a card, so
   -- it is the earliest surviving half rather than the front face -- a front face
   -- the gate dropped is not on offer at all. A deterministic fallback, not a
@@ -1455,7 +1455,7 @@ swapDefault families = Maybe.fromMaybe (TextWord.Type.SubtypeWord Subtype.Mounta
 -- The game each question came from (Asked, #153) is dropped here, and both
 -- halves drop it: a transcript is a positional list of ANSWERS, and a subgame's
 -- questions are answered from the same list in the order they are asked -- which
--- is exactly what lets one transcript replay a game containing a CR 729 subgame.
+-- is exactly what lets one transcript replay a game containing a CR 730 subgame.
 record :: (forall r. Prompt r -> r) -> GameState -> Game a -> ((a, GameState), [Response])
 record answer gs game =
   let step :: Prompt r -> State.State [Response] r

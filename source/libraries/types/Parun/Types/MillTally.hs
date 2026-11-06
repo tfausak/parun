@@ -5,7 +5,7 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.SlotName as SlotName
 
 -- | What a mill (CR 701.17) records about itself for a LATER effect of the same
--- resolution to read -- CR 728.1's "for each nonland card milled this way, that
+-- resolution to read -- CR 729.1's "for each nonland card milled this way, that
 -- player loses 1 life and removes one rad counter from themselves".
 --
 -- Carried by the opcode rather than by the milled cards, for
@@ -16,7 +16,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- read back as Quantity.InSlot off the effect's source, which is the same
 -- binding Parun.Engine.Resolve's Destroy arm writes for Bane of Progress' "for
 -- each permanent destroyed this way". `filter` is which of the milled cards
--- count, because no rule in the pool tallies ALL of them: rule 728.1 says
+-- count, because no rule in the pool tallies ALL of them: rule 729.1 says
 -- "nonland card", and every printed reader of a mill in the Fallout set
 -- (The Wise Mothman, Screeching Scorchbeast) says the same words.
 --

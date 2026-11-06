@@ -1,5 +1,5 @@
 {
-  "description": "CR 610.3d / 725.4 / 800.4a a monarch who loses to a state-based action crowns the active player as she leaves, THEN her borrowed Banisher Priest is exiled, so the Palace Jailer's prisoner returns first and only it sees the Priest's enter",
+  "description": "CR 610.3d / 726.4 / 800.4a a monarch who loses to a state-based action crowns the active player as she leaves, THEN her borrowed Banisher Priest is exiled, so the Palace Jailer's prisoner returns first and only it sees the Priest's enter",
   "note": "alice controls Palace Jailer (holding carol's Warden) and bob's Banisher Priest, returned under her control by Animate Dead (holding bob's Warden). Nothing gives alice control of the Priest, so CR 800.4a's second clause leaves it with her, and its fourth clause exiles it after she has left and carol has been crowned. Two events: carol's Warden returns alone, then sees bob's arrive, so carol gains 1 and bob nothing. Returned as one event, bob would gain 1 too. Each seat has one Warden, so nobody orders two triggers.",
   "board": {
     "active": "alice",

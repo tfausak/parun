@@ -15,7 +15,7 @@
 --
 -- Imports no Parun.Engine.Projection: every function here takes the projection it
 -- needs as an argument, so a caller that has already projected does not pay for a
--- second one. NOT Saga's reason -- rule 714's module is imported BY Projection,
+-- second one. NOT Saga's reason -- rule 715's module is imported BY Projection,
 -- which calls Saga.entryReplacementsOf, so a dependency the other way really would
 -- be a cycle there. Projection imports THIS module, for `protectorOf` alone:
 -- Filter.attackingBattleProtector is CR 310.9d's seat and this is where the
@@ -35,7 +35,7 @@
 --
 -- CR 310.12b's sentence is whole here, but only its first half is rule 310: the
 -- second half is three rules this module names and does not own -- CR 608.2g's
--- cast during a resolution, CR 712.11a's transformed face and CR 118.9's
+-- cast during a resolution, CR 712.8a's transformed face and CR 118.9's
 -- alternative cost -- carried as an Effect.OfferCast the DSL states and
 -- Parun.Engine.Resolve performs.
 module Parun.Engine.Battle where
@@ -301,7 +301,7 @@ siegeDefeat =
               Nothing
           )
       -- "then you may cast it transformed without paying its mana cost": CR 608.2g's
-      -- cast during a resolution, with CR 712.11a's face rider and CR 118.9's
+      -- cast during a resolution, with CR 712.8a's face rider and CR 118.9's
       -- alternative cost. Both riders come from the OFFER, so nothing downstream
       -- learns that rule 310.12b is what wrote them.
       offer =
@@ -336,7 +336,7 @@ triggeredAbilitiesOf :: PC.ProjectedCharacteristics -> [TriggeredAbility Card (G
 triggeredAbilitiesOf pc = if Set.member Subtype.Siege (battleTypes pc) && not (PC.lostAllAbilities pc) then [siegeDefeat] else []
 
 -- CR 122.1g / 310.4c: the defense counters on a permanent. Zero for an object the
--- game does not hold, the answer Saga.loreOn gives for rule 714.3.
+-- game does not hold, the answer Saga.loreOn gives for rule 715.3.
 defenseOn :: ObjectId.ObjectId -> GameState -> Natural
 defenseOn oid gs = case Game.lookupObject oid gs of
   Nothing -> 0

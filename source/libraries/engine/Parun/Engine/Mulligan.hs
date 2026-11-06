@@ -74,8 +74,8 @@ openingHands :: HandActionPerformer -> [PlayerId] -> Game ()
 openingHands perform seated = do
   owners <- State.gets (\gs -> List.sortOn (\pid -> List.findIndex (Turn.sharesTurn gs pid) seated) seated)
   -- CR 103.5 sentence 1: every player draws a full opening hand. A short
-  -- library sets drewFromEmpty here, and the flag survives the loop -- CR 727.3
-  -- / 729.3.
+  -- library sets drewFromEmpty here, and the flag survives the loop -- CR 728.3
+  -- / 730.3.
   Monad.forM_
     owners
     ( \pid -> do
@@ -302,7 +302,7 @@ declared pid decision offer =
 -- CR 800.1: a multiplayer game BEGINS with more than two players, rather than
 -- currently having them. GameState.turnOrder is the permanent seating roster,
 -- so counting seats answers that directly and a game that drops to two players
--- by departure keeps its free mulligan. A rebuilt game (CR 727.1, CR 729.2) is
+-- by departure keeps its free mulligan. A rebuilt game (CR 728.1, CR 730.2) is
 -- seated from the players who were in the game it came from, so it answers for
 -- itself.
 --

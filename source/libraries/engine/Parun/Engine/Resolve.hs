@@ -199,7 +199,7 @@ withDefinedSlots holder mi mode action =
 -- withDefinedSlots' first half: lift `names` off `holder`'s bindings, answering
 -- what was under them. A holder that has ceased carries nothing to lift and
 -- takes nothing back (Map.adjust is silent on a missing key), which is the same
--- answer CR 729.5's detached bindings give the rest of this module.
+-- answer CR 730.5's detached bindings give the rest of this module.
 takeBindings :: ObjectId -> Set SlotName -> GameState -> (Map SlotName Binding.Type.Binding, GameState)
 takeBindings holder names gs =
   let taken = maybe Map.empty (flip Map.restrictKeys names . Object.bindings) (Game.lookupObject holder gs)
@@ -667,13 +667,13 @@ applyCipher settle oid controller = do
          in g {GameState.encoded = foldr (`Map.insert` chosen) (GameState.encoded g) arrived}
       pure (not (null landed))
 
--- CR 608.2n / 702.27a / 702.88a / 715.3d / 720.3d: where the spell goes as the
+-- CR 608.2n / 702.27a / 702.88a / 716.3d / 721.3d: where the spell goes as the
 -- last part of its resolution -- its owner's graveyard, unless one of four riders
 -- replaces that move: buyback's owner's hand, rebound's exile, the Adventure's
 -- exile, or the Omen's shuffle into its owner's library.
 --
 -- Reached only from the RESOLVING path: a fizzled spell does not resolve (CR
--- 608.2b), so CR 715.3d's "as it resolves" never applies to it. What a rider
+-- 608.2b), so CR 716.3d's "as it resolves" never applies to it. What a rider
 -- leaves BEHIND is written onto the id the move RETURNS, since CR 400.7 mints a
 -- fresh incarnation wherever the card lands.
 --
@@ -681,7 +681,7 @@ applyCipher settle oid controller = do
 -- 205.3k) rather than on the card's layout, because the question is which set of
 -- characteristics is resolving rather than which card printed them -- read off
 -- Projection.spellFaceOf, so a spell that became a copy asks of the copy (CR
--- 707.2, 715.3c, 720.3c) -- a
+-- 707.2, 716.3c, 721.3c) -- a
 -- classification either way, never an effect's identity. Buyback's is keyed on the
 -- record CR 601.2b's announcement wrote (Parun.Engine.Cast.stampBoughtBack), which
 -- is rule 702.27a's own "if the buyback cost was paid", and rebound's on rule
@@ -691,7 +691,7 @@ applyCipher settle oid controller = do
 -- rather than performed (Replacement.installSpellMoveRow), so CR 616.1's loop
 -- orders them against every other row watching the same move AND against each
 -- other. What no ZoneChangeR can carry -- rule 702.88a's delayed ability and rule
--- 715.3d's play permission -- is armed after the move and only where
+-- 716.3d's play permission -- is armed after the move and only where
 -- Replacement.rowApplied says that row is what moved the card: a row the
 -- controller took ahead of it sends the spell somewhere else and CR 614.6 leaves
 -- the rider nothing to hang on.
@@ -699,7 +699,7 @@ finishSpell :: Game () -> ObjectId -> Face.Face Card.Type.Card -> PlayerId -> Ga
 finishSpell settle oid face controller = do
   bought <- State.gets (maybe False Object.boughtBack . Game.lookupObject oid)
   Monad.when bought (State.modify' (snd . Replacement.installBuybackReturn oid controller))
-  -- CR 701.24a's shuffle is the Omen row's own rider, so rule 720.3d leaves
+  -- CR 701.24a's shuffle is the Omen row's own rider, so rule 721.3d leaves
   -- nothing to do after the move and its timestamp is not kept.
   Monad.when (Card.isOmen face) (State.modify' (snd . Replacement.installOmenShuffle oid controller))
   rebounds <- State.gets reboundApplies
@@ -713,7 +713,7 @@ finishSpell settle oid face controller = do
     -- exile, so it is armed only where that rewrite is what moved the card.
     Monad.when (took reboundRow) $
       State.modify' (Event.armDelayed Keyword.Engine.reboundUpkeep newId controller (Map.singleton Keyword.Engine.reboundSlot (Binding.toObject newId)) (Just TurnWindow.AnyTurn) Nothing)
-    -- CR 715.3d's "for as long as that card remains exiled, that player may play
+    -- CR 716.3d's "for as long as that card remains exiled, that player may play
     -- it", which is the same sentence as the exile it hangs off.
     Monad.when (took adventureRow) . State.modify' $ \gs ->
       gs
@@ -743,16 +743,16 @@ finishSpell settle oid face controller = do
       Keyword.Engine.hasRebound (Map.keysSet (Projection.keywordsOf oid gs))
         && maybe False fromOwnHand (Game.lookupObject oid gs)
     fromOwnHand obj = Object.castFrom obj == Just Zone.Hand && Object.owner obj == controller
-    -- Never for CR 715.3d's duration, as long as the card stays exiled: what ends
+    -- Never for CR 716.3d's duration, as long as the card stays exiled: what ends
     -- it is CR 400.7 -- leaving exile mints a new incarnation, and newIncarnation clears
     -- the field.
     permission newId =
-      -- CR 715.3d says nothing about mana, in either sense: neither CR
+      -- CR 716.3d says nothing about mana, in either sense: neither CR
       -- 118.14's rider nor CR 118.9's alternative cost, so the Adventure half
       -- is cast for its printed cost. Its "that player may play it" counts no
       -- plays.
       (ExilePlayPermission.defaultValue controller newId)
-        { -- This IS rule 715.3d's permission, and so the one its next sentence
+        { -- This IS rule 716.3d's permission, and so the one its next sentence
           -- excludes the Adventure half from.
           ExilePlayPermission.origin = PlayPermissionOrigin.Adventure
         }
@@ -774,7 +774,7 @@ resolveSpell = resolveSpellWith Common.noSubgame
 -- target is gone.
 --
 -- `runSubgame` is the injected nested-game runner, the same one resolveSpellWith
--- takes: CR 729.1a says "the spell or ability that created the subgame", so an
+-- takes: CR 730.1a says "the spell or ability that created the subgame", so an
 -- ability's PlaySubgame plays one exactly as a spell's does (see #137).
 resolveModesWith :: Game Result -> ObjectId -> ObjectId -> [(ModeInstance, Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))] -> Game ()
 resolveModesWith runSubgame stackId srcId modes = do
@@ -1283,7 +1283,7 @@ villainousPass resolving source controller idx legal orElse limbs performLimb ac
 -- through apnapDecidersOf. Every printed "you may" names the resolving controller -- CR
 -- 405.4 for a spell, CR 113.8 for an ability -- and Jungle Wayfinder's "each
 -- player may" names the whole table. Each of them is asked through
--- Decide.deciderFor, so a player controlled under CR 723.1 has their controller
+-- Decide.deciderFor, so a player controlled under CR 724.1 has their controller
 -- answer.
 --
 -- ALL the asks BEFORE any effect runs, which is CR 608.2e: the choices for an
@@ -1373,7 +1373,7 @@ exercises couldnt resolving source controller idx cIdx bound legal announced com
 --
 -- A CLASSIFICATION and never an identity check: what an effect reads comes from
 -- slotsOf, and slotsAreExhaustive is what says slotsOf is the WHOLE of it -- an
--- opcode that reads more than its slots (ArmDelayedTrigger, CR 725.2's
+-- opcode that reads more than its slots (ArmDelayedTrigger, CR 726.2's
 -- ControllerOfSource) answers False there and so is never called inert. That
 -- conjunct is a REGRESSION FENCE rather than a proven behaviour: no optional
 -- clause in data/cards/ holds such an opcode, so dropping it leaves the suite
@@ -1477,7 +1477,7 @@ resolveModes = resolveModesWith Common.noSubgame
 -- 700.2c). The ability then ceases (CR 608.2n) rather than being buried.
 --
 -- `runSubgame` rides through to the effects for the reason resolveModesWith
--- gives (CR 729.1a).
+-- gives (CR 730.1a).
 resolveAbilityWith :: Game Result -> ObjectId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
 resolveAbilityWith runSubgame abilId srcId ability = do
   gs <- State.get
@@ -1543,10 +1543,10 @@ resolveAbility = resolveAbilityWith Common.noSubgame
 -- visible to a later one. `obj` is the object as resolution began, the fallback
 -- for the reads below.
 --
--- CR 729.5 is why the fallback is not just that snapshot: "the spell or ability
+-- CR 730.5 is why the fallback is not just that snapshot: "the spell or ability
 -- that created the subgame finishes resolving, even if it was created by a spell
 -- card that's no longer on the stack". A wish cast INSIDE a subgame may name the
--- very spell that is resolving -- CR 729.4 puts the main game's stack outside the
+-- very spell that is resolving -- CR 730.4 puts the main game's stack outside the
 -- subgame -- and Parun.Engine.Setup.applyCrossings then deletes that object before
 -- the resolution resumes. What it bound meanwhile is in
 -- GameState.detachedBindings, and takes precedence over the announced bindings

@@ -29,7 +29,7 @@ data EventShape
   | -- | CR 603.6c: an object left this zone, for anywhere -- "left the
     -- battlefield", which GameEvent.LeftTheGame answers too.
     MovedFrom Zone.Zone
-  | -- | CR 712.21e's second half: how many CARDS were put into this zone, from
+  | -- | CR 713.8e's second half: how many CARDS were put into this zone, from
     -- anywhere.
     --
     -- MovedBetween above is the same rule's first half and counts OBJECTS, which
@@ -40,7 +40,7 @@ data EventShape
     --
     -- ONE DESTINATION, where MovedBetween names both ends, and beside it the
     -- origins that do NOT count rather than the ones that do -- see the payload.
-    -- CR 712.21e's "changed zones" puts no condition on where a card came from,
+    -- CR 713.8e's "changed zones" puts no condition on where a card came from,
     -- and most of the pool's producers ask the same way -- "put into graveyards
     -- from anywhere", and Ashiok, Wicked Manipulator's Nightmare token's "if a
     -- card was put into exile this turn" (Parun.PlaneswalkerSpec's AshiokLoyalty

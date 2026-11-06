@@ -18,6 +18,6 @@ data CopyCoverage
     SourceHost (Map.Map ObjectId.ObjectId Timestamp.Timestamp)
   | -- | CR 611.3a / 613.7e: this object while the row's source stays attached
     -- to it under the row's own timestamp -- one attachment of a SourceHost
-    -- row, carved off it by a merge (CR 730.2a).
+    -- row, carved off it by a merge (CR 731.2a).
     Attachment ObjectId.ObjectId
   deriving (Eq, Ord, Show)

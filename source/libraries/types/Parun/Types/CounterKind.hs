@@ -6,7 +6,7 @@ import qualified Parun.Types.CounterName as CounterName
 -- Its KIND is a closed-half classification, the same posture as Keyword: the
 -- rules core reads counts by kind (CR 613.4c, the CR 704.5q SBA) and never cases
 -- on a card. CR 122.1a for the P/T kinds, CR 122.1b for keyword, CR 122.1e for
--- loyalty, rule 714 for lore, CR 702.63 for time and CR 702.32 for fade -- none
+-- loyalty, rule 715 for lore, CR 702.63 for time and CR 702.32 for fade -- none
 -- of which rule 122.1 lists at all, CR 122.1c for shield, CR 122.1d for stun and
 -- CR 122.1h for finality. Every object kind rule 122.1 names now has an arm;
 -- 122.1f's poison and 122.1i's rad are a PLAYER's and live in
@@ -41,15 +41,15 @@ data CounterKind keyword
     -- reads it is CR 704.5i's state-based action and CR 606.6's activation gate,
     -- both counting Object.counters directly.
     Loyalty
-  | -- | CR 714.3: the counters a Saga tracks its progress with. Rule 122.1 gives
+  | -- | CR 715.3: the counters a Saga tracks its progress with. Rule 122.1 gives
     -- lore counters no lettered clause of their own -- 122.1a-j never name them --
-    -- so rule 714 is the whole citation. Contrast CR 122.1e, which does give
+    -- so rule 715 is the whole citation. Contrast CR 122.1e, which does give
     -- loyalty a clause of its own and cross-refers rule 704 from it.
     --
     -- Contributes nothing to the CR 613 layer system, so
     -- Parun.Engine.Projection.counterGathered grants nothing for this kind either.
-    -- What reads it is CR 714.2b's chapter trigger
-    -- (TriggerCondition.CountersChange), CR 714.3c's turn-based action and CR
+    -- What reads it is CR 715.2b's chapter trigger
+    -- (TriggerCondition.CountersChange), CR 715.3c's turn-based action and CR
     -- 704.5s's state-based action, all three counting Object.counters directly.
     Lore
   | -- | CR 122.1g / 310.4c: a battle's defense on the battlefield is this count,
@@ -68,7 +68,7 @@ data CounterKind keyword
     Defense
   | -- | CR 702.62a / 702.63a: the counters suspend and vanishing count down. Rule
     -- 122.1 gives time counters no lettered clause either -- 122.1a-j never name
-    -- them -- so those two rules are the whole citation, exactly as rule 714 is
+    -- them -- so those two rules are the whole citation, exactly as rule 715 is
     -- Lore's.
     --
     -- Contributes nothing to the CR 613 layer system, so
@@ -164,7 +164,7 @@ data CounterKind keyword
     Stun
   | -- | CR 711.2: the counters a leveler creature tracks its level with. Rule
     -- 122.1 gives level counters no lettered clause of their own -- 122.1a-j
-    -- never name them -- so rule 711 is the whole citation, exactly as rule 714
+    -- never name them -- so rule 711 is the whole citation, exactly as rule 715
     -- is Lore's.
     --
     -- Contributes nothing to the CR 613 layer system, so
@@ -174,7 +174,7 @@ data CounterKind keyword
     -- which is ordinary card data (StaticAbility.condition), so the layer 6 and
     -- 7b modifications come from the card and never from the counter.
     --
-    -- CR 716.4 keeps this apart from a Class's level: "Level counters do not
+    -- CR 717.4 keeps this apart from a Class's level: "Level counters do not
     -- interact with Class cards, and class levels do not interact with leveler
     -- cards." A class level is not a counter at all, so it is not a kind here --
     -- it is Object.classLevel, and the two must not share a field.

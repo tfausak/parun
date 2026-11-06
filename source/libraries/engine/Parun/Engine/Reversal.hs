@@ -1,4 +1,4 @@
--- | CR 733.1's partition, built as a state rather than asked as a question:
+-- | CR 734.1's partition, built as a state rather than asked as a question:
 -- the state a player ends in who reverses an illegal play but KEEPS the legal
 -- mana abilities they activated while making it.
 --
@@ -9,7 +9,7 @@
 -- `before -> entry` diff is undone on top of `closed`, rather than the window
 -- being replayed onto `before`. Replaying is not exact, and Crypt of Agadeem is
 -- why -- a mana ability that counts the graveyard counts it with the
--- announcement's spell already gone from it, and CR 733.1 keeps the ability as
+-- announcement's spell already gone from it, and CR 734.1 keeps the ability as
 -- it HAPPENED.
 --
 -- Parun.Engine.Cost.composeReversal is the caller.
@@ -33,7 +33,7 @@ import qualified Parun.Types.Object as Object
 import Parun.Types.Player (Player)
 import qualified Parun.Types.Player as Player
 
--- CR 733.1: `closed` with the announcement undone -- "the entire action is
+-- CR 734.1: `closed` with the announcement undone -- "the entire action is
 -- reversed and any payments already made are canceled", while the mana
 -- abilities the payer activated stand. The arguments are where the action
 -- began, where the payment's mana window opened, and where it closed.
@@ -195,9 +195,9 @@ withoutAnnouncement before entry closed = do
   -- announcement spans.
   turnMarkers <- one GameState.turnMarkers
   -- CR 100.6a: a monotone tally, so the closed window's value is the newest --
-  -- nextTimestamp's treatment. Nothing a CR 733.1 reversal undoes can reach it.
+  -- nextTimestamp's treatment. Nothing a CR 734.1 reversal undoes can reach it.
   subgamesThisMatch <- newest GameState.subgamesThisMatch
-  -- CR 727.1 / 729.1a: the same, and the game the window was in.
+  -- CR 728.1 / 730.1a: the same, and the game the window was in.
   gamesThisMatch <- newest GameState.gamesThisMatch
   gameNumber <- one GameState.gameNumber
   turnAnchor <- one GameState.turnAnchor
@@ -350,7 +350,7 @@ withoutAnnouncement before entry closed = do
     -- The window's value, always: the monotone counters, and the two intern
     -- tables `nextPrintingId` indexes. Giving back a counter the announcement
     -- advanced would hand an id or a timestamp out twice, which is a state no
-    -- rule describes; CR 733.1 reverses a game action, not the bookkeeping.
+    -- rule describes; CR 734.1 reverses a game action, not the bookkeeping.
     newest :: (GameState -> a) -> Maybe a
     newest field = Just (field closed)
     -- Per key, with an absent key its own value: a key only the announcement
@@ -371,7 +371,7 @@ withoutAnnouncement before entry closed = do
     seqOf field = Just (Seq.fromList (elements (Foldable.toList (field before)) (Foldable.toList (field entry)) (Foldable.toList (field closed))))
     zoneOf :: (Ord k, Eq a) => (GameState -> Map.Map k (Seq.Seq a)) -> Maybe (Map.Map k (Seq.Seq a))
     zoneOf field = mapWith (\b e c -> Just (Seq.fromList (elements (Foldable.toList b) (Foldable.toList e) (Foldable.toList c)))) (field before) (field entry) (field closed)
-    -- CR 733.1's last sentence: a shuffle is never reversed, nor a move to a
+    -- CR 734.1's last sentence: a shuffle is never reversed, nor a move to a
     -- library or out of one to anywhere but the stack. So the window's ORDER
     -- stands, and so does whatever the window moved; what goes back is only the
     -- announcement's own move, which is a cast from a library (Panglacial Wurm)
@@ -383,7 +383,7 @@ withoutAnnouncement before entry closed = do
     -- library is, its order being a shuffle's too (CR 103.3a).
     pilesOf :: (Ord k, Eq a) => Map.Map k (Seq.Seq a) -> Map.Map k (Seq.Seq a) -> Map.Map k (Seq.Seq a) -> Maybe (Map.Map k (Seq.Seq a))
     pilesOf = mapWith (\b e c -> Just (Seq.fromList (libraryOrder (Foldable.toList b) (Foldable.toList e) (Foldable.toList c))))
-    -- CR 733.1: "no abilities trigger and no effects apply as a result of an
+    -- CR 734.1: "no abilities trigger and no effects apply as a result of an
     -- undone action", so the announcement's own segment of the log goes and the
     -- window's stands. The log only grows, so that segment is the one between
     -- the two lengths. A kept life gain or loss can become its player's first by
@@ -584,7 +584,7 @@ tally before entry closed = case leaf before entry closed of
 -- CR 106.4's pools, each read as a multiset of units where `leaf` finds both
 -- sides wrote it: what the undone side added comes out of `closed` and what it
 -- spent goes back. Nothing where an added unit is no longer there. Whose mana
--- paid for what is CR 733.1's "unless" clause, which a pool cannot tell and
+-- paid for what is CR 734.1's "unless" clause, which a pool cannot tell and
 -- Parun.Engine.Cost.reverseIllegal checks before this is asked.
 --
 -- An absent pool is an empty one, so a key goes through `leaf` whole first.
@@ -630,7 +630,7 @@ libraryOrder before entry closed =
       taken = [(i, x) | (i, x) <- zip [0 :: Int ..] before, notElem x entry, notElem x closed]
    in putBackAt stayed taken
 
--- A library the WHOLE action is reversed over, CR 733.1's last sentence still
+-- A library the WHOLE action is reversed over, CR 734.1's last sentence still
 -- standing: `since`'s order, less what it gained, with what it lost back at the
 -- index `snapshot` gave it. Parun.Engine.Cost.keepingLibraryActions is the
 -- caller. Where the membership is unchanged this is `since` itself.
