@@ -1,11 +1,8 @@
 {
-  "description": "CR 701.71a With two Jace planeswalker tokens, alice chooses which one Campus Crier's empower Jace puts the counters on",
   "board": {
     "active": "alice",
-    "step": "PrecombatMain",
     "seats": [
       {
-        "name": "alice",
         "battlefield": [
           {
             "card": "Island",
@@ -13,8 +10,6 @@
           },
           {
             "card": "Jace Beleren",
-            "label": "first",
-            "token": true,
             "counters": [
               {
                 "key": {
@@ -22,12 +17,12 @@
                 },
                 "value": 3
               }
-            ]
+            ],
+            "label": "first",
+            "token": true
           },
           {
-            "card": "Jace Beleren",
-            "label": "second",
-            "token": true,
+            "card": "Jace, Memory Adept",
             "counters": [
               {
                 "key": {
@@ -35,7 +30,9 @@
                 },
                 "value": 3
               }
-            ]
+            ],
+            "label": "second",
+            "token": true
           }
         ],
         "graveyard": [
@@ -57,10 +54,10 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "alice"
       },
       {
-        "name": "bob",
         "library": [
           {
             "card": "Island"
@@ -74,81 +71,85 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "bob"
       }
-    ]
+    ],
+    "step": "PrecombatMain"
   },
+  "description": "CR 701.71a With two Jace planeswalker tokens, alice chooses which one Campus Crier's empower Jace puts the counters on",
+  "note": "Two different Jace planeswalkers as tokens, so the legend rule (CR 704.5j) keeps both.",
   "timeline": [
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Activate": {
-          "object": "$crier",
           "mana": [
             "$island"
-          ]
+          ],
+          "object": "$crier"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Answer": {
           "prompt": "ChooseAmass",
           "with": "$second"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Counters": {
-          "object": "$second",
+          "count": 5,
           "kind": {
             "type": "Loyalty"
           },
-          "count": 5
+          "object": "$second"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Counters": {
-          "object": "$first",
+          "count": 3,
           "kind": {
             "type": "Loyalty"
           },
-          "count": 3
+          "object": "$first"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Count": {
-          "player": "alice",
-          "zone": "Battlefield",
           "card": "Jace Token",
-          "count": 0
+          "count": 0,
+          "player": "alice",
+          "zone": "Battlefield"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     }
   ]
 }

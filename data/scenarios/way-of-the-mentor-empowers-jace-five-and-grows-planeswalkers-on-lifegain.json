@@ -1,12 +1,8 @@
 {
-  "description": "CR 701.71a Way of the Mentor's enters trigger empowers Jace 5; the token's [-3] draws a card, and gaining life puts a loyalty counter on each planeswalker alice controls",
-  "note": "Jace Beleren is a second planeswalker, so the lifegain trigger is seen to reach each one; bob's Jace Beleren is not alice's and stays at 3.",
   "board": {
     "active": "alice",
-    "step": "PrecombatMain",
     "seats": [
       {
-        "name": "alice",
         "battlefield": [
           {
             "card": "Plains",
@@ -38,7 +34,6 @@
           },
           {
             "card": "Jace Beleren",
-            "label": "jace",
             "counters": [
               {
                 "key": {
@@ -46,7 +41,8 @@
                 },
                 "value": 3
               }
-            ]
+            ],
+            "label": "jace"
           }
         ],
         "hand": [
@@ -61,8 +57,7 @@
         ],
         "library": [
           {
-            "card": "Plains",
-            "label": "top"
+            "card": "Plains"
           },
           {
             "card": "Island"
@@ -76,10 +71,24 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "alice"
       },
       {
-        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Jace Beleren",
+            "counters": [
+              {
+                "key": {
+                  "type": "Loyalty"
+                },
+                "value": 3
+              }
+            ],
+            "label": "bobjace"
+          }
+        ],
         "library": [
           {
             "card": "Island"
@@ -94,218 +103,206 @@
             "card": "Island"
           }
         ],
-        "battlefield": [
-          {
-            "card": "Jace Beleren",
-            "label": "bobjace",
-            "counters": [
-              {
-                "key": {
-                  "type": "Loyalty"
-                },
-                "value": 3
-              }
-            ]
-          }
-        ]
+        "name": "bob"
       }
-    ]
+    ],
+    "step": "PrecombatMain"
   },
+  "description": "CR 701.71a Way of the Mentor's enters trigger empowers Jace 5; the token's [-3] draws a card, and gaining life puts a loyalty counter on each planeswalker alice controls",
+  "note": "Jace Beleren is a second planeswalker, so the lifegain trigger is seen to reach each one; bob's Jace Beleren is not alice's and stays at 3.",
   "timeline": [
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Cast": {
-          "object": "$mentor",
           "mana": [
             "$p1",
             "$p2",
-            "$p3"
-          ]
+            "$p3",
+            null
+          ],
+          "object": "$mentor"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "View": {
-          "of": "Stack",
           "is": [
-            "trigger of $mentor"
-          ]
+            "trigger of Way of the Mentor"
+          ],
+          "of": "Stack"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Counters": {
-          "object": "Jace Token",
+          "count": 5,
           "kind": {
             "type": "Loyalty"
           },
-          "count": 5
+          "object": "Jace Token"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Activate": {
-          "object": "Jace Token",
-          "ability": 1
+          "ability": 1,
+          "object": "Jace Token"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Counters": {
-          "object": "Jace Token",
+          "count": 2,
           "kind": {
             "type": "Loyalty"
           },
-          "count": 2
+          "object": "Jace Token"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
-        "View": {
-          "of": "Zone",
+        "Count": {
+          "card": "Plains",
+          "count": 1,
           "player": "alice",
-          "zone": "Hand",
-          "is": [
-            "$mercy",
-            "$top"
-          ]
+          "zone": "Hand"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Cast": {
-          "object": "$mercy",
           "mana": [
             "$p4",
             "$p5",
             "$p6",
             "$p7"
-          ]
+          ],
+          "object": "$mercy"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Life": {
-          "player": "alice",
-          "life": 27
+          "life": 27,
+          "player": "alice"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "View": {
-          "of": "Stack",
           "is": [
-            "trigger of $mentor"
-          ]
+            "trigger of Way of the Mentor"
+          ],
+          "of": "Stack"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Counters": {
-          "object": "Jace Token",
+          "count": 3,
           "kind": {
             "type": "Loyalty"
           },
-          "count": 3
+          "object": "Jace Token"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Counters": {
-          "object": "$jace",
+          "count": 4,
           "kind": {
             "type": "Loyalty"
           },
-          "count": 4
+          "object": "$jace"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Counters": {
-          "object": "$bobjace",
+          "count": 3,
           "kind": {
             "type": "Loyalty"
           },
-          "count": 3
+          "object": "$bobjace"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     }
   ]
 }

@@ -1,12 +1,8 @@
 {
-  "description": "CR 701.71a Campus Crier puts two loyalty counters on the Jace planeswalker token alice controls and creates no other",
-  "note": "The Jace is a token copy of Jace Beleren, so it is a Jace planeswalker token without being the rule's own token.",
   "board": {
     "active": "alice",
-    "step": "PrecombatMain",
     "seats": [
       {
-        "name": "alice",
         "battlefield": [
           {
             "card": "Island",
@@ -14,8 +10,6 @@
           },
           {
             "card": "Jace Beleren",
-            "label": "jace",
-            "token": true,
             "counters": [
               {
                 "key": {
@@ -23,7 +17,9 @@
                 },
                 "value": 3
               }
-            ]
+            ],
+            "label": "jace",
+            "token": true
           }
         ],
         "graveyard": [
@@ -45,10 +41,10 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "alice"
       },
       {
-        "name": "bob",
         "library": [
           {
             "card": "Island"
@@ -62,56 +58,60 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "bob"
       }
-    ]
+    ],
+    "step": "PrecombatMain"
   },
+  "description": "CR 701.71a Campus Crier puts two loyalty counters on the Jace planeswalker token alice controls and creates no other",
+  "note": "The Jace is a token copy of Jace Beleren, so it is a Jace planeswalker token without being the rule's own token.",
   "timeline": [
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Activate": {
-          "object": "$crier",
           "mana": [
             "$island"
-          ]
+          ],
+          "object": "$crier"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Counters": {
-          "object": "$jace",
+          "count": 5,
           "kind": {
             "type": "Loyalty"
           },
-          "count": 5
+          "object": "$jace"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Count": {
-          "player": "alice",
-          "zone": "Battlefield",
           "card": "Jace Token",
-          "count": 0
+          "count": 0,
+          "player": "alice",
+          "zone": "Battlefield"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     }
   ]
 }

@@ -1,12 +1,8 @@
 {
-  "description": "CR 701.71a Campus Crier exiled from the graveyard creates a blue Jace planeswalker token and puts two loyalty counters on it; its [-1] surveils 1",
-  "note": "Alice controls no Jace token, so the token is created with 0 loyalty and survives only because the two counters land in the same instruction. The Plains on top of her library is what the surveil puts into the graveyard.",
   "board": {
     "active": "alice",
-    "step": "PrecombatMain",
     "seats": [
       {
-        "name": "alice",
         "battlefield": [
           {
             "card": "Island",
@@ -36,10 +32,10 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "alice"
       },
       {
-        "name": "bob",
         "library": [
           {
             "card": "Island"
@@ -53,145 +49,146 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "bob"
       }
-    ]
+    ],
+    "step": "PrecombatMain"
   },
+  "description": "CR 701.71a Campus Crier exiled from the graveyard creates a blue Jace planeswalker token and puts two loyalty counters on it; its [-1] surveils 1",
+  "note": "Alice controls no Jace token, so the token is created with 0 loyalty and survives only because the two counters land in the same instruction. The Plains on top of her library is what the surveil puts into the graveyard.",
   "timeline": [
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Activate": {
-          "object": "$crier",
           "mana": [
             "$island"
-          ]
+          ],
+          "object": "$crier"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Count": {
-          "player": "alice",
-          "zone": "Exile",
           "card": "Campus Crier",
-          "count": 1
+          "count": 1,
+          "player": "alice",
+          "zone": "Exile"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Count": {
-          "player": "alice",
-          "zone": "Battlefield",
           "card": "Jace Token",
-          "count": 1
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Counters": {
-          "object": "Jace Token",
+          "count": 2,
           "kind": {
             "type": "Loyalty"
           },
-          "count": 2
+          "object": "Jace Token"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Types": {
           "object": "Jace Token",
-          "is": [
+          "types": [
             "Planeswalker"
           ]
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Subtypes": {
           "object": "Jace Token",
-          "is": [
+          "subtypes": [
             "Jace"
           ]
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "View": {
-          "of": "Colors",
-          "object": "Jace Token",
           "is": [
             "Blue"
-          ]
+          ],
+          "object": "Jace Token",
+          "of": "Colors"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Activate": {
-          "object": "Jace Token",
-          "ability": 0
+          "ability": 0,
+          "object": "Jace Token"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Counters": {
-          "object": "Jace Token",
+          "count": 1,
           "kind": {
             "type": "Loyalty"
           },
-          "count": 1
+          "object": "Jace Token"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Answer": {
           "prompt": "ChooseSurveil",
@@ -202,34 +199,37 @@
             []
           ]
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Count": {
-          "player": "alice",
-          "zone": "Graveyard",
           "card": "Plains",
-          "count": 1
+          "count": 1,
+          "player": "alice",
+          "zone": "Graveyard"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Counters": {
-          "object": "Jace Token",
+          "count": 1,
           "kind": {
             "type": "Loyalty"
           },
-          "count": 1
+          "object": "Jace Token"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     }
   ]
 }
