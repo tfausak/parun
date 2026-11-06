@@ -158,6 +158,9 @@ data PlayerEffect
   | -- | CR 725.1 / 101.2 / Jared Carthalion, True Heir: this player can't become
     -- the monarch.
     CantBecomeMonarch
+  | -- | CR 704.5j / Hall of Echoes: the legend rule doesn't apply to permanents
+    -- this player controls.
+    LegendRuleDoesntApply
   | -- | CR 701.32 / 904.9 / All in Good Time: schemes can't be set in motion.
     CantSetSchemesInMotion
   | -- | CR 603.6a / 603.2d / 613.11 / Hushwing Gryff, Yarok, the Desecrated:

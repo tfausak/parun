@@ -112,6 +112,7 @@ import qualified Parun.Types.SkipPhase as SkipPhase
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.Surveil as Surveil
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TurnFaceDown as TurnFaceDown
@@ -275,7 +276,7 @@ data Effect card ability
     -- unwanted cards crossing into their graveyard where Scry's go to the bottom
     -- of the library. CR 701.25b's extra cards come from
     -- Parun.Types.PlayerEffect's AdditionalSurveilCards.
-    Surveil PlayerQuantity.PlayerQuantity
+    Surveil Surveil.Surveil
   | -- | CR 701.29a: the players the PlayerRef names each fateseal this many --
     -- Scry's library rewrite over an opponent's library, that opponent chosen as
     -- the effect applies.

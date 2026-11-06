@@ -539,6 +539,9 @@ stillLegalEnchant pools gs source slot recipient = case (slot, recipient) of
 -- buries only B. A transitive closure over shared names would bury two of the
 -- three. Partial overlap needs no special handling anyway: CR 704.3 repeats the
 -- check, so whatever survives is re-grouped against the new board.
+--
+-- A controller under Parun.Types.PlayerEffect.LegendRuleDoesntApply keys
+-- nothing, since every member of a group shares its controller.
 legendGroups :: Map.Map ObjectId PC.ProjectedCharacteristics -> GameState -> [(PlayerId, NonEmpty.NonEmpty ObjectId)]
 legendGroups pcs gs =
   let legendary oid = case Map.lookup oid pcs of
@@ -547,7 +550,9 @@ legendGroups pcs gs =
           | Set.member Supertype.Legendary (PC.supertypes pc) ->
               case Projection.controllerOf oid gs of
                 Nothing -> []
-                Just controller -> fmap (\name -> ((controller, name), [oid])) (Set.toList (PC.names pc))
+                Just controller
+                  | PlayerEffect.legendRuleDoesntApplyTo controller gs -> []
+                  | otherwise -> fmap (\name -> ((controller, name), [oid])) (Set.toList (PC.names pc))
           | otherwise -> []
       keyed = concatMap legendary (Set.toList (GameState.battlefield gs))
       byKey = Map.fromListWith (<>) keyed

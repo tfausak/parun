@@ -218,16 +218,12 @@ first.
   Pyromancer; Way of the Warlord; Way of the Wildspeaker. No keyword action
   creates or empowers a Jace planeswalker token (CR 701.71a); amass is the
   sibling.
-- #6493: Hall of Echoes. Nothing switches off the legend rule for a player for a
-  duration (CR 704.5j).
 - #6486: Blossom-Blessed Angel; Carnivorous Cultivator; Diviner of Victory;
   Emergency Phytomedic; Fatehold Chronologist; Hallway Heckler; Heartwood
   Crafter; Konstrari Improviser; Pompous Battlemage; Prudent Fateseer; Pyre
   Rhymer; Semester Foreseer; Theorix Metamage; Variable Chaser; Vigorbloom
   Vanguard; Void Extrapolator; Whiplash Wordsmith. `EntryRiders` carries no
   designation, so nothing enters prepared (CR 722.3a).
-- #6489: Chandra, Chill of Compliance; Enlightened Confidant. Surveil binds no
-  slot for the cards it put into the graveyard (CR 701.25a).
 - #4295: Extrapolate the Impossible. Cards from outside the game can't be
   revealed and held for an opponent's choice, nor held to "different names" (CR
   701.23j).
@@ -242,5 +238,3 @@ first.
   can't be asked.
 - #6496: Loot, the Anomaly. `CombatDamageAmount` can't treat a negative power as
   positive (CR 510.1a, 107.1b).
-- #6495: Loot, the Nexus; Tam, the Possibility. `DistinctOf` has no powers or
-  planeswalker types.
