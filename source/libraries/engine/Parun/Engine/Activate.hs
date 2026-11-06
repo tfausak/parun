@@ -17,6 +17,7 @@ import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.Loyalty as Loyalty
 import qualified Parun.Engine.Modal as Modal
+import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Resolve.Common as Resolve
 import qualified Parun.Engine.Resolve.Effect as Resolve
@@ -247,7 +248,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
       -- alternative cost. Only the payable ones are offered, as the gate
       -- measured them, and a question with one answer is not asked. The
       -- printed cost is FIRST, so a default answer pays it.
-      let offeredCosts = filter (Activatable.payableCostAt aimableUnannounced floorX stamp (ActivatedAbility.name ability) spendable pid srcId gs) (Activatable.costsFor pid ability gs)
+      let offeredCosts = filter (Activatable.payableCostAt aimableUnannounced floorX stamp (ActivatedAbility.name ability) spendable pid srcId gs) (Activatable.costsFor (PlayerEffect.applying pid gs) pid ability gs)
       printedCost <- case offeredCosts of
         _ : _ : _ -> CandidateCost.cost <$> Game.choose (Prompt.ChooseCost decider pid abilId (fmap Cost.untagged offeredCosts) Seq.empty)
         [only] -> pure only
