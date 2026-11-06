@@ -355,6 +355,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.IsEvaluated -> leaf predicate
   Filter.Type.IsHostOfSource -> leaf predicate
   Filter.Type.EnteredWithSource -> leaf predicate
+  Filter.Type.CounterLinkedToSource _ -> leaf predicate
   Filter.Type.AttachedNoLaterThanSource -> leaf predicate
   -- A leaf: the MIRROR atom is not this one, and its own lint counts it through the
   -- codec (canAttachToSubjectCounts) rather than through this recursion.

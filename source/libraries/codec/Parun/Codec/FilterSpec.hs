@@ -18,6 +18,7 @@ import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.ControlMargin as ControlMargin
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterLinked as CounterLinked
 import qualified Parun.Types.DamageDealer as DamageDealer
 import qualified Parun.Types.DamagedParty as DamagedParty
 import qualified Parun.Types.DealtDamageTo as DealtDamageTo
@@ -510,6 +511,12 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       Filter.EnteredWithSource
       " {\"type\":\"EnteredWithSource\"} "
+  Spec.it s "CounterLinkedToSource" $
+    Common.assertCodec
+      s
+      codec
+      (Filter.CounterLinkedToSource (CounterLinked.RemovedWith CounterKind.PlusOnePlusOne))
+      " {\"type\":\"CounterLinkedToSource\",\"value\":{\"type\":\"RemovedWith\",\"value\":{\"type\":\"PlusOnePlusOne\"}}} "
   Spec.it s "AttachedNoLaterThanSource" $
     Common.assertCodec
       s

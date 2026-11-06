@@ -351,6 +351,7 @@ blankGame settings order active =
       GameState.encoded = Map.empty,
       GameState.exiledWith = Map.empty,
       GameState.enteredWith = Map.empty,
+      GameState.counteredWith = Map.empty,
       GameState.exilePiles = Map.empty,
       GameState.extraTurns = [],
       GameState.turnMarkers = [],

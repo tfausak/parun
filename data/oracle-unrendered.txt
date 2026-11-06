@@ -3400,3 +3400,4 @@ rocket-launcher
 sacrifice
 veteran-bodyguard
 wheel-of-fortune
+cyclopean-tomb

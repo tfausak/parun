@@ -494,6 +494,8 @@ data Asking r = MkAsking
     history :: HistoryRead.HistoryRead -> r,
     -- | A read of what the source's own prevention effect stopped (CR 615.13).
     prevention :: r,
+    -- | A read of the counters the source's own effects moved (CR 607.1).
+    counterLinks :: r,
     -- | What an inline card answers as a meld pair's combined back face (CR
     -- 712.4a), given what it answers as any inline card.
     melded :: r -> r
@@ -511,6 +513,7 @@ combinedBackFaces = snd . foldMap (faceNames asking (\card -> ([card], []))) . C
           keyed = mempty,
           history = const mempty,
           prevention = mempty,
+          counterLinks = mempty,
           melded = \(inline, backs) -> ([], inline <> backs)
         }
 
@@ -530,8 +533,23 @@ readsPrevention =
           keyed = mempty,
           history = const mempty,
           prevention = Monoid.Any True,
+          counterLinks = mempty,
           melded = id
         }
+
+-- | The question whose answer is whether a tree reads the counters its
+-- source's own effects moved (Parun.Engine.Fragmented.digest).
+readsCounterLinks :: Asking Monoid.Any
+readsCounterLinks =
+  MkAsking
+    { names = const mempty,
+      context = mempty,
+      keyed = mempty,
+      history = const mempty,
+      prevention = mempty,
+      counterLinks = Monoid.Any True,
+      melded = id
+    }
 
 -- Whether reading this slot might name the object.
 slotNames :: Asking r -> SlotName.SlotName -> r
@@ -562,8 +580,9 @@ contextNames = context
 --   * IDENTITY: IsObject names an id outright.
 --   * The turn's EVENT LOG: the look-back atoms (DeclaredThisTurn,
 --     LeftLibraryThisTurn, DealtDamageThisTurn, EnteredThisTurn, the
---     crewed/convoked/saddled-the-source atoms) and EnteredWithSource
---     (GameState.enteredWith) and CouldAttackThisTurn
+--     crewed/convoked/saddled-the-source atoms), EnteredWithSource
+--     (GameState.enteredWith), CounterLinkedToSource
+--     (GameState.counteredWith) and CouldAttackThisTurn
 --     (GameState.couldAttackThisTurn) read a record kept per object id,
 --     answered by Asking's keyed -- and the look-back atoms by its history too.
 --   * A RESOLUTION CONTEXT: the slot atoms, the slot and amount operands, the
@@ -646,6 +665,7 @@ filterNames asking criterion = case criterion of
   Filter.IsEvaluated -> mempty
   Filter.IsHostOfSource -> mempty
   Filter.EnteredWithSource -> keyed asking
+  Filter.CounterLinkedToSource _moved -> keyed asking <> counterLinks asking
   Filter.AttachedNoLaterThanSource -> contextNames asking
   Filter.CanHostSubject -> contextNames asking
   Filter.CanAttachToSubject -> contextNames asking

@@ -10,6 +10,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.ControlMargin as ControlMargin
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterLinked as CounterLinked
 import qualified Parun.Types.DealtDamageTo as DealtDamageTo
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.EnteredZone as EnteredZone
@@ -436,6 +437,11 @@ data Filter keyword
     -- "tokens created with this creature". Read off
     -- GameState.enteredWith.
     EnteredWithSource
+  | -- | CR 607.1 / 400.7: an effect of the evaluation's SOURCE moved counters
+    -- this way on the candidate, as this object -- Cyclopean Tomb's "a land
+    -- that a mire counter was put onto with this artifact". Read off
+    -- GameState.counteredWith.
+    CounterLinkedToSource (CounterLinked.CounterLinked keyword)
   | -- | CR 702.16p / 613.7e: the candidate was attached to what the SOURCE
     -- enchants when the source's effect started to apply -- Benevolent
     -- Blessing's "already attached to it". Parun.Engine.Keyword.grantedBy bakes it

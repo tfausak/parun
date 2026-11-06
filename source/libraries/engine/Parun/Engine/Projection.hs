@@ -4050,6 +4050,7 @@ filterReads f = case f of
   Filter.Type.IsEvaluated -> Set.empty
   Filter.Type.IsHostOfSource -> Set.empty
   Filter.Type.EnteredWithSource -> Set.empty
+  Filter.Type.CounterLinkedToSource _ -> Set.empty
   Filter.Type.AttachedNoLaterThanSource -> Set.empty
   -- Over-declared deliberately, per the note on Aspect above: the characteristics
   -- behind this atom are the candidate's (CR 301.5) and the subject's (CR
@@ -4318,6 +4319,7 @@ filterReadsPeers f = case f of
   Filter.Type.IsEvaluated -> False
   Filter.Type.IsHostOfSource -> False
   Filter.Type.EnteredWithSource -> False
+  Filter.Type.CounterLinkedToSource _ -> False
   Filter.Type.AttachedNoLaterThanSource -> False
   Filter.Type.IsToken -> False
   Filter.Type.IsCommander -> False

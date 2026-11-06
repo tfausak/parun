@@ -10,6 +10,7 @@ import qualified Parun.Codec.CardType as CardType
 import qualified Parun.Codec.Color as Color
 import qualified Parun.Codec.ControlMargin as ControlMargin
 import qualified Parun.Codec.CounterKind as CounterKind
+import qualified Parun.Codec.CounterLinked as CounterLinked
 import qualified Parun.Codec.DealtDamageTo as DealtDamageTo
 import qualified Parun.Codec.Designation as Designation
 import qualified Parun.Codec.EnteredZone as EnteredZone
@@ -145,6 +146,7 @@ codec keywordCodec =
       Arm.nullary "IsEvaluated" Filter.IsEvaluated,
       Arm.nullary "IsHostOfSource" Filter.IsHostOfSource,
       Arm.nullary "EnteredWithSource" Filter.EnteredWithSource,
+      Arm.payload "CounterLinkedToSource" (CounterLinked.codec keywordCodec) Filter.CounterLinkedToSource (\x -> case x of Filter.CounterLinkedToSource y -> Just y; _ -> Nothing),
       Arm.nullary "AttachedNoLaterThanSource" Filter.AttachedNoLaterThanSource,
       Arm.nullary "CanHostSubject" Filter.CanHostSubject,
       Arm.nullary "CanAttachToSubject" Filter.CanAttachToSubject,
@@ -308,6 +310,7 @@ tagOf x = case x of
   Filter.IsEvaluated {} -> "IsEvaluated"
   Filter.IsHostOfSource {} -> "IsHostOfSource"
   Filter.EnteredWithSource {} -> "EnteredWithSource"
+  Filter.CounterLinkedToSource {} -> "CounterLinkedToSource"
   Filter.AttachedNoLaterThanSource {} -> "AttachedNoLaterThanSource"
   Filter.CanHostSubject {} -> "CanHostSubject"
   Filter.CanAttachToSubject {} -> "CanAttachToSubject"

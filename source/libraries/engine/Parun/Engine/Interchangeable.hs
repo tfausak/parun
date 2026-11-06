@@ -47,6 +47,7 @@ import qualified Parun.Types.ComponentCard as ComponentCard
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.Convoking as Convoking
 import qualified Parun.Types.CopyCoverage as CopyCoverage
+import qualified Parun.Types.CounterLink as CounterLink
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageDirection as DamageDirection
 import qualified Parun.Types.DamageEvent as DamageEvent
@@ -379,6 +380,7 @@ unread oid =
       Mentions.keyed = Monoid.Any True,
       Mentions.history = mempty,
       Mentions.prevention = mempty,
+      Mentions.counterLinks = mempty,
       Mentions.melded = id
     }
 
@@ -529,6 +531,8 @@ affectedNames oid source gs affected = case affected of
 --     value the stamp of the pile it is in.
 --   * GameState.enteredWith (CR 400.7), keyed by the permanent, its value
 --     naming the source whose effect put it onto the battlefield.
+--   * GameState.counteredWith (CR 607.1), keyed by the object, its values
+--     naming the sources whose effects moved counters on it.
 --   * The per-object budgets and notes: GameState.activatedThisTurn (CR
 --     602.5b), castPermissionsUsedThisTurn (CR 601.3), rollModifiersUsedThisTurn
 --     (CR 706.2), namedCopyChoices (CR 707.13), notedCards (CR 707.14),
@@ -558,8 +562,9 @@ affectedNames oid source gs affected = case affected of
 -- row's value moved.
 --
 -- The KEY side is a regression fence rather than a proof, and so is exiledWith's
--- value side, encoded's whole arm and exilePiles' whole arm. Every one of these relations but
--- enteredWith keys on an object that is not on the battlefield -- an exiled incarnation, or a permanent
+-- value side, encoded's whole arm, exilePiles' whole arm and counteredWith's
+-- whole arm. Every one of these relations but enteredWith and counteredWith
+-- keys on an object that is not on the battlefield -- an exiled incarnation, or a permanent
 -- GameState.battlefield excludes (CR 702.26b) -- so no such key can ever be a
 -- mana-source candidate, and neutering `key == oid` below leaves the whole suite
 -- green. The line stays because a row does name its key; do not read the green as
@@ -579,6 +584,7 @@ namedByRelation oid gs =
         || relates (Set.singleton . ExileLink.source) (GameState.exiledWith gs)
         || relates pileNames (GameState.exilePiles gs)
         || relates (Set.singleton . EntryLink.source) (GameState.enteredWith gs)
+        || relates (Set.map CounterLink.source) (GameState.counteredWith gs)
         -- CR 305.1 / 601.2a: keyed by the spell or permanent a play made, too.
         || keyed (GameState.cardsPlayed gs)
         || keyed (GameState.activatedThisTurn gs)

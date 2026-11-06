@@ -540,6 +540,10 @@ library codec
     Parun.Codec.CounteringTriggerSpec
     Parun.Codec.CounterKind
     Parun.Codec.CounterKindSpec
+    Parun.Codec.CounterLink
+    Parun.Codec.CounterLinked
+    Parun.Codec.CounterLinkedSpec
+    Parun.Codec.CounterLinkSpec
     Parun.Codec.CounterMotion
     Parun.Codec.CounterMotionSpec
     Parun.Codec.CounterName
@@ -2696,6 +2700,8 @@ library types
     Parun.Types.CounterKind
     Parun.Types.CounterKindFamily
     Parun.Types.CounterKindFor
+    Parun.Types.CounterLink
+    Parun.Types.CounterLinked
     Parun.Types.CounterMotion
     Parun.Types.CounterName
     Parun.Types.CounterPattern

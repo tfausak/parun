@@ -31,6 +31,7 @@ import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterLinked as CounterLinked
 import qualified Parun.Types.CountersFromPermanents as CountersFromPermanents
 import qualified Parun.Types.Craft as Craft
 import qualified Parun.Types.Cycling as Cycling
@@ -1511,6 +1512,11 @@ data Context = MkContext
     -- below, and the atom then matches nothing. LAZY: filling it scans the
     -- relation.
     sourceEntrants :: Set.Set ObjectId.ObjectId,
+    -- CR 607.1 / 607.5: which way an effect of the SOURCE's reading abilities
+    -- moved counters on each object, as that object, for CounterLinkedToSource
+    -- (Cyclopean Tomb). sourceEntrants' twin, filled from
+    -- GameState.counteredWith; empty in contextFor below. LAZY.
+    sourceCountered :: Map.Map ObjectId.ObjectId (Set.Set (CounterLinked.CounterLinked Keyword.Type.Keyword)),
     -- CR 108.3: the OWNER of the SOURCE, for Shares Owner Source (CR
     -- 702.140a's "with the same owner as this spell"). Off Object.owner rather
     -- than off `perspective`:
@@ -1759,7 +1765,7 @@ data Context = MkContext
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, sourceDealtDamage = Set.empty, sourceDealtDamageEarlier = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotCardTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, evaluatedCreatureTypes = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceChosenNumber = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, sourceAcquisition = Nothing, reader = Nothing, candidateMeasures = Nothing, battlefieldViews = Seq.empty}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, sourceDealtDamage = Set.empty, sourceDealtDamageEarlier = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotCardTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, evaluatedCreatureTypes = Nothing, sourceEntrants = Set.empty, sourceCountered = Map.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceChosenNumber = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, sourceAcquisition = Nothing, reader = Nothing, candidateMeasures = Nothing, battlefieldViews = Seq.empty}
 
 -- contextFor over a game: its teams (CR 102.4) and its active players (CR 102.1,
 -- 805.4a) filled from the state, the two facts about the table a match may ask.
@@ -2439,6 +2445,7 @@ matches context view predicate = case predicate of
     (Just oid, Just host) -> oid == host
     _ -> False
   Filter.EnteredWithSource -> maybe False (`Set.member` sourceEntrants context) (identity view)
+  Filter.CounterLinkedToSource moved -> maybe False (Set.member moved . (\oid -> Map.findWithDefault Set.empty oid (sourceCountered context))) (identity view)
   -- CR 702.16p's moment is not in any view; Parun.Engine.Keyword.grantedBy
   -- bakes the atom out of the one position that asks it.
   Filter.AttachedNoLaterThanSource -> False
@@ -2731,6 +2738,8 @@ rewrite pairs predicate = case predicate of
   Filter.IsEvaluated -> predicate
   Filter.IsHostOfSource -> predicate
   Filter.EnteredWithSource -> predicate
+  -- Rewritten THROUGH the kind, HasCounters' reason below.
+  Filter.CounterLinkedToSource moved -> Filter.CounterLinkedToSource (case moved of CounterLinked.PutWith kind -> CounterLinked.PutWith (rewriteCounterKind pairs kind); CounterLinked.RemovedWith kind -> CounterLinked.RemovedWith (rewriteCounterKind pairs kind))
   Filter.AttachedNoLaterThanSource -> predicate
   Filter.CanHostSubject -> predicate
   Filter.CanAttachToSubject -> predicate
@@ -3503,6 +3512,7 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.IsEvaluated -> predicate
   Filter.IsHostOfSource -> predicate
   Filter.EnteredWithSource -> predicate
+  Filter.CounterLinkedToSource _ -> predicate
   Filter.AttachedNoLaterThanSource -> predicate
   Filter.CanHostSubject -> predicate
   Filter.CanAttachToSubject -> predicate
@@ -3674,6 +3684,7 @@ manaValueThresholds predicate = case predicate of
   Filter.IsEvaluated -> []
   Filter.IsHostOfSource -> []
   Filter.EnteredWithSource -> []
+  Filter.CounterLinkedToSource _ -> []
   Filter.AttachedNoLaterThanSource -> []
   Filter.CanHostSubject -> []
   Filter.CanAttachToSubject -> []
@@ -3841,6 +3852,7 @@ statesAQuality predicate = case predicate of
   Filter.IsEvaluated -> True
   Filter.IsHostOfSource -> True
   Filter.EnteredWithSource -> True
+  Filter.CounterLinkedToSource _ -> True
   Filter.AttachedNoLaterThanSource -> True
   Filter.CanHostSubject -> True
   Filter.CanAttachToSubject -> True
@@ -3996,6 +4008,7 @@ readsSourceValues predicate = case predicate of
   Filter.IsEvaluated -> False
   Filter.IsHostOfSource -> False
   Filter.EnteredWithSource -> False
+  Filter.CounterLinkedToSource _ -> False
   Filter.AttachedNoLaterThanSource -> False
   Filter.CanHostSubject -> False
   Filter.CanAttachToSubject -> False
@@ -4170,6 +4183,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.IsEvaluated -> pure predicate
   Filter.IsHostOfSource -> pure predicate
   Filter.EnteredWithSource -> pure predicate
+  Filter.CounterLinkedToSource _ -> pure predicate
   Filter.AttachedNoLaterThanSource -> pure predicate
   Filter.CanHostSubject -> pure predicate
   Filter.CanAttachToSubject -> pure predicate
