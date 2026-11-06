@@ -27,9 +27,8 @@ import qualified Parun.Types.TurnMarker as TurnMarker
 -- | CR 807.2 / 807.4b: a Grand Melee game's options over this game's seating
 -- (GameState.turnOrder) -- CR 807.2a's range of 1, CR 807.2b's attack left
 -- option and CR 807.2c's options off -- and its turn markers, handed out from
--- the active player.
---
--- Not implemented: CR 807.3's random seating, which is the caller's (#6455).
+-- the active player. CR 807.3's random seating is
+-- Parun.Engine.Setup.randomSeating's.
 setUp :: GameState -> GameState
 setUp gs =
   handOut
