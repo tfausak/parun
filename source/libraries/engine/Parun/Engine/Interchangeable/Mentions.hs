@@ -1751,6 +1751,7 @@ entryRewriteNames asking onAbility onEffect x = case x of
   EntryRewrite.Tribute _natural -> mempty
   EntryRewrite.Compleated _natural -> mempty
   EntryRewrite.Tapped -> mempty
+  EntryRewrite.Prepared -> mempty
   EntryRewrite.OrTapped entryPrice -> entryPriceNames asking entryPrice
   EntryRewrite.EntersTransformed -> mempty
   EntryRewrite.RunEffects seq_ -> foldMap onEffect seq_

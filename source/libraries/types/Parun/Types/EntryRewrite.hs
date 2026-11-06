@@ -167,6 +167,8 @@ data EntryRewrite ability effect
     -- stamped on the entering incarnation rather than routed through the tap
     -- funnel, so no becomes-tapped event exists (CR 110.5b).
     Tapped
+  | -- | CR 722.3a / 614.1d / Pompous Battlemage: "This creature enters prepared".
+    Prepared
   | -- | CR 614.1c / Razorgrass Field, Rustic Clachan: "you may [price]. If you
     -- don't, it enters tapped" -- the arm above's rewrite with a price on
     -- avoiding it.
