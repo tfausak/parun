@@ -17,9 +17,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -39,12 +37,8 @@
                   "condition": {
                     "type": "LifeChanges",
                     "value": {
-                      "direction": {
-                        "type": "Gained"
-                      },
-                      "player": {
-                        "type": "You"
-                      }
+                      "direction": "Gained",
+                      "player": "You"
                     }
                   },
                   "modal": {
@@ -83,14 +77,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

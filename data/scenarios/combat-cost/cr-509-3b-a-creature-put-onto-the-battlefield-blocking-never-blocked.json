@@ -79,9 +79,7 @@
       "step": "DeclareBlockers",
       "player": "bob",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {
@@ -89,9 +87,7 @@
       "step": "DeclareBlockers",
       "player": "bob",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {

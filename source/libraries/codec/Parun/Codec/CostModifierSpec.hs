@@ -29,7 +29,7 @@ spec s = Spec.describe s "Parun.Codec.CostModifier" $ do
       s
       CostModifier.codec
       (CostModifier.Type.MkCostModifier CostSubject.Spells (Filter.Not (Filter.HasCardType CardType.Creature)) Nothing Nothing Nothing Nothing (CostChange.Increase (ManaCost.MkManaCost [ManaSymbol.Generic 1])))
-      " {\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"change\":{\"type\":\"Increase\",\"value\":[{\"type\":\"Generic\",\"value\":1}]}} "
+      " {\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"change\":{\"type\":\"Increase\",\"value\":[{\"type\":\"Generic\",\"value\":1}]}} "
   -- Every criterion present on the activation subject: Professor Hojo's first,
   -- Zirda's kind, Dwarven Mauler's target, Henzie's count, Heartstone's floor.
   Spec.it s "an activation reduction with every criterion" $
@@ -45,18 +45,18 @@ spec s = Spec.describe s "Parun.Codec.CostModifier" $ do
           (Just (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)))
           (CostChange.Reduce (AppliedReduction.MkAppliedReduction (ManaCost.MkManaCost [ManaSymbol.Generic 2]) 1 False))
       )
-      " {\"subject\":{\"type\":\"Activations\",\"value\":{\"whichKind\":{\"type\":\"NonManaAbility\"}}},\"matching\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"whichTargets\":{\"type\":\"IsSource\"},\"perTarget\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"perEach\":{\"type\":\"CommanderCasts\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"onlyFirst\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"change\":{\"type\":\"Reduce\",\"value\":{\"amount\":[{\"type\":\"Generic\",\"value\":2}],\"atLeast\":1}}} "
+      " {\"subject\":{\"type\":\"Activations\",\"value\":{\"whichKind\":\"NonManaAbility\"}},\"matching\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"whichTargets\":{\"type\":\"IsSource\"},\"perTarget\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"perEach\":{\"type\":\"CommanderCasts\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}},\"onlyFirst\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}},\"change\":{\"type\":\"Reduce\",\"value\":{\"amount\":[{\"type\":\"Generic\",\"value\":2}],\"atLeast\":1}}} "
   -- Shadow in the Warp's first creature spell.
   Spec.it s "a spell reduction for the first each turn" $
     Common.assertCodec
       s
       CostModifier.codec
       (CostModifier.Type.MkCostModifier CostSubject.Spells (Filter.HasCardType CardType.Creature) Nothing Nothing Nothing (Just (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer))) (CostChange.Reduce (AppliedReduction.MkAppliedReduction (ManaCost.MkManaCost [ManaSymbol.Generic 2]) 0 False)))
-      " {\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"onlyFirst\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}},\"change\":{\"type\":\"Reduce\",\"value\":{\"amount\":[{\"type\":\"Generic\",\"value\":2}]}}} "
+      " {\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"onlyFirst\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}},\"change\":{\"type\":\"Reduce\",\"value\":{\"amount\":[{\"type\":\"Generic\",\"value\":2}]}}} "
   Spec.it s "refuses onlyFirst beside whichLoyalty" $
     Spec.assertBool
       s
-      (Either.isLeft (Codec.decode CostModifier.codec =<< Common.parse (Text.pack "{\"subject\":{\"type\":\"Activations\",\"value\":{\"whichLoyalty\":{\"type\":\"LoyaltyAbility\"}}},\"matching\":{\"type\":\"IsSource\"},\"onlyFirst\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"change\":{\"type\":\"Increase\",\"value\":[{\"type\":\"Generic\",\"value\":1}]}}")))
+      (Either.isLeft (Codec.decode CostModifier.codec =<< Common.parse (Text.pack "{\"subject\":{\"type\":\"Activations\",\"value\":{\"whichLoyalty\":\"LoyaltyAbility\"}},\"matching\":{\"type\":\"IsSource\"},\"onlyFirst\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"change\":{\"type\":\"Increase\",\"value\":[{\"type\":\"Generic\",\"value\":1}]}}")))
       "expected a decode failure"
   Spec.it s "refuses a target criterion on an addition to an activation" $
     Spec.assertBool

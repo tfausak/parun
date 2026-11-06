@@ -24,17 +24,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Chimera"
-          }
+          "Chimera"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

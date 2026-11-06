@@ -128,9 +128,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },
@@ -141,9 +139,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -154,9 +150,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -167,9 +161,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -180,9 +172,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

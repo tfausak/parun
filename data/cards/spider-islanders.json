@@ -14,9 +14,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -32,9 +30,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -50,20 +46,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Citizen"
-          },
-          {
-            "type": "Horror"
-          },
-          {
-            "type": "Spider"
-          }
+          "Citizen",
+          "Horror",
+          "Spider"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

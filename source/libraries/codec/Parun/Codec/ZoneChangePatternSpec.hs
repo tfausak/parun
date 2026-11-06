@@ -28,7 +28,7 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangePattern" $ do
           ZoneChangePattern.causedBy = Nothing,
           ZoneChangePattern.duringResolution = False
         }
-      " {\"whenDestination\":{\"type\":\"Graveyard\"}} "
+      " {\"whenDestination\":\"Graveyard\"} "
   -- CR 614.1a: Anafenza, the Foremost's "a nontoken creature an opponent owns
   -- would die". The characteristic filter is what distinguishes this from the
   -- shape above, so it has to survive the wire.
@@ -44,7 +44,7 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangePattern" $ do
           ZoneChangePattern.causedBy = Nothing,
           ZoneChangePattern.duringResolution = False
         }
-      " {\"whatObject\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}]},\"whenDestination\":{\"type\":\"Graveyard\"},\"whoseObject\":{\"type\":\"Opponent\"}} "
+      " {\"whatObject\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Creature\"},{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}]},\"whenDestination\":\"Graveyard\",\"whoseObject\":{\"type\":\"Opponent\"}} "
   -- CR 702.34a's "instead of putting it anywhere else": no destination named,
   -- which is the default, so the whole pattern is the empty object.
   Spec.it s "MkZoneChangePattern (flashback, any destination)" $
@@ -73,7 +73,7 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangePattern" $ do
           ZoneChangePattern.causedBy = Nothing,
           ZoneChangePattern.duringResolution = True
         }
-      " {\"duringResolution\":true,\"whatObject\":{\"type\":\"IsSource\"},\"whenDestination\":{\"type\":\"Graveyard\"}} "
+      " {\"duringResolution\":true,\"whatObject\":{\"type\":\"IsSource\"},\"whenDestination\":\"Graveyard\"} "
   -- CR 609.1: Obstinate Baloth's "a spell or ability an opponent controls
   -- causes you to discard this card".
   Spec.it s "MkZoneChangePattern (Obstinate Baloth, caused by an opponent)" $
@@ -88,7 +88,7 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangePattern" $ do
           ZoneChangePattern.causedBy = Just PlayerRelation.Opponent,
           ZoneChangePattern.duringResolution = False
         }
-      " {\"causedBy\":{\"type\":\"Opponent\"},\"whatObject\":{\"type\":\"IsSource\"},\"whenDestination\":{\"type\":\"Graveyard\"}} "
+      " {\"causedBy\":\"Opponent\",\"whatObject\":{\"type\":\"IsSource\"},\"whenDestination\":\"Graveyard\"} "
   -- CR 701.9a: Library of Leng's "if an effect causes you to discard a card".
   Spec.it s "MkZoneChangePattern (Library of Leng, discarded by an effect)" $
     Common.assertCodec
@@ -102,5 +102,5 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangePattern" $ do
           ZoneChangePattern.causedBy = Nothing,
           ZoneChangePattern.duringResolution = False
         }
-      " {\"whenDestination\":{\"type\":\"Graveyard\"},\"whenDiscarded\":{\"type\":\"ByEffect\"},\"whoseObject\":{\"type\":\"You\"}} "
+      " {\"whenDestination\":\"Graveyard\",\"whenDiscarded\":\"ByEffect\",\"whoseObject\":{\"type\":\"You\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ZoneChangePattern.codec

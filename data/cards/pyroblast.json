@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -22,9 +20,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -33,9 +29,7 @@
                         },
                         "filter": {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Blue"
-                          }
+                          "value": "Blue"
                         },
                         "scope": {
                           "type": "OverBound",
@@ -76,9 +70,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -87,9 +79,7 @@
                         },
                         "filter": {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Blue"
-                          }
+                          "value": "Blue"
                         },
                         "scope": {
                           "type": "OverBound",
@@ -111,9 +101,7 @@
                         "type": "InSlot",
                         "value": "permanent"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -131,9 +119,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

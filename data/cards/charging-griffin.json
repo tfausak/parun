@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -81,14 +79,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Griffin"
-          }
+          "Griffin"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

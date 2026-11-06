@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -40,17 +36,11 @@
           "condition": {
             "type": "AttachmentChanges",
             "value": {
-              "direction": {
-                "type": "Attaches"
-              },
-              "end": {
-                "type": "Host"
-              },
+              "direction": "Attaches",
+              "end": "Host",
               "other": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Aura"
-                }
+                "value": "Aura"
               }
             }
           },
@@ -67,9 +57,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Green"
-                                  }
+                                  "Green"
                                 ],
                                 "name": "Saproling Token",
                                 "power": {
@@ -82,14 +70,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Saproling"
-                                    }
+                                    "Saproling"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -111,14 +95,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          }
+          "Elemental"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

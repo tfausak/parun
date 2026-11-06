@@ -6,9 +6,7 @@
         "name": "alice",
         "counters": [
           {
-            "key": {
-              "type": "Energy"
-            },
+            "key": "Energy",
             "value": 5
           }
         ],
@@ -163,9 +161,7 @@
     {
       "PlayerCounters": {
         "player": "alice",
-        "kind": {
-          "type": "Energy"
-        },
+        "kind": "Energy",
         "count": 2
       }
     },

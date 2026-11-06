@@ -19,17 +19,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Sable"
-          }
+          "Sable"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

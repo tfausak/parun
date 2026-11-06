@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -27,18 +25,14 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "Hand"
-                      },
+                      "destination": "Hand",
                       "filter": {
                         "type": "And",
                         "value": []
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -46,17 +40,13 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
                 ],
                 "payGate": {
-                  "branch": {
-                    "type": "IfNonePaid"
-                  },
+                  "branch": "IfNonePaid",
                   "cost": {
                     "mana": [
                       {
@@ -67,9 +57,7 @@
                   },
                   "payer": {
                     "type": "Relative",
-                    "value": {
-                      "type": "AnyPlayer"
-                    }
+                    "value": "AnyPlayer"
                   }
                 }
               }
@@ -79,9 +67,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

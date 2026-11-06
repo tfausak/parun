@@ -34,7 +34,7 @@ spec s = Spec.describe s "Parun.Codec.Count" $ do
           (Filter.And [Filter.HasSubtype Subtype.Swamp, Filter.HeldBy Holder.Controller PlayerRelation.You])
           Aggregation.Members
       )
-      " {\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Swamp\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]},\"aggregation\":{\"type\":\"Members\"}} "
+      " {\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":\"Battlefield\",\"player\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSubtype\",\"value\":\"Swamp\"},{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}]},\"aggregation\":{\"type\":\"Members\"}} "
   -- CR 608.2i's look-back-in-time domain.
   Spec.it s "MkCount, scoped to the event history" $
     Common.assertCodec
@@ -45,7 +45,7 @@ spec s = Spec.describe s "Parun.Codec.Count" $ do
           (Filter.HasCardType CardType.Creature)
           (Aggregation.Distinct DistinctOf.CardTypes)
       )
-      " {\"scope\":{\"type\":\"InHistory\",\"value\":{\"type\":\"MovedBetween\",\"value\":{\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}}}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"aggregation\":{\"type\":\"Distinct\",\"value\":{\"type\":\"CardTypes\"}}} "
+      " {\"scope\":{\"type\":\"InHistory\",\"value\":{\"type\":\"MovedBetween\",\"value\":{\"from\":\"Battlefield\",\"to\":\"Graveyard\"}}},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"aggregation\":{\"type\":\"Distinct\",\"value\":\"CardTypes\"}} "
   Spec.it s "MkCount, scoped to a slot" $
     Common.assertCodec
       s
@@ -55,5 +55,5 @@ spec s = Spec.describe s "Parun.Codec.Count" $ do
           (Filter.And [])
           Aggregation.Members
       )
-      " {\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Hand\"},\"player\":{\"type\":\"InSlot\",\"value\":\"target\"}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Members\"}} "
+      " {\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":\"Hand\",\"player\":{\"type\":\"InSlot\",\"value\":\"target\"}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Members\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s (Count.codec Common.integer)

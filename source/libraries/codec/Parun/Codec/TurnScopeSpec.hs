@@ -18,12 +18,12 @@ spec s = Spec.describe s "Parun.Codec.TurnScope" $ do
       s
       TurnScope.codec
       (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   Spec.it s "PlayersTurn" $
     Common.assertCodec
       s
       TurnScope.codec
       (TurnScope.PlayersTurn (PlayerRef.HolderOfBound Holder.Controller Hop.Host (SlotName.MkSlotName (Text.pack "self"))))
-      " {\"type\":\"PlayersTurn\",\"value\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Host\"},\"slot\":\"self\"}}} "
+      " {\"type\":\"PlayersTurn\",\"value\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Host\",\"slot\":\"self\"}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s TurnScope.codec

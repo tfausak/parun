@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -32,43 +28,25 @@
           "effect": {
             "type": "ZoneChangeR",
             "value": {
-              "destination": {
-                "type": "Library"
-              },
+              "destination": "Library",
               "matching": {
                 "whatObject": {
                   "type": "IsSource"
                 },
-                "whenDestination": {
-                  "type": "Graveyard"
-                }
+                "whenDestination": "Graveyard"
               },
               "revealing": true,
               "shuffling": true
             }
           },
           "functionsFrom": [
-            {
-              "type": "Library"
-            },
-            {
-              "type": "Hand"
-            },
-            {
-              "type": "Graveyard"
-            },
-            {
-              "type": "Battlefield"
-            },
-            {
-              "type": "Stack"
-            },
-            {
-              "type": "Exile"
-            },
-            {
-              "type": "Command"
-            }
+            "Library",
+            "Hand",
+            "Graveyard",
+            "Battlefield",
+            "Stack",
+            "Exile",
+            "Command"
           ]
         }
       ],
@@ -83,9 +61,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "skips": []
                     }
@@ -98,9 +74,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

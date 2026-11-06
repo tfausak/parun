@@ -17,9 +17,7 @@
                     "value": [
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Caribou"
-                        }
+                        "value": "Caribou"
                       },
                       {
                         "type": "IsToken"
@@ -42,9 +40,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -67,19 +63,13 @@
             "value": [
               {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Land"
-                }
+                "value": "Land"
               },
               {
                 "type": "HeldBy",
                 "value": {
-                  "holder": {
-                    "type": "Controller"
-                  },
-                  "relation": {
-                    "type": "You"
-                  }
+                  "holder": "Controller",
+                  "relation": "You"
                 }
               }
             ]
@@ -98,18 +88,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -124,9 +110,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 {
                   "type": "HasAttached",
@@ -154,18 +138,14 @@
                         "type": "OfType",
                         "value": {
                           "type": "Colored",
-                          "value": {
-                            "type": "White"
-                          }
+                          "value": "White"
                         }
                       },
                       {
                         "type": "OfType",
                         "value": {
                           "type": "Colored",
-                          "value": {
-                            "type": "White"
-                          }
+                          "value": "White"
                         }
                       }
                     ]
@@ -183,9 +163,7 @@
                                     "faces": [
                                       {
                                         "colorIndicator": [
-                                          {
-                                            "type": "White"
-                                          }
+                                          "White"
                                         ],
                                         "name": "Caribou Token",
                                         "power": {
@@ -198,14 +176,10 @@
                                         },
                                         "typeLine": {
                                           "subtypes": [
-                                            {
-                                              "type": "Caribou"
-                                            }
+                                            "Caribou"
                                           ],
                                           "types": [
-                                            {
-                                              "type": "Creature"
-                                            }
+                                            "Creature"
                                           ]
                                         }
                                       }
@@ -231,14 +205,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

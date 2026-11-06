@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -60,9 +58,7 @@
                         },
                         {
                           "type": "HasSticker",
-                          "value": {
-                            "type": "Name"
-                          }
+                          "value": "Name"
                         }
                       ]
                     },
@@ -90,9 +86,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -122,15 +116,11 @@
                         "type": "PutSticker",
                         "value": {
                           "kinds": [
-                            {
-                              "type": "Name"
-                            }
+                            "Name"
                           ],
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "ref": {
                             "type": "ChosenPermanents",
@@ -142,20 +132,14 @@
                                     "type": "Not",
                                     "value": {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Land"
-                                      }
+                                      "value": "Land"
                                     }
                                   },
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Owner"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Owner",
+                                      "relation": "You"
                                     }
                                   }
                                 ]
@@ -177,17 +161,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Performer"
-          },
-          {
-            "type": "Sheep"
-          }
+          "Performer",
+          "Sheep"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

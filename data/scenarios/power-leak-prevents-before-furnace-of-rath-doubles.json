@@ -11,7 +11,7 @@
   },
   "timeline": [
     {"turn": 2, "step": "Upkeep", "player": "bob", "do": {"Answer": {"prompt": "ChooseNumber", "with": 1}}, "source": "$leak"},
-    {"turn": 2, "step": "Upkeep", "player": "bob", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$i1", null]}}, "source": "$leak"},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "do": {"ChooseToPay": {"decision": "Pays", "mana": ["$i1", null]}}, "source": "$leak"},
     {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 18}}}
   ]
 }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -37,16 +35,12 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HeldByBound",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
+                                "holder": "Controller",
                                 "slot": "target"
                               }
                             }
@@ -66,16 +60,12 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HeldByBound",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
+                                "holder": "Controller",
                                 "slot": "target"
                               }
                             },
@@ -92,9 +82,7 @@
                       "duration": {
                         "type": "UntilEndOfTurn"
                       },
-                      "what": {
-                        "type": "Block"
-                      }
+                      "what": "Block"
                     }
                   }
                 ]
@@ -104,9 +92,7 @@
               "target": {
                 "filter": {
                   "type": "IsPlayer",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
                 "pool": {
                   "type": "Players"
@@ -118,9 +104,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

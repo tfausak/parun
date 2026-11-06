@@ -5,9 +5,7 @@
         {
           "filter": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Swamp"
-            }
+            "value": "Swamp"
           },
           "pool": {
             "type": "Permanents"
@@ -19,9 +17,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -41,9 +37,7 @@
                   }
                 }
               },
-              "status": {
-                "type": "Tapped"
-              }
+              "status": "Tapped"
             }
           },
           "modal": {
@@ -59,9 +53,7 @@
                             "type": "InSlot",
                             "value": "thatTappedPermanent"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -77,9 +69,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -97,9 +87,7 @@
                             "type": "InSlot",
                             "value": "became"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -112,14 +100,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

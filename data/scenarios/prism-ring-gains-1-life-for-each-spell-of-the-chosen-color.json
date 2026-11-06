@@ -86,14 +86,10 @@
           "with": {
             "manaType": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             },
             "restriction": null,
-            "retention": {
-              "type": "Ordinary"
-            },
+            "retention": "Ordinary",
             "rider": null,
             "sourceChoices": null,
             "tags": []
@@ -114,9 +110,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseColor",
-          "with": {
-            "type": "Red"
-          }
+          "with": "Red"
         }
       },
       "player": "alice",

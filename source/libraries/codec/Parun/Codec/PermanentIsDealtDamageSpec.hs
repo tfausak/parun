@@ -22,5 +22,5 @@ spec s = Spec.describe s "Parun.Codec.PermanentIsDealtDamage" $ do
       s
       PermanentIsDealtDamage.codec
       (PermanentIsDealtDamage.MkPermanentIsDealtDamage {PermanentIsDealtDamage.dealt = DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat) Nothing, PermanentIsDealtDamage.batching = Batching.EachOccurrence})
-      " {\"dealt\":{\"recipient\":{\"type\":\"Self\"},\"kind\":{\"type\":\"Combat\"}},\"batching\":{\"type\":\"EachOccurrence\"}} "
+      " {\"dealt\":{\"recipient\":{\"type\":\"Self\"},\"kind\":\"Combat\"},\"batching\":\"EachOccurrence\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PermanentIsDealtDamage.codec

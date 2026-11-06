@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -29,17 +27,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     },
                     {
                       "type": "Not",
                       "value": {
                         "type": "HasSupertype",
-                        "value": {
-                          "type": "Basic"
-                        }
+                        "value": "Basic"
                       }
                     }
                   ]
@@ -58,26 +52,18 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "Opponent"
-                    }
+                    "holder": "Controller",
+                    "relation": "Opponent"
                   }
                 },
                 {
                   "type": "HasChosenName",
-                  "value": {
-                    "type": "AnyChooser"
-                  }
+                  "value": "AnyChooser"
                 }
               ]
             }
@@ -85,9 +71,7 @@
           "modifications": [
             {
               "type": "LoseEverySubtype",
-              "value": {
-                "type": "Land"
-              }
+              "value": "Land"
             },
             {
               "type": "LoseAllAbilities"
@@ -133,9 +117,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

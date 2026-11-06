@@ -70,16 +70,12 @@
                             "value": {
                               "filter": {
                                 "type": "HasChosenName",
-                                "value": {
-                                  "type": "AnyChooser"
-                                }
+                                "value": "AnyChooser"
                               },
                               "slot": "revealed"
                             }
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -96,17 +92,13 @@
                                 "type": "Not",
                                 "value": {
                                   "type": "HasChosenName",
-                                  "value": {
-                                    "type": "AnyChooser"
-                                  }
+                                  "value": "AnyChooser"
                                 }
                               },
                               "slot": "revealed"
                             }
                           },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       }
                     ]
@@ -115,9 +107,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -128,9 +118,7 @@
                               "type": "Not",
                               "value": {
                                 "type": "HasChosenName",
-                                "value": {
-                                  "type": "AnyChooser"
-                                }
+                                "value": "AnyChooser"
                               }
                             },
                             "scope": {
@@ -188,9 +176,7 @@
       "oracleText": "{3}, {T}: Target player chooses a card name, then reveals the top card of their library. If that card has the chosen name, that player puts it into their hand. Otherwise, they put it into their graveyard and this artifact deals 2 damage to them.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

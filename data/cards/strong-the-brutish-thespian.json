@@ -25,18 +25,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -52,9 +48,7 @@
             "type": "LifeLossR",
             "value": {
               "matching": {
-                "whichCause": {
-                  "type": "ByRadiation"
-                },
+                "whichCause": "ByRadiation",
                 "whose": {
                   "type": "You"
                 }
@@ -91,14 +85,10 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Rad"
-                          },
+                          "kind": "Rad",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -132,22 +122,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Berserker"
-          },
-          {
-            "type": "Mutant"
-          }
+          "Berserker",
+          "Mutant"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

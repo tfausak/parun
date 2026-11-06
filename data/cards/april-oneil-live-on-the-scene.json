@@ -4,9 +4,7 @@
       "keywords": [
         {
           "type": "PartnerText",
-          "value": {
-            "type": "CharacterSelect"
-          }
+          "value": "CharacterSelect"
         }
       ],
       "manaCost": [
@@ -18,9 +16,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -49,33 +45,23 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Mutant"
-                          }
+                          "value": "Mutant"
                         },
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Ninja"
-                          }
+                          "value": "Ninja"
                         },
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Turtle"
-                          }
+                          "value": "Turtle"
                         }
                       ]
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -121,9 +107,7 @@
                                                   "value": {
                                                     "player": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -142,14 +126,10 @@
                                 "name": "Clue Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Clue"
-                                    }
+                                    "Clue"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -171,22 +151,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Detective"
-          },
-          {
-            "type": "Human"
-          }
+          "Detective",
+          "Human"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

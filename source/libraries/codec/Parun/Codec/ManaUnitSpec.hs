@@ -39,7 +39,7 @@ spec s = Spec.describe s "Parun.Codec.ManaUnit" $ do
           ManaUnit.sourceChoices = Nothing,
           ManaUnit.sourceLastExiled = Nothing
         }
-      " {\"manaType\":{\"type\":\"Colorless\"},\"tags\":[],\"retention\":{\"type\":\"Ordinary\"},\"restriction\":null,\"rider\":null,\"sourceChoices\":null} "
+      " {\"manaType\":{\"type\":\"Colorless\"},\"tags\":[],\"retention\":\"Ordinary\",\"restriction\":null,\"rider\":null,\"sourceChoices\":null} "
   -- Every axis but the rider at once, each away from its default: CR 107.4h's
   -- snow tag, CR 514.2's retention, Geosurge's "spend this mana only to cast"
   -- restriction, CR 607.2d's subtype baked off the source (Pillar of Origins)
@@ -58,7 +58,7 @@ spec s = Spec.describe s "Parun.Codec.ManaUnit" $ do
           ManaUnit.sourceChoices = Just SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.singleton Color.Red, SourceChoices.subtype = Just Subtype.Goblin, SourceChoices.number = Nothing, SourceChoices.acquisition = Acquisition.Own},
           ManaUnit.sourceLastExiled = Just (ObjectId.MkObjectId 7)
         }
-      " {\"manaType\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}},\"tags\":[{\"type\":\"Snow\"}],\"retention\":{\"type\":\"UntilEndOfTurn\"},\"restriction\":{\"casts\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"rider\":null,\"sourceChoices\":{\"colors\":[{\"type\":\"Red\"}],\"subtype\":{\"type\":\"Goblin\"}},\"sourceLastExiled\":7} "
+      " {\"manaType\":{\"type\":\"Colored\",\"value\":\"Red\"},\"tags\":[\"Snow\"],\"retention\":\"UntilEndOfTurn\",\"restriction\":{\"casts\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"rider\":null,\"sourceChoices\":{\"colors\":[\"Red\"],\"subtype\":\"Goblin\"},\"sourceLastExiled\":7} "
   -- Pyromancer's Goggles' red: CR 106.6's third shape, written only when set.
   Spec.it s "mana carrying a spend trigger" $
     Common.assertCodec
@@ -81,8 +81,8 @@ spec s = Spec.describe s "Parun.Codec.ManaUnit" $ do
           ManaUnit.sourceChoices = Nothing,
           ManaUnit.sourceLastExiled = Nothing
         }
-      ( " {\"manaType\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}},\"tags\":[],\"retention\":{\"type\":\"Ordinary\"},\"restriction\":null,\"rider\":null,"
-          <> "\"spendTrigger\":{\"casts\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0},"
+      ( " {\"manaType\":{\"type\":\"Colored\",\"value\":\"Red\"},\"tags\":[],\"retention\":\"Ordinary\",\"restriction\":null,\"rider\":null,"
+          <> "\"spendTrigger\":{\"casts\":{\"type\":\"HasCardType\",\"value\":\"Instant\"},\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0},"
           <> "\"sourceChoices\":null} "
       )
   Spec.it s "has a schema" $

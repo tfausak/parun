@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -45,9 +43,7 @@
                                   "value": {
                                     "filter": {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Creature"
-                                      }
+                                      "value": "Creature"
                                     },
                                     "slot": "thatDamageSource"
                                   }
@@ -75,12 +71,8 @@
                                           "players": {
                                             "type": "HolderOfBound",
                                             "value": {
-                                              "holder": {
-                                                "type": "Controller"
-                                              },
-                                              "hop": {
-                                                "type": "Itself"
-                                              },
+                                              "holder": "Controller",
+                                              "hop": "Itself",
                                               "slot": "noncreatureSource"
                                             }
                                           }
@@ -98,9 +90,7 @@
                                   "type": "Not",
                                   "value": {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   }
                                 },
                                 "slot": "thatDamageSource"
@@ -115,19 +105,13 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Planeswalker"
-                            }
+                            "value": "Planeswalker"
                           },
                           {
                             "type": "HeldBy",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "relation": {
-                                "type": "You"
-                              }
+                              "holder": "Controller",
+                              "relation": "You"
                             }
                           }
                         ]
@@ -137,18 +121,12 @@
                         "value": {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       },
-                      "whoRecipient": {
-                        "type": "You"
-                      }
+                      "whoRecipient": "You"
                     }
                   }
                 ]
@@ -159,9 +137,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

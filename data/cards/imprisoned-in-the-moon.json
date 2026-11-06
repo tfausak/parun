@@ -8,21 +8,15 @@
             "value": [
               {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Creature"
               },
               {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Land"
-                }
+                "value": "Land"
               },
               {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Planeswalker"
-                }
+                "value": "Planeswalker"
               }
             ]
           },
@@ -40,9 +34,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -61,20 +53,14 @@
               "type": "Colors",
               "value": {
                 "colors": [],
-                "mode": {
-                  "type": "Replace"
-                }
+                "mode": "Replace"
               }
             },
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Land"
-                },
-                "mode": {
-                  "type": "Replace"
-                }
+                "cardType": "Land",
+                "mode": "Replace"
               }
             },
             {
@@ -121,14 +107,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -17,6 +17,6 @@ spec s = Spec.describe s "Parun.Codec.Facing" $ do
       s
       Facing.codec
       (Facing.faceDown FaceDownReason.Manifested)
-      " {\"type\":\"FaceDown\",\"value\":{\"reason\":{\"type\":\"Manifested\"},\"listed\":{}}} "
+      " {\"type\":\"FaceDown\",\"value\":{\"reason\":\"Manifested\",\"listed\":{}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s Facing.codec

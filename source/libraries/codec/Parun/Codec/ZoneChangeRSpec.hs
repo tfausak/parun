@@ -36,7 +36,7 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangeR" $ do
             ZoneChangeR.optional = False
           }
       )
-      " {\"matching\":{\"whenDestination\":{\"type\":\"Graveyard\"}},\"destination\":{\"type\":\"Exile\"}} "
+      " {\"matching\":{\"whenDestination\":\"Graveyard\"},\"destination\":\"Exile\"} "
   -- CR 701.20 / 701.24: Nexus of Fate's shape, where both riders are written
   -- out rather than defaulted away.
   Spec.it s "MkZoneChangeR with both riders" $
@@ -60,7 +60,7 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangeR" $ do
             ZoneChangeR.optional = False
           }
       )
-      " {\"matching\":{\"whenDestination\":{\"type\":\"Graveyard\"},\"whatObject\":{\"type\":\"IsSource\"}},\"destination\":{\"type\":\"Library\"},\"revealing\":true,\"shuffling\":true} "
+      " {\"matching\":{\"whenDestination\":\"Graveyard\",\"whatObject\":{\"type\":\"IsSource\"}},\"destination\":\"Library\",\"revealing\":true,\"shuffling\":true} "
   -- CR 614.1a / 401.2: Library of Leng's optional redirect of an effect's
   -- discard to the top of the library, every new field off its default.
   Spec.it s "MkZoneChangeR (Library of Leng)" $
@@ -84,5 +84,5 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangeR" $ do
             ZoneChangeR.optional = True
           }
       )
-      " {\"matching\":{\"whenDestination\":{\"type\":\"Graveyard\"},\"whoseObject\":{\"type\":\"You\"},\"whenDiscarded\":{\"type\":\"ByEffect\"}},\"destination\":{\"type\":\"Library\"},\"position\":{\"type\":\"Top\"},\"optional\":true} "
+      " {\"matching\":{\"whenDestination\":\"Graveyard\",\"whoseObject\":{\"type\":\"You\"},\"whenDiscarded\":\"ByEffect\"},\"destination\":\"Library\",\"position\":\"Top\",\"optional\":true} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ZoneChangeR.codec

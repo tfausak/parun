@@ -24,7 +24,7 @@
       "turn": 1,
       "step": "BeginningOfCombat",
       "player": "alice",
-      "check": {"View": {"of": "ManaPool", "player": "alice", "is": [{"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [], "retention": {"type": "UntilEndOfTurn"}, "restriction": null, "rider": null, "sourceChoices": null}]}}
+      "check": {"View": {"of": "ManaPool", "player": "alice", "is": [{"manaType": {"type": "Colored", "value": "Red"}, "tags": [], "retention": "UntilEndOfTurn", "restriction": null, "rider": null, "sourceChoices": null}]}}
     }
   ],
   "final": [

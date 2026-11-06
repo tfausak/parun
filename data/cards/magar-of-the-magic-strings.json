@@ -13,18 +13,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -55,15 +51,11 @@
                                           "actor": {
                                             "type": "Self"
                                           },
-                                          "kind": {
-                                            "type": "Combat"
-                                          },
+                                          "kind": "Combat",
                                           "recipients": [
                                             {
                                               "type": "Player",
-                                              "value": {
-                                                "type": "AnyPlayer"
-                                              }
+                                              "value": "AnyPlayer"
                                             }
                                           ]
                                         }
@@ -97,9 +89,7 @@
                                       "effect": {
                                         "type": "ZoneChangeR",
                                         "value": {
-                                          "destination": {
-                                            "type": "Exile"
-                                          },
+                                          "destination": "Exile",
                                           "matching": {
                                             "whatObject": {
                                               "type": "IsSource"
@@ -108,9 +98,7 @@
                                         }
                                       },
                                       "functionsFrom": [
-                                        {
-                                          "type": "Battlefield"
-                                        }
+                                        "Battlefield"
                                       ]
                                     }
                                   }
@@ -124,15 +112,11 @@
                                   "value": 3
                                 }
                               },
-                              "reason": {
-                                "type": "EnteredFaceDown"
-                              }
+                              "reason": "EnteredFaceDown"
                             },
                             "noted": true
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -145,15 +129,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Instant"
-                          }
+                          "value": "Instant"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Sorcery"
-                          }
+                          "value": "Sorcery"
                         }
                       ]
                     },
@@ -182,18 +162,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -209,22 +185,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Minotaur"
-          },
-          {
-            "type": "Performer"
-          }
+          "Minotaur",
+          "Performer"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

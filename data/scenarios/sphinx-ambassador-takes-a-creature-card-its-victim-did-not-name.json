@@ -6,7 +6,7 @@
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$sphinx"]}},
     {"turn": 1, "step": "CombatDamage", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$lib-giant"]}}},
     {"turn": 1, "step": "CombatDamage", "player": "bob", "do": {"Answer": {"prompt": "ChooseCardName", "with": "Grizzly Bears"}}},
-    {"turn": 1, "step": "CombatDamage", "player": "alice", "do": {"Answer": {"prompt": "ChooseOptional", "with": {"type": "Exercises"}}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "do": {"Answer": {"prompt": "ChooseOptional", "with": "Exercises"}}},
     {"turn": 1, "step": "CombatDamage", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$lib-island", "$lib-forest"]}}}
   ],
   "final": [

@@ -33,6 +33,6 @@ spec s = Spec.describe s "Parun.Codec.SpellWasCast" $ do
       )
       ( "{\"player\":0,\"spell\":7,\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
-          <> ",\"zone\":{\"type\":\"Hand\"},\"castUsing\":{\"type\":\"JumpStart\"},\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":5}}}]}"
+          <> ",\"zone\":\"Hand\",\"castUsing\":{\"type\":\"JumpStart\"},\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":5}}}]}"
       )
   Spec.it s "has a schema" $ Common.assertHasSchema s SpellWasCast.codec

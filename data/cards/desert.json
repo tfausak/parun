@@ -91,18 +91,14 @@
                   "type": "PlayersTurn",
                   "value": {
                     "type": "Relative",
-                    "value": {
-                      "type": "AnyPlayer"
-                    }
+                    "value": "AnyPlayer"
                   }
                 },
                 "window": {
                   "type": "Step",
                   "value": {
                     "type": "Combat",
-                    "value": {
-                      "type": "EndOfCombat"
-                    }
+                    "value": "EndOfCombat"
                   }
                 }
               }
@@ -114,14 +110,10 @@
       "oracleText": "{T}: Add {C}.\n{T}: This land deals 1 damage to target attacking creature. Activate only during the end of combat step.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Desert"
-          }
+          "Desert"
         ],
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

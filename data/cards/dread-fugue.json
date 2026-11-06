@@ -14,9 +14,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -28,9 +26,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -63,16 +59,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "CastUsing",
                       "value": {
                         "type": "OfFamily",
-                        "value": {
-                          "type": "Cleave"
-                        }
+                        "value": "Cleave"
                       }
                     },
                     "threshold": {
@@ -97,20 +89,14 @@
                                   "type": "Not",
                                   "value": {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Land"
-                                    }
+                                    "value": "Land"
                                   }
                                 },
                                 {
                                   "type": "Measures",
                                   "value": {
-                                    "comparison": {
-                                      "type": "AtMost"
-                                    },
-                                    "measure": {
-                                      "type": "ManaValue"
-                                    },
+                                    "comparison": "AtMost",
+                                    "measure": "ManaValue",
                                     "operand": {
                                       "type": "Literal",
                                       "value": 2
@@ -131,16 +117,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "CastUsing",
                       "value": {
                         "type": "OfFamily",
-                        "value": {
-                          "type": "Cleave"
-                        }
+                        "value": "Cleave"
                       }
                     },
                     "threshold": {
@@ -162,9 +144,7 @@
                               "type": "Not",
                               "value": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Land"
-                                }
+                                "value": "Land"
                               }
                             },
                             "slot": "revealed"
@@ -188,9 +168,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

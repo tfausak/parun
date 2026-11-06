@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -41,9 +37,7 @@
             "type": "HasProtectionFrom",
             "value": {
               "type": "OfRelatedPlayer",
-              "value": {
-                "type": "Opponent"
-              }
+              "value": "Opponent"
             }
           },
           "scope": {
@@ -61,22 +55,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Avatar"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Avatar",
+          "Warrior"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -44,9 +44,7 @@
                     ],
                     "power": 1,
                     "subtypes": [
-                      {
-                        "type": "Wall"
-                      }
+                      "Wall"
                     ],
                     "toughness": 6
                   }
@@ -61,17 +59,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Shapeshifter"
-          }
+          "Shapeshifter"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

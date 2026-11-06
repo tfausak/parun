@@ -12,19 +12,19 @@ spec s = Spec.describe s "Parun.Codec.AttackTargetKind" $ do
       s
       AttackTargetKind.codec
       AttackTargetKind.OfPlayer
-      " {\"type\":\"OfPlayer\"} "
+      " \"OfPlayer\" "
   Spec.it s "OfPlaneswalker" $
     Common.assertCodec
       s
       AttackTargetKind.codec
       AttackTargetKind.OfPlaneswalker
-      " {\"type\":\"OfPlaneswalker\"} "
+      " \"OfPlaneswalker\" "
   Spec.it s "OfBattle" $
     Common.assertCodec
       s
       AttackTargetKind.codec
       AttackTargetKind.OfBattle
-      " {\"type\":\"OfBattle\"} "
+      " \"OfBattle\" "
   -- PlayerScopeSpec's posture: Arm.enum derives the arm list from the type, so
   -- this is what would catch a constructor the derivation missed.
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s AttackTargetKind.codec

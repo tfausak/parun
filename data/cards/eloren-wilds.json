@@ -18,9 +18,7 @@
                   "value": []
                 }
               },
-              "player": {
-                "type": "AnyPlayer"
-              }
+              "player": "AnyPlayer"
             }
           },
           "modal": {
@@ -93,14 +91,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Shandalar"
-          }
+          "Shandalar"
         ],
         "types": [
-          {
-            "type": "Plane"
-          }
+          "Plane"
         ]
       }
     }

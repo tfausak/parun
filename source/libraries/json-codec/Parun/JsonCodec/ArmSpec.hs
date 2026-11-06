@@ -5,6 +5,8 @@ import qualified Data.Text as Text
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.JsonSchema.Define as Define
+import qualified Parun.JsonSchema.Validate as Validate
 import qualified Parun.Spec as Spec
 
 data Example
@@ -54,8 +56,9 @@ crossedCodec = Arm.tagged (\x -> case x of Sized {} -> "Plain"; _ -> tagOf x) ar
 keyedCodec :: Codec.Codec Example
 keyedCodec = Arm.keyed tagOf arms
 
-flatKeyedCodec :: Codec.Codec Flat
-flatKeyedCodec = Arm.keyedEnum
+-- | Whether a document satisfies 'flatCodec'\'s schema.
+flatIsValid :: String -> Either Text.Text Bool
+flatIsValid t = null . Validate.validate (Define.run (Codec.schema flatCodec)) <$> Common.parse (Text.pack t)
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.JsonCodec.Arm" $ do
@@ -86,17 +89,42 @@ spec s = Spec.describe s "Parun.JsonCodec.Arm" $ do
   -- Every constructor, not a representative one: the whole point of 'Arm.enum'
   -- is that the arm list IS @[minBound ..]@, so the exhaustive assertion is the
   -- one that would catch a derivation covering only part of the type.
-  Spec.it s "enum round trips every constructor, tagged by its name" $ do
-    Common.assertCodec s flatCodec First " {\"type\":\"First\"} "
-    Common.assertCodec s flatCodec Middle " {\"type\":\"Middle\"} "
-    Common.assertCodec s flatCodec Last " {\"type\":\"Last\"} "
+  Spec.it s "enum round trips every constructor as its bare name" $ do
+    Common.assertEnumCodec s flatCodec
+    Common.assertCodec s flatCodec First " \"First\" "
+    Common.assertCodec s flatCodec Middle " \"Middle\" "
+    Common.assertCodec s flatCodec Last " \"Last\" "
+
+  -- The object form every enum wrote before #2171, so older documents load.
+  Spec.it s "enum still reads the tagged-object form" $
+    Spec.assertEq
+      s
+      (Common.parse (Text.pack " {\"type\":\"Middle\"} ") >>= Codec.decode flatCodec)
+      (Right Middle)
+
+  -- Both spellings are valid, since the decoder reads both.
+  Spec.it s "enum's schema admits both spellings" $ do
+    Common.assertMatchesSchema s flatCodec Middle
+    Spec.assertEq s (flatIsValid " {\"type\":\"Middle\"} ") (Right True)
+    Spec.assertEq s (flatIsValid " \"Absent\" ") (Right False)
+
+  -- The scope line of #2171: a nullary arm of a MIXED sum keeps its object.
+  Spec.it s "tagged rejects a nullary arm written bare" $
+    Spec.assertBool
+      s
+      (Either.isLeft (Common.parse (Text.pack " \"Plain\" ") >>= Codec.decode codec))
+      "expected a decode failure"
 
   -- An unknown tag still fails rather than falling through to some arm, and the
   -- error names the type the same way a hand-written 'tagged' does.
-  Spec.it s "enum rejects an unknown tag" $
+  Spec.it s "enum rejects an unknown tag" $ do
     Spec.assertBool
       s
       (Either.isLeft (Common.parse (Text.pack " {\"type\":\"Absent\"} ") >>= Codec.decode flatCodec))
+      "expected a decode failure"
+    Spec.assertBool
+      s
+      (Either.isLeft (Common.parse (Text.pack " \"Absent\" ") >>= Codec.decode flatCodec))
       "expected a decode failure"
 
   -- What a total 'tagOf' does NOT check: that the tag it names has an arm. What
@@ -148,13 +176,8 @@ spec s = Spec.describe s "Parun.JsonCodec.Arm" $ do
         (Either.isLeft (Common.parse (Text.pack " \"Nope\" ") >>= Codec.decode keyedCodec))
         "expected a decode failure"
 
-    Spec.it s "keyedEnum writes every constructor as a bare string" $ do
-      Common.assertEnumCodec s flatKeyedCodec
-      Common.assertCodec s flatKeyedCodec Middle " \"Middle\" "
-
-    Spec.it s "has a schema" $ do
+    Spec.it s "has a schema" $
       Common.assertHasSchema s keyedCodec
-      Common.assertHasSchema s flatKeyedCodec
 
   Spec.it s "has a schema" $
     Common.assertHasSchema s codec

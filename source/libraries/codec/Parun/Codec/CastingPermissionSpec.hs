@@ -30,7 +30,7 @@ spec s = Spec.describe s "Parun.Codec.CastingPermission" $ do
       s
       CastingPermission.codec
       (CastingPermission.CastFromGraveyard (Just KeywordFamily.Blitz) [])
-      " {\"type\":\"CastFromGraveyard\",\"value\":{\"using\":{\"type\":\"Blitz\"}}} "
+      " {\"type\":\"CastFromGraveyard\",\"value\":{\"using\":\"Blitz\"}} "
   Spec.it s "CastFromGraveyard paying an additional cost" $
     Common.assertCodec
       s

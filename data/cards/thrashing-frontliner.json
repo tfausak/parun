@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -42,9 +40,7 @@
                   "type": "Permanent",
                   "value": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Battle"
-                    }
+                    "value": "Battle"
                   }
                 }
               }
@@ -91,17 +87,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Lizard"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Lizard",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

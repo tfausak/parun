@@ -65,16 +65,12 @@
           {
             "card": "Grizzly Bears",
             "label": "x",
-            "faceDown": {
-              "type": "Manifested"
-            }
+            "faceDown": "Manifested"
           },
           {
             "card": "Hill Giant",
             "label": "y",
-            "faceDown": {
-              "type": "Manifested"
-            }
+            "faceDown": "Manifested"
           }
         ]
       }

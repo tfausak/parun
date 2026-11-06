@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.ManaAddedCause" $ do
       s
       ManaAddedCause.codec
       ManaAddedCause.ManaAbility
-      " {\"type\":\"ManaAbility\"} "
+      " \"ManaAbility\" "
   Spec.it s "Resolution" $
     Common.assertCodec
       s
       ManaAddedCause.codec
       ManaAddedCause.Resolution
-      " {\"type\":\"Resolution\"} "
+      " \"Resolution\" "
   -- Parun.Codec.RevealCauseSpec's reason: Arm.enum derives the arm list, so this
   -- is what would catch a constructor the derivation missed.
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s ManaAddedCause.codec

@@ -27,9 +27,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
+                            "comparison": "Exactly",
                             "measured": {
                               "type": "Count",
                               "value": {
@@ -41,9 +39,7 @@
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Artifact"
-                                      }
+                                      "value": "Artifact"
                                     },
                                     {
                                       "type": "HasName",
@@ -52,12 +48,8 @@
                                     {
                                       "type": "HeldBy",
                                       "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
-                                        "relation": {
-                                          "type": "You"
-                                        }
+                                        "holder": "Controller",
+                                        "relation": "You"
                                       }
                                     }
                                   ]
@@ -67,13 +59,9 @@
                                   "value": {
                                     "player": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "AnyPlayer"
-                                      }
+                                      "value": "AnyPlayer"
                                     },
-                                    "zone": {
-                                      "type": "Battlefield"
-                                    }
+                                    "zone": "Battlefield"
                                   }
                                 }
                               }
@@ -87,9 +75,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
+                            "comparison": "Exactly",
                             "measured": {
                               "type": "Count",
                               "value": {
@@ -101,9 +87,7 @@
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Artifact"
-                                      }
+                                      "value": "Artifact"
                                     },
                                     {
                                       "type": "HasName",
@@ -112,12 +96,8 @@
                                     {
                                       "type": "HeldBy",
                                       "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
-                                        "relation": {
-                                          "type": "You"
-                                        }
+                                        "holder": "Controller",
+                                        "relation": "You"
                                       }
                                     }
                                   ]
@@ -127,13 +107,9 @@
                                   "value": {
                                     "player": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "AnyPlayer"
-                                      }
+                                      "value": "AnyPlayer"
                                     },
-                                    "zone": {
-                                      "type": "Battlefield"
-                                    }
+                                    "zone": "Battlefield"
                                   }
                                 }
                               }
@@ -154,9 +130,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  }
+                                  "White"
                                 ],
                                 "name": "Soldier Token",
                                 "power": {
@@ -169,14 +143,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Soldier"
-                                    }
+                                    "Soldier"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -197,9 +167,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "AtLeast"
-                            },
+                            "comparison": "AtLeast",
                             "measured": {
                               "type": "Count",
                               "value": {
@@ -211,9 +179,7 @@
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Artifact"
-                                      }
+                                      "value": "Artifact"
                                     },
                                     {
                                       "type": "HasName",
@@ -222,12 +188,8 @@
                                     {
                                       "type": "HeldBy",
                                       "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
-                                        "relation": {
-                                          "type": "You"
-                                        }
+                                        "holder": "Controller",
+                                        "relation": "You"
                                       }
                                     }
                                   ]
@@ -237,13 +199,9 @@
                                   "value": {
                                     "player": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "AnyPlayer"
-                                      }
+                                      "value": "AnyPlayer"
                                     },
-                                    "zone": {
-                                      "type": "Battlefield"
-                                    }
+                                    "zone": "Battlefield"
                                   }
                                 }
                               }
@@ -257,9 +215,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "AtLeast"
-                            },
+                            "comparison": "AtLeast",
                             "measured": {
                               "type": "Count",
                               "value": {
@@ -271,9 +227,7 @@
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Artifact"
-                                      }
+                                      "value": "Artifact"
                                     },
                                     {
                                       "type": "HasName",
@@ -282,12 +236,8 @@
                                     {
                                       "type": "HeldBy",
                                       "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
-                                        "relation": {
-                                          "type": "You"
-                                        }
+                                        "holder": "Controller",
+                                        "relation": "You"
                                       }
                                     }
                                   ]
@@ -297,13 +247,9 @@
                                   "value": {
                                     "player": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "AnyPlayer"
-                                      }
+                                      "value": "AnyPlayer"
                                     },
-                                    "zone": {
-                                      "type": "Battlefield"
-                                    }
+                                    "zone": "Battlefield"
                                   }
                                 }
                               }
@@ -324,9 +270,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  }
+                                  "White"
                                 ],
                                 "name": "Soldier Token",
                                 "power": {
@@ -339,14 +283,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Soldier"
-                                    }
+                                    "Soldier"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -376,9 +316,7 @@
       "oracleText": "{1}, {T}: Create a 1/1 white Soldier creature token. Create five of those tokens instead if you control artifacts named Crown of Empires and Scepter of Empires.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -53,9 +51,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
                       "quantity": {
                         "type": "Count",
@@ -70,9 +66,7 @@
                                 },
                                 "filter": {
                                   "type": "HeldByRecipient",
-                                  "value": {
-                                    "type": "Owner"
-                                  }
+                                  "value": "Owner"
                                 },
                                 "scope": {
                                   "type": "OverBound",
@@ -89,9 +83,7 @@
                             "type": "OverPlayers",
                             "value": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             }
                           }
                         }
@@ -106,9 +98,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

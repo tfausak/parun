@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -39,23 +35,15 @@
                 "type": "FromOutsideTheGame",
                 "value": {
                   "count": 1,
-                  "destination": {
-                    "type": "Hand"
-                  },
+                  "destination": "Hand",
                   "filter": {
                     "type": "Measures",
                     "value": {
-                      "comparison": {
-                        "type": "LessThan"
-                      },
-                      "measure": {
-                        "type": "Power"
-                      },
+                      "comparison": "LessThan",
+                      "measure": "Power",
                       "operand": {
                         "type": "OfSource",
-                        "value": {
-                          "type": "Power"
-                        }
+                        "value": "Power"
                       }
                     }
                   },
@@ -76,14 +64,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Djinn"
-          }
+          "Djinn"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

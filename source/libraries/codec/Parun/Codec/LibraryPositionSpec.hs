@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.LibraryPosition" $ do
       s
       LibraryPosition.codec
       LibraryPosition.Top
-      " {\"type\":\"Top\"} "
+      " \"Top\" "
   Spec.it s "Bottom" $
     Common.assertCodec
       s
       LibraryPosition.codec
       LibraryPosition.Bottom
-      " {\"type\":\"Bottom\"} "
+      " \"Bottom\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.Sacrificer" $ do
       s
       Sacrificer.codec
       Sacrificer.EffectController
-      " {\"type\":\"EffectController\"} "
+      " \"EffectController\" "
   Spec.it s "PermanentController" $
     Common.assertCodec
       s
       Sacrificer.codec
       Sacrificer.PermanentController
-      " {\"type\":\"PermanentController\"} "
+      " \"PermanentController\" "
   -- Exhaustive where the two literals above are representative: Arm.enum
   -- derives the arm list from the type.
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s Sacrificer.codec

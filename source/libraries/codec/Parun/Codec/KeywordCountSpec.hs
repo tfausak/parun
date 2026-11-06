@@ -42,12 +42,12 @@ spec s = Spec.describe s "Parun.Codec.KeywordCount" $ do
               KeywordTally.filter = Filter.HasCardType CardType.Creature
             }
       )
-      " {\"type\":\"Tally\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"scope\":{\"type\":\"InZone\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"zone\":{\"type\":\"Graveyard\"}}}}} "
+      " {\"type\":\"Tally\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"scope\":{\"type\":\"InZone\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"zone\":\"Graveyard\"}}}} "
   -- Zuko, Firebending Master's "the number of experience counters you have".
   Spec.it s "PlayerCounters carries a player and a kind" $
     Common.assertCodec
       s
       codec
       (KeywordCount.PlayerCounters PlayerCounterTally.MkPlayerCounterTally {PlayerCounterTally.player = PlayerRef.Relative PlayerRelation.You, PlayerCounterTally.kind = PlayerCounterKind.Experience})
-      " {\"type\":\"PlayerCounters\",\"value\":{\"kind\":{\"type\":\"Experience\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
+      " {\"type\":\"PlayerCounters\",\"value\":{\"kind\":\"Experience\",\"player\":{\"type\":\"Relative\",\"value\":\"You\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

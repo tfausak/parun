@@ -22,9 +22,7 @@
                         "value": {
                           "chosenSource": {
                             "type": "HasColor",
-                            "value": {
-                              "type": "Black"
-                            }
+                            "value": "Black"
                           },
                           "duration": {
                             "type": "UntilEndOfTurn"
@@ -52,9 +50,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -62,9 +58,7 @@
       "oracleText": "{1}: The next time a black source of your choice would deal damage to you this turn, prevent that damage.",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

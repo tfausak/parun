@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -47,19 +43,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
@@ -84,17 +74,13 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "AtMost"
-                            },
+                            "comparison": "AtMost",
                             "measured": {
                               "type": "AgainstSlot",
                               "value": {
                                 "quantity": {
                                   "type": "TimesThisTurn",
-                                  "value": {
-                                    "type": "Resolved"
-                                  }
+                                  "value": "Resolved"
                                 },
                                 "slot": "thisAbility"
                               }
@@ -108,17 +94,13 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "AtLeast"
-                            },
+                            "comparison": "AtLeast",
                             "measured": {
                               "type": "AgainstSlot",
                               "value": {
                                 "quantity": {
                                   "type": "TimesThisTurn",
-                                  "value": {
-                                    "type": "Resolved"
-                                  }
+                                  "value": "Resolved"
                                 },
                                 "slot": "thisAbility"
                               }
@@ -137,9 +119,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -153,17 +133,13 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "AgainstSlot",
                           "value": {
                             "quantity": {
                               "type": "TimesThisTurn",
-                              "value": {
-                                "type": "Resolved"
-                              }
+                              "value": "Resolved"
                             },
                             "slot": "thisAbility"
                           }
@@ -180,9 +156,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -200,17 +174,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Elf",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

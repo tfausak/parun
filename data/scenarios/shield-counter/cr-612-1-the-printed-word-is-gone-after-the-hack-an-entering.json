@@ -33,7 +33,7 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Artificial Evolution", "do": { "ChooseWordSwap": { "from": { "type": "Dragon" }, "to": { "type": "Goblin" } } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$creature", "mana": ["$mountain-1", "$mountain-2", "$mountain-3", "$mountain-4", "$mountain-5", null] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Hoarding Dragon", "do": { "ChooseOptional": { "type": "Declines" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Hoarding Dragon", "do": { "ChooseOptional": "Declines" } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Hoarding Dragon", "power": 4, "toughness": 4 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "Hoarding Dragon", "kind": { "type": "PlusOnePlusOne" }, "count": 0 } } }

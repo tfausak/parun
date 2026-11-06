@@ -241,8 +241,8 @@ spec s = Spec.describe s "Parun.Registry" $ do
     nightmare <- S.nightmareJson
     let divided =
           Text.replace
-            (Text.pack "\"type\": \"AnyPlayer\"")
-            (Text.pack "\"type\": \"You\"")
+            (Text.pack "\"value\": \"AnyPlayer\"")
+            (Text.pack "\"value\": \"You\"")
             nightmare
     Spec.assertBool s (divided /= nightmare) "the fixture's scope was actually divided"
     withCorpus "shared-zone-whole" [("nightmare.json", nightmare)] $ \_ registry -> do

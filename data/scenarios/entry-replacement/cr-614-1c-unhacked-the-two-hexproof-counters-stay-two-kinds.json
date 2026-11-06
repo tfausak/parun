@@ -133,9 +133,7 @@
             "type": "Hexproof",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Island"
-              }
+              "value": "Island"
             }
           }
         },
@@ -151,9 +149,7 @@
             "type": "Hexproof",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Swamp"
-              }
+              "value": "Swamp"
             }
           }
         },

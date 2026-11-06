@@ -24,7 +24,7 @@ spec s = Spec.describe s "Parun.Codec.SkipPhase" $ do
             SkipPhase.duration = Duration.Indefinite
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"selector\":{\"type\":\"CombatPhase\"}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"selector\":{\"type\":\"CombatPhase\"}} "
   -- CR 614.3: every occurrence inside a window, so both keys are written.
   Spec.it s "MkSkipPhase, every occurrence in a window" $
     Common.assertCodec
@@ -37,5 +37,5 @@ spec s = Spec.describe s "Parun.Codec.SkipPhase" $ do
             SkipPhase.duration = Duration.DuringYourNextTurn
           }
       )
-      " {\"duration\":{\"type\":\"DuringYourNextTurn\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"selector\":{\"type\":\"CombatPhase\"},\"uses\":{\"type\":\"Unlimited\"}} "
+      " {\"duration\":{\"type\":\"DuringYourNextTurn\"},\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"selector\":{\"type\":\"CombatPhase\"},\"uses\":\"Unlimited\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s SkipPhase.codec

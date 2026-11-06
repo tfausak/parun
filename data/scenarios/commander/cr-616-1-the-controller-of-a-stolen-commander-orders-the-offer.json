@@ -131,9 +131,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseCommandZoneOfferFirst",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

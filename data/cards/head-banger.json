@@ -9,9 +9,7 @@
           "condition": {
             "type": "PermanentActs",
             "value": {
-              "action": {
-                "type": "Crank"
-              },
+              "action": "Crank",
               "permanent": {
                 "type": "Self"
               }
@@ -26,9 +24,7 @@
                       {
                         "type": "RequireBlock",
                         "value": {
-                          "arity": {
-                            "type": "AnySubject"
-                          },
+                          "arity": "AnySubject",
                           "attacker": {
                             "type": "Named",
                             "value": {
@@ -40,9 +36,7 @@
                             "type": "Matching",
                             "value": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             }
                           },
                           "duration": {
@@ -67,14 +61,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Contraption"
-          }
+          "Contraption"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

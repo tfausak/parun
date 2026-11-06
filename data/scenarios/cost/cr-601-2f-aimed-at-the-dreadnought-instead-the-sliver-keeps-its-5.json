@@ -77,9 +77,7 @@
       "source": "$richlau",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$payer",
             null

@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -44,15 +40,11 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Artifact"
-                                }
+                                "value": "Artifact"
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Enchantment"
-                                }
+                                "value": "Enchantment"
                               }
                             ]
                           },
@@ -69,9 +61,7 @@
                           "type": "Owner"
                         }
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 ]
@@ -82,9 +72,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

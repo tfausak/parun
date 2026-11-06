@@ -23,9 +23,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -41,9 +39,7 @@
                     "type": "ChangeText",
                     "value": {
                       "families": [
-                        {
-                          "type": "BasicLandType"
-                        }
+                        "BasicLandType"
                       ],
                       "forbidden": [],
                       "slot": "land"
@@ -68,9 +64,7 @@
                     "type": "ChangeText",
                     "value": {
                       "families": [
-                        {
-                          "type": "Color"
-                        }
+                        "Color"
                       ],
                       "forbidden": [],
                       "slot": "color"
@@ -91,9 +85,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

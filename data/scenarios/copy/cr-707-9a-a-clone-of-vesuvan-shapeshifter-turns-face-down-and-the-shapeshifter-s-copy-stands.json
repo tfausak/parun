@@ -41,11 +41,11 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Clone", "power": 4, "toughness": 3 } } },
     { "turn": 3, "step": "Upkeep", "player": "alice", "do": { "OrderTriggers": ["Vesuvan Shapeshifter", "Clone"] } },
     { "turn": 3, "step": "Upkeep", "player": "alice", "do": "Pass" },
-    { "turn": 3, "step": "Upkeep", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } }, "source": "Clone" },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "do": { "ChooseOptional": "Exercises" }, "source": "Clone" },
     { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "PowerToughness": { "object": "Vesuvan Shapeshifter", "power": 4, "toughness": 3 } } },
     { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "Names": { "object": "Vesuvan Shapeshifter", "names": ["Blind-Spot Giant"] } } },
     { "turn": 3, "step": "Upkeep", "player": "alice", "do": "Pass" },
-    { "turn": 3, "step": "Upkeep", "player": "alice", "do": { "ChooseOptional": { "type": "Declines" } }, "source": "Vesuvan Shapeshifter" },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "do": { "ChooseOptional": "Declines" }, "source": "Vesuvan Shapeshifter" },
     { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "PowerToughness": { "object": "Clone", "power": 2, "toughness": 2 } } },
     { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "Names": { "object": "Clone", "names": [] } } },
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility Island", "ActivateManaAbility Island#2", "ActivateManaAbility Island#3", "ActivateManaAbility Island#4", "ActivateManaAbility Island#5", "ActivateManaAbility Island#6", "ActivateManaAbility Island#7", "ActivateManaAbility Island#8", "ActivateManaAbility Island#9"] } } }

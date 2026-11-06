@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -53,36 +51,24 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "Opponent"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "Opponent"
                                   }
                                 },
                                 {
                                   "type": "Measures",
                                   "value": {
-                                    "comparison": {
-                                      "type": "LessThan"
-                                    },
-                                    "measure": {
-                                      "type": "Toughness"
-                                    },
+                                    "comparison": "LessThan",
+                                    "measure": "Toughness",
                                     "operand": {
                                       "type": "OfBound",
                                       "value": {
-                                        "measure": {
-                                          "type": "Toughness"
-                                        },
+                                        "measure": "Toughness",
                                         "slot": "thatExploitedCreature"
                                       }
                                     }
@@ -91,9 +77,7 @@
                               ]
                             }
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -106,17 +90,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Snake"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Snake",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

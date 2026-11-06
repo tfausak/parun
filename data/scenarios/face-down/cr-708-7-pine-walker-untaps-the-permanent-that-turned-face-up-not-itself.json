@@ -57,9 +57,7 @@
           {
             "card": "Ainok Tracker",
             "label": "ainok",
-            "faceDown": {
-              "type": "Morphed"
-            },
+            "faceDown": "Morphed",
             "ready": true,
             "tapped": true
           },

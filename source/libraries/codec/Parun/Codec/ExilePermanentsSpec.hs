@@ -28,5 +28,5 @@ spec s = Spec.describe s "Parun.Codec.ExilePermanents" $ do
             ExilePermanents.whichPermanents = Filter.HasCardType CardType.Creature
           }
       )
-      " {\"count\":1,\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"count\":1,\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

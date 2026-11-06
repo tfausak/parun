@@ -237,9 +237,7 @@
           "of": "Designations",
           "object": "$case",
           "is": [
-            {
-              "type": "Solved"
-            }
+            "Solved"
           ]
         }
       }

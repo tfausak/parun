@@ -25,5 +25,5 @@ spec s = Spec.describe s "Parun.Codec.PlaneswalkR" $ do
       s
       (PlaneswalkR.codec Common.natural)
       (PlaneswalkR.MkPlaneswalkR (ControllerRelation.Related PlayerRelation.AnyPlayer) (Just PlaneswalkCause.PlanarDie) (PlaneswalkRewrite.RunEffects (Seq.fromList [7])))
-      " {\"whose\":{\"type\":\"AnyPlayer\"},\"cause\":{\"type\":\"PlanarDie\"},\"rewrite\":{\"type\":\"RunEffects\",\"value\":[7]}} "
+      " {\"whose\":{\"type\":\"AnyPlayer\"},\"cause\":\"PlanarDie\",\"rewrite\":{\"type\":\"RunEffects\",\"value\":[7]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s (PlaneswalkR.codec Common.natural)

@@ -74,19 +74,13 @@
               "from": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Library"
-                }
+                "zone": "Library"
               },
               "matching": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Creature"
               }
             }
           ]

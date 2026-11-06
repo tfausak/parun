@@ -6,9 +6,7 @@
           "type": "BeforeStep",
           "value": {
             "type": "Combat",
-            "value": {
-              "type": "DeclareAttackers"
-            }
+            "value": "DeclareAttackers"
           }
         }
       ],
@@ -22,15 +20,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             }
           }
         },
@@ -39,15 +33,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             }
           }
         }
@@ -68,9 +58,7 @@
                       },
                       "effect": {
                         "type": "YouChoose",
-                        "value": {
-                          "type": "Attackers"
-                        }
+                        "value": "Attackers"
                       },
                       "players": {
                         "type": "Scoped",
@@ -88,9 +76,7 @@
                       },
                       "effect": {
                         "type": "YouChoose",
-                        "value": {
-                          "type": "Blockers"
-                        }
+                        "value": "Blockers"
                       },
                       "players": {
                         "type": "Scoped",
@@ -108,9 +94,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

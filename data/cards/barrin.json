@@ -34,9 +34,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -58,9 +56,7 @@
       "oracleText": "Sacrifice a permanent: Return target creature to its owner's hand.",
       "typeLine": {
         "types": [
-          {
-            "type": "Vanguard"
-          }
+          "Vanguard"
         ]
       },
       "vanguard": {

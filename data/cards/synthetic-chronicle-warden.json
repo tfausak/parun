@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -21,9 +19,7 @@
         {
           "condition": {
             "type": "SagaFinalChapterTriggers",
-            "value": {
-              "type": "Opponent"
-            }
+            "value": "Opponent"
           },
           "modal": {
             "modes": [
@@ -38,9 +34,7 @@
                             "type": "InSlot",
                             "value": "became"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       },
                       {
@@ -66,9 +60,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

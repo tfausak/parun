@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -42,17 +38,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "BeginningOfCombat"
-                }
+                "value": "BeginningOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -60,9 +52,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -75,12 +65,8 @@
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       },
                       {
@@ -88,15 +74,11 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Instant"
-                            }
+                            "value": "Instant"
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Sorcery"
-                            }
+                            "value": "Sorcery"
                           }
                         ]
                       }
@@ -106,9 +88,7 @@
                     "type": "InHistory",
                     "value": {
                       "type": "SpellCast",
-                      "value": {
-                        "type": "ThisTurn"
-                      }
+                      "value": "ThisTurn"
                     }
                   }
                 }
@@ -132,12 +112,8 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Blue"
-                                  },
-                                  {
-                                    "type": "Red"
-                                  }
+                                  "Blue",
+                                  "Red"
                                 ],
                                 "keywords": [
                                   {
@@ -155,9 +131,7 @@
                                       "type": "Greatest",
                                       "value": {
                                         "type": "Measure",
-                                        "value": {
-                                          "type": "ManaValue"
-                                        }
+                                        "value": "ManaValue"
                                       }
                                     },
                                     "filter": {
@@ -166,12 +140,8 @@
                                         {
                                           "type": "HeldBy",
                                           "value": {
-                                            "holder": {
-                                              "type": "Controller"
-                                            },
-                                            "relation": {
-                                              "type": "You"
-                                            }
+                                            "holder": "Controller",
+                                            "relation": "You"
                                           }
                                         },
                                         {
@@ -179,15 +149,11 @@
                                           "value": [
                                             {
                                               "type": "HasCardType",
-                                              "value": {
-                                                "type": "Instant"
-                                              }
+                                              "value": "Instant"
                                             },
                                             {
                                               "type": "HasCardType",
-                                              "value": {
-                                                "type": "Sorcery"
-                                              }
+                                              "value": "Sorcery"
                                             }
                                           ]
                                         }
@@ -197,9 +163,7 @@
                                       "type": "InHistory",
                                       "value": {
                                         "type": "SpellCast",
-                                        "value": {
-                                          "type": "ThisTurn"
-                                        }
+                                        "value": "ThisTurn"
                                       }
                                     }
                                   }
@@ -211,9 +175,7 @@
                                       "type": "Greatest",
                                       "value": {
                                         "type": "Measure",
-                                        "value": {
-                                          "type": "ManaValue"
-                                        }
+                                        "value": "ManaValue"
                                       }
                                     },
                                     "filter": {
@@ -222,12 +184,8 @@
                                         {
                                           "type": "HeldBy",
                                           "value": {
-                                            "holder": {
-                                              "type": "Controller"
-                                            },
-                                            "relation": {
-                                              "type": "You"
-                                            }
+                                            "holder": "Controller",
+                                            "relation": "You"
                                           }
                                         },
                                         {
@@ -235,15 +193,11 @@
                                           "value": [
                                             {
                                               "type": "HasCardType",
-                                              "value": {
-                                                "type": "Instant"
-                                              }
+                                              "value": "Instant"
                                             },
                                             {
                                               "type": "HasCardType",
-                                              "value": {
-                                                "type": "Sorcery"
-                                              }
+                                              "value": "Sorcery"
                                             }
                                           ]
                                         }
@@ -253,23 +207,17 @@
                                       "type": "InHistory",
                                       "value": {
                                         "type": "SpellCast",
-                                        "value": {
-                                          "type": "ThisTurn"
-                                        }
+                                        "value": "ThisTurn"
                                       }
                                     }
                                   }
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Elemental"
-                                    }
+                                    "Elemental"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -291,22 +239,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Orc"
-          },
-          {
-            "type": "Sorcerer"
-          }
+          "Orc",
+          "Sorcerer"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

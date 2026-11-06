@@ -21,7 +21,7 @@ spec s = Spec.describe s "Parun.Codec.DamagePattern" $ do
       s
       DamagePattern.codec
       (DamagePattern.MkDamagePattern (Just DamageKind.Combat) (Filter.And []) Nothing Nothing Nothing Nothing Nothing)
-      " {\"whichKind\":{\"type\":\"Combat\"}} "
+      " {\"whichKind\":\"Combat\"} "
   -- No kind, no source, no recipient -- every field elided at its default, so
   -- the pattern matches any damage instance whatsoever.
   Spec.it s "no kind (matches any)" $
@@ -53,7 +53,7 @@ spec s = Spec.describe s "Parun.Codec.DamagePattern" $ do
       s
       DamagePattern.codec
       (DamagePattern.MkDamagePattern (Just DamageKind.Noncombat) (Filter.And []) (Just Filter.IsSource) Nothing Nothing Nothing Nothing)
-      " {\"whichKind\":{\"type\":\"Noncombat\"},\"whatRecipient\":{\"type\":\"IsSource\"}} "
+      " {\"whichKind\":\"Noncombat\",\"whatRecipient\":{\"type\":\"IsSource\"}} "
   -- CR 615.7's DISJOINED recipient side, both halves written: Divine
   -- Deflection's "you and/or permanents you control", where the player half is a
   -- relation rather than an id and so is authorable beside the object filter.
@@ -62,7 +62,7 @@ spec s = Spec.describe s "Parun.Codec.DamagePattern" $ do
       s
       DamagePattern.codec
       (DamagePattern.MkDamagePattern Nothing (Filter.And []) (Just (Filter.HeldBy Holder.Controller PlayerRelation.You)) (Just PlayerRelation.You) Nothing Nothing Nothing)
-      " {\"whatRecipient\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"whoRecipient\":{\"type\":\"You\"}} "
+      " {\"whatRecipient\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}},\"whoRecipient\":\"You\"} "
   -- CR 609.7a's chosen source, baked as an id by Resolve's prevention arms and
   -- never authored either -- Healing Grace's "a source of your choice", whose
   -- printed properties are none, so the trivial filter rides beside the id.

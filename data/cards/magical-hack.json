@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -24,9 +22,7 @@
                     "type": "ChangeText",
                     "value": {
                       "families": [
-                        {
-                          "type": "BasicLandType"
-                        }
+                        "BasicLandType"
                       ],
                       "forbidden": [],
                       "slot": "target"
@@ -47,9 +43,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

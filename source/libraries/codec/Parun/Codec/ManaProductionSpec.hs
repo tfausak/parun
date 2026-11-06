@@ -22,7 +22,7 @@ spec s = Spec.describe s "Parun.Codec.ManaProduction" $ do
       s
       ManaProduction.codec
       (ManaProduction.OfType (ManaType.Colored Color.Green))
-      " {\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}} "
+      " {\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Green\"}} "
   Spec.it s "AnyColor" $
     Common.assertCodec
       s
@@ -34,7 +34,7 @@ spec s = Spec.describe s "Parun.Codec.ManaProduction" $ do
       s
       ManaProduction.codec
       (ManaProduction.AnyColor ColorSpread.AnyCombination)
-      " {\"type\":\"AnyColor\",\"value\":{\"type\":\"AnyCombination\"}} "
+      " {\"type\":\"AnyColor\",\"value\":\"AnyCombination\"} "
   Spec.it s "Chosen" $
     Common.assertCodec
       s
@@ -58,13 +58,13 @@ spec s = Spec.describe s "Parun.Codec.ManaProduction" $ do
       s
       ManaProduction.codec
       (ManaProduction.CouldProduce (CouldProduce.MkCouldProduce (Filter.HasCardType CardType.Land) ManaFilter.Any))
-      " {\"type\":\"CouldProduce\",\"value\":{\"among\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"types\":{\"type\":\"Any\"}}} "
+      " {\"type\":\"CouldProduce\",\"value\":{\"among\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"types\":{\"type\":\"Any\"}}} "
   Spec.it s "Pooled" $
     Common.assertCodec
       s
       ManaProduction.codec
       (ManaProduction.Pooled (ManaCount.MkManaCount (PlayerRef.Relative PlayerRelation.You) ManaFilter.Any))
-      " {\"type\":\"Pooled\",\"value\":{\"filter\":{\"type\":\"Any\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
+      " {\"type\":\"Pooled\",\"value\":{\"filter\":{\"type\":\"Any\"},\"player\":{\"type\":\"Relative\",\"value\":\"You\"}}} "
   Spec.it s "ProducedByTapped" $
     Common.assertCodec
       s

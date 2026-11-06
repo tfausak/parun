@@ -23,7 +23,7 @@ spec s = Spec.describe s "Parun.Codec.TokenPattern" $ do
       s
       TokenPattern.codec
       TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.HasCardType CardType.Creature, TokenPattern.effectsOnly = False}
-      " {\"whose\":{\"type\":\"You\"},\"whatToken\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"whose\":{\"type\":\"You\"},\"whatToken\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- CR 109.5: Related AnyPlayer is what a pattern that says nothing about the
   -- controller means, so the sole field's key is omitted.
   Spec.it s "an all-default value omits every optional key" $

@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.RevealTiming" $ do
       s
       RevealTiming.codec
       RevealTiming.OnceCast
-      " {\"type\":\"OnceCast\"} "
+      " \"OnceCast\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s RevealTiming.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s RevealTiming.codec

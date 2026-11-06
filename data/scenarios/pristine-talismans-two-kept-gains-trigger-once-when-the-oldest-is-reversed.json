@@ -108,9 +108,7 @@
       "do": {
         "Answer": {
           "prompt": "ReverseManaAbilities",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -121,9 +119,7 @@
       "do": {
         "Answer": {
           "prompt": "ReverseManaAbilities",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -134,9 +130,7 @@
       "do": {
         "Answer": {
           "prompt": "ReverseManaAbilities",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },

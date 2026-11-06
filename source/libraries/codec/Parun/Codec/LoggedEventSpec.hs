@@ -24,6 +24,6 @@ spec s = Spec.describe s "Parun.Codec.LoggedEvent" $ do
         { LoggedEvent.group = EventGroup.next EventGroup.first,
           LoggedEvent.event = GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Ending EndingStep.EndStep) (PlayerId.MkPlayerId 0))
         }
-      " {\"group\":1,\"event\":{\"type\":\"StepBegan\",\"value\":{\"phase\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}},\"player\":0}}} "
+      " {\"group\":1,\"event\":{\"type\":\"StepBegan\",\"value\":{\"phase\":{\"type\":\"Ending\",\"value\":\"EndStep\"},\"player\":0}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s LoggedEvent.codec

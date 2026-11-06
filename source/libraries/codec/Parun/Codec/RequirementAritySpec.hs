@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.RequirementArity" $ do
       s
       RequirementArity.codec
       RequirementArity.EachSubject
-      " {\"type\":\"EachSubject\"} "
+      " \"EachSubject\" "
   Spec.it s "AnySubject" $
     Common.assertCodec
       s
       RequirementArity.codec
       RequirementArity.AnySubject
-      " {\"type\":\"AnySubject\"} "
+      " \"AnySubject\" "
   -- Exhaustive where the literals above are representative, for
   -- Parun.Codec.RequiredDefenderSpec's reason.
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s RequirementArity.codec

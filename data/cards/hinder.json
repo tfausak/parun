@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -40,9 +36,7 @@
                         "position": {
                           "type": "CounteringPlayerChooses"
                         },
-                        "zone": {
-                          "type": "Library"
-                        }
+                        "zone": "Library"
                       },
                       "ref": {
                         "type": "InSlot",
@@ -65,9 +59,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

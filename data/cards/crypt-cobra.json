@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -46,9 +44,7 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Poison"
-                          },
+                          "kind": "Poison",
                           "player": {
                             "type": "InSlot",
                             "value": "thatPlayer"
@@ -69,14 +65,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Snake"
-          }
+          "Snake"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

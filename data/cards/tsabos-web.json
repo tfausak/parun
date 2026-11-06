@@ -26,9 +26,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -46,9 +44,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       },
       "untapRestrictions": [
@@ -60,15 +56,11 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 {
                   "type": "HasActivatedAbility",
-                  "value": {
-                    "type": "NonManaAbility"
-                  }
+                  "value": "NonManaAbility"
                 }
               ]
             }

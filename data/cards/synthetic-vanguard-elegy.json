@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -24,9 +22,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Count",
@@ -39,9 +35,7 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "IsAttacking"
@@ -53,12 +47,8 @@
                             "value": {
                               "type": "MovedBetween",
                               "value": {
-                                "from": {
-                                  "type": "Battlefield"
-                                },
-                                "to": {
-                                  "type": "Graveyard"
-                                }
+                                "from": "Battlefield",
+                                "to": "Graveyard"
                               }
                             }
                           }
@@ -74,9 +64,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

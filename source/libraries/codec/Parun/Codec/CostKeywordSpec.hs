@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.CostKeyword" $ do
       s
       CostKeyword.codec
       CostKeyword.Scavenge
-      " {\"type\":\"Scavenge\"} "
+      " \"Scavenge\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s CostKeyword.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s CostKeyword.codec

@@ -25,7 +25,7 @@ spec s = Spec.describe s "Parun.Codec.Discarded" $ do
             Discarded.causedBy = Nothing
           }
       )
-      " {\"player\":0,\"card\":7,\"cause\":{\"type\":\"ToPayCyclingCost\"},\"madness\":null} "
+      " {\"player\":0,\"card\":7,\"cause\":\"ToPayCyclingCost\",\"madness\":null} "
   -- CR 702.35a's "exiled this way", the field's other value: an ordinary discard
   -- that rule 702.35a's own replacement redirected into exile.
   Spec.it s "MkDiscarded, a madness exile" $
@@ -40,7 +40,7 @@ spec s = Spec.describe s "Parun.Codec.Discarded" $ do
             Discarded.causedBy = Nothing
           }
       )
-      " {\"player\":1,\"card\":5,\"cause\":{\"type\":\"Ordinary\"},\"madness\":{\"type\":\"OwnManaCost\"}} "
+      " {\"player\":1,\"card\":5,\"cause\":\"Ordinary\",\"madness\":{\"type\":\"OwnManaCost\"}} "
   -- CR 609.1's cause: a discard an opponent's effect made, the one shape the
   -- defaulted key appears in.
   Spec.it s "MkDiscarded, CR 609.1's discard an effect made" $
@@ -55,5 +55,5 @@ spec s = Spec.describe s "Parun.Codec.Discarded" $ do
             Discarded.causedBy = Just (PlayerId.MkPlayerId 1)
           }
       )
-      " {\"player\":0,\"card\":4,\"cause\":{\"type\":\"ByEffect\"},\"madness\":null,\"causedBy\":1} "
+      " {\"player\":0,\"card\":4,\"cause\":\"ByEffect\",\"madness\":null,\"causedBy\":1} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Discarded.codec

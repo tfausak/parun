@@ -36,15 +36,11 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -68,12 +64,8 @@
           "effect": {
             "type": "Shows",
             "value": {
-              "cards": {
-                "type": "TopOfLibrary"
-              },
-              "to": {
-                "type": "ThatPlayer"
-              }
+              "cards": "TopOfLibrary",
+              "to": "ThatPlayer"
             }
           },
           "scope": {
@@ -87,32 +79,22 @@
               "from": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Library"
-                }
+                "zone": "Library"
               },
               "matching": {
                 "type": "Or",
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Artifact"
-                    }
+                    "value": "Artifact"
                   },
                   {
                     "type": "Measures",
                     "value": {
-                      "comparison": {
-                        "type": "Exactly"
-                      },
-                      "measure": {
-                        "type": "ColorCount"
-                      },
+                      "comparison": "Exactly",
+                      "measure": "ColorCount",
                       "operand": {
                         "type": "Literal",
                         "value": 0
@@ -130,9 +112,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

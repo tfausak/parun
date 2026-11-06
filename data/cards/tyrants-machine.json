@@ -56,9 +56,7 @@
       "oracleText": "{4}, {T}: Tap target creature.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

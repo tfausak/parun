@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -31,15 +29,11 @@
               "value": [
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Sliver"
-                  }
+                  "value": "Sliver"
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               ]
             }
@@ -59,9 +53,7 @@
                   "condition": {
                     "type": "Compares",
                     "value": {
-                      "comparison": {
-                        "type": "AtLeast"
-                      },
+                      "comparison": "AtLeast",
                       "measured": {
                         "type": "Count",
                         "value": {
@@ -73,19 +65,13 @@
                             "value": [
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Swamp"
-                                }
+                                "value": "Swamp"
                               },
                               {
                                 "type": "HeldBy",
                                 "value": {
-                                  "holder": {
-                                    "type": "Controller"
-                                  },
-                                  "relation": {
-                                    "type": "You"
-                                  }
+                                  "holder": "Controller",
+                                  "relation": "You"
                                 }
                               }
                             ]
@@ -95,13 +81,9 @@
                             "value": {
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "AnyPlayer"
-                                }
+                                "value": "AnyPlayer"
                               },
-                              "zone": {
-                                "type": "Battlefield"
-                              }
+                              "zone": "Battlefield"
                             }
                           }
                         }
@@ -137,9 +119,7 @@
             "type": "Matching",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Sliver"
-              }
+              "value": "Sliver"
             }
           },
           "modifications": [
@@ -154,9 +134,7 @@
                         "type": "OfType",
                         "value": {
                           "type": "Colored",
-                          "value": {
-                            "type": "Black"
-                          }
+                          "value": "Black"
                         }
                       }
                     ]
@@ -176,17 +154,11 @@
                                   "effect": {
                                     "type": "DestructionR",
                                     "value": {
-                                      "rewrite": {
-                                        "type": "Regenerate"
-                                      }
+                                      "rewrite": "Regenerate"
                                     }
                                   },
-                                  "origin": {
-                                    "type": "Other"
-                                  },
-                                  "uses": {
-                                    "type": "Once"
-                                  }
+                                  "origin": "Other",
+                                  "uses": "Once"
                                 }
                               }
                             ]
@@ -207,14 +179,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Sliver"
-          }
+          "Sliver"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

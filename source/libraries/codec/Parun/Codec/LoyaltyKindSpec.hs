@@ -12,14 +12,14 @@ spec s = Spec.describe s "Parun.Codec.LoyaltyKind" $ do
       s
       LoyaltyKind.codec
       LoyaltyKind.LoyaltyAbility
-      " {\"type\":\"LoyaltyAbility\"} "
+      " \"LoyaltyAbility\" "
 
   Spec.it s "NonLoyaltyAbility" $
     Common.assertCodec
       s
       LoyaltyKind.codec
       LoyaltyKind.NonLoyaltyAbility
-      " {\"type\":\"NonLoyaltyAbility\"} "
+      " \"NonLoyaltyAbility\" "
 
   -- Exhaustive where the two above are literal, Parun.Codec.AbilityKindSpec's
   -- posture: Arm.enum derives its arms from the type.

@@ -9,18 +9,14 @@
               "type": "PlayersTurn",
               "value": {
                 "type": "Relative",
-                "value": {
-                  "type": "AnyPlayer"
-                }
+                "value": "AnyPlayer"
               }
             },
             "window": {
               "type": "Step",
               "value": {
                 "type": "Combat",
-                "value": {
-                  "type": "DeclareBlockers"
-                }
+                "value": "DeclareBlockers"
               }
             }
           }
@@ -33,17 +29,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "EndOfCombat"
-                }
+                "value": "EndOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -61,9 +53,7 @@
                             "type": "InSlot",
                             "value": "token"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -83,18 +73,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -134,24 +120,18 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "Or",
                               "value": [
                                 {
                                   "type": "IsAttackingPlayer",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 },
                                 {
                                   "type": "IsAttackingPlaneswalker",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 }
                               ]
                             }
@@ -175,9 +155,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

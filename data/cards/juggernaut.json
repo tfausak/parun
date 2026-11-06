@@ -23,9 +23,7 @@
             },
             "blockers": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Wall"
-              }
+              "value": "Wall"
             }
           }
         }
@@ -48,17 +46,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Juggernaut"
-          }
+          "Juggernaut"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

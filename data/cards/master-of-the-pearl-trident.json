@@ -6,18 +6,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -42,25 +38,17 @@
                 },
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Merfolk"
-                  }
+                  "value": "Merfolk"
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -86,9 +74,7 @@
                 "type": "Landwalk",
                 "value": {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Island"
-                  }
+                  "value": "Island"
                 }
               }
             }
@@ -101,14 +87,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Merfolk"
-          }
+          "Merfolk"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

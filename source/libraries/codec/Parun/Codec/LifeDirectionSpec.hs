@@ -12,12 +12,12 @@ spec s = Spec.describe s "Parun.Codec.LifeDirection" $ do
       s
       LifeDirection.codec
       LifeDirection.Gained
-      " {\"type\":\"Gained\"} "
+      " \"Gained\" "
   Spec.it s "Lost" $
     Common.assertCodec
       s
       LifeDirection.codec
       LifeDirection.Lost
-      " {\"type\":\"Lost\"} "
+      " \"Lost\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s LifeDirection.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s LifeDirection.codec

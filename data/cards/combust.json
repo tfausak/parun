@@ -13,9 +13,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -38,9 +36,7 @@
                         "value": {
                           "whatRecipient": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           "whatSource": {
                             "type": "IsSource"
@@ -82,15 +78,11 @@
                   "value": [
                     {
                       "type": "HasColor",
-                      "value": {
-                        "type": "White"
-                      }
+                      "value": "White"
                     },
                     {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Blue"
-                      }
+                      "value": "Blue"
                     }
                   ]
                 },
@@ -104,9 +96,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

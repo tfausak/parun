@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -39,15 +37,11 @@
               "actor": {
                 "type": "Self"
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -64,9 +58,7 @@
                           "condition": {
                             "type": "Compares",
                             "value": {
-                              "comparison": {
-                                "type": "LessThan"
-                              },
+                              "comparison": "LessThan",
                               "measured": {
                                 "type": "Count",
                                 "value": {
@@ -120,9 +112,7 @@
                                   }
                                 },
                                 "slot": "exiled",
-                                "zone": {
-                                  "type": "Exile"
-                                }
+                                "zone": "Exile"
                               }
                             }
                           ]
@@ -138,14 +128,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          }
+          "Beast"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

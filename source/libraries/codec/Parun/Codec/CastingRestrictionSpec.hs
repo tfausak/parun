@@ -37,7 +37,7 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
               DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)
             }
       )
-      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"DeclareAttackers\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}} "
+      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":\"DeclareAttackers\"}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}}} "
   -- Necrologia's "only during your end step" (CR 512.1, CR 109.5): a different
   -- window AND a different scope, so neither key is defaulted past.
   Spec.it s "DuringPhase, Necrologia's own end step" $
@@ -50,7 +50,7 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
               DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)
             }
       )
-      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}}} "
+      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Ending\",\"value\":\"EndStep\"}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}}}} "
   -- The third scope, and a whole-phase window: no card prints it on a CAST yet,
   -- so this is the codec's own coverage of the axis the arm gained.
   Spec.it s "DuringPhase, a whole-phase window on an opponent's turn" $
@@ -63,14 +63,14 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
               DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.Opponent)
             }
       )
-      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"CombatPhase\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}}} "
+      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"CombatPhase\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"Opponent\"}}}} "
   -- Siren's Call's "during an opponent's turn" (CR 102.1).
   Spec.it s "DuringTurn" $
     Common.assertCodec
       s
       CastingRestriction.codec
       (CastingRestriction.DuringTurn (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.Opponent)))
-      " {\"type\":\"DuringTurn\",\"value\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
+      " {\"type\":\"DuringTurn\",\"value\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"Opponent\"}}} "
   -- Serra Avenger's "your first, second, or third turns of the game" (CR 601.3).
   Spec.it s "NotDuringFirstTurns" $
     Common.assertCodec
@@ -98,14 +98,14 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
       s
       CastingRestriction.codec
       (CastingRestriction.BeforeStep (Phase.Combat CombatStep.CombatDamage))
-      " {\"type\":\"BeforeStep\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"CombatDamage\"}}} "
+      " {\"type\":\"BeforeStep\",\"value\":{\"type\":\"Combat\",\"value\":\"CombatDamage\"}} "
   -- Panic's "during combat before blockers are declared" (CR 506.8b, 506.8c).
   Spec.it s "DuringCombatBefore" $
     Common.assertCodec
       s
       CastingRestriction.codec
       (CastingRestriction.DuringCombatBefore CombatStep.DeclareBlockers)
-      " {\"type\":\"DuringCombatBefore\",\"value\":{\"type\":\"DeclareBlockers\"}} "
+      " {\"type\":\"DuringCombatBefore\",\"value\":\"DeclareBlockers\"} "
   -- CR 601.3 over a fact about the game: Illusory Angel's "Cast this spell only
   -- if you've cast another spell this turn".
   Spec.it s "OnlyIf, Illusory Angel's another spell this turn" $
@@ -121,13 +121,13 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
                 }
           )
       )
-      " {\"type\":\"OnlyIf\",\"value\":{\"type\":\"Compares\",\"value\":{\"comparison\":{\"type\":\"AtLeast\"},\"measured\":{\"type\":\"SpellsCast\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
+      " {\"type\":\"OnlyIf\",\"value\":{\"type\":\"Compares\",\"value\":{\"comparison\":\"AtLeast\",\"measured\":{\"type\":\"SpellsCast\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"}}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
   -- Soul Burn's "Spend only black and/or red mana on X" (CR 601.2h).
   Spec.it s "SpendOnlyOnX" $
     Common.assertCodec
       s
       CastingRestriction.codec
       (CastingRestriction.SpendOnlyOnX (ManaSymbol.Hybrid (Hybrid.MkHybrid (ManaType.Colored Color.Black) (ManaType.Colored Color.Red))))
-      " {\"type\":\"SpendOnlyOnX\",\"value\":{\"type\":\"Hybrid\",\"value\":{\"left\":{\"type\":\"Colored\",\"value\":{\"type\":\"Black\"}},\"right\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}}}}} "
+      " {\"type\":\"SpendOnlyOnX\",\"value\":{\"type\":\"Hybrid\",\"value\":{\"left\":{\"type\":\"Colored\",\"value\":\"Black\"},\"right\":{\"type\":\"Colored\",\"value\":\"Red\"}}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s CastingRestriction.codec

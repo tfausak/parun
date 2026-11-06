@@ -16,15 +16,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             }
           }
         },
@@ -33,15 +29,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             }
           }
         }
@@ -63,9 +55,7 @@
             "value": {
               "type": "Declaration",
               "value": {
-                "player": {
-                  "type": "You"
-                }
+                "player": "You"
               }
             }
           },
@@ -80,17 +70,13 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "OpponentsAttacked",
                             "value": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             }
                           }
                         }
@@ -108,17 +94,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -126,9 +108,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -147,12 +127,8 @@
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Owner"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Owner",
+                          "relation": "You"
                         }
                       }
                     ]
@@ -163,13 +139,9 @@
                       "type": "CardArrivedIn",
                       "value": {
                         "excluding": [
-                          {
-                            "type": "Battlefield"
-                          }
+                          "Battlefield"
                         ],
-                        "to": {
-                          "type": "Graveyard"
-                        }
+                        "to": "Graveyard"
                       }
                     }
                   }
@@ -192,9 +164,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -212,17 +182,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Faerie"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Faerie",
+          "Rogue"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

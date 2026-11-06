@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -38,17 +36,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -56,9 +50,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -76,15 +68,11 @@
                         "value": [
                           {
                             "type": "DeclaredThisTurn",
-                            "value": {
-                              "type": "Attacker"
-                            }
+                            "value": "Attacker"
                           },
                           {
                             "type": "DeclaredThisTurn",
-                            "value": {
-                              "type": "Blocker"
-                            }
+                            "value": "Blocker"
                           }
                         ]
                       }
@@ -95,13 +83,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -137,14 +121,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hellion"
-          }
+          "Hellion"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

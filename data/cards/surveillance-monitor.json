@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -38,9 +36,7 @@
                 "clauses": [
                   {
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "components": [
                           {
@@ -52,9 +48,7 @@
                       },
                       "payer": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -67,12 +61,8 @@
           "condition": {
             "type": "PlayerActs",
             "value": {
-              "action": {
-                "type": "CollectEvidence"
-              },
-              "player": {
-                "type": "You"
-              }
+              "action": "CollectEvidence",
+              "player": "You"
             }
           },
           "modal": {
@@ -103,17 +93,11 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Thopter"
-                                    }
+                                    "Thopter"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    },
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Artifact",
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -135,17 +119,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Detective"
-          },
-          {
-            "type": "Vedalken"
-          }
+          "Detective",
+          "Vedalken"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

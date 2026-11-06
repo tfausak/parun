@@ -12,9 +12,7 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "Not",
@@ -33,9 +31,7 @@
                         "type": "Landwalk",
                         "value": {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Island"
-                          }
+                          "value": "Island"
                         }
                       }
                     }
@@ -70,9 +66,7 @@
                           },
                           "effect": {
                             "type": "Precluded",
-                            "value": {
-                              "type": "Lose"
-                            }
+                            "value": "Lose"
                           },
                           "players": {
                             "type": "Scoped",
@@ -93,9 +87,7 @@
                           },
                           "effect": {
                             "type": "Precluded",
-                            "value": {
-                              "type": "Win"
-                            }
+                            "value": "Win"
                           },
                           "players": {
                             "type": "Scoped",
@@ -115,14 +107,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Luvion"
-          }
+          "Luvion"
         ],
         "types": [
-          {
-            "type": "Plane"
-          }
+          "Plane"
         ]
       }
     }

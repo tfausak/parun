@@ -9,45 +9,35 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -65,9 +55,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -98,56 +86,34 @@
           "effect": {
             "type": "ZoneChangeR",
             "value": {
-              "destination": {
-                "type": "Library"
-              },
+              "destination": "Library",
               "matching": {
                 "whatObject": {
                   "type": "IsSource"
                 },
-                "whenDestination": {
-                  "type": "Graveyard"
-                }
+                "whenDestination": "Graveyard"
               },
               "revealing": true,
               "shuffling": true
             }
           },
           "functionsFrom": [
-            {
-              "type": "Library"
-            },
-            {
-              "type": "Hand"
-            },
-            {
-              "type": "Graveyard"
-            },
-            {
-              "type": "Battlefield"
-            },
-            {
-              "type": "Stack"
-            },
-            {
-              "type": "Exile"
-            },
-            {
-              "type": "Command"
-            }
+            "Library",
+            "Hand",
+            "Graveyard",
+            "Battlefield",
+            "Stack",
+            "Exile",
+            "Command"
           ]
         }
       ],
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

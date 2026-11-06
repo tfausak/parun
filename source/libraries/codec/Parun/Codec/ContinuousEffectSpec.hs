@@ -52,6 +52,6 @@ spec s = Spec.describe s "Parun.Codec.ContinuousEffect" $ do
           ContinuousEffect.modification = Modification.LoseAllAbilities,
           ContinuousEffect.affected = Affected.Matching (Filter.HasCardType CardType.Artifact)
         }
-      " {\"source\":4,\"timestamp\":5,\"expiry\":{\"type\":\"Never\"},\"modification\":{\"type\":\"LoseAllAbilities\"},\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}}} "
+      " {\"source\":4,\"timestamp\":5,\"expiry\":{\"type\":\"Never\"},\"modification\":{\"type\":\"LoseAllAbilities\"},\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s codec

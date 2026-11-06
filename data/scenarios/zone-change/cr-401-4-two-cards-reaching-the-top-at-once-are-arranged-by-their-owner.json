@@ -91,9 +91,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseLibraryEnd",
-          "with": {
-            "type": "Top"
-          }
+          "with": "Top"
         }
       }
     },
@@ -104,9 +102,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseLibraryEnd",
-          "with": {
-            "type": "Top"
-          }
+          "with": "Top"
         }
       }
     },

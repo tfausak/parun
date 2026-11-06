@@ -12,6 +12,6 @@ spec s = Spec.describe s "Parun.Codec.Batching" $ do
       s
       Batching.codec
       Batching.OneOrMore
-      " {\"type\":\"OneOrMore\"} "
+      " \"OneOrMore\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s Batching.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s Batching.codec

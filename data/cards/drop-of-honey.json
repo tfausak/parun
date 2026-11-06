@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -21,17 +19,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -51,24 +45,16 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "Measures",
                                   "value": {
-                                    "comparison": {
-                                      "type": "AtMost"
-                                    },
-                                    "measure": {
-                                      "type": "Power"
-                                    },
+                                    "comparison": "AtMost",
+                                    "measure": "Power",
                                     "operand": {
                                       "type": "OfEachOtherCandidate",
-                                      "value": {
-                                        "type": "Power"
-                                      }
+                                      "value": "Power"
                                     }
                                   }
                                 }
@@ -85,9 +71,7 @@
                             "type": "InSlot",
                             "value": "least"
                           },
-                          "regenerability": {
-                            "type": "CantBeRegenerated"
-                          }
+                          "regenerability": "CantBeRegenerated"
                         }
                       }
                     ]
@@ -103,9 +87,7 @@
             "value": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "Exactly"
-                },
+                "comparison": "Exactly",
                 "measured": {
                   "type": "Count",
                   "value": {
@@ -114,22 +96,16 @@
                     },
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     "scope": {
                       "type": "InZone",
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
-                        "zone": {
-                          "type": "Battlefield"
-                        }
+                        "zone": "Battlefield"
                       }
                     }
                   }
@@ -166,9 +142,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

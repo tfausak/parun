@@ -23,5 +23,5 @@ spec s = Spec.describe s "Parun.Codec.Behold" $ do
       s
       codec
       (Behold.MkBehold {Behold.count = 3, Behold.whichObjects = Filter.HasSubtype Subtype.Elemental})
-      " {\"count\":3,\"whichObjects\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Elemental\"}}} "
+      " {\"count\":3,\"whichObjects\":{\"type\":\"HasSubtype\",\"value\":\"Elemental\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

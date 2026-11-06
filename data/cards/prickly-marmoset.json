@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -43,14 +41,10 @@
                     "type": "And",
                     "value": []
                   },
-                  "player": {
-                    "type": "You"
-                  }
+                  "player": "You"
                 }
               },
-              "way": {
-                "type": "Cycled"
-              }
+              "way": "Cycled"
             }
           },
           "modal": {
@@ -94,14 +88,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Monkey"
-          }
+          "Monkey"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

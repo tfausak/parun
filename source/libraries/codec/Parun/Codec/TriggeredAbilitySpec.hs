@@ -121,7 +121,7 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
             TriggeredAbility.functionsFrom = Set.empty
           }
       )
-      " {\"condition\":{\"type\":\"StepBegins\",\"value\":{\"phase\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}}},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"DealDamage\",\"value\":{\"parts\":[{\"ref\":{\"type\":\"InSlot\",\"value\":\"you\"},\"quantity\":{\"type\":\"Literal\",\"value\":1}}]}}]}]}]},\"intervening\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Zombie\"}},\"aggregation\":{\"type\":\"Members\"}}},\"comparison\":{\"type\":\"Exactly\"},\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
+      " {\"condition\":{\"type\":\"StepBegins\",\"value\":{\"phase\":{\"type\":\"Beginning\",\"value\":\"Upkeep\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}}}},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"DealDamage\",\"value\":{\"parts\":[{\"ref\":{\"type\":\"InSlot\",\"value\":\"you\"},\"quantity\":{\"type\":\"Literal\",\"value\":1}}]}}]}]}]},\"intervening\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":\"Battlefield\",\"player\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}},\"filter\":{\"type\":\"HasSubtype\",\"value\":\"Zombie\"},\"aggregation\":{\"type\":\"Members\"}}},\"comparison\":\"Exactly\",\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
   -- CR 603.7: Face.delayedAbilities is a name-keyed map, rendered as a JSON
   -- OBJECT keyed by the name in ascending order. The two entries are inserted in
   -- DESCENDING name order, so a trip that emitted the map's incidental traversal
@@ -162,7 +162,7 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
             )
           ]
       )
-      " {\"each combat\":{\"condition\":{\"type\":\"StepBegins\",\"value\":{\"phase\":{\"type\":\"Combat\",\"value\":{\"type\":\"BeginningOfCombat\"}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Untap\",\"value\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"DeclaredThisTurn\",\"value\":{\"type\":\"Attacker\"}}}}]}]}]}},\"sacrifice it\":{\"condition\":{\"type\":\"StepBegins\",\"value\":{\"phase\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Sacrifice\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"token\"}}}]}]}]}}} "
+      " {\"each combat\":{\"condition\":{\"type\":\"StepBegins\",\"value\":{\"phase\":{\"type\":\"Combat\",\"value\":\"BeginningOfCombat\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}}},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Untap\",\"value\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"DeclaredThisTurn\",\"value\":\"Attacker\"}}}]}]}]}},\"sacrifice it\":{\"condition\":{\"type\":\"StepBegins\",\"value\":{\"phase\":{\"type\":\"Ending\",\"value\":\"EndStep\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}}},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Sacrifice\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"token\"}}}]}]}]}}} "
   -- CR 603.4: an ability stating no intervening "if" leaves only the two
   -- required keys.
   Spec.it s "an all-default value omits every optional key" $
@@ -220,4 +220,4 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
           TriggeredAbility.limit = TriggerLimit.Unlimited,
           TriggeredAbility.functionsFrom = Set.fromList [Zone.Library, Zone.Hand]
         }
-      " {\"condition\":{\"type\":\"Enters\",\"value\":{}},\"functionsFrom\":[{\"type\":\"Library\"},{\"type\":\"Hand\"}],\"modal\":{\"modes\":[{}]}} "
+      " {\"condition\":{\"type\":\"Enters\",\"value\":{}},\"functionsFrom\":[\"Library\",\"Hand\"],\"modal\":{\"modes\":[{}]}} "

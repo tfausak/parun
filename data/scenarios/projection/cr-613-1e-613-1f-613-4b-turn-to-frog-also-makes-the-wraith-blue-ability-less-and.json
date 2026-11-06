@@ -66,9 +66,7 @@
             "type": "Landwalk",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Swamp"
-              }
+              "value": "Swamp"
             }
           },
           "count": 1
@@ -158,9 +156,7 @@
           "type": "Landwalk",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Swamp"
-            }
+            "value": "Swamp"
           }
         },
         "count": 0

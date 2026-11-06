@@ -22,9 +22,7 @@
                         "value": {
                           "chosenSource": {
                             "type": "HasColor",
-                            "value": {
-                              "type": "Red"
-                            }
+                            "value": "Red"
                           },
                           "duration": {
                             "type": "UntilEndOfTurn"
@@ -45,9 +43,7 @@
           "value": {
             "quality": {
               "type": "HasColor",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             },
             "spares": null
           }
@@ -58,9 +54,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -76,17 +70,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Kithkin"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Kithkin",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

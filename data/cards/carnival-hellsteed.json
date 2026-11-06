@@ -21,18 +21,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -48,17 +44,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horse"
-          },
-          {
-            "type": "Nightmare"
-          }
+          "Horse",
+          "Nightmare"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

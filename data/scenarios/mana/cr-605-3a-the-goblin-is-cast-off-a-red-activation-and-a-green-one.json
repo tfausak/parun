@@ -66,18 +66,12 @@
               {
                 "manaType": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 },
                 "tags": [
-                  {
-                    "type": "Artifact"
-                  }
+                  "Artifact"
                 ],
-                "retention": {
-                  "type": "Ordinary"
-                },
+                "retention": "Ordinary",
                 "restriction": null,
                 "rider": null,
                 "sourceChoices": null
@@ -87,18 +81,12 @@
               {
                 "manaType": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 },
                 "tags": [
-                  {
-                    "type": "Artifact"
-                  }
+                  "Artifact"
                 ],
-                "retention": {
-                  "type": "Ordinary"
-                },
+                "retention": "Ordinary",
                 "restriction": null,
                 "rider": null,
                 "sourceChoices": null
@@ -121,9 +109,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseRiot",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },

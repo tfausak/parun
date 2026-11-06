@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -43,15 +39,11 @@
               "actor": {
                 "type": "Self"
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -69,9 +61,7 @@
                             "type": "InSlot",
                             "value": "targets"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -89,9 +79,7 @@
                     "filter": {
                       "type": "HeldByBound",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
+                        "holder": "Controller",
                         "slot": "thatPlayer"
                       }
                     },
@@ -107,17 +95,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Octopus"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Octopus",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

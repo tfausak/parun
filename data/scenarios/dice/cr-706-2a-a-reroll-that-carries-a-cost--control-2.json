@@ -101,9 +101,7 @@
       "do": {
         "Answer": {
           "prompt": "RerollDie",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -125,9 +123,7 @@
       "do": {
         "Answer": {
           "prompt": "RerollDie",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

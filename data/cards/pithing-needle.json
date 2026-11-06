@@ -7,14 +7,10 @@
             "type": "MatchingAnywhere",
             "value": {
               "type": "HasChosenName",
-              "value": {
-                "type": "AnyChooser"
-              }
+              "value": "AnyChooser"
             }
           },
-          "kind": {
-            "type": "NonManaAbility"
-          }
+          "kind": "NonManaAbility"
         }
       ],
       "manaCost": [
@@ -46,9 +42,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

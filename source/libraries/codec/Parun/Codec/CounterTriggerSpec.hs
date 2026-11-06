@@ -27,7 +27,7 @@ spec s = Spec.describe s "Parun.Codec.CounterTrigger" $ do
       s
       CounterTrigger.codec
       (CounterTrigger.MkCounterTrigger CounterKind.Lore (CounterMotion.Put PlayerRelation.AnyPlayer) CounterHolder.Self (Just 3) CounterGrouping.EachPermanent)
-      " {\"kind\":{\"type\":\"Lore\"},\"motion\":{\"type\":\"Put\",\"value\":{\"type\":\"AnyPlayer\"}},\"threshold\":3} "
+      " {\"kind\":{\"type\":\"Lore\"},\"motion\":{\"type\":\"Put\",\"value\":\"AnyPlayer\"},\"threshold\":3} "
   -- Cloaked Cadet's "one or more +1/+1 counters are put on one or more
   -- creatures".
   Spec.it s "a holder and a grouping write their keys" $
@@ -35,5 +35,5 @@ spec s = Spec.describe s "Parun.Codec.CounterTrigger" $ do
       s
       CounterTrigger.codec
       (CounterTrigger.MkCounterTrigger CounterKind.PlusOnePlusOne (CounterMotion.Put PlayerRelation.AnyPlayer) (CounterHolder.Permanent (Filter.HasCardType CardType.Creature)) Nothing CounterGrouping.EachBatch)
-      " {\"kind\":{\"type\":\"PlusOnePlusOne\"},\"motion\":{\"type\":\"Put\",\"value\":{\"type\":\"AnyPlayer\"}},\"holder\":{\"type\":\"Permanent\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"grouping\":{\"type\":\"EachBatch\"}} "
+      " {\"kind\":{\"type\":\"PlusOnePlusOne\"},\"motion\":{\"type\":\"Put\",\"value\":\"AnyPlayer\"},\"holder\":{\"type\":\"Permanent\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"grouping\":\"EachBatch\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CounterTrigger.codec

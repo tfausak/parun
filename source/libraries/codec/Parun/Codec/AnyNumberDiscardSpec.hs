@@ -25,7 +25,7 @@ spec s = Spec.describe s "Parun.Codec.AnyNumberDiscard" $ do
             AnyNumberDiscard.discarded = Nothing
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"cards\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"cards\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}} "
   Spec.it s "MkAnyNumberDiscard, with a ceiling and the discarded slot" $
     Common.assertCodec
       s
@@ -36,5 +36,5 @@ spec s = Spec.describe s "Parun.Codec.AnyNumberDiscard" $ do
             AnyNumberDiscard.discarded = Just (SlotName.MkSlotName (Text.pack "discarded"))
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"cards\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"atMost\":{\"type\":\"Literal\",\"value\":2}},\"discarded\":\"discarded\"} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"cards\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"atMost\":{\"type\":\"Literal\",\"value\":2}},\"discarded\":\"discarded\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AnyNumberDiscard.codec

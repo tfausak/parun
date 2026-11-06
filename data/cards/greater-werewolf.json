@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -33,17 +31,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "EndOfCombat"
-                }
+                "value": "EndOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -75,15 +69,11 @@
                               "value": [
                                 {
                                   "type": "BlockPartnerOfSource",
-                                  "value": {
-                                    "type": "Blocker"
-                                  }
+                                  "value": "Blocker"
                                 },
                                 {
                                   "type": "BlockPartnerOfSource",
-                                  "value": {
-                                    "type": "Attacker"
-                                  }
+                                  "value": "Attacker"
                                 }
                               ]
                             }
@@ -100,14 +90,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Werewolf"
-          }
+          "Werewolf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

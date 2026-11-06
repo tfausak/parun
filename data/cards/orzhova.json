@@ -22,9 +22,7 @@
                             "value": {
                               "filter": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               "graveyards": {
                                 "type": "Scoped",
@@ -39,9 +37,7 @@
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -68,9 +64,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -87,14 +81,10 @@
                     },
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     "perPlayer": {
-                      "players": {
-                        "type": "Opponent"
-                      },
+                      "players": "Opponent",
                       "slot": "eachPlayer"
                     },
                     "pool": {
@@ -113,14 +103,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ravnica"
-          }
+          "Ravnica"
         ],
         "types": [
-          {
-            "type": "Plane"
-          }
+          "Plane"
         ]
       }
     }

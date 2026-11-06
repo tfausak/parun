@@ -31,13 +31,13 @@ spec s = Spec.describe s "Parun.Codec.PlayerRef" $ do
       s
       PlayerRef.codec
       (PlayerRef.Relative PlayerRelation.AnyPlayer)
-      " {\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}} "
+      " {\"type\":\"Relative\",\"value\":\"AnyPlayer\"} "
   Spec.it s "Relative" $
     Common.assertCodec
       s
       PlayerRef.codec
       (PlayerRef.Relative PlayerRelation.You)
-      " {\"type\":\"Relative\",\"value\":{\"type\":\"You\"}} "
+      " {\"type\":\"Relative\",\"value\":\"You\"} "
   Spec.it s "InSlot" $
     Common.assertCodec
       s
@@ -67,31 +67,31 @@ spec s = Spec.describe s "Parun.Codec.PlayerRef" $ do
       s
       PlayerRef.codec
       (PlayerRef.HolderOfBound Holder.Controller Hop.Host (SlotName.MkSlotName (Text.pack "self")))
-      " {\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Host\"},\"slot\":\"self\"}} "
+      " {\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Host\",\"slot\":\"self\"}} "
   Spec.it s "HolderOfBound controller" $
     Common.assertCodec
       s
       PlayerRef.codec
       (PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "permanent")))
-      " {\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"permanent\"}} "
+      " {\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"permanent\"}} "
   Spec.it s "HolderOfBound owner" $
     Common.assertCodec
       s
       PlayerRef.codec
       (PlayerRef.HolderOfBound Holder.Owner Hop.Itself (SlotName.MkSlotName (Text.pack "permanent")))
-      " {\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Owner\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"permanent\"}} "
+      " {\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Owner\",\"hop\":\"Itself\",\"slot\":\"permanent\"}} "
   Spec.it s "HolderOfObject controller" $
     Common.assertCodec
       s
       PlayerRef.codec
       (PlayerRef.HolderOfObject Holder.Controller (ObjectId.MkObjectId 7))
-      " {\"type\":\"HolderOfObject\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"object\":7}} "
+      " {\"type\":\"HolderOfObject\",\"value\":{\"holder\":\"Controller\",\"object\":7}} "
   Spec.it s "HolderOfObject owner" $
     Common.assertCodec
       s
       PlayerRef.codec
       (PlayerRef.HolderOfObject Holder.Owner (ObjectId.MkObjectId 7))
-      " {\"type\":\"HolderOfObject\",\"value\":{\"holder\":{\"type\":\"Owner\"},\"object\":7}} "
+      " {\"type\":\"HolderOfObject\",\"value\":{\"holder\":\"Owner\",\"object\":7}} "
   -- CR 614.1c / CR 702.174b: HolderOfBound's shape one record over.
   Spec.it s "ChosenPlayerOfBound" $
     Common.assertCodec
@@ -104,19 +104,19 @@ spec s = Spec.describe s "Parun.Codec.PlayerRef" $ do
       s
       PlayerRef.codec
       (PlayerRef.Attacking (AttackingPlayers.MkAttackingPlayers PlayerRelation.Opponent (SlotName.MkSlotName (Text.pack "attackedPlayer"))))
-      " {\"type\":\"Attacking\",\"value\":{\"relation\":{\"type\":\"Opponent\"},\"attacked\":\"attackedPlayer\"}} "
+      " {\"type\":\"Attacking\",\"value\":{\"relation\":\"Opponent\",\"attacked\":\"attackedPlayer\"}} "
   Spec.it s "Superlative" $
     Common.assertCodec
       s
       PlayerRef.codec
       (PlayerRef.Superlative (Superlative.MkSuperlative (PlayerMeasure.CountersOf PlayerCounterKind.Point) Comparison.AtLeast))
-      " {\"type\":\"Superlative\",\"value\":{\"measure\":{\"type\":\"CountersOf\",\"value\":{\"type\":\"Point\"}},\"comparison\":{\"type\":\"AtLeast\"}}} "
+      " {\"type\":\"Superlative\",\"value\":{\"measure\":{\"type\":\"CountersOf\",\"value\":\"Point\"},\"comparison\":\"AtLeast\"}} "
   Spec.it s "InRole" $
     Common.assertCodec
       s
       PlayerRef.codec
       (PlayerRef.InRole TurnRole.Defending)
-      " {\"type\":\"InRole\",\"value\":{\"type\":\"Defending\"}} "
+      " {\"type\":\"InRole\",\"value\":\"Defending\"} "
   Spec.it s "EachOpponentExcept" $
     Common.assertCodec
       s

@@ -19,7 +19,7 @@
   "timeline": [
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$wildbonder"] } },
     { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$beast": ["$wildbonder"] } } },
-    { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$wildbonder", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$wildbonder", "do": { "ChooseOptional": "Exercises" } },
     { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 16 } } },
     { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Damage": { "object": "$beast", "damage": 0 } } }
   ]

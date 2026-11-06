@@ -25,9 +25,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  }
+                                  "White"
                                 ],
                                 "name": "Soldier Token",
                                 "power": {
@@ -40,14 +38,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Soldier"
-                                    }
+                                    "Soldier"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -95,19 +89,13 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "Measures",
                                   "value": {
-                                    "comparison": {
-                                      "type": "AtLeast"
-                                    },
-                                    "measure": {
-                                      "type": "Power"
-                                    },
+                                    "comparison": "AtLeast",
+                                    "measure": "Power",
                                     "operand": {
                                       "type": "Literal",
                                       "value": 4
@@ -117,9 +105,7 @@
                               ]
                             }
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -164,19 +150,13 @@
                                         "value": [
                                           {
                                             "type": "HasCardType",
-                                            "value": {
-                                              "type": "Creature"
-                                            }
+                                            "value": "Creature"
                                           },
                                           {
                                             "type": "HeldBy",
                                             "value": {
-                                              "holder": {
-                                                "type": "Controller"
-                                              },
-                                              "relation": {
-                                                "type": "You"
-                                              }
+                                              "holder": "Controller",
+                                              "relation": "You"
                                             }
                                           }
                                         ]
@@ -231,18 +211,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -250,19 +226,13 @@
       "oracleText": "[+1]: Create three 1/1 white Soldier creature tokens.\n[−3]: Destroy all creatures with power 4 or greater.\n[−7]: You get an emblem with \"Creatures you control get +2/+2 and have flying.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elspeth"
-          }
+          "Elspeth"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

@@ -7,9 +7,7 @@
             "type": "MatchingAnywhere",
             "value": {
               "type": "HasChosenName",
-              "value": {
-                "type": "AnyChooser"
-              }
+              "value": "AnyChooser"
             }
           }
         }
@@ -40,9 +38,7 @@
                   "type": "Not",
                   "value": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Land"
-                    }
+                    "value": "Land"
                   }
                 }
               }
@@ -56,20 +52,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horror"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Horror",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

@@ -12,15 +12,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         },
@@ -29,15 +25,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         },
@@ -46,15 +38,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         },
@@ -63,15 +51,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         },
@@ -80,15 +64,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         }
@@ -108,9 +88,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "Not",
@@ -144,17 +122,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Avatar"
-          },
-          {
-            "type": "Spirit"
-          }
+          "Avatar",
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

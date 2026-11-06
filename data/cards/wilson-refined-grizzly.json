@@ -40,9 +40,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -58,22 +56,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Bear"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Bear",
+          "Warrior"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

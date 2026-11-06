@@ -16,5 +16,5 @@ spec s = Spec.describe s "Parun.Codec.DieRollR" $ do
       s
       DieRollR.codec
       (DieRollR.MkDieRollR (ControllerRelation.Related PlayerRelation.You) DieRollRewrite.ExtraIgnoringLowest)
-      " {\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"ExtraIgnoringLowest\"}} "
+      " {\"whose\":{\"type\":\"You\"},\"rewrite\":\"ExtraIgnoringLowest\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DieRollR.codec

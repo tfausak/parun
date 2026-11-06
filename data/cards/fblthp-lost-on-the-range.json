@@ -25,18 +25,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -47,12 +43,8 @@
           "effect": {
             "type": "Shows",
             "value": {
-              "cards": {
-                "type": "TopOfLibrary"
-              },
-              "to": {
-                "type": "ThatPlayer"
-              }
+              "cards": "TopOfLibrary",
+              "to": "ThatPlayer"
             }
           },
           "scope": {
@@ -66,21 +58,15 @@
               "from": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Library"
-                }
+                "zone": "Library"
               },
               "matching": {
                 "type": "Not",
                 "value": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 }
               }
             }
@@ -100,19 +86,13 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Homunculus"
-          }
+          "Homunculus"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

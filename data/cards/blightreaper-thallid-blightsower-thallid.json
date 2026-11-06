@@ -11,9 +11,7 @@
               },
               {
                 "type": "Phyrexian",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               }
             ]
           },
@@ -52,9 +50,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -70,25 +66,17 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Fungus"
-          }
+          "Fungus"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
     {
       "colorIndicator": [
-        {
-          "type": "Black"
-        },
-        {
-          "type": "Green"
-        }
+        "Black",
+        "Green"
       ],
       "name": "Blightsower Thallid",
       "oracleText": "When this creature transforms into Blightsower Thallid or dies, create a 1/1 green Phyrexian Saproling creature token.",
@@ -116,9 +104,7 @@
                 "value": {
                   "destinations": [
                     {
-                      "zone": {
-                        "type": "Graveyard"
-                      }
+                      "zone": "Graveyard"
                     }
                   ]
                 }
@@ -138,9 +124,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Green"
-                                  }
+                                  "Green"
                                 ],
                                 "name": "Phyrexian Saproling Token",
                                 "power": {
@@ -153,17 +137,11 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Phyrexian"
-                                    },
-                                    {
-                                      "type": "Saproling"
-                                    }
+                                    "Phyrexian",
+                                    "Saproling"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -185,17 +163,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Fungus"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Fungus",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

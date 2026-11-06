@@ -19,17 +19,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Scarecrow"
-          }
+          "Scarecrow"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

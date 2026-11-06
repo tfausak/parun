@@ -50,9 +50,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Desert"
-                    }
+                    "value": "Desert"
                   }
                 }
               }
@@ -85,14 +83,10 @@
       "oracleText": "{T}: Add {C}.\n{2}, {T}, Sacrifice a Desert: Exile all graveyards.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Desert"
-          }
+          "Desert"
         ],
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

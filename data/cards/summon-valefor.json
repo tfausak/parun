@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -41,9 +39,7 @@
               },
               "motion": {
                 "type": "Put",
-                "value": {
-                  "type": "AnyPlayer"
-                }
+                "value": "AnyPlayer"
               },
               "threshold": 1
             }
@@ -71,33 +67,23 @@
                                     "value": [
                                       {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Creature"
-                                        }
+                                        "value": "Creature"
                                       },
                                       {
                                         "type": "HeldByBound",
                                         "value": {
-                                          "holder": {
-                                            "type": "Controller"
-                                          },
+                                          "holder": "Controller",
                                           "slot": "opponent"
                                         }
                                       },
                                       {
                                         "type": "Measures",
                                         "value": {
-                                          "comparison": {
-                                            "type": "AtLeast"
-                                          },
-                                          "measure": {
-                                            "type": "ManaValue"
-                                          },
+                                          "comparison": "AtLeast",
+                                          "measure": "ManaValue",
                                           "operand": {
                                             "type": "OfEachOtherCandidate",
-                                            "value": {
-                                              "type": "ManaValue"
-                                            }
+                                            "value": "ManaValue"
                                           }
                                         }
                                       }
@@ -113,9 +99,7 @@
                             "value": {
                               "players": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "Opponent"
-                                }
+                                "value": "Opponent"
                               }
                             }
                           },
@@ -129,9 +113,7 @@
                             "type": "InSlot",
                             "value": "chosen"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -150,9 +132,7 @@
               },
               "motion": {
                 "type": "Put",
-                "value": {
-                  "type": "AnyPlayer"
-                }
+                "value": "AnyPlayer"
               },
               "threshold": 2
             }
@@ -218,9 +198,7 @@
               },
               "motion": {
                 "type": "Put",
-                "value": {
-                  "type": "AnyPlayer"
-                }
+                "value": "AnyPlayer"
               },
               "threshold": 3
             }
@@ -286,9 +264,7 @@
               },
               "motion": {
                 "type": "Put",
-                "value": {
-                  "type": "AnyPlayer"
-                }
+                "value": "AnyPlayer"
               },
               "threshold": 4
             }
@@ -348,20 +324,12 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Saga"
-          },
-          {
-            "type": "Drake"
-          }
+          "Saga",
+          "Drake"
         ],
         "types": [
-          {
-            "type": "Creature"
-          },
-          {
-            "type": "Enchantment"
-          }
+          "Creature",
+          "Enchantment"
         ]
       }
     }

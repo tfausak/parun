@@ -27,9 +27,7 @@
                 "type": "Not",
                 "value": {
                   "type": "ControlledByRole",
-                  "value": {
-                    "type": "Active"
-                  }
+                  "value": "Active"
                 }
               },
               "subject": {
@@ -44,9 +42,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

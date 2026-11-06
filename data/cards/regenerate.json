@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -37,17 +35,11 @@
                             "type": "IsBound",
                             "value": "creature"
                           },
-                          "rewrite": {
-                            "type": "Regenerate"
-                          }
+                          "rewrite": "Regenerate"
                         }
                       },
-                      "origin": {
-                        "type": "Other"
-                      },
-                      "uses": {
-                        "type": "Once"
-                      }
+                      "origin": "Other",
+                      "uses": "Once"
                     }
                   }
                 ]
@@ -65,9 +57,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

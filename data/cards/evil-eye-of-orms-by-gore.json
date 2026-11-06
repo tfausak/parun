@@ -12,28 +12,20 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "Not",
                     "value": {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Eye"
-                      }
+                      "value": "Eye"
                     }
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   }
                 ]
@@ -54,9 +46,7 @@
               "type": "Not",
               "value": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Wall"
-                }
+                "value": "Wall"
               }
             }
           }
@@ -71,9 +61,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -89,14 +77,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Eye"
-          }
+          "Eye"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

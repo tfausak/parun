@@ -14,27 +14,21 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -50,18 +44,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -78,9 +68,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "skips": []
                     }
@@ -91,16 +79,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "CastUsing",
                       "value": {
                         "type": "OfFamily",
-                        "value": {
-                          "type": "Awaken"
-                        }
+                        "value": "Awaken"
                       }
                     },
                     "threshold": {
@@ -135,12 +119,8 @@
                       "modification": {
                         "type": "CardType",
                         "value": {
-                          "cardType": {
-                            "type": "Creature"
-                          },
-                          "mode": {
-                            "type": "InAddition"
-                          }
+                          "cardType": "Creature",
+                          "mode": "InAddition"
                         }
                       },
                       "ref": {
@@ -158,12 +138,8 @@
                       "modification": {
                         "type": "CreatureSubtype",
                         "value": {
-                          "mode": {
-                            "type": "InAddition"
-                          },
-                          "subtype": {
-                            "type": "Elemental"
-                          }
+                          "mode": "InAddition",
+                          "subtype": "Elemental"
                         }
                       },
                       "ref": {
@@ -226,9 +202,7 @@
                         "type": "InSlot",
                         "value": "self"
                       },
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   }
                 ]
@@ -241,19 +215,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -268,9 +236,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

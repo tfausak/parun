@@ -8,17 +8,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -61,9 +57,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -138,9 +132,7 @@
           "condition": {
             "type": "CountersChange",
             "value": {
-              "grouping": {
-                "type": "EachCounter"
-              },
+              "grouping": "EachCounter",
               "kind": {
                 "type": "PlusOnePlusOne"
               },
@@ -171,14 +163,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hydra"
-          }
+          "Hydra"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

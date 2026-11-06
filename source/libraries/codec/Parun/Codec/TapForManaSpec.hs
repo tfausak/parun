@@ -20,11 +20,11 @@ spec s = Spec.describe s "Parun.Codec.TapForMana" $ do
             TapForMana.restriction = Just (ManaRestriction.onlyCasts (Filter.And []))
           }
       )
-      " {\"permanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"restriction\":{\"casts\":{\"type\":\"And\",\"value\":[]}}} "
+      " {\"permanents\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"restriction\":{\"casts\":{\"type\":\"And\",\"value\":[]}}} "
   Spec.it s "omits an absent restriction" $
     Common.assertCodec
       s
       TapForMana.codec
       (TapForMana.MkTapForMana {TapForMana.permanents = Filter.HasCardType CardType.Land, TapForMana.restriction = Nothing})
-      " {\"permanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}} "
+      " {\"permanents\":{\"type\":\"HasCardType\",\"value\":\"Land\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s TapForMana.codec

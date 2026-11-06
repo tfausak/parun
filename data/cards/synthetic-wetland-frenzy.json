@@ -7,9 +7,7 @@
             "type": "Matching",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Swamp"
-              }
+              "value": "Swamp"
             }
           }
         }
@@ -20,9 +18,7 @@
             "type": "Matching",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Island"
-              }
+              "value": "Island"
             }
           }
         }
@@ -36,18 +32,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
       "name": "Synthetic Wetland Frenzy",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

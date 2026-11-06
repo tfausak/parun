@@ -30,7 +30,7 @@ spec s = Spec.describe s "Parun.Codec.Impending" $ do
             Impending.cost = Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 2, white, white]), Cost.components = []}
           }
       )
-      " {\"counters\":4,\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":2},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}}},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}}}]}} "
+      " {\"counters\":4,\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":2},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"White\"}},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"White\"}}]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec
 
 white :: ManaSymbol.ManaSymbol

@@ -15,11 +15,11 @@ spec s = Spec.describe s "Parun.Codec.AnyNumberMatching" $ do
       s
       AnyNumberMatching.codec
       (AnyNumberMatching.MkAnyNumberMatching (Filter.HasCardType CardType.Creature) Nothing)
-      " {\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   Spec.it s "a ceiling" $
     Common.assertCodec
       s
       AnyNumberMatching.codec
       (AnyNumberMatching.MkAnyNumberMatching (Filter.HasCardType CardType.Land) (Just (Quantity.Literal 2)))
-      " {\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"atMost\":{\"type\":\"Literal\",\"value\":2}} "
+      " {\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"atMost\":{\"type\":\"Literal\",\"value\":2}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AnyNumberMatching.codec

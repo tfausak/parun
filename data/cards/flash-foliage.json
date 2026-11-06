@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -36,9 +34,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Green"
-                              }
+                              "Green"
                             ],
                             "name": "Saproling Token",
                             "power": {
@@ -51,14 +47,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Saproling"
-                                }
+                                "Saproling"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -81,9 +73,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -98,9 +88,7 @@
               "target": {
                 "filter": {
                   "type": "IsAttackingPlayer",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
                 "pool": {
                   "type": "Creatures"
@@ -112,9 +100,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -41,9 +39,7 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "RevealThenHand"
-                          },
+                          "destination": "RevealThenHand",
                           "filter": {
                             "type": "And",
                             "value": [
@@ -52,27 +48,19 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Instant"
-                                    }
+                                    "value": "Instant"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Sorcery"
-                                    }
+                                    "value": "Sorcery"
                                   }
                                 ]
                               },
                               {
                                 "type": "Measures",
                                 "value": {
-                                  "comparison": {
-                                    "type": "Exactly"
-                                  },
-                                  "measure": {
-                                    "type": "ManaValue"
-                                  },
+                                  "comparison": "Exactly",
+                                  "measure": "ManaValue",
                                   "operand": {
                                     "type": "Literal",
                                     "value": 1
@@ -83,9 +71,7 @@
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -93,9 +79,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -112,17 +96,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

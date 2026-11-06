@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -64,9 +62,7 @@
                         "type": "InSlot",
                         "value": "creature"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -77,12 +73,8 @@
                 "filter": {
                   "type": "Measures",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
-                    "measure": {
-                      "type": "Toughness"
-                    },
+                    "comparison": "AtLeast",
+                    "measure": "Toughness",
                     "operand": {
                       "type": "Literal",
                       "value": 4
@@ -99,9 +91,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

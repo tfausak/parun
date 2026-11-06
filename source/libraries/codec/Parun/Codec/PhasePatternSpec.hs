@@ -22,13 +22,13 @@ spec s = Spec.describe s "Parun.Codec.PhasePattern" $ do
       s
       PhasePattern.codec
       PhasePattern.MkPhasePattern {PhasePattern.whichPhase = PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep), PhasePattern.whosePhase = ControllerRelation.Related PlayerRelation.AnyPlayer}
-      " {\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}}}} "
+      " {\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":\"Upkeep\"}}} "
   Spec.it s "Necropotence's whosePhase = Related You" $
     Common.assertCodec
       s
       PhasePattern.codec
       PhasePattern.MkPhasePattern {PhasePattern.whichPhase = PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep), PhasePattern.whosePhase = ControllerRelation.Related PlayerRelation.You}
-      " {\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":{\"type\":\"DrawStep\"}}},\"whosePhase\":{\"type\":\"You\"}} "
+      " {\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":\"DrawStep\"}},\"whosePhase\":{\"type\":\"You\"}} "
   -- The only Among Resolve's SkipPhase arm produces, never authored on a card
   -- (#437).
   Spec.it s "Fatigue's player-scoped whosePhase = Among" $
@@ -36,7 +36,7 @@ spec s = Spec.describe s "Parun.Codec.PhasePattern" $ do
       s
       PhasePattern.codec
       PhasePattern.MkPhasePattern {PhasePattern.whichPhase = PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep), PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (PlayerId.MkPlayerId 1))}
-      " {\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":{\"type\":\"DrawStep\"}}},\"whosePhase\":{\"type\":\"Among\",\"value\":[1]}} "
+      " {\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":\"DrawStep\"}},\"whosePhase\":{\"type\":\"Among\",\"value\":[1]}} "
   -- CR 500.1: the whole-phase arm, once Resolve has baked the player its
   -- resolution named.
   Spec.it s "Stonehorn Dignitary's whole-phase selector" $

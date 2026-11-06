@@ -81,39 +81,27 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Bird"
-                          }
+                          "value": "Bird"
                         },
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Cat"
-                          }
+                          "value": "Cat"
                         },
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Dog"
-                          }
+                          "value": "Dog"
                         },
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Goat"
-                          }
+                          "value": "Goat"
                         },
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Ox"
-                          }
+                          "value": "Ox"
                         },
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Snake"
-                          }
+                          "value": "Snake"
                         }
                       ]
                     },
@@ -131,9 +119,7 @@
       "oracleText": "{T}: Add {C}.\n{2}, {T}: Put a +1/+1 counter on target Bird, Cat, Dog, Goat, Ox, or Snake.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

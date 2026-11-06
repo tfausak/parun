@@ -60,9 +60,7 @@
       "source": "Fortress Kin-Guard",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       }
     },

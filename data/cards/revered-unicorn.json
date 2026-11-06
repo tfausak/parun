@@ -23,9 +23,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -56,9 +54,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "ObjectCounters",
@@ -78,14 +74,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Unicorn"
-          }
+          "Unicorn"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

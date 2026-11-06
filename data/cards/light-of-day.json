@@ -12,15 +12,11 @@
                 "value": [
                   {
                     "type": "HasColor",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   },
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 ]
               }
@@ -37,15 +33,11 @@
                 "value": [
                   {
                     "type": "HasColor",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   },
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 ]
               }
@@ -62,9 +54,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -72,9 +62,7 @@
       "oracleText": "Black creatures can't attack or block.",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

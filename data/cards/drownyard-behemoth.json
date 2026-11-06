@@ -18,9 +18,7 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Blue"
-                    }
+                    "value": "Blue"
                   }
                 }
               ]
@@ -52,9 +50,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "EnteredThisTurn"
               },
@@ -80,17 +76,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Crab"
-          },
-          {
-            "type": "Eldrazi"
-          }
+          "Crab",
+          "Eldrazi"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

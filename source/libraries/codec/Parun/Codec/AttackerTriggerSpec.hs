@@ -36,5 +36,5 @@ spec s = Spec.describe s "Parun.Codec.AttackerTrigger" $ do
           TriggerFrequency.FirstTimeEachTurn
           (Just (Condition.Compares (Compares.MkCompares (Quantity.Literal 0) Comparison.Exactly (Quantity.Literal 0))))
       )
-      " {\"creature\":{\"type\":\"IsToken\"},\"target\":{\"type\":\"Defending\",\"value\":{\"type\":\"You\"}},\"company\":{\"type\":\"Alone\"},\"frequency\":{\"type\":\"FirstTimeEachTurn\"},\"while\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":0},\"comparison\":{\"type\":\"Exactly\"},\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
+      " {\"creature\":{\"type\":\"IsToken\"},\"target\":{\"type\":\"Defending\",\"value\":\"You\"},\"company\":{\"type\":\"Alone\"},\"frequency\":\"FirstTimeEachTurn\",\"while\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":0},\"comparison\":\"Exactly\",\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AttackerTrigger.codec

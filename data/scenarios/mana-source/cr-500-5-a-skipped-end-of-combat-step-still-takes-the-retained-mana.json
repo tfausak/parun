@@ -122,14 +122,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfCombat"
-              },
+              "retention": "UntilEndOfCombat",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -137,14 +133,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfCombat"
-              },
+              "retention": "UntilEndOfCombat",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -152,14 +144,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfCombat"
-              },
+              "retention": "UntilEndOfCombat",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -167,14 +155,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfCombat"
-              },
+              "retention": "UntilEndOfCombat",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -182,14 +166,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfCombat"
-              },
+              "retention": "UntilEndOfCombat",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -197,14 +177,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfCombat"
-              },
+              "retention": "UntilEndOfCombat",
               "restriction": null,
               "rider": null,
               "sourceChoices": null

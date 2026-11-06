@@ -9,7 +9,7 @@
           { "card": "Island", "label": "i2", "ready": true },
           { "card": "Smoke Teller", "label": "teller" } ] },
       { "name": "bob",
-        "battlefield": [ { "card": "Goblin Piker", "label": "piker", "faceDown": { "type": "Manifested" } } ] },
+        "battlefield": [ { "card": "Goblin Piker", "label": "piker", "faceDown": "Manifested" } ] },
       { "name": "carol" }
     ],
     "active": "alice",

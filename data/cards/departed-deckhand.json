@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -37,9 +35,7 @@
                             "type": "Not",
                             "value": {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Spirit"
-                              }
+                              "value": "Spirit"
                             }
                           },
                           "duration": {
@@ -64,12 +60,8 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -98,9 +90,7 @@
               "type": "Not",
               "value": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Spirit"
-                }
+                "value": "Spirit"
               }
             }
           }
@@ -115,9 +105,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -136,9 +124,7 @@
           "condition": {
             "type": "BecomesTargeted",
             "value": {
-              "kind": {
-                "type": "Spell"
-              },
+              "kind": "Spell",
               "subject": {
                 "type": "Permanent",
                 "value": {
@@ -175,17 +161,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Pirate"
-          },
-          {
-            "type": "Spirit"
-          }
+          "Pirate",
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

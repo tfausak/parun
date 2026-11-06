@@ -10,7 +10,7 @@
     ]
   },
   "timeline": [
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$merfolk", "mana": ["$syphon", "$manaweft"], "yields": [[{"manaType": {"type": "Colored", "value": {"type": "Blue"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}], [{"manaType": {"type": "Colored", "value": {"type": "Blue"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$merfolk", "mana": ["$syphon", "$manaweft"], "yields": [[{"manaType": {"type": "Colored", "value": "Blue"}, "tags": [], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null}], [{"manaType": {"type": "Colored", "value": "Blue"}, "tags": [], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null}]]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Coral Merfolk", "count": 1}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$syphon", "tapped": true}}},

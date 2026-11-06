@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -48,9 +46,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Count",
@@ -63,19 +59,13 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "You"
                                     }
                                   }
                                 ]
@@ -85,12 +75,8 @@
                                 "value": {
                                   "type": "MovedBetween",
                                   "value": {
-                                    "from": {
-                                      "type": "Battlefield"
-                                    },
-                                    "to": {
-                                      "type": "Graveyard"
-                                    }
+                                    "from": "Battlefield",
+                                    "to": "Graveyard"
                                   }
                                 }
                               }
@@ -108,17 +94,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Knight"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Knight",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

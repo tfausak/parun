@@ -18,9 +18,7 @@
               "type": "Not",
               "value": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Wall"
-                }
+                "value": "Wall"
               }
             }
           }
@@ -38,18 +36,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -57,14 +51,10 @@
       "oracleText": "Enchant creature\nEnchanted creature can't be blocked except by Walls.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

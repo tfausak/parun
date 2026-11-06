@@ -54,9 +54,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "DrawStep",
@@ -101,9 +99,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          }
+          "decision": "Pays"
         }
       },
       "player": "alice",

@@ -6,9 +6,7 @@
           "type": "Gift",
           "value": {
             "type": "TappedFish",
-            "value": {
-              "type": "Fish"
-            }
+            "value": "Fish"
           }
         }
       ],
@@ -17,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -33,16 +29,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "TimesPaid",
                       "value": {
                         "type": "Printed",
-                        "value": {
-                          "type": "Gift"
-                        }
+                        "value": "Gift"
                       }
                     },
                     "threshold": {
@@ -59,9 +51,7 @@
                         "type": "InSlot",
                         "value": "creature"
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ]
@@ -70,16 +60,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "TimesPaid",
                       "value": {
                         "type": "Printed",
-                        "value": {
-                          "type": "Gift"
-                        }
+                        "value": "Gift"
                       }
                     },
                     "threshold": {
@@ -96,9 +82,7 @@
                         "type": "InSlot",
                         "value": "permanent"
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ]
@@ -109,12 +93,8 @@
                 "filter": {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "Opponent"
-                    }
+                    "holder": "Controller",
+                    "relation": "Opponent"
                   }
                 },
                 "pool": {
@@ -129,20 +109,14 @@
                       "type": "Not",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       }
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "Opponent"
-                        }
+                        "holder": "Controller",
+                        "relation": "Opponent"
                       }
                     }
                   ]
@@ -157,9 +131,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

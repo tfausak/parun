@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.SubtypeFamily" $ do
       s
       SubtypeFamily.codec
       SubtypeFamily.BasicLandType
-      " {\"type\":\"BasicLandType\"} "
+      " \"BasicLandType\" "
   Spec.it s "CreatureType" $
     Common.assertCodec
       s
       SubtypeFamily.codec
       SubtypeFamily.CreatureType
-      " {\"type\":\"CreatureType\"} "
+      " \"CreatureType\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s SubtypeFamily.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s SubtypeFamily.codec

@@ -13,9 +13,7 @@
             },
             "blockers": {
               "type": "HasColor",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             }
           }
         }
@@ -29,18 +27,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -66,9 +60,7 @@
               {
                 "type": "BecomesTargeted",
                 "value": {
-                  "relation": {
-                    "type": "Opponent"
-                  }
+                  "relation": "Opponent"
                 }
               }
             ]
@@ -84,9 +76,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -104,14 +94,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horse"
-          }
+          "Horse"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

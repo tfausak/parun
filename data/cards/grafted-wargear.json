@@ -29,9 +29,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -64,12 +62,8 @@
           "condition": {
             "type": "AttachmentChanges",
             "value": {
-              "direction": {
-                "type": "Unattaches"
-              },
-              "end": {
-                "type": "Attachment"
-              },
+              "direction": "Unattaches",
+              "end": "Attachment",
               "other": {
                 "type": "And",
                 "value": []
@@ -101,14 +95,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Equipment"
-          }
+          "Equipment"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

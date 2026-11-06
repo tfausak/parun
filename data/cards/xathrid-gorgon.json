@@ -18,9 +18,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -75,12 +73,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Artifact"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Artifact",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -99,9 +93,7 @@
                             "type": "Colors",
                             "value": {
                               "colors": [],
-                              "mode": {
-                                "type": "Replace"
-                              }
+                              "mode": "Replace"
                             }
                           },
                           "ref": {
@@ -123,9 +115,7 @@
                           "duration": {
                             "type": "Indefinite"
                           },
-                          "what": {
-                            "type": "Activate"
-                          }
+                          "what": "Activate"
                         }
                       }
                     ]
@@ -157,9 +147,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -175,14 +163,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Gorgon"
-          }
+          "Gorgon"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

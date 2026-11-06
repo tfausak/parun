@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -42,20 +40,14 @@
                         "type": "Search",
                         "value": {
                           "andOr": true,
-                          "destination": {
-                            "type": "BattlefieldAttached"
-                          },
+                          "destination": "BattlefieldAttached",
                           "filter": {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Aura"
-                            }
+                            "value": "Aura"
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -63,20 +55,12 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "zones": [
-                            {
-                              "type": "Library"
-                            },
-                            {
-                              "type": "Hand"
-                            },
-                            {
-                              "type": "Graveyard"
-                            }
+                            "Library",
+                            "Hand",
+                            "Graveyard"
                           ]
                         }
                       }
@@ -93,17 +77,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Giant"
-          },
-          {
-            "type": "Monk"
-          }
+          "Giant",
+          "Monk"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

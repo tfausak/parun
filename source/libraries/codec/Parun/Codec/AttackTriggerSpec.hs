@@ -33,7 +33,7 @@ spec s = Spec.describe s "Parun.Codec.AttackTrigger" $ do
       s
       AttackTrigger.codec
       (AttackTrigger.Declaration (DeclarationTrigger.MkDeclarationTrigger PlayerRelation.AnyPlayer Nothing))
-      " {\"type\":\"Declaration\",\"value\":{\"player\":{\"type\":\"AnyPlayer\"}}} "
+      " {\"type\":\"Declaration\",\"value\":{\"player\":\"AnyPlayer\"}} "
   Spec.it s "Unblocked" $
     Common.assertCodec
       s

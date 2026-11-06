@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -39,15 +37,11 @@
                 "value": [
                   {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Kithkin"
-                    }
+                    "value": "Kithkin"
                   },
                   {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Soldier"
-                    }
+                    "value": "Soldier"
                   }
                 ]
               },
@@ -71,17 +65,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Kithkin"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Kithkin",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

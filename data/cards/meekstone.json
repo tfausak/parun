@@ -11,9 +11,7 @@
       "oracleText": "Creatures with power 3 or greater don't untap during their controllers' untap steps.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       },
       "untapRestrictions": [
@@ -25,19 +23,13 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "Measures",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
-                    "measure": {
-                      "type": "Power"
-                    },
+                    "comparison": "AtLeast",
+                    "measure": "Power",
                     "operand": {
                       "type": "Literal",
                       "value": 3

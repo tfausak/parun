@@ -7,9 +7,7 @@
           "value": {
             "aggregation": {
               "type": "Distinct",
-              "value": {
-                "type": "CardTypes"
-              }
+              "value": "CardTypes"
             },
             "filter": {
               "type": "And",
@@ -20,13 +18,9 @@
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               }
             }
           }
@@ -36,9 +30,7 @@
           "value": {
             "aggregation": {
               "type": "Distinct",
-              "value": {
-                "type": "CardTypes"
-              }
+              "value": "CardTypes"
             },
             "filter": {
               "type": "And",
@@ -49,13 +41,9 @@
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               }
             }
           }
@@ -70,18 +58,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -109,17 +93,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -142,9 +122,7 @@
                                     "value": {
                                       "aggregation": {
                                         "type": "Distinct",
-                                        "value": {
-                                          "type": "CardTypes"
-                                        }
+                                        "value": "CardTypes"
                                       },
                                       "filter": {
                                         "type": "And",
@@ -155,13 +133,9 @@
                                         "value": {
                                           "player": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "You"
-                                            }
+                                            "value": "You"
                                           },
-                                          "zone": {
-                                            "type": "Graveyard"
-                                          }
+                                          "zone": "Graveyard"
                                         }
                                       }
                                     }
@@ -171,9 +145,7 @@
                                     "value": {
                                       "aggregation": {
                                         "type": "Distinct",
-                                        "value": {
-                                          "type": "CardTypes"
-                                        }
+                                        "value": "CardTypes"
                                       },
                                       "filter": {
                                         "type": "And",
@@ -184,22 +156,16 @@
                                         "value": {
                                           "player": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "You"
-                                            }
+                                            "value": "You"
                                           },
-                                          "zone": {
-                                            "type": "Graveyard"
-                                          }
+                                          "zone": "Graveyard"
                                         }
                                       }
                                     }
                                   }
                                 },
                                 "colorIndicator": [
-                                  {
-                                    "type": "Green"
-                                  }
+                                  "Green"
                                 ],
                                 "name": "Ooze Token",
                                 "power": {
@@ -219,14 +185,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Ooze"
-                                    }
+                                    "Ooze"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -248,14 +210,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ooze"
-          }
+          "Ooze"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

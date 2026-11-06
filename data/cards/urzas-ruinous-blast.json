@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -36,26 +34,20 @@
                               "type": "Not",
                               "value": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Land"
-                                }
+                                "value": "Land"
                               }
                             },
                             {
                               "type": "Not",
                               "value": {
                                 "type": "HasSupertype",
-                                "value": {
-                                  "type": "Legendary"
-                                }
+                                "value": "Legendary"
                               }
                             }
                           ]
                         }
                       },
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   }
                 ]
@@ -66,14 +58,10 @@
       },
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

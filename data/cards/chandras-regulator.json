@@ -20,15 +20,11 @@
                     "value": [
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Mountain"
-                        }
+                        "value": "Mountain"
                       },
                       {
                         "type": "HasColor",
-                        "value": {
-                          "type": "Red"
-                        }
+                        "value": "Red"
                       }
                     ]
                   }
@@ -53,9 +49,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -80,9 +74,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -98,19 +90,13 @@
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 {
                   "type": "IsActivatedAbility",
-                  "value": {
-                    "type": "LoyaltyAbility"
-                  }
+                  "value": "LoyaltyAbility"
                 },
                 {
                   "type": "FromSource",
@@ -119,21 +105,15 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Planeswalker"
-                        }
+                        "value": "Planeswalker"
                       },
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Chandra"
-                        }
+                        "value": "Chandra"
                       },
                       {
                         "type": "IsInZone",
-                        "value": {
-                          "type": "Battlefield"
-                        }
+                        "value": "Battlefield"
                       }
                     ]
                   }
@@ -161,9 +141,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "mana": [
                           {
@@ -186,14 +164,10 @@
       ],
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

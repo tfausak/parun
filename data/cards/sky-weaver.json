@@ -45,15 +45,11 @@
                       "value": [
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "White"
-                          }
+                          "value": "White"
                         },
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Black"
-                          }
+                          "value": "Black"
                         }
                       ]
                     },
@@ -76,9 +72,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -94,17 +88,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Metathran"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Metathran",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -23,12 +23,8 @@
                         "value": {
                           "type": "Measures",
                           "value": {
-                            "comparison": {
-                              "type": "AtLeast"
-                            },
-                            "measure": {
-                              "type": "ColorCount"
-                            },
+                            "comparison": "AtLeast",
+                            "measure": "ColorCount",
                             "operand": {
                               "type": "Literal",
                               "value": 1
@@ -36,9 +32,7 @@
                           }
                         }
                       },
-                      "sacrificer": {
-                        "type": "PermanentController"
-                      }
+                      "sacrificer": "PermanentController"
                     }
                   }
                 ]
@@ -49,17 +43,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Eldrazi"
-          }
+          "Eldrazi"
         ],
         "types": [
-          {
-            "type": "Kindred"
-          },
-          {
-            "type": "Sorcery"
-          }
+          "Kindred",
+          "Sorcery"
         ]
       }
     }

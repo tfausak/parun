@@ -17,9 +17,7 @@
             },
             "quality": {
               "type": "HasCardType",
-              "value": {
-                "type": "Artifact"
-              }
+              "value": "Artifact"
             }
           }
         }
@@ -33,9 +31,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -51,17 +47,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goat"
-          }
+          "Goat"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

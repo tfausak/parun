@@ -86,17 +86,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horse"
-          }
+          "Horse"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

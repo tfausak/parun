@@ -22,7 +22,7 @@ spec s = Spec.describe s "Parun.Codec.MoveMana" $ do
             MoveMana.to = Just (PlayerRef.Relative PlayerRelation.You)
           }
       )
-      " {\"from\":{\"type\":\"InSlot\",\"value\":\"target\"},\"to\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"from\":{\"type\":\"InSlot\",\"value\":\"target\"},\"to\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   -- CR 106.4: Mana Short's "that player loses all unspent mana", no one adding it.
   Spec.it s "MkMoveMana, no to" $
     Common.assertCodec

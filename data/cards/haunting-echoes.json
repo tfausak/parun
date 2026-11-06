@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -46,15 +42,11 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Land"
-                                  }
+                                  "value": "Land"
                                 },
                                 {
                                   "type": "HasSupertype",
-                                  "value": {
-                                    "type": "Basic"
-                                  }
+                                  "value": "Basic"
                                 }
                               ]
                             }
@@ -66,17 +58,13 @@
                         }
                       },
                       "slot": "exiled",
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   },
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "Exile"
-                      },
+                      "destination": "Exile",
                       "filter": {
                         "type": "Shares",
                         "value": {
@@ -96,9 +84,7 @@
                       "quantity": null,
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -117,9 +103,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

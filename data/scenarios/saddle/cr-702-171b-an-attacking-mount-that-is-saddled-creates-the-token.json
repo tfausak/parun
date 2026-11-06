@@ -64,9 +64,7 @@
           "of": "Designations",
           "object": "$mount",
           "is": [
-            {
-              "type": "Saddled"
-            }
+            "Saddled"
           ]
         }
       }

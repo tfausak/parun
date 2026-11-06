@@ -12,9 +12,7 @@
               "type": "Unwritten",
               "value": {
                 "type": "HasColor",
-                "value": {
-                  "type": "White"
-                }
+                "value": "White"
               }
             },
             "spares": null
@@ -27,9 +25,7 @@
               "type": "Unwritten",
               "value": {
                 "type": "HasColor",
-                "value": {
-                  "type": "Blue"
-                }
+                "value": "Blue"
               }
             },
             "spares": null
@@ -42,9 +38,7 @@
               "type": "Unwritten",
               "value": {
                 "type": "HasColor",
-                "value": {
-                  "type": "Black"
-                }
+                "value": "Black"
               }
             },
             "spares": null
@@ -57,9 +51,7 @@
               "type": "Unwritten",
               "value": {
                 "type": "HasColor",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               }
             },
             "spares": null
@@ -72,9 +64,7 @@
               "type": "Unwritten",
               "value": {
                 "type": "HasColor",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               }
             },
             "spares": null
@@ -90,18 +80,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -117,14 +103,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Angel"
-          }
+          "Angel"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

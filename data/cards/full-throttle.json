@@ -8,17 +8,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "BeginningOfCombat"
-                }
+                "value": "BeginningOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -35,9 +31,7 @@
                           "type": "EachMatching",
                           "value": {
                             "type": "DeclaredThisTurn",
-                            "value": {
-                              "type": "Attacker"
-                            }
+                            "value": "Attacker"
                           }
                         }
                       }
@@ -58,18 +52,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -84,12 +74,8 @@
                   {
                     "type": "AddPhases",
                     "value": [
-                      {
-                        "type": "ExtraCombat"
-                      },
-                      {
-                        "type": "ExtraCombat"
-                      }
+                      "ExtraCombat",
+                      "ExtraCombat"
                     ]
                   },
                   {
@@ -109,9 +95,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

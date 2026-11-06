@@ -11,9 +11,7 @@
                   "count": 1,
                   "whichObjects": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Dragon"
-                    }
+                    "value": "Dragon"
                   }
                 }
               }
@@ -34,9 +32,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -71,9 +67,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "WasBound",
                       "value": "thatBeheldObject"
@@ -90,9 +84,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -126,9 +118,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

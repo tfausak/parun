@@ -60,14 +60,14 @@ spec s = Spec.describe s "Parun.Codec.CombatRestriction" $ do
       s
       CombatRestriction.codec
       (CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy Affected.Attached (Filter.Measures (Measures.MkMeasures Measure.Power Comparison.GreaterThan (Operand.OfSource Measure.Power))) Nothing Nothing))
-      " {\"type\":\"CantBeBlockedBy\",\"value\":{\"affected\":{\"type\":\"Attached\"},\"blockers\":{\"type\":\"Measures\",\"value\":{\"measure\":{\"type\":\"Power\"},\"comparison\":{\"type\":\"GreaterThan\"},\"operand\":{\"type\":\"OfSource\",\"value\":{\"type\":\"Power\"}}}}}} "
+      " {\"type\":\"CantBeBlockedBy\",\"value\":{\"affected\":{\"type\":\"Attached\"},\"blockers\":{\"type\":\"Measures\",\"value\":{\"measure\":\"Power\",\"comparison\":\"GreaterThan\",\"operand\":{\"type\":\"OfSource\",\"value\":\"Power\"}}}}} "
   -- Its blocker-side mirror: "attackers" beside "affected".
   Spec.it s "CantBlockCreatures carries its Affected and its attackers" $
     Common.assertCodec
       s
       CombatRestriction.codec
       (CombatRestriction.CantBlockCreatures (CantBlockCreatures.MkCantBlockCreatures Affected.Attached (Filter.Measures (Measures.MkMeasures Measure.Power Comparison.GreaterThan (Operand.OfSource Measure.Power))) Nothing Nothing))
-      " {\"type\":\"CantBlockCreatures\",\"value\":{\"affected\":{\"type\":\"Attached\"},\"attackers\":{\"type\":\"Measures\",\"value\":{\"measure\":{\"type\":\"Power\"},\"comparison\":{\"type\":\"GreaterThan\"},\"operand\":{\"type\":\"OfSource\",\"value\":{\"type\":\"Power\"}}}}}} "
+      " {\"type\":\"CantBlockCreatures\",\"value\":{\"affected\":{\"type\":\"Attached\"},\"attackers\":{\"type\":\"Measures\",\"value\":{\"measure\":\"Power\",\"comparison\":\"GreaterThan\",\"operand\":{\"type\":\"OfSource\",\"value\":\"Power\"}}}}} "
   -- CR 508.1c's PAIRWISE arm, the attacking one, whose payload spells
   -- "defenders" where CantBeBlockedBy spells "blockers": the players the
   -- restricted creatures may not be announced against (CR 508.1b), together
@@ -77,7 +77,7 @@ spec s = Spec.describe s "Parun.Codec.CombatRestriction" $ do
       s
       CombatRestriction.codec
       (CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer Affected.Attached (PlayerScope.Related PlayerRelation.You) (Set.singleton AttackTargetKind.OfPlaneswalker) Nothing Nothing))
-      " {\"type\":\"CantAttackPlayer\",\"value\":{\"affected\":{\"type\":\"Attached\"},\"defenders\":{\"type\":\"You\"},\"kinds\":[{\"type\":\"OfPlaneswalker\"}]}} "
+      " {\"type\":\"CantAttackPlayer\",\"value\":{\"affected\":{\"type\":\"Attached\"},\"defenders\":{\"type\":\"You\"},\"kinds\":[\"OfPlaneswalker\"]}} "
   -- CR 508.1c together with CR 506.5, the SET-SHAPED arm: the same payload as
   -- the two above, so the tag is the only thing that tells a reader this one is
   -- answered against a whole declaration.
@@ -131,10 +131,10 @@ spec s = Spec.describe s "Parun.Codec.CombatRestriction" $ do
       (CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless Affected.Attached (Just anotherGiant) Nothing Nothing))
       ( "{\"type\":\"CantAttack\",\"value\":{\"affected\":{\"type\":\"Attached\"},\"unless\":"
           <> "{\"type\":\"Compares\",\"value\":"
-          <> "{\"measured\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},"
-          <> "\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Giant\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]},"
+          <> "{\"measured\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":\"Battlefield\",\"player\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}},"
+          <> "\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSubtype\",\"value\":\"Giant\"},{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}]},"
           <> "\"aggregation\":{\"type\":\"Members\"}}},"
-          <> "\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}}}"
+          <> "\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":1}}}}}"
       )
   -- CR 509.1b's second clause is the same sentence with "block" in place of
   -- "attack", so the gate rides the other arm unchanged.

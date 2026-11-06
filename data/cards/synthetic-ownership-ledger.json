@@ -22,9 +22,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Count",
@@ -37,12 +35,8 @@
                                 "value": {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Owner"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Owner",
+                                    "relation": "You"
                                   }
                                 }
                               },
@@ -50,9 +44,7 @@
                                 "type": "InHistory",
                                 "value": {
                                   "type": "SpellCast",
-                                  "value": {
-                                    "type": "ThisTurn"
-                                  }
+                                  "value": "ThisTurn"
                                 }
                               }
                             }
@@ -76,9 +68,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -93,14 +83,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Zombie"
-          }
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

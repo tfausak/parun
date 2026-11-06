@@ -6,9 +6,7 @@
           "type": "Landwalk",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Island"
-            }
+            "value": "Island"
           }
         }
       ],
@@ -21,18 +19,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -64,16 +58,12 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "duration": {
-                            "type": "UntilSourceLeavesTheBattlefield"
-                          },
+                          "duration": "UntilSourceLeavesTheBattlefield",
                           "ref": {
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ],
@@ -86,9 +76,7 @@
                   "target": {
                     "filter": {
                       "type": "ControlledByRole",
-                      "value": {
-                        "type": "Defending"
-                      }
+                      "value": "Defending"
                     },
                     "pool": {
                       "type": "Creatures"
@@ -102,14 +90,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Whale"
-          }
+          "Whale"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

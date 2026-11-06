@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -47,9 +43,7 @@
                             "type": "EachMatching",
                             "value": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             }
                           }
                         }
@@ -65,9 +59,7 @@
                       "effect": {
                         "type": "ZoneChangeR",
                         "value": {
-                          "destination": {
-                            "type": "Exile"
-                          },
+                          "destination": "Exile",
                           "matching": {
                             "whatObject": {
                               "type": "And",
@@ -78,30 +70,20 @@
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "IsInZone",
-                                  "value": {
-                                    "type": "Battlefield"
-                                  }
+                                  "value": "Battlefield"
                                 }
                               ]
                             },
-                            "whenDestination": {
-                              "type": "Graveyard"
-                            }
+                            "whenDestination": "Graveyard"
                           }
                         }
                       },
-                      "origin": {
-                        "type": "Other"
-                      },
-                      "uses": {
-                        "type": "Unlimited"
-                      }
+                      "origin": "Other",
+                      "uses": "Unlimited"
                     }
                   }
                 ]
@@ -112,9 +94,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

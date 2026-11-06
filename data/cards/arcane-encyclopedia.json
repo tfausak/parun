@@ -27,9 +27,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -55,14 +53,10 @@
       "oracleText": "{3}, {T}: Draw a card.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Book"
-          }
+          "Book"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

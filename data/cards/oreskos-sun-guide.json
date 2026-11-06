@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -34,9 +32,7 @@
               "actor": {
                 "type": "Self"
               },
-              "status": {
-                "type": "Untapped"
-              }
+              "status": "Untapped"
             }
           },
           "modal": {
@@ -50,9 +46,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -70,17 +64,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          },
-          {
-            "type": "Monk"
-          }
+          "Cat",
+          "Monk"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

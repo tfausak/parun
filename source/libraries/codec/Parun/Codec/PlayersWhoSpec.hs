@@ -18,7 +18,7 @@ spec s = Spec.describe s "Parun.Codec.PlayersWho" $ do
       s
       PlayersWho.codec
       PlayersWho.MkPlayersWho {PlayersWho.players = PlayerRef.Relative PlayerRelation.You, PlayersWho.who = Nothing}
-      " {\"players\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"players\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   -- Disorder's "each player who controls a white creature".
   Spec.it s "MkPlayersWho, narrowed by a player filter" $
     Common.assertCodec
@@ -28,6 +28,6 @@ spec s = Spec.describe s "Parun.Codec.PlayersWho" $ do
         { PlayersWho.players = PlayerRef.Relative PlayerRelation.AnyPlayer,
           PlayersWho.who = Just (Filter.Controls (ControlMargin.AtLeast 1) (Filter.And [Filter.HasCardType CardType.Creature, Filter.HasColor Color.White]))
         }
-      " {\"players\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"who\":{\"type\":\"Controls\",\"value\":{\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HasColor\",\"value\":{\"type\":\"White\"}}]},\"margin\":{\"type\":\"AtLeast\",\"value\":1}}}} "
+      " {\"players\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"},\"who\":{\"type\":\"Controls\",\"value\":{\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Creature\"},{\"type\":\"HasColor\",\"value\":\"White\"}]},\"margin\":{\"type\":\"AtLeast\",\"value\":1}}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s PlayersWho.codec

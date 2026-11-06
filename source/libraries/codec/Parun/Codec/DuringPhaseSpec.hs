@@ -24,7 +24,7 @@ spec s = Spec.describe s "Parun.Codec.DuringPhase" $ do
             DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)
           }
       )
-      " {\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"EndOfCombat\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}} "
+      " {\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":\"EndOfCombat\"}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}} "
   -- Jade Statue's whole-phase window, and the other turn scope. BOTH keys are
   -- required: there is no scope-less form, so a payload naming only a window is
   -- a decode failure rather than a silent @Relative AnyPlayer@.
@@ -37,5 +37,5 @@ spec s = Spec.describe s "Parun.Codec.DuringPhase" $ do
             DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)
           }
       )
-      " {\"window\":{\"type\":\"CombatPhase\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
+      " {\"window\":{\"type\":\"CombatPhase\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DuringPhase.codec

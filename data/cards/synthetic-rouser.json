@@ -43,9 +43,7 @@
       "name": "Synthetic Rouser",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

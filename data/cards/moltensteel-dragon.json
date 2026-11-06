@@ -7,9 +7,7 @@
             "mana": [
               {
                 "type": "Phyrexian",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               }
             ]
           },
@@ -64,15 +62,11 @@
         },
         {
           "type": "Phyrexian",
-          "value": {
-            "type": "Red"
-          }
+          "value": "Red"
         },
         {
           "type": "Phyrexian",
-          "value": {
-            "type": "Red"
-          }
+          "value": "Red"
         }
       ],
       "name": "Moltensteel Dragon",
@@ -87,20 +81,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dragon"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Dragon",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

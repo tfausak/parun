@@ -45,7 +45,7 @@ spec s = Spec.describe s "Parun.Codec.Voted" $ do
       )
       ( "{\"ballot\":{\"voter\":1,\"choice\":{\"type\":\"ForObject\",\"value\":{\"object\":7,\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
-          <> ",\"controller\":0,\"owner\":0,\"zone\":{\"type\":\"Battlefield\"}}}},\"audience\":[0,1]}"
+          <> ",\"controller\":0,\"owner\":0,\"zone\":\"Battlefield\"}}},\"audience\":[0,1]}"
       )
   -- CR 701.38b's word choice, shown to its voter alone.
   Spec.it s "MkVoted, a word ballot" $

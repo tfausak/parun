@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -37,12 +33,8 @@
           "effect": {
             "type": "Shows",
             "value": {
-              "cards": {
-                "type": "TopOfLibrary"
-              },
-              "to": {
-                "type": "Everyone"
-              }
+              "cards": "TopOfLibrary",
+              "to": "Everyone"
             }
           },
           "scope": {
@@ -56,19 +48,13 @@
               "from": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Library"
-                }
+                "zone": "Library"
               },
               "matching": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Creature"
               }
             }
           },
@@ -87,14 +73,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          }
+          "Beast"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

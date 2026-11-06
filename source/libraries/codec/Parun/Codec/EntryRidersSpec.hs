@@ -36,7 +36,7 @@ spec s = Spec.describe s "Parun.Codec.EntryRiders" $ do
       s
       (EntryRiders.codec Common.text)
       EntryRiders.MkEntryRiders {EntryRiders.tapped = TapState.Tapped, EntryRiders.attacking = Just EntryAttack.Chosen, EntryRiders.blocking = Nothing, EntryRiders.transformed = False, EntryRiders.counters = Map.empty, EntryRiders.under = EntryController.Instructed (PlayerRef.Relative PlayerRelation.You), EntryRiders.exiledFaceDown = False, EntryRiders.attachedTo = Nothing, EntryRiders.faceDown = Nothing, EntryRiders.noted = False, EntryRiders.characteristics = Seq.empty}
-      " {\"tapped\":{\"type\":\"Tapped\"},\"attacking\":{\"type\":\"Chosen\"}} "
+      " {\"tapped\":\"Tapped\",\"attacking\":{\"type\":\"Chosen\"}} "
   -- CR 702.49c's specified attack: whatever the slot's object was attacking.
   Spec.it s "MkEntryRiders, attacking what a slot's object attacked" $
     Common.assertCodec
@@ -85,7 +85,7 @@ spec s = Spec.describe s "Parun.Codec.EntryRiders" $ do
       s
       (EntryRiders.codec Common.text)
       EntryRiders.MkEntryRiders {EntryRiders.tapped = TapState.Untapped, EntryRiders.attacking = Nothing, EntryRiders.blocking = Nothing, EntryRiders.transformed = False, EntryRiders.counters = Map.singleton CounterKind.PlusOnePlusOne (Quantity.Measure Measure.Power), EntryRiders.under = EntryController.Instructed (PlayerRef.Relative PlayerRelation.You), EntryRiders.exiledFaceDown = False, EntryRiders.attachedTo = Nothing, EntryRiders.faceDown = Nothing, EntryRiders.noted = False, EntryRiders.characteristics = Seq.empty}
-      " {\"counters\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"count\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}}]} "
+      " {\"counters\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"count\":{\"type\":\"Measure\",\"value\":\"Power\"}}]} "
   -- A repeated kind is rejected rather than combined, which the multiset could
   -- not do: there a repeat was how a count was written.
   Spec.it s "MkEntryRiders, a repeated counter kind is a decode error" $
@@ -119,7 +119,7 @@ spec s = Spec.describe s "Parun.Codec.EntryRiders" $ do
       s
       (EntryRiders.codec Common.text)
       EntryRiders.defaultValue {EntryRiders.characteristics = Seq.fromList [Modification.CardType ChangeMode.Replace CardType.Enchantment, Modification.AddSubtype Subtype.Aura]}
-      " {\"characteristics\":[{\"type\":\"CardType\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"cardType\":{\"type\":\"Enchantment\"}}},{\"type\":\"AddSubtype\",\"value\":{\"type\":\"Aura\"}}]} "
+      " {\"characteristics\":[{\"type\":\"CardType\",\"value\":{\"mode\":\"Replace\",\"cardType\":\"Enchantment\"}},{\"type\":\"AddSubtype\",\"value\":\"Aura\"}]} "
   -- CR 406.3's rider, which is the one rider about a zone that is not the
   -- battlefield: Ignorant Bliss exiles face down and says nothing else.
   Spec.it s "MkEntryRiders, exiledFaceDown alone" $
@@ -136,7 +136,7 @@ spec s = Spec.describe s "Parun.Codec.EntryRiders" $ do
       s
       (EntryRiders.codec Common.text)
       EntryRiders.MkEntryRiders {EntryRiders.tapped = TapState.Untapped, EntryRiders.attacking = Nothing, EntryRiders.blocking = Nothing, EntryRiders.transformed = False, EntryRiders.counters = Map.empty, EntryRiders.under = EntryController.Instructed (PlayerRef.Relative PlayerRelation.You), EntryRiders.exiledFaceDown = False, EntryRiders.attachedTo = Nothing, EntryRiders.noted = False, EntryRiders.characteristics = Seq.empty, EntryRiders.faceDown = Just FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.Manifested, FaceDownState.listed = FaceDownCharacteristics.defaultValue, FaceDownState.turnsUpBefore = Set.empty}}
-      " {\"faceDown\":{\"reason\":{\"type\":\"Manifested\"},\"listed\":{}}} "
+      " {\"faceDown\":{\"reason\":\"Manifested\",\"listed\":{}}} "
   -- CR 708.2a's "unless otherwise specified": Yedora, Grave Gardener's "It's a
   -- Forest land", whose listing has no power or toughness (CR 208.3) and whose
   -- reason is CR 708.3's rather than manifest's.
@@ -145,18 +145,18 @@ spec s = Spec.describe s "Parun.Codec.EntryRiders" $ do
       s
       (EntryRiders.codec Common.text)
       EntryRiders.MkEntryRiders {EntryRiders.tapped = TapState.Untapped, EntryRiders.attacking = Nothing, EntryRiders.blocking = Nothing, EntryRiders.transformed = False, EntryRiders.counters = Map.empty, EntryRiders.under = EntryController.Instructed (PlayerRef.Relative PlayerRelation.You), EntryRiders.exiledFaceDown = False, EntryRiders.attachedTo = Nothing, EntryRiders.noted = False, EntryRiders.characteristics = Seq.empty, EntryRiders.faceDown = Just FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.EnteredFaceDown, FaceDownState.listed = FaceDownCharacteristics.defaultValue {FaceDownCharacteristics.typeLine = TypeLine.MkTypeLine {TypeLine.supertypes = Set.empty, TypeLine.types = Set.singleton CardType.Land, TypeLine.subtypes = Set.singleton Subtype.Forest}, FaceDownCharacteristics.power = Nothing, FaceDownCharacteristics.toughness = Nothing}, FaceDownState.turnsUpBefore = Set.empty}}
-      " {\"faceDown\":{\"reason\":{\"type\":\"EnteredFaceDown\"},\"listed\":{\"power\":null,\"toughness\":null,\"typeLine\":{\"subtypes\":[{\"type\":\"Forest\"}],\"types\":[{\"type\":\"Land\"}]}}}} "
+      " {\"faceDown\":{\"reason\":\"EnteredFaceDown\",\"listed\":{\"power\":null,\"toughness\":null,\"typeLine\":{\"subtypes\":[\"Forest\"],\"types\":[\"Land\"]}}}} "
   Spec.describe s "defaultValue" $ do
     Spec.it s "is untapped, not attacking and not transformed" $
       Spec.assertEq s (EntryRiders.defaultValue :: EntryRiders.EntryRiders Quantity.Quantity Text.Text) EntryRiders.MkEntryRiders {EntryRiders.tapped = TapState.Untapped, EntryRiders.attacking = Nothing, EntryRiders.blocking = Nothing, EntryRiders.transformed = False, EntryRiders.counters = Map.empty, EntryRiders.under = EntryController.Instructed (PlayerRef.Relative PlayerRelation.You), EntryRiders.exiledFaceDown = False, EntryRiders.attachedTo = Nothing, EntryRiders.faceDown = Nothing, EntryRiders.noted = False, EntryRiders.characteristics = Seq.empty}
     Spec.it s "a missing tapped key decodes as Untapped" $
       Common.assertFromJson s (Codec.decode (EntryRiders.codec Common.text)) "{\"attacking\":null}" EntryRiders.defaultValue
     Spec.it s "a missing attacking key decodes as Nothing" $
-      Common.assertFromJson s (Codec.decode (EntryRiders.codec Common.text)) "{\"tapped\":{\"type\":\"Untapped\"}}" EntryRiders.defaultValue
+      Common.assertFromJson s (Codec.decode (EntryRiders.codec Common.text)) "{\"tapped\":\"Untapped\"}" EntryRiders.defaultValue
     -- CR 712.14: the front face is the default, so a card file that says nothing
     -- about transforming is saying the card enters showing its front face.
     Spec.it s "a missing transformed key decodes as False" $
-      Common.assertFromJson s (Codec.decode (EntryRiders.codec Common.text)) "{\"tapped\":{\"type\":\"Untapped\"},\"attacking\":null}" EntryRiders.defaultValue
+      Common.assertFromJson s (Codec.decode (EntryRiders.codec Common.text)) "{\"tapped\":\"Untapped\",\"attacking\":null}" EntryRiders.defaultValue
     -- An explicit null is tolerated only for a Maybe field, composed with
     -- Common.maybe. `tapped` isn't one, so a null is a decode error
     -- rather than a second spelling of the default.

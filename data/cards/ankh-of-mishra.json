@@ -18,9 +18,7 @@
                 "type": "Matching",
                 "value": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 }
               }
             }
@@ -46,12 +44,8 @@
                                   "players": {
                                     "type": "HolderOfBound",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "hop": {
-                                        "type": "Itself"
-                                      },
+                                      "holder": "Controller",
+                                      "hop": "Itself",
                                       "slot": "became"
                                     }
                                   }
@@ -71,9 +65,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

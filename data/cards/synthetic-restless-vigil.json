@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -26,25 +24,17 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "IsInZone",
-                  "value": {
-                    "type": "Graveyard"
-                  }
+                  "value": "Graveyard"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Owner"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Owner",
+                    "relation": "You"
                   }
                 }
               ]
@@ -65,9 +55,7 @@
                       "type": "OfType",
                       "value": {
                         "type": "Colored",
-                        "value": {
-                          "type": "Blue"
-                        }
+                        "value": "Blue"
                       }
                     }
                   ]
@@ -79,9 +67,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -21,5 +21,5 @@ spec s = Spec.describe s "Parun.Codec.CounterHolder" $ do
       s
       CounterHolder.codec
       (CounterHolder.Permanent (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"Permanent\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"Permanent\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CounterHolder.codec

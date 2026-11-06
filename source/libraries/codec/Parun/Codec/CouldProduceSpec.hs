@@ -20,5 +20,5 @@ spec s = Spec.describe s "Parun.Codec.CouldProduce" $ do
             CouldProduce.types = ManaFilter.NotOfType ManaType.Colorless
           }
       )
-      " {\"among\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"types\":{\"type\":\"NotOfType\",\"value\":{\"type\":\"Colorless\"}}} "
+      " {\"among\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"types\":{\"type\":\"NotOfType\",\"value\":{\"type\":\"Colorless\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CouldProduce.codec

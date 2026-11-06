@@ -57,9 +57,7 @@
       "oracleText": "{T}: Look at target player's hand.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

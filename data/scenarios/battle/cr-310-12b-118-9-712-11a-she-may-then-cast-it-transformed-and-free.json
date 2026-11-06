@@ -118,9 +118,7 @@
       "do": {
         "Answer": {
           "prompt": "OfferedCast",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },

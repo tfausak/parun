@@ -75,18 +75,12 @@
               {
                 "manaType": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 },
                 "tags": [
-                  {
-                    "type": "Artifact"
-                  }
+                  "Artifact"
                 ],
-                "retention": {
-                  "type": "Ordinary"
-                },
+                "retention": "Ordinary",
                 "restriction": null,
                 "rider": null,
                 "sourceChoices": null
@@ -107,18 +101,12 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Blue"
-                }
+                "value": "Blue"
               },
               "tags": [
-                {
-                  "type": "Artifact"
-                }
+                "Artifact"
               ],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null

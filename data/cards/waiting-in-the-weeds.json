@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -40,9 +36,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Green"
-                              }
+                              "Green"
                             ],
                             "name": "Cat Token",
                             "power": {
@@ -55,14 +49,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Cat"
-                                }
+                                "Cat"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -70,9 +60,7 @@
                       },
                       "creator": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
                       "quantity": {
                         "type": "Count",
@@ -85,9 +73,7 @@
                             "value": [
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Forest"
-                                }
+                                "value": "Forest"
                               },
                               {
                                 "type": "Not",
@@ -97,9 +83,7 @@
                               },
                               {
                                 "type": "HeldByRecipient",
-                                "value": {
-                                  "type": "Controller"
-                                }
+                                "value": "Controller"
                               }
                             ]
                           },
@@ -108,13 +92,9 @@
                             "value": {
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "AnyPlayer"
-                                }
+                                "value": "AnyPlayer"
                               },
-                              "zone": {
-                                "type": "Battlefield"
-                              }
+                              "zone": "Battlefield"
                             }
                           }
                         }
@@ -129,9 +109,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

@@ -23,9 +23,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -79,9 +77,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -93,9 +89,7 @@
                       "type": "Not",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       }
                     },
                     "pool": {
@@ -138,9 +132,7 @@
                                     "condition": {
                                       "type": "PlayerDrawsNthCard",
                                       "value": {
-                                        "player": {
-                                          "type": "You"
-                                        }
+                                        "player": "You"
                                       }
                                     },
                                     "modal": {
@@ -156,9 +148,7 @@
                                                       "type": "InSlot",
                                                       "value": "target"
                                                     },
-                                                    "zone": {
-                                                      "type": "Exile"
-                                                    }
+                                                    "zone": "Exile"
                                                   }
                                                 }
                                               ]
@@ -169,12 +159,8 @@
                                               "filter": {
                                                 "type": "HeldBy",
                                                 "value": {
-                                                  "holder": {
-                                                    "type": "Controller"
-                                                  },
-                                                  "relation": {
-                                                    "type": "Opponent"
-                                                  }
+                                                  "holder": "Controller",
+                                                  "relation": "Opponent"
                                                 }
                                               },
                                               "pool": {
@@ -207,17 +193,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -242,9 +224,7 @@
                             },
                             "filter": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Land"
-                              }
+                              "value": "Land"
                             }
                           }
                         }
@@ -270,18 +250,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -289,19 +265,13 @@
       "oracleText": "[+1]: Draw a card. At the beginning of the next end step, untap up to two lands.\n[−3]: Put target nonland permanent into its owner's library third from the top.\n[−8]: You get an emblem with \"Whenever you draw a card, exile target permanent an opponent controls.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Teferi"
-          }
+          "Teferi"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -40,9 +38,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -51,9 +47,7 @@
                     "value": {
                       "type": "LifeChanged",
                       "value": {
-                        "direction": {
-                          "type": "Lost"
-                        },
+                        "direction": "Lost",
                         "player": {
                           "type": "Candidate"
                         }
@@ -68,9 +62,7 @@
                     "type": "OverPlayers",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     }
                   }
                 }
@@ -94,9 +86,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "Opponent"
-                              }
+                              "value": "Opponent"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -115,17 +105,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Noble"
-          },
-          {
-            "type": "Vampire"
-          }
+          "Noble",
+          "Vampire"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -9,9 +9,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -49,9 +47,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNonePaid"
-                      },
+                      "branch": "IfNonePaid",
                       "cost": {
                         "mana": [
                           {
@@ -62,9 +58,7 @@
                       },
                       "payer": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       }
                     }
                   }
@@ -83,9 +77,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -101,14 +93,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Shade"
-          }
+          "Shade"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

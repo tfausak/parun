@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -39,9 +35,7 @@
                       "duration": {
                         "type": "UntilEndOfTurn"
                       },
-                      "kind": {
-                        "type": "Combat"
-                      },
+                      "kind": "Combat",
                       "ref": {
                         "type": "InSlot",
                         "value": "you"
@@ -54,12 +48,8 @@
                               "faces": [
                                 {
                                   "colorIndicator": [
-                                    {
-                                      "type": "White"
-                                    },
-                                    {
-                                      "type": "Black"
-                                    }
+                                    "White",
+                                    "Black"
                                   ],
                                   "keywords": [
                                     {
@@ -77,14 +67,10 @@
                                   },
                                   "typeLine": {
                                     "subtypes": [
-                                      {
-                                        "type": "Inkling"
-                                      }
+                                      "Inkling"
                                     ],
                                     "types": [
-                                      {
-                                        "type": "Creature"
-                                      }
+                                      "Creature"
                                     ]
                                   }
                                 }
@@ -107,9 +93,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

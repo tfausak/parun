@@ -19,7 +19,7 @@ codec = Fields.object $ do
   turn <- Fields.defaulted "turn" 1 Common.natural Board.turn
   phase <- Fields.required "step" Phase.flat Board.phase
   monarch <- Fields.defaulted "monarch" Nothing (Common.maybe Label.codec) Board.monarch
-  attackOption <- Fields.defaulted "attackOption" (Just AttackOption.MultiplePlayers) (Common.maybe Arm.keyedEnum) Board.attackOption
+  attackOption <- Fields.defaulted "attackOption" (Just AttackOption.MultiplePlayers) (Common.maybe Arm.enum) Board.attackOption
   brawl <- Fields.defaulted "brawl" False Common.boolean Board.brawl
   sharedTeamTurns <- Fields.defaulted "sharedTeamTurns" False Common.boolean Board.sharedTeamTurns
   sharedTeamLife <- Fields.defaulted "sharedTeamLife" False Common.boolean Board.sharedTeamLife

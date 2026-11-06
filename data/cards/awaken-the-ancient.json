@@ -5,9 +5,7 @@
         {
           "filter": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Mountain"
-            }
+            "value": "Mountain"
           },
           "pool": {
             "type": "Permanents"
@@ -23,27 +21,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -58,9 +50,7 @@
               "value": [
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Mountain"
-                  }
+                  "value": "Mountain"
                 },
                 {
                   "type": "HasAttached",
@@ -75,36 +65,24 @@
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Creature"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Creature",
+                "mode": "InAddition"
               }
             },
             {
               "type": "CreatureSubtype",
               "value": {
-                "mode": {
-                  "type": "InAddition"
-                },
-                "subtype": {
-                  "type": "Giant"
-                }
+                "mode": "InAddition",
+                "subtype": "Giant"
               }
             },
             {
               "type": "Colors",
               "value": {
                 "colors": [
-                  {
-                    "type": "Red"
-                  }
+                  "Red"
                 ],
-                "mode": {
-                  "type": "Replace"
-                }
+                "mode": "Replace"
               }
             },
             {
@@ -131,14 +109,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

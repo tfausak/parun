@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -31,9 +29,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "regenerability": {
-                        "type": "CantBeRegenerated"
-                      }
+                      "regenerability": "CantBeRegenerated"
                     }
                   }
                 ]
@@ -48,18 +44,14 @@
                       "type": "Not",
                       "value": {
                         "type": "HasColor",
-                        "value": {
-                          "type": "Black"
-                        }
+                        "value": "Black"
                       }
                     },
                     {
                       "type": "Not",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Artifact"
-                        }
+                        "value": "Artifact"
                       }
                     }
                   ]
@@ -74,9 +66,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

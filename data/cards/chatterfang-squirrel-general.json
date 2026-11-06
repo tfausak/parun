@@ -14,9 +14,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Squirrel"
-                    }
+                    "value": "Squirrel"
                   }
                 }
               }
@@ -26,9 +24,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -87,9 +83,7 @@
           "type": "Landwalk",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Forest"
-            }
+            "value": "Forest"
           }
         }
       ],
@@ -102,9 +96,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -130,9 +122,7 @@
                   "faces": [
                     {
                       "colorIndicator": [
-                        {
-                          "type": "Green"
-                        }
+                        "Green"
                       ],
                       "name": "Squirrel Token",
                       "power": {
@@ -145,14 +135,10 @@
                       },
                       "typeLine": {
                         "subtypes": [
-                          {
-                            "type": "Squirrel"
-                          }
+                          "Squirrel"
                         ],
                         "types": [
-                          {
-                            "type": "Creature"
-                          }
+                          "Creature"
                         ]
                       }
                     }
@@ -169,22 +155,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Squirrel"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Squirrel",
+          "Warrior"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

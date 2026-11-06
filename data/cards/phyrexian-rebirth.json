@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -40,14 +36,10 @@
                         "type": "EachMatching",
                         "value": {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         }
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      },
+                      "regenerability": "Regenerable",
                       "slot": "destroyed"
                     }
                   },
@@ -68,20 +60,12 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Horror"
-                                },
-                                {
-                                  "type": "Phyrexian"
-                                }
+                                "Horror",
+                                "Phyrexian"
                               ],
                               "types": [
-                                {
-                                  "type": "Artifact"
-                                },
-                                {
-                                  "type": "Creature"
-                                }
+                                "Artifact",
+                                "Creature"
                               ]
                             }
                           }
@@ -101,9 +85,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

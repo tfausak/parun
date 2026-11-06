@@ -16,9 +16,7 @@
                     "type": "PlayersTurn",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "AnyPlayer"
-                      }
+                      "value": "AnyPlayer"
                     }
                   }
                 }
@@ -33,9 +31,7 @@
                     "type": "PlayersTurn",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "AnyPlayer"
-                      }
+                      "value": "AnyPlayer"
                     }
                   }
                 }
@@ -53,21 +49,15 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "PlayersDealtDamageThisTurn",
                             "value": {
-                              "kind": {
-                                "type": "Combat"
-                              },
+                              "kind": "Combat",
                               "recipient": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "AnyPlayer"
-                                }
+                                "value": "AnyPlayer"
                               }
                             }
                           }
@@ -90,18 +80,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -132,19 +118,13 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "You"
-                                }
+                                "holder": "Controller",
+                                "relation": "You"
                               }
                             }
                           ]
@@ -171,19 +151,13 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "You"
-                                }
+                                "holder": "Controller",
+                                "relation": "You"
                               }
                             }
                           ]
@@ -210,19 +184,13 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "You"
-                                }
+                                "holder": "Controller",
+                                "relation": "You"
                               }
                             }
                           ]
@@ -247,9 +215,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

@@ -16,19 +16,13 @@
                   "value": [
                     {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Elf"
-                      }
+                      "value": "Elf"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -38,13 +32,9 @@
                   "value": {
                     "player": {
                       "type": "Relative",
-                      "value": {
-                        "type": "AnyPlayer"
-                      }
+                      "value": "AnyPlayer"
                     },
-                    "zone": {
-                      "type": "Battlefield"
-                    }
+                    "zone": "Battlefield"
                   }
                 }
               }
@@ -57,22 +47,16 @@
                 },
                 "filter": {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Elf"
-                  }
+                  "value": "Elf"
                 },
                 "scope": {
                   "type": "InZone",
                   "value": {
                     "player": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     },
-                    "zone": {
-                      "type": "Graveyard"
-                    }
+                    "zone": "Graveyard"
                   }
                 }
               }
@@ -93,19 +77,13 @@
                   "value": [
                     {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Elf"
-                      }
+                      "value": "Elf"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -115,13 +93,9 @@
                   "value": {
                     "player": {
                       "type": "Relative",
-                      "value": {
-                        "type": "AnyPlayer"
-                      }
+                      "value": "AnyPlayer"
                     },
-                    "zone": {
-                      "type": "Battlefield"
-                    }
+                    "zone": "Battlefield"
                   }
                 }
               }
@@ -134,22 +108,16 @@
                 },
                 "filter": {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Elf"
-                  }
+                  "value": "Elf"
                 },
                 "scope": {
                   "type": "InZone",
                   "value": {
                     "player": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     },
-                    "zone": {
-                      "type": "Graveyard"
-                    }
+                    "zone": "Graveyard"
                   }
                 }
               }
@@ -174,18 +142,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -199,22 +163,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Horror"
-          }
+          "Elf",
+          "Horror"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

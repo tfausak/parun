@@ -27,7 +27,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerSacrifices" $ do
             PlayerSacrifices.permanents = Nothing
           }
       )
-      " {\"players\":{\"type\":\"EachInSlot\",\"value\":\"player\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"quantity\":{\"type\":\"Literal\",\"value\":1}} "
+      " {\"players\":{\"type\":\"EachInSlot\",\"value\":\"player\"},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"quantity\":{\"type\":\"Literal\",\"value\":1}} "
   -- CR 608.2h: the permanents sacrificed, bound for a later read (Consume).
   Spec.it s "MkPlayerSacrifices, with permanents" $
     Common.assertCodec
@@ -40,5 +40,5 @@ spec s = Spec.describe s "Parun.Codec.PlayerSacrifices" $ do
             PlayerSacrifices.permanents = Just (SlotName.MkSlotName (Text.pack "sacrificed"))
           }
       )
-      " {\"players\":{\"type\":\"EachInSlot\",\"value\":\"player\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"permanents\":\"sacrificed\"} "
+      " {\"players\":{\"type\":\"EachInSlot\",\"value\":\"player\"},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"permanents\":\"sacrificed\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlayerSacrifices.codec

@@ -11,9 +11,7 @@
                 "type": "IsSource"
               }
             },
-            "comparison": {
-              "type": "AtLeast"
-            },
+            "comparison": "AtLeast",
             "limit": 3
           }
         }
@@ -42,14 +40,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Eldrazi"
-          }
+          "Eldrazi"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

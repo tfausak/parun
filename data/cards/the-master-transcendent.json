@@ -30,24 +30,16 @@
                                 "type": "Colors",
                                 "value": {
                                   "colors": [
-                                    {
-                                      "type": "Green"
-                                    }
+                                    "Green"
                                   ],
-                                  "mode": {
-                                    "type": "Replace"
-                                  }
+                                  "mode": "Replace"
                                 }
                               },
                               {
                                 "type": "CreatureSubtype",
                                 "value": {
-                                  "mode": {
-                                    "type": "Replace"
-                                  },
-                                  "subtype": {
-                                    "type": "Mutant"
-                                  }
+                                  "mode": "Replace",
+                                  "subtype": "Mutant"
                                 }
                               },
                               {
@@ -65,9 +57,7 @@
                               }
                             ]
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -80,15 +70,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "LeftLibraryThisTurn",
-                          "value": {
-                            "type": "Milled"
-                          }
+                          "value": "Milled"
                         }
                       ]
                     },
@@ -117,27 +103,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -166,9 +146,7 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Rad"
-                          },
+                          "kind": "Rad",
                           "player": {
                             "type": "InSlot",
                             "value": "target"
@@ -196,22 +174,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Mutant"
-          }
+          "Mutant"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

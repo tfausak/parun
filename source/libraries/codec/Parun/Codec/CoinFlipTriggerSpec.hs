@@ -15,5 +15,5 @@ spec s = Spec.describe s "Parun.Codec.CoinFlipTrigger" $ do
       s
       CoinFlipTrigger.codec
       (CoinFlipTrigger.MkCoinFlipTrigger PlayerRelation.You FlipOutcome.Lost)
-      " {\"player\":{\"type\":\"You\"},\"outcome\":{\"type\":\"Lost\"}} "
+      " {\"player\":\"You\",\"outcome\":\"Lost\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CoinFlipTrigger.codec

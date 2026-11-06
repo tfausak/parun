@@ -68,9 +68,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseRepeat",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },
@@ -81,9 +79,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseRepeat",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

@@ -43,19 +43,13 @@
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Owner"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Owner",
+                                    "relation": "You"
                                   }
                                 }
                               ]
                             },
-                            "zone": {
-                              "type": "Exile"
-                            }
+                            "zone": "Exile"
                           },
                           "slot": "chosen"
                         }
@@ -66,30 +60,22 @@
                           "ref": {
                             "type": "EachCardInYourLibrary"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "origin": {
-                            "type": "Exile"
-                          },
+                          "origin": "Exile",
                           "placement": {
                             "type": "Stated",
-                            "value": {
-                              "type": "Top"
-                            }
+                            "value": "Top"
                           },
                           "ref": {
                             "type": "InSlot",
                             "value": "chosen"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -110,9 +96,7 @@
       "oracleText": "{T}, Sacrifice this artifact: Choose up to seven face-up exiled cards you own. Exile all the cards from your library, then put the chosen cards on top of your library.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

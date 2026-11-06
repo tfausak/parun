@@ -59,9 +59,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -77,17 +75,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Drone"
-          },
-          {
-            "type": "Eldrazi"
-          }
+          "Drone",
+          "Eldrazi"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

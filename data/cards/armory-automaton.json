@@ -69,9 +69,7 @@
                     },
                     "filter": {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Equipment"
-                      }
+                      "value": "Equipment"
                     },
                     "pool": {
                       "type": "Permanents"
@@ -85,17 +83,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Construct"
-          }
+          "Construct"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

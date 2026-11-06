@@ -72,9 +72,7 @@
             "value": {
               "quality": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Artifact"
-                }
+                "value": "Artifact"
               },
               "spares": null
             }

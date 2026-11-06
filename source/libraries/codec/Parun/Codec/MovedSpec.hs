@@ -30,7 +30,7 @@ spec s = Spec.describe s "Parun.Codec.Moved" $ do
             Moved.causedBy = Nothing
           }
       )
-      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}},\"characteristics\":"
+      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":\"Battlefield\",\"to\":\"Graveyard\"},\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
           <> ",\"otherArrivals\":[]}"
       )
@@ -51,7 +51,7 @@ spec s = Spec.describe s "Parun.Codec.Moved" $ do
             Moved.causedBy = Nothing
           }
       )
-      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}},\"characteristics\":"
+      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":\"Battlefield\",\"to\":\"Graveyard\"},\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
           <> ",\"otherArrivals\":[3]}"
       )
@@ -72,7 +72,7 @@ spec s = Spec.describe s "Parun.Codec.Moved" $ do
             Moved.causedBy = Nothing
           }
       )
-      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Exile\"},\"to\":{\"type\":\"Battlefield\"}},\"characteristics\":"
+      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":\"Exile\",\"to\":\"Battlefield\"},\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
           <> ",\"otherArrivals\":[],\"otherDepartures\":[3]}"
       )
@@ -93,7 +93,7 @@ spec s = Spec.describe s "Parun.Codec.Moved" $ do
             Moved.causedBy = Nothing
           }
       )
-      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Stack\"},\"to\":{\"type\":\"Graveyard\"}},\"characteristics\":"
+      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":\"Stack\",\"to\":\"Graveyard\"},\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
           <> ",\"otherArrivals\":[],\"duringResolution\":true}"
       )
@@ -114,7 +114,7 @@ spec s = Spec.describe s "Parun.Codec.Moved" $ do
             Moved.causedBy = Nothing
           }
       )
-      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Hand\"},\"to\":{\"type\":\"Library\"}},\"characteristics\":"
+      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":\"Hand\",\"to\":\"Library\"},\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
           <> ",\"otherArrivals\":[],\"revealed\":true}"
       )
@@ -135,7 +135,7 @@ spec s = Spec.describe s "Parun.Codec.Moved" $ do
             Moved.causedBy = Nothing
           }
       )
-      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Library\"},\"to\":{\"type\":\"Battlefield\"}},\"characteristics\":"
+      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":\"Library\",\"to\":\"Battlefield\"},\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
           <> ",\"otherArrivals\":[],\"seenArriving\":true}"
       )
@@ -156,7 +156,7 @@ spec s = Spec.describe s "Parun.Codec.Moved" $ do
             Moved.causedBy = Just (PlayerId.MkPlayerId 1)
           }
       )
-      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}},\"characteristics\":"
+      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":\"Battlefield\",\"to\":\"Graveyard\"},\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
           <> ",\"otherArrivals\":[],\"causedBy\":1}"
       )

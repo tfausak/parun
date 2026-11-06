@@ -6,9 +6,7 @@
           "type": "Landwalk",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Mountain"
-            }
+            "value": "Mountain"
           }
         }
       ],
@@ -21,9 +19,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -39,17 +35,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Kor"
-          },
-          {
-            "type": "Scout"
-          }
+          "Kor",
+          "Scout"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -6,27 +6,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -43,9 +37,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
                       "quantity": {
                         "type": "Quotient",
@@ -60,9 +52,7 @@
                               "type": "Candidate"
                             }
                           },
-                          "rounding": {
-                            "type": "Up"
-                          }
+                          "rounding": "Up"
                         }
                       }
                     }
@@ -74,9 +64,7 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
                         "quantity": {
                           "type": "Quotient",
@@ -101,16 +89,12 @@
                                     "player": {
                                       "type": "Candidate"
                                     },
-                                    "zone": {
-                                      "type": "Hand"
-                                    }
+                                    "zone": "Hand"
                                   }
                                 }
                               }
                             },
-                            "rounding": {
-                              "type": "Up"
-                            }
+                            "rounding": "Up"
                           }
                         }
                       }
@@ -121,15 +105,11 @@
                     "value": {
                       "filter": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       "players": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
                       "quantity": {
                         "type": "Quotient",
@@ -149,15 +129,11 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "HeldByRecipient",
-                                    "value": {
-                                      "type": "Controller"
-                                    }
+                                    "value": "Controller"
                                   }
                                 ]
                               },
@@ -166,20 +142,14 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   },
-                                  "zone": {
-                                    "type": "Battlefield"
-                                  }
+                                  "zone": "Battlefield"
                                 }
                               }
                             }
                           },
-                          "rounding": {
-                            "type": "Up"
-                          }
+                          "rounding": "Up"
                         }
                       }
                     }
@@ -189,15 +159,11 @@
                     "value": {
                       "filter": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       },
                       "players": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
                       "quantity": {
                         "type": "Quotient",
@@ -217,15 +183,11 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Land"
-                                    }
+                                    "value": "Land"
                                   },
                                   {
                                     "type": "HeldByRecipient",
-                                    "value": {
-                                      "type": "Controller"
-                                    }
+                                    "value": "Controller"
                                   }
                                 ]
                               },
@@ -234,20 +196,14 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   },
-                                  "zone": {
-                                    "type": "Battlefield"
-                                  }
+                                  "zone": "Battlefield"
                                 }
                               }
                             }
                           },
-                          "rounding": {
-                            "type": "Up"
-                          }
+                          "rounding": "Up"
                         }
                       }
                     }
@@ -260,9 +216,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

@@ -52,15 +52,11 @@
                       "value": [
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Green"
-                          }
+                          "value": "Green"
                         },
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Blue"
-                          }
+                          "value": "Blue"
                         }
                       ]
                     },
@@ -83,9 +79,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -101,17 +95,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

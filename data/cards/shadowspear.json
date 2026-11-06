@@ -25,21 +25,15 @@
                           },
                           "modification": {
                             "type": "LoseKeywordFamily",
-                            "value": {
-                              "type": "Hexproof"
-                            }
+                            "value": "Hexproof"
                           },
                           "ref": {
                             "type": "EachMatching",
                             "value": {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "Opponent"
-                                }
+                                "holder": "Controller",
+                                "relation": "Opponent"
                               }
                             }
                           }
@@ -62,12 +56,8 @@
                             "value": {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "Opponent"
-                                }
+                                "holder": "Controller",
+                                "relation": "Opponent"
                               }
                             }
                           }
@@ -114,9 +104,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -158,19 +146,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Equipment"
-          }
+          "Equipment"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

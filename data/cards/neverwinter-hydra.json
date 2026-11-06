@@ -30,18 +30,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -69,9 +65,7 @@
                         "type": "InSlot",
                         "value": "X"
                       },
-                      "reading": {
-                        "type": "Total"
-                      },
+                      "reading": "Total",
                       "sides": 6,
                       "slot": "total"
                     }
@@ -106,14 +100,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hydra"
-          }
+          "Hydra"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

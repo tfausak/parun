@@ -29,5 +29,5 @@ spec s = Spec.describe s "Parun.Codec.Morph" $ do
             Morph.variant = MorphVariant.Mega
           }
       )
-      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"variant\":{\"type\":\"Mega\"}} "
+      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"variant\":\"Mega\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

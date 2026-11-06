@@ -25,9 +25,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -44,9 +42,7 @@
                     },
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     "pool": {
                       "type": "CardsInGraveyard",
@@ -89,9 +85,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -104,12 +98,8 @@
                           "player": {
                             "type": "HolderOfBound",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "hop": {
-                                "type": "Itself"
-                              },
+                              "holder": "Controller",
+                              "hop": "Itself",
                               "slot": "target"
                             }
                           },
@@ -171,9 +161,7 @@
                                   },
                                   "filter": {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   "scope": {
                                     "type": "InZone",
@@ -182,9 +170,7 @@
                                         "type": "InSlot",
                                         "value": "target"
                                       },
-                                      "zone": {
-                                        "type": "Graveyard"
-                                      }
+                                      "zone": "Graveyard"
                                     }
                                   }
                                 }
@@ -200,9 +186,7 @@
                   "target": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -227,18 +211,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -246,19 +226,13 @@
       "oracleText": "[+1]: Return up to one target creature card from your graveyard to your hand.\n[−3]: Destroy target creature. Its controller loses 2 life.\n[−7]: Target opponent loses 2 life for each creature card in their graveyard.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Liliana"
-          }
+          "Liliana"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

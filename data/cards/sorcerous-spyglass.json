@@ -7,14 +7,10 @@
             "type": "MatchingAnywhere",
             "value": {
               "type": "HasChosenName",
-              "value": {
-                "type": "AnyChooser"
-              }
+              "value": "AnyChooser"
             }
           },
-          "kind": {
-            "type": "NonManaAbility"
-          }
+          "kind": "NonManaAbility"
         }
       ],
       "manaCost": [
@@ -65,9 +61,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "restriction": {
                         "type": "And",
@@ -83,9 +77,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

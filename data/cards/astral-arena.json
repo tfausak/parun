@@ -41,9 +41,7 @@
                                 "type": "EachMatching",
                                 "value": {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 }
                               }
                             }
@@ -60,14 +58,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Kolbahan"
-          }
+          "Kolbahan"
         ],
         "types": [
-          {
-            "type": "Plane"
-          }
+          "Plane"
         ]
       }
     }

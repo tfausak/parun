@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -55,18 +51,14 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "Stay"
-                          },
+                          "destination": "Stay",
                           "filter": {
                             "type": "And",
                             "value": []
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -74,9 +66,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "slot": "found"
                         }
@@ -88,18 +78,14 @@
                             "type": "InSlot",
                             "value": "found"
                           },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       },
                       {
                         "type": "Shuffle",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     ]
@@ -112,17 +98,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Warlock"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Warlock",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

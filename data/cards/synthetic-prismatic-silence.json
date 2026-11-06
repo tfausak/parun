@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -39,9 +37,7 @@
               "ability": {
                 "filter": {
                   "type": "HasColor",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 },
                 "pool": {
                   "type": "Abilities"
@@ -53,9 +49,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

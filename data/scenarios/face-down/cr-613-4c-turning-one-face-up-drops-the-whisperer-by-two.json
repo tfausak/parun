@@ -23,9 +23,7 @@
           {
             "card": "Thragtusk",
             "label": "tusk",
-            "faceDown": {
-              "type": "Manifested"
-            }
+            "faceDown": "Manifested"
           }
         ],
         "hand": [
@@ -50,16 +48,12 @@
           {
             "card": "Ainok Tracker",
             "label": "victim",
-            "faceDown": {
-              "type": "Manifested"
-            }
+            "faceDown": "Manifested"
           },
           {
             "card": "Goblin Piker",
             "label": "piker",
-            "faceDown": {
-              "type": "Manifested"
-            }
+            "faceDown": "Manifested"
           }
         ],
         "library": [

@@ -12,19 +12,19 @@ spec s = Spec.describe s "Parun.Codec.PermissionLimit" $ do
       s
       PermissionLimit.codec
       PermissionLimit.Unlimited
-      " {\"type\":\"Unlimited\"} "
+      " \"Unlimited\" "
   Spec.it s "OnceEachTurn" $
     Common.assertCodec
       s
       PermissionLimit.codec
       PermissionLimit.OnceEachTurn
-      " {\"type\":\"OnceEachTurn\"} "
+      " \"OnceEachTurn\" "
   Spec.it s "OnceEachOfYourTurns" $
     Common.assertCodec
       s
       PermissionLimit.codec
       PermissionLimit.OnceEachOfYourTurns
-      " {\"type\":\"OnceEachOfYourTurns\"} "
+      " \"OnceEachOfYourTurns\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives the
   -- arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

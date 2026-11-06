@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.DifferentIn" $ do
       s
       DifferentIn.codec
       DifferentIn.Powers
-      " {\"type\":\"Powers\"} "
+      " \"Powers\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s DifferentIn.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s DifferentIn.codec

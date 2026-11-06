@@ -33,9 +33,7 @@
                   "spell": {
                     "filter": {
                       "type": "TargetsPlayer",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     },
                     "pool": {
                       "type": "Spells"
@@ -56,9 +54,7 @@
           "value": {
             "quality": {
               "type": "HasColor",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             },
             "spares": null
           }
@@ -73,9 +69,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -91,14 +85,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Drake"
-          }
+          "Drake"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

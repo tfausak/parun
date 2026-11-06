@@ -119,9 +119,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseCreatureType",
-          "with": {
-            "type": "Bear"
-          }
+          "with": "Bear"
         }
       },
       "player": "alice",
@@ -187,9 +185,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "PrecombatMain",

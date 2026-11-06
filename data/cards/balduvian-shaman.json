@@ -21,9 +21,7 @@
                         "type": "ChangeText",
                         "value": {
                           "families": [
-                            {
-                              "type": "Color"
-                            }
+                            "Color"
                           ],
                           "forbidden": [],
                           "slot": "target"
@@ -65,34 +63,24 @@
                       "value": [
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "White"
-                          }
+                          "value": "White"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Enchantment"
-                          }
+                          "value": "Enchantment"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         },
                         {
                           "type": "Not",
                           "value": {
                             "type": "HasKeywordFamily",
-                            "value": {
-                              "type": "CumulativeUpkeep"
-                            }
+                            "value": "CumulativeUpkeep"
                           }
                         }
                       ]
@@ -112,9 +100,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -130,20 +116,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Cleric",
+          "Human",
+          "Shaman"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

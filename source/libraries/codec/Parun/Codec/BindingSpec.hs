@@ -48,7 +48,7 @@ spec s = Spec.describe s "Parun.Codec.Binding" $ do
       ( "{\"targets\":[{\"type\":\"ToPlayer\",\"value\":0}],"
           <> "\"amount\":3,\"modes\":[0,2,2],\"copy\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
-          <> ",\"objects\":[7,4],\"sticker\":{\"owner\":0,\"sheet\":2,\"kind\":{\"type\":\"Name\"},\"index\":1},\"votes\":{\"0\":2,\"1\":0},"
+          <> ",\"objects\":[7,4],\"sticker\":{\"owner\":0,\"sheet\":2,\"kind\":\"Name\",\"index\":1},\"votes\":{\"0\":2,\"1\":0},"
           <> "\"division\":[{\"key\":{\"type\":\"ToCreature\",\"value\":7},\"value\":1},{\"key\":{\"type\":\"ToPlayer\",\"value\":0},\"value\":3}]}"
       )
   -- A name-keyed map is a JSON OBJECT keyed by the slot name, written in

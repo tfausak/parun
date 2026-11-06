@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -27,9 +25,7 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "Battlefield"
-                      },
+                      "destination": "Battlefield",
                       "filter": {
                         "type": "And",
                         "value": [
@@ -38,39 +34,27 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Artifact"
-                                }
+                                "value": "Artifact"
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Battle"
-                                }
+                                "value": "Battle"
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Enchantment"
-                                }
+                                "value": "Enchantment"
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Land"
-                                }
+                                "value": "Land"
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Planeswalker"
-                                }
+                                "value": "Planeswalker"
                               }
                             ]
                           },
@@ -90,9 +74,7 @@
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -100,9 +82,7 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -127,9 +107,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

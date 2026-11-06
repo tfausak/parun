@@ -179,9 +179,7 @@
       "do": {
         "Answer": {
           "prompt": "OfferedCast",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       },
       "player": "alice",
@@ -192,9 +190,7 @@
       "do": {
         "Answer": {
           "prompt": "OfferedCast",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       },
       "player": "alice",

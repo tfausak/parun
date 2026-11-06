@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -38,19 +36,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Enchantment"
-                      }
+                      "value": "Enchantment"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -67,9 +59,7 @@
                       {
                         "type": "RequireBlock",
                         "value": {
-                          "arity": {
-                            "type": "AnySubject"
-                          },
+                          "arity": "AnySubject",
                           "attacker": {
                             "type": "Named",
                             "value": {
@@ -81,9 +71,7 @@
                             "type": "Matching",
                             "value": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             }
                           },
                           "duration": {
@@ -108,17 +96,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ox"
-          }
+          "Ox"
         ],
         "types": [
-          {
-            "type": "Creature"
-          },
-          {
-            "type": "Enchantment"
-          }
+          "Creature",
+          "Enchantment"
         ]
       }
     }

@@ -6,9 +6,7 @@
           "type": "Landwalk",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Forest"
-            }
+            "value": "Forest"
           }
         }
       ],
@@ -17,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -35,17 +31,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dryad"
-          },
-          {
-            "type": "Nymph"
-          }
+          "Dryad",
+          "Nymph"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

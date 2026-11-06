@@ -50,7 +50,7 @@ spec s = Spec.describe s "Parun.Codec.PermanentCandidate" $ do
           PermanentCandidate.effect = effect,
           PermanentCandidate.ordinal = InstanceOrdinal.MkInstanceOrdinal 0
         }
-      " {\"source\":4,\"provenance\":{\"type\":\"Printed\"},\"effect\":{\"type\":\"ZoneChangeR\",\"value\":{\"matching\":{\"whenDestination\":{\"type\":\"Graveyard\"}},\"destination\":{\"type\":\"Exile\"}}},\"ordinal\":0} "
+      " {\"source\":4,\"provenance\":\"Printed\",\"effect\":{\"type\":\"ZoneChangeR\",\"value\":{\"matching\":{\"whenDestination\":\"Graveyard\"},\"destination\":\"Exile\"}},\"ordinal\":0} "
   -- CR 702.136b: the SECOND instance of an equal ability on one source is a
   -- different identity, and the ordinal is the only field that says so.
   Spec.it s "the second instance of the same ability" $
@@ -63,6 +63,6 @@ spec s = Spec.describe s "Parun.Codec.PermanentCandidate" $ do
           PermanentCandidate.effect = effect,
           PermanentCandidate.ordinal = InstanceOrdinal.MkInstanceOrdinal 1
         }
-      " {\"source\":4,\"provenance\":{\"type\":\"Minted\"},\"effect\":{\"type\":\"ZoneChangeR\",\"value\":{\"matching\":{\"whenDestination\":{\"type\":\"Graveyard\"}},\"destination\":{\"type\":\"Exile\"}}},\"ordinal\":1} "
+      " {\"source\":4,\"provenance\":\"Minted\",\"effect\":{\"type\":\"ZoneChangeR\",\"value\":{\"matching\":{\"whenDestination\":\"Graveyard\"},\"destination\":\"Exile\"}},\"ordinal\":1} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s PermanentCandidate.codec

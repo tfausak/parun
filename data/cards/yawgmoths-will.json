@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -36,13 +34,9 @@
                           "from": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
-                            "zone": {
-                              "type": "Graveyard"
-                            }
+                            "zone": "Graveyard"
                           },
                           "matching": {
                             "type": "And",
@@ -69,13 +63,9 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       },
                       "players": {
@@ -95,9 +85,7 @@
                       "effect": {
                         "type": "ZoneChangeR",
                         "value": {
-                          "destination": {
-                            "type": "Exile"
-                          },
+                          "destination": "Exile",
                           "matching": {
                             "whatObject": {
                               "type": "Not",
@@ -105,21 +93,15 @@
                                 "type": "IsToken"
                               }
                             },
-                            "whenDestination": {
-                              "type": "Graveyard"
-                            },
+                            "whenDestination": "Graveyard",
                             "whoseObject": {
                               "type": "You"
                             }
                           }
                         }
                       },
-                      "origin": {
-                        "type": "Other"
-                      },
-                      "uses": {
-                        "type": "Unlimited"
-                      }
+                      "origin": "Other",
+                      "uses": "Unlimited"
                     }
                   }
                 ]
@@ -130,9 +112,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

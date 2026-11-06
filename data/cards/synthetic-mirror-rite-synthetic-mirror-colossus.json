@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
       "name": "Synthetic Mirror Rite",
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     },
@@ -29,15 +25,11 @@
       "characteristicPT": {
         "power": {
           "type": "Measure",
-          "value": {
-            "type": "ManaValue"
-          }
+          "value": "ManaValue"
         },
         "toughness": {
           "type": "Measure",
-          "value": {
-            "type": "ManaValue"
-          }
+          "value": "ManaValue"
         }
       },
       "manaCost": [
@@ -49,9 +41,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -64,14 +54,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Golem"
-          }
+          "Golem"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

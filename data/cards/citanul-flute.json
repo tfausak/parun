@@ -24,27 +24,19 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "RevealThenHand"
-                          },
+                          "destination": "RevealThenHand",
                           "filter": {
                             "type": "And",
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "Measures",
                                 "value": {
-                                  "comparison": {
-                                    "type": "AtMost"
-                                  },
-                                  "measure": {
-                                    "type": "ManaValue"
-                                  },
+                                  "comparison": "AtMost",
+                                  "measure": "ManaValue",
                                   "operand": {
                                     "type": "AmountInSlot",
                                     "value": "X"
@@ -55,9 +47,7 @@
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -65,9 +55,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -89,9 +77,7 @@
       "oracleText": "{X}, {T}: Search your library for a creature card with mana value X or less, reveal it, put it into your hand, then shuffle.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

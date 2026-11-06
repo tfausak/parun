@@ -6,9 +6,7 @@
           "affected": {
             "type": "Attached"
           },
-          "kind": {
-            "type": "NonManaAbility"
-          }
+          "kind": "NonManaAbility"
         }
       ],
       "combatRestrictions": [
@@ -36,15 +34,11 @@
             "value": [
               {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Artifact"
-                }
+                "value": "Artifact"
               },
               {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Creature"
               }
             ]
           },
@@ -62,9 +56,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -72,14 +64,10 @@
       "oracleText": "Enchant artifact or creature\nEnchanted permanent can't attack or block, and its activated abilities can't be activated unless they're mana abilities.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

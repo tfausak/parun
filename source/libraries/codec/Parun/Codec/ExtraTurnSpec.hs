@@ -38,6 +38,6 @@ spec s = Spec.describe s "Parun.Codec.ExtraTurn" $ do
           ExtraTurn.skipped = Set.singleton (PhaseSelector.Step (Phase.Beginning BeginningStep.Untap)),
           ExtraTurn.createdAt = Timestamp.MkTimestamp 11
         }
-      " {\"taker\":2,\"source\":5,\"skipped\":[{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Untap\"}}}],\"createdAt\":11} "
+      " {\"taker\":2,\"source\":5,\"skipped\":[{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":\"Untap\"}}],\"createdAt\":11} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ExtraTurn.codec

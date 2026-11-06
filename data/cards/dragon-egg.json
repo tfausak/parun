@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -38,9 +36,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -65,9 +61,7 @@
                                           "type": "OfType",
                                           "value": {
                                             "type": "Colored",
-                                            "value": {
-                                              "type": "Red"
-                                            }
+                                            "value": "Red"
                                           }
                                         }
                                       ]
@@ -112,9 +106,7 @@
                                   }
                                 ],
                                 "colorIndicator": [
-                                  {
-                                    "type": "Red"
-                                  }
+                                  "Red"
                                 ],
                                 "keywords": [
                                   {
@@ -132,14 +124,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Dragon"
-                                    }
+                                    "Dragon"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -161,17 +149,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dragon"
-          },
-          {
-            "type": "Egg"
-          }
+          "Dragon",
+          "Egg"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

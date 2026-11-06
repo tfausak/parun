@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -48,18 +46,14 @@
                                 "type": "Not",
                                 "value": {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Land"
-                                  }
+                                  "value": "Land"
                                 }
                               },
                               "player": {
                                 "type": "InSlot",
                                 "value": "opponent"
                               },
-                              "zone": {
-                                "type": "Hand"
-                              }
+                              "zone": "Hand"
                             }
                           },
                           "slot": "revealed"
@@ -82,9 +76,7 @@
                                     "value": 1
                                   }
                                 ],
-                                "direction": {
-                                  "type": "More"
-                                },
+                                "direction": "More",
                                 "perEach": {
                                   "type": "Literal",
                                   "value": 1
@@ -105,9 +97,7 @@
                   "opponent": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -121,14 +111,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Illusion"
-          }
+          "Illusion"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

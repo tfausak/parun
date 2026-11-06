@@ -22,15 +22,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         },
@@ -39,15 +35,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         }
@@ -81,12 +73,8 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  },
-                                  {
-                                    "type": "Blue"
-                                  }
+                                  "White",
+                                  "Blue"
                                 ],
                                 "name": "Merfolk Token",
                                 "power": {
@@ -99,14 +87,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Merfolk"
-                                    }
+                                    "Merfolk"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -128,17 +112,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Merfolk"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Merfolk",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

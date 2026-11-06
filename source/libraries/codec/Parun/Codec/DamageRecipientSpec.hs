@@ -15,12 +15,12 @@ spec s = Spec.describe s "Parun.Codec.DamageRecipient" $ do
       s
       DamageRecipient.codec
       (DamageRecipient.Player PlayerRelation.Opponent)
-      " {\"type\":\"Player\",\"value\":{\"type\":\"Opponent\"}} "
+      " {\"type\":\"Player\",\"value\":\"Opponent\"} "
   -- Phage the Untouchable's "to a creature".
   Spec.it s "Permanent" $
     Common.assertCodec
       s
       DamageRecipient.codec
       (DamageRecipient.Permanent CardType.Creature)
-      " {\"type\":\"Permanent\",\"value\":{\"type\":\"Creature\"}} "
+      " {\"type\":\"Permanent\",\"value\":\"Creature\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DamageRecipient.codec

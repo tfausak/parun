@@ -152,9 +152,7 @@
       "player": "alice",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          }
+          "decision": "Pays"
         }
       },
       "source": "The Fugitive Doctor"
@@ -203,18 +201,14 @@
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               }
             },
             {
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               }
             }
           ],

@@ -24,33 +24,23 @@
           "effect": {
             "type": "ZoneChangeR",
             "value": {
-              "destination": {
-                "type": "Library"
-              },
+              "destination": "Library",
               "matching": {
-                "whenDestination": {
-                  "type": "Graveyard"
-                },
-                "whenDiscarded": {
-                  "type": "ByEffect"
-                },
+                "whenDestination": "Graveyard",
+                "whenDiscarded": "ByEffect",
                 "whoseObject": {
                   "type": "You"
                 }
               },
               "optional": true,
-              "position": {
-                "type": "Top"
-              }
+              "position": "Top"
             }
           }
         }
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

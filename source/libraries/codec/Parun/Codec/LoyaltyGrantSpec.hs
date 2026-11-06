@@ -15,5 +15,5 @@ spec s = Spec.describe s "Parun.Codec.LoyaltyGrant" $ do
       s
       LoyaltyGrant.codec
       (LoyaltyGrant.MkLoyaltyGrant {LoyaltyGrant.relaxes = LoyaltyClause.Window, LoyaltyGrant.permanents = Filter.IsSource})
-      " {\"relaxes\":{\"type\":\"Window\"},\"permanents\":{\"type\":\"IsSource\"}} "
+      " {\"relaxes\":\"Window\",\"permanents\":{\"type\":\"IsSource\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s LoyaltyGrant.codec

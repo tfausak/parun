@@ -13,15 +13,11 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Instant"
-                  }
+                  "value": "Instant"
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Sorcery"
-                  }
+                  "value": "Sorcery"
                 }
               ]
             },
@@ -30,13 +26,9 @@
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               }
             }
           }
@@ -52,15 +44,11 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Instant"
-                  }
+                  "value": "Instant"
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Sorcery"
-                  }
+                  "value": "Sorcery"
                 }
               ]
             },
@@ -69,13 +57,9 @@
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               }
             }
           }
@@ -95,9 +79,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -140,9 +122,7 @@
                             "discarded": "discarded",
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             }
                           }
                         }
@@ -152,9 +132,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "BoundCount",
@@ -172,17 +150,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Human",
+          "Shaman"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

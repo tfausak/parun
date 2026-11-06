@@ -95,7 +95,7 @@ spec s = Spec.describe s "Parun.Codec.Create" $ do
             Create.linked = False
           }
       )
-      " {\"quantity\":{\"type\":\"Literal\",\"value\":1},\"card\":\"Centaur Token\",\"creator\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"victim\"}}} "
+      " {\"quantity\":{\"type\":\"Literal\",\"value\":1},\"card\":\"Centaur Token\",\"creator\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"victim\"}}} "
   Spec.it s "MkCreate, linked to its source" $
     Common.assertCodec
       s

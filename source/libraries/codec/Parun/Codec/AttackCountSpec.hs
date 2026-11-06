@@ -18,7 +18,7 @@ spec s = Spec.describe s "Parun.Codec.AttackCount" $ do
       s
       AttackCount.codec
       (AttackCount.MkAttackCount 2 (Filter.HasCardType CardType.Creature))
-      " {\"floor\":2,\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"floor\":2,\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- A zero floor is CR 508.3d's "attacks" spelled another way.
   Spec.it s "rejects a zero floor" $
     Spec.assertBool

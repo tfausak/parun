@@ -11,9 +11,7 @@
       "oracleText": "Indestructible (Effects that say \"destroy\" don't destroy this artifact.)",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

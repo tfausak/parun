@@ -6,18 +6,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -45,9 +41,7 @@
                               "type": "InSlot",
                               "value": "target"
                             },
-                            "zone": {
-                              "type": "Hand"
-                            }
+                            "zone": "Hand"
                           }
                         }
                       }
@@ -68,9 +62,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

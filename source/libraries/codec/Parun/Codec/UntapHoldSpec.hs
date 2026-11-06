@@ -38,7 +38,7 @@ spec s = Spec.describe s "Parun.Codec.UntapHold" $ do
       s
       UntapHold.codec
       (UntapHold.OfChosenType (CardType.Artifact NonEmpty.:| [CardType.Land]))
-      " {\"type\":\"OfChosenType\",\"value\":[{\"type\":\"Artifact\"},{\"type\":\"Land\"}]} "
+      " {\"type\":\"OfChosenType\",\"value\":[\"Artifact\",\"Land\"]} "
   Spec.it s "Never" $
     Common.assertCodec
       s

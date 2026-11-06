@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -30,9 +28,7 @@
         {
           "condition": {
             "type": "PlayerManifestsDread",
-            "value": {
-              "type": "You"
-            }
+            "value": "You"
           },
           "modal": {
             "modes": [
@@ -48,16 +44,12 @@
                             "value": {
                               "filter": {
                                 "type": "IsInZone",
-                                "value": {
-                                  "type": "Graveyard"
-                                }
+                                "value": "Graveyard"
                               },
                               "slot": "became"
                             }
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -70,17 +62,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Detective"
-          },
-          {
-            "type": "Human"
-          }
+          "Detective",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

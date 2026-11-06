@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -53,9 +51,7 @@
                       "placement": {
                         "type": "ArrangedBy",
                         "value": {
-                          "position": {
-                            "type": "Bottom"
-                          }
+                          "position": "Bottom"
                         }
                       },
                       "ref": {
@@ -71,9 +67,7 @@
                           "slot": "looked"
                         }
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -104,9 +98,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

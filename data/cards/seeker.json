@@ -21,15 +21,11 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Artifact"
-                    }
+                    "value": "Artifact"
                   },
                   {
                     "type": "HasColor",
-                    "value": {
-                      "type": "White"
-                    }
+                    "value": "White"
                   }
                 ]
               }
@@ -53,18 +49,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -72,14 +64,10 @@
       "oracleText": "Enchant creature\nEnchanted creature can't be blocked except by artifact creatures and/or white creatures.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

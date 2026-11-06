@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -35,22 +33,16 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Enchantment"
-                              }
+                              "value": "Enchantment"
                             }
                           ]
                         }
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   },
                   {
@@ -64,9 +56,7 @@
                               "faces": [
                                 {
                                   "colorIndicator": [
-                                    {
-                                      "type": "Green"
-                                    }
+                                    "Green"
                                   ],
                                   "name": "Centaur Token",
                                   "power": {
@@ -79,14 +69,10 @@
                                   },
                                   "typeLine": {
                                     "subtypes": [
-                                      {
-                                        "type": "Centaur"
-                                      }
+                                      "Centaur"
                                     ],
                                     "types": [
-                                      {
-                                        "type": "Creature"
-                                      }
+                                      "Creature"
                                     ]
                                   }
                                 }
@@ -95,12 +81,8 @@
                             "creator": {
                               "type": "HolderOfBound",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "hop": {
-                                  "type": "Itself"
-                                },
+                                "holder": "Controller",
+                                "hop": "Itself",
                                 "slot": "victim"
                               }
                             },
@@ -126,9 +108,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

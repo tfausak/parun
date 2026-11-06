@@ -92,13 +92,9 @@
                 "type": "Colorless"
               },
               "tags": [
-                {
-                  "type": "Artifact"
-                }
+                "Artifact"
               ],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -108,13 +104,9 @@
                 "type": "Colorless"
               },
               "tags": [
-                {
-                  "type": "Artifact"
-                }
+                "Artifact"
               ],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null

@@ -38,7 +38,7 @@ import qualified Parun.Types.Zone as Zone
 -- | The bare projection an all-default value writes, reused as the `copiable`
 -- half below.
 minimalJson :: String
-minimalJson = "{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}"
+minimalJson = "{\"names\":[\"Mountain\"],\"cardTypes\":[\"Land\"]}"
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
@@ -87,14 +87,14 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           <> ",\"copiable\":"
           <> minimalJson
           <> ",\"attached\":[9],\"host\":11"
-          <> ",\"chosenNames\":[{\"key\":{\"type\":\"Own\"},\"value\":{\"8\":\"Goblin Piker\"}}],\"chosenPlayers\":[{\"key\":{\"type\":\"Copied\",\"value\":5},\"value\":[{\"key\":{\"type\":\"Promised\",\"value\":[{\"type\":\"Food\"},{\"type\":\"Own\",\"value\":1}]},\"value\":3}]}],\"chosenColors\":[{\"key\":{\"type\":\"Own\"},\"value\":[{\"type\":\"Green\"}]}],\"chosenSubtype\":[{\"key\":{\"type\":\"Copied\",\"value\":6},\"value\":{\"type\":\"Goblin\"}}],\"chosenNumber\":[{\"key\":{\"type\":\"Own\"},\"value\":5}],\"acquisition\":{\"type\":\"Copied\",\"value\":5},\"attacking\":false,\"attackTarget\":null,\"blocking\":true,\"protector\":7"
+          <> ",\"chosenNames\":[{\"key\":{\"type\":\"Own\"},\"value\":{\"8\":\"Goblin Piker\"}}],\"chosenPlayers\":[{\"key\":{\"type\":\"Copied\",\"value\":5},\"value\":[{\"key\":{\"type\":\"Promised\",\"value\":[{\"type\":\"Food\"},{\"type\":\"Own\",\"value\":1}]},\"value\":3}]}],\"chosenColors\":[{\"key\":{\"type\":\"Own\"},\"value\":[\"Green\"]}],\"chosenSubtype\":[{\"key\":{\"type\":\"Copied\",\"value\":6},\"value\":\"Goblin\"}],\"chosenNumber\":[{\"key\":{\"type\":\"Own\"},\"value\":5}],\"acquisition\":{\"type\":\"Copied\",\"value\":5},\"attacking\":false,\"attackTarget\":null,\"blocking\":true,\"protector\":7"
           <> ",\"paidCosts\":[{\"key\":{\"type\":\"Offspring\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"value\":[{\"key\":{\"type\":\"Own\",\"value\":1},\"value\":1}]}]"
           <> ",\"prototyped\":true"
           <> ",\"announcedX\":4"
           <> ",\"chosenModes\":[{\"key\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"value\":[2]}]"
-          <> ",\"controlClock\":[{\"player\":1,\"clock\":{\"type\":\"SinceLastUpkeep\"}}]"
-          <> ",\"zone\":{\"type\":\"Battlefield\"},\"home\":{\"type\":\"Command\"},\"pile\":6"
-          <> ",\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":5}}}],\"tapped\":true} "
+          <> ",\"controlClock\":[{\"player\":1,\"clock\":\"SinceLastUpkeep\"}]"
+          <> ",\"zone\":\"Battlefield\",\"home\":\"Command\",\"pile\":6"
+          <> ",\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":5}}}],\"tapped\":true} "
       )
   -- CR 109.3: neither an attachment nor a chosen name is a characteristic, and
   -- most objects have neither, so the absent case is written out rather than left
@@ -141,7 +141,7 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           <> minimalJson
           <> ",\"attached\":[]"
           <> ",\"chosenNames\":[],\"attacking\":true,\"attackTarget\":{\"type\":\"OfPlaneswalker\",\"value\":8},\"blocking\":false,\"protector\":null"
-          <> ",\"zone\":{\"type\":\"Stack\"}} "
+          <> ",\"zone\":\"Stack\"} "
       )
   Spec.it s "has a schema" $
     Common.assertHasSchema s LastKnown.codec

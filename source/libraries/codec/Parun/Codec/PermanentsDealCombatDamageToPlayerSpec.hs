@@ -23,7 +23,7 @@ spec s = Spec.describe s "Parun.Codec.PermanentsDealCombatDamageToPlayer" $ do
             PermanentsDealCombatDamageToPlayer.oneOrMorePlayers = False
           }
       )
-      " {\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}},\"recipient\":{\"type\":\"You\"}} "
+      " {\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"Opponent\"}},\"recipient\":\"You\"} "
   -- Forth Eorlingas!'s "to one or more players": the key appears only when set.
   Spec.it s "MkPermanentsDealCombatDamageToPlayer, one or more players" $
     Common.assertCodec
@@ -35,5 +35,5 @@ spec s = Spec.describe s "Parun.Codec.PermanentsDealCombatDamageToPlayer" $ do
             PermanentsDealCombatDamageToPlayer.oneOrMorePlayers = True
           }
       )
-      " {\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"oneOrMorePlayers\":true,\"recipient\":{\"type\":\"AnyPlayer\"}} "
+      " {\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}},\"oneOrMorePlayers\":true,\"recipient\":\"AnyPlayer\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PermanentsDealCombatDamageToPlayer.codec

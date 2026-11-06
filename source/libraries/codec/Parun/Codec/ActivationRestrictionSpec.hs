@@ -44,7 +44,7 @@ spec s = Spec.describe s "Parun.Codec.ActivationRestriction" $ do
               DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)
             }
       )
-      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"EndOfCombat\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}} "
+      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":\"EndOfCombat\"}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}}} "
   -- The arm's second axis: the SAME window under each scope, so a codec that
   -- dropped the scope would collapse this and the previous case into one.
   Spec.it s "DuringPhase, Llanowar Augur's controller's-turn upkeep" $
@@ -57,7 +57,7 @@ spec s = Spec.describe s "Parun.Codec.ActivationRestriction" $ do
               DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)
             }
       )
-      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}}} "
+      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":\"Upkeep\"}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}}}} "
   -- The PhaseSelector's stepless arm: a phase that HAS steps, named whole.
   Spec.it s "DuringPhase, Jade Statue's combat-phase rider" $
     Common.assertCodec
@@ -69,7 +69,7 @@ spec s = Spec.describe s "Parun.Codec.ActivationRestriction" $ do
               DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)
             }
       )
-      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"CombatPhase\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}} "
+      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"CombatPhase\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}}} "
   -- CR 102.1 with no window beside it, which is the arm DuringPhase above cannot
   -- reach: Lavinia, Foil to Conspiracy's "Activate only during an opponent's
   -- turn". Rendered payload-tagged, so a decoder cannot confuse it with the
@@ -79,7 +79,7 @@ spec s = Spec.describe s "Parun.Codec.ActivationRestriction" $ do
       s
       ActivationRestriction.codec
       (ActivationRestriction.DuringTurn (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.Opponent)))
-      " {\"type\":\"DuringTurn\",\"value\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
+      " {\"type\":\"DuringTurn\",\"value\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"Opponent\"}}} "
   -- CR 602.5's second clause, and the arm that made this type a list: Kongming's
   -- Contraptions prints it beside the DuringPhase above.
   Spec.it s "AttackedThisStep" $
@@ -103,14 +103,14 @@ spec s = Spec.describe s "Parun.Codec.ActivationRestriction" $ do
       s
       ActivationRestriction.codec
       (ActivationRestriction.DuringCombatBefore CombatStep.CombatDamage)
-      " {\"type\":\"DuringCombatBefore\",\"value\":{\"type\":\"CombatDamage\"}} "
+      " {\"type\":\"DuringCombatBefore\",\"value\":\"CombatDamage\"} "
   -- Capricious Sorcerer's "before attackers are declared" (CR 506.8a).
   Spec.it s "BeforeStep" $
     Common.assertCodec
       s
       ActivationRestriction.codec
       (ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers))
-      " {\"type\":\"BeforeStep\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"DeclareAttackers\"}}} "
+      " {\"type\":\"BeforeStep\",\"value\":{\"type\":\"Combat\",\"value\":\"DeclareAttackers\"}} "
   -- CR 602.5 over a fact about the board rather than a window: Barbarian Ring's
   -- "Activate only if there are seven or more cards in your graveyard".
   Spec.it s "OnlyIf, Barbarian Ring's threshold rider" $
@@ -132,7 +132,7 @@ spec s = Spec.describe s "Parun.Codec.ActivationRestriction" $ do
                 }
           )
       )
-      " {\"type\":\"OnlyIf\",\"value\":{\"type\":\"Compares\",\"value\":{\"comparison\":{\"type\":\"AtLeast\"},\"measured\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[]},\"scope\":{\"type\":\"InZone\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"zone\":{\"type\":\"Graveyard\"}}}}},\"threshold\":{\"type\":\"Literal\",\"value\":7}}}} "
+      " {\"type\":\"OnlyIf\",\"value\":{\"type\":\"Compares\",\"value\":{\"comparison\":\"AtLeast\",\"measured\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[]},\"scope\":{\"type\":\"InZone\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"zone\":\"Graveyard\"}}}},\"threshold\":{\"type\":\"Literal\",\"value\":7}}}} "
   -- CR 602.5b's counted rider, which CR 702.177a's exhaust rewrites into:
   -- Greenbelt Guardian's "Activate only once".
   Spec.it s "OnlyOnce" $

@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -38,9 +36,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -61,9 +57,7 @@
                     },
                     {
                       "type": "HasBlockStatus",
-                      "value": {
-                        "type": "Unblocked"
-                      }
+                      "value": "Unblocked"
                     }
                   ]
                 },
@@ -77,9 +71,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -24,5 +24,5 @@ spec s = Spec.describe s "Parun.Codec.UntapR" $ do
       s
       UntapR.codec
       (UntapR.MkUntapR {UntapR.during = Just (Phase.Beginning BeginningStep.Untap), UntapR.rewrite = UntapRewrite.RemoveCounterToUntap CounterKind.PlusOnePlusOne})
-      " {\"during\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Untap\"}},\"rewrite\":{\"type\":\"RemoveCounterToUntap\",\"value\":{\"type\":\"PlusOnePlusOne\"}}} "
+      " {\"during\":{\"type\":\"Beginning\",\"value\":\"Untap\"},\"rewrite\":{\"type\":\"RemoveCounterToUntap\",\"value\":{\"type\":\"PlusOnePlusOne\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s UntapR.codec

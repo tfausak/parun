@@ -26,7 +26,7 @@ spec s = Spec.describe s "Parun.Codec.Reveal" $ do
             Reveal.slot = Nothing
           }
       )
-      " {\"ref\":{\"type\":\"RandomCard\",\"value\":{\"zone\":{\"type\":\"Hand\"},\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"}}}} "
+      " {\"ref\":{\"type\":\"RandomCard\",\"value\":{\"zone\":\"Hand\",\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"}}}} "
   -- Wild Evocation's reveal, whose later clauses name what it showed.
   Spec.it s "MkReveal, slot written" $
     Common.assertCodec
@@ -37,5 +37,5 @@ spec s = Spec.describe s "Parun.Codec.Reveal" $ do
             Reveal.slot = Just (SlotName.MkSlotName (Text.pack "revealed"))
           }
       )
-      " {\"ref\":{\"type\":\"RandomCard\",\"value\":{\"zone\":{\"type\":\"Hand\"},\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"}}},\"slot\":\"revealed\"} "
+      " {\"ref\":{\"type\":\"RandomCard\",\"value\":{\"zone\":\"Hand\",\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"}}},\"slot\":\"revealed\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Reveal.codec

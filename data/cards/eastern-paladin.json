@@ -14,18 +14,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -43,9 +39,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -55,9 +49,7 @@
                   "target": {
                     "filter": {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Green"
-                      }
+                      "value": "Green"
                     },
                     "pool": {
                       "type": "Creatures"
@@ -78,18 +70,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -105,20 +93,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Knight"
-          },
-          {
-            "type": "Phyrexian"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Knight",
+          "Phyrexian",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

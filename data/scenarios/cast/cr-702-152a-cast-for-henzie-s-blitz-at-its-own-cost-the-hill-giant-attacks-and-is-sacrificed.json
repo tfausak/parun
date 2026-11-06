@@ -65,9 +65,7 @@
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               }
             }
           ],
@@ -75,9 +73,7 @@
             "type": "ByKeyword",
             "value": {
               "type": "OfFamily",
-              "value": {
-                "type": "Blitz"
-              }
+              "value": "Blitz"
             }
           },
           "mana": [

@@ -100,9 +100,7 @@
                     },
                     "whichCards": {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Blue"
-                      }
+                      "value": "Blue"
                     }
                   }
                 }

@@ -45,12 +45,8 @@
       "oracleText": "Indestructible\n{T}: Add {C}.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Land"
-          }
+          "Artifact",
+          "Land"
         ]
       }
     }

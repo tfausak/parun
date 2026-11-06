@@ -8,9 +8,7 @@
         "name": "alice",
         "counters": [
           {
-            "key": {
-              "type": "Rad"
-            },
+            "key": "Rad",
             "value": 1
           }
         ],

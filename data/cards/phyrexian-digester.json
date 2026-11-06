@@ -24,20 +24,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Construct"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Construct",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

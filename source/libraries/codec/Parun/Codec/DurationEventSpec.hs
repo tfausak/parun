@@ -22,7 +22,7 @@ spec s = Spec.describe s "Parun.Codec.DurationEvent" $ do
       s
       Codec.codec
       (DurationEvent.SpellCast (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"SpellCast\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"SpellCast\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- CR 901.11 (Agyrem).
   Spec.it s "Planeswalked" $
     Common.assertCodec

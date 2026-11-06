@@ -14,8 +14,8 @@
           { "card": "Forest", "label": "f4" },
           { "card": "Forest", "label": "f5" },
           { "card": "Forest", "label": "f6" },
-          { "card": "Hill Giant", "label": "giant", "faceDown": { "type": "Manifested" } },
-          { "card": "Grizzly Bears", "label": "bears", "faceDown": { "type": "Manifested" } }
+          { "card": "Hill Giant", "label": "giant", "faceDown": "Manifested" },
+          { "card": "Grizzly Bears", "label": "bears", "faceDown": "Manifested" }
         ],
         "hand": [{ "card": "Hustle", "label": "bustle" }],
         "library": [{ "card": "Island" }]

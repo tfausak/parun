@@ -5,7 +5,7 @@
   "timeline": [
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$div"}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseOptional", "with": {"type": "Exercises"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseOptional", "with": "Exercises"}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Lightning Bolt", "count": 0}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Forest", "Plains", "Lightning Bolt"]}}}
   ]

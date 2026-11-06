@@ -35,14 +35,10 @@
                 "type": "Matching",
                 "value": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 }
               },
-              "player": {
-                "type": "AnyPlayer"
-              }
+              "player": "AnyPlayer"
             }
           },
           "modal": {
@@ -54,16 +50,12 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "origin": {
-                            "type": "Battlefield"
-                          },
+                          "origin": "Battlefield",
                           "ref": {
                             "type": "InSlot",
                             "value": "thatManaSource"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -76,9 +68,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

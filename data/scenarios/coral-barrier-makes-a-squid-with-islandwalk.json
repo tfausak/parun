@@ -134,9 +134,7 @@
             "type": "Landwalk",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Island"
-              }
+              "value": "Island"
             }
           },
           "count": 1

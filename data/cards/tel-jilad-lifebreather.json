@@ -17,9 +17,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Forest"
-                    }
+                    "value": "Forest"
                   }
                 }
               }
@@ -29,9 +27,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -55,17 +51,11 @@
                                 "type": "IsBound",
                                 "value": "creature"
                               },
-                              "rewrite": {
-                                "type": "Regenerate"
-                              }
+                              "rewrite": "Regenerate"
                             }
                           },
-                          "origin": {
-                            "type": "Other"
-                          },
-                          "uses": {
-                            "type": "Once"
-                          }
+                          "origin": "Other",
+                          "uses": "Once"
                         }
                       }
                     ]
@@ -92,9 +82,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -110,17 +98,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Shaman"
-          },
-          {
-            "type": "Troll"
-          }
+          "Shaman",
+          "Troll"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

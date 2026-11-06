@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -47,17 +43,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 }
               }
             }
@@ -88,16 +80,12 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldByBound",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
+                                    "holder": "Controller",
                                     "slot": "thatPlayer"
                                   }
                                 }
@@ -117,16 +105,12 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldByBound",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
+                                    "holder": "Controller",
                                     "slot": "thatPlayer"
                                   }
                                 },
@@ -140,9 +124,7 @@
                               ]
                             }
                           },
-                          "sacrificer": {
-                            "type": "PermanentController"
-                          }
+                          "sacrificer": "PermanentController"
                         }
                       }
                     ]
@@ -155,14 +137,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Demon"
-          }
+          "Demon"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

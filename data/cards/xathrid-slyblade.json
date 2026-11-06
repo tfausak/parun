@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -34,9 +32,7 @@
                           },
                           "modification": {
                             "type": "LoseKeywordFamily",
-                            "value": {
-                              "type": "Hexproof"
-                            }
+                            "value": "Hexproof"
                           },
                           "ref": {
                             "type": "InSlot",
@@ -102,9 +98,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -120,17 +114,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Assassin"
-          },
-          {
-            "type": "Human"
-          }
+          "Assassin",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -41,12 +39,8 @@
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 {
@@ -56,21 +50,15 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Planeswalker"
-                        }
+                        "value": "Planeswalker"
                       },
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Sarkhan"
-                        }
+                        "value": "Sarkhan"
                       },
                       {
                         "type": "IsInZone",
-                        "value": {
-                          "type": "Battlefield"
-                        }
+                        "value": "Battlefield"
                       }
                     ]
                   }
@@ -118,14 +106,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dragon"
-          }
+          "Dragon"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

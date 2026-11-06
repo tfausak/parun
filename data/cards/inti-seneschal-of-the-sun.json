@@ -73,9 +73,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -96,9 +94,7 @@
             "value": {
               "type": "Declaration",
               "value": {
-                "player": {
-                  "type": "You"
-                }
+                "player": "You"
               }
             }
           },
@@ -116,9 +112,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "components": [
                           {
@@ -152,9 +146,7 @@
           "condition": {
             "type": "Discards",
             "value": {
-              "batching": {
-                "type": "OneOrMore"
-              },
+              "batching": "OneOrMore",
               "subject": {
                 "type": "Discarder",
                 "value": {
@@ -162,9 +154,7 @@
                     "type": "And",
                     "value": []
                   },
-                  "player": {
-                    "type": "You"
-                  }
+                  "player": "You"
                 }
               }
             }
@@ -187,16 +177,12 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -207,9 +193,7 @@
                             "value": {
                               "step": {
                                 "type": "Ending",
-                                "value": {
-                                  "type": "EndStep"
-                                }
+                                "value": "EndStep"
                               }
                             }
                           },
@@ -229,22 +213,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Knight"
-          }
+          "Human",
+          "Knight"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

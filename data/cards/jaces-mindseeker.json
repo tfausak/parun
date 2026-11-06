@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -80,15 +76,11 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Instant"
-                                    }
+                                    "value": "Instant"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Sorcery"
-                                    }
+                                    "value": "Sorcery"
                                   }
                                 ]
                               },
@@ -104,9 +96,7 @@
                   "target": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -120,17 +110,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Fish"
-          },
-          {
-            "type": "Illusion"
-          }
+          "Fish",
+          "Illusion"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

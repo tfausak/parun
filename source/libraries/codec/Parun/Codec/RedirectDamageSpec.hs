@@ -38,7 +38,7 @@ spec s = Spec.describe s "Parun.Codec.RedirectDamage" $ do
             RedirectDamage.whatSource = Filter.And []
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"kind\":{\"type\":\"Combat\"},\"from\":{\"type\":\"InSlot\",\"value\":\"you\"},\"to\":{\"type\":\"InSlot\",\"value\":\"attacker\"}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"kind\":\"Combat\",\"from\":{\"type\":\"InSlot\",\"value\":\"you\"},\"to\":{\"type\":\"InSlot\",\"value\":\"attacker\"}} "
   -- A redirect naming no kind, which is the elided case.
   Spec.it s "MkRedirectDamage, kind elided" $
     Common.assertCodec
@@ -99,7 +99,7 @@ spec s = Spec.describe s "Parun.Codec.RedirectDamage" $ do
             RedirectDamage.whatSource = Filter.And []
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"amount\":{\"type\":\"Literal\",\"value\":2},\"whatRecipient\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"whoRecipient\":{\"type\":\"You\"},\"to\":{\"type\":\"InSlot\",\"value\":\"target\"},\"chosenSource\":{\"type\":\"And\",\"value\":[]}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"amount\":{\"type\":\"Literal\",\"value\":2},\"whatRecipient\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}},\"whoRecipient\":\"You\",\"to\":{\"type\":\"InSlot\",\"value\":\"target\"},\"chosenSource\":{\"type\":\"And\",\"value\":[]}} "
   -- Jade Monolith's "the next time" and Kjeldoran Royal Guard's "by unblocked
   -- creatures": CR 614.3's use count and CR 609.7b's described source, both
   -- written only when not the default.
@@ -120,5 +120,5 @@ spec s = Spec.describe s "Parun.Codec.RedirectDamage" $ do
             RedirectDamage.whatSource = Filter.HasBlockStatus BlockStatus.Unblocked
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"from\":{\"type\":\"InSlot\",\"value\":\"target\"},\"to\":{\"type\":\"InSlot\",\"value\":\"you\"},\"uses\":{\"type\":\"Once\"},\"whatSource\":{\"type\":\"HasBlockStatus\",\"value\":{\"type\":\"Unblocked\"}}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"from\":{\"type\":\"InSlot\",\"value\":\"target\"},\"to\":{\"type\":\"InSlot\",\"value\":\"you\"},\"uses\":\"Once\",\"whatSource\":{\"type\":\"HasBlockStatus\",\"value\":\"Unblocked\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s RedirectDamage.codec

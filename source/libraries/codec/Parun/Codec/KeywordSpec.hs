@@ -108,14 +108,14 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (Keyword.Hexproof (Just (Filter.HasColor Color.Black)))
-      " {\"type\":\"Hexproof\",\"value\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}}} "
+      " {\"type\":\"Hexproof\",\"value\":{\"type\":\"HasColor\",\"value\":\"Black\"}} "
     -- CR 702.16a's "any characteristic value or information": a quality need not
     -- be a colour. Eradicator Valkyrie's "hexproof from planeswalkers".
     Common.assertCodec
       s
       Keyword.codec
       (Keyword.Hexproof (Just (Filter.HasCardType CardType.Planeswalker)))
-      " {\"type\":\"Hexproof\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Planeswalker\"}}} "
+      " {\"type\":\"Hexproof\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Planeswalker\"}} "
     Spec.assertBool
       s
       (Codec.encode Keyword.codec (Keyword.Hexproof Nothing) /= Codec.encode Keyword.codec (Keyword.Hexproof (Just (Filter.HasColor Color.Black))))
@@ -137,12 +137,12 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (Keyword.Landwalk (Filter.HasSubtype Subtype.Swamp))
-      " {\"type\":\"Landwalk\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Swamp\"}}} "
+      " {\"type\":\"Landwalk\",\"value\":{\"type\":\"HasSubtype\",\"value\":\"Swamp\"}} "
     Common.assertCodec
       s
       Keyword.codec
       (Keyword.Landwalk (Filter.HasSubtype Subtype.Island))
-      " {\"type\":\"Landwalk\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Island\"}}} "
+      " {\"type\":\"Landwalk\",\"value\":{\"type\":\"HasSubtype\",\"value\":\"Island\"}} "
     Spec.assertBool
       s
       (Codec.encode Keyword.codec (Keyword.Landwalk (Filter.HasSubtype Subtype.Swamp)) /= Codec.encode Keyword.codec (Keyword.Landwalk (Filter.HasSubtype Subtype.Island)))
@@ -156,20 +156,20 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (Keyword.Landwalk (Filter.Not (Filter.HasSupertype Supertype.Basic)))
-      " {\"type\":\"Landwalk\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"HasSupertype\",\"value\":{\"type\":\"Basic\"}}}} "
+      " {\"type\":\"Landwalk\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"HasSupertype\",\"value\":\"Basic\"}}} "
     -- With both the specified type or supertype and the specified subtype.
     Common.assertCodec
       s
       Keyword.codec
       (Keyword.Landwalk (Filter.And [Filter.HasSupertype Supertype.Snow, Filter.HasSubtype Subtype.Swamp]))
-      " {\"type\":\"Landwalk\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSupertype\",\"value\":{\"type\":\"Snow\"}},{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Swamp\"}}]}} "
+      " {\"type\":\"Landwalk\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSupertype\",\"value\":\"Snow\"},{\"type\":\"HasSubtype\",\"value\":\"Swamp\"}]}} "
     -- With the specified type or supertype: artifact landwalk, which no
     -- creature prints -- it is only ever granted.
     Common.assertCodec
       s
       Keyword.codec
       (Keyword.Landwalk (Filter.HasCardType CardType.Artifact))
-      " {\"type\":\"Landwalk\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}} "
+      " {\"type\":\"Landwalk\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}} "
   Spec.it s "Lifelink" $
     Common.assertCodec
       s
@@ -204,14 +204,14 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (Keyword.Protection Protection.MkProtection {Protection.quality = Filter.HasColor Color.Black, Protection.spares = Nothing})
-      " {\"type\":\"Protection\",\"value\":{\"quality\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}},\"spares\":null}} "
+      " {\"type\":\"Protection\",\"value\":{\"quality\":{\"type\":\"HasColor\",\"value\":\"Black\"},\"spares\":null}} "
     -- CR 702.16a's "any characteristic value or information": protection from
     -- artifacts is as printed as protection from black.
     Common.assertCodec
       s
       Keyword.codec
       (Keyword.Protection Protection.MkProtection {Protection.quality = Filter.HasCardType CardType.Artifact, Protection.spares = Nothing})
-      " {\"type\":\"Protection\",\"value\":{\"quality\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}},\"spares\":null}} "
+      " {\"type\":\"Protection\",\"value\":{\"quality\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"},\"spares\":null}} "
     Spec.assertBool
       s
       (Codec.encode Keyword.codec (Keyword.Protection Protection.MkProtection {Protection.quality = Filter.HasColor Color.Black, Protection.spares = Nothing}) /= Codec.encode Keyword.codec (Keyword.Hexproof (Just (Filter.HasColor Color.Black))))
@@ -337,7 +337,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (Keyword.Cycling (Cycling.MkCycling cost (Just (Filter.HasCardType CardType.Land))))
-      " {\"type\":\"Cycling\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"searchFor\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}} "
+      " {\"type\":\"Cycling\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"searchFor\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}} "
   -- CR 702.34a's payload is a whole Cost, not a number -- the first keyword
   -- whose parameter is itself a composite.
   Spec.it s "Flashback carries its cost" $ do
@@ -560,7 +560,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (ninjutsu 2 NinjutsuVariant.Plain)
-      " {\"type\":\"Ninjutsu\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]},\"variant\":{\"type\":\"Plain\"}}} "
+      " {\"type\":\"Ninjutsu\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]},\"variant\":\"Plain\"}} "
     Spec.assertBool s (Codec.encode Keyword.codec (ninjutsu 2 NinjutsuVariant.Plain) /= Codec.encode Keyword.codec (ninjutsu 3 NinjutsuVariant.Plain)) "the cost is part of the encoding"
     Spec.assertBool s (Codec.encode Keyword.codec (ninjutsu 2 NinjutsuVariant.Plain) /= Codec.encode Keyword.codec (ninjutsu 2 NinjutsuVariant.Commander)) "and so is the variant"
   -- CR 702.84a's payload is a Cost, LevelUp's shape below: the cost is the whole of
@@ -633,7 +633,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (morph 1)
-      " {\"type\":\"Morph\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"variant\":{\"type\":\"Plain\"}}} "
+      " {\"type\":\"Morph\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"variant\":\"Plain\"}} "
     Spec.assertBool s (Codec.encode Keyword.codec (morph 1) /= Codec.encode Keyword.codec (flashbackOf 1)) "morph {1} is not flashback {1}"
   -- CR 702.37b: megamorph is the SAME constructor with a different variant, so
   -- the two must not encode alike -- a codec that dropped the variant would make
@@ -644,7 +644,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (morphOf MorphVariant.Mega)
-      " {\"type\":\"Morph\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"variant\":{\"type\":\"Mega\"}}} "
+      " {\"type\":\"Morph\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"variant\":\"Mega\"}} "
     Spec.assertBool
       s
       (Codec.encode Keyword.codec (morphOf MorphVariant.Mega) /= Codec.encode Keyword.codec (morphOf MorphVariant.Plain))
@@ -883,7 +883,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (Keyword.Champion (Filter.HasSubtype Subtype.Merfolk))
-      " {\"type\":\"Champion\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Merfolk\"}}} "
+      " {\"type\":\"Champion\",\"value\":{\"type\":\"HasSubtype\",\"value\":\"Merfolk\"}} "
     Spec.assertBool
       s
       (Codec.encode Keyword.codec (Keyword.Champion (Filter.HasSubtype Subtype.Merfolk)) /= Codec.encode Keyword.codec (Keyword.Champion (Filter.HasSubtype Subtype.Island)))
@@ -893,7 +893,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (Keyword.Offering (Filter.HasSubtype Subtype.Goblin))
-      " {\"type\":\"Offering\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Goblin\"}}} "
+      " {\"type\":\"Offering\",\"value\":{\"type\":\"HasSubtype\",\"value\":\"Goblin\"}} "
   -- CR 702.112a's N is written like every other keyword's, so the TAG is what
   -- keeps them apart: `Renown 2` and `Poisonous 2` differ only by it on the wire.
   Spec.it s "Renown carries its N" $ do
@@ -1280,7 +1280,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (Keyword.PartnerText PartnerText.FriendsForever)
-      " {\"type\":\"PartnerText\",\"value\":{\"type\":\"FriendsForever\"}} "
+      " {\"type\":\"PartnerText\",\"value\":\"FriendsForever\"} "
     Spec.assertBool s (Codec.encode Keyword.codec (Keyword.PartnerText PartnerText.FriendsForever) /= Codec.encode Keyword.codec (Keyword.PartnerText PartnerText.CharacterSelect)) "two texts encode differently"
   -- CR 702.124j's name rides the constructor, since the pairing is by name.
   Spec.it s "PartnerWith carries its name" $ do
@@ -1345,7 +1345,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (Keyword.Devour Devour.MkDevour {Devour.quality = Just (Filter.HasCardType CardType.Artifact), Devour.count = DevourCount.Fixed 1})
-      " {\"type\":\"Devour\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":1},\"quality\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}}} "
+      " {\"type\":\"Devour\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":1},\"quality\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}}} "
     Spec.assertBool s (Codec.encode Keyword.codec (Keyword.Devour Devour.MkDevour {Devour.quality = Nothing, Devour.count = DevourCount.Fixed 1}) /= Codec.encode Keyword.codec (Keyword.Devour Devour.MkDevour {Devour.quality = Just (Filter.HasCardType CardType.Artifact), Devour.count = DevourCount.Fixed 1})) "devour 1 and devour artifact 1 encode differently"
   -- CR 702.82b: Thromok the Insatiable's N is the sacrifice's own count, which
   -- carries no number to be distinct by.
@@ -1424,7 +1424,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (Keyword.Prototype assemblerFrame)
-      " {\"type\":\"Prototype\",\"value\":{\"cost\":[{\"type\":\"Generic\",\"value\":1},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}}}],\"power\":2,\"toughness\":2}} "
+      " {\"type\":\"Prototype\",\"value\":{\"cost\":[{\"type\":\"Generic\",\"value\":1},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"White\"}}],\"power\":2,\"toughness\":2}} "
     Spec.assertBool s (Codec.encode Keyword.codec (Keyword.Prototype assemblerFrame) /= Codec.encode Keyword.codec (Keyword.Prototype assemblerFrame {Prototype.power = 4})) "two inset frames differing only in power encode differently"
   -- CR 702.164a's N rides the constructor.
   Spec.it s "Toxic carries its N" $ do
@@ -1646,7 +1646,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (Keyword.Affinity (Filter.HasCardType CardType.Artifact))
-      " {\"type\":\"Affinity\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}} "
+      " {\"type\":\"Affinity\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}} "
     Spec.assertBool
       s
       (Codec.encode Keyword.codec (Keyword.Affinity (Filter.HasCardType CardType.Artifact)) /= Codec.encode Keyword.codec (Keyword.Affinity (Filter.HasSubtype Subtype.Island)))
@@ -1749,7 +1749,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (Keyword.Craft (Craft.MkCraft cost (ExileMaterials.MkExileMaterials 1 False (Filter.HasCardType CardType.Creature))))
-      " {\"type\":\"Craft\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":4},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Black\"}}}]},\"materials\":{\"count\":1,\"whichObjects\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}}} "
+      " {\"type\":\"Craft\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":4},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Black\"}}]},\"materials\":{\"count\":1,\"whichObjects\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}}} "
   -- CR 702.47a: Desperate Ritual's "Splice onto Arcane {1}{R}".
   Spec.it s "Splice carries its quality and its cost" $ do
     let cost = Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Red)])) []
@@ -1757,7 +1757,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       s
       Keyword.codec
       (Keyword.Splice (Splice.MkSplice (Filter.HasSubtype Subtype.Arcane) cost))
-      " {\"type\":\"Splice\",\"value\":{\"onto\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Arcane\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}}}]}}} "
+      " {\"type\":\"Splice\",\"value\":{\"onto\":{\"type\":\"HasSubtype\",\"value\":\"Arcane\"},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Red\"}}]}}} "
   Spec.it s "Scavenge carries its cost" $ do
     Common.assertCodec
       s

@@ -48,8 +48,8 @@
           "targets": ["Clone"],
           "cost": [
             { "type": "Generic", "value": 2 },
-            { "type": "OfType", "value": { "type": "Colored", "value": { "type": "White" } } },
-            { "type": "OfType", "value": { "type": "Colored", "value": { "type": "White" } } }
+            { "type": "OfType", "value": { "type": "Colored", "value": "White" } },
+            { "type": "OfType", "value": { "type": "Colored", "value": "White" } }
           ],
           "mana": ["$p1", "$p2", "$p3", "$p4", null]
         }
@@ -72,7 +72,7 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Clone", "names": [] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "alice", "is": [] } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": "Exercises" } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$shrieker", "targets": ["Clone"], "mana": ["$f1", "$f2"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },

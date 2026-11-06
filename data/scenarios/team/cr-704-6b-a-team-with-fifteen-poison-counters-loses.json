@@ -8,9 +8,7 @@
         "team": 1,
         "counters": [
           {
-            "key": {
-              "type": "Poison"
-            },
+            "key": "Poison",
             "value": 13
           }
         ]
@@ -20,9 +18,7 @@
         "team": 1,
         "counters": [
           {
-            "key": {
-              "type": "Poison"
-            },
+            "key": "Poison",
             "value": 13
           }
         ]
@@ -102,9 +98,7 @@
     {
       "PlayerCounters": {
         "player": "carol",
-        "kind": {
-          "type": "Poison"
-        },
+        "kind": "Poison",
         "count": 2
       }
     }

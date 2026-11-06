@@ -21,7 +21,7 @@
   },
   "timeline": [
     { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$barbarians", "power": 2, "toughness": 1 } } },
-    { "turn": 1, "step": "EndStep", "player": "alice", "do": { "ChooseToPay": { "decision": { "type": "Pays" } } }, "source": "$feed" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": { "ChooseToPay": { "decision": "Pays" } }, "source": "$feed" },
     { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Wolf Token", "count": 1 } } },
     { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Balduvian Barbarians", "count": 1 } } },
     { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Ancient Crab", "count": 1 } } }

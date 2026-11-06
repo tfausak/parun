@@ -26,5 +26,5 @@ spec s = Spec.describe s "Parun.Codec.DamageTrigger" $ do
       s
       DamageTrigger.codec
       (DamageTrigger.MkDamageTrigger ActingPermanent.Self (Just DamageKind.Combat) (Set.fromList [DamageRecipient.Player PlayerRelation.AnyPlayer, DamageRecipient.Permanent CardType.Planeswalker]))
-      " {\"actor\":{\"type\":\"Self\"},\"kind\":{\"type\":\"Combat\"},\"recipients\":[{\"type\":\"Player\",\"value\":{\"type\":\"AnyPlayer\"}},{\"type\":\"Permanent\",\"value\":{\"type\":\"Planeswalker\"}}]} "
+      " {\"actor\":{\"type\":\"Self\"},\"kind\":\"Combat\",\"recipients\":[{\"type\":\"Player\",\"value\":\"AnyPlayer\"},{\"type\":\"Permanent\",\"value\":\"Planeswalker\"}]} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DamageTrigger.codec

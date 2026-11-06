@@ -6,27 +6,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -49,16 +43,12 @@
                               "type": "InSlot",
                               "value": "land"
                             },
-                            "regenerability": {
-                              "type": "Regenerable"
-                            }
+                            "regenerability": "Regenerable"
                           }
                         }
                       ],
                       "payGate": {
-                        "branch": {
-                          "type": "IfNonePaid"
-                        },
+                        "branch": "IfNonePaid",
                         "cost": {
                           "components": [
                             {
@@ -73,18 +63,14 @@
                         },
                         "payer": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         }
                       },
                       "ref": {
                         "type": "EachMatching",
                         "value": {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Land"
-                          }
+                          "value": "Land"
                         }
                       },
                       "slot": "land"
@@ -98,9 +84,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

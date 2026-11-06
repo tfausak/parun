@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -78,12 +74,8 @@
           "condition": {
             "type": "PlayerActs",
             "value": {
-              "action": {
-                "type": "OpenAttraction"
-              },
-              "player": {
-                "type": "You"
-              }
+              "action": "OpenAttraction",
+              "player": "You"
             }
           },
           "modal": {
@@ -119,12 +111,8 @@
           "condition": {
             "type": "PlayerActs",
             "value": {
-              "action": {
-                "type": "ClaimPrize"
-              },
-              "player": {
-                "type": "You"
-              }
+              "action": "ClaimPrize",
+              "player": "You"
             }
           },
           "modal": {
@@ -140,9 +128,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -162,25 +148,15 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Gamer"
-          },
-          {
-            "type": "Guest"
-          },
-          {
-            "type": "Human"
-          }
+          "Gamer",
+          "Guest",
+          "Human"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

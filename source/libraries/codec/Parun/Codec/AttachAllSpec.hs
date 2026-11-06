@@ -21,5 +21,5 @@ spec s = Spec.describe s "Parun.Codec.AttachAll" $ do
             AttachAll.destination = Filter.IsSource
           }
       )
-      " {\"subjects\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}},\"destination\":{\"type\":\"IsSource\"}} "
+      " {\"subjects\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}},\"destination\":{\"type\":\"IsSource\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AttachAll.codec

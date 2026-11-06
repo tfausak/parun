@@ -44,6 +44,6 @@
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Tapped": {"object": "$i2", "tapped": true}}},
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Tapped": {"object": "$i3", "tapped": false}}},
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Tapped": {"object": "$baral", "tapped": false}}},
-    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"ChooseOptional": {"type": "Exercises"}}}
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"ChooseOptional": "Exercises"}}
   ]
 }

@@ -29,7 +29,7 @@ spec s = Spec.describe s "Parun.Codec.AffectedUnless" $ do
             AffectedUnless.amount = Nothing
           }
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   Spec.it s "MkAffectedUnless, unless written" $
     Common.assertCodec
       s
@@ -44,7 +44,7 @@ spec s = Spec.describe s "Parun.Codec.AffectedUnless" $ do
             AffectedUnless.amount = Nothing
           }
       )
-      " {\"affected\":{\"type\":\"Attached\"},\"unless\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":1},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
+      " {\"affected\":{\"type\":\"Attached\"},\"unless\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":1},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
   -- CR 116.2d: the name a face gives the ability stating the restriction, which
   -- only a face granting the ignore writes (Volrath's Curse).
   Spec.it s "MkAffectedUnless, name written" $

@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -55,13 +51,9 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "Reveal"
-                          },
+                          "destination": "Reveal",
                           "differentIn": [
-                            {
-                              "type": "Names"
-                            }
+                            "Names"
                           ],
                           "exactly": true,
                           "filter": {
@@ -73,9 +65,7 @@
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -83,9 +73,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "slot": "found"
                         }
@@ -105,9 +93,7 @@
                             "value": {
                               "chooser": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "Opponent"
-                                }
+                                "value": "Opponent"
                               },
                               "filter": {
                                 "type": "And",
@@ -116,9 +102,7 @@
                               "slot": "found"
                             }
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ],
@@ -138,18 +122,14 @@
                             "type": "InSlot",
                             "value": "found"
                           },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       },
                       {
                         "type": "Shuffle",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     ],
@@ -168,17 +148,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Berserker"
-          },
-          {
-            "type": "Demon"
-          }
+          "Berserker",
+          "Demon"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

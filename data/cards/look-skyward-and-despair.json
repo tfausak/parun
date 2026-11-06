@@ -21,9 +21,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Red"
-                                  }
+                                  "Red"
                                 ],
                                 "keywords": [
                                   {
@@ -41,14 +39,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Dragon"
-                                    }
+                                    "Dragon"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -70,9 +64,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Scheme"
-          }
+          "Scheme"
         ]
       }
     }

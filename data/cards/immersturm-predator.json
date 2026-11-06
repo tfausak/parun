@@ -17,9 +17,7 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       {
                         "type": "Not",
@@ -89,18 +87,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -125,9 +119,7 @@
                   "type": "IsSource"
                 }
               },
-              "status": {
-                "type": "Tapped"
-              }
+              "status": "Tapped"
             }
           },
           "modal": {
@@ -143,9 +135,7 @@
                             "type": "InSlot",
                             "value": "card"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -194,17 +184,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dragon"
-          },
-          {
-            "type": "Vampire"
-          }
+          "Dragon",
+          "Vampire"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

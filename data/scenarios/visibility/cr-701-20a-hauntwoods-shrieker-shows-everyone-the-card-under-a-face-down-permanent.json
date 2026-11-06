@@ -9,7 +9,7 @@
           { "card": "Forest", "label": "f2", "ready": true },
           { "card": "Hauntwoods Shrieker", "label": "shrieker" } ] },
       { "name": "bob",
-        "battlefield": [ { "card": "Forest", "label": "manifest", "faceDown": { "type": "Manifested" } } ] }
+        "battlefield": [ { "card": "Forest", "label": "manifest", "faceDown": "Manifested" } ] }
     ],
     "active": "alice",
     "step": "PrecombatMain"

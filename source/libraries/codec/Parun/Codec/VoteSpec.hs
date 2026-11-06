@@ -36,7 +36,7 @@ spec s = Spec.describe s "Parun.Codec.Vote" $ do
             Vote.secret = False
           }
       )
-      " {\"starter\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"choices\":{\"type\":\"Objects\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"slot\":\"elected\"}}} "
+      " {\"starter\":{\"type\":\"Relative\",\"value\":\"You\"},\"choices\":{\"type\":\"Objects\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"slot\":\"elected\"}}} "
   Spec.it s "MkVote, Plea for Power's word vote" $
     Common.assertCodec
       s
@@ -51,7 +51,7 @@ spec s = Spec.describe s "Parun.Codec.Vote" $ do
             Vote.secret = False
           }
       )
-      " {\"starter\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"choices\":{\"type\":\"Words\",\"value\":[\"time\",\"knowledge\"]}} "
+      " {\"starter\":{\"type\":\"Relative\",\"value\":\"You\"},\"choices\":{\"type\":\"Words\",\"value\":[\"time\",\"knowledge\"]}} "
   -- Secret council (CR 207.2c): the one vote written with the key.
   Spec.it s "MkVote, Truth or Consequences' secret word vote" $
     Common.assertCodec
@@ -67,7 +67,7 @@ spec s = Spec.describe s "Parun.Codec.Vote" $ do
             Vote.secret = True
           }
       )
-      " {\"starter\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"choices\":{\"type\":\"Words\",\"value\":[\"truth\",\"consequences\"]},\"secret\":true} "
+      " {\"starter\":{\"type\":\"Relative\",\"value\":\"You\"},\"choices\":{\"type\":\"Words\",\"value\":[\"truth\",\"consequences\"]},\"secret\":true} "
   -- CR 701.38b's players, Mob Verdict's secret "another player" vote.
   Spec.it s "MkVote, Mob Verdict's secret player vote" $
     Common.assertCodec
@@ -79,7 +79,7 @@ spec s = Spec.describe s "Parun.Codec.Vote" $ do
             Vote.secret = True
           }
       )
-      " {\"starter\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"choices\":{\"type\":\"Players\",\"value\":{\"another\":true,\"slot\":\"votes\"}},\"secret\":true} "
+      " {\"starter\":{\"type\":\"Relative\",\"value\":\"You\"},\"choices\":{\"type\":\"Players\",\"value\":{\"another\":true,\"slot\":\"votes\"}},\"secret\":true} "
   -- Círdan the Shipwright's "votes for a player", which may be oneself.
   Spec.it s "MkVote, a player vote open to every player" $
     Common.assertCodec
@@ -91,5 +91,5 @@ spec s = Spec.describe s "Parun.Codec.Vote" $ do
             Vote.secret = False
           }
       )
-      " {\"starter\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"choices\":{\"type\":\"Players\",\"value\":{\"slot\":\"votes\"}}} "
+      " {\"starter\":{\"type\":\"Relative\",\"value\":\"You\"},\"choices\":{\"type\":\"Players\",\"value\":{\"slot\":\"votes\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Vote.codec

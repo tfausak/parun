@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -43,9 +41,7 @@
                                 "type": "Hexproof",
                                 "value": {
                                   "type": "HasSubtype",
-                                  "value": {
-                                    "type": "Skeleton"
-                                  }
+                                  "value": "Skeleton"
                                 }
                               }
                             }
@@ -61,18 +57,14 @@
                                 "type": "Hexproof",
                                 "value": {
                                   "type": "HasSubtype",
-                                  "value": {
-                                    "type": "Zombie"
-                                  }
+                                  "value": "Zombie"
                                 }
                               }
                             }
                           }
                         ]
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 ]
@@ -82,9 +74,7 @@
               "target": {
                 "filter": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 "pool": {
                   "type": "CardsInGraveyard",
@@ -102,9 +92,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

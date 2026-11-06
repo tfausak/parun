@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -33,17 +31,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -66,9 +60,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -92,9 +84,7 @@
                               "slot": "looked"
                             }
                           },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       }
                     ]
@@ -115,35 +105,23 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Owner"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Owner",
+                        "relation": "You"
                       }
                     }
                   ]
                 }
               },
               "from": [
-                {
-                  "type": "Library"
-                },
-                {
-                  "type": "Hand"
-                }
+                "Library",
+                "Hand"
               ],
-              "to": {
-                "type": "Graveyard"
-              }
+              "to": "Graveyard"
             }
           },
           "modal": {
@@ -166,9 +144,7 @@
                                 "condition": {
                                   "type": "LeavesZone",
                                   "value": {
-                                    "from": {
-                                      "type": "Graveyard"
-                                    }
+                                    "from": "Graveyard"
                                   }
                                 },
                                 "modal": {
@@ -184,9 +160,7 @@
                                                   "faces": [
                                                     {
                                                       "colorIndicator": [
-                                                        {
-                                                          "type": "Black"
-                                                        }
+                                                        "Black"
                                                       ],
                                                       "name": "Zombie Token",
                                                       "power": {
@@ -199,14 +173,10 @@
                                                       },
                                                       "typeLine": {
                                                         "subtypes": [
-                                                          {
-                                                            "type": "Zombie"
-                                                          }
+                                                          "Zombie"
                                                         ],
                                                         "types": [
-                                                          {
-                                                            "type": "Creature"
-                                                          }
+                                                          "Creature"
                                                         ]
                                                       }
                                                     }
@@ -217,9 +187,7 @@
                                                   "value": 1
                                                 },
                                                 "riders": {
-                                                  "tapped": {
-                                                    "type": "Tapped"
-                                                  }
+                                                  "tapped": "Tapped"
                                                 }
                                               }
                                             }
@@ -248,19 +216,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Homunculus"
-          }
+          "Homunculus"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -28,9 +28,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -48,9 +46,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -63,9 +59,7 @@
                       "value": {
                         "party": {
                           "type": "Related",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     },
@@ -93,9 +87,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -116,9 +108,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ],
               "permanent": {
@@ -133,9 +123,7 @@
                       "type": "Not",
                       "value": {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Spirit"
-                        }
+                        "value": "Spirit"
                       }
                     }
                   ]
@@ -161,23 +149,15 @@
                               {
                                 "type": "CreatureSubtype",
                                 "value": {
-                                  "mode": {
-                                    "type": "Replace"
-                                  },
-                                  "subtype": {
-                                    "type": "Spirit"
-                                  }
+                                  "mode": "Replace",
+                                  "subtype": "Spirit"
                                 }
                               },
                               {
                                 "type": "CreatureSubtype",
                                 "value": {
-                                  "mode": {
-                                    "type": "InAddition"
-                                  },
-                                  "subtype": {
-                                    "type": "Detective"
-                                  }
+                                  "mode": "InAddition",
+                                  "subtype": "Detective"
                                 }
                               }
                             ],
@@ -197,9 +177,7 @@
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -212,17 +190,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Detective"
-          },
-          {
-            "type": "Human"
-          }
+          "Detective",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

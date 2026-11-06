@@ -31,7 +31,7 @@ spec s = Spec.describe s "Parun.Codec.UntapRestriction" $ do
           UntapHold.Forbidden
           Nothing
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},{\"type\":\"HasActivatedAbility\",\"value\":{\"type\":\"NonManaAbility\"}}]}}} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Land\"},{\"type\":\"HasActivatedAbility\",\"value\":\"NonManaAbility\"}]}}} "
   -- Amber Prison's "You may choose not to untap this artifact during your untap
   -- step" (CR 502.3): the hold is written only when it is not the default.
   Spec.it s "Elective" $

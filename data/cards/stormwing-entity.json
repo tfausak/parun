@@ -12,18 +12,14 @@
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "Blue"
-                }
+                "value": "Blue"
               }
             }
           ],
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -36,12 +32,8 @@
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       },
                       {
@@ -49,15 +41,11 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Instant"
-                            }
+                            "value": "Instant"
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Sorcery"
-                            }
+                            "value": "Sorcery"
                           }
                         ]
                       }
@@ -67,9 +55,7 @@
                     "type": "InHistory",
                     "value": {
                       "type": "SpellCast",
-                      "value": {
-                        "type": "ThisTurn"
-                      }
+                      "value": "ThisTurn"
                     }
                   }
                 }
@@ -103,18 +89,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -145,9 +127,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -165,14 +145,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          }
+          "Elemental"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

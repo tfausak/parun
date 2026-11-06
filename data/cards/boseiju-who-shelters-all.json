@@ -39,21 +39,15 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Instant"
-                                  }
+                                  "value": "Instant"
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Sorcery"
-                                  }
+                                  "value": "Sorcery"
                                 }
                               ]
                             },
-                            "effect": {
-                              "type": "CantBeCountered"
-                            }
+                            "effect": "CantBeCountered"
                           }
                         }
                       }
@@ -84,14 +78,10 @@
       ],
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

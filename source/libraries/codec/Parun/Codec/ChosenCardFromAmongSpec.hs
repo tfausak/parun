@@ -31,7 +31,7 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardFromAmong" $ do
             ChosenCardFromAmong.faceUpPile = False
           }
       )
-      " {\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- Uncovered Clues' "up to two" and Animal Magnetism's opponent: the two keys
   -- the defaults above leave off the wire entirely.
   Spec.it s "MkChosenCardFromAmong, count and chooser" $
@@ -47,7 +47,7 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardFromAmong" $ do
             ChosenCardFromAmong.faceUpPile = False
           }
       )
-      " {\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}},\"chooser\":{\"type\":\"InSlot\",\"value\":\"opponent\"}} "
+      " {\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}},\"chooser\":{\"type\":\"InSlot\",\"value\":\"opponent\"}} "
   -- Fact or Fiction: an opponent separates, and you take a pile (CR 700.3).
   Spec.it s "MkChosenCardFromAmong, a pile chooser" $
     Common.assertCodec
@@ -62,7 +62,7 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardFromAmong" $ do
             ChosenCardFromAmong.faceUpPile = False
           }
       )
-      " {\"slot\":\"revealed\",\"filter\":{\"type\":\"And\",\"value\":[]},\"count\":{\"type\":\"UpTo\"},\"chooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}},\"pileChooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"slot\":\"revealed\",\"filter\":{\"type\":\"And\",\"value\":[]},\"count\":{\"type\":\"UpTo\"},\"chooser\":{\"type\":\"Relative\",\"value\":\"Opponent\"},\"pileChooser\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   -- Curator of Destinies: you separate into a face-up and a face-down pile, and
   -- an opponent takes one (CR 700.3).
   Spec.it s "MkChosenCardFromAmong, a face-up pile" $
@@ -78,5 +78,5 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardFromAmong" $ do
             ChosenCardFromAmong.faceUpPile = True
           }
       )
-      " {\"slot\":\"looked\",\"filter\":{\"type\":\"And\",\"value\":[]},\"count\":{\"type\":\"UpTo\"},\"pileChooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}},\"faceUpPile\":true} "
+      " {\"slot\":\"looked\",\"filter\":{\"type\":\"And\",\"value\":[]},\"count\":{\"type\":\"UpTo\"},\"pileChooser\":{\"type\":\"Relative\",\"value\":\"Opponent\"},\"faceUpPile\":true} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ChosenCardFromAmong.codec

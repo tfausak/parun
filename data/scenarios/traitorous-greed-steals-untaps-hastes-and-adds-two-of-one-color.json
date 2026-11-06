@@ -155,9 +155,7 @@
           "prompt": "ChooseManaType",
           "with": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       },

@@ -9,9 +9,7 @@
               "type": "Matching",
               "value": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Swamp"
-                }
+                "value": "Swamp"
               }
             }
           }
@@ -23,9 +21,7 @@
               "type": "Matching",
               "value": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Island"
-                }
+                "value": "Island"
               }
             }
           }
@@ -40,18 +36,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
       "name": "Synthetic Wetland Embargo",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

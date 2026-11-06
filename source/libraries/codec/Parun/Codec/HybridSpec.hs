@@ -16,5 +16,5 @@ spec s = Spec.describe s "Parun.Codec.Hybrid" $ do
       s
       Hybrid.codec
       (Hybrid.MkHybrid {Hybrid.left = ManaType.Colored Color.White, Hybrid.right = ManaType.Colored Color.Blue})
-      " {\"left\":{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}},\"right\":{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}} "
+      " {\"left\":{\"type\":\"Colored\",\"value\":\"White\"},\"right\":{\"type\":\"Colored\",\"value\":\"Blue\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Hybrid.codec

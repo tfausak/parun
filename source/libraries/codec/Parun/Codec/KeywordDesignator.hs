@@ -7,7 +7,7 @@ import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 
--- | Tagged, so `{"type":"OfFamily","value":{"type":"Cycling"}}` names CR 702.29a's
+-- | Tagged, so `{"type":"OfFamily","value":"Cycling"}` names CR 702.29a's
 -- family and `{"type":"OfKeyword","value":{"type":"Exhaust"}}` names CR 702.177a's
 -- keyword. The keyword codec is a PARAMETER; see Parun.Codec.Filter's header.
 codec :: (Typeable.Typeable keyword) => Codec.Codec keyword -> Codec.Codec (KeywordDesignator.KeywordDesignator keyword)

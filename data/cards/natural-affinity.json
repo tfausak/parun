@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -33,21 +31,15 @@
                       "modification": {
                         "type": "CardType",
                         "value": {
-                          "cardType": {
-                            "type": "Creature"
-                          },
-                          "mode": {
-                            "type": "InAddition"
-                          }
+                          "cardType": "Creature",
+                          "mode": "InAddition"
                         }
                       },
                       "ref": {
                         "type": "EachMatching",
                         "value": {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Land"
-                          }
+                          "value": "Land"
                         }
                       }
                     }
@@ -75,9 +67,7 @@
                         "type": "EachMatching",
                         "value": {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Land"
-                          }
+                          "value": "Land"
                         }
                       }
                     }
@@ -90,9 +80,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -73,9 +73,7 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Blue"
-                    }
+                    "value": "Blue"
                   }
                 }
               ]
@@ -90,9 +88,7 @@
                     "type": "Not",
                     "value": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     }
                   },
                   {
@@ -109,9 +105,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -134,22 +128,16 @@
       ],
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     },
     {
       "colorIndicator": [
-        {
-          "type": "Blue"
-        }
+        "Blue"
       ],
       "name": "Locus of Enlightenment",
       "oracleText": "Locus of Enlightenment has each activated ability of the exiled cards used to craft it. You may activate each of those abilities only once each turn.\nWhenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy.",
@@ -189,12 +177,8 @@
             "value": {
               "type": "HeldBy",
               "value": {
-                "holder": {
-                  "type": "Controller"
-                },
-                "relation": {
-                  "type": "You"
-                }
+                "holder": "Controller",
+                "relation": "You"
               }
             }
           },
@@ -226,14 +210,10 @@
       ],
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

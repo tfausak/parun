@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -47,13 +43,9 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
-                                  "zone": {
-                                    "type": "Hand"
-                                  }
+                                  "zone": "Hand"
                                 }
                               },
                               "discarded": "discarded"
@@ -72,9 +64,7 @@
                                       "type": "Total",
                                       "value": {
                                         "type": "Measure",
-                                        "value": {
-                                          "type": "ManaValue"
-                                        }
+                                        "value": "ManaValue"
                                       }
                                     },
                                     "filter": {
@@ -91,9 +81,7 @@
                                   "type": "EachMatching",
                                   "value": {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   }
                                 }
                               }
@@ -103,9 +91,7 @@
                       ],
                       "chooser": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -117,9 +103,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -26,9 +24,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Enchantment"
-                  }
+                  "value": "Enchantment"
                 },
                 {
                   "type": "Not",
@@ -39,12 +35,8 @@
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -53,18 +45,14 @@
           "modifications": [
             {
               "type": "AddSubtype",
-              "value": {
-                "type": "Saga"
-              }
+              "value": "Saga"
             }
           ]
         }
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

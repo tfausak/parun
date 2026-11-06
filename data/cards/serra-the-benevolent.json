@@ -44,19 +44,13 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 },
                                 {
@@ -103,9 +97,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  }
+                                  "White"
                                 ],
                                 "keywords": [
                                   {
@@ -126,14 +118,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Angel"
-                                    }
+                                    "Angel"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -183,9 +171,7 @@
                                     "condition": {
                                       "type": "Compares",
                                       "value": {
-                                        "comparison": {
-                                          "type": "AtLeast"
-                                        },
+                                        "comparison": "AtLeast",
                                         "measured": {
                                           "type": "Count",
                                           "value": {
@@ -197,19 +183,13 @@
                                               "value": [
                                                 {
                                                   "type": "HasCardType",
-                                                  "value": {
-                                                    "type": "Creature"
-                                                  }
+                                                  "value": "Creature"
                                                 },
                                                 {
                                                   "type": "HeldBy",
                                                   "value": {
-                                                    "holder": {
-                                                      "type": "Controller"
-                                                    },
-                                                    "relation": {
-                                                      "type": "You"
-                                                    }
+                                                    "holder": "Controller",
+                                                    "relation": "You"
                                                   }
                                                 }
                                               ]
@@ -219,13 +199,9 @@
                                               "value": {
                                                 "player": {
                                                   "type": "Relative",
-                                                  "value": {
-                                                    "type": "AnyPlayer"
-                                                  }
+                                                  "value": "AnyPlayer"
                                                 },
-                                                "zone": {
-                                                  "type": "Battlefield"
-                                                }
+                                                "zone": "Battlefield"
                                               }
                                             }
                                           }
@@ -240,9 +216,7 @@
                                       "type": "LifeLossR",
                                       "value": {
                                         "matching": {
-                                          "whichCause": {
-                                            "type": "ByDamage"
-                                          },
+                                          "whichCause": "ByDamage",
                                           "whose": {
                                             "type": "You"
                                           }
@@ -281,18 +255,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -300,19 +270,13 @@
       "oracleText": "[+2]: Creatures you control with flying get +1/+1 until end of turn.\n[−3]: Create a 4/4 white Angel creature token with flying and vigilance.\n[−6]: You get an emblem with \"If you control a creature, damage that would reduce your life total to less than 1 reduces it to 1 instead.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Serra"
-          }
+          "Serra"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

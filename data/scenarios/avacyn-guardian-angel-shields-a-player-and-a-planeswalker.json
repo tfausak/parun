@@ -201,9 +201,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseColor",
-          "with": {
-            "type": "Red"
-          }
+          "with": "Red"
         }
       }
     },
@@ -243,9 +241,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseColor",
-          "with": {
-            "type": "Green"
-          }
+          "with": "Green"
         }
       }
     },

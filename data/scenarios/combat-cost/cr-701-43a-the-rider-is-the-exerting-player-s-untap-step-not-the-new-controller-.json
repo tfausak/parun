@@ -145,9 +145,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseExert",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },
@@ -284,9 +282,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseExert",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -378,9 +374,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseExert",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

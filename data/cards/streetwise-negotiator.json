@@ -18,9 +18,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -41,9 +39,7 @@
           "modifications": [
             {
               "type": "AssignCombatDamage",
-              "value": {
-                "type": "EqualToToughness"
-              }
+              "value": "EqualToToughness"
             }
           ]
         }
@@ -54,17 +50,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          },
-          {
-            "type": "Citizen"
-          }
+          "Cat",
+          "Citizen"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

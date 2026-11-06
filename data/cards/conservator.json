@@ -56,9 +56,7 @@
       "oracleText": "{3}, {T}: Prevent the next 2 damage that would be dealt to you this turn.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -79,12 +79,8 @@
                                 {
                                   "type": "Measures",
                                   "value": {
-                                    "comparison": {
-                                      "type": "AtMost"
-                                    },
-                                    "measure": {
-                                      "type": "ManaValue"
-                                    },
+                                    "comparison": "AtMost",
+                                    "measure": "ManaValue",
                                     "operand": {
                                       "type": "AmountInSlot",
                                       "value": "X"
@@ -94,12 +90,8 @@
                                 {
                                   "type": "Measures",
                                   "value": {
-                                    "comparison": {
-                                      "type": "AtLeast"
-                                    },
-                                    "measure": {
-                                      "type": "ColorCount"
-                                    },
+                                    "comparison": "AtLeast",
+                                    "measure": "ColorCount",
                                     "operand": {
                                       "type": "Literal",
                                       "value": 1
@@ -109,9 +101,7 @@
                               ]
                             }
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -145,9 +135,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -160,9 +148,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -188,53 +174,37 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Artifact"
-                                    }
+                                    "value": "Artifact"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Battle"
-                                    }
+                                    "value": "Battle"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Enchantment"
-                                    }
+                                    "value": "Enchantment"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Land"
-                                    }
+                                    "value": "Land"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Planeswalker"
-                                    }
+                                    "value": "Planeswalker"
                                   }
                                 ]
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -259,19 +229,13 @@
       "oracleText": "[+2]: Ugin deals 3 damage to any target.\n[−X]: Exile each permanent with mana value X or less that's one or more colors.\n[−10]: You gain 7 life, draw seven cards, then put up to seven permanent cards from your hand onto the battlefield.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ugin"
-          }
+          "Ugin"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

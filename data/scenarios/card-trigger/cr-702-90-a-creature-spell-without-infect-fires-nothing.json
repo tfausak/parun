@@ -140,18 +140,14 @@
     {
       "PlayerCounters": {
         "player": "bob",
-        "kind": {
-          "type": "Poison"
-        },
+        "kind": "Poison",
         "count": 0
       }
     },
     {
       "PlayerCounters": {
         "player": "alice",
-        "kind": {
-          "type": "Poison"
-        },
+        "kind": "Poison",
         "count": 0
       }
     }

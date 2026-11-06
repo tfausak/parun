@@ -14,12 +14,8 @@
             "blockers": {
               "type": "Measures",
               "value": {
-                "comparison": {
-                  "type": "AtMost"
-                },
-                "measure": {
-                  "type": "Power"
-                },
+                "comparison": "AtMost",
+                "measure": "Power",
                 "operand": {
                   "type": "Literal",
                   "value": 2
@@ -34,9 +30,7 @@
           "type": "Affinity",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Gate"
-            }
+            "value": "Gate"
           }
         }
       ],
@@ -68,19 +62,13 @@
                   "value": [
                     {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Gate"
-                      }
+                      "value": "Gate"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -97,22 +85,16 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "origin": {
-                            "type": "Graveyard"
-                          },
+                          "origin": "Graveyard",
                           "placement": {
                             "type": "Stated",
-                            "value": {
-                              "type": "Top"
-                            }
+                            "value": "Top"
                           },
                           "ref": {
                             "type": "InSlot",
                             "value": "self"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ],
@@ -128,17 +110,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Construct"
-          }
+          "Construct"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

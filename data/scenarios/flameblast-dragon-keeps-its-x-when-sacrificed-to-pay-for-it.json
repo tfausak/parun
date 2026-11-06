@@ -20,7 +20,7 @@
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$dragon"] } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseTargets": { "target": ["$bob"] } }, "source": "$dragon" },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Answer": { "prompt": "ChooseNumber", "with": 2 } }, "source": "$dragon" },
-    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseToPay": { "decision": { "type": "Pays" }, "mana": ["$altar", "$m1"] } }, "source": "$dragon" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseToPay": { "decision": "Pays", "mana": ["$altar", "$m1"] } }, "source": "$dragon" },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Flameblast Dragon", "count": 1 } } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } },
     { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } }

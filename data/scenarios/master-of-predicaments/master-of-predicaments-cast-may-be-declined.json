@@ -104,9 +104,7 @@
       "do": {
         "Answer": {
           "prompt": "OfferedCast",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

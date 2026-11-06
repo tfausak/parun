@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -36,9 +34,7 @@
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       },
@@ -51,9 +47,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -71,48 +65,34 @@
                               "value": [
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Library"
-                                  }
+                                  "value": "Library"
                                 },
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Graveyard"
-                                  }
+                                  "value": "Graveyard"
                                 },
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Exile"
-                                  }
+                                  "value": "Exile"
                                 },
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Command"
-                                  }
+                                  "value": "Command"
                                 },
                                 {
                                   "type": "And",
                                   "value": [
                                     {
                                       "type": "WasCastFrom",
-                                      "value": {
-                                        "type": "Hand"
-                                      }
+                                      "value": "Hand"
                                     },
                                     {
                                       "type": "Not",
                                       "value": {
                                         "type": "HeldBy",
                                         "value": {
-                                          "holder": {
-                                            "type": "Owner"
-                                          },
-                                          "relation": {
-                                            "type": "You"
-                                          }
+                                          "holder": "Owner",
+                                          "relation": "You"
                                         }
                                       }
                                     }
@@ -127,13 +107,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Stack"
-                            }
+                            "zone": "Stack"
                           }
                         }
                       }
@@ -158,9 +134,7 @@
                           "slot": "looked"
                         }
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ]
@@ -169,9 +143,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -189,48 +161,34 @@
                               "value": [
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Library"
-                                  }
+                                  "value": "Library"
                                 },
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Graveyard"
-                                  }
+                                  "value": "Graveyard"
                                 },
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Exile"
-                                  }
+                                  "value": "Exile"
                                 },
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Command"
-                                  }
+                                  "value": "Command"
                                 },
                                 {
                                   "type": "And",
                                   "value": [
                                     {
                                       "type": "WasCastFrom",
-                                      "value": {
-                                        "type": "Hand"
-                                      }
+                                      "value": "Hand"
                                     },
                                     {
                                       "type": "Not",
                                       "value": {
                                         "type": "HeldBy",
                                         "value": {
-                                          "holder": {
-                                            "type": "Owner"
-                                          },
-                                          "relation": {
-                                            "type": "You"
-                                          }
+                                          "holder": "Owner",
+                                          "relation": "You"
                                         }
                                       }
                                     }
@@ -245,13 +203,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Stack"
-                            }
+                            "zone": "Stack"
                           }
                         }
                       }
@@ -270,9 +224,7 @@
                         "type": "InSlot",
                         "value": "looked"
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -281,9 +233,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -301,48 +251,34 @@
                               "value": [
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Library"
-                                  }
+                                  "value": "Library"
                                 },
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Graveyard"
-                                  }
+                                  "value": "Graveyard"
                                 },
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Exile"
-                                  }
+                                  "value": "Exile"
                                 },
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Command"
-                                  }
+                                  "value": "Command"
                                 },
                                 {
                                   "type": "And",
                                   "value": [
                                     {
                                       "type": "WasCastFrom",
-                                      "value": {
-                                        "type": "Hand"
-                                      }
+                                      "value": "Hand"
                                     },
                                     {
                                       "type": "Not",
                                       "value": {
                                         "type": "HeldBy",
                                         "value": {
-                                          "holder": {
-                                            "type": "Owner"
-                                          },
-                                          "relation": {
-                                            "type": "You"
-                                          }
+                                          "holder": "Owner",
+                                          "relation": "You"
                                         }
                                       }
                                     }
@@ -357,13 +293,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Stack"
-                            }
+                            "zone": "Stack"
                           }
                         }
                       }
@@ -382,9 +314,7 @@
                         "type": "InSlot",
                         "value": "looked"
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ]
@@ -395,9 +325,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

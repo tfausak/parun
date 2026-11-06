@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -63,9 +59,7 @@
                           "value": [
                             {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Aura"
-                              }
+                              "value": "Aura"
                             },
                             {
                               "type": "IsAttachedTo",
@@ -80,13 +74,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Battlefield"
-                            }
+                            "zone": "Battlefield"
                           }
                         }
                       }
@@ -108,9 +98,7 @@
                           "value": [
                             {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Aura"
-                              }
+                              "value": "Aura"
                             },
                             {
                               "type": "IsAttachedTo",
@@ -125,13 +113,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Battlefield"
-                            }
+                            "zone": "Battlefield"
                           }
                         }
                       }
@@ -149,14 +133,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Wombat"
-          }
+          "Wombat"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

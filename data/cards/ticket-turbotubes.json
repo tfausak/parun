@@ -55,14 +55,10 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Ticket"
-                          },
+                          "kind": "Ticket",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -88,9 +84,7 @@
       "oracleText": "{T}: Add one mana of any color.\n{3}, {T}: You get {TK} (a ticket counter).",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

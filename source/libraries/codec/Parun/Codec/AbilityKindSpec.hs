@@ -12,14 +12,14 @@ spec s = Spec.describe s "Parun.Codec.AbilityKind" $ do
       s
       AbilityKind.codec
       AbilityKind.ManaAbility
-      " {\"type\":\"ManaAbility\"} "
+      " \"ManaAbility\" "
 
   Spec.it s "NonManaAbility" $
     Common.assertCodec
       s
       AbilityKind.codec
       AbilityKind.NonManaAbility
-      " {\"type\":\"NonManaAbility\"} "
+      " \"NonManaAbility\" "
 
   -- Exhaustive where the two above are literal, Parun.Codec.KeywordFamilySpec's
   -- posture: Arm.enum derives its arms from the type.

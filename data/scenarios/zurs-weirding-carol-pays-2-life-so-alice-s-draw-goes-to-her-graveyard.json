@@ -18,8 +18,8 @@
   },
   "timeline": [
     { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "View": { "of": "Seers", "object": "$held", "is": ["alice", "bob", "carol"] } } },
-    { "turn": 2, "step": "DrawStep", "player": "bob", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } }, "source": "Zur's Weirding" },
-    { "turn": 2, "step": "DrawStep", "player": "carol", "do": { "ChooseToPay": { "decision": { "type": "Pays" } } }, "source": "Zur's Weirding" },
+    { "turn": 2, "step": "DrawStep", "player": "bob", "do": { "ChooseToPay": { "decision": "Declines" } }, "source": "Zur's Weirding" },
+    { "turn": 2, "step": "DrawStep", "player": "carol", "do": { "ChooseToPay": { "decision": "Pays" } }, "source": "Zur's Weirding" },
     { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } },
     { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 0 } } },
     { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Life": { "player": "carol", "life": 17 } } },

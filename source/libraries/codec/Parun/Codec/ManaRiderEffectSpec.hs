@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.ManaRiderEffect" $ do
       s
       ManaRiderEffect.codec
       ManaRiderEffect.CantBeCountered
-      " {\"type\":\"CantBeCountered\"} "
+      " \"CantBeCountered\" "
   Spec.it s "GainsHasteUntilEndOfTurn" $
     Common.assertCodec
       s
       ManaRiderEffect.codec
       ManaRiderEffect.GainsHasteUntilEndOfTurn
-      " {\"type\":\"GainsHasteUntilEndOfTurn\"} "
+      " \"GainsHasteUntilEndOfTurn\" "
   -- Arm.enum derives the arm list from the type, so this is what catches a
   -- payload that encoded like another.
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s ManaRiderEffect.codec

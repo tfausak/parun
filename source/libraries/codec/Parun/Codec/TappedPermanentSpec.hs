@@ -12,5 +12,5 @@ spec s = Spec.describe s "Parun.Codec.TappedPermanent" $ do
   Spec.it s "Attached" $
     Common.assertCodec s TappedPermanent.codec TappedPermanent.Attached " {\"type\":\"Attached\"} "
   Spec.it s "Matching" $
-    Common.assertCodec s TappedPermanent.codec (TappedPermanent.Matching (Filter.HasCardType CardType.Land)) " {\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}} "
+    Common.assertCodec s TappedPermanent.codec (TappedPermanent.Matching (Filter.HasCardType CardType.Land)) " {\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s TappedPermanent.codec

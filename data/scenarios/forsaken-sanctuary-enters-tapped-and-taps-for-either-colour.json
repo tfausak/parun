@@ -92,14 +92,10 @@
               {
                 "manaType": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 },
                 "restriction": null,
-                "retention": {
-                  "type": "Ordinary"
-                },
+                "retention": "Ordinary",
                 "rider": null,
                 "sourceChoices": null,
                 "tags": []
@@ -130,14 +126,10 @@
               {
                 "manaType": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 },
                 "restriction": null,
-                "retention": {
-                  "type": "Ordinary"
-                },
+                "retention": "Ordinary",
                 "rider": null,
                 "sourceChoices": null,
                 "tags": []

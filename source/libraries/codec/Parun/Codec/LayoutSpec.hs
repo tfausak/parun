@@ -94,7 +94,7 @@ spec s = Spec.describe s "Parun.Codec.Layout" $ do
   Spec.it s "a layout that has not landed is rejected" $
     Spec.assertBool
       s
-      (Either.isLeft (Common.parse (Text.pack " {\"type\":\"Planar\"} ") >>= Codec.decode Layout.codec))
+      (Either.isLeft (Common.parse (Text.pack " \"Planar\" ") >>= Codec.decode Layout.codec))
       "expected an unknown layout tag to fail to decode"
   Spec.it s "has a schema" $
     Common.assertHasSchema s Layout.codec

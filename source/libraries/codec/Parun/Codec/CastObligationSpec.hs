@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.CastObligation" $ do
       s
       CastObligation.codec
       CastObligation.Mandatory
-      " {\"type\":\"Mandatory\"} "
+      " \"Mandatory\" "
   Spec.it s "Optional" $
     Common.assertCodec
       s
       CastObligation.codec
       CastObligation.Optional
-      " {\"type\":\"Optional\"} "
+      " \"Optional\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives the
   -- arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

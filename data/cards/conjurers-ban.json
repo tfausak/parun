@@ -6,18 +6,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -34,9 +30,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "restriction": {
                         "type": "And",
@@ -58,9 +52,7 @@
                         "type": "CantCastMatching",
                         "value": {
                           "type": "HasChosenName",
-                          "value": {
-                            "type": "AnyChooser"
-                          }
+                          "value": "AnyChooser"
                         }
                       },
                       "players": {
@@ -81,9 +73,7 @@
                         "type": "CantPlayLands",
                         "value": {
                           "type": "HasChosenName",
-                          "value": {
-                            "type": "AnyChooser"
-                          }
+                          "value": "AnyChooser"
                         }
                       },
                       "players": {
@@ -103,9 +93,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -121,9 +109,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

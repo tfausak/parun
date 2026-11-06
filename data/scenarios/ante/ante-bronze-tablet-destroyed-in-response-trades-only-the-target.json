@@ -54,7 +54,7 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "bob",
-      "do": { "ChooseToPay": { "decision": { "type": "Declines" } } }
+      "do": { "ChooseToPay": { "decision": "Declines" } }
     }
   ],
   "final": [

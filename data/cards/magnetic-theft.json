@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -39,9 +37,7 @@
               "equipment": {
                 "filter": {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Equipment"
-                  }
+                  "value": "Equipment"
                 },
                 "pool": {
                   "type": "Permanents"
@@ -53,9 +49,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

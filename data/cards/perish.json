@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -34,22 +32,16 @@
                           "value": [
                             {
                               "type": "HasColor",
-                              "value": {
-                                "type": "Green"
-                              }
+                              "value": "Green"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             }
                           ]
                         }
                       },
-                      "regenerability": {
-                        "type": "CantBeRegenerated"
-                      }
+                      "regenerability": "CantBeRegenerated"
                     }
                   }
                 ]
@@ -60,9 +52,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

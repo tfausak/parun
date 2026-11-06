@@ -17,13 +17,9 @@
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Hand"
-                }
+                "zone": "Hand"
               }
             }
           }
@@ -43,13 +39,9 @@
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Hand"
-                }
+                "zone": "Hand"
               }
             }
           }
@@ -72,9 +64,7 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Blue"
-                    }
+                    "value": "Blue"
                   }
                 }
               ]
@@ -95,18 +85,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -123,9 +109,7 @@
           "condition": {
             "type": "CountersChange",
             "value": {
-              "grouping": {
-                "type": "EachCounter"
-              },
+              "grouping": "EachCounter",
               "kind": {
                 "type": "Time"
               },
@@ -135,9 +119,7 @@
             }
           },
           "functionsFrom": [
-            {
-              "type": "Exile"
-            }
+            "Exile"
           ],
           "modal": {
             "modes": [
@@ -150,9 +132,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -170,14 +150,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Avatar"
-          }
+          "Avatar"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

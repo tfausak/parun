@@ -89,9 +89,7 @@
       "check": {
         "PlayerCounters": {
           "player": "bob",
-          "kind": {
-            "type": "Poison"
-          },
+          "kind": "Poison",
           "count": 1
         }
       }
@@ -103,9 +101,7 @@
       "check": {
         "PlayerCounters": {
           "player": "alice",
-          "kind": {
-            "type": "Poison"
-          },
+          "kind": "Poison",
           "count": 0
         }
       }

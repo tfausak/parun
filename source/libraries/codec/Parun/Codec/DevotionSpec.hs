@@ -22,5 +22,5 @@ spec s = Spec.describe s "Parun.Codec.Devotion" $ do
             Devotion.colors = Set.fromList [Color.White, Color.Black]
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"colors\":[{\"type\":\"White\"},{\"type\":\"Black\"}]} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"colors\":[\"White\",\"Black\"]} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Devotion.codec

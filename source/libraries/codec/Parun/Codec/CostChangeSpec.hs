@@ -31,7 +31,7 @@ spec s = Spec.describe s "Parun.Codec.CostChange" $ do
       s
       CostChange.codec
       (CostChange.Type.Increase (ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Black)]))
-      " {\"type\":\"Increase\",\"value\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Black\"}}}]} "
+      " {\"type\":\"Increase\",\"value\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Black\"}}]} "
   -- The rules' defaults, no floor and CR 118.7b-d's spill, write no key.
   Spec.it s "Reduce, Sapphire Medallion's" $
     Common.assertCodec
@@ -44,7 +44,7 @@ spec s = Spec.describe s "Parun.Codec.CostChange" $ do
       s
       CostChange.codec
       (CostChange.Type.Reduce (AppliedReduction.MkAppliedReduction (ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.White)]) 0 True))
-      " {\"type\":\"Reduce\",\"value\":{\"amount\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}}}],\"coloredOnly\":true}} "
+      " {\"type\":\"Reduce\",\"value\":{\"amount\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"White\"}}],\"coloredOnly\":true}} "
   Spec.it s "Reduce, Heartstone's floor" $
     Common.assertCodec
       s
@@ -57,11 +57,11 @@ spec s = Spec.describe s "Parun.Codec.CostChange" $ do
       s
       CostChange.codec
       (CostChange.Type.Add (CostAddition.MkCostAddition [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.HasCardType CardType.Land))] CostScale.Once))
-      " {\"type\":\"Add\",\"value\":{\"components\":[{\"type\":\"Sacrifice\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}}]}} "
+      " {\"type\":\"Add\",\"value\":{\"components\":[{\"type\":\"Sacrifice\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}}]}} "
   Spec.it s "Add, Drought's scale" $
     Common.assertCodec
       s
       CostChange.codec
       (CostChange.Type.Add (CostAddition.MkCostAddition [] (CostScale.PerColoredSymbol Color.Black)))
-      " {\"type\":\"Add\",\"value\":{\"components\":[],\"scale\":{\"type\":\"PerColoredSymbol\",\"value\":{\"type\":\"Black\"}}}} "
+      " {\"type\":\"Add\",\"value\":{\"components\":[],\"scale\":{\"type\":\"PerColoredSymbol\",\"value\":\"Black\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CostChange.codec

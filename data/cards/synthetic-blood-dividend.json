@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -23,9 +21,7 @@
             "type": "LifeLossR",
             "value": {
               "matching": {
-                "whichCause": {
-                  "type": "ByPayment"
-                },
+                "whichCause": "ByPayment",
                 "whose": {
                   "type": "You"
                 }
@@ -39,9 +35,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

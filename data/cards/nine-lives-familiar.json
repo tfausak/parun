@@ -8,17 +8,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -32,9 +28,7 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "origin": {
-                            "type": "Graveyard"
-                          },
+                          "origin": "Graveyard",
                           "ref": {
                             "type": "InSlot",
                             "value": "became"
@@ -74,9 +68,7 @@
                               }
                             ]
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -96,18 +88,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -133,33 +121,23 @@
                     "value": [
                       {
                         "type": "WasCastFrom",
-                        "value": {
-                          "type": "Hand"
-                        }
+                        "value": "Hand"
                       },
                       {
                         "type": "WasCastFrom",
-                        "value": {
-                          "type": "Library"
-                        }
+                        "value": "Library"
                       },
                       {
                         "type": "WasCastFrom",
-                        "value": {
-                          "type": "Graveyard"
-                        }
+                        "value": "Graveyard"
                       },
                       {
                         "type": "WasCastFrom",
-                        "value": {
-                          "type": "Exile"
-                        }
+                        "value": "Exile"
                       },
                       {
                         "type": "WasCastFrom",
-                        "value": {
-                          "type": "Command"
-                        }
+                        "value": "Command"
                       }
                     ]
                   }
@@ -195,9 +173,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ],
               "permanent": {
@@ -242,14 +218,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          }
+          "Cat"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

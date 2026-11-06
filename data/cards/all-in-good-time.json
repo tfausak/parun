@@ -19,9 +19,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "skips": []
                         }
@@ -53,9 +51,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Scheme"
-          }
+          "Scheme"
         ]
       }
     }

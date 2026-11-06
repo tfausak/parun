@@ -17,9 +17,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -31,9 +29,7 @@
             "type": "DamageR",
             "value": {
               "matching": {
-                "whoRecipient": {
-                  "type": "You"
-                }
+                "whoRecipient": "You"
               },
               "rewrite": {
                 "type": "RedirectMatching",
@@ -47,14 +43,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

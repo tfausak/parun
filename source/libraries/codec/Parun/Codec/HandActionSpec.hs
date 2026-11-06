@@ -52,7 +52,7 @@ spec s = Spec.describe s "Parun.Codec.HandAction" $ do
           (Just (Condition.Compares (Compares.MkCompares (Quantity.IsStartingPlayer (PlayerRef.Relative PlayerRelation.You)) Comparison.Exactly (Quantity.Literal 0))))
           []
       )
-      " {\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"IsStartingPlayer\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"comparison\":{\"type\":\"Exactly\"},\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
+      " {\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"IsStartingPlayer\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}},\"comparison\":\"Exactly\",\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
   Spec.it s "both keys default away" $ do
     v <- Common.assertJson s " {} "
     Spec.assertEq s (fromJson v) (Right (HandAction.MkHandAction Nothing []))

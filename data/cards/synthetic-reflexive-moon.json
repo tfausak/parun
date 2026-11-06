@@ -11,17 +11,13 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 {
                   "type": "Not",
                   "value": {
                     "type": "HasSupertype",
-                    "value": {
-                      "type": "Basic"
-                    }
+                    "value": "Basic"
                   }
                 }
               ]
@@ -31,12 +27,8 @@
             {
               "type": "LandSubtype",
               "value": {
-                "mode": {
-                  "type": "Replace"
-                },
-                "subtype": {
-                  "type": "Mountain"
-                }
+                "mode": "Replace",
+                "subtype": "Mountain"
               }
             }
           ]
@@ -46,21 +38,15 @@
             "type": "Matching",
             "value": {
               "type": "HasCardType",
-              "value": {
-                "type": "Creature"
-              }
+              "value": "Creature"
             }
           },
           "modifications": [
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Artifact"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Artifact",
+                "mode": "InAddition"
               }
             }
           ]
@@ -68,9 +54,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

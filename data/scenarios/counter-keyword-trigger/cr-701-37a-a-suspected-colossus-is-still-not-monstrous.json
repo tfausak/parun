@@ -152,9 +152,7 @@
           "of": "Designations",
           "object": "$colossus",
           "is": [
-            {
-              "type": "Suspected"
-            }
+            "Suspected"
           ]
         }
       }
@@ -237,12 +235,8 @@
           "of": "Designations",
           "object": "$colossus",
           "is": [
-            {
-              "type": "Monstrous"
-            },
-            {
-              "type": "Suspected"
-            }
+            "Monstrous",
+            "Suspected"
           ]
         }
       }

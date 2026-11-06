@@ -18,19 +18,13 @@
                     "value": [
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Swamp"
-                        }
+                        "value": "Swamp"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "Opponent"
-                          }
+                          "holder": "Controller",
+                          "relation": "Opponent"
                         }
                       }
                     ]
@@ -40,13 +34,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -54,17 +44,13 @@
             },
             "filter": {
               "type": "IsPlayer",
-              "value": {
-                "type": "You"
-              }
+              "value": "You"
             },
             "scope": {
               "type": "OverPlayers",
               "value": {
                 "type": "InRole",
-                "value": {
-                  "type": "Active"
-                }
+                "value": "Active"
               }
             }
           }
@@ -85,19 +71,13 @@
                     "value": [
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Swamp"
-                        }
+                        "value": "Swamp"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "Opponent"
-                          }
+                          "holder": "Controller",
+                          "relation": "Opponent"
                         }
                       }
                     ]
@@ -107,13 +87,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -121,17 +97,13 @@
             },
             "filter": {
               "type": "IsPlayer",
-              "value": {
-                "type": "You"
-              }
+              "value": "You"
             },
             "scope": {
               "type": "OverPlayers",
               "value": {
                 "type": "InRole",
-                "value": {
-                  "type": "Active"
-                }
+                "value": "Active"
               }
             }
           }
@@ -151,18 +123,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -194,14 +162,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          }
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

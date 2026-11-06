@@ -19,17 +19,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Thopter"
-          }
+          "Thopter"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

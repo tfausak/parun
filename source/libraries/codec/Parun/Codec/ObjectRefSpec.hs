@@ -55,7 +55,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- A two-payload arm, so its value is a payload record keyed by the field
   -- names (#1464) rather than the positional array it once was.
   Spec.it s "EachCardInGraveyard" $
@@ -63,7 +63,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.EachCardInGraveyard (EachCardInGraveyard.MkEachCardInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer)) (Filter.HasCardType CardType.Creature)))
-      " {\"type\":\"EachCardInGraveyard\",\"value\":{\"graveyards\":{\"type\":\"Scoped\",\"value\":{\"type\":\"AnyPlayer\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"EachCardInGraveyard\",\"value\":{\"graveyards\":{\"type\":\"Scoped\",\"value\":{\"type\":\"AnyPlayer\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- The record codec rejects an ARRAY of any length, which is what keeps the
   -- old positional wire format from decoding silently. Both lengths are asserted
   -- rather than one: a decoder that had kept a tuple fallback would reject the
@@ -76,7 +76,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
   Spec.it s "EachCardInGraveyard rejects a too-long payload" $
     Spec.assertBool
       s
-      (Either.isLeft (Common.parse (Text.pack " {\"type\":\"EachCardInGraveyard\",\"value\":[{\"type\":\"EachPlayer\"},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"EachPlayer\"}]} ") >>= Codec.decode ObjectRef.codec))
+      (Either.isLeft (Common.parse (Text.pack " {\"type\":\"EachCardInGraveyard\",\"value\":[{\"type\":\"EachPlayer\"},{\"type\":\"HasCardType\",\"value\":\"Creature\"},{\"type\":\"EachPlayer\"}]} ") >>= Codec.decode ObjectRef.codec))
       "expected a decode failure"
   -- CR 109.2b: the word "spell" switches CR 109.2's battlefield default to the
   -- stack. Swift Silence's "all other spells" is the filter, and "other" is the
@@ -94,7 +94,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.EachAbility (Filter.HeldBy Holder.Controller PlayerRelation.Opponent))
-      " {\"type\":\"EachAbility\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}}} "
+      " {\"type\":\"EachAbility\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"Opponent\"}}} "
   -- CR 405.1: the same zone with no kind test, so both arms above are in. Glen
   -- Elendra's Answer's "all spells your opponents control and all abilities your
   -- opponents control" is the filter.
@@ -103,7 +103,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.EachOnStack (Filter.HeldBy Holder.Controller PlayerRelation.Opponent))
-      " {\"type\":\"EachOnStack\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}}} "
+      " {\"type\":\"EachOnStack\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"Opponent\"}}} "
   -- "each opponent" is a relation the resolution's CR 109.5 "you" answers, so
   -- the PlayerRef carries no seat (Soul Immolation).
   Spec.it s "Players each opponent" $
@@ -111,7 +111,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.Players PlayersWho.MkPlayersWho {PlayersWho.players = PlayerRef.Relative PlayerRelation.Opponent, PlayersWho.who = Nothing})
-      " {\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
+      " {\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":\"Opponent\"}}} "
   -- A seat named through an object a slot holds: Deflecting Palm's "that
   -- source's controller".
   Spec.it s "Players" $
@@ -119,7 +119,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.Players PlayersWho.MkPlayersWho {PlayersWho.players = PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "thatDamageSource")), PlayersWho.who = Nothing})
-      " {\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"thatDamageSource\"}}}} "
+      " {\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"thatDamageSource\"}}}} "
   -- Nullary for a rule rather than an economy: CR
   -- 400.2 makes a hand hidden, so this arm names only the resolving
   -- controller's own and carries neither a player nor a filter.
@@ -137,7 +137,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.EachCardInHand (EachCardInHand.MkEachCardInHand (ZoneScope.InSlot (SlotName.MkSlotName (Text.pack "target"))) (Just (Filter.Not (Filter.HasCardType CardType.Land)))))
-      " {\"type\":\"EachCardInHand\",\"value\":{\"hands\":{\"type\":\"InSlot\",\"value\":\"target\"},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}}} "
+      " {\"type\":\"EachCardInHand\",\"value\":{\"hands\":{\"type\":\"InSlot\",\"value\":\"target\"},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}}} "
   -- An absent filter is the whole hand, which is Amnesia's reveal: the key is
   -- omitted rather than written null, so the shorter spelling is the unfiltered
   -- one.
@@ -164,7 +164,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.EachCardInYourLibrary (Just (Filter.HasSubtype Subtype.Mountain)))
-      " {\"type\":\"EachCardInYourLibrary\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Mountain\"}}} "
+      " {\"type\":\"EachCardInYourLibrary\",\"value\":{\"type\":\"HasSubtype\",\"value\":\"Mountain\"}} "
   -- Static Discharge's "cards you own named Static Discharge": the owner is CR
   -- 109.5's "you", so the Filter is the whole payload.
   Spec.it s "EachCardYouOwn" $
@@ -172,7 +172,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.EachCardYouOwn (Filter.HasSubtype Subtype.Mountain))
-      " {\"type\":\"EachCardYouOwn\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Mountain\"}}} "
+      " {\"type\":\"EachCardYouOwn\",\"value\":{\"type\":\"HasSubtype\",\"value\":\"Mountain\"}} "
   -- No player, for a rule: CR 607.2a's set is defined by which object exiled the
   -- card. The record carries the pile and the filter (Parun.Codec.EachCardInExiledPileSpec).
   Spec.it s "EachCardInExiledPile" $
@@ -194,7 +194,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 3)))
-      " {\"type\":\"TopOfLibrary\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"count\":{\"type\":\"Literal\",\"value\":3}}} "
+      " {\"type\":\"TopOfLibrary\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"count\":{\"type\":\"Literal\",\"value\":3}}} "
   -- Commune with Lava's "the top X cards of your library": the same arm with a
   -- computed depth, which is what a bare number could never say.
   Spec.it s "TopOfLibrary carries the computed depth Commune with Lava needs" $
@@ -202,7 +202,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.Relative PlayerRelation.You) (Quantity.InSlot (SlotName.MkSlotName (Text.pack "X")))))
-      " {\"type\":\"TopOfLibrary\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"count\":{\"type\":\"InSlot\",\"value\":\"X\"}}} "
+      " {\"type\":\"TopOfLibrary\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"count\":{\"type\":\"InSlot\",\"value\":\"X\"}}} "
   -- The walk-terminated sibling: the arm above's keys plus a Filter, which is
   -- the whole difference between them on the wire too -- the shared @count@
   -- counting matches here where it counts cards there.
@@ -211,7 +211,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil (PlayerRef.Relative PlayerRelation.You) (Filter.Not (Filter.HasCardType CardType.Land)) (Quantity.Literal 1)))
-      " {\"type\":\"TopOfLibraryUntil\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}},\"count\":{\"type\":\"Literal\",\"value\":1}}} "
+      " {\"type\":\"TopOfLibraryUntil\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}},\"count\":{\"type\":\"Literal\",\"value\":1}}} "
   -- The graveyard twin, and the pair that keeps the two ends apart on the wire:
   -- this one is a bare PlayerRef where TopOfLibrary above is a record, so a card
   -- cannot write a depth against a pile that has no positions but its top.
@@ -250,13 +250,13 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard Chooser.TheController (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) (Filter.HasCardType CardType.Creature) HowMany.one))
-      " {\"type\":\"ChosenCardInGraveyard\",\"value\":{\"chooser\":{\"type\":\"TheController\"},\"players\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"ChosenCardInGraveyard\",\"value\":{\"chooser\":{\"type\":\"TheController\"},\"players\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   Spec.it s "ChosenCardInGraveyard carries the chooser Exhume needs" $
     Common.assertCodec
       s
       ObjectRef.codec
       (ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard Chooser.EachInScope (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer)) (Filter.HasCardType CardType.Creature) HowMany.one))
-      " {\"type\":\"ChosenCardInGraveyard\",\"value\":{\"chooser\":{\"type\":\"EachInScope\"},\"players\":{\"type\":\"Scoped\",\"value\":{\"type\":\"AnyPlayer\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"ChosenCardInGraveyard\",\"value\":{\"chooser\":{\"type\":\"EachInScope\"},\"players\":{\"type\":\"Scoped\",\"value\":{\"type\":\"AnyPlayer\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   Spec.it s "ChosenCardInGraveyard carries the slot-named chooser Skullwinder needs" $
     Common.assertCodec
       s
@@ -266,14 +266,14 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
   Spec.it s "ChosenCardInGraveyard rejects a bare filter with no chooser or scope" $
     Spec.assertBool
       s
-      (Either.isLeft (Common.parse (Text.pack " {\"type\":\"ChosenCardInGraveyard\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} ") >>= Codec.decode ObjectRef.codec))
+      (Either.isLeft (Common.parse (Text.pack " {\"type\":\"ChosenCardInGraveyard\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} ") >>= Codec.decode ObjectRef.codec))
       "expected a decode failure"
   -- The chooser is REQUIRED rather than defaulted, so a card written before it
   -- existed is a decode failure rather than a silent controller choice.
   Spec.it s "ChosenCardInGraveyard rejects the two-element payload that preceded the chooser" $
     Spec.assertBool
       s
-      (Either.isLeft (Common.parse (Text.pack " {\"type\":\"ChosenCardInGraveyard\",\"value\":[{\"type\":\"You\"},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}]} ") >>= Codec.decode ObjectRef.codec))
+      (Either.isLeft (Common.parse (Text.pack " {\"type\":\"ChosenCardInGraveyard\",\"value\":[{\"type\":\"You\"},{\"type\":\"HasCardType\",\"value\":\"Creature\"}]} ") >>= Codec.decode ObjectRef.codec))
       "expected a decode failure"
   -- Karn Liberated's "+4: target player exiles a card from their hand". One
   -- PlayerRef, since CR 402.3 makes the chooser and the hand's owner the same
@@ -293,7 +293,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.HasCardType CardType.Creature) HowMany.one))
-      " {\"type\":\"ChosenCardInHand\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"ChosenCardInHand\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- The filter is REQUIRED rather than defaulted, so a card written before it
   -- existed is a decode failure rather than a silently unnarrowed choice.
   Spec.it s "ChosenCardInHand rejects the bare player reference that preceded the filter" $
@@ -309,7 +309,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Creature) HowMany.one (PlayerRef.Relative PlayerRelation.You) Nothing False))
-      " {\"type\":\"ChosenCardFromAmong\",\"value\":{\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"ChosenCardFromAmong\",\"value\":{\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- The bare slot name an InSlot takes is not a whole payload here: dropping the
   -- filter would make the two arms tell one story on the wire.
   -- The plural sibling: the same two keys, a different tag.
@@ -318,7 +318,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Land)))
-      " {\"type\":\"EachCardFromAmong\",\"value\":{\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}} "
+      " {\"type\":\"EachCardFromAmong\",\"value\":{\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}} "
   Spec.it s "ChosenCardFromAmong rejects a bare slot name" $
     Spec.assertBool
       s
@@ -332,7 +332,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Hand (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))) (Filter.And []) (Quantity.Literal 1)))
-      " {\"type\":\"RandomCard\",\"value\":{\"zone\":{\"type\":\"Hand\"},\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"}}} "
+      " {\"type\":\"RandomCard\",\"value\":{\"zone\":\"Hand\",\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"}}} "
   -- Both narrowings at once: Fall's count beside Lumbering Lightshield's filter,
   -- which is the pair no single printing writes.
   Spec.it s "RandomCard narrowed and counted" $
@@ -340,7 +340,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Hand (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))) (Filter.Not (Filter.HasCardType CardType.Land)) (Quantity.Literal 2)))
-      " {\"type\":\"RandomCard\",\"value\":{\"zone\":{\"type\":\"Hand\"},\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}},\"count\":{\"type\":\"Literal\",\"value\":2}}} "
+      " {\"type\":\"RandomCard\",\"value\":{\"zone\":\"Hand\",\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}},\"count\":{\"type\":\"Literal\",\"value\":2}}} "
   -- Ghoulraiser's "return a Zombie card at random from your graveyard to your
   -- hand": the filter narrows and the defaulted count writes no key.
   Spec.it s "RandomCardInGraveyard" $
@@ -348,7 +348,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) (Filter.HasSubtype Subtype.Zombie) (Quantity.Literal 1)))
-      " {\"type\":\"RandomCardInGraveyard\",\"value\":{\"players\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Zombie\"}}}} "
+      " {\"type\":\"RandomCardInGraveyard\",\"value\":{\"players\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasSubtype\",\"value\":\"Zombie\"}}} "
   -- Make a Wish's "two cards at random from your graveyard": the count narrows
   -- and the defaulted filter writes no key, the arm above's other half.
   Spec.it s "RandomCardInGraveyard counted" $
@@ -364,7 +364,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Library (PlayerRef.Relative PlayerRelation.You) (Filter.Not (Filter.HasCardType CardType.Land)) (Quantity.Literal 1)))
-      " {\"type\":\"RandomCard\",\"value\":{\"zone\":{\"type\":\"Library\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}}} "
+      " {\"type\":\"RandomCard\",\"value\":{\"zone\":\"Library\",\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}}} "
   -- The bare PlayerRef this arm used to take is not a whole payload any more,
   -- ChosenCardFromAmong's slot-name case above and for its reason.
   Spec.it s "RandomCard rejects a bare player reference" $
@@ -386,39 +386,39 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       s
       ObjectRef.codec
       (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) HowMany.one Zone.Battlefield))
-      " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   Spec.it s "ChosenPermanents carries a chooser other than the resolving controller" $
     Common.assertCodec
       s
       ObjectRef.codec
       (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "opponent"))) HowMany.one Zone.Battlefield))
-      " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"chooser\":{\"type\":\"InSlot\",\"value\":\"opponent\"}}} "
+      " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"chooser\":{\"type\":\"InSlot\",\"value\":\"opponent\"}}} "
   Spec.it s "ChosenPermanents takes any number" $
     Common.assertCodec
       s
       ObjectRef.codec
       (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo Nothing) Zone.Battlefield))
-      " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"count\":{\"type\":\"UpTo\"}}} "
+      " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"count\":{\"type\":\"UpTo\"}}} "
   -- An exact count other than one, the arm the singular default leaves off.
   Spec.it s "ChosenPermanents takes an exact count" $
     Common.assertCodec
       s
       ObjectRef.codec
       (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Land) (PlayerRef.Relative PlayerRelation.You) (HowMany.Exactly (Quantity.Literal 2)) Zone.Battlefield))
-      " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"count\":{\"type\":\"Exactly\",\"value\":{\"type\":\"Literal\",\"value\":2}}}} "
+      " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"count\":{\"type\":\"Exactly\",\"value\":{\"type\":\"Literal\",\"value\":2}}}} "
   Spec.it s "ChosenPermanents takes up to a ceiling" $
     Common.assertCodec
       s
       ObjectRef.codec
       (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Land) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo (Just (Quantity.Literal 2))) Zone.Battlefield))
-      " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}}}} "
+      " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}}}} "
   -- CR 303.4b / 608.2h: a slot and a Filter under their own tag.
   Spec.it s "AttachedToBound" $
     Common.assertCodec
       s
       ObjectRef.codec
       (ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound (SlotName.MkSlotName (Text.pack "target")) (Filter.HasSubtype Subtype.Equipment)))
-      " {\"type\":\"AttachedToBound\",\"value\":{\"slot\":\"target\",\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Equipment\"}}}} "
+      " {\"type\":\"AttachedToBound\",\"value\":{\"slot\":\"target\",\"filter\":{\"type\":\"HasSubtype\",\"value\":\"Equipment\"}}} "
   -- CR 508.1b: the attacker's slot, a bare string.
   Spec.it s "AttackedBy" $
     Common.assertCodec s ObjectRef.codec (ObjectRef.AttackedBy (SlotName.MkSlotName (Text.pack "self"))) " {\"type\":\"AttackedBy\",\"value\":\"self\"} "

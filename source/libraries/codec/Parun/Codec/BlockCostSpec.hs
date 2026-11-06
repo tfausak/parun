@@ -56,7 +56,7 @@ spec s = Spec.describe s "Parun.Codec.BlockCost" $ do
           (Just (Filter.Measures (Measures.MkMeasures Measure.Power Comparison.AtLeast (Operand.Literal 3))))
           Nothing
       )
-      " {\"attackers\":{\"type\":\"Measures\",\"value\":{\"measure\":{\"type\":\"Power\"},\"comparison\":{\"type\":\"AtLeast\"},\"operand\":{\"type\":\"Literal\",\"value\":3}}},\"perBlocker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]}},\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}}} "
+      " {\"attackers\":{\"type\":\"Measures\",\"value\":{\"measure\":\"Power\",\"comparison\":\"AtLeast\",\"operand\":{\"type\":\"Literal\",\"value\":3}}},\"perBlocker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]}},\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}}} "
   -- Archangel of Tithes: CR 611.3a's "as long as this creature is attacking".
   Spec.it s "MkBlockCost with a while" $
     Common.assertCodec
@@ -82,5 +82,5 @@ spec s = Spec.describe s "Parun.Codec.BlockCost" $ do
               )
           )
       )
-      " {\"perBlocker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]}},\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"while\":{\"type\":\"Compares\",\"value\":{\"comparison\":{\"type\":\"AtLeast\"},\"measured\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"IsSource\"},{\"type\":\"IsAttacking\"}]},\"scope\":{\"type\":\"InZone\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"zone\":{\"type\":\"Battlefield\"}}}}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
+      " {\"perBlocker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]}},\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"while\":{\"type\":\"Compares\",\"value\":{\"comparison\":\"AtLeast\",\"measured\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"IsSource\"},{\"type\":\"IsAttacking\"}]},\"scope\":{\"type\":\"InZone\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"},\"zone\":\"Battlefield\"}}}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s BlockCost.codec

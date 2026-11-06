@@ -21,18 +21,14 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Red"
-                    }
+                    "value": "Red"
                   }
                 },
                 {
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "White"
-                    }
+                    "value": "White"
                   }
                 }
               ]
@@ -53,18 +49,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -83,19 +75,13 @@
               "value": [
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Dinosaur"
-                  }
+                  "value": "Dinosaur"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 {
@@ -145,9 +131,7 @@
           "condition": {
             "type": "CountersChange",
             "value": {
-              "grouping": {
-                "type": "EachCounter"
-              },
+              "grouping": "EachCounter",
               "kind": {
                 "type": "Time"
               },
@@ -157,9 +141,7 @@
             }
           },
           "functionsFrom": [
-            {
-              "type": "Exile"
-            }
+            "Exile"
           ],
           "modal": {
             "modes": [
@@ -174,12 +156,8 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  },
-                                  {
-                                    "type": "Red"
-                                  }
+                                  "White",
+                                  "Red"
                                 ],
                                 "keywords": [
                                   {
@@ -200,14 +178,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Dinosaur"
-                                    }
+                                    "Dinosaur"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -229,14 +203,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dinosaur"
-          }
+          "Dinosaur"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

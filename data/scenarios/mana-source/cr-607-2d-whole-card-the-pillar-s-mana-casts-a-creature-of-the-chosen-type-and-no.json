@@ -61,9 +61,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseCreatureType",
-          "with": {
-            "type": "Goblin"
-          }
+          "with": "Goblin"
         }
       }
     },

@@ -26,12 +26,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Creature"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Creature",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -49,12 +45,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "InAddition"
-                              },
-                              "subtype": {
-                                "type": "Golem"
-                              }
+                              "mode": "InAddition",
+                              "subtype": "Golem"
                             }
                           },
                           "ref": {
@@ -102,9 +94,7 @@
                   "type": "PlayersTurn",
                   "value": {
                     "type": "Relative",
-                    "value": {
-                      "type": "AnyPlayer"
-                    }
+                    "value": "AnyPlayer"
                   }
                 },
                 "window": {
@@ -125,9 +115,7 @@
       "oracleText": "{2}: This artifact becomes a 3/6 Golem artifact creature until end of combat. Activate only during combat.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

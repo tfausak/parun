@@ -30,7 +30,7 @@ spec s = Spec.describe s "Parun.Codec.Quotient" $ do
             Quotient.divisor = Quantity.Literal 2
           }
       )
-      " {\"rounding\":{\"type\":\"Up\"},\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}},\"divisor\":{\"type\":\"Literal\",\"value\":2}} "
+      " {\"rounding\":\"Up\",\"quantity\":{\"type\":\"Measure\",\"value\":\"Power\"},\"divisor\":{\"type\":\"Literal\",\"value\":2}} "
   -- Fireball's divisor, a count of its targets.
   Spec.it s "MkQuotient by a count" $
     Common.assertCodec
@@ -42,5 +42,5 @@ spec s = Spec.describe s "Parun.Codec.Quotient" $ do
             Quotient.divisor = Quantity.BoundCount (SlotName.MkSlotName (Text.pack "targets"))
           }
       )
-      " {\"rounding\":{\"type\":\"Down\"},\"quantity\":{\"type\":\"InSlot\",\"value\":\"X\"},\"divisor\":{\"type\":\"BoundCount\",\"value\":\"targets\"}} "
+      " {\"rounding\":\"Down\",\"quantity\":{\"type\":\"InSlot\",\"value\":\"X\"},\"divisor\":{\"type\":\"BoundCount\",\"value\":\"targets\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

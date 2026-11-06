@@ -23,7 +23,7 @@ spec s = Spec.describe s "Parun.Codec.SacrificeAnyNumber" $ do
             SacrificeAnyNumber.kind = Just CounterKind.PlusOnePlusOne
           }
       )
-      " {\"each\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"kind\":{\"type\":\"PlusOnePlusOne\"}} "
+      " {\"each\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"kind\":{\"type\":\"PlusOnePlusOne\"}} "
   -- The key is REQUIRED rather than elided: a null is a real answer here (the
   -- sacrifice places no counters), not an absence.
   Spec.it s "MkSacrificeAnyNumber, no counter kind" $
@@ -36,7 +36,7 @@ spec s = Spec.describe s "Parun.Codec.SacrificeAnyNumber" $ do
             SacrificeAnyNumber.kind = Nothing
           }
       )
-      " {\"each\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"kind\":null} "
+      " {\"each\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"kind\":null} "
   -- CR 702.82a's devour 3: the multiplier is on the wire, so a row that scales
   -- and one that does not are different values.
   Spec.it s "MkSacrificeAnyNumber, a per-sacrifice multiplier" $
@@ -49,7 +49,7 @@ spec s = Spec.describe s "Parun.Codec.SacrificeAnyNumber" $ do
             SacrificeAnyNumber.kind = Just CounterKind.PlusOnePlusOne
           }
       )
-      " {\"each\":{\"type\":\"Literal\",\"value\":3},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"kind\":{\"type\":\"PlusOnePlusOne\"}} "
+      " {\"each\":{\"type\":\"Literal\",\"value\":3},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"kind\":{\"type\":\"PlusOnePlusOne\"}} "
   -- CR 702.82b restated as N (Thromok the Insatiable): the multiplier names the
   -- slot the sacrifice itself writes, so the counters are the count squared.
   Spec.it s "MkSacrificeAnyNumber, a multiplier naming the sacrifice's own count" $
@@ -62,5 +62,5 @@ spec s = Spec.describe s "Parun.Codec.SacrificeAnyNumber" $ do
             SacrificeAnyNumber.kind = Just CounterKind.PlusOnePlusOne
           }
       )
-      " {\"each\":{\"type\":\"InSlot\",\"value\":\"thatMany\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"kind\":{\"type\":\"PlusOnePlusOne\"}} "
+      " {\"each\":{\"type\":\"InSlot\",\"value\":\"thatMany\"},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"kind\":{\"type\":\"PlusOnePlusOne\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s SacrificeAnyNumber.codec

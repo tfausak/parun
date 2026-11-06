@@ -13,9 +13,7 @@
       "manaCost": [
         {
           "type": "Phyrexian",
-          "value": {
-            "type": "Green"
-          }
+          "value": "Green"
         }
       ],
       "name": "Synthetic Phyrexian Toll",
@@ -65,9 +63,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -25,9 +25,7 @@
                         "value": {
                           "library": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "ref": {
                             "type": "EachCardInGraveyard",
@@ -64,9 +62,7 @@
       "oracleText": "{T}, Exile this artifact: Shuffle your graveyard into your library.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

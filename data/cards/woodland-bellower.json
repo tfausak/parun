@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -50,9 +46,7 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "Battlefield"
-                          },
+                          "destination": "Battlefield",
                           "filter": {
                             "type": "And",
                             "value": [
@@ -60,32 +54,22 @@
                                 "type": "Not",
                                 "value": {
                                   "type": "HasSupertype",
-                                  "value": {
-                                    "type": "Legendary"
-                                  }
+                                  "value": "Legendary"
                                 }
                               },
                               {
                                 "type": "HasColor",
-                                "value": {
-                                  "type": "Green"
-                                }
+                                "value": "Green"
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "Measures",
                                 "value": {
-                                  "comparison": {
-                                    "type": "AtMost"
-                                  },
-                                  "measure": {
-                                    "type": "ManaValue"
-                                  },
+                                  "comparison": "AtMost",
+                                  "measure": "ManaValue",
                                   "operand": {
                                     "type": "Literal",
                                     "value": 3
@@ -96,9 +80,7 @@
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -106,9 +88,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -125,14 +105,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          }
+          "Beast"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

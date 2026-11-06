@@ -15,27 +15,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -71,9 +65,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "sacrificer": {
-                            "type": "PermanentController"
-                          }
+                          "sacrificer": "PermanentController"
                         }
                       },
                       {
@@ -93,12 +85,8 @@
                                     "player": {
                                       "type": "HolderOfBound",
                                       "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
-                                        "hop": {
-                                          "type": "Itself"
-                                        },
+                                        "holder": "Controller",
+                                        "hop": "Itself",
                                         "slot": "victim"
                                       }
                                     }
@@ -126,39 +114,27 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Artifact"
-                                    }
+                                    "value": "Artifact"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Battle"
-                                    }
+                                    "value": "Battle"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Enchantment"
-                                    }
+                                    "value": "Enchantment"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Land"
-                                    }
+                                    "value": "Land"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Planeswalker"
-                                    }
+                                    "value": "Planeswalker"
                                   }
                                 ]
                               },
@@ -170,9 +146,7 @@
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -183,16 +157,12 @@
                     "filter": {
                       "type": "HeldByBound",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
+                        "holder": "Controller",
                         "slot": "eachPlayer"
                       }
                     },
                     "perPlayer": {
-                      "players": {
-                        "type": "AnyPlayer"
-                      },
+                      "players": "AnyPlayer",
                       "slot": "eachPlayer"
                     },
                     "pool": {
@@ -207,22 +177,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dragon"
-          },
-          {
-            "type": "Elder"
-          }
+          "Dragon",
+          "Elder"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

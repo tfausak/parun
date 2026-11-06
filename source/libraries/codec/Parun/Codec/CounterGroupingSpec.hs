@@ -12,6 +12,6 @@ spec s = Spec.describe s "Parun.Codec.CounterGrouping" $ do
       s
       CounterGrouping.codec
       CounterGrouping.EachCounter
-      " {\"type\":\"EachCounter\"} "
+      " \"EachCounter\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s CounterGrouping.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s CounterGrouping.codec

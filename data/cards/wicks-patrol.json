@@ -30,9 +30,7 @@
                                       "type": "Greatest",
                                       "value": {
                                         "type": "Measure",
-                                        "value": {
-                                          "type": "ManaValue"
-                                        }
+                                        "value": "ManaValue"
                                       }
                                     },
                                     "filter": {
@@ -44,13 +42,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "You"
-                                          }
+                                          "value": "You"
                                         },
-                                        "zone": {
-                                          "type": "Graveyard"
-                                        }
+                                        "zone": "Graveyard"
                                       }
                                     }
                                   }
@@ -65,9 +59,7 @@
                                       "type": "Greatest",
                                       "value": {
                                         "type": "Measure",
-                                        "value": {
-                                          "type": "ManaValue"
-                                        }
+                                        "value": "ManaValue"
                                       }
                                     },
                                     "filter": {
@@ -79,13 +71,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "You"
-                                          }
+                                          "value": "You"
                                         },
-                                        "zone": {
-                                          "type": "Graveyard"
-                                        }
+                                        "zone": "Graveyard"
                                       }
                                     }
                                   }
@@ -107,12 +95,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "Opponent"
-                        }
+                        "holder": "Controller",
+                        "relation": "Opponent"
                       }
                     },
                     "pool": {
@@ -134,18 +118,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -176,9 +156,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -202,17 +180,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Rat"
-          },
-          {
-            "type": "Warlock"
-          }
+          "Rat",
+          "Warlock"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

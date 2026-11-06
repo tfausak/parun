@@ -7,18 +7,12 @@
             "type": "MatchingOffBattlefield",
             "value": {
               "type": "HasCardType",
-              "value": {
-                "type": "Creature"
-              }
+              "value": "Creature"
             }
           },
           "origins": [
-            {
-              "type": "Library"
-            },
-            {
-              "type": "Graveyard"
-            }
+            "Library",
+            "Graveyard"
           ]
         }
       ],
@@ -39,15 +33,11 @@
               "value": [
                 {
                   "type": "IsInZone",
-                  "value": {
-                    "type": "Graveyard"
-                  }
+                  "value": "Graveyard"
                 },
                 {
                   "type": "IsInZone",
-                  "value": {
-                    "type": "Library"
-                  }
+                  "value": "Library"
                 }
               ]
             }
@@ -59,9 +49,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

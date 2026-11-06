@@ -139,9 +139,7 @@
       "do": {
         "Answer": {
           "prompt": "CallCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       },
       "player": "alice",
@@ -152,9 +150,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       },
       "player": "alice",
@@ -204,9 +200,7 @@
       "do": {
         "Answer": {
           "prompt": "CallCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       },
       "player": "alice",
@@ -217,9 +211,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Tails"
-          }
+          "with": "Tails"
         }
       },
       "player": "alice",

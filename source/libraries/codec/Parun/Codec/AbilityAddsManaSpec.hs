@@ -22,5 +22,5 @@ spec s = Spec.describe s "Parun.Codec.AbilityAddsMana" $ do
             AbilityAddsMana.mana = ManaSpecification.ChosenColor
           }
       )
-      " {\"player\":{\"type\":\"You\"},\"source\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"mana\":{\"type\":\"ChosenColor\"}} "
+      " {\"player\":\"You\",\"source\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"mana\":{\"type\":\"ChosenColor\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AbilityAddsMana.codec

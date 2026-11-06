@@ -8,7 +8,7 @@ schema scenario` prints the schema. A test moved from a Haskell spec goes in a
 subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones still to move.
 
 - **Board.** `seats` in turn order, each with a `name`, `life` (default 20),
-  player `counters` (`[{ "key": { "type": "Energy" }, "value": 3 }]`), a
+  player `counters` (`[{ "key": "Energy", "value": 3 }]`), a
   `team` number (CR 808.1), a `range` of influence (CR 801.2a, default
   unlimited), `emperor` (CR 809.2), a `manaPool` of unrestricted mana one
   letter per unit (`"RRC"`, CR 106.4) and
@@ -20,7 +20,7 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   `controller`, the label of the object or seat it is `attached` to, and
   `commander` (CR 903.3: its owner's commander), the name of the `face` it
   shows (CR 712.8e, `"Nightfall Predator"`), `faceDown` with the reason it is
-  (CR 708.2a / 708.6, `{ "type": "Manifested" }`) and a battle's `protector`
+  (CR 708.2a / 708.6, `"Manifested"`) and a battle's `protector`
   seat (CR 310.9). `active` names a seat;
   `turn` (default 1) and `step` are where the game starts; `monarch` optionally names a seat;
   `attackOption` (CR 806.2b) is `MultiplePlayers` unless given, and `null` is
@@ -86,7 +86,7 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   `Cast` of a split card names the half it casts (CR 709.3), `"face": "Consume"`.
   A cast's `cost` picks a candidate cost by its mana (CR 601.2b); where two
   share it, `costOffer` names what offered the one wanted, `{ "type":
-  "ByKeyword", "value": { "type": "OfFamily", "value": { "type": "Blitz" } } }`
+  "ByKeyword", "value": { "type": "OfFamily", "value": "Blitz" } }`
   or `{ "type": "ByNoKeyword" }`.
   `Take` takes any other action offered at priority (CR 116.2, 605.3a), named
   as the `Offered` view renders it, with a cast's choices such as `mana`:

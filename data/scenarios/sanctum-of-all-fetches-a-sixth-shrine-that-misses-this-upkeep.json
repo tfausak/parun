@@ -123,9 +123,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "Upkeep",
@@ -136,9 +134,7 @@
         "Answer": {
           "prompt": "ChooseSearchZones",
           "with": [
-            {
-              "type": "Graveyard"
-            }
+            "Graveyard"
           ]
         }
       },

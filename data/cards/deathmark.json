@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -27,9 +25,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -42,15 +38,11 @@
                   "value": [
                     {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Green"
-                      }
+                      "value": "Green"
                     },
                     {
                       "type": "HasColor",
-                      "value": {
-                        "type": "White"
-                      }
+                      "value": "White"
                     }
                   ]
                 },
@@ -64,9 +56,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

@@ -27,5 +27,5 @@ spec s = Spec.describe s "Parun.Codec.CantBlockCreatures" $ do
             CantBlockCreatures.name = Nothing
           }
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"attackers\":{\"type\":\"Measures\",\"value\":{\"measure\":{\"type\":\"Power\"},\"comparison\":{\"type\":\"GreaterThan\"},\"operand\":{\"type\":\"OfSource\",\"value\":{\"type\":\"Power\"}}}}} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"attackers\":{\"type\":\"Measures\",\"value\":{\"measure\":\"Power\",\"comparison\":\"GreaterThan\",\"operand\":{\"type\":\"OfSource\",\"value\":\"Power\"}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CantBlockCreatures.codec

@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -62,14 +58,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfTurn"
-                          }
+                          "retention": "UntilEndOfTurn"
                         }
                       },
                       {
@@ -79,14 +71,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfTurn"
-                          }
+                          "retention": "UntilEndOfTurn"
                         }
                       },
                       {
@@ -96,14 +84,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfTurn"
-                          }
+                          "retention": "UntilEndOfTurn"
                         }
                       },
                       {
@@ -113,14 +97,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Green"
-                              }
+                              "value": "Green"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfTurn"
-                          }
+                          "retention": "UntilEndOfTurn"
                         }
                       },
                       {
@@ -130,14 +110,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Green"
-                              }
+                              "value": "Green"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfTurn"
-                          }
+                          "retention": "UntilEndOfTurn"
                         }
                       },
                       {
@@ -147,14 +123,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Green"
-                              }
+                              "value": "Green"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfTurn"
-                          }
+                          "retention": "UntilEndOfTurn"
                         }
                       }
                     ]
@@ -167,14 +139,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dragon"
-          }
+          "Dragon"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

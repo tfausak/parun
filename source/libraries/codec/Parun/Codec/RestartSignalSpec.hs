@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.RestartSignal" $ do
       s
       RestartSignal.codec
       RestartSignal.Playing
-      " {\"type\":\"Playing\"} "
+      " \"Playing\" "
   Spec.it s "Restarted" $
     Common.assertCodec
       s
       RestartSignal.codec
       RestartSignal.Restarted
-      " {\"type\":\"Restarted\"} "
+      " \"Restarted\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

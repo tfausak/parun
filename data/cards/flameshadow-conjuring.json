@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -36,19 +34,13 @@
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -101,17 +93,13 @@
                                 "value": {
                                   "phase": {
                                     "type": "Ending",
-                                    "value": {
-                                      "type": "EndStep"
-                                    }
+                                    "value": "EndStep"
                                   },
                                   "scope": {
                                     "type": "PlayersTurn",
                                     "value": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "AnyPlayer"
-                                      }
+                                      "value": "AnyPlayer"
                                     }
                                   }
                                 }
@@ -129,9 +117,7 @@
                                                 "type": "InSlot",
                                                 "value": "token"
                                               },
-                                              "zone": {
-                                                "type": "Exile"
-                                              }
+                                              "zone": "Exile"
                                             }
                                           }
                                         ]
@@ -147,18 +133,14 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "mana": [
                           {
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         ]
@@ -177,9 +159,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -32,7 +32,7 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardInGraveyard" $ do
             ChosenCardInGraveyard.count = HowMany.one
           }
       )
-      " {\"chooser\":{\"type\":\"TheController\"},\"players\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"chooser\":{\"type\":\"TheController\"},\"players\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- The scope's other arm, which is what Grasping Tentacles' "that player's
   -- graveyard" needs: whose is the slot the spell's own target filled, not a
   -- reading CR 109.5 answers.
@@ -47,7 +47,7 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardInGraveyard" $ do
             ChosenCardInGraveyard.count = HowMany.one
           }
       )
-      " {\"chooser\":{\"type\":\"TheController\"},\"players\":{\"type\":\"InSlot\",\"value\":\"opponent\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}} "
+      " {\"chooser\":{\"type\":\"TheController\"},\"players\":{\"type\":\"InSlot\",\"value\":\"opponent\"},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}} "
   -- The count Fall of the Thran's "two land cards" states: defaulted, so the
   -- printed singular above encodes without it.
   Spec.it s "MkChosenCardInGraveyard, a count above one" $
@@ -61,7 +61,7 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardInGraveyard" $ do
             ChosenCardInGraveyard.count = HowMany.Exactly (Quantity.Literal 2)
           }
       )
-      " {\"chooser\":{\"type\":\"EachInScope\"},\"players\":{\"type\":\"Scoped\",\"value\":{\"type\":\"AnyPlayer\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"count\":{\"type\":\"Exactly\",\"value\":{\"type\":\"Literal\",\"value\":2}}} "
+      " {\"chooser\":{\"type\":\"EachInScope\"},\"players\":{\"type\":\"Scoped\",\"value\":{\"type\":\"AnyPlayer\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"count\":{\"type\":\"Exactly\",\"value\":{\"type\":\"Literal\",\"value\":2}}} "
   -- Liliana, the Necromancer's "up to two creature cards from graveyards".
   Spec.it s "MkChosenCardInGraveyard, an up-to count" $
     Common.assertCodec
@@ -74,5 +74,5 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardInGraveyard" $ do
             ChosenCardInGraveyard.count = HowMany.UpTo (Just (Quantity.Literal 2))
           }
       )
-      " {\"chooser\":{\"type\":\"TheController\"},\"players\":{\"type\":\"Scoped\",\"value\":{\"type\":\"AnyPlayer\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}}} "
+      " {\"chooser\":{\"type\":\"TheController\"},\"players\":{\"type\":\"Scoped\",\"value\":{\"type\":\"AnyPlayer\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ChosenCardInGraveyard.codec

@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -52,9 +50,7 @@
                                               "type": "InSlot",
                                               "value": "permanent"
                                             },
-                                            "zone": {
-                                              "type": "Hand"
-                                            }
+                                            "zone": "Hand"
                                           }
                                         }
                                       ]
@@ -66,9 +62,7 @@
                                         "type": "Not",
                                         "value": {
                                           "type": "HasCardType",
-                                          "value": {
-                                            "type": "Land"
-                                          }
+                                          "value": "Land"
                                         }
                                       },
                                       "pool": {
@@ -103,9 +97,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

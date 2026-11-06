@@ -26,9 +26,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -42,9 +40,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "WasBound",
                       "value": "thatCollectedEvidence"
@@ -61,15 +57,11 @@
                     "value": {
                       "filter": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       "players": {
                         "type": "Relative",
-                        "value": {
-                          "type": "Opponent"
-                        }
+                        "value": "Opponent"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -83,9 +75,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "WasBound",
                       "value": "thatCollectedEvidence"
@@ -105,24 +95,16 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "Measures",
                             "value": {
-                              "comparison": {
-                                "type": "AtLeast"
-                              },
-                              "measure": {
-                                "type": "Power"
-                              },
+                              "comparison": "AtLeast",
+                              "measure": "Power",
                               "operand": {
                                 "type": "OfEachOtherCandidate",
-                                "value": {
-                                  "type": "Power"
-                                }
+                                "value": "Power"
                               }
                             }
                           }
@@ -130,9 +112,7 @@
                       },
                       "players": {
                         "type": "Relative",
-                        "value": {
-                          "type": "Opponent"
-                        }
+                        "value": "Opponent"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -148,9 +128,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

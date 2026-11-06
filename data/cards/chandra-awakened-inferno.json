@@ -32,17 +32,13 @@
                                       "value": {
                                         "phase": {
                                           "type": "Beginning",
-                                          "value": {
-                                            "type": "Upkeep"
-                                          }
+                                          "value": "Upkeep"
                                         },
                                         "scope": {
                                           "type": "PlayersTurn",
                                           "value": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "You"
-                                            }
+                                            "value": "You"
                                           }
                                         }
                                       }
@@ -83,9 +79,7 @@
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           }
                         }
                       }
@@ -131,17 +125,13 @@
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Creature"
-                                      }
+                                      "value": "Creature"
                                     },
                                     {
                                       "type": "Not",
                                       "value": {
                                         "type": "HasSubtype",
-                                        "value": {
-                                          "type": "Elemental"
-                                        }
+                                        "value": "Elemental"
                                       }
                                     }
                                   ]
@@ -204,9 +194,7 @@
                           "effect": {
                             "type": "ZoneChangeR",
                             "value": {
-                              "destination": {
-                                "type": "Exile"
-                              },
+                              "destination": "Exile",
                               "matching": {
                                 "whatObject": {
                                   "type": "And",
@@ -217,24 +205,16 @@
                                     },
                                     {
                                       "type": "IsInZone",
-                                      "value": {
-                                        "type": "Battlefield"
-                                      }
+                                      "value": "Battlefield"
                                     }
                                   ]
                                 },
-                                "whenDestination": {
-                                  "type": "Graveyard"
-                                }
+                                "whenDestination": "Graveyard"
                               }
                             }
                           },
-                          "origin": {
-                            "type": "Other"
-                          },
-                          "uses": {
-                            "type": "Unlimited"
-                          }
+                          "origin": "Other",
+                          "uses": "Unlimited"
                         }
                       }
                     ]
@@ -247,15 +227,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Planeswalker"
-                          }
+                          "value": "Planeswalker"
                         }
                       ]
                     },
@@ -285,18 +261,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -304,19 +276,13 @@
       "oracleText": "This spell can't be countered.\n[+2]: Each opponent gets an emblem with \"At the beginning of your upkeep, this emblem deals 1 damage to you.\"\n[−3]: Chandra deals 3 damage to each non-Elemental creature.\n[−X]: Chandra deals X damage to target creature or planeswalker. If a permanent dealt damage this way would die this turn, exile it instead.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Chandra"
-          }
+          "Chandra"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

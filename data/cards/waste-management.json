@@ -14,9 +14,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -32,9 +30,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -48,16 +44,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "TimesPaid",
                       "value": {
                         "type": "Printed",
-                        "value": {
-                          "type": "Kicker"
-                        }
+                        "value": "Kicker"
                       }
                     },
                     "threshold": {
@@ -75,9 +67,7 @@
                         "value": "cards"
                       },
                       "slot": "exiled",
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   }
                 ]
@@ -86,16 +76,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "TimesPaid",
                       "value": {
                         "type": "Printed",
-                        "value": {
-                          "type": "Kicker"
-                        }
+                        "value": "Kicker"
                       }
                     },
                     "threshold": {
@@ -122,9 +108,7 @@
                         }
                       },
                       "slot": "exiled",
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   }
                 ]
@@ -138,9 +122,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Black"
-                              }
+                              "Black"
                             ],
                             "name": "Rogue Token",
                             "power": {
@@ -153,14 +135,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Rogue"
-                                }
+                                "Rogue"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -174,9 +152,7 @@
                           },
                           "filter": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           "scope": {
                             "type": "OverBound",
@@ -207,9 +183,7 @@
                     }
                   }
                 },
-                "together": {
-                  "type": "InOneZone"
-                }
+                "together": "InOneZone"
               },
               "player": {
                 "pool": {
@@ -222,9 +196,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -44,9 +44,7 @@
       "name": "Synthetic Snow Symbol",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

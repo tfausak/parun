@@ -19,9 +19,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -30,9 +28,7 @@
                             },
                             "filter": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             "scope": {
                               "type": "TopOf",
@@ -41,9 +37,7 @@
                                   "type": "InSlot",
                                   "value": "player"
                                 },
-                                "zone": {
-                                  "type": "Graveyard"
-                                }
+                                "zone": "Graveyard"
                               }
                             }
                           }
@@ -60,9 +54,7 @@
                         "value": {
                           "placement": {
                             "type": "Stated",
-                            "value": {
-                              "type": "Top"
-                            }
+                            "value": "Top"
                           },
                           "ref": {
                             "type": "TopOfGraveyard",
@@ -71,9 +63,7 @@
                               "value": "player"
                             }
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -105,18 +95,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -132,17 +118,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Angel"
-          },
-          {
-            "type": "Spirit"
-          }
+          "Angel",
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

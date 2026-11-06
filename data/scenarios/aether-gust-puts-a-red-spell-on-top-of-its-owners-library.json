@@ -120,9 +120,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseLibraryEnd",
-          "with": {
-            "type": "Top"
-          }
+          "with": "Top"
         }
       },
       "player": "bob",

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -30,12 +28,8 @@
           "condition": {
             "type": "PlayerActs",
             "value": {
-              "action": {
-                "type": "Earthbend"
-              },
-              "player": {
-                "type": "AnyPlayer"
-              }
+              "action": "Earthbend",
+              "player": "AnyPlayer"
             }
           },
           "modal": {
@@ -70,17 +64,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Monk"
-          }
+          "Human",
+          "Monk"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

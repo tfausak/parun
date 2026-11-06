@@ -82,9 +82,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -100,17 +98,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Angel"
-          },
-          {
-            "type": "Spirit"
-          }
+          "Angel",
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

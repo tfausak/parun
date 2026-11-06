@@ -100,12 +100,8 @@
                                   "players": {
                                     "type": "HolderOfBound",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "hop": {
-                                        "type": "Itself"
-                                      },
+                                      "holder": "Controller",
+                                      "hop": "Itself",
                                       "slot": "target"
                                     }
                                   }
@@ -174,16 +170,12 @@
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Creature"
-                                      }
+                                      "value": "Creature"
                                     },
                                     {
                                       "type": "HeldByBound",
                                       "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
+                                        "holder": "Controller",
                                         "slot": "target"
                                       }
                                     }
@@ -222,18 +214,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -241,19 +229,13 @@
       "oracleText": "[+1]: Chandra deals 2 damage to any target.\n[−2]: Chandra deals 4 damage to target creature and 2 damage to that creature's controller.\n[−8]: Chandra deals 10 damage to target player and each creature that player controls.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Chandra"
-          }
+          "Chandra"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

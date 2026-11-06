@@ -8,7 +8,7 @@
       },
       {
         "name": "bob",
-        "counters": [{ "key": { "type": "Rad" }, "value": 3 }],
+        "counters": [{ "key": "Rad", "value": 3 }],
         "library": [
           { "card": "Lightning Bolt" },
           { "card": "Lightning Bolt" },
@@ -23,6 +23,6 @@
   "timeline": [
     { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Library", "card": "Lightning Bolt", "count": 4 } } },
     { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 20 } } },
-    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": { "type": "Rad" }, "count": 3 } } }
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": "Rad", "count": 3 } } }
   ]
 }

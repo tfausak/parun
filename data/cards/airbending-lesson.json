@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -36,9 +34,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -55,9 +51,7 @@
                   "type": "Not",
                   "value": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Land"
-                    }
+                    "value": "Land"
                   }
                 },
                 "pool": {
@@ -70,14 +64,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Lesson"
-          }
+          "Lesson"
         ],
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

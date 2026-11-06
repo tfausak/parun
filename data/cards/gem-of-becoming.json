@@ -31,35 +31,25 @@
                           "descriptions": [
                             {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Island"
-                              }
+                              "value": "Island"
                             },
                             {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Swamp"
-                              }
+                              "value": "Swamp"
                             },
                             {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Mountain"
-                              }
+                              "value": "Mountain"
                             }
                           ],
-                          "destination": {
-                            "type": "RevealThenHand"
-                          },
+                          "destination": "RevealThenHand",
                           "filter": {
                             "type": "And",
                             "value": []
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -67,9 +57,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -91,9 +79,7 @@
       "oracleText": "{3}, {T}, Sacrifice this artifact: Search your library for an Island card, a Swamp card, and a Mountain card. Reveal those cards, put them into your hand, then shuffle.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

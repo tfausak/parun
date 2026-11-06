@@ -94,9 +94,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseToPay",
-          "with": {
-            "type": "Pays"
-          }
+          "with": "Pays"
         }
       },
       "player": "bob",
@@ -118,9 +116,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseToPay",
-          "with": {
-            "type": "Pays"
-          }
+          "with": "Pays"
         }
       },
       "player": "carol",

@@ -42,9 +42,9 @@
   },
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$wayfinder", "mana": ["$forest-1", "$forest-2", "$forest-3"] } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": { "type": "Declines" } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "ChooseOptional": { "type": "Declines" } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "ChooseOptional": { "type": "Declines" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": "Declines" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "ChooseOptional": "Declines" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "ChooseOptional": "Declines" } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Jungle Wayfinder", "count": 1 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Library", "card": "Island", "count": 3 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Library", "card": "Goblin Piker", "count": 1 } } },

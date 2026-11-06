@@ -26,7 +26,7 @@ spec s = Spec.describe s "Parun.Codec.TappedForManaTrigger" $ do
             TappedForManaTrigger.mana = ManaSpecification.AnyMana
           }
       )
-      " {\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}},\"player\":{\"type\":\"You\"},\"mana\":{\"type\":\"AnyMana\"}} "
+      " {\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}},\"player\":\"You\",\"mana\":{\"type\":\"AnyMana\"}} "
   -- Gauntlet of Power's narrowing, on a payload differing from the one above in
   -- all three keys: a codec that defaulted the mana rather than reading it would
   -- encode the two alike.
@@ -40,12 +40,12 @@ spec s = Spec.describe s "Parun.Codec.TappedForManaTrigger" $ do
             TappedForManaTrigger.mana = ManaSpecification.ChosenColor
           }
       )
-      " {\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasSupertype\",\"value\":{\"type\":\"Basic\"}}},\"player\":{\"type\":\"AnyPlayer\"},\"mana\":{\"type\":\"ChosenColor\"}} "
+      " {\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasSupertype\",\"value\":\"Basic\"}},\"player\":\"AnyPlayer\",\"mana\":{\"type\":\"ChosenColor\"}} "
   -- Wild Growth's: the attachment link, any tapping player, any mana.
   Spec.it s "MkTappedForManaTrigger, an attached one" $
     Common.assertCodec
       s
       TappedForManaTrigger.codec
       (TappedForManaTrigger.MkTappedForManaTrigger TappedPermanent.Attached PlayerRelation.AnyPlayer ManaSpecification.AnyMana)
-      " {\"permanent\":{\"type\":\"Attached\"},\"player\":{\"type\":\"AnyPlayer\"},\"mana\":{\"type\":\"AnyMana\"}} "
+      " {\"permanent\":{\"type\":\"Attached\"},\"player\":\"AnyPlayer\",\"mana\":{\"type\":\"AnyMana\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s TappedForManaTrigger.codec

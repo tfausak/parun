@@ -10,7 +10,7 @@
           { "card": "Mountain", "label": "m3", "ready": true }, { "card": "Mountain", "label": "m4", "ready": true } ],
         "library": [ { "card": "Goblin Piker" } ] },
       { "name": "bob",
-        "battlefield": [ { "card": "Goblin Piker", "label": "hidden", "faceDown": { "type": "Manifested" } } ],
+        "battlefield": [ { "card": "Goblin Piker", "label": "hidden", "faceDown": "Manifested" } ],
         "hand": [ { "card": "Hill Giant", "label": "b-hand" } ],
         "library": [ { "card": "Goblin Piker" }, { "card": "Goblin Piker", "label": "b-top" } ] }
     ],

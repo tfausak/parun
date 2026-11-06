@@ -12,6 +12,6 @@ spec s = Spec.describe s "Parun.Codec.NinjutsuVariant" $ do
       s
       NinjutsuVariant.codec
       NinjutsuVariant.Commander
-      " {\"type\":\"Commander\"} "
+      " \"Commander\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s NinjutsuVariant.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s NinjutsuVariant.codec

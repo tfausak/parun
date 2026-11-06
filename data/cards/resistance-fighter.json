@@ -20,15 +20,11 @@
                       {
                         "type": "PreventAllDamage",
                         "value": {
-                          "direction": {
-                            "type": "DealtBy"
-                          },
+                          "direction": "DealtBy",
                           "duration": {
                             "type": "UntilEndOfTurn"
                           },
-                          "kind": {
-                            "type": "Combat"
-                          },
+                          "kind": "Combat",
                           "ref": {
                             "type": "InSlot",
                             "value": "target"
@@ -55,9 +51,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -73,17 +67,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Human",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

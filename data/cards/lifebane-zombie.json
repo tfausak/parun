@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -85,32 +81,24 @@
                                     "value": [
                                       {
                                         "type": "HasColor",
-                                        "value": {
-                                          "type": "Green"
-                                        }
+                                        "value": "Green"
                                       },
                                       {
                                         "type": "HasColor",
-                                        "value": {
-                                          "type": "White"
-                                        }
+                                        "value": "White"
                                       }
                                     ]
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   }
                                 ]
                               },
                               "slot": "revealed"
                             }
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -120,9 +108,7 @@
                   "target": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -136,17 +122,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Warrior"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Warrior",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

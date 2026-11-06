@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -56,9 +54,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Black"
-                              }
+                              "Black"
                             ],
                             "combatRestrictions": [
                               {
@@ -84,14 +80,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Rat"
-                                }
+                                "Rat"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -125,9 +117,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

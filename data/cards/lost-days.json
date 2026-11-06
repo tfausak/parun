@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -38,9 +36,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -79,9 +75,7 @@
                                               "value": {
                                                 "player": {
                                                   "type": "Relative",
-                                                  "value": {
-                                                    "type": "You"
-                                                  }
+                                                  "value": "You"
                                                 },
                                                 "quantity": {
                                                   "type": "Literal",
@@ -100,14 +94,10 @@
                             "name": "Clue Token",
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Clue"
-                                }
+                                "Clue"
                               ],
                               "types": [
-                                {
-                                  "type": "Artifact"
-                                }
+                                "Artifact"
                               ]
                             }
                           }
@@ -129,15 +119,11 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Enchantment"
-                      }
+                      "value": "Enchantment"
                     }
                   ]
                 },
@@ -151,14 +137,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Lesson"
-          }
+          "Lesson"
         ],
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

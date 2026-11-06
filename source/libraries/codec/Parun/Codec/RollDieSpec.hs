@@ -85,7 +85,7 @@ spec s = Spec.describe s "Parun.Codec.RollDie" $ do
           RollDie.highest = Nothing,
           RollDie.store = Nothing
         }
-      " {\"count\":{\"type\":\"InSlot\",\"value\":\"X\"},\"reading\":{\"type\":\"Total\"},\"sides\":6,\"slot\":\"total\"} "
+      " {\"count\":{\"type\":\"InSlot\",\"value\":\"X\"},\"reading\":\"Total\",\"sides\":6,\"slot\":\"total\"} "
   -- CR 706.1's roller and the players who rolled highest, Chaos Dragon's wire
   -- form: both fields elide everywhere else.
   Spec.it s "each player rolls, the highest bound" $

@@ -64,14 +64,10 @@
       "oracleText": "{2}, {T}, Exile The Stasis Coffin: You gain protection from everything until your next turn.",
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

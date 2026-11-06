@@ -34,7 +34,7 @@ spec s = Spec.describe s "Parun.Codec.AloneUnless" $ do
             AloneUnless.name = Nothing
           }
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"alongside\":{\"type\":\"Measures\",\"value\":{\"measure\":{\"type\":\"Power\"},\"comparison\":{\"type\":\"GreaterThan\"},\"operand\":{\"type\":\"OfSource\",\"value\":{\"type\":\"Power\"}}}}} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"alongside\":{\"type\":\"Measures\",\"value\":{\"measure\":\"Power\",\"comparison\":\"GreaterThan\",\"operand\":{\"type\":\"OfSource\",\"value\":\"Power\"}}}} "
   Spec.it s "MkAloneUnless, a count of others written" $
     Common.assertCodec
       s

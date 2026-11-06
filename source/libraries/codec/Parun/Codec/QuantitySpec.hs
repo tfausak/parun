@@ -78,17 +78,17 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.Measure Measure.ManaValue)
-      " {\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}} "
+      " {\"type\":\"Measure\",\"value\":\"ManaValue\"} "
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.Measure Measure.Power)
-      " {\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}} "
+      " {\"type\":\"Measure\",\"value\":\"Power\"} "
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.Measure Measure.Toughness)
-      " {\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}} "
+      " {\"type\":\"Measure\",\"value\":\"Toughness\"} "
   -- Alchemy's intensity, a nullary leaf.
   Spec.it s "Intensity" $
     Common.assertCodec
@@ -203,7 +203,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.Arithmetic (Arithmetic.NonNegative (Quantity.Measure Measure.Power)))
-      " {\"type\":\"NonNegative\",\"value\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}} "
+      " {\"type\":\"NonNegative\",\"value\":{\"type\":\"Measure\",\"value\":\"Power\"}} "
   -- Quantity.Count's arm is tagged here and nowhere else: Parun.Codec.Count
   -- writes a bare object, so a Count payload can never be double-tagged.
   Spec.it s "Count is tagged by Quantity, and the payload is Count's bare object" $
@@ -217,7 +217,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
               (Aggregation.Distinct DistinctOf.CardTypes)
           )
       )
-      " {\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Distinct\",\"value\":{\"type\":\"CardTypes\"}}}} "
+      " {\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":\"Graveyard\",\"player\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Distinct\",\"value\":\"CardTypes\"}}} "
   -- Greatest's payload is a whole Quantity rather than a nullary tag, so a
   -- per-member quantity that is itself a Count has to round-trip.
   Spec.it s "Greatest round-trips a nested Count payload" $
@@ -239,7 +239,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
               )
           )
       )
-      " {\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Greatest\",\"value\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Distinct\",\"value\":{\"type\":\"CardTypes\"}}}}}}} "
+      " {\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":\"Battlefield\",\"player\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Greatest\",\"value\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":\"Graveyard\",\"player\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Distinct\",\"value\":\"CardTypes\"}}}}}} "
   -- CR 119.1, with the PlayerRef on the wire saying whose. Serra Avatar's "your"
   -- is the Relative arm; the InSlot arm below is the one a recursive decoder
   -- could lose a payload through, so both are round-tripped.
@@ -248,7 +248,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.LifeTotal (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"LifeTotal\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"LifeTotal\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
     Common.assertCodec
       s
       Quantity.codec
@@ -260,7 +260,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.StartingLifeTotal (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"StartingLifeTotal\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"StartingLifeTotal\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   -- CR 725.1, with a PlayerRef and nothing else on the wire: the arm answers a
   -- 0/1 rather than carrying a number. Dawnglade Regent's "you're the monarch"
   -- is the Relative arm; the InSlot arm beside it is the one a recursive decoder
@@ -270,7 +270,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.IsMonarch (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"IsMonarch\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"IsMonarch\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
     Common.assertCodec
       s
       Quantity.codec
@@ -284,12 +284,12 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.HasPlayerDesignation (PlayerDesignationTally.MkPlayerDesignationTally (PlayerRef.Relative PlayerRelation.You) PlayerDesignation.CitysBlessing))
-      " {\"type\":\"HasPlayerDesignation\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"designation\":{\"type\":\"CitysBlessing\"}}} "
+      " {\"type\":\"HasPlayerDesignation\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"designation\":\"CitysBlessing\"}} "
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.HasPlayerDesignation (PlayerDesignationTally.MkPlayerDesignationTally (PlayerRef.Relative PlayerRelation.You) PlayerDesignation.EnduringStory))
-      " {\"type\":\"HasPlayerDesignation\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"designation\":{\"type\":\"EnduringStory\"}}} "
+      " {\"type\":\"HasPlayerDesignation\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"designation\":\"EnduringStory\"}} "
   -- CR 103.1, IsMonarch's shape and round-tripped the same two ways: Gemstone
   -- Caverns' gate is the Relative arm, and the InSlot arm beside it is the one a
   -- recursive decoder could lose a payload through.
@@ -298,7 +298,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.IsStartingPlayer (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"IsStartingPlayer\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"IsStartingPlayer\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
     Common.assertCodec
       s
       Quantity.codec
@@ -312,7 +312,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.IsActivePlayer (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"IsActivePlayer\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"IsActivePlayer\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
     Common.assertCodec
       s
       Quantity.codec
@@ -326,19 +326,19 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.HasDesignation Designation.Renowned)
-      " {\"type\":\"HasDesignation\",\"value\":{\"type\":\"Renowned\"}} "
+      " {\"type\":\"HasDesignation\",\"value\":\"Renowned\"} "
   Spec.it s "HasDesignation Monstrous" $
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.HasDesignation Designation.Monstrous)
-      " {\"type\":\"HasDesignation\",\"value\":{\"type\":\"Monstrous\"}} "
+      " {\"type\":\"HasDesignation\",\"value\":\"Monstrous\"} "
   Spec.it s "HasDesignation Suspected" $
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.HasDesignation Designation.Suspected)
-      " {\"type\":\"HasDesignation\",\"value\":{\"type\":\"Suspected\"}} "
+      " {\"type\":\"HasDesignation\",\"value\":\"Suspected\"} "
   -- CR 701.37c: the same designation on the wire, asking the NUMBER rather than
   -- the membership.
   Spec.it s "DesignationValue Monstrous" $
@@ -346,7 +346,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.DesignationValue Designation.Monstrous)
-      " {\"type\":\"DesignationValue\",\"value\":{\"type\":\"Monstrous\"}} "
+      " {\"type\":\"DesignationValue\",\"value\":\"Monstrous\"} "
   Spec.it s "StoredResultsOfSameValue" $
     Common.assertCodec
       s
@@ -392,12 +392,12 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.CastUsing (KeywordDesignator.OfFamily KeywordFamily.Evoke))
-      " {\"type\":\"CastUsing\",\"value\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Evoke\"}}} "
+      " {\"type\":\"CastUsing\",\"value\":{\"type\":\"OfFamily\",\"value\":\"Evoke\"}} "
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.CastUsing (KeywordDesignator.OfFamily KeywordFamily.Escape))
-      " {\"type\":\"CastUsing\",\"value\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Escape\"}}} "
+      " {\"type\":\"CastUsing\",\"value\":{\"type\":\"OfFamily\",\"value\":\"Escape\"}} "
     Common.assertCodec
       s
       Quantity.codec
@@ -412,13 +412,13 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.TagWasSpent ProductionTag.Snow)
-      " {\"type\":\"TagWasSpent\",\"value\":{\"type\":\"Snow\"}} "
+      " {\"type\":\"TagWasSpent\",\"value\":\"Snow\"} "
   Spec.it s "TagWasSpent Treasure" $
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.TagWasSpent ProductionTag.Treasure)
-      " {\"type\":\"TagWasSpent\",\"value\":{\"type\":\"Treasure\"}} "
+      " {\"type\":\"TagWasSpent\",\"value\":\"Treasure\"} "
   -- CR 107.4h with CR 202.2, the arm above's tag on a different wire word.
   Spec.it s "ChosenNumber" $
     Common.assertCodec
@@ -437,7 +437,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.TagWasSpentOfOwnColor ProductionTag.Snow)
-      " {\"type\":\"TagWasSpentOfOwnColor\",\"value\":{\"type\":\"Snow\"}} "
+      " {\"type\":\"TagWasSpentOfOwnColor\",\"value\":\"Snow\"} "
   -- CR 107.1: Drain Life's gain under its limits, through Quantity's own arm.
   Spec.it s "AtMost" $
     Common.assertCodec
@@ -479,14 +479,14 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.ControlGained ControlWindow.SinceLastUpkeep (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"ControlGainedSinceLastUpkeep\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"ControlGainedSinceLastUpkeep\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   -- Erg Raiders' window, the same constructor under its other tag.
   Spec.it s "ControlGainedThisTurn" $
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.ControlGained ControlWindow.ThisTurn (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"ControlGainedThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"ControlGainedThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   -- CR 305.1 / 601.2a's play, the same shape.
   Spec.it s "PlayedBy" $
     Common.assertCodec
@@ -500,12 +500,12 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.DamageDealtThisTurn DamageDirection.DealtTo)
-      " {\"type\":\"DamageDealtThisTurn\",\"value\":{\"type\":\"DealtTo\"}} "
+      " {\"type\":\"DamageDealtThisTurn\",\"value\":\"DealtTo\"} "
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.DamageDealtThisTurn DamageDirection.DealtBy)
-      " {\"type\":\"DamageDealtThisTurn\",\"value\":{\"type\":\"DealtBy\"}} "
+      " {\"type\":\"DamageDealtThisTurn\",\"value\":\"DealtBy\"} "
   -- CR 509.1h's status as a look-back, on the wire the same way again.
   Spec.it s "WasBlockedThisTurn" $
     Common.assertCodec
@@ -520,12 +520,12 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.PlayerCounters (PlayerCounterTally.MkPlayerCounterTally (PlayerRef.Relative PlayerRelation.You) PlayerCounterKind.Rad))
-      " {\"type\":\"PlayerCounters\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"kind\":{\"type\":\"Rad\"}}} "
+      " {\"type\":\"PlayerCounters\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"kind\":\"Rad\"}} "
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.PlayerCounters (PlayerCounterTally.MkPlayerCounterTally (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) PlayerCounterKind.Experience))
-      " {\"type\":\"PlayerCounters\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"kind\":{\"type\":\"Experience\"}}} "
+      " {\"type\":\"PlayerCounters\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"kind\":\"Experience\"}} "
   -- CR 700.5, with both halves on the wire: a PlayerRef saying whose and the set
   -- of colours saying to what. Fanatic of Mogis is the one-colour reading; the
   -- two-colour one beside it is CR 700.5's second sentence, which no card in
@@ -535,18 +535,18 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.Devotion (Devotion.MkDevotion (PlayerRef.Relative PlayerRelation.You) (Set.singleton Color.Red)))
-      " {\"type\":\"Devotion\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"colors\":[{\"type\":\"Red\"}]}} "
+      " {\"type\":\"Devotion\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"colors\":[\"Red\"]}} "
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.Devotion (Devotion.MkDevotion (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (Set.fromList [Color.Black, Color.Green])))
-      " {\"type\":\"Devotion\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"colors\":[{\"type\":\"Black\"},{\"type\":\"Green\"}]}} "
+      " {\"type\":\"Devotion\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"colors\":[\"Black\",\"Green\"]}} "
   Spec.it s "PartySize, relative and from a slot" $ do
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.PartySize (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"PartySize\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"PartySize\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
     Common.assertCodec
       s
       Quantity.codec
@@ -588,7 +588,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.OpponentsAttacked (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"OpponentsAttacked\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"OpponentsAttacked\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
     Common.assertCodec
       s
       Quantity.codec
@@ -601,7 +601,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.AttackersDeclaredThisTurn (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"AttackersDeclaredThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"AttackersDeclaredThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
     Common.assertCodec
       s
       Quantity.codec
@@ -613,12 +613,12 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.AttackedInLastTurnOf (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"AttackedInLastTurnOf\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"AttackedInLastTurnOf\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.AttackersInTheirLastTurn (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"AttackersInTheirLastTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"AttackersInTheirLastTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   -- CR 701.9a, with a PlayerRef and nothing else on the wire: what is counted is
   -- the turn-scoped event log. Asmoranomardicadaistinaculdacar's is the Relative
   -- arm; the InSlot arm beside it is the one a recursive decoder could lose a
@@ -628,7 +628,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.TalliedThisTurn TurnTally.CardsDiscarded (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"CardsDiscardedThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"CardsDiscardedThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
     Common.assertCodec
       s
       Quantity.codec
@@ -639,7 +639,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.TalliedThisTurn TurnTally.CardsDrawn (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"CardsDrawnThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"CardsDrawnThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   -- CR 603.1b, on CardsDiscardedThisTurn's terms. Avatar Aang's is the Relative
   -- arm.
   Spec.it s "BendingsThisTurn" $
@@ -647,14 +647,14 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.TalliedThisTurn TurnTally.Bendings (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"BendingsThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"BendingsThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   -- CR 305.2a, on CardsDiscardedThisTurn's terms. Fastbond's is the Relative arm.
   Spec.it s "LandsPlayedThisTurn" $
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.TalliedThisTurn TurnTally.LandsPlayed (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"LandsPlayedThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"LandsPlayedThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   -- CR 119.3: the tally's record, whose own spec covers its fields. Fortifying
   -- Draught's is this turn's gain; First Response's last turn's loss.
   Spec.it s "LifeChanged" $ do
@@ -662,12 +662,12 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.LifeChanged LifeTally.MkLifeTally {LifeTally.player = PlayerRef.Relative PlayerRelation.You, LifeTally.direction = LifeDirection.Gained, LifeTally.turn = WhichTurn.ThisTurn})
-      " {\"type\":\"LifeChanged\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"direction\":{\"type\":\"Gained\"}}} "
+      " {\"type\":\"LifeChanged\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"direction\":\"Gained\"}} "
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.LifeChanged LifeTally.MkLifeTally {LifeTally.player = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), LifeTally.direction = LifeDirection.Lost, LifeTally.turn = WhichTurn.LastTurn})
-      " {\"type\":\"LifeChanged\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"direction\":{\"type\":\"Lost\"},\"turn\":{\"type\":\"LastTurn\"}}} "
+      " {\"type\":\"LifeChanged\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"direction\":\"Lost\",\"turn\":\"LastTurn\"}} "
   -- CR 120.1: a PlayerRef and an optional kind. Furious Spinesplitter's is the
   -- Relative arm over Opponent with no kind; Tymna the Weaver's narrows it to CR
   -- 510.2's combat damage.
@@ -676,12 +676,12 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing, DealtDamage.by = Nothing})
-      " {\"type\":\"PlayersDealtDamageThisTurn\",\"value\":{\"recipient\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
+      " {\"type\":\"PlayersDealtDamageThisTurn\",\"value\":{\"recipient\":{\"type\":\"Relative\",\"value\":\"Opponent\"}}} "
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), DealtDamage.kind = Just DamageKind.Combat, DealtDamage.by = Nothing})
-      " {\"type\":\"PlayersDealtDamageThisTurn\",\"value\":{\"recipient\":{\"type\":\"InSlot\",\"value\":\"target\"},\"kind\":{\"type\":\"Combat\"}}} "
+      " {\"type\":\"PlayersDealtDamageThisTurn\",\"value\":{\"recipient\":{\"type\":\"InSlot\",\"value\":\"target\"},\"kind\":\"Combat\"}} "
   -- CR 120.1 again, the same log read as a TOTAL: Petrified Wood-Kin's rule
   -- 702.54b X is the Relative arm over Opponent, and it must not share a tag with
   -- the tally above, which answers a different number on the same board.
@@ -690,7 +690,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.DamageDealtToPlayersThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Just DamageKind.Noncombat, DealtDamage.by = Nothing})
-      " {\"type\":\"DamageDealtToPlayersThisTurn\",\"value\":{\"kind\":{\"type\":\"Noncombat\"},\"recipient\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
+      " {\"type\":\"DamageDealtToPlayersThisTurn\",\"value\":{\"kind\":\"Noncombat\",\"recipient\":{\"type\":\"Relative\",\"value\":\"Opponent\"}}} "
     Common.assertCodec
       s
       Quantity.codec
@@ -703,7 +703,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.SpellsCast SpellTally.MkSpellTally {SpellTally.player = PlayerRef.Candidate, SpellTally.turn = WhichTurn.LastTurn})
-      " {\"type\":\"SpellsCast\",\"value\":{\"player\":{\"type\":\"Candidate\"},\"turn\":{\"type\":\"LastTurn\"}}} "
+      " {\"type\":\"SpellsCast\",\"value\":{\"player\":{\"type\":\"Candidate\"},\"turn\":\"LastTurn\"}} "
     Common.assertCodec
       s
       Quantity.codec
@@ -717,7 +717,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.TimesThisTurn AbilityAct.Resolved)
-      " {\"type\":\"TimesThisTurn\",\"value\":{\"type\":\"Resolved\"}} "
+      " {\"type\":\"TimesThisTurn\",\"value\":\"Resolved\"} "
   -- The Chain Veil's "you activate a loyalty ability of a planeswalker".
   Spec.it s "ActivationsThisTurn" $
     Common.assertCodec
@@ -730,7 +730,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
               ActivationsThisTurn.criteria = ActivationCriteria.MkActivationCriteria {ActivationCriteria.grantedBy = Nothing, ActivationCriteria.whichKind = Nothing, ActivationCriteria.whichLoyalty = Just LoyaltyKind.LoyaltyAbility, ActivationCriteria.whichAbility = Nothing}
             }
       )
-      " {\"type\":\"ActivationsThisTurn\",\"value\":{\"activator\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"source\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Planeswalker\"}},\"criteria\":{\"whichLoyalty\":{\"type\":\"LoyaltyAbility\"}}}} "
+      " {\"type\":\"ActivationsThisTurn\",\"value\":{\"activator\":{\"type\":\"Relative\",\"value\":\"You\"},\"source\":{\"type\":\"HasCardType\",\"value\":\"Planeswalker\"},\"criteria\":{\"whichLoyalty\":\"LoyaltyAbility\"}}} "
   -- CR 702.69a with nothing on the wire: the count reads the whole of the
   -- event log's extent and names no object at all.
   Spec.it s "PermanentsDiedThisTurn is nullary" $
@@ -759,7 +759,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.SpellsCastUsingThisTurn KeywordFamily.Warp)
-      " {\"type\":\"SpellsCastUsingThisTurn\",\"value\":{\"type\":\"Warp\"}} "
+      " {\"type\":\"SpellsCastUsingThisTurn\",\"value\":\"Warp\"} "
   -- CR 100.6a with nothing on the wire: the tally is the match's, so it names
   -- neither a player nor an object.
   Spec.it s "SubgamesThisMatch is nullary" $
@@ -777,7 +777,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.DungeonsCompleted (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"DungeonsCompleted\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"DungeonsCompleted\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
     Common.assertCodec
       s
       Quantity.codec
@@ -789,14 +789,14 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.CommanderCasts (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"CommanderCasts\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"CommanderCasts\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   -- CR 309.7 asked of one dungeon by name, the tally's named sibling.
   Spec.it s "CompletedDungeon, a player and a printed name" $
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.CompletedDungeon (CompletedDungeon.MkCompletedDungeon (PlayerRef.Relative PlayerRelation.You) (CardName.MkCardName (Text.pack "Tomb of Annihilation"))))
-      " {\"type\":\"CompletedDungeon\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"dungeon\":\"Tomb of Annihilation\"}} "
+      " {\"type\":\"CompletedDungeon\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"dungeon\":\"Tomb of Annihilation\"}} "
   -- CR 400.7 with NOTHING on the wire either: the object is the one the quantity
   -- is evaluated against, and "this turn" is the event log's own extent.
   Spec.it s "EnteredThisTurn is nullary" $
@@ -813,7 +813,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.EnteredFrom (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You)))
-      " {\"type\":\"EnteredFrom\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"zone\":{\"type\":\"Graveyard\"}}} "
+      " {\"type\":\"EnteredFrom\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"zone\":\"Graveyard\"}} "
   -- CR 601.2a's cast wraps that same InZone beside a caster of its own; the
   -- payload's own arms are Parun.Codec.CastFromSpec's, and what this proves is
   -- the TAG that reaches them.
@@ -822,7 +822,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.WasCastFrom (CastFrom.MkCastFrom (PlayerRef.Relative PlayerRelation.You) (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You))))
-      " {\"type\":\"WasCastFrom\",\"value\":{\"from\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"zone\":{\"type\":\"Graveyard\"}}}} "
+      " {\"type\":\"WasCastFrom\",\"value\":{\"from\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"zone\":\"Graveyard\"}}} "
   -- CR 509.1g with only the skip on the wire: the object is the one the
   -- quantity is evaluated against.
   Spec.it s "BlockersBeyond carries how many blockers it skips" $
@@ -848,7 +848,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot slot (Quantity.Measure Measure.Power)))
-      " {\"type\":\"AgainstSlot\",\"value\":{\"slot\":\"creature\",\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}}} "
+      " {\"type\":\"AgainstSlot\",\"value\":{\"slot\":\"creature\",\"quantity\":{\"type\":\"Measure\",\"value\":\"Power\"}}} "
     Common.assertCodec
       s
       Quantity.codec
@@ -863,12 +863,12 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile ExiledPile.OwnAbilities (Quantity.Measure Measure.Power)))
-      " {\"type\":\"AgainstExiledPile\",\"value\":{\"pile\":{\"type\":\"OwnAbilities\"},\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}}} "
+      " {\"type\":\"AgainstExiledPile\",\"value\":{\"pile\":{\"type\":\"OwnAbilities\"},\"quantity\":{\"type\":\"Measure\",\"value\":\"Power\"}}} "
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.Arithmetic (Arithmetic.Plus (Plus.MkPlus (Quantity.Literal 1) (Quantity.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile ExiledPile.CraftMaterials (Quantity.Measure Measure.Toughness))))))
-      " {\"type\":\"Plus\",\"value\":{\"left\":{\"type\":\"Literal\",\"value\":1},\"right\":{\"type\":\"AgainstExiledPile\",\"value\":{\"pile\":{\"type\":\"CraftMaterials\"},\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}}}}}} "
+      " {\"type\":\"Plus\",\"value\":{\"left\":{\"type\":\"Literal\",\"value\":1},\"right\":{\"type\":\"AgainstExiledPile\",\"value\":{\"pile\":{\"type\":\"CraftMaterials\"},\"quantity\":{\"type\":\"Measure\",\"value\":\"Toughness\"}}}}} "
   -- CR 607.2a / 613.7d (Duplicant): the filter picking the card, then what to
   -- read off it.
   Spec.it s "AgainstLastCardExiledWith" $
@@ -876,7 +876,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.AgainstLastCardExiledWith (AgainstLastCardExiledWith.MkAgainstLastCardExiledWith (Filter.HasCardType CardType.Creature) (Quantity.Measure Measure.Toughness)))
-      " {\"type\":\"AgainstLastCardExiledWith\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}}}} "
+      " {\"type\":\"AgainstLastCardExiledWith\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"quantity\":{\"type\":\"Measure\",\"value\":\"Toughness\"}}} "
   -- CR 107.1a's direction and the value it applies to, in that order. Nested
   -- once for AgainstSlot's reason -- a recursive decoder is where a payload gets
   -- lost -- and over a Count, which is the shape both producers print.
@@ -885,12 +885,12 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       s
       Quantity.codec
       (Quantity.Arithmetic (Arithmetic.Quotient (Quotient.MkQuotient Rounding.Down (Quantity.Literal 5) (Quantity.Literal 2))))
-      " {\"type\":\"Quotient\",\"value\":{\"rounding\":{\"type\":\"Down\"},\"quantity\":{\"type\":\"Literal\",\"value\":5},\"divisor\":{\"type\":\"Literal\",\"value\":2}}} "
+      " {\"type\":\"Quotient\",\"value\":{\"rounding\":\"Down\",\"quantity\":{\"type\":\"Literal\",\"value\":5},\"divisor\":{\"type\":\"Literal\",\"value\":2}}} "
     Common.assertCodec
       s
       Quantity.codec
       (Quantity.Arithmetic (Arithmetic.Quotient (Quotient.MkQuotient Rounding.Up (Quantity.LifeTotal PlayerRef.Candidate) (Quantity.Literal 2))))
-      " {\"type\":\"Quotient\",\"value\":{\"rounding\":{\"type\":\"Up\"},\"quantity\":{\"type\":\"LifeTotal\",\"value\":{\"type\":\"Candidate\"}},\"divisor\":{\"type\":\"Literal\",\"value\":2}}} "
+      " {\"type\":\"Quotient\",\"value\":{\"rounding\":\"Up\",\"quantity\":{\"type\":\"LifeTotal\",\"value\":{\"type\":\"Candidate\"}},\"divisor\":{\"type\":\"Literal\",\"value\":2}}} "
   -- CR 107.1's factor and the value it multiplies, over the Count that Blessed
   -- Reversal prints -- Quotient's reason for nesting, one arm over.
   Spec.it s "Times, over a count" $

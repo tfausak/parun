@@ -7,9 +7,7 @@
             "type": "AttachedPlayerControls",
             "value": {
               "type": "HasCardType",
-              "value": {
-                "type": "Creature"
-              }
+              "value": "Creature"
             }
           }
         }
@@ -30,9 +28,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -40,17 +36,11 @@
       "oracleText": "Enchant player\nCreatures enchanted player controls attack each combat if able.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          },
-          {
-            "type": "Curse"
-          }
+          "Aura",
+          "Curse"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

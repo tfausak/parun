@@ -18,9 +18,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -33,13 +31,9 @@
             "value": {
               "entrants": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Creature"
               },
-              "triggering": {
-                "type": "NoTrigger"
-              }
+              "triggering": "NoTrigger"
             }
           },
           "scope": {
@@ -57,14 +51,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hippogriff"
-          }
+          "Hippogriff"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

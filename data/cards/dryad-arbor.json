@@ -2,9 +2,7 @@
   "faces": [
     {
       "colorIndicator": [
-        {
-          "type": "Green"
-        }
+        "Green"
       ],
       "name": "Dryad Arbor",
       "oracleText": "(This land isn't a spell, it's affected by summoning sickness, and it has \"{T}: Add {G}.\")",
@@ -18,20 +16,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Forest"
-          },
-          {
-            "type": "Dryad"
-          }
+          "Forest",
+          "Dryad"
         ],
         "types": [
-          {
-            "type": "Creature"
-          },
-          {
-            "type": "Land"
-          }
+          "Creature",
+          "Land"
         ]
       }
     }

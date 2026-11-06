@@ -136,9 +136,7 @@
           "of": "Designations",
           "object": "$aviator",
           "is": [
-            {
-              "type": "Prepared"
-            }
+            "Prepared"
           ]
         }
       }

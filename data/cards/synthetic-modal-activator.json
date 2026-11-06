@@ -97,9 +97,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

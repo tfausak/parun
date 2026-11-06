@@ -29,16 +29,12 @@
                   "type": "OverPlayers",
                   "value": {
                     "type": "Relative",
-                    "value": {
-                      "type": "Opponent"
-                    }
+                    "value": "Opponent"
                   }
                 }
               }
             },
-            "rounding": {
-              "type": "Up"
-            }
+            "rounding": "Up"
           }
         },
         "toughness": {
@@ -68,16 +64,12 @@
                   "type": "OverPlayers",
                   "value": {
                     "type": "Relative",
-                    "value": {
-                      "type": "Opponent"
-                    }
+                    "value": "Opponent"
                   }
                 }
               }
             },
-            "rounding": {
-              "type": "Up"
-            }
+            "rounding": "Up"
           }
         }
       },
@@ -90,18 +82,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -130,17 +118,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          },
-          {
-            "type": "Spirit"
-          }
+          "Elemental",
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

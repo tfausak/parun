@@ -119,7 +119,7 @@ spec s = Spec.describe s "Parun.Codec.DamageRewrite" $ do
       s
       (DamageRewrite.codec (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (DamageRewrite.RunEffects (Seq.fromList [Effect.Type.Destroy (Destroy.MkDestroy (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "creature"))) Regenerability.Regenerable Nothing Nothing Nothing)]))
-      " {\"type\":\"RunEffects\",\"value\":[{\"type\":\"Destroy\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"creature\"},\"regenerability\":{\"type\":\"Regenerable\"}}}]} "
+      " {\"type\":\"RunEffects\",\"value\":[{\"type\":\"Destroy\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"creature\"},\"regenerability\":\"Regenerable\"}}]} "
   Spec.it s "TurnFaceUp" $
     Common.assertCodec
       s

@@ -33,9 +33,7 @@
                             "type": "Not",
                             "value": {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Wall"
-                              }
+                              "value": "Wall"
                             }
                           },
                           "duration": {
@@ -68,9 +66,7 @@
       "oracleText": "{4}, {T}: Target creature can't be blocked this turn except by Walls.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

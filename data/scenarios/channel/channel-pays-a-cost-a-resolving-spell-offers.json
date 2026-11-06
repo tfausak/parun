@@ -137,9 +137,7 @@
       "source": "Force Spike",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          }
+          "decision": "Pays"
         }
       }
     },
@@ -150,9 +148,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },
@@ -163,9 +159,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

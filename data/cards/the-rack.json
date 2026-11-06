@@ -19,9 +19,7 @@
               },
               "rewrite": {
                 "type": "ChoosePlayer",
-                "value": {
-                  "type": "Opponent"
-                }
+                "value": "Opponent"
               }
             }
           }
@@ -34,9 +32,7 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
@@ -94,9 +90,7 @@
                                                 }
                                               ]
                                             },
-                                            "zone": {
-                                              "type": "Hand"
-                                            }
+                                            "zone": "Hand"
                                           }
                                         }
                                       }
@@ -132,9 +126,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

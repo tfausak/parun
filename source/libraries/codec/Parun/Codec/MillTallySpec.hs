@@ -20,5 +20,5 @@ spec s = Spec.describe s "Parun.Codec.MillTally" $ do
         { MillTally.slot = SlotName.MkSlotName (Text.pack "milled"),
           MillTally.filter = Filter.Not (Filter.HasCardType CardType.Land)
         }
-      " {\"slot\":\"milled\",\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}} "
+      " {\"slot\":\"milled\",\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s MillTally.codec

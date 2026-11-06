@@ -12,12 +12,12 @@ spec s = Spec.describe s "Parun.Codec.CostDirection" $ do
       s
       CostDirection.codec
       CostDirection.Less
-      " {\"type\":\"Less\"} "
+      " \"Less\" "
   Spec.it s "More" $
     Common.assertCodec
       s
       CostDirection.codec
       CostDirection.More
-      " {\"type\":\"More\"} "
+      " \"More\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s CostDirection.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s CostDirection.codec

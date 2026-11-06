@@ -59,12 +59,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Artifact"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Artifact",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -82,12 +78,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Creature"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Creature",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -105,12 +97,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "InAddition"
-                              },
-                              "subtype": {
-                                "type": "AssemblyWorker"
-                              }
+                              "mode": "InAddition",
+                              "subtype": "AssemblyWorker"
                             }
                           },
                           "ref": {
@@ -198,9 +186,7 @@
                   "target": {
                     "filter": {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "AssemblyWorker"
-                      }
+                      "value": "AssemblyWorker"
                     },
                     "pool": {
                       "type": "Creatures"
@@ -216,9 +202,7 @@
       "oracleText": "{T}: Add {C}.\n{1}: This land becomes a 2/2 Assembly-Worker artifact creature until end of turn. It's still a land.\n{T}: Target Assembly-Worker creature gets +1/+1 until end of turn.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

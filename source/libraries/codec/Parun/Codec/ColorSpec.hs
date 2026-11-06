@@ -14,31 +14,31 @@ spec s = Spec.describe s "Parun.Codec.Color" $ do
       s
       Color.codec
       Color.White
-      " {\"type\":\"White\"} "
+      " \"White\" "
   Spec.it s "Blue" $
     Common.assertCodec
       s
       Color.codec
       Color.Blue
-      " {\"type\":\"Blue\"} "
+      " \"Blue\" "
   Spec.it s "Black" $
     Common.assertCodec
       s
       Color.codec
       Color.Black
-      " {\"type\":\"Black\"} "
+      " \"Black\" "
   Spec.it s "Red" $
     Common.assertCodec
       s
       Color.codec
       Color.Red
-      " {\"type\":\"Red\"} "
+      " \"Red\" "
   Spec.it s "Green" $
     Common.assertCodec
       s
       Color.codec
       Color.Green
-      " {\"type\":\"Green\"} "
+      " \"Green\" "
   Spec.it s "unknown tag fails" $
     Spec.assertBool s (either (const True) (const False) (Codec.decode Color.codec (Value.object []))) "left"
   -- Exhaustive where the literals above are representative: Arm.enum derives

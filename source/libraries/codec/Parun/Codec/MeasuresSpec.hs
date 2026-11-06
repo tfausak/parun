@@ -17,5 +17,5 @@ spec s = Spec.describe s "Parun.Codec.Measures" $ do
       s
       Measures.codec
       (Measures.MkMeasures Measure.Power Comparison.AtLeast (Operand.OfSource Measure.Toughness))
-      " {\"measure\":{\"type\":\"Power\"},\"comparison\":{\"type\":\"AtLeast\"},\"operand\":{\"type\":\"OfSource\",\"value\":{\"type\":\"Toughness\"}}} "
+      " {\"measure\":\"Power\",\"comparison\":\"AtLeast\",\"operand\":{\"type\":\"OfSource\",\"value\":\"Toughness\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Measures.codec

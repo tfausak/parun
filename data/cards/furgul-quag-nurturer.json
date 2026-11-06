@@ -17,9 +17,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               }
@@ -40,9 +38,7 @@
                             "value": {
                               "quantity": {
                                 "type": "Measure",
-                                "value": {
-                                  "type": "Power"
-                                }
+                                "value": "Power"
                               },
                               "slot": "thatSacrificedPermanent"
                             }
@@ -51,9 +47,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Green"
-                              }
+                              "value": "Green"
                             }
                           }
                         }
@@ -75,18 +69,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -107,17 +97,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -130,9 +116,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -144,19 +128,13 @@
                               "value": [
                                 {
                                   "type": "HasSubtype",
-                                  "value": {
-                                    "type": "Leech"
-                                  }
+                                  "value": "Leech"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -166,13 +144,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
+                                  "value": "AnyPlayer"
                                 },
-                                "zone": {
-                                  "type": "Battlefield"
-                                }
+                                "zone": "Battlefield"
                               }
                             }
                           }
@@ -202,9 +176,7 @@
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "Black"
-                                          }
+                                          "value": "Black"
                                         }
                                       }
                                     ],
@@ -225,17 +197,13 @@
                                           "value": {
                                             "phase": {
                                               "type": "Combat",
-                                              "value": {
-                                                "type": "BeginningOfCombat"
-                                              }
+                                              "value": "BeginningOfCombat"
                                             },
                                             "scope": {
                                               "type": "PlayersTurn",
                                               "value": {
                                                 "type": "Relative",
-                                                "value": {
-                                                  "type": "You"
-                                                }
+                                                "value": "You"
                                               }
                                             }
                                           }
@@ -300,23 +268,15 @@
                                                       {
                                                         "type": "HeldBy",
                                                         "value": {
-                                                          "holder": {
-                                                            "type": "Controller"
-                                                          },
-                                                          "relation": {
-                                                            "type": "You"
-                                                          }
+                                                          "holder": "Controller",
+                                                          "relation": "You"
                                                         }
                                                       },
                                                       {
                                                         "type": "Measures",
                                                         "value": {
-                                                          "comparison": {
-                                                            "type": "AtMost"
-                                                          },
-                                                          "measure": {
-                                                            "type": "Power"
-                                                          },
+                                                          "comparison": "AtMost",
+                                                          "measure": "Power",
                                                           "operand": {
                                                             "type": "Literal",
                                                             "value": 2
@@ -337,14 +297,10 @@
                                     ],
                                     "typeLine": {
                                       "subtypes": [
-                                        {
-                                          "type": "Leech"
-                                        }
+                                        "Leech"
                                       ],
                                       "types": [
-                                        {
-                                          "type": "Creature"
-                                        }
+                                        "Creature"
                                       ]
                                     }
                                   }
@@ -378,19 +334,13 @@
                               "value": [
                                 {
                                   "type": "HasSubtype",
-                                  "value": {
-                                    "type": "Leech"
-                                  }
+                                  "value": "Leech"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -414,22 +364,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Elf",
+          "Shaman"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

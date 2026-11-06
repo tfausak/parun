@@ -5,7 +5,7 @@
     "seats": [
       {
         "name": "alice",
-        "counters": [{ "key": { "type": "Rad" }, "value": 3 }],
+        "counters": [{ "key": "Rad", "value": 3 }],
         "library": [
           { "card": "Mountain" },
           { "card": "Mountain" },
@@ -24,6 +24,6 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Mountain", "count": 3 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": { "type": "Rad" }, "count": 3 } } }
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": "Rad", "count": 3 } } }
   ]
 }

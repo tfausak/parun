@@ -16,9 +16,7 @@
                     },
                     "whichPermanents": {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Food"
-                      }
+                      "value": "Food"
                     }
                   }
                 }
@@ -37,18 +35,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -67,9 +61,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "Not",
@@ -83,19 +75,13 @@
           "modifications": [
             {
               "type": "AddSubtype",
-              "value": {
-                "type": "Food"
-              }
+              "value": "Food"
             },
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Artifact"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Artifact",
+                "mode": "InAddition"
               }
             },
             {
@@ -130,9 +116,7 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
                                   "quantity": {
                                     "type": "Literal",
@@ -163,18 +147,14 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ],
               "permanent": {
                 "type": "Matching",
                 "value": {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Food"
-                  }
+                  "value": "Food"
                 }
               }
             }
@@ -211,22 +191,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          },
-          {
-            "type": "Elemental"
-          }
+          "Cat",
+          "Elemental"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }
