@@ -293,7 +293,7 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "number" (answering gs "2" (Prompt.ChooseNumber alice S.alice o7 1 NumberFloor.Least (Just 2))) (Right 2)
     let (_, pastBound) = asking Hotseat.fresh {Hotseat.facing = Just S.alice} ["3"] gs (Prompt.ChooseNumber alice S.alice o7 1 NumberFloor.Least (Just 2))
     Spec.assertEqWith s "a number past its bound is refused by its range" (filter (Text.isPrefixOf (Text.pack "Type a number")) pastBound) [Text.pack "Type a number from 1 to 2."]
-    Spec.assertEqWith s "a number that is no bid notes no high bid" (filter (Text.isPrefixOf (Text.pack "Choose a number")) pastBound) [Text.pack "Choose a number for Player 1's spell, from 1 to 2:"]
+    Spec.assertEqWith s "a number that is no bid notes no high bid" (filter (Text.isPrefixOf (Text.pack "Choose a number")) pastBound) [Text.pack "Choose a number for object 7, from 1 to 2:"]
     Spec.assertEqWith s "an unbounded number" (answering gs "99" (Prompt.ChooseNumber alice S.alice o7 3 NumberFloor.Least Nothing)) (Right 99)
     Spec.assertEqWith s "combat damage" (answering gs "1 2" (Prompt.AssignCombatDamage alice S.alice o7 (Map.fromList [(Recipient.ToCreature o5, 0), (Recipient.ToCreature o9, 0)]) 3)) (Right (Map.fromList [(Recipient.ToCreature o5, 1), (Recipient.ToCreature o9, 2)]))
     Spec.assertEqWith s "division" (answering gs "3 1" (Prompt.ChooseDivision alice S.alice o7 (Dividing.Total 4) (Recipient.ToCreature o9 NonEmpty.:| [Recipient.ToPlayer S.bob]))) (Right (Map.fromList [(Recipient.ToCreature o9, 3), (Recipient.ToPlayer S.bob, 1)]))
