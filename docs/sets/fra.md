@@ -244,5 +244,3 @@ first.
   can't be asked.
 - #6496: Loot, the Anomaly. `CombatDamageAmount` can't treat a negative power as
   positive (CR 510.1a, 107.1b).
-- #6495: Loot, the Nexus; Tam, the Possibility. `DistinctOf` has no powers or
-  planeswalker types.
