@@ -307,6 +307,7 @@ printed self keyword = case keyword of
   Keyword.Warp c -> Cost.keyworded self (keywordWord self) (Text.pack "Warp") c
   Keyword.Disturb c -> Cost.keyworded self (keywordWord self) (Text.pack "Disturb") c
   Keyword.Harmonize c -> Cost.keyworded self (keywordWord self) (Text.pack "Harmonize") c
+  Keyword.BeamMeUp c -> Cost.keyworded self (keywordWord self) (Text.pack "Beam me up") c
 
 -- | A keyword family as Oracle text names every keyword of it, in lower case
 -- ("loses hexproof"), landwalk's as its abilities (Hammerheim, CR 702.14a),
@@ -557,7 +558,8 @@ costedKeywords =
     Keyword.Transfigure,
     Keyword.Warp,
     Keyword.Disturb,
-    Keyword.Harmonize
+    Keyword.Harmonize,
+    Keyword.BeamMeUp
   ]
 
 -- | The keywords 'printed' answers for with a number and a cost, each as the

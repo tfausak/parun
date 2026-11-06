@@ -950,7 +950,28 @@ candidateCostsGiven permitted pid name oid gs =
                          in concatMap
                               (\cost -> tappingNone cost : fmap (tappingOne cost) tappable)
                               (Keyword.harmonizeCosts keywords)
-                      stated = not . null . Keyword.permissionsFor (TypeLine.types (Face.typeLine face)) . Keyword.Type.Flashback
+                      -- CR 702.196a's cost, flashback's shape plus "returning a
+                      -- creature you control to its owner's hand", which rides in
+                      -- the candidate's components as sneak's return does
+                      -- (Keyword.plainAlternativeCosts). Gated by rule 702.196a's own
+                      -- instant-or-sorcery clause, flashback's `stated`.
+                      beamedUp cost =
+                        CandidateCost.plain
+                          (Just (Keyword.Type.BeamMeUp cost))
+                          ( withAdditional
+                              cost
+                                { Cost.components =
+                                    Cost.components cost
+                                      <> [ CostComponent.ReturnPermanents
+                                             ( ReturnPermanents.MkReturnPermanents
+                                                 1
+                                                 (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.HeldBy Holder.Controller PlayerRelation.You])
+                                             )
+                                         ]
+                                }
+                          )
+                      statedFor keyword = not . null . Keyword.permissionsFor (TypeLine.types (Face.typeLine face)) . keyword
+                      stated = statedFor Keyword.Type.Flashback
                       -- CR 601.3: a permission naming the cost it admits --
                       -- Tenacious Underdog's "cast this card from your graveyard
                       -- using its blitz ability" -- opens only the candidates a
@@ -967,6 +988,7 @@ candidateCostsGiven permitted pid name oid gs =
                         <> fmap escape (Keyword.escapeCosts keywords)
                         <> (if Game.discardedThisTurnBy pid oid gs then fmap mayhem (Keyword.mayhemCosts keywords) else [])
                         <> harmonized
+                        <> fmap beamedUp (filter (statedFor Keyword.Type.BeamMeUp) (Keyword.beamMeUpCosts keywords))
                         <> ( if Keyword.hasRetrace keywords
                                then
                                  [ CandidateCost.plain

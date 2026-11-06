@@ -1805,6 +1805,16 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       " {\"type\":\"Harmonize\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":6}]}} "
     Spec.assertBool s (Codec.encode Keyword.codec (Keyword.Disturb (cost 2)) /= Codec.encode Keyword.codec (Keyword.Flashback (cost 2))) "CR 702.146a is not CR 702.34a"
     Spec.assertBool s (Codec.encode Keyword.codec (Keyword.Harmonize (cost 2)) /= Codec.encode Keyword.codec (Keyword.Disturb (cost 2))) "CR 702.180a is not CR 702.146a"
+  -- CR 702.196a's payload is a whole Cost, and must not share Flashback's tag:
+  -- its cost also returns a creature.
+  Spec.it s "BeamMeUp carries its cost, and is not Flashback" $ do
+    let cost n = Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic n])) []
+    Common.assertCodec
+      s
+      Keyword.codec
+      (Keyword.BeamMeUp (cost 3))
+      " {\"type\":\"BeamMeUp\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]}} "
+    Spec.assertBool s (Codec.encode Keyword.codec (Keyword.BeamMeUp (cost 2)) /= Codec.encode Keyword.codec (Keyword.Flashback (cost 2))) "CR 702.196a is not CR 702.34a"
   Spec.it s "has a schema" $
     Common.assertHasSchema s Keyword.codec
 

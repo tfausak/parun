@@ -545,6 +545,7 @@ abilitiesFor keyword count = case keyword of
   -- a leaves-the-stack replacement rather than triggers.
   Keyword.Disturb _ -> []
   Keyword.Harmonize _ -> []
+  Keyword.BeamMeUp _ -> []
   -- CR 702.148a's two static abilities print no triggered ability either: one is
   -- an alternative cost (Parun.Engine.Cost.candidateCostsGiven) and the other a CR
   -- 612.1 text change, which Parun.Types.Keyword's Cleave says the card states for
@@ -825,6 +826,7 @@ handAbilitiesFor keyword = fmap (mintedBy keyword) $ case keyword of
   Keyword.Warp _ -> []
   Keyword.Disturb _ -> []
   Keyword.Harmonize _ -> []
+  Keyword.BeamMeUp _ -> []
   Keyword.Cleave _ -> []
   Keyword.Overload _ -> []
   Keyword.Awaken _ -> []
@@ -1408,6 +1410,7 @@ graveyardAbilitiesFor keyword = fmap (mintedBy keyword) $ case keyword of
   Keyword.Warp _ -> []
   Keyword.Disturb _ -> []
   Keyword.Harmonize _ -> []
+  Keyword.BeamMeUp _ -> []
   Keyword.Cleave _ -> []
   Keyword.Overload _ -> []
   Keyword.Awaken _ -> []
@@ -2048,6 +2051,7 @@ battlefieldAbilitiesFor keyword count = fmap (mintedBy keyword) $ case keyword o
   Keyword.Warp _ -> []
   Keyword.Disturb _ -> []
   Keyword.Harmonize _ -> []
+  Keyword.BeamMeUp _ -> []
   Keyword.Cleave _ -> []
   Keyword.Overload _ -> []
   Keyword.Awaken _ -> []
@@ -2845,6 +2849,11 @@ permissionsFor cardTypes keyword = case keyword of
   -- is Parun.Engine.Cost.candidateCostsGiven's; the third ability's exile is
   -- castFromGraveyardReplacementsOf's.
   Keyword.Harmonize _ -> [CastingPermission.CastFromGraveyard Nothing []]
+  -- CR 702.196a: flashback's arm and its clause, word for word.
+  Keyword.BeamMeUp _
+    | Set.member CardType.Instant cardTypes || Set.member CardType.Sorcery cardTypes ->
+        [CastingPermission.CastFromGraveyard Nothing []]
+    | otherwise -> []
   Keyword.Cleave _ -> []
   Keyword.Overload _ -> []
   Keyword.Awaken _ -> []
@@ -3168,6 +3177,16 @@ harmonizeCosts :: Set Keyword -> [Cost Keyword]
 harmonizeCosts keywords =
   let costOf keyword = case keyword of
         Keyword.Harmonize cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.196a: every beam me up cost this card has, in ascending Set order, a
+-- list for flashbackCosts' reason. The BARE payload: rule 702.196a's return
+-- rides in the candidate's components (Parun.Engine.Cost.candidateCostsGiven).
+beamMeUpCosts :: Set Keyword -> [Cost Keyword]
+beamMeUpCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.BeamMeUp cost -> Just cost
         _ -> Nothing
    in Maybe.mapMaybe costOf (Set.toAscList keywords)
 
@@ -4053,18 +4072,19 @@ manaSubstitutesFor symbol keywords =
         _ -> Nothing
    in Maybe.mapMaybe substituteOf (Set.toAscList keywords)
 
--- The one exile CR 702.34a, CR 702.127a, CR 702.133a and CR 702.180a all print,
+-- The one exile CR 702.34a, 702.127a, 702.133a, 702.180a and 702.196a all print,
 -- in the same words. Filter.IsSource, because the rule says "this card".
 -- `whenDestination = Nothing` is the rule's "instead of putting it anywhere else" -- every
 -- destination, not the graveyard alone, so Reprieve returning a flashed-back
 -- spell to its owner's hand exiles it instead (Parun.CastSpec's "CR 702.34a a
 -- flashback spell bounced off the stack is exiled, not returned to hand").
 --
--- GATED on the clause each of the four rules puts in front of it, and the four
+-- GATED on the clause each of the five rules puts in front of it, and the five
 -- clauses are not the same question. `castFor` is the keyword whose candidate cost
 -- the cast was announced for, which rule 702.34a's "if the flashback cost was
--- paid", rule 702.133a's jump-start clause and rule 702.180a's each ask about;
--- rule 702.127a asks only whether the cast came from a graveyard.
+-- paid", rule 702.133a's jump-start clause, rule 702.180a's and rule
+-- 702.196a's each ask about; rule 702.127a asks only whether the cast came from
+-- a graveyard.
 -- Parun.Engine.Cast installs what this
 -- returns without ever inspecting it.
 castFromGraveyardReplacementsOf :: Set Keyword -> Maybe Keyword -> [ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))]
@@ -4096,6 +4116,9 @@ castFromGraveyardReplacementsOf keywords castFor =
         -- rule 702.34a's does, and against every harmonize the card has for that
         -- arm's reason.
         <> (if any (paidFor . Keyword.Harmonize) (harmonizeCosts keywords) then [castFromGraveyardExile] else [])
+        -- CR 702.196a's second static ability, the fifth printing of the
+        -- sentence, gated as rule 702.34a's is.
+        <> (if any (paidFor . Keyword.BeamMeUp) (beamMeUpCosts keywords) then [castFromGraveyardExile] else [])
 
 castFromGraveyardExile :: ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))
 castFromGraveyardExile =
@@ -4419,6 +4442,7 @@ mintedReplacementsFor keyword count = case keyword of
   -- than this one.
   Keyword.Disturb _ -> []
   Keyword.Harmonize _ -> []
+  Keyword.BeamMeUp _ -> []
   Keyword.Cleave _ -> []
   Keyword.Overload _ -> []
   Keyword.Awaken _ -> []
@@ -4910,6 +4934,7 @@ mintedCombatRestrictionsFor keyword = case keyword of
   Keyword.Warp _ -> []
   Keyword.Disturb _ -> []
   Keyword.Harmonize _ -> []
+  Keyword.BeamMeUp _ -> []
   Keyword.Cleave _ -> []
   Keyword.Overload _ -> []
   Keyword.Awaken _ -> []
@@ -5255,6 +5280,7 @@ mintedAttachRestrictionsFor keyword = case keyword of
   Keyword.Warp _ -> []
   Keyword.Disturb _ -> []
   Keyword.Harmonize _ -> []
+  Keyword.BeamMeUp _ -> []
   Keyword.Cleave _ -> []
   Keyword.Overload _ -> []
   Keyword.Awaken _ -> []
@@ -5812,6 +5838,7 @@ functionsOnBattlefield keyword = case keyword of
   Keyword.Forecast -> False
   Keyword.Foretell _ -> False
   Keyword.Harmonize _ -> False
+  Keyword.BeamMeUp _ -> False
   Keyword.JumpStart -> False
   Keyword.Madness _ -> False
   Keyword.Mayhem _ -> False
@@ -6070,6 +6097,7 @@ familyOf keyword = case keyword of
   Keyword.Warp _ -> Just KeywordFamily.Warp
   Keyword.Disturb _ -> Just KeywordFamily.Disturb
   Keyword.Harmonize _ -> Just KeywordFamily.Harmonize
+  Keyword.BeamMeUp _ -> Just KeywordFamily.BeamMeUp
   Keyword.Cleave _ -> Just KeywordFamily.Cleave
   Keyword.Overload _ -> Just KeywordFamily.Overload
   Keyword.Awaken _ -> Just KeywordFamily.Awaken
