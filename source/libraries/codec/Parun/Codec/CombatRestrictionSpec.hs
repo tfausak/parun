@@ -9,6 +9,7 @@ import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AffectedUnless as AffectedUnless
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.AloneUnless as AloneUnless
+import qualified Parun.Types.AttackLimitScope as AttackLimitScope
 import qualified Parun.Types.AttackLimitUnless as AttackLimitUnless
 import qualified Parun.Types.AttackTargetKind as AttackTargetKind
 import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
@@ -121,8 +122,8 @@ spec s = Spec.describe s "Parun.Codec.CombatRestriction" $ do
     Common.assertCodec
       s
       CombatRestriction.codec
-      (CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless 3 (Just (PlayerScope.Related PlayerRelation.You)) Nothing))
-      " {\"type\":\"CantAttackMoreThan\",\"value\":{\"limit\":3,\"defenders\":{\"type\":\"You\"}}} "
+      (CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless 3 (Just (AttackLimitScope.Players (PlayerScope.Related PlayerRelation.You))) Nothing))
+      " {\"type\":\"CantAttackMoreThan\",\"value\":{\"limit\":3,\"defenders\":{\"type\":\"Players\",\"value\":{\"type\":\"You\"}}}} "
   -- CR 508.1c's second clause: the gated form.
   Spec.it s "CantAttack carries its condition" $
     Common.assertCodec

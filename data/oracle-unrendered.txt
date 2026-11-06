@@ -2888,6 +2888,7 @@ tolarian-winds
 tomb-of-annihilation
 tome-anima
 tome-of-the-infinite
+tomik-orzhov-lawmage
 too-greedily-too-deep
 toralfs-disciple
 torgaar-famine-incarnate
