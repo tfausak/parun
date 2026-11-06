@@ -40,8 +40,8 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "CR 700.3 / 611.2c Raging River: a creature that became one after the piles were made is in no pile and can't block",
-  "note": "Bob's Factory is a land as the ability resolves, so it is in neither pile; bob puts the Ogre on the left and alice chooses left for the Bears. Animated afterwards, the Factory is a creature without flying outside every pile, so it is refused, while the Ogre may block.",
+  "description": "CR 700.3 / 611.2c Raging River: a creature animated after the piles were made is not in the right pile and can't block",
+  "note": "Bob passes with the trigger on the stack, so his Factory is a land as it resolves and is in neither pile; bob leaves the left pile empty and alice chooses the right one, the Ogre, for the Bears. Animated afterwards, the Factory is outside both piles, and the chosen pile is the rest of the division, so a complement of the left pile would admit it; it is refused, while the Ogre may block.",
   "timeline": [
     {
       "do": "Pass",
@@ -63,9 +63,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseAnyNumberIntoPile",
-          "with": [
-            "$ogre"
-          ]
+          "with": []
         }
       },
       "player": "bob",
@@ -82,6 +80,12 @@
         }
       },
       "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
       "step": "DeclareAttackers",
       "turn": 1
     },
