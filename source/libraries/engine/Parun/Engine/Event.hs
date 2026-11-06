@@ -50,7 +50,7 @@ import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Dice as Dice
 import qualified Parun.Engine.EntryRestriction as EntryRestriction
 import Parun.Engine.Event.Match (matchesTriggerGiven)
-import Parun.Engine.Event.Trigger (battlefieldCandidates, delayedArmed, delayedPending, eventTriggers, interveningHolds, isReflexive, participants, reflexiveFiring, stateTriggers)
+import Parun.Engine.Event.Trigger (Standing, battlefieldCandidates, delayedArmed, delayedPending, eventTriggers, eventTriggersGiven, interveningHolds, isReflexive, participants, reflexiveFiring, standingOf, stateTriggers)
 import qualified Parun.Engine.Expiry as Expiry
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
@@ -11883,7 +11883,11 @@ gatherTriggers grouped boards gs = do
 -- at all, so a second call would duplicate every one of them. The CR 603.7
 -- delayed store is re-run by Engine.reactions itself, which writes it back.
 reactionTriggers :: [LoggedEvent.LoggedEvent] -> GameState -> [PendingTrigger]
-reactionTriggers events gs = filter (interveningHolds gs) (eventTriggers events gs)
+reactionTriggers events gs = reactionTriggersGiven Nothing (standingOf gs) events gs
+
+-- `reactionTriggers` over Trigger.eventTriggersGiven's `scope` and `standing`.
+reactionTriggersGiven :: Maybe (Set.Set ObjectId) -> Standing -> [LoggedEvent.LoggedEvent] -> GameState -> [PendingTrigger]
+reactionTriggersGiven scope standing events gs = filter (interveningHolds gs) (eventTriggersGiven scope standing events gs)
 
 -- CR 704.5v's "the source of an ability that has triggered": the objects an
 -- ability has triggered from since the last scan, before any of it is placed.

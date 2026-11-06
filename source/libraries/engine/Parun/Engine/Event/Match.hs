@@ -1401,7 +1401,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- all, so nothing about the spell is read and no CR 608.2h fallback is
   -- reachable. The bearer is the STACK object, which is the same id
   -- GameEvent.SpellCast carries: CR 601.2a puts the card on the stack as it is
-  -- cast and leaves it there, so eventTriggers' `spellCast` source offers
+  -- cast and leaves it there, so eventTriggersGiven's `spellCast` source offers
   -- exactly that incarnation. Its scope is @Relative AnyPlayer@ (CR 601.2i says nothing
   -- about whose turn it is, and no printing narrows its own cast by one), and a
   -- spell's own cast is the first of its kind, so its ordinal is one.
@@ -2000,7 +2000,7 @@ armMatches bindings board gs bearer you cond event = case cond of
     _ -> False
   -- CR 701.31d: "When you planeswalk away from [this plane]", against the
   -- planeswalk naming this very plane among those walked away from. The bearer
-  -- is the id it had face up, which eventTriggers' `walkedAwayFrom` offers.
+  -- is the id it had face up, which eventTriggersGiven's `walkedAwayFrom` offers.
   TriggerCondition.SelfPlaneswalkedAwayFrom -> case event of
     GameEvent.TurnedUpOffDeck e -> Set.member bearer (TurnedUpOffDeck.awayFrom e)
     _ -> False

@@ -4366,14 +4366,14 @@ aimingSignature pid oid gs cost
           capacity = Mana.supplyCapacity (midPayment (manaActivationsGiven (PlayerEffect.applying pid gs)))
           borrowed = PlayerEffect.tapForManaGrants pid gs
           pcs = Projection.projectAll gs
-          sample = Trigger.battlefieldCandidates gs
+          watch = Mana.watchOf gs
           rewritesOf = Replacement.manaRewrites gs
           -- A route announcing an X is read at X = 0 alone: what it claims is
           -- the same at every X.
           supplies =
             if Set.null axes
               then []
-              else [(source, supply) | source <- Mana.manaSourcesGiven Set.empty capacity (Projection.controlGrants gs) pcs pid gs, supply <- Mana.manaSuppliesGiven 0 capacity sample rewritesOf pcs pid (borrowed source) source gs]
+              else [(source, supply) | source <- Mana.manaSourcesGiven Set.empty capacity (Projection.controlGrants gs) pcs pid gs, supply <- Mana.manaSuppliesGiven 0 capacity watch rewritesOf pcs pid (borrowed source) source gs]
           -- The yield's OWN claims, narrowed per sacrifice candidate where the
           -- supply prices one (Mana.manaSuppliesGiven's fourth element).
           relevant (_, _, _, own) = filter ((`Set.member` axes) . Claim.Type.axis) (Activations.claims own)
