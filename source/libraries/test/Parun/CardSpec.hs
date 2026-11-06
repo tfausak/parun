@@ -8027,7 +8027,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
   Spec.it s "the lint itself catches a choice that binds a reserved slot" $ do
     json <- S.committedJson "sirens-call.json"
     let misnamed = Text.replace (Text.pack "\"namedPlayer\"") (Text.pack "\"thatPlayer\"") json
-        faceOf text = either (\err -> Left (Text.unpack err)) (Right . Card.combined) (Registry.parseCard (TextEncoding.encodeUtf8 text))
+        faceOf text = either (Left . Text.unpack) (Right . Card.combined) (Registry.parseCard (TextEncoding.encodeUtf8 text))
     Spec.assertEqWith
       s
       "a ChoosePlayer bound to thatPlayer is caught, and the real card binds no reserved slot"
