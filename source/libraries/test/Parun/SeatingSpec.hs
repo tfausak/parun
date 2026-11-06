@@ -35,11 +35,12 @@ spec s registry = Spec.describe s "Seating" $ do
     forest <- S.printingOf s registry "Forest"
     let (started, drawnFrom) = S.newGameDrawingLast forest (game 3 GameSettings.plain)
         (teamed, teamDraws) = S.newGameDrawingLast forest (teamGame [0, 0, 1])
+    Spec.assertEqWith s "CR 806.3 carol takes the next turn" (nextTurn started) (seat 2)
     Spec.assertEqWith s "CR 806.3 the seats after alice drawn" drawnFrom [[seat 1, seat 2]]
     Spec.assertEqWith s "CR 806.3 the seating drawn" (GameState.turnOrder started) [seat 0, seat 2, seat 1]
-    Spec.assertEqWith s "CR 806.3 carol takes the next turn" (nextTurn started) (seat 2)
     Spec.assertEqWith s "CR 808.2 a team game draws no seat" teamDraws []
-    Spec.assertEqWith s "CR 808.2 and keeps its seating" (GameState.turnOrder teamed) [seat 0, seat 1, seat 2]
+    -- CR 808.4 rotates the turn order to the starting team; the seating stands.
+    Spec.assertEqWith s "CR 808.2 and keeps its seating" (Setup.rotateTo (seat 0) (GameState.turnOrder teamed)) [seat 0, seat 1, seat 2]
 
   -- CR 808.2: two teams of two seated alternately split both. Seat 2 opens
   -- team 0's second run. The same seating is CR 811.3's, so as an Alternating

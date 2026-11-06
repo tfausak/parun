@@ -46,9 +46,9 @@ spec s registry = Spec.describe s "GrandMelee" $ do
   Spec.it s "CR 807.3 the players are seated at random" $ do
     forest <- S.printingOf s registry "Forest"
     let (started, drawnFrom) = S.newGameDrawingLast forest (GrandMelee.setUp (seated 5))
+    Spec.assertEqWith s "CR 807.4c the marker passes to seat 4" (turnsAfter 1 started) [(seat 4, False)]
     Spec.assertEqWith s "CR 807.3 each seat drawn from the players not yet seated" drawnFrom (fmap seats [[1, 2, 3, 4], [1, 2, 3], [1, 2]])
     Spec.assertEqWith s "CR 807.3 the seating drawn" (GameState.turnOrder started) (seats [0, 4, 3, 2, 1])
-    Spec.assertEqWith s "CR 807.4c the marker passes to seat 4" (turnsAfter 1 started) [(seat 4, False)]
 
   -- CR 807.4b-d: seat 0's marker passes to seat 1, which waits (seat 4 holds
   -- a marker within three seats) until seat 4 has taken its turn. Each seat

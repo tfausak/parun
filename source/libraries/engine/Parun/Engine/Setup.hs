@@ -915,8 +915,8 @@ claimStartingPlayer = do
     State.modify' (\g -> g {GameState.turnOrder = rotateTo pid (GameState.turnOrder g), GameState.activePlayer = pid})
 
 -- CR 806.3 / 807.3: a Free-for-All or Grand Melee game, which is any game on
--- no teams (CR 800.2's other variants are CR 808's to 811's), seats its players
--- at random. Randomness and not a choice, so Prompt.RandomPlayer, each next
+-- no teams (every other variant has them, CR 808.1, 809.1, 810.1, 811.1),
+-- seats its players at random; a team's own order is its choice (CR 808.2). Randomness and not a choice, so Prompt.RandomPlayer, each next
 -- seat to the left drawn from the players not yet seated. The starting player
 -- (CR 103.1, the caller's) keeps the first seat, the others drawn around them.
 -- Parun.GrandMeleeSpec's "CR 807.3" and Parun.SeatingSpec's "CR 806.3" cases
