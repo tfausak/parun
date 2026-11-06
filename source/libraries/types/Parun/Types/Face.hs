@@ -279,8 +279,8 @@ data Face card = MkFace
     -- Parun.Engine.Cast has to know which half an entry belongs to. ALL of these
     -- must hold for a cast to be legal, where one permission suffices.
     --
-    -- Read directly from the card; CR 113.6e is the rule that puts such an
-    -- ability in the hand, where this reader takes the printed card (#4707).
+    -- Read off the card less a layer-6 wipe reaching the spell (CR 113.6e,
+    -- Parun.Engine.Projection.View.wipedFace).
     --
     -- SELF-scoped and printed-only, which is the whole difference between this and
     -- the other producer CR 601.3's "rule or effect" names. A prohibition aimed at
@@ -308,11 +308,8 @@ data Face card = MkFace
     -- field alone, for a caller holding a face and no object.
     enchant :: [TargetSlot.TargetSlot],
     -- | CR 113.6g: a can't-be-countered ability functions on the stack (Rending
-    -- Volley). Read straight off the card by Event.counter rather than through the
-    -- projection: this reader takes the printed card while the object is on the
-    -- stack (#4707). CR 613 itself does reach the stack, and so does parun's
-    -- projection; this is a fact about ONE reader, not about the rules and not
-    -- about the fold.
+    -- Volley). Read off the card by Event.counter less a layer-6 wipe reaching
+    -- the spell (Parun.Engine.Projection.View.wipedFace).
     --
     -- CR 113.6g's SELF-referential clause only. A permanent's static ability
     -- about OTHER objects being uncounterable (Spider-Punk) rides
@@ -322,7 +319,7 @@ data Face card = MkFace
     -- | CR 118.8: this face's printed additional costs, paid at the same time as
     -- the spell's mana cost (Village Rites). Read off the card, or the copy
     -- stamp's values where it carries one (Game.castingFaceOf), less a layer-6
-    -- wipe reaching the spell (CR 113.6d, Parun.Engine.Cost.spellFace). CR 118.8d: this does not
+    -- wipe reaching the spell (CR 113.6d, Parun.Engine.Projection.View.wipedFace). CR 118.8d: this does not
     -- change the card's mana cost, so 'manaCost' above and every reader of mana
     -- value is unaffected.
     --
