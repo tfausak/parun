@@ -1,6 +1,7 @@
 {-# LANGUAGE GADTs #-}
 
--- Covers: CR 807's Grand Melee variant -- Parun.Engine.GrandMelee's setUp and
+-- Covers: CR 807's Grand Melee variant -- Parun.Engine.Setup.randomSeating
+-- (CR 807.3), Parun.Engine.GrandMelee's setUp and
 -- handOut (CR 807.2, 807.4a-b), its marker handoff through
 -- Parun.Engine.Engine.takeNextTurn (CR 807.4c-d, 807.4g, 807.4i-j), its
 -- departures through Parun.Engine.Departure (CR 807.4c, 807.4e-f, 807.4h),
@@ -38,6 +39,16 @@ spec s registry = Spec.describe s "GrandMelee" $ do
   Spec.it s "CR 807.4a sixteen players have four markers and fifteen three" $ do
     Spec.assertEqWith s "CR 807.4a sixteen players" (holders (GrandMelee.setUp (seated 16))) [0, 4, 8, 12]
     Spec.assertEqWith s "CR 807.4a fifteen players" (holders (GrandMelee.setUp (seated 15))) [0, 4, 8]
+
+  -- CR 807.3: five seats, each after seat 0 drawn at random as its last
+  -- candidate, sit 0, 4, 3, 2, 1; the one marker then passes left (CR 807.4c)
+  -- to seat 4.
+  Spec.it s "CR 807.3 the players are seated at random" $ do
+    forest <- S.printingOf s registry "Forest"
+    let (started, drawnFrom) = S.newGameDrawingLast forest (GrandMelee.setUp (seated 5))
+    Spec.assertEqWith s "CR 807.3 each seat drawn from the players not yet seated" drawnFrom (fmap seats [[1, 2, 3, 4], [1, 2, 3], [1, 2]])
+    Spec.assertEqWith s "CR 807.3 the seating drawn" (GameState.turnOrder started) (seats [0, 4, 3, 2, 1])
+    Spec.assertEqWith s "CR 807.4c the marker passes to seat 4" (turnsAfter 1 started) [(seat 4, False)]
 
   -- CR 807.4b-d: seat 0's marker passes to seat 1, which waits (seat 4 holds
   -- a marker within three seats) until seat 4 has taken its turn. Each seat

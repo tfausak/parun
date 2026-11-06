@@ -1,5 +1,7 @@
 -- Covers: Parun.Engine.Seating's misseated (CR 805.1, 808.2, 809.1, 809.2,
--- 809.6, 809.6a, 811.3) and its refusal through Parun.Engine.Emperor's setUp.
+-- 809.6, 809.6a, 811.3) and its refusal through Parun.Engine.Emperor's setUp,
+-- and Parun.Engine.Setup.randomSeating's Free-for-All draw (CR 806.3); its
+-- Grand Melee draw is Parun.GrandMeleeSpec's.
 -- The scenario board's refusal is Parun.ScenarioSpec's.
 --
 -- Seats are PlayerIds 0 up, in turn order; a team list gives each seat's team.
@@ -9,11 +11,13 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Parun.Engine.AlternatingTeams as AlternatingTeams
 import qualified Parun.Engine.Emperor as Emperor
+import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Seating as Seating
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
+import qualified Parun.Support as S
 import qualified Parun.Types.Emperors as Emperors
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
@@ -23,7 +27,20 @@ import qualified Parun.Types.TeamId as TeamId
 import qualified Parun.Types.Teams as Teams
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
-spec s _ = Spec.describe s "Seating" $ do
+spec s registry = Spec.describe s "Seating" $ do
+  -- CR 806.3: three seats on no team, bob's and carol's drawn at random as the
+  -- last candidate, sit alice, carol, bob, and carol takes the next turn. A
+  -- game on teams draws no seat.
+  Spec.it s "CR 806.3 a Free-for-All game seats its players at random" $ do
+    forest <- S.printingOf s registry "Forest"
+    let (started, drawnFrom) = S.newGameDrawingLast forest (game 3 GameSettings.plain)
+        (teamed, teamDraws) = S.newGameDrawingLast forest (teamGame [0, 0, 1])
+    Spec.assertEqWith s "CR 806.3 the seats after alice drawn" drawnFrom [[seat 1, seat 2]]
+    Spec.assertEqWith s "CR 806.3 the seating drawn" (GameState.turnOrder started) [seat 0, seat 2, seat 1]
+    Spec.assertEqWith s "CR 806.3 carol takes the next turn" (nextTurn started) (seat 2)
+    Spec.assertEqWith s "CR 808.2 a team game draws no seat" teamDraws []
+    Spec.assertEqWith s "CR 808.2 and keeps its seating" (GameState.turnOrder teamed) [seat 0, seat 1, seat 2]
+
   -- CR 808.2: two teams of two seated alternately split both. Seat 2 opens
   -- team 0's second run. The same seating is CR 811.3's, so as an Alternating
   -- Teams game it starts.
@@ -81,6 +98,12 @@ spec s _ = Spec.describe s "Seating" $ do
     Spec.assertEqWith s "CR 809.6a two teams of two are refused" (fmap Seating.misseated (emperorGame [0, 0, 1, 1] [0, 2])) Nothing
   where
     seat = PlayerId.MkPlayerId
+    -- Who takes the turn after `gs0`'s, at most forty steps on.
+    nextTurn gs0 =
+      let go budget gs
+            | budget <= (0 :: Int) || GameState.turnNumber gs /= GameState.turnNumber gs0 = GameState.activePlayer gs
+            | otherwise = go (budget - 1) (S.runPure S.identityAnswer gs Engine.runStep)
+       in go 40 gs0
     team = TeamId.MkTeamId
     game n settings = Setup.gameWith settings (seat 0 NonEmpty.:| fmap seat [1 .. n - 1])
     teamsOf ts = Teams.MkTeams (Map.fromList (zip (fmap seat [0 ..]) (fmap team ts)))

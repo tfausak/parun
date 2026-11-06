@@ -886,6 +886,20 @@ withEffect oid m gs =
 performer :: HandActionPerformer.HandActionPerformer
 performer = Resolve.performHandAction Engine.playSubgame
 
+-- Setup.newGame over `board`, twenty of `card` a seat, answering every
+-- Prompt.RandomPlayer with its last candidate and recording each candidate
+-- list; everything else is identityAnswer's.
+newGameDrawingLast :: Printing.Printing -> GameState.GameState -> (GameState.GameState, [[PlayerId.PlayerId]])
+newGameDrawingLast card board =
+  let deck = Deck.fromCards (Map.singleton card 20)
+      matchup = fmap (\pid -> (pid, deck)) (Maybe.fromMaybe (alice NonEmpty.:| []) (NonEmpty.nonEmpty (GameState.turnOrder board)))
+      lastDrawn :: Prompt.Prompt r -> State.State [[PlayerId.PlayerId]] r
+      lastDrawn p = case p of
+        Prompt.RandomPlayer candidates -> NonEmpty.last candidates <$ State.modify' (<> [NonEmpty.toList candidates])
+        _ -> pure (identityAnswer p)
+      ((_, started), drawnFrom) = State.runState (Engine.runGame lastDrawn board (Setup.newGame performer matchup)) []
+   in (started, drawnFrom)
+
 -- The one CR 405.6c performer (Parun.Engine.Resolve.Effect.performManaAbility) with
 -- the live loop's subgame runner (Parun.Engine.Engine.performManaAbility), which
 -- every payment path takes as a parameter.

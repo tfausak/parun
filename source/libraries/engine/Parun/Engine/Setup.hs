@@ -538,6 +538,8 @@ newGame perform matchup = do
   -- total reads the teams.
   Monad.forM_ (Archenemy.sole (NonEmpty.toList matchup)) $ \archenemy ->
     State.modify' (\g -> (Archenemy.setUp archenemy g) {GameState.turnOrder = rotateTo archenemy (GameState.turnOrder g), GameState.activePlayer = archenemy})
+  -- CR 806.3 / 807.3, once CR 904.2's teams are known.
+  randomSeating
   -- CR 103.3: build and shuffle every library before any opening hand is drawn,
   -- so CR 103.5's declaration round sees settled libraries.
   communal <- State.gets (GameSettings.singlePlanarDeck . GameState.settings)
@@ -911,6 +913,23 @@ claimStartingPlayer = do
   starter <- Game.drawAmong Prompt.RandomFirstPlayer (filter claims (Game.stillPlayingInOrder gs))
   Monad.forM_ starter $ \pid ->
     State.modify' (\g -> g {GameState.turnOrder = rotateTo pid (GameState.turnOrder g), GameState.activePlayer = pid})
+
+-- CR 806.3 / 807.3: a Free-for-All or Grand Melee game, which is any game on
+-- no teams (CR 800.2's other variants are CR 808's to 811's), seats its players
+-- at random. Randomness and not a choice, so Prompt.RandomPlayer, each next
+-- seat to the left drawn from the players not yet seated. The starting player
+-- (CR 103.1, the caller's) keeps the first seat, the others drawn around them.
+-- Parun.GrandMeleeSpec's "CR 807.3" and Parun.SeatingSpec's "CR 806.3" cases
+-- prove it.
+randomSeating :: Game ()
+randomSeating = do
+  gs <- State.get
+  Monad.when (Map.null (Teams.unwrap (GameSettings.teams (GameState.settings gs)))) $
+    case GameState.turnOrder gs of
+      [] -> pure ()
+      starter : rest -> do
+        drawn <- Game.drawDistinct Prompt.RandomPlayer (Natural.length rest) rest
+        State.modify' (\g -> g {GameState.turnOrder = starter : drawn})
 
 -- CR 809.4: in an Emperor game a randomly determined emperor goes first, turn
 -- order to the left. Randomness and not a choice, so Prompt.RandomFirstPlayer,
