@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -89,9 +85,7 @@
                                   "value": {
                                     "quantity": {
                                       "type": "Measure",
-                                      "value": {
-                                        "type": "Power"
-                                      }
+                                      "value": "Power"
                                     },
                                     "slot": "self"
                                   }
@@ -104,9 +98,7 @@
                                   "value": {
                                     "quantity": {
                                       "type": "Measure",
-                                      "value": {
-                                        "type": "Power"
-                                      }
+                                      "value": "Power"
                                     },
                                     "slot": "self"
                                   }
@@ -137,12 +129,8 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -159,17 +147,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Druid"
-          },
-          {
-            "type": "Lizard"
-          }
+          "Druid",
+          "Lizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

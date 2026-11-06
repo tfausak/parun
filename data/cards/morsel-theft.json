@@ -14,9 +14,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -32,18 +30,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -73,9 +67,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -89,16 +81,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "CastUsing",
                       "value": {
                         "type": "OfFamily",
-                        "value": {
-                          "type": "Prowl"
-                        }
+                        "value": "Prowl"
                       }
                     },
                     "threshold": {
@@ -113,9 +101,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -138,17 +124,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Rogue"
-          }
+          "Rogue"
         ],
         "types": [
-          {
-            "type": "Kindred"
-          },
-          {
-            "type": "Sorcery"
-          }
+          "Kindred",
+          "Sorcery"
         ]
       }
     }

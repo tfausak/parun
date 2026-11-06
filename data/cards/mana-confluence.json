@@ -44,9 +44,7 @@
       "oracleText": "{T}, Pay 1 life: Add one mana of any color.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

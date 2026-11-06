@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -50,9 +48,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -71,16 +67,12 @@
                             "value": {
                               "filter": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Land"
-                                }
+                                "value": "Land"
                               },
                               "slot": "revealed"
                             }
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ],
@@ -97,9 +89,7 @@
                             "type": "InSlot",
                             "value": "revealed"
                           },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       }
                     ]
@@ -112,14 +102,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Satyr"
-          }
+          "Satyr"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

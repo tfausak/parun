@@ -18,36 +18,28 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -69,45 +61,29 @@
               {
                 "type": "PlayerActs",
                 "value": {
-                  "action": {
-                    "type": "Waterbend"
-                  },
-                  "player": {
-                    "type": "You"
-                  }
+                  "action": "Waterbend",
+                  "player": "You"
                 }
               },
               {
                 "type": "PlayerActs",
                 "value": {
-                  "action": {
-                    "type": "Earthbend"
-                  },
-                  "player": {
-                    "type": "You"
-                  }
+                  "action": "Earthbend",
+                  "player": "You"
                 }
               },
               {
                 "type": "PlayerActs",
                 "value": {
-                  "action": {
-                    "type": "Firebend"
-                  },
-                  "player": {
-                    "type": "You"
-                  }
+                  "action": "Firebend",
+                  "player": "You"
                 }
               },
               {
                 "type": "PlayerActs",
                 "value": {
-                  "action": {
-                    "type": "Airbend"
-                  },
-                  "player": {
-                    "type": "You"
-                  }
+                  "action": "Airbend",
+                  "player": "You"
                 }
               }
             ]
@@ -123,9 +99,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -139,16 +113,12 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "BendingsThisTurn",
                           "value": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         },
                         "threshold": {
@@ -175,25 +145,15 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ally"
-          },
-          {
-            "type": "Avatar"
-          },
-          {
-            "type": "Human"
-          }
+          "Ally",
+          "Avatar",
+          "Human"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
@@ -218,45 +178,35 @@
                       "type": "OfType",
                       "value": {
                         "type": "Colored",
-                        "value": {
-                          "type": "White"
-                        }
+                        "value": "White"
                       }
                     },
                     {
                       "type": "OfType",
                       "value": {
                         "type": "Colored",
-                        "value": {
-                          "type": "Blue"
-                        }
+                        "value": "Blue"
                       }
                     },
                     {
                       "type": "OfType",
                       "value": {
                         "type": "Colored",
-                        "value": {
-                          "type": "Black"
-                        }
+                        "value": "Black"
                       }
                     },
                     {
                       "type": "OfType",
                       "value": {
                         "type": "Colored",
-                        "value": {
-                          "type": "Red"
-                        }
+                        "value": "Red"
                       }
                     },
                     {
                       "type": "OfType",
                       "value": {
                         "type": "Colored",
-                        "value": {
-                          "type": "Green"
-                        }
+                        "value": "Green"
                       }
                     }
                   ]
@@ -291,17 +241,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -331,9 +277,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -346,9 +290,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -386,9 +328,7 @@
                                 "value": {
                                   "players": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "Opponent"
-                                    }
+                                    "value": "Opponent"
                                   }
                                 }
                               }
@@ -412,22 +352,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ally"
-          },
-          {
-            "type": "Avatar"
-          }
+          "Ally",
+          "Avatar"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

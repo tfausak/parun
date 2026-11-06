@@ -17,16 +17,12 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Red"
-                    }
+                    "value": "Red"
                   }
                 }
               ]
             },
-            "variant": {
-              "type": "Plain"
-            }
+            "variant": "Plain"
           }
         }
       ],
@@ -35,9 +31,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -72,9 +66,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Red"
-                                  }
+                                  "Red"
                                 ],
                                 "name": "Goblin Token",
                                 "power": {
@@ -87,14 +79,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Goblin"
-                                    }
+                                    "Goblin"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -116,14 +104,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          }
+          "Goblin"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

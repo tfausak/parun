@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -36,9 +34,7 @@
           "condition": {
             "type": "PermanentActs",
             "value": {
-              "action": {
-                "type": "Evolve"
-              },
+              "action": "Evolve",
               "permanent": {
                 "type": "Self"
               }
@@ -69,17 +65,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elk"
-          },
-          {
-            "type": "Mutant"
-          }
+          "Elk",
+          "Mutant"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

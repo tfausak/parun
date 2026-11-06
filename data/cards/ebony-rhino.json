@@ -24,17 +24,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Rhino"
-          }
+          "Rhino"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

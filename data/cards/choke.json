@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -20,9 +18,7 @@
       "oracleText": "Islands don't untap during their controllers' untap steps.",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       },
       "untapRestrictions": [
@@ -31,9 +27,7 @@
             "type": "Matching",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Island"
-              }
+              "value": "Island"
             }
           }
         }

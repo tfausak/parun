@@ -1,0 +1,122 @@
+{
+  "description": "CR 614.1 Vorinclex doubles Grub's blight",
+  "note": "The control for Doubling Season's board: Vorinclex, Monstrous Raider's row names a player (\"if you would put\"), and the player paying CR 118.12's cost is putting the counters, so the blight is doubled to two -1/-1 counters on the Wall of Stone. Vorinclex doubles no token, so one copy.",
+  "board": {
+    "active": "alice",
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Grub, Storied Matriarch",
+            "label": "grub",
+            "ready": true
+          },
+          {
+            "card": "Wall of Stone",
+            "label": "wall",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain"
+          },
+          {
+            "card": "Vorinclex, Monstrous Raider",
+            "label": "vorinclex"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "source": "$grub",
+      "do": {
+        "ChooseToPay": {
+          "decision": "Pays",
+          "mana": [
+            "$mountain"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$grub"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "source": "$grub",
+      "do": {
+        "ChooseOptional": "Exercises"
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseBlight",
+          "with": "$wall"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "Names": {
+          "object": "$grub",
+          "names": [
+            "Grub, Notorious Auntie"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "$wall",
+          "kind": {
+            "type": "MinusOneMinusOne"
+          },
+          "count": 2
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Wall of Stone",
+          "count": 2
+        }
+      }
+    }
+  ]
+}

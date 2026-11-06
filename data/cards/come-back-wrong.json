@@ -8,17 +8,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -55,9 +51,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -77,9 +71,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   },
                   {
@@ -90,9 +82,7 @@
                         "value": "buried"
                       },
                       "slot": "returned",
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   },
                   {
@@ -116,9 +106,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

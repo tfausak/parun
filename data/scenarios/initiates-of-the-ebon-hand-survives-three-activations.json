@@ -150,9 +150,7 @@
               "type": "Colorless"
             },
             "restriction": null,
-            "retention": {
-              "type": "Ordinary"
-            },
+            "retention": "Ordinary",
             "rider": null,
             "sourceChoices": null,
             "tags": []
@@ -185,9 +183,7 @@
               "type": "Colorless"
             },
             "restriction": null,
-            "retention": {
-              "type": "Ordinary"
-            },
+            "retention": "Ordinary",
             "rider": null,
             "sourceChoices": null,
             "tags": []
@@ -220,9 +216,7 @@
               "type": "Colorless"
             },
             "restriction": null,
-            "retention": {
-              "type": "Ordinary"
-            },
+            "retention": "Ordinary",
             "rider": null,
             "sourceChoices": null,
             "tags": []

@@ -10,17 +10,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "BeginningOfCombat"
-                }
+                "value": "BeginningOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -55,12 +51,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "Opponent"
-                        }
+                        "holder": "Controller",
+                        "relation": "Opponent"
                       }
                     },
                     "pool": {
@@ -78,12 +70,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     "pool": {
@@ -116,21 +104,15 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "Not",
                                     "value": {
                                       "type": "HeldBy",
                                       "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
-                                        "relation": {
-                                          "type": "You"
-                                        }
+                                        "holder": "Controller",
+                                        "relation": "You"
                                       }
                                     }
                                   }
@@ -141,9 +123,7 @@
                           },
                           "starter": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       },
@@ -154,9 +134,7 @@
                             "type": "InSlot",
                             "value": "elected"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -169,14 +147,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Earth"
-          }
+          "Earth"
         ],
         "types": [
-          {
-            "type": "Plane"
-          }
+          "Plane"
         ]
       }
     }

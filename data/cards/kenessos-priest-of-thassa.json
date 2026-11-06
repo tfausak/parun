@@ -14,15 +14,11 @@
                 "value": {
                   "left": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Green"
-                    }
+                    "value": "Green"
                   },
                   "right": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Blue"
-                    }
+                    "value": "Blue"
                   }
                 }
               }
@@ -46,9 +42,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -61,9 +55,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -79,36 +71,26 @@
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "Or",
                                   "value": [
                                     {
                                       "type": "HasSubtype",
-                                      "value": {
-                                        "type": "Kraken"
-                                      }
+                                      "value": "Kraken"
                                     },
                                     {
                                       "type": "HasSubtype",
-                                      "value": {
-                                        "type": "Leviathan"
-                                      }
+                                      "value": "Leviathan"
                                     },
                                     {
                                       "type": "HasSubtype",
-                                      "value": {
-                                        "type": "Octopus"
-                                      }
+                                      "value": "Octopus"
                                     },
                                     {
                                       "type": "HasSubtype",
-                                      "value": {
-                                        "type": "Serpent"
-                                      }
+                                      "value": "Serpent"
                                     }
                                   ]
                                 }
@@ -119,13 +101,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 },
-                                "zone": {
-                                  "type": "Library"
-                                }
+                                "zone": "Library"
                               }
                             }
                           }
@@ -144,9 +122,7 @@
                             "type": "InSlot",
                             "value": "looked"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ],
@@ -158,9 +134,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -181,13 +155,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 },
-                                "zone": {
-                                  "type": "Library"
-                                }
+                                "zone": "Library"
                               }
                             }
                           }
@@ -206,9 +176,7 @@
                             "type": "InSlot",
                             "value": "looked"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ],
@@ -231,9 +199,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -248,9 +214,7 @@
           "effect": {
             "type": "InstructionR",
             "value": {
-              "instruction": {
-                "type": "Scry"
-              },
+              "instruction": "Scry",
               "rewrite": {
                 "type": "Scaled",
                 "value": {
@@ -271,22 +235,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Merfolk"
-          }
+          "Cleric",
+          "Merfolk"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

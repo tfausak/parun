@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -45,9 +41,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 ]
@@ -60,33 +54,23 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Artifact"
-                      }
+                      "value": "Artifact"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Battle"
-                      }
+                      "value": "Battle"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Enchantment"
-                      }
+                      "value": "Enchantment"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Planeswalker"
-                      }
+                      "value": "Planeswalker"
                     }
                   ]
                 },
@@ -106,14 +90,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Lesson"
-          }
+          "Lesson"
         ],
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

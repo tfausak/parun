@@ -68,9 +68,7 @@
       "oracleText": "{T}: Add {C}{C}. This land deals 2 damage to you.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

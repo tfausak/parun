@@ -11,9 +11,7 @@
       "oracleText": "As long as this artifact is untapped, each player chooses artifact, creature, or land during their untap step. That player can untap only permanents of the chosen type this step.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       },
       "untapRestrictions": [
@@ -28,23 +26,15 @@
           "hold": {
             "type": "OfChosenType",
             "value": [
-              {
-                "type": "Artifact"
-              },
-              {
-                "type": "Creature"
-              },
-              {
-                "type": "Land"
-              }
+              "Artifact",
+              "Creature",
+              "Land"
             ]
           },
           "while": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -70,13 +60,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }

@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -52,33 +48,23 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
                 }
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -94,9 +80,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -117,9 +101,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ],
               "permanent": {
@@ -132,9 +114,7 @@
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     }
                   ]
                 }
@@ -159,12 +139,8 @@
                               {
                                 "type": "CardType",
                                 "value": {
-                                  "cardType": {
-                                    "type": "Enchantment"
-                                  },
-                                  "mode": {
-                                    "type": "Replace"
-                                  }
+                                  "cardType": "Enchantment",
+                                  "mode": "Replace"
                                 }
                               }
                             ],
@@ -172,9 +148,7 @@
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -187,20 +161,12 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          },
-          {
-            "type": "Glimmer"
-          }
+          "Cat",
+          "Glimmer"
         ],
         "types": [
-          {
-            "type": "Creature"
-          },
-          {
-            "type": "Enchantment"
-          }
+          "Creature",
+          "Enchantment"
         ]
       }
     }

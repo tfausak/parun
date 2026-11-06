@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -37,12 +35,8 @@
             "type": "PlayerIsDealtDamage",
             "value": {
               "dealt": {
-                "kind": {
-                  "type": "Noncombat"
-                },
-                "recipient": {
-                  "type": "Opponent"
-                }
+                "kind": "Noncombat",
+                "recipient": "Opponent"
               }
             }
           },
@@ -87,14 +81,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          }
+          "Elemental"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

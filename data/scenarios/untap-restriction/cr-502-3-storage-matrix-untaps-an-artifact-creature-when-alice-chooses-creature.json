@@ -60,9 +60,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseCardType",
-          "with": {
-            "type": "Creature"
-          }
+          "with": "Creature"
         }
       }
     },

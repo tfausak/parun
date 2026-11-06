@@ -6,18 +6,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -32,15 +28,11 @@
               "value": [
                 {
                   "type": "HasColor",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               ]
             }
@@ -64,9 +56,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

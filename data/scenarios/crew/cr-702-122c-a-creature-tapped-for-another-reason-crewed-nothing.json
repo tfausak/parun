@@ -146,9 +146,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseExplore",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },

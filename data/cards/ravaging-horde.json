@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -54,9 +50,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -66,9 +60,7 @@
                   "target": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     },
                     "pool": {
                       "type": "Permanents"
@@ -82,17 +74,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Human",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

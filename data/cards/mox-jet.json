@@ -24,9 +24,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Black"
-                              }
+                              "value": "Black"
                             }
                           }
                         }
@@ -44,9 +42,7 @@
       "oracleText": "{T}: Add {B}.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

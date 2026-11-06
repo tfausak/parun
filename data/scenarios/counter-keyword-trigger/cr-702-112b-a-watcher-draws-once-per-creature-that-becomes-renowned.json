@@ -181,9 +181,7 @@
           "of": "Designations",
           "object": "$valeron-wardens",
           "is": [
-            {
-              "type": "Renowned"
-            }
+            "Renowned"
           ]
         }
       }
@@ -197,9 +195,7 @@
           "of": "Designations",
           "object": "$rhox-maulers",
           "is": [
-            {
-              "type": "Renowned"
-            }
+            "Renowned"
           ]
         }
       }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -41,17 +39,13 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "BattlefieldAttachedOrHand"
-                          },
+                          "destination": "BattlefieldAttachedOrHand",
                           "filter": {
                             "type": "And",
                             "value": [
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Aura"
-                                }
+                                "value": "Aura"
                               },
                               {
                                 "type": "CanAttachToSubject"
@@ -60,9 +54,7 @@
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -70,9 +62,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -86,17 +76,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

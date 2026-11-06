@@ -18,9 +18,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -38,9 +36,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -50,9 +46,7 @@
                   "target": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     "pool": {
                       "type": "CardsInGraveyard",
@@ -79,9 +73,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -97,17 +89,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Human",
+          "Rogue"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

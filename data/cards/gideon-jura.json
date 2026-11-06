@@ -28,16 +28,12 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldByBound",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
+                                    "holder": "Controller",
                                     "slot": "target"
                                   }
                                 }
@@ -67,9 +63,7 @@
                   "target": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -106,9 +100,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -153,12 +145,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Creature"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Creature",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -176,12 +164,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "InAddition"
-                              },
-                              "subtype": {
-                                "type": "Human"
-                              }
+                              "mode": "InAddition",
+                              "subtype": "Human"
                             }
                           },
                           "ref": {
@@ -199,12 +183,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "InAddition"
-                              },
-                              "subtype": {
-                                "type": "Soldier"
-                              }
+                              "mode": "InAddition",
+                              "subtype": "Soldier"
                             }
                           },
                           "ref": {
@@ -271,18 +251,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -290,19 +266,13 @@
       "oracleText": "[+2]: During target opponent's next turn, creatures that player controls attack Gideon Jura if able.\n[−2]: Destroy target tapped creature.\n[0]: Until end of turn, Gideon Jura becomes a 6/6 Human Soldier creature that's still a planeswalker. Prevent all damage that would be dealt to him this turn.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Gideon"
-          }
+          "Gideon"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

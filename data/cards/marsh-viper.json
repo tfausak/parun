@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -37,9 +35,7 @@
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -53,9 +49,7 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Poison"
-                          },
+                          "kind": "Poison",
                           "player": {
                             "type": "InSlot",
                             "value": "thatPlayer"
@@ -76,14 +70,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Snake"
-          }
+          "Snake"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

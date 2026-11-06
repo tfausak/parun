@@ -18,11 +18,11 @@ spec s = Spec.describe s "Parun.Codec.EntersTrigger" $ do
       s
       EntersTrigger.codec
       (EntersTrigger.matching (Filter.HasCardType CardType.Land))
-      " {\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}} "
+      " {\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}} "
   Spec.it s "round-trips every field" $
     Common.assertCodec
       s
       EntersTrigger.codec
       (EntersTrigger.MkEntersTrigger (ActingPermanent.Matching (Filter.HasCardType CardType.Creature)) Batching.OneOrMore)
-      " {\"batching\":{\"type\":\"OneOrMore\"},\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"batching\":\"OneOrMore\",\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s EntersTrigger.codec

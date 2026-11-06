@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -34,17 +30,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -66,27 +58,21 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "mana": [
                           {
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "White"
-                              }
+                              "value": "White"
                             }
                           },
                           {
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "White"
-                              }
+                              "value": "White"
                             }
                           }
                         ]
@@ -113,9 +99,7 @@
                   "value": [
                     {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Red"
-                      }
+                      "value": "Red"
                     },
                     {
                       "type": "Or",
@@ -125,23 +109,17 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "IsInZone",
-                              "value": {
-                                "type": "Battlefield"
-                              }
+                              "value": "Battlefield"
                             }
                           ]
                         },
                         {
                           "type": "IsInZone",
-                          "value": {
-                            "type": "Stack"
-                          }
+                          "value": "Stack"
                         }
                       ]
                     }
@@ -171,12 +149,8 @@
                                   "players": {
                                     "type": "HolderOfBound",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "hop": {
-                                        "type": "Itself"
-                                      },
+                                      "holder": "Controller",
+                                      "hop": "Itself",
                                       "slot": "thatDamager"
                                     }
                                   }
@@ -196,9 +170,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

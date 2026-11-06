@@ -9,9 +9,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -69,9 +67,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -87,17 +83,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Faerie"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Faerie",
+          "Rogue"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

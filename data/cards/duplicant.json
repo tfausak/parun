@@ -24,17 +24,13 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "AgainstLastCardExiledWith",
                 "value": {
                   "filter": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   "quantity": {
                     "type": "Literal",
@@ -57,15 +53,11 @@
                   "value": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     "quantity": {
                       "type": "Measure",
-                      "value": {
-                        "type": "Power"
-                      }
+                      "value": "Power"
                     }
                   }
                 },
@@ -74,15 +66,11 @@
                   "value": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     "quantity": {
                       "type": "Measure",
-                      "value": {
-                        "type": "Toughness"
-                      }
+                      "value": "Toughness"
                     }
                   }
                 }
@@ -92,20 +80,14 @@
               "type": "SetCreatureSubtypesOfLastCardExiledWith",
               "value": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Creature"
               }
             },
             {
               "type": "CreatureSubtype",
               "value": {
-                "mode": {
-                  "type": "InAddition"
-                },
-                "subtype": {
-                  "type": "Shapeshifter"
-                }
+                "mode": "InAddition",
+                "subtype": "Shapeshifter"
               }
             }
           ]
@@ -134,9 +116,7 @@
                             "type": "InSlot",
                             "value": "creature"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ],
@@ -165,17 +145,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Shapeshifter"
-          }
+          "Shapeshifter"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

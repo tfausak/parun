@@ -7,9 +7,7 @@
             "components": [
               {
                 "type": "PayHalfLife",
-                "value": {
-                  "type": "Up"
-                }
+                "value": "Up"
               }
             ],
             "mana": [
@@ -17,18 +15,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -46,9 +40,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "CantBeRegenerated"
-                          }
+                          "regenerability": "CantBeRegenerated"
                         }
                       }
                     ]
@@ -60,9 +52,7 @@
                       "type": "Not",
                       "value": {
                         "type": "HasColor",
-                        "value": {
-                          "type": "Black"
-                        }
+                        "value": "Black"
                       }
                     },
                     "pool": {
@@ -80,27 +70,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -108,9 +92,7 @@
       "oracleText": "{B}{B}, Pay half your life, rounded up: Destroy target nonblack creature. It can't be regenerated.",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

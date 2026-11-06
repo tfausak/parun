@@ -20,5 +20,5 @@ spec s = Spec.describe s "Parun.Codec.SpellTally" $ do
       s
       SpellTally.codec
       (SpellTally.MkSpellTally {SpellTally.player = PlayerRef.Candidate, SpellTally.turn = WhichTurn.LastTurn})
-      " {\"player\":{\"type\":\"Candidate\"},\"turn\":{\"type\":\"LastTurn\"}} "
+      " {\"player\":{\"type\":\"Candidate\"},\"turn\":\"LastTurn\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s SpellTally.codec

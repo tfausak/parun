@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -36,9 +34,7 @@
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       },
@@ -51,20 +47,14 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "LifeChanged",
                       "value": {
-                        "direction": {
-                          "type": "Gained"
-                        },
+                        "direction": "Gained",
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     },
@@ -93,15 +83,11 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Land"
-                                }
+                                "value": "Land"
                               }
                             ]
                           },
@@ -118,9 +104,7 @@
                         "type": "InSlot",
                         "value": "revealed"
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ]
@@ -129,20 +113,14 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "LifeChanged",
                       "value": {
-                        "direction": {
-                          "type": "Gained"
-                        },
+                        "direction": "Gained",
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     },
@@ -171,15 +149,11 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Land"
-                                }
+                                "value": "Land"
                               }
                             ]
                           },
@@ -196,9 +170,7 @@
                         "type": "InSlot",
                         "value": "revealed"
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ]
@@ -210,17 +182,13 @@
                     "value": {
                       "placement": {
                         "type": "RandomOrder",
-                        "value": {
-                          "type": "Bottom"
-                        }
+                        "value": "Bottom"
                       },
                       "ref": {
                         "type": "InSlot",
                         "value": "looked"
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -231,9 +199,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

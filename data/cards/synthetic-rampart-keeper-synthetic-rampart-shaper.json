@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -27,17 +25,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
@@ -53,9 +45,7 @@
             "type": "Matching",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Wall"
-              }
+              "value": "Wall"
             }
           },
           "modifications": [
@@ -81,14 +71,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Werewolf"
-          }
+          "Werewolf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

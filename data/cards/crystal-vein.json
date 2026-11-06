@@ -87,9 +87,7 @@
       "oracleText": "{T}: Add {C}.\n{T}, Sacrifice this land: Add {C}{C}.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

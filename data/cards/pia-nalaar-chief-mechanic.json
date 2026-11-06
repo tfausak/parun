@@ -6,27 +6,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -50,32 +44,22 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Artifact"
-                    }
+                    "value": "Artifact"
                   },
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   }
                 ]
               },
-              "recipient": {
-                "type": "AnyPlayer"
-              }
+              "recipient": "AnyPlayer"
             }
           },
           "modal": {
@@ -87,14 +71,10 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Energy"
-                          },
+                          "kind": "Energy",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -115,17 +95,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -146,9 +122,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "InSlot",
                           "value": "paid"
@@ -186,14 +160,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Vehicle"
-                                    }
+                                    "Vehicle"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -215,22 +185,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Artificer"
-          },
-          {
-            "type": "Human"
-          }
+          "Artificer",
+          "Human"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

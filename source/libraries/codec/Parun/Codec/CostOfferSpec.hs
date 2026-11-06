@@ -14,7 +14,7 @@ spec s = Spec.describe s "Parun.Codec.CostOffer" $ do
       s
       CostOffer.codec
       (CostOffer.Type.ByKeyword (KeywordDesignator.OfFamily KeywordFamily.Blitz))
-      " {\"type\":\"ByKeyword\",\"value\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Blitz\"}}} "
+      " {\"type\":\"ByKeyword\",\"value\":{\"type\":\"OfFamily\",\"value\":\"Blitz\"}} "
   Spec.it s "ByNoKeyword" $
     Common.assertCodec s CostOffer.codec CostOffer.Type.ByNoKeyword " {\"type\":\"ByNoKeyword\"} "
   Spec.it s "has a schema" $

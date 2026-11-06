@@ -18,27 +18,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -48,9 +42,7 @@
         {
           "effect": {
             "type": "Precluded",
-            "value": {
-              "type": "Lose"
-            }
+            "value": "Lose"
           },
           "scope": {
             "type": "You"
@@ -59,9 +51,7 @@
         {
           "effect": {
             "type": "Precluded",
-            "value": {
-              "type": "Win"
-            }
+            "value": "Win"
           },
           "scope": {
             "type": "Opponent"
@@ -78,14 +68,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Angel"
-          }
+          "Angel"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

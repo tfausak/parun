@@ -4,7 +4,7 @@
   "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Sibilant Spirit", "label": "spirit", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Swamp"}, {"card": "Swamp"}, {"card": "Swamp"}]}]},
   "timeline": [
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$spirit"]}},
-    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"ChooseOptional": "Exercises"}},
     {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Swamp", "count": 1}}}
   ]
 }

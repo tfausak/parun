@@ -12,9 +12,7 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "HasAttached",
@@ -45,9 +43,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -62,9 +58,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -87,14 +81,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

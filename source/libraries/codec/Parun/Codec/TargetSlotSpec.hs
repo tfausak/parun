@@ -36,33 +36,33 @@ spec s = Spec.describe s "Parun.Codec.TargetSlot" $ do
       s
       TargetSlot.codec
       (TargetSlot.required Pool.Permanents (Just (Filter.HasCardType CardType.Artifact)))
-      " {\"pool\":{\"type\":\"Permanents\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}} "
+      " {\"pool\":{\"type\":\"Permanents\"},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}} "
   Spec.it s "a slot narrowed only as the spell is cast" $
     Common.assertCodec
       s
       TargetSlot.codec
       ((TargetSlot.required Pool.Creatures Nothing) {TargetSlot.asCast = Just (Filter.HasCardType CardType.Artifact)})
-      " {\"pool\":{\"type\":\"Creatures\"},\"asCast\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}} "
+      " {\"pool\":{\"type\":\"Creatures\"},\"asCast\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}} "
   Spec.it s "a required spec: \"another\" (Not IsSource)" $
     Common.assertCodec
       s
       TargetSlot.codec
       (TargetSlot.required Pool.Permanents (Just (Filter.And [Filter.Not (Filter.HasCardType CardType.Land), Filter.Not Filter.IsSource])))
-      " {\"pool\":{\"type\":\"Permanents\"},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}} "
+      " {\"pool\":{\"type\":\"Permanents\"},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}} "
   -- CR 115.1: a slot another player announces, its chooser a PlayerRef.
   Spec.it s "a required spec: chosen by an opponent" $
     Common.assertCodec
       s
       TargetSlot.codec
       (TargetSlot.chosenBy (PlayerRef.Relative PlayerRelation.Opponent) (TargetSlot.required Pool.AnyTarget Nothing))
-      " {\"pool\":{\"type\":\"AnyTarget\"},\"chooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}} "
+      " {\"pool\":{\"type\":\"AnyTarget\"},\"chooser\":{\"type\":\"Relative\",\"value\":\"Opponent\"}} "
   -- CR 115.2 clause (a): a target slot over a graveyard, tagged with WHOSE.
   Spec.it s "a required spec: over a graveyard" $
     Common.assertCodec
       s
       TargetSlot.codec
       (TargetSlot.required (Pool.CardsInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You))) (Just (Filter.HasCardType CardType.Creature)))
-      " {\"pool\":{\"type\":\"CardsInGraveyard\",\"value\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"pool\":{\"type\":\"CardsInGraveyard\",\"value\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}}},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- CR 115.2 clause (a)'s other zone: no PlayerScope (CR 400.1's shared zone)
   -- and no Filter.
   Spec.it s "a required spec: over exile, scopeless and unfiltered" $
@@ -100,7 +100,7 @@ spec s = Spec.describe s "Parun.Codec.TargetSlot" $ do
       s
       TargetSlot.codec
       (TargetSlot.forEachPlayer PlayerRelation.Opponent (SlotName.MkSlotName (Text.pack "thatPlayer")) (TargetSlot.upTo 1 Pool.Permanents Nothing))
-      " {\"pool\":{\"type\":\"Permanents\"},\"count\":{\"type\":\"Printed\",\"value\":{\"least\":0,\"most\":1}},\"perPlayer\":{\"players\":{\"type\":\"Opponent\"},\"slot\":\"thatPlayer\"}} "
+      " {\"pool\":{\"type\":\"Permanents\"},\"count\":{\"type\":\"Printed\",\"value\":{\"least\":0,\"most\":1}},\"perPlayer\":{\"players\":\"Opponent\",\"slot\":\"thatPlayer\"}} "
   -- CR 601.2d's divided slot: the one case that spends the divided key (Forked
   -- Lightning).
   Spec.it s "a divided spec" $

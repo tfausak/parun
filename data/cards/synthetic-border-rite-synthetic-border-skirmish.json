@@ -6,18 +6,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
       "name": "Synthetic Border Rite",
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     },
@@ -32,18 +28,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
       "name": "Synthetic Border Skirmish",
       "typeLine": {
         "types": [
-          {
-            "type": "Battle"
-          }
+          "Battle"
         ]
       }
     }

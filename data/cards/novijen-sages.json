@@ -18,27 +18,19 @@
                       "type": "PlusOnePlusOne"
                     }
                   },
-                  "spread": {
-                    "type": "FromAmong"
-                  },
+                  "spread": "FromAmong",
                   "whichPermanent": {
                     "type": "And",
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       }
                     ]
@@ -64,9 +56,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -97,18 +87,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -124,20 +110,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Advisor"
-          },
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Mutant"
-          }
+          "Advisor",
+          "Human",
+          "Mutant"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

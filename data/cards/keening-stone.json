@@ -46,9 +46,7 @@
                                     "type": "InSlot",
                                     "value": "target"
                                   },
-                                  "zone": {
-                                    "type": "Graveyard"
-                                  }
+                                  "zone": "Graveyard"
                                 }
                               }
                             }
@@ -80,9 +78,7 @@
       "oracleText": "{5}, {T}: Target player mills X cards, where X is the number of cards in that player's graveyard.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

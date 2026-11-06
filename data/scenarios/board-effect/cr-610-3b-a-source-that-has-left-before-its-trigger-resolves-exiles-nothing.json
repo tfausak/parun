@@ -163,9 +163,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseOptional",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },

@@ -61,12 +61,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     "pool": {
@@ -86,17 +82,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -110,16 +102,12 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "origin": {
-                            "type": "Battlefield"
-                          },
+                          "origin": "Battlefield",
                           "ref": {
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -140,9 +128,7 @@
       "oracleText": "{3}, {T}: Target creature you control gets +2/+2 until end of turn. Return it to its owner's hand at the beginning of the next end step. (Return it only if it's on the battlefield.)",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

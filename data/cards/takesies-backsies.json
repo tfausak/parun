@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -63,9 +61,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     },
@@ -84,9 +80,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -94,9 +88,7 @@
       "oracleText": "Until end of turn, treat all counters as -1/-1 counters.\nFuse (You may cast one or both halves of this card from your hand.)",
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

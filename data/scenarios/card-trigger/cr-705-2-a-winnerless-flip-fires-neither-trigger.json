@@ -74,9 +74,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       }
     },

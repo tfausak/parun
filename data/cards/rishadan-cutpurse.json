@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -57,9 +55,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "mana": [
                           {
@@ -70,9 +66,7 @@
                       },
                       "payer": {
                         "type": "Relative",
-                        "value": {
-                          "type": "Opponent"
-                        }
+                        "value": "Opponent"
                       }
                     }
                   }
@@ -84,17 +78,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Pirate"
-          }
+          "Human",
+          "Pirate"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -17,18 +17,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -40,9 +36,7 @@
             "type": "AttachedPlayerControls",
             "value": {
               "type": "HasCardType",
-              "value": {
-                "type": "Creature"
-              }
+              "value": "Creature"
             }
           },
           "modifications": [
@@ -64,17 +58,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          },
-          {
-            "type": "Curse"
-          }
+          "Aura",
+          "Curse"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

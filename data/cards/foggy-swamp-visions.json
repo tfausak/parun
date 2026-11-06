@@ -28,17 +28,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -75,18 +71,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -106,9 +98,7 @@
                         "value": "cards"
                       },
                       "slot": "exiled",
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   },
                   {
@@ -149,9 +139,7 @@
                 },
                 "filter": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 "pool": {
                   "type": "CardsInGraveyard",
@@ -169,9 +157,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

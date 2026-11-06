@@ -28,5 +28,5 @@ spec s = Spec.describe s "Parun.Codec.AgainstSlot" $ do
             AgainstSlot.quantity = Quantity.Measure Measure.Toughness
           }
       )
-      " {\"slot\":\"target\",\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}}} "
+      " {\"slot\":\"target\",\"quantity\":{\"type\":\"Measure\",\"value\":\"Toughness\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

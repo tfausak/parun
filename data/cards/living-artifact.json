@@ -5,9 +5,7 @@
         {
           "filter": {
             "type": "HasCardType",
-            "value": {
-              "type": "Artifact"
-            }
+            "value": "Artifact"
           },
           "pool": {
             "type": "Permanents"
@@ -19,9 +17,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -33,9 +29,7 @@
             "type": "PlayerIsDealtDamage",
             "value": {
               "dealt": {
-                "recipient": {
-                  "type": "You"
-                }
+                "recipient": "You"
               }
             }
           },
@@ -75,17 +69,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -101,9 +91,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -113,9 +101,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "components": [
                           {
@@ -145,14 +131,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

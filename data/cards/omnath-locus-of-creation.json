@@ -6,36 +6,28 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -66,9 +58,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -94,19 +84,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -122,17 +106,13 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "AgainstSlot",
                           "value": {
                             "quantity": {
                               "type": "TimesThisTurn",
-                              "value": {
-                                "type": "Resolved"
-                              }
+                              "value": "Resolved"
                             },
                             "slot": "thisAbility"
                           }
@@ -149,9 +129,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -165,17 +143,13 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "AgainstSlot",
                           "value": {
                             "quantity": {
                               "type": "TimesThisTurn",
-                              "value": {
-                                "type": "Resolved"
-                              }
+                              "value": "Resolved"
                             },
                             "slot": "thisAbility"
                           }
@@ -194,9 +168,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         }
@@ -208,9 +180,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Green"
-                              }
+                              "value": "Green"
                             }
                           }
                         }
@@ -222,9 +192,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "White"
-                              }
+                              "value": "White"
                             }
                           }
                         }
@@ -236,9 +204,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Blue"
-                              }
+                              "value": "Blue"
                             }
                           }
                         }
@@ -249,17 +215,13 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "AgainstSlot",
                           "value": {
                             "quantity": {
                               "type": "TimesThisTurn",
-                              "value": {
-                                "type": "Resolved"
-                              }
+                              "value": "Resolved"
                             },
                             "slot": "thisAbility"
                           }
@@ -285,9 +247,7 @@
                                 "value": {
                                   "players": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "Opponent"
-                                    }
+                                    "value": "Opponent"
                                   }
                                 }
                               }
@@ -304,21 +264,15 @@
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Planeswalker"
-                                      }
+                                      "value": "Planeswalker"
                                     },
                                     {
                                       "type": "Not",
                                       "value": {
                                         "type": "HeldBy",
                                         "value": {
-                                          "holder": {
-                                            "type": "Controller"
-                                          },
-                                          "relation": {
-                                            "type": "You"
-                                          }
+                                          "holder": "Controller",
+                                          "relation": "You"
                                         }
                                       }
                                     }
@@ -339,19 +293,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          }
+          "Elemental"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

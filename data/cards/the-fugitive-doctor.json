@@ -32,18 +32,14 @@
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "Red"
-                                      }
+                                      "value": "Red"
                                     }
                                   },
                                   {
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "Green"
-                                      }
+                                      "value": "Green"
                                     }
                                   }
                                 ]
@@ -66,15 +62,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Instant"
-                          }
+                          "value": "Instant"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Sorcery"
-                          }
+                          "value": "Sorcery"
                         }
                       ]
                     },
@@ -103,18 +95,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -172,9 +160,7 @@
                                                   "value": {
                                                     "player": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -193,14 +179,10 @@
                                 "name": "Clue Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Clue"
-                                    }
+                                    "Clue"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -241,9 +223,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "components": [
                           {
@@ -255,9 +235,7 @@
                               },
                               "whichPermanents": {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Clue"
-                                }
+                                "value": "Clue"
                               }
                             }
                           }
@@ -278,22 +256,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Doctor"
-          },
-          {
-            "type": "TimeLord"
-          }
+          "Doctor",
+          "TimeLord"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -18,27 +18,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -59,17 +53,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -85,18 +75,14 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           },
                           "quantity": {
                             "type": "AgainstSlot",
                             "value": {
                               "quantity": {
                                 "type": "Measure",
-                                "value": {
-                                  "type": "Power"
-                                }
+                                "value": "Power"
                               },
                               "slot": "thatSacrificedPermanent"
                             }
@@ -105,9 +91,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "components": [
                           {
@@ -122,9 +106,7 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "Not",
@@ -139,9 +121,7 @@
                         ],
                         "mana": []
                       },
-                      "obligation": {
-                        "type": "Mandatory"
-                      },
+                      "obligation": "Mandatory",
                       "payer": {
                         "type": "InSlot",
                         "value": "you"
@@ -166,9 +146,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -178,9 +156,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "components": [
                           {
@@ -195,9 +171,7 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "Not",
@@ -212,9 +186,7 @@
                         ],
                         "mana": []
                       },
-                      "obligation": {
-                        "type": "Mandatory"
-                      },
+                      "obligation": "Mandatory",
                       "offeredAt": 0,
                       "payer": {
                         "type": "InSlot",
@@ -230,14 +202,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Demon"
-          }
+          "Demon"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

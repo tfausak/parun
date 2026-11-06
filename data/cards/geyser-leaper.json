@@ -31,9 +31,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -48,9 +46,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -81,9 +77,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -99,20 +93,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ally"
-          },
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Ally",
+          "Human",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

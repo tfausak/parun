@@ -41,7 +41,7 @@ spec s = Spec.describe s "Parun.Codec.Discard" $ do
       s
       Discard.codec
       (Discard.These (TheseDiscard.MkTheseDiscard (ObjectRef.EachCardInHand (EachCardInHand.MkEachCardInHand (ZoneScope.InSlot (SlotName.MkSlotName (Text.pack "target"))) (Just (Filter.Not (Filter.HasCardType CardType.Land))))) Nothing))
-      " {\"type\":\"These\",\"value\":{\"cards\":{\"type\":\"EachCardInHand\",\"value\":{\"hands\":{\"type\":\"InSlot\",\"value\":\"target\"},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}}}}} "
+      " {\"type\":\"These\",\"value\":{\"cards\":{\"type\":\"EachCardInHand\",\"value\":{\"hands\":{\"type\":\"InSlot\",\"value\":\"target\"},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}}}}} "
   -- CR 107.1c: the players the reference names discard any number of matching cards.
   Spec.it s "AnyNumber" $
     Common.assertCodec
@@ -54,5 +54,5 @@ spec s = Spec.describe s "Parun.Codec.Discard" $ do
               AnyNumberDiscard.discarded = Nothing
             }
       )
-      " {\"type\":\"AnyNumber\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"cards\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}}} "
+      " {\"type\":\"AnyNumber\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"cards\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Discard.codec

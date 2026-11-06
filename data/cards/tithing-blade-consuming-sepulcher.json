@@ -15,9 +15,7 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   }
                 }
               ]
@@ -26,9 +24,7 @@
               "count": 1,
               "whichObjects": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Creature"
               }
             }
           }
@@ -43,9 +39,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -68,15 +62,11 @@
                         "value": {
                           "filter": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           "players": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -94,17 +84,13 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     },
     {
       "colorIndicator": [
-        {
-          "type": "Black"
-        }
+        "Black"
       ],
       "name": "Consuming Sepulcher",
       "oracleText": "At the beginning of your upkeep, each opponent loses 1 life and you gain 1 life.",
@@ -115,17 +101,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -141,9 +123,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -156,9 +136,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -176,9 +154,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

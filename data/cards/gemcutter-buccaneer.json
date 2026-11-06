@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -31,19 +29,13 @@
               "value": [
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Treasure"
-                  }
+                  "value": "Treasure"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -52,9 +44,7 @@
           "modifications": [
             {
               "type": "AddSubtype",
-              "value": {
-                "type": "Equipment"
-              }
+              "value": "Equipment"
             },
             {
               "type": "GainAbility",
@@ -68,9 +58,7 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "HasAttached",
@@ -114,9 +102,7 @@
                   },
                   "quality": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Pirate"
-                    }
+                    "value": "Pirate"
                   }
                 }
               }
@@ -164,19 +150,13 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Pirate"
-                          }
+                          "value": "Pirate"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         },
                         {
@@ -242,14 +222,10 @@
                                 "name": "Treasure Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Treasure"
-                                    }
+                                    "Treasure"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -260,9 +236,7 @@
                             "value": 1
                           },
                           "riders": {
-                            "tapped": {
-                              "type": "Tapped"
-                            }
+                            "tapped": "Tapped"
                           }
                         }
                       }
@@ -276,20 +250,12 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Artificer"
-          },
-          {
-            "type": "Orc"
-          },
-          {
-            "type": "Pirate"
-          }
+          "Artificer",
+          "Orc",
+          "Pirate"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

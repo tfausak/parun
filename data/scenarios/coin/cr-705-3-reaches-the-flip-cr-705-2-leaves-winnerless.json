@@ -68,9 +68,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Tails"
-          }
+          "with": "Tails"
         }
       }
     },

@@ -18,27 +18,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -67,9 +61,7 @@
               {
                 "type": "Blocks",
                 "value": {
-                  "role": {
-                    "type": "Blocker"
-                  }
+                  "role": "Blocker"
                 }
               }
             ]
@@ -94,16 +86,12 @@
                               }
                             }
                           ],
-                          "members": {
-                            "type": "AnyNumber"
-                          },
+                          "members": "AnyNumber",
                           "ref": {
                             "type": "EachMatching",
                             "value": {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Aura"
-                              }
+                              "value": "Aura"
                             }
                           },
                           "slot": "aura"
@@ -120,17 +108,13 @@
                         "type": "Search",
                         "value": {
                           "andOr": true,
-                          "destination": {
-                            "type": "BattlefieldAttached"
-                          },
+                          "destination": "BattlefieldAttached",
                           "filter": {
                             "type": "And",
                             "value": [
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Aura"
-                                }
+                                "value": "Aura"
                               },
                               {
                                 "type": "CanAttachToSubject"
@@ -139,24 +123,16 @@
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": null,
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "zones": [
-                            {
-                              "type": "Hand"
-                            },
-                            {
-                              "type": "Graveyard"
-                            }
+                            "Hand",
+                            "Graveyard"
                           ]
                         }
                       }
@@ -173,19 +149,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Angel"
-          }
+          "Angel"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

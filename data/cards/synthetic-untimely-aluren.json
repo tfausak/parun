@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -26,21 +24,15 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "Not",
                   "value": {
                     "type": "Measures",
                     "value": {
-                      "comparison": {
-                        "type": "AtMost"
-                      },
-                      "measure": {
-                        "type": "ManaValue"
-                      },
+                      "comparison": "AtMost",
+                      "measure": "ManaValue",
                       "operand": {
                         "type": "Literal",
                         "value": 3
@@ -58,9 +50,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

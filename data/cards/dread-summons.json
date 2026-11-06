@@ -9,18 +9,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -37,9 +33,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
                       "quantity": {
                         "type": "InSlot",
@@ -48,9 +42,7 @@
                       "tally": {
                         "filter": {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         "slot": "milled"
                       }
@@ -63,9 +55,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Black"
-                              }
+                              "Black"
                             ],
                             "name": "Zombie Token",
                             "power": {
@@ -78,14 +68,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Zombie"
-                                }
+                                "Zombie"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -96,9 +82,7 @@
                         "value": "milled"
                       },
                       "riders": {
-                        "tapped": {
-                          "type": "Tapped"
-                        }
+                        "tapped": "Tapped"
                       }
                     }
                   }
@@ -110,9 +94,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

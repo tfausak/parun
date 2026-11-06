@@ -11,18 +11,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -45,9 +41,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               },
               "spell": {
@@ -59,9 +53,7 @@
                       "type": "TargetsOnlyOne",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       }
                     },
                     {
@@ -112,22 +104,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Faerie"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Faerie",
+          "Rogue"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -57,9 +53,7 @@
                 "value": {
                   "destinations": [
                     {
-                      "zone": {
-                        "type": "Graveyard"
-                      }
+                      "zone": "Graveyard"
                     }
                   ],
                   "permanent": {
@@ -93,9 +87,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -120,14 +112,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Bat"
-          }
+          "Bat"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

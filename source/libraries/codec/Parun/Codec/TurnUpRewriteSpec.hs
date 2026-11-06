@@ -30,7 +30,7 @@ spec s = Spec.describe s "Parun.Codec.TurnUpRewrite" $ do
       s
       (TurnUpRewrite.codec Common.text Common.text)
       (TurnUpRewrite.MayAttachTo (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"MayAttachTo\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"MayAttachTo\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- Vesuvan Shapeshifter's "as this is turned face up ... until this creature
   -- is turned face down, it becomes a copy", the AsCopy payload EntryRewrite's
   -- arm carries.
@@ -39,6 +39,6 @@ spec s = Spec.describe s "Parun.Codec.TurnUpRewrite" $ do
       s
       (TurnUpRewrite.codec Common.text Common.text)
       (TurnUpRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty (CopyDomain.InZone Zone.Battlefield) (Just (Duration.UntilEvent DurationEvent.SourceTurnedFaceDown)) CopyRecipient.ThisObject True))
-      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"duration\":{\"type\":\"UntilEvent\",\"value\":{\"type\":\"SourceTurnedFaceDown\"}}}} "
+      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"duration\":{\"type\":\"UntilEvent\",\"value\":{\"type\":\"SourceTurnedFaceDown\"}}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s (TurnUpRewrite.codec Common.text Common.text)

@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -49,22 +45,16 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "WasCastFrom",
                 "value": {
                   "from": {
                     "player": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     },
-                    "zone": {
-                      "type": "Hand"
-                    }
+                    "zone": "Hand"
                   }
                 }
               },
@@ -104,9 +94,7 @@
                                   "value": {
                                     "players": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "AnyPlayer"
-                                      }
+                                      "value": "AnyPlayer"
                                     }
                                   }
                                 }
@@ -127,15 +115,11 @@
                         "value": [
                           {
                             "type": "IsInZone",
-                            "value": {
-                              "type": "Battlefield"
-                            }
+                            "value": "Battlefield"
                           },
                           {
                             "type": "IsPlayer",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           }
                         ]
                       }
@@ -152,17 +136,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

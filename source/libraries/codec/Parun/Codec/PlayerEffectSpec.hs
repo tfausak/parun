@@ -83,7 +83,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.ModifyCost (CostModifier.MkCostModifier CostSubject.Spells (Filter.Not (Filter.HasCardType CardType.Creature)) Nothing Nothing Nothing Nothing (CostChange.Increase (ManaCost.MkManaCost [ManaSymbol.Generic 1]))))
-      " {\"type\":\"ModifyCost\",\"value\":{\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"change\":{\"type\":\"Increase\",\"value\":[{\"type\":\"Generic\",\"value\":1}]}}} "
+      " {\"type\":\"ModifyCost\",\"value\":{\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"change\":{\"type\":\"Increase\",\"value\":[{\"type\":\"Generic\",\"value\":1}]}}} "
   -- CR 305.2 / Exploration.
   Spec.it s "PlayAdditionalLands, Exploration's one" $
     Common.assertCodec
@@ -170,7 +170,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.DontLoseUnspentMana (ManaFilter.OfType (ManaType.Colored Color.Green)))
-      " {\"type\":\"DontLoseUnspentMana\",\"value\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}}} "
+      " {\"type\":\"DontLoseUnspentMana\",\"value\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Green\"}}} "
   Spec.it s "MayPayLifeForMana, Channel's life for mana" $
     Common.assertCodec
       s
@@ -200,7 +200,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
               SpendManaAsThough.casting = Nothing
             }
       )
-      " {\"type\":\"SpendManaAsThough\",\"value\":{\"which\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}}},\"asThough\":[{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}],\"only\":false}} "
+      " {\"type\":\"SpendManaAsThough\",\"value\":{\"which\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"White\"}},\"asThough\":[{\"type\":\"Colored\",\"value\":\"Blue\"}],\"only\":false}} "
   Spec.it s "SpendManaAsThough, Celestial Dawn's restriction" $
     Common.assertCodec
       s
@@ -213,7 +213,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
               SpendManaAsThough.casting = Nothing
             }
       )
-      " {\"type\":\"SpendManaAsThough\",\"value\":{\"which\":{\"type\":\"NotOfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}}},\"asThough\":[{\"type\":\"Colorless\"}],\"only\":true}} "
+      " {\"type\":\"SpendManaAsThough\",\"value\":{\"which\":{\"type\":\"NotOfType\",\"value\":{\"type\":\"Colored\",\"value\":\"White\"}},\"asThough\":[{\"type\":\"Colorless\"}],\"only\":true}} "
   -- CR 702.18a / Ivory Mask: shroud names no player, so the scope is everybody.
   Spec.it s "CantBeTargetedBy, shroud's EachPlayer" $
     Common.assertCodec
@@ -251,7 +251,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.MayPlayAsThoughItHadFlash (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"MayPlayAsThoughItHadFlash\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"MayPlayAsThoughItHadFlash\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- CR 602.5d / Leonin Shikari: "equip abilities", the family with its cost dropped,
   -- of any permanent.
   Spec.it s "KeywordRiderGrant, Leonin Shikari's equip abilities" $
@@ -265,21 +265,21 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
               KeywordRiderGrant.permanents = Filter.And []
             }
       )
-      " {\"type\":\"KeywordRiderGrant\",\"value\":{\"abilities\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Equip\"}},\"relaxes\":{\"type\":\"InstantSpeed\"},\"permanents\":{\"type\":\"And\",\"value\":[]}}} "
+      " {\"type\":\"KeywordRiderGrant\",\"value\":{\"abilities\":{\"type\":\"OfFamily\",\"value\":\"Equip\"},\"relaxes\":{\"type\":\"InstantSpeed\"},\"permanents\":{\"type\":\"And\",\"value\":[]}}} "
   -- CR 606.3 / The Wandering Emperor: "her loyalty abilities", the source itself.
   Spec.it s "LoyaltyGrant, The Wandering Emperor's own" $
     Common.assertCodec
       s
       PlayerEffect.codec
       (PlayerEffect.LoyaltyGrant (LoyaltyGrant.MkLoyaltyGrant LoyaltyClause.Window Filter.IsSource))
-      " {\"type\":\"LoyaltyGrant\",\"value\":{\"relaxes\":{\"type\":\"Window\"},\"permanents\":{\"type\":\"IsSource\"}}} "
+      " {\"type\":\"LoyaltyGrant\",\"value\":{\"relaxes\":\"Window\",\"permanents\":{\"type\":\"IsSource\"}}} "
   -- CR 602.2 / Piracy: "you may tap lands you don't control for mana".
   Spec.it s "MayTapForMana, Piracy's" $
     Common.assertCodec
       s
       PlayerEffect.codec
       (PlayerEffect.MayTapForMana (TapForMana.MkTapForMana (Filter.HasCardType CardType.Land) Nothing))
-      " {\"type\":\"MayTapForMana\",\"value\":{\"permanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}} "
+      " {\"type\":\"MayTapForMana\",\"value\":{\"permanents\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}} "
   -- CR 601.3b's "certain qualities" (Yeva, Nature's Herald), so a codec that
   -- dropped the payload would round-trip one of these and not both.
   Spec.it s "CastAsThoughItHadFlash, a filter that names qualities" $
@@ -287,7 +287,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.CastAsThoughItHadFlash (Filter.And [Filter.HasColor Color.Green, Filter.HasCardType CardType.Creature]))
-      " {\"type\":\"CastAsThoughItHadFlash\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasColor\",\"value\":{\"type\":\"Green\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}]}} "
+      " {\"type\":\"CastAsThoughItHadFlash\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasColor\",\"value\":\"Green\"},{\"type\":\"HasCardType\",\"value\":\"Creature\"}]}} "
   -- CR 701.6a, twice for CastAsThoughItHadFlash's reason: Spider-Punk narrows by
   -- nothing and Prowling Serpopard narrows by a card type, so a codec that
   -- dropped the payload would round-trip one of these and not both. WHOSE spells
@@ -303,14 +303,14 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.CantBeCountered (CounterProhibition.MkCounterProhibition (Filter.HasCardType CardType.Creature) (Filter.And [])))
-      " {\"type\":\"CantBeCountered\",\"value\":{\"countered\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"CantBeCountered\",\"value\":{\"countered\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- Autumn's Veil's "by blue or black spells": the counterers' key.
   Spec.it s "CantBeCountered, counterers that name qualities" $
     Common.assertCodec
       s
       PlayerEffect.codec
       (PlayerEffect.CantBeCountered (CounterProhibition.MkCounterProhibition (Filter.Not Filter.IsAbility) (Filter.HasColor Color.Blue)))
-      " {\"type\":\"CantBeCountered\",\"value\":{\"countered\":{\"type\":\"Not\",\"value\":{\"type\":\"IsAbility\"}},\"counterers\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Blue\"}}}} "
+      " {\"type\":\"CantBeCountered\",\"value\":{\"countered\":{\"type\":\"Not\",\"value\":{\"type\":\"IsAbility\"}},\"counterers\":{\"type\":\"HasColor\",\"value\":\"Blue\"}}} "
   -- CR 115 / 101.2 / Autumn's Veil: a targeting restriction whose affected set
   -- is a Filter.
   Spec.it s "RestrictTargeting" $
@@ -318,7 +318,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.RestrictTargeting (TargetRestriction.MkTargetRestriction (Filter.HasCardType CardType.Creature) StackObjectKind.Spell (Filter.HasColor Color.Black)))
-      " {\"type\":\"RestrictTargeting\",\"value\":{\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"aimers\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}},\"kind\":{\"type\":\"Spell\"}}} "
+      " {\"type\":\"RestrictTargeting\",\"value\":{\"affected\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"aimers\":{\"type\":\"HasColor\",\"value\":\"Black\"},\"kind\":\"Spell\"}} "
   -- CR 702.11e / Detection Tower: the tag around the payload
   -- Parun.Codec.HexproofExemptionSpec covers.
   Spec.it s "TargetPastHexproof" $
@@ -326,7 +326,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.TargetPastHexproof (HexproofExemption.MkHexproofExemption (Filter.HasCardType CardType.Creature) True))
-      " {\"type\":\"TargetPastHexproof\",\"value\":{\"permanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"players\":true}} "
+      " {\"type\":\"TargetPastHexproof\",\"value\":{\"permanents\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"players\":true}} "
   -- CR 615.12 / Spider-Punk, whose sentence names no quality of the damage: the
   -- pattern that admits everything, whose every field is its default, so the
   -- payload is an empty object rather than absent. WHOSE damage is the carrier's
@@ -354,7 +354,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.DamageCantBeRedirected (DamagePattern.MkDamagePattern Nothing Filter.IsSource (Just (Filter.HasCardType CardType.Creature)) Nothing Nothing Nothing Nothing))
-      " {\"type\":\"DamageCantBeRedirected\",\"value\":{\"whatRecipient\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"whatSource\":{\"type\":\"IsSource\"}}} "
+      " {\"type\":\"DamageCantBeRedirected\",\"value\":{\"whatRecipient\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"whatSource\":{\"type\":\"IsSource\"}}} "
   -- CR 701.23 / Leonin Arbiter.
   Spec.it s "CantSearchLibraries" $
     Common.assertCodec
@@ -397,7 +397,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.EntriesTrigger EntriesTrigger.MkEntriesTrigger {EntriesTrigger.entrants = Filter.And [], EntriesTrigger.triggering = EntryTriggering.AnAdditionalTime})
-      " {\"type\":\"EntriesTrigger\",\"value\":{\"entrants\":{\"type\":\"And\",\"value\":[]},\"triggering\":{\"type\":\"AnAdditionalTime\"}}} "
+      " {\"type\":\"EntriesTrigger\",\"value\":{\"entrants\":{\"type\":\"And\",\"value\":[]},\"triggering\":\"AnAdditionalTime\"}} "
   -- CR 723.2 / Opposition Agent.
   Spec.it s "ControlledWhileSearching" $
     Common.assertCodec
@@ -411,7 +411,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.YouChoose CombatDeclaration.Blockers)
-      " {\"type\":\"YouChoose\",\"value\":{\"type\":\"Blockers\"}} "
+      " {\"type\":\"YouChoose\",\"value\":\"Blockers\"} "
   -- CR 509.1 / 700.3 / Camouflage.
   Spec.it s "BlocksFromPiles" $
     Common.assertCodec
@@ -439,7 +439,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.CantCastMatching (Filter.Or [Filter.HasCardType CardType.Artifact, Filter.HasCardType CardType.Creature]))
-      " {\"type\":\"CantCastMatching\",\"value\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}]}} "
+      " {\"type\":\"CantCastMatching\",\"value\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Artifact\"},{\"type\":\"HasCardType\",\"value\":\"Creature\"}]}} "
   -- CR 307.5 / Teferi, Mage of Zhalfir's third clause, nullary.
   Spec.it s "CastOnlyAtSorcerySpeed" $
     Common.assertCodec
@@ -468,7 +468,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.CantActivateAbilities Nothing (Filter.HasCardType CardType.Artifact))
-      " {\"type\":\"CantActivateAbilities\",\"value\":{\"sources\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}}} "
+      " {\"type\":\"CantActivateAbilities\",\"value\":{\"sources\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}}} "
   -- CR 305.1 / City in a Bottle's land half, whose Filter names the land
   -- (Damping Engine's writes the empty And instead).
   Spec.it s "CantPlayLands" $
@@ -484,7 +484,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.CastFrom (CastFromZone.MkCastFromZone (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You)) (Filter.And []) PermissionLimit.Unlimited PermissionVerb.Cast PermissionPool.EveryCard [] 0 ManaSpending.AsProduced))
-      " {\"type\":\"CastFrom\",\"value\":{\"from\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"matching\":{\"type\":\"And\",\"value\":[]}}} "
+      " {\"type\":\"CastFrom\",\"value\":{\"from\":{\"zone\":\"Graveyard\",\"player\":{\"type\":\"Relative\",\"value\":\"You\"}},\"matching\":{\"type\":\"And\",\"value\":[]}}} "
   -- CR 601.3 / Garruk's Horde's "creature spells", the arm that used to be a
   -- CastFromTopOfLibrary of its own: the zone is all that told the two apart.
   Spec.it s "CastFrom, a filter that names qualities" $
@@ -492,7 +492,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.CastFrom (CastFromZone.MkCastFromZone (InZone.MkInZone Zone.Library (PlayerRef.Relative PlayerRelation.You)) (Filter.HasCardType CardType.Creature) PermissionLimit.Unlimited PermissionVerb.Cast PermissionPool.EveryCard [] 0 ManaSpending.AsProduced))
-      " {\"type\":\"CastFrom\",\"value\":{\"from\":{\"zone\":{\"type\":\"Library\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"matching\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"CastFrom\",\"value\":{\"from\":{\"zone\":\"Library\",\"player\":{\"type\":\"Relative\",\"value\":\"You\"}},\"matching\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- CR 601.3 / Sen Triplets: the zone belongs to the player a slot names, which
   -- is the whole of what the reference buys.
   Spec.it s "CastFrom, a slot naming whose zone" $
@@ -500,21 +500,21 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.CastFrom (CastFromZone.MkCastFromZone (InZone.MkInZone Zone.Hand (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "opponent")))) (Filter.And []) PermissionLimit.Unlimited PermissionVerb.Cast PermissionPool.EveryCard [] 0 ManaSpending.AsProduced))
-      " {\"type\":\"CastFrom\",\"value\":{\"from\":{\"zone\":{\"type\":\"Hand\"},\"player\":{\"type\":\"InSlot\",\"value\":\"opponent\"}},\"matching\":{\"type\":\"And\",\"value\":[]}}} "
+      " {\"type\":\"CastFrom\",\"value\":{\"from\":{\"zone\":\"Hand\",\"player\":{\"type\":\"InSlot\",\"value\":\"opponent\"}},\"matching\":{\"type\":\"And\",\"value\":[]}}} "
   -- CR 305.1 / Crucible of Worlds, whose sentence narrows no land.
   Spec.it s "PlayLandsFrom" $
     Common.assertCodec
       s
       PlayerEffect.codec
       (PlayerEffect.PlayLandsFrom (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You)))
-      " {\"type\":\"PlayLandsFrom\",\"value\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
+      " {\"type\":\"PlayLandsFrom\",\"value\":{\"zone\":\"Graveyard\",\"player\":{\"type\":\"Relative\",\"value\":\"You\"}}} "
   -- CR 702.170f / Fblthp, Lost on the Range.
   Spec.it s "PlotFrom" $
     Common.assertCodec
       s
       PlayerEffect.codec
       (PlayerEffect.PlotFrom (PlotFromZone.MkPlotFromZone (InZone.MkInZone Zone.Library (PlayerRef.Relative PlayerRelation.You)) (Filter.Not (Filter.HasCardType CardType.Land))))
-      " {\"type\":\"PlotFrom\",\"value\":{\"from\":{\"zone\":{\"type\":\"Library\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"matching\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}}} "
+      " {\"type\":\"PlotFrom\",\"value\":{\"from\":{\"zone\":\"Library\",\"player\":{\"type\":\"Relative\",\"value\":\"You\"}},\"matching\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}}} "
   -- CR 118.9 / Omniscience, whose sentence names no quality of the spell.
   Spec.it s "CastFromHandWithoutPayingManaCost, an empty filter" $
     Common.assertCodec
@@ -528,7 +528,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.CastFromHandWithoutPayingManaCost (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"CastFromHandWithoutPayingManaCost\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"CastFromHandWithoutPayingManaCost\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- Solemnity's first sentence, which names no kind, so the key is null -- the
   -- wire form data/cards/solemnity.json writes.
   Spec.it s "CantGetCounters, no kind named" $
@@ -543,7 +543,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.CantGetCounters (Just PlayerCounterKind.Poison))
-      " {\"type\":\"CantGetCounters\",\"value\":{\"type\":\"Poison\"}} "
+      " {\"type\":\"CantGetCounters\",\"value\":\"Poison\"} "
   -- CR 705.3 as Edgar, King of Figaro prints it, and the wire form
   -- data/cards/edgar-king-of-figaro.json writes.
   Spec.it s "StateCoinFlip, both halves of CR 705.3" $
@@ -557,7 +557,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
               StatedFlip.firstEachTurn = True
             }
       )
-      " {\"type\":\"StateCoinFlip\",\"value\":{\"face\":{\"type\":\"Heads\"},\"wins\":true,\"firstEachTurn\":true}} "
+      " {\"type\":\"StateCoinFlip\",\"value\":{\"face\":\"Heads\",\"wins\":true,\"firstEachTurn\":true}} "
   -- CR 706.2 as Clam-I-Am prints it, and the wire form
   -- data/cards/clam-i-am.json writes.
   Spec.it s "ModifyDieRoll, Clam-I-Am's reroll" $
@@ -605,7 +605,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.PutTappedAsYouCascade (Filter.HasCardType CardType.Land))
-      " {\"type\":\"PutTappedAsYouCascade\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}} "
+      " {\"type\":\"PutTappedAsYouCascade\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}} "
   -- CR 119.7 as Giant Cindermaw prints it, and the wire form
   -- data/cards/giant-cindermaw.json writes.
   Spec.it s "CantGainLife, Giant Cindermaw's restriction" $
@@ -629,18 +629,18 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       s
       PlayerEffect.codec
       (PlayerEffect.Precluded GameOutcome.Win)
-      " {\"type\":\"Precluded\",\"value\":{\"type\":\"Win\"}} "
+      " {\"type\":\"Precluded\",\"value\":\"Win\"} "
   -- CR 400.2, a revealed hand.
   Spec.it s "Shows, a hand to every player" $
     Common.assertCodec
       s
       PlayerEffect.codec
       (PlayerEffect.Shows (Shows.MkShows ShownCards.Hand Audience.Everyone))
-      " {\"type\":\"Shows\",\"value\":{\"cards\":{\"type\":\"Hand\"},\"to\":{\"type\":\"Everyone\"}}} "
+      " {\"type\":\"Shows\",\"value\":{\"cards\":\"Hand\",\"to\":\"Everyone\"}} "
   Spec.it s "RevealsDraw, Rowen's reveal" $
     Common.assertCodec
       s
       PlayerEffect.codec
       (PlayerEffect.RevealsDraw (DrawReveal.MkDrawReveal RevealObligation.Mandatory (Just 1)))
-      " {\"type\":\"RevealsDraw\",\"value\":{\"obligation\":{\"type\":\"Mandatory\"},\"nth\":1}} "
+      " {\"type\":\"RevealsDraw\",\"value\":{\"obligation\":\"Mandatory\",\"nth\":1}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlayerEffect.codec

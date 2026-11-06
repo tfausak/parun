@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -33,17 +31,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "BeginningOfCombat"
-                }
+                "value": "BeginningOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -51,9 +45,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -65,25 +57,17 @@
                     "value": [
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Basri"
-                        }
+                        "value": "Basri"
                       },
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Planeswalker"
-                        }
+                        "value": "Planeswalker"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       }
                     ]
@@ -93,13 +77,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -142,17 +122,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Human",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

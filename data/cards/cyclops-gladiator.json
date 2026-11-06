@@ -10,27 +10,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -66,9 +60,7 @@
                             {
                               "quantity": {
                                 "type": "Measure",
-                                "value": {
-                                  "type": "Power"
-                                }
+                                "value": "Power"
                               },
                               "ref": {
                                 "type": "InSlot",
@@ -89,9 +81,7 @@
                                 "value": {
                                   "quantity": {
                                     "type": "Measure",
-                                    "value": {
-                                      "type": "Power"
-                                    }
+                                    "value": "Power"
                                   },
                                   "slot": "target"
                                 }
@@ -114,9 +104,7 @@
                   "target": {
                     "filter": {
                       "type": "ControlledByRole",
-                      "value": {
-                        "type": "Defending"
-                      }
+                      "value": "Defending"
                     },
                     "pool": {
                       "type": "Creatures"
@@ -130,17 +118,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cyclops"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Cyclops",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

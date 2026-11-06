@@ -20,7 +20,7 @@ spec s = Spec.describe s "Parun.Codec.PermanentBecomesDesignated" $ do
             PermanentBecomesDesignated.filter = Filter.HeldBy Holder.Controller PlayerRelation.You
           }
       )
-      " {\"designation\":{\"type\":\"Renowned\"},\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
+      " {\"designation\":\"Renowned\",\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}} "
   -- The other designation, over the source itself.
   Spec.it s "MkPermanentBecomesDesignated, Monstrous over the source" $
     Common.assertCodec
@@ -31,5 +31,5 @@ spec s = Spec.describe s "Parun.Codec.PermanentBecomesDesignated" $ do
             PermanentBecomesDesignated.filter = Filter.IsSource
           }
       )
-      " {\"designation\":{\"type\":\"Monstrous\"},\"filter\":{\"type\":\"IsSource\"}} "
+      " {\"designation\":\"Monstrous\",\"filter\":{\"type\":\"IsSource\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PermanentBecomesDesignated.codec

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -33,17 +31,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -51,9 +45,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -62,21 +54,15 @@
                   },
                   "filter": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   "scope": {
                     "type": "InHistory",
                     "value": {
                       "type": "MovedBetween",
                       "value": {
-                        "from": {
-                          "type": "Battlefield"
-                        },
-                        "to": {
-                          "type": "Graveyard"
-                        }
+                        "from": "Battlefield",
+                        "to": "Graveyard"
                       }
                     }
                   }
@@ -127,14 +113,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          }
+          "Cat"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

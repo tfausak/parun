@@ -13,5 +13,5 @@ import qualified Parun.Types.SubtypesAre as SubtypesAre
 codec :: Codec.Codec SubtypesAre.SubtypesAre
 codec = Fields.object $ do
   object <- Fields.required "object" Reference.codec SubtypesAre.object
-  subtypes <- Fields.required "subtypes" (Common.set Arm.keyedEnum) SubtypesAre.subtypes
+  subtypes <- Fields.required "subtypes" (Common.set Arm.enum) SubtypesAre.subtypes
   pure SubtypesAre.MkSubtypesAre {SubtypesAre.object = object, SubtypesAre.subtypes = subtypes}

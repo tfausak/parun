@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -55,9 +53,7 @@
                 },
                 "target": {
                   "type": "Defending",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -74,12 +70,8 @@
                           "player": {
                             "type": "HolderOfBound",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "hop": {
-                                "type": "Itself"
-                              },
+                              "holder": "Controller",
+                              "hop": "Itself",
                               "slot": "thatAttackingCreature"
                             }
                           },
@@ -99,9 +91,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -19,9 +19,7 @@
                     "type": "Not",
                     "value": {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Black"
-                      }
+                      "value": "Black"
                     }
                   }
                 }
@@ -40,9 +38,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -72,9 +68,7 @@
                   },
                   "whichCards": {
                     "type": "HasColor",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   }
                 }
               }
@@ -92,9 +86,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -138,9 +130,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -156,20 +146,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Sorcerer"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Sorcerer",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

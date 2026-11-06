@@ -19,18 +19,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -63,9 +59,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ],
@@ -85,12 +79,8 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "Opponent"
-                            }
+                            "holder": "Controller",
+                            "relation": "Opponent"
                           }
                         }
                       ]
@@ -107,17 +97,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Merfolk"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Merfolk",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

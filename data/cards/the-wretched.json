@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -42,17 +38,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "EndOfCombat"
-                }
+                "value": "EndOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -71,9 +63,7 @@
                             "value": {
                               "type": "Compares",
                               "value": {
-                                "comparison": {
-                                  "type": "Exactly"
-                                },
+                                "comparison": "Exactly",
                                 "measured": {
                                   "type": "Count",
                                   "value": {
@@ -89,12 +79,8 @@
                                         {
                                           "type": "HeldBy",
                                           "value": {
-                                            "holder": {
-                                              "type": "Controller"
-                                            },
-                                            "relation": {
-                                              "type": "You"
-                                            }
+                                            "holder": "Controller",
+                                            "relation": "You"
                                           }
                                         }
                                       ]
@@ -104,13 +90,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         },
-                                        "zone": {
-                                          "type": "Battlefield"
-                                        }
+                                        "zone": "Battlefield"
                                       }
                                     }
                                   }
@@ -126,9 +108,7 @@
                             "type": "EachMatching",
                             "value": {
                               "type": "BlockPartnerOfSource",
-                              "value": {
-                                "type": "Blocker"
-                              }
+                              "value": "Blocker"
                             }
                           }
                         }
@@ -143,14 +123,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Demon"
-          }
+          "Demon"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

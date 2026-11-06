@@ -6,18 +6,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -67,9 +63,7 @@
                         "value": "opponent"
                       },
                       "controlWhileResolving": true,
-                      "optionality": {
-                        "type": "Mandatory"
-                      },
+                      "optionality": "Mandatory",
                       "ref": {
                         "type": "ChosenCardFromAmong",
                         "value": {
@@ -80,9 +74,7 @@
                           "slot": "looked"
                         }
                       },
-                      "verb": {
-                        "type": "Play"
-                      }
+                      "verb": "Play"
                     }
                   }
                 ]
@@ -92,9 +84,7 @@
               "opponent": {
                 "filter": {
                   "type": "IsPlayer",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
                 "pool": {
                   "type": "Players"
@@ -106,9 +96,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

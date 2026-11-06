@@ -14,7 +14,7 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Tenacious Dead", "count": 1}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$s1", "$s2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseToPay": {"decision": "Pays", "mana": ["$s1", "$s2"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Tenacious Dead", "count": 1}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "Tenacious Dead", "tapped": true}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$s2", "tapped": true}}}

@@ -13,9 +13,7 @@
         },
         {
           "type": "Phyrexian",
-          "value": {
-            "type": "Blue"
-          }
+          "value": "Blue"
         }
       ],
       "name": "Spined Thopter",
@@ -30,20 +28,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Phyrexian"
-          },
-          {
-            "type": "Thopter"
-          }
+          "Phyrexian",
+          "Thopter"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

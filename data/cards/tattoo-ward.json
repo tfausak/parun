@@ -24,9 +24,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -36,9 +34,7 @@
                   "target": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Enchantment"
-                      }
+                      "value": "Enchantment"
                     },
                     "pool": {
                       "type": "Permanents"
@@ -66,9 +62,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -83,9 +77,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -117,9 +109,7 @@
                 "value": {
                   "quality": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Enchantment"
-                    }
+                    "value": "Enchantment"
                   },
                   "spares": {
                     "type": "IsSource"
@@ -132,14 +122,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

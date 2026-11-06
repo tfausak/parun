@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -64,16 +60,12 @@
                                     "type": "InSlot",
                                     "value": "target"
                                   },
-                                  "zone": {
-                                    "type": "Library"
-                                  }
+                                  "zone": "Library"
                                 }
                               }
                             }
                           },
-                          "rounding": {
-                            "type": "Down"
-                          }
+                          "rounding": "Down"
                         }
                       }
                     }
@@ -93,9 +85,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

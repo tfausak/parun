@@ -78,9 +78,7 @@
           "prompt": "ChooseManaType",
           "with": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       }

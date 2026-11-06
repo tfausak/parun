@@ -11,15 +11,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             }
           }
         }
@@ -54,9 +50,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -77,9 +71,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ],
               "permanent": {
@@ -89,19 +81,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
@@ -135,16 +121,12 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -155,9 +137,7 @@
                             "value": {
                               "step": {
                                 "type": "Ending",
-                                "value": {
-                                  "type": "EndStep"
-                                }
+                                "value": "EndStep"
                               }
                             }
                           },
@@ -177,14 +157,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ouphe"
-          }
+          "Ouphe"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

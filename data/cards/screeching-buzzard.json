@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -38,9 +36,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -58,9 +54,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "Opponent"
-                              }
+                              "value": "Opponent"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -79,14 +73,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Bird"
-          }
+          "Bird"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

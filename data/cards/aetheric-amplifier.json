@@ -80,26 +80,18 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Energy"
-                          },
+                          "kind": "Energy",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "PlayerCounters",
                             "value": {
-                              "kind": {
-                                "type": "Energy"
-                              },
+                              "kind": "Energy",
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           }
@@ -108,26 +100,18 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Ticket"
-                          },
+                          "kind": "Ticket",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "PlayerCounters",
                             "value": {
-                              "kind": {
-                                "type": "Ticket"
-                              },
+                              "kind": "Ticket",
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           }
@@ -136,26 +120,18 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Poison"
-                          },
+                          "kind": "Poison",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "PlayerCounters",
                             "value": {
-                              "kind": {
-                                "type": "Poison"
-                              },
+                              "kind": "Poison",
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           }
@@ -164,26 +140,18 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Rad"
-                          },
+                          "kind": "Rad",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "PlayerCounters",
                             "value": {
-                              "kind": {
-                                "type": "Rad"
-                              },
+                              "kind": "Rad",
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           }
@@ -192,26 +160,18 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Experience"
-                          },
+                          "kind": "Experience",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "PlayerCounters",
                             "value": {
-                              "kind": {
-                                "type": "Experience"
-                              },
+                              "kind": "Experience",
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           }
@@ -220,26 +180,18 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Point"
-                          },
+                          "kind": "Point",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "PlayerCounters",
                             "value": {
-                              "kind": {
-                                "type": "Point"
-                              },
+                              "kind": "Point",
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           }
@@ -268,9 +220,7 @@
       "oracleText": "{T}: Add one mana of any color.\n{4}, {T}: Choose one. Activate only as a sorcery.\n• Double the number of each kind of counter on target permanent.\n• Double the number of each kind of counter you have.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -61,9 +57,7 @@
                             "type": "EachMatching",
                             "value": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             }
                           }
                         }
@@ -78,17 +72,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Elemental",
+          "Shaman"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

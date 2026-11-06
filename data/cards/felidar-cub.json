@@ -24,9 +24,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -36,9 +34,7 @@
                   "target": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Enchantment"
-                      }
+                      "value": "Enchantment"
                     },
                     "pool": {
                       "type": "Permanents"
@@ -59,9 +55,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -77,17 +71,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          },
-          {
-            "type": "Cat"
-          }
+          "Beast",
+          "Cat"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

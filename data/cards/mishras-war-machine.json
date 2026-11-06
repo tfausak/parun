@@ -29,17 +29,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -70,9 +66,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "components": [
                           {
@@ -101,9 +95,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -112,9 +104,7 @@
                             },
                             "filter": {
                               "type": "IsPlayer",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
                             "scope": {
                               "type": "OverPlayers",
@@ -151,17 +141,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Juggernaut"
-          }
+          "Juggernaut"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

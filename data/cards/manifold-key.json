@@ -45,9 +45,7 @@
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Artifact"
-                          }
+                          "value": "Artifact"
                         }
                       ]
                     },
@@ -121,9 +119,7 @@
       "oracleText": "{1}, {T}: Untap another target artifact.\n{3}, {T}: Target creature can't be blocked this turn.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

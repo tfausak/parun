@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -42,9 +38,7 @@
           "modifications": [
             {
               "type": "MayAssignCombatDamage",
-              "value": {
-                "type": "AsThoughUnblocked"
-              }
+              "value": "AsThoughUnblocked"
             }
           ]
         }
@@ -55,14 +49,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Wolf"
-          }
+          "Wolf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

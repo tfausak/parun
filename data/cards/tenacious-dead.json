@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -29,9 +27,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -50,23 +46,17 @@
                             "value": "became"
                           },
                           "riders": {
-                            "tapped": {
-                              "type": "Tapped"
-                            },
+                            "tapped": "Tapped",
                             "under": {
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "mana": [
                           {
@@ -77,9 +67,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Black"
-                              }
+                              "value": "Black"
                             }
                           }
                         ]
@@ -98,17 +86,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Skeleton"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Skeleton",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

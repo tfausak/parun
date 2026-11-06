@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -71,12 +69,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "Opponent"
-                        }
+                        "holder": "Controller",
+                        "relation": "Opponent"
                       }
                     },
                     "pool": {
@@ -91,17 +85,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Assassin"
-          },
-          {
-            "type": "Elf"
-          }
+          "Assassin",
+          "Elf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -6,9 +6,7 @@
           "type": "Landwalk",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Mountain"
-            }
+            "value": "Mountain"
           }
         }
       ],
@@ -21,18 +19,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -48,17 +42,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Giant"
-          },
-          {
-            "type": "Scout"
-          }
+          "Giant",
+          "Scout"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

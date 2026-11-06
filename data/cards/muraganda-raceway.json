@@ -39,16 +39,12 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Speed",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -110,9 +106,7 @@
       "oracleText": "Start your engines! (If you have no speed, it starts at 1. It increases once on each of your turns when an opponent loses life. Max speed is 4.)\n{T}: Add {C}.\nMax speed — {T}: Add {C}{C}.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

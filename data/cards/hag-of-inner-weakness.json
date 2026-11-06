@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -33,17 +31,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -87,12 +81,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "Opponent"
-                        }
+                        "holder": "Controller",
+                        "relation": "Opponent"
                       }
                     },
                     "pool": {
@@ -107,17 +97,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hag"
-          },
-          {
-            "type": "Warlock"
-          }
+          "Hag",
+          "Warlock"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -29,16 +27,12 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "origin": {
-                            "type": "Graveyard"
-                          },
+                          "origin": "Graveyard",
                           "ref": {
                             "type": "InSlot",
                             "value": "self"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -53,9 +47,7 @@
               "value": {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "AtLeast"
-                  },
+                  "comparison": "AtLeast",
                   "measured": {
                     "type": "Count",
                     "value": {
@@ -67,25 +59,17 @@
                         "value": [
                           {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Vivien"
-                            }
+                            "value": "Vivien"
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Planeswalker"
-                            }
+                            "value": "Planeswalker"
                           },
                           {
                             "type": "HeldBy",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "relation": {
-                                "type": "You"
-                              }
+                              "holder": "Controller",
+                              "relation": "You"
                             }
                           }
                         ]
@@ -95,13 +79,9 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     }
@@ -130,9 +110,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -148,17 +126,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          },
-          {
-            "type": "Spirit"
-          }
+          "Cat",
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

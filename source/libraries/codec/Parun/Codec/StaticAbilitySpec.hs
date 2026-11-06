@@ -84,7 +84,7 @@ spec s = Spec.describe s "Parun.Codec.StaticAbility" $ do
           Nothing
           (NonEmpty.singleton (Modification.GainKeyword Keyword.Flying))
       )
-      " {\"affected\":{\"type\":\"Attached\"},\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Forest\"}},\"aggregation\":{\"type\":\"Members\"}}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"modifications\":[{\"type\":\"GainKeyword\",\"value\":{\"type\":\"Flying\"}}]} "
+      " {\"affected\":{\"type\":\"Attached\"},\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":\"Battlefield\",\"player\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}},\"filter\":{\"type\":\"HasSubtype\",\"value\":\"Forest\"},\"aggregation\":{\"type\":\"Members\"}}},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"modifications\":[{\"type\":\"GainKeyword\",\"value\":{\"type\":\"Flying\"}}]} "
   -- Titania's Song's second sentence: CR 604.2's other override, and optional
   -- for the condition's reason -- absent means the effect ends with its
   -- permanent, which is every other ability in the pool.
@@ -116,7 +116,7 @@ spec s = Spec.describe s "Parun.Codec.StaticAbility" $ do
           Nothing
           (NonEmpty.singleton (Modification.GainKeyword Keyword.Flying))
       )
-      " {\"affected\":{\"type\":\"Attached\"},\"functionsFrom\":[{\"type\":\"Graveyard\"},{\"type\":\"Stack\"}],\"modifications\":[{\"type\":\"GainKeyword\",\"value\":{\"type\":\"Flying\"}}]} "
+      " {\"affected\":{\"type\":\"Attached\"},\"functionsFrom\":[\"Graveyard\",\"Stack\"],\"modifications\":[{\"type\":\"GainKeyword\",\"value\":{\"type\":\"Flying\"}}]} "
   -- CR 613.1f: the name a LoseNamedAbility removal joins to. Optional for the
   -- condition's reason.
   Spec.it s "a name" $

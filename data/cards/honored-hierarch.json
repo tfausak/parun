@@ -12,9 +12,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -35,14 +33,10 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "HasDesignation",
-                "value": {
-                  "type": "Renowned"
-                }
+                "value": "Renowned"
               },
               "threshold": {
                 "type": "Literal",
@@ -102,17 +96,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Druid"
-          },
-          {
-            "type": "Human"
-          }
+          "Druid",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

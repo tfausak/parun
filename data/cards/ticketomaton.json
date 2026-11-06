@@ -32,14 +32,10 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Ticket"
-                          },
+                          "kind": "Ticket",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -55,24 +51,14 @@
                         "type": "PutSticker",
                         "value": {
                           "kinds": [
-                            {
-                              "type": "Name"
-                            },
-                            {
-                              "type": "Ability"
-                            },
-                            {
-                              "type": "PowerToughness"
-                            },
-                            {
-                              "type": "Art"
-                            }
+                            "Name",
+                            "Ability",
+                            "PowerToughness",
+                            "Art"
                           ],
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "ref": {
                             "type": "ChosenPermanents",
@@ -84,20 +70,14 @@
                                     "type": "Not",
                                     "value": {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Land"
-                                      }
+                                      "value": "Land"
                                     }
                                   },
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Owner"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Owner",
+                                      "relation": "You"
                                     }
                                   }
                                 ]
@@ -119,17 +99,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Robot"
-          }
+          "Robot"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

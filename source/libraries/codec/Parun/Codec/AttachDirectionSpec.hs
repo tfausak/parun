@@ -8,6 +8,6 @@ import qualified Parun.Types.AttachDirection as AttachDirection
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.AttachDirection" $ do
   Spec.it s "Unattaches" $
-    Common.assertCodec s AttachDirection.codec AttachDirection.Unattaches " {\"type\":\"Unattaches\"} "
+    Common.assertCodec s AttachDirection.codec AttachDirection.Unattaches " \"Unattaches\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s AttachDirection.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s AttachDirection.codec

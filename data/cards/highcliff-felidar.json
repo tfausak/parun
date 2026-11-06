@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -65,33 +61,23 @@
                                     "value": [
                                       {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Creature"
-                                        }
+                                        "value": "Creature"
                                       },
                                       {
                                         "type": "HeldByBound",
                                         "value": {
-                                          "holder": {
-                                            "type": "Controller"
-                                          },
+                                          "holder": "Controller",
                                           "slot": "opponent"
                                         }
                                       },
                                       {
                                         "type": "Measures",
                                         "value": {
-                                          "comparison": {
-                                            "type": "AtLeast"
-                                          },
-                                          "measure": {
-                                            "type": "Power"
-                                          },
+                                          "comparison": "AtLeast",
+                                          "measure": "Power",
                                           "operand": {
                                             "type": "OfEachOtherCandidate",
-                                            "value": {
-                                              "type": "Power"
-                                            }
+                                            "value": "Power"
                                           }
                                         }
                                       }
@@ -107,9 +93,7 @@
                             "value": {
                               "players": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "Opponent"
-                                }
+                                "value": "Opponent"
                               }
                             }
                           },
@@ -123,9 +107,7 @@
                             "type": "InSlot",
                             "value": "chosen"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -138,17 +120,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          },
-          {
-            "type": "Cat"
-          }
+          "Beast",
+          "Cat"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

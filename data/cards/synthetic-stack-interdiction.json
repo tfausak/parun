@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -22,19 +20,13 @@
           "effect": {
             "type": "ZoneChangeR",
             "value": {
-              "destination": {
-                "type": "Exile"
-              },
+              "destination": "Exile",
               "matching": {
                 "whatObject": {
                   "type": "HasColor",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 },
-                "whenDestination": {
-                  "type": "Stack"
-                }
+                "whenDestination": "Stack"
               }
             }
           }
@@ -42,9 +34,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

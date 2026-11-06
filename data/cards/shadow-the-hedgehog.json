@@ -11,36 +11,28 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -59,9 +51,7 @@
               "value": [
                 {
                   "type": "IsInZone",
-                  "value": {
-                    "type": "Stack"
-                  }
+                  "value": "Stack"
                 },
                 {
                   "type": "Not",
@@ -72,19 +62,13 @@
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 {
                   "type": "TagWasSpent",
-                  "value": {
-                    "type": "Artifact"
-                  }
+                  "value": "Artifact"
                 }
               ]
             }
@@ -110,9 +94,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -128,9 +110,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -151,9 +131,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ],
               "permanent": {
@@ -163,19 +141,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
@@ -217,9 +189,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -237,22 +207,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hedgehog"
-          },
-          {
-            "type": "Mercenary"
-          }
+          "Hedgehog",
+          "Mercenary"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -35,33 +31,23 @@
               "asThough": [
                 {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 },
                 {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 },
                 {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 },
                 {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 },
                 {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               ],
               "only": false,
@@ -69,9 +55,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             }
@@ -94,9 +78,7 @@
                 "type": "NotOfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             }
@@ -115,19 +97,13 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -137,12 +113,8 @@
             {
               "type": "LandSubtype",
               "value": {
-                "mode": {
-                  "type": "Replace"
-                },
-                "subtype": {
-                  "type": "Plains"
-                }
+                "mode": "Replace",
+                "subtype": "Plains"
               }
             }
           ]
@@ -157,20 +129,14 @@
                   "type": "Not",
                   "value": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Land"
-                    }
+                    "value": "Land"
                   }
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -181,13 +147,9 @@
               "type": "Colors",
               "value": {
                 "colors": [
-                  {
-                    "type": "White"
-                  }
+                  "White"
                 ],
-                "mode": {
-                  "type": "Replace"
-                }
+                "mode": "Replace"
               }
             }
           ]
@@ -202,26 +164,18 @@
                   "type": "Not",
                   "value": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Land"
-                    }
+                    "value": "Land"
                   }
                 },
                 {
                   "type": "IsInZone",
-                  "value": {
-                    "type": "Stack"
-                  }
+                  "value": "Stack"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 {
@@ -238,13 +192,9 @@
               "type": "Colors",
               "value": {
                 "colors": [
-                  {
-                    "type": "White"
-                  }
+                  "White"
                 ],
-                "mode": {
-                  "type": "Replace"
-                }
+                "mode": "Replace"
               }
             }
           ]
@@ -259,20 +209,14 @@
                   "type": "Not",
                   "value": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Land"
-                    }
+                    "value": "Land"
                   }
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Owner"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Owner",
+                    "relation": "You"
                   }
                 },
                 {
@@ -297,13 +241,9 @@
               "type": "Colors",
               "value": {
                 "colors": [
-                  {
-                    "type": "White"
-                  }
+                  "White"
                 ],
-                "mode": {
-                  "type": "Replace"
-                }
+                "mode": "Replace"
               }
             }
           ]
@@ -311,9 +251,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

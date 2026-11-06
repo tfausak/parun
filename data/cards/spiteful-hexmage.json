@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -57,9 +55,7 @@
                                         "value": [
                                           {
                                             "type": "HasCardType",
-                                            "value": {
-                                              "type": "Creature"
-                                            }
+                                            "value": "Creature"
                                           },
                                           {
                                             "type": "HasAttached",
@@ -89,17 +85,11 @@
                                 ],
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Aura"
-                                    },
-                                    {
-                                      "type": "Role"
-                                    }
+                                    "Aura",
+                                    "Role"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Enchantment"
-                                    }
+                                    "Enchantment"
                                   ]
                                 }
                               }
@@ -125,12 +115,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     "pool": {
@@ -145,17 +131,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Warlock"
-          }
+          "Human",
+          "Warlock"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

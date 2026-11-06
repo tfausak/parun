@@ -5101,6 +5101,37 @@ announcedTopSpec s registry = Spec.describe s "CR 401.5" $ do
     Spec.assertBool s (not (sacrificed goblins after)) "Snoop had no ability of the Prospector during the payment"
     Spec.assertEqWith s "the Piker became cast" (fmap (\oid -> Game.namesOf oid after) (GameState.stack after)) [Set.singleton (CardName.MkCardName (Text.pack "Goblin Piker"))]
     Spec.assertEqWith s "and the mark is gone with the window" (GameState.announcedTops after) Nothing
+  -- The same hold-back, read by Vampire Nocturnus (the docs/decisions.md entry
+  -- "Whether a library's held-back top card is its top card"). Leafkin Avenger
+  -- tells: it adds {G}{G} for Grizzly Bears' {1}{G} exactly when Nocturnus has
+  -- +2/+1, and {G} otherwise, leaving the Forest to pay the rest.
+  let nocturnusBoard library held =
+        let alice =
+              (S.battlefield S.alice [S.permanent "Future Sight", S.aliased "nocturnus" (S.permanent "Vampire Nocturnus"), S.ready (S.aliased "leafkin" (S.permanent "Leafkin Avenger")), S.ready (S.aliased "forest" (S.permanent "Forest"))])
+                { Seat.hand = Seq.fromList [S.aliased alias (S.cardSetup name) | (alias, name) <- held],
+                  Seat.library = Seq.fromList ([S.aliased alias (S.cardSetup name) | (alias, name) <- library] <> replicate 3 (S.cardSetup "Island"))
+                }
+         in S.board (alice NonEmpty.:| [S.playerSetup S.bob]) S.alice S.precombatMain
+      leafkinFirst :: ObjectId.ObjectId -> Prompt.Prompt r -> r
+      leafkinFirst leafkin p = case p of
+        Prompt.ChooseManaSource _ _ _ sources -> Just (if leafkin `elem` sources then leafkin else NonEmpty.head sources)
+        Prompt.ChooseExtraManaSource {} -> Nothing
+        _ -> S.identityAnswer p
+      castBears library held = do
+        built <- S.buildBoardOrFail s registry (nocturnusBoard library held)
+        leafkin <- idOf "leafkin" built
+        forest <- idOf "forest" built
+        bears <- idOf "bears" built
+        nocturnus <- idOf "nocturnus" built
+        pure (forest, nocturnus, S.runPure (leafkinFirst leafkin) (Staged.state built) (S.cast S.alice bears))
+  Spec.it s "the control: Vampire Nocturnus reads a black top card shown as the cast began" $ do
+    (forest, _, after) <- castBears [("duress", "Duress")] [("bears", "Grizzly Bears")]
+    Spec.assertBool s (not (Game.isTapped forest after)) "Leafkin Avenger paid all of the Bears"
+  Spec.it s "Vampire Nocturnus reads no top card the cast itself exposed" $ do
+    (forest, nocturnus, after) <- castBears [("bears", "Grizzly Bears"), ("duress", "Duress")] []
+    Spec.assertBool s (Game.isTapped forest after) "Leafkin Avenger added only {G}: Nocturnus had no +2/+1 during the payment"
+    Spec.assertEqWith s "the Bears became cast" (fmap (\oid -> Game.namesOf oid after) (GameState.stack after)) [Set.singleton (CardName.MkCardName (Text.pack "Grizzly Bears"))]
+    Spec.assertEqWith s "and once it was cast Nocturnus reads the Duress" (Projection.powerOf nocturnus after) (Just 5)
 
 keptFaceDownSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 keptFaceDownSpec s registry = Spec.describe s "KeptFaceDown" $ do

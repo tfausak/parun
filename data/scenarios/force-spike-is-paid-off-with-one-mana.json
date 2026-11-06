@@ -5,7 +5,7 @@
   "timeline": [
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$piker", "mana": ["$m1", "$m2", null]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$spike", "targets": ["Goblin Piker"]}}},
-    {"turn": 1, "step": "PrecombatMain", "player": "bob", "source": "Force Spike", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$island"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "source": "Force Spike", "do": {"ChooseToPay": {"decision": "Pays", "mana": ["$island"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Force Spike", "count": 1}}},
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Tapped": {"object": "$island", "tapped": true}}},
     {"turn": 1, "step": "BeginningOfCombat", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Goblin Piker", "count": 1}}}

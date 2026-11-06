@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -33,17 +31,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Fish"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Fish",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

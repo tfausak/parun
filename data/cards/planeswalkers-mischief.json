@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -36,9 +34,7 @@
                                 "type": "InSlot",
                                 "value": "target"
                               },
-                              "zone": {
-                                "type": "Hand"
-                              }
+                              "zone": "Hand"
                             }
                           },
                           "slot": "revealed"
@@ -50,9 +46,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -71,15 +65,11 @@
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Instant"
-                                      }
+                                      "value": "Instant"
                                     },
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Sorcery"
-                                      }
+                                      "value": "Sorcery"
                                     }
                                   ]
                                 }
@@ -90,13 +80,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
+                                  "value": "AnyPlayer"
                                 },
-                                "zone": {
-                                  "type": "Hand"
-                                }
+                                "zone": "Hand"
                               }
                             }
                           }
@@ -116,9 +102,7 @@
                             "value": "revealed"
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -135,9 +119,7 @@
                             "type": "InSlot",
                             "value": "exiled"
                           },
-                          "verb": {
-                            "type": "Cast"
-                          }
+                          "verb": "Cast"
                         }
                       },
                       {
@@ -153,9 +135,7 @@
                   "target": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -179,17 +159,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -197,9 +173,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtMost"
-              },
+              "comparison": "AtMost",
               "measured": {
                 "type": "AgainstSlot",
                 "value": {
@@ -207,9 +181,7 @@
                     "type": "PlayedBy",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     }
                   },
                   "slot": "exiled"
@@ -230,16 +202,12 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "origin": {
-                            "type": "Exile"
-                          },
+                          "origin": "Exile",
                           "ref": {
                             "type": "InSlot",
                             "value": "exiled"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -259,9 +227,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -269,9 +235,7 @@
       "oracleText": "{3}{U}: Target opponent reveals a card at random from their hand. If it's an instant or sorcery card, exile it. You may cast it without paying its mana cost for as long as it remains exiled. At the beginning of the next end step, if you haven't cast it, return it to its owner's hand. Activate only as a sorcery.",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -57,9 +53,7 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "Not",
@@ -76,9 +70,7 @@
                           "duration": {
                             "type": "UntilEndOfTurn"
                           },
-                          "what": {
-                            "type": "Block"
-                          }
+                          "what": "Block"
                         }
                       }
                     ]
@@ -91,14 +83,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          }
+          "Elemental"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

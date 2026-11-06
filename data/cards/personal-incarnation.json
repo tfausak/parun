@@ -35,12 +35,8 @@
                               "players": {
                                 "type": "HolderOfBound",
                                 "value": {
-                                  "holder": {
-                                    "type": "Owner"
-                                  },
-                                  "hop": {
-                                    "type": "Itself"
-                                  },
+                                  "holder": "Owner",
+                                  "hop": "Itself",
                                   "slot": "self"
                                 }
                               }
@@ -65,27 +61,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -106,9 +96,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -125,12 +113,8 @@
                           "player": {
                             "type": "HolderOfBound",
                             "value": {
-                              "holder": {
-                                "type": "Owner"
-                              },
-                              "hop": {
-                                "type": "Itself"
-                              },
+                              "holder": "Owner",
+                              "hop": "Itself",
                               "slot": "self"
                             }
                           },
@@ -146,19 +130,13 @@
                                 "value": {
                                   "type": "HolderOfBound",
                                   "value": {
-                                    "holder": {
-                                      "type": "Owner"
-                                    },
-                                    "hop": {
-                                      "type": "Itself"
-                                    },
+                                    "holder": "Owner",
+                                    "hop": "Itself",
                                     "slot": "self"
                                   }
                                 }
                               },
-                              "rounding": {
-                                "type": "Up"
-                              }
+                              "rounding": "Up"
                             }
                           }
                         }
@@ -173,17 +151,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Avatar"
-          },
-          {
-            "type": "Incarnation"
-          }
+          "Avatar",
+          "Incarnation"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

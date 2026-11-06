@@ -62,9 +62,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             },
@@ -72,9 +70,7 @@
               "type": "BeforeStep",
               "value": {
                 "type": "Combat",
-                "value": {
-                  "type": "DeclareAttackers"
-                }
+                "value": "DeclareAttackers"
               }
             }
           ]
@@ -89,9 +85,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -107,17 +101,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Knight"
-          }
+          "Human",
+          "Knight"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

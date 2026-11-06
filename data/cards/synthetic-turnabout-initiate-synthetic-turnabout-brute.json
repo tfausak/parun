@@ -41,9 +41,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -58,17 +56,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Warlock"
-          }
+          "Human",
+          "Warlock"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
@@ -78,9 +70,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -92,19 +82,13 @@
                     "value": [
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Demon"
-                        }
+                        "value": "Demon"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       }
                     ]
@@ -114,13 +98,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -137,9 +117,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -159,17 +137,11 @@
                           "effect": {
                             "type": "DestructionR",
                             "value": {
-                              "rewrite": {
-                                "type": "Regenerate"
-                              }
+                              "rewrite": "Regenerate"
                             }
                           },
-                          "origin": {
-                            "type": "Other"
-                          },
-                          "uses": {
-                            "type": "Once"
-                          }
+                          "origin": "Other",
+                          "uses": "Once"
                         }
                       }
                     ]
@@ -181,9 +153,7 @@
         }
       ],
       "colorIndicator": [
-        {
-          "type": "Black"
-        }
+        "Black"
       ],
       "name": "Synthetic Turnabout Brute",
       "power": {
@@ -196,17 +166,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ogre"
-          },
-          {
-            "type": "Warlock"
-          }
+          "Ogre",
+          "Warlock"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -18,15 +18,11 @@
               "value": [
                 {
                   "type": "HasColor",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               ]
             }
@@ -60,14 +56,10 @@
                 "type": "Matching",
                 "value": {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Mountain"
-                  }
+                  "value": "Mountain"
                 }
               },
-              "player": {
-                "type": "AnyPlayer"
-              }
+              "player": "AnyPlayer"
             }
           },
           "modal": {
@@ -82,12 +74,8 @@
                           "player": {
                             "type": "HolderOfBound",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "hop": {
-                                "type": "Itself"
-                              },
+                              "holder": "Controller",
+                              "hop": "Itself",
                               "slot": "thatManaSource"
                             }
                           },
@@ -95,9 +83,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         }
@@ -112,9 +98,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

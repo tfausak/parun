@@ -23,9 +23,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -48,9 +46,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               },
               "spell": {
@@ -61,21 +57,15 @@
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
                       "type": "Not",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       }
                     }
                   ]
@@ -103,9 +93,7 @@
                                 "value": {
                                   "players": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "Opponent"
-                                    }
+                                    "value": "Opponent"
                                   }
                                 }
                               }
@@ -123,17 +111,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Otter"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Otter",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

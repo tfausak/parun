@@ -27,9 +27,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNonePaid"
-                      },
+                      "branch": "IfNonePaid",
                       "cost": {
                         "mana": [
                           {
@@ -40,9 +38,7 @@
                       },
                       "payer": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       }
                     }
                   }
@@ -61,9 +57,7 @@
       "oracleText": "{T}: Choose a color. Add one mana of that color unless any player pays {1}. Activate only as an instant.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -42,17 +38,13 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "Not",
                               "value": {
                                 "type": "HasSupertype",
-                                "value": {
-                                  "type": "Legendary"
-                                }
+                                "value": "Legendary"
                               }
                             }
                           ]
@@ -95,9 +87,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

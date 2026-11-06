@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -36,9 +34,7 @@
                               "type": "InSlot",
                               "value": "target"
                             },
-                            "zone": {
-                              "type": "Hand"
-                            }
+                            "zone": "Hand"
                           }
                         }
                       }
@@ -71,9 +67,7 @@
               "target": {
                 "filter": {
                   "type": "IsPlayer",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
                 "pool": {
                   "type": "Players"
@@ -85,9 +79,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

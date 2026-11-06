@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -27,9 +25,7 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "BattlefieldTapped"
-                      },
+                      "destination": "BattlefieldTapped",
                       "filter": {
                         "type": "Or",
                         "value": [
@@ -38,31 +34,23 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Land"
-                                }
+                                "value": "Land"
                               },
                               {
                                 "type": "HasSupertype",
-                                "value": {
-                                  "type": "Basic"
-                                }
+                                "value": "Basic"
                               }
                             ]
                           },
                           {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Gate"
-                            }
+                            "value": "Gate"
                           }
                         ]
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -70,9 +58,7 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -84,9 +70,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

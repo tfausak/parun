@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -40,9 +36,7 @@
           "condition": {
             "type": "BecomesTargeted",
             "value": {
-              "relation": {
-                "type": "You"
-              },
+              "relation": "You",
               "subject": {
                 "type": "Permanent",
                 "value": {
@@ -52,19 +46,13 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "Opponent"
-                          }
+                          "holder": "Controller",
+                          "relation": "Opponent"
                         }
                       }
                     ]
@@ -87,9 +75,7 @@
                             "value": {
                               "type": "Compares",
                               "value": {
-                                "comparison": {
-                                  "type": "Exactly"
-                                },
+                                "comparison": "Exactly",
                                 "measured": {
                                   "type": "Count",
                                   "value": {
@@ -105,12 +91,8 @@
                                         {
                                           "type": "HeldBy",
                                           "value": {
-                                            "holder": {
-                                              "type": "Controller"
-                                            },
-                                            "relation": {
-                                              "type": "You"
-                                            }
+                                            "holder": "Controller",
+                                            "relation": "You"
                                           }
                                         }
                                       ]
@@ -120,13 +102,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         },
-                                        "zone": {
-                                          "type": "Battlefield"
-                                        }
+                                        "zone": "Battlefield"
                                       }
                                     }
                                   }
@@ -154,17 +132,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

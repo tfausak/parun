@@ -20,13 +20,9 @@
                             "value": "target"
                           },
                           "riders": {
-                            "tapped": {
-                              "type": "Tapped"
-                            }
+                            "tapped": "Tapped"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -37,14 +33,10 @@
                     "amount": {
                       "type": "LifeChanged",
                       "value": {
-                        "direction": {
-                          "type": "Gained"
-                        },
+                        "direction": "Gained",
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     },
@@ -53,19 +45,13 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Artifact"
-                          }
+                          "value": "Artifact"
                         },
                         {
                           "type": "Measures",
                           "value": {
-                            "comparison": {
-                              "type": "AtMost"
-                            },
-                            "measure": {
-                              "type": "ManaValue"
-                            },
+                            "comparison": "AtMost",
+                            "measure": "ManaValue",
                             "operand": {
                               "type": "EnclosingAmount"
                             }
@@ -105,9 +91,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -123,9 +107,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -144,12 +126,8 @@
           "condition": {
             "type": "LifeChanges",
             "value": {
-              "direction": {
-                "type": "Gained"
-              },
-              "player": {
-                "type": "You"
-              }
+              "direction": "Gained",
+              "player": "You"
             }
           },
           "modal": {
@@ -184,30 +162,20 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Robot"
-          }
+          "Robot"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     },
     {
       "colorIndicator": [
-        {
-          "type": "White"
-        }
+        "White"
       ],
       "keywords": [
         {
@@ -232,14 +200,10 @@
           "condition": {
             "type": "Leaves",
             "value": {
-              "batching": {
-                "type": "OneOrMore"
-              },
+              "batching": "OneOrMore",
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ],
               "permanent": {
@@ -249,19 +213,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Artifact"
-                      }
+                      "value": "Artifact"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
@@ -275,9 +233,7 @@
               }
             }
           },
-          "limit": {
-            "type": "OncePerTurn"
-          },
+          "limit": "OncePerTurn",
           "modal": {
             "modes": [
               {
@@ -301,19 +257,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Vehicle"
-          }
+          "Vehicle"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

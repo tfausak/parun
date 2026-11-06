@@ -114,9 +114,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          }
+          "decision": "Pays"
         }
       },
       "player": "alice",

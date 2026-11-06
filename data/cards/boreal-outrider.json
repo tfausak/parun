@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -35,9 +33,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               },
               "spell": {
@@ -48,19 +44,13 @@
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     }
                   ]
                 }
@@ -70,17 +60,13 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "AgainstSlot",
                 "value": {
                   "quantity": {
                     "type": "TagWasSpentOfOwnColor",
-                    "value": {
-                      "type": "Snow"
-                    }
+                    "value": "Snow"
                   },
                   "slot": "thatSpell"
                 }
@@ -126,12 +112,8 @@
                               }
                             }
                           },
-                          "origin": {
-                            "type": "Other"
-                          },
-                          "uses": {
-                            "type": "Once"
-                          }
+                          "origin": "Other",
+                          "uses": "Once"
                         }
                       }
                     ]
@@ -144,22 +126,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Elf",
+          "Warrior"
         ],
         "supertypes": [
-          {
-            "type": "Snow"
-          }
+          "Snow"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

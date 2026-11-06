@@ -10,27 +10,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -52,9 +46,7 @@
                           "value": []
                         }
                       },
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   }
                 ]
@@ -95,9 +87,7 @@
                           }
                         ]
                       },
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   }
                 ]
@@ -109,9 +99,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -127,9 +115,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

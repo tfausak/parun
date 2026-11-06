@@ -33,19 +33,13 @@
                                         "value": [
                                           {
                                             "type": "HasCardType",
-                                            "value": {
-                                              "type": "Creature"
-                                            }
+                                            "value": "Creature"
                                           },
                                           {
                                             "type": "HeldBy",
                                             "value": {
-                                              "holder": {
-                                                "type": "Controller"
-                                              },
-                                              "relation": {
-                                                "type": "You"
-                                              }
+                                              "holder": "Controller",
+                                              "relation": "You"
                                             }
                                           }
                                         ]
@@ -59,9 +53,7 @@
                                           "value": {
                                             "quality": {
                                               "type": "HasColor",
-                                              "value": {
-                                                "type": "Red"
-                                              }
+                                              "value": "Red"
                                             },
                                             "spares": null
                                           }
@@ -92,9 +84,7 @@
       "name": "Synthetic Emblem Forge",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

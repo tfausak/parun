@@ -17,9 +17,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Artifact"
-                    }
+                    "value": "Artifact"
                   }
                 }
               }
@@ -40,9 +38,7 @@
                             "value": {
                               "quantity": {
                                 "type": "Measure",
-                                "value": {
-                                  "type": "ManaValue"
-                                }
+                                "value": "ManaValue"
                               },
                               "slot": "thatSacrificedPermanent"
                             }
@@ -51,9 +47,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         }
@@ -75,9 +69,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -93,20 +85,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Cleric",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

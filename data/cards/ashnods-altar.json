@@ -14,9 +14,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               }
@@ -69,9 +67,7 @@
       "oracleText": "Sacrifice a creature: Add {C}{C}.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

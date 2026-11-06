@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -56,28 +52,20 @@
                                   "value": {
                                     "aggregation": {
                                       "type": "Distinct",
-                                      "value": {
-                                        "type": "BasicLandTypes"
-                                      }
+                                      "value": "BasicLandTypes"
                                     },
                                     "filter": {
                                       "type": "And",
                                       "value": [
                                         {
                                           "type": "HasCardType",
-                                          "value": {
-                                            "type": "Land"
-                                          }
+                                          "value": "Land"
                                         },
                                         {
                                           "type": "HeldBy",
                                           "value": {
-                                            "holder": {
-                                              "type": "Controller"
-                                            },
-                                            "relation": {
-                                              "type": "You"
-                                            }
+                                            "holder": "Controller",
+                                            "relation": "You"
                                           }
                                         }
                                       ]
@@ -87,13 +75,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         },
-                                        "zone": {
-                                          "type": "Battlefield"
-                                        }
+                                        "zone": "Battlefield"
                                       }
                                     }
                                   }
@@ -115,28 +99,20 @@
                                   "value": {
                                     "aggregation": {
                                       "type": "Distinct",
-                                      "value": {
-                                        "type": "BasicLandTypes"
-                                      }
+                                      "value": "BasicLandTypes"
                                     },
                                     "filter": {
                                       "type": "And",
                                       "value": [
                                         {
                                           "type": "HasCardType",
-                                          "value": {
-                                            "type": "Land"
-                                          }
+                                          "value": "Land"
                                         },
                                         {
                                           "type": "HeldBy",
                                           "value": {
-                                            "holder": {
-                                              "type": "Controller"
-                                            },
-                                            "relation": {
-                                              "type": "You"
-                                            }
+                                            "holder": "Controller",
+                                            "relation": "You"
                                           }
                                         }
                                       ]
@@ -146,13 +122,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         },
-                                        "zone": {
-                                          "type": "Battlefield"
-                                        }
+                                        "zone": "Battlefield"
                                       }
                                     }
                                   }
@@ -166,9 +138,7 @@
                         "type": "EachMatching",
                         "value": {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         }
                       }
                     }
@@ -181,9 +151,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

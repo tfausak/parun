@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -50,9 +48,7 @@
                             "type": "InSlot",
                             "value": "permanent"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -74,9 +70,7 @@
                           "type": "Not",
                           "value": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           }
                         },
                         {
@@ -102,9 +96,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Hand"
-                  }
+                  "zone": "Hand"
                 }
               ],
               "permanent": {
@@ -122,20 +114,14 @@
                       "type": "Not",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       }
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -175,22 +161,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hero"
-          },
-          {
-            "type": "Mutant"
-          }
+          "Hero",
+          "Mutant"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

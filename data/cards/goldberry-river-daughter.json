@@ -44,12 +44,8 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         },
                         {
@@ -81,9 +77,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -104,7 +98,6 @@
                           "kinds": {
                             "type": "AtLeastOne"
                           },
-                          "slot": "moved",
                           "to": {
                             "type": "InSlot",
                             "value": "permanent"
@@ -114,31 +107,13 @@
                     ]
                   },
                   {
-                    "condition": {
-                      "type": "Compares",
-                      "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
-                        "measured": {
-                          "type": "InSlot",
-                          "value": "moved"
-                        },
-                        "threshold": {
-                          "type": "Literal",
-                          "value": 1
-                        }
-                      }
-                    },
                     "effects": [
                       {
                         "type": "Draw",
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -146,7 +121,13 @@
                           }
                         }
                       }
-                    ]
+                    ],
+                    "ifTaken": {
+                      "type": "AnyTaken",
+                      "value": [
+                        0
+                      ]
+                    }
                   }
                 ],
                 "targetSlots": {
@@ -157,12 +138,8 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         },
                         {
@@ -192,9 +169,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -210,19 +185,13 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Nymph"
-          }
+          "Nymph"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

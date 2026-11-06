@@ -28,20 +28,14 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "RevealThenHand"
-                          },
+                          "destination": "RevealThenHand",
                           "filter": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -49,9 +43,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -73,9 +65,7 @@
       "oracleText": "{2}, {T}, Sacrifice this artifact: Search your library for a land card, reveal it, put it into your hand, then shuffle.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

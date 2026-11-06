@@ -50,12 +50,8 @@
                         {
                           "type": "Measures",
                           "value": {
-                            "comparison": {
-                              "type": "AtMost"
-                            },
-                            "measure": {
-                              "type": "Power"
-                            },
+                            "comparison": "AtMost",
+                            "measure": "Power",
                             "operand": {
                               "type": "Literal",
                               "value": 2
@@ -101,9 +97,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -143,30 +137,20 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
                       "type": "Measures",
                       "value": {
-                        "comparison": {
-                          "type": "AtMost"
-                        },
-                        "measure": {
-                          "type": "Power"
-                        },
+                        "comparison": "AtMost",
+                        "measure": "Power",
                         "operand": {
                           "type": "Literal",
                           "value": 2
@@ -176,15 +160,11 @@
                   ]
                 }
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -200,9 +180,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -232,9 +210,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -250,22 +226,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Human",
+          "Shaman"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

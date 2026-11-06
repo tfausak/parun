@@ -87,9 +87,7 @@
           "of": "Designations",
           "object": "$rhox-maulers",
           "is": [
-            {
-              "type": "Renowned"
-            }
+            "Renowned"
           ]
         }
       }

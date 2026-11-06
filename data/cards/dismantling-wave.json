@@ -15,18 +15,14 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "White"
-                    }
+                    "value": "White"
                   }
                 },
                 {
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "White"
-                    }
+                    "value": "White"
                   }
                 }
               ]
@@ -44,9 +40,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -65,9 +59,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -90,33 +82,25 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Artifact"
-                          }
+                          "value": "Artifact"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Enchantment"
-                          }
+                          "value": "Enchantment"
                         }
                       ]
                     },
                     {
                       "type": "HeldByBound",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
+                        "holder": "Controller",
                         "slot": "eachPlayer"
                       }
                     }
                   ]
                 },
                 "perPlayer": {
-                  "players": {
-                    "type": "Opponent"
-                  },
+                  "players": "Opponent",
                   "slot": "eachPlayer"
                 },
                 "pool": {
@@ -135,9 +119,7 @@
               "subject": {
                 "type": "Self"
               },
-              "way": {
-                "type": "Cycled"
-              }
+              "way": "Cycled"
             }
           },
           "modal": {
@@ -156,22 +138,16 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Artifact"
-                                  }
+                                  "value": "Artifact"
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Enchantment"
-                                  }
+                                  "value": "Enchantment"
                                 }
                               ]
                             }
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -184,9 +160,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

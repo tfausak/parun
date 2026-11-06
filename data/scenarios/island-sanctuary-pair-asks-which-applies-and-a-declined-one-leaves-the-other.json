@@ -107,9 +107,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Declines"
-        }
+        "ChooseOptional": "Declines"
       },
       "player": "alice",
       "source": "$first",
@@ -118,9 +116,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "source": "$second",

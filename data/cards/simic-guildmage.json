@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -74,12 +72,8 @@
                         {
                           "type": "ControllerRelatesToBound",
                           "value": {
-                            "hop": {
-                              "type": "Itself"
-                            },
-                            "relation": {
-                              "type": "You"
-                            },
+                            "hop": "Itself",
+                            "relation": "You",
                             "slot": "from"
                           }
                         }
@@ -105,9 +99,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -127,12 +119,8 @@
                               {
                                 "type": "ControllerRelatesToBound",
                                 "value": {
-                                  "hop": {
-                                    "type": "Host"
-                                  },
-                                  "relation": {
-                                    "type": "You"
-                                  },
+                                  "hop": "Host",
+                                  "relation": "You",
                                   "slot": "target"
                                 }
                               },
@@ -154,9 +142,7 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Aura"
-                          }
+                          "value": "Aura"
                         },
                         {
                           "type": "AttachedTo",
@@ -183,15 +169,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         },
@@ -200,15 +182,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         }
@@ -225,17 +203,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Elf",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

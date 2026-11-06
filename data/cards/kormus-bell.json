@@ -15,34 +15,24 @@
             "type": "Matching",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Swamp"
-              }
+              "value": "Swamp"
             }
           },
           "modifications": [
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Creature"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Creature",
+                "mode": "InAddition"
               }
             },
             {
               "type": "Colors",
               "value": {
                 "colors": [
-                  {
-                    "type": "Black"
-                  }
+                  "Black"
                 ],
-                "mode": {
-                  "type": "Replace"
-                }
+                "mode": "Replace"
               }
             },
             {
@@ -63,9 +53,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

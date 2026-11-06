@@ -30,7 +30,7 @@
     { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$firecraft", "targets": ["$alice"], "mana": ["$m1", "$m2", "$m3"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$rebuttal", "targets": ["Exquisite Firecraft"], "mana": ["$i1", "$i2"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Psychic Rebuttal", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Psychic Rebuttal", "do": { "ChooseOptional": "Exercises" } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTargets": { "target": ["$bob"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["Exquisite Firecraft#2"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Exquisite Firecraft", "count": 1 } } },

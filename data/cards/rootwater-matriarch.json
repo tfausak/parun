@@ -25,9 +25,7 @@
                             "value": {
                               "type": "Compares",
                               "value": {
-                                "comparison": {
-                                  "type": "AtLeast"
-                                },
+                                "comparison": "AtLeast",
                                 "measured": {
                                   "type": "Count",
                                   "value": {
@@ -45,9 +43,7 @@
                                           "type": "HasAttached",
                                           "value": {
                                             "type": "HasSubtype",
-                                            "value": {
-                                              "type": "Aura"
-                                            }
+                                            "value": "Aura"
                                           }
                                         }
                                       ]
@@ -57,13 +53,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         },
-                                        "zone": {
-                                          "type": "Battlefield"
-                                        }
+                                        "zone": "Battlefield"
                                       }
                                     }
                                   }
@@ -105,18 +97,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -132,14 +120,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Merfolk"
-          }
+          "Merfolk"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

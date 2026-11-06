@@ -35,9 +35,7 @@
                           "duration": {
                             "type": "UntilEndOfTurn"
                           },
-                          "what": {
-                            "type": "Block"
-                          }
+                          "what": "Block"
                         }
                       }
                     ]
@@ -68,39 +66,27 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Artifact"
-                      }
+                      "value": "Artifact"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Battle"
-                      }
+                      "value": "Battle"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Enchantment"
-                      }
+                      "value": "Enchantment"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Planeswalker"
-                      }
+                      "value": "Planeswalker"
                     }
                   ]
                 }
@@ -122,15 +108,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             }
           }
         },
@@ -139,15 +121,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             }
           }
         }
@@ -178,9 +156,7 @@
               "subject": {
                 "type": "Activations",
                 "value": {
-                  "whichKind": {
-                    "type": "NonManaAbility"
-                  }
+                  "whichKind": "NonManaAbility"
                 }
               }
             }
@@ -200,22 +176,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          },
-          {
-            "type": "Fox"
-          }
+          "Elemental",
+          "Fox"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

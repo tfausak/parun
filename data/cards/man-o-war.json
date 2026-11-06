@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -45,9 +43,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -67,14 +63,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Jellyfish"
-          }
+          "Jellyfish"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

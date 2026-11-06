@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -48,15 +44,11 @@
               "actor": {
                 "type": "Self"
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -118,14 +110,10 @@
                                 "name": "Treasure Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Treasure"
-                                    }
+                                    "Treasure"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -147,17 +135,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dragon"
-          },
-          {
-            "type": "Elder"
-          }
+          "Dragon",
+          "Elder"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

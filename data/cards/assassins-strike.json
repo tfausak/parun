@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -40,9 +36,7 @@
                         "type": "InSlot",
                         "value": "creature"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   },
                   {
@@ -72,12 +66,8 @@
                           "players": {
                             "type": "HolderOfBound",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "hop": {
-                                "type": "Itself"
-                              },
+                              "holder": "Controller",
+                              "hop": "Itself",
                               "slot": "creature"
                             }
                           }
@@ -101,9 +91,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

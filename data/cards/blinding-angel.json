@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -48,15 +44,11 @@
               "actor": {
                 "type": "Self"
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -89,14 +81,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Angel"
-          }
+          "Angel"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

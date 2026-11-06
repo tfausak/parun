@@ -16,5 +16,5 @@ spec s = Spec.describe s "Parun.Codec.DrawCountR" $ do
       s
       DrawCountR.codec
       (DrawCountR.MkDrawCountR (ControllerRelation.Related PlayerRelation.Opponent) 2 DrawCountRewrite.EachDrawOne)
-      " {\"whose\":{\"type\":\"Opponent\"},\"atLeast\":2,\"rewrite\":{\"type\":\"EachDrawOne\"}} "
+      " {\"whose\":{\"type\":\"Opponent\"},\"atLeast\":2,\"rewrite\":\"EachDrawOne\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DrawCountR.codec

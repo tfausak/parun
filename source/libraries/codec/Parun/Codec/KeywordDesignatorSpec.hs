@@ -19,7 +19,7 @@ spec s = Spec.describe s "Parun.Codec.KeywordDesignator" $ do
       s
       codec
       (KeywordDesignator.OfFamily KeywordFamily.Cycling)
-      " {\"type\":\"OfFamily\",\"value\":{\"type\":\"Cycling\"}} "
+      " {\"type\":\"OfFamily\",\"value\":\"Cycling\"} "
 
   -- CR 702.177a: the keyword itself, which is what Boom Scholar's "exhaust
   -- abilities of other permanents you control" names.
@@ -36,7 +36,7 @@ spec s = Spec.describe s "Parun.Codec.KeywordDesignator" $ do
       s
       codec
       (KeywordDesignator.Printed KeywordFamily.Gift)
-      " {\"type\":\"Printed\",\"value\":{\"type\":\"Gift\"}} "
+      " {\"type\":\"Printed\",\"value\":\"Gift\"} "
 
   -- CR 702.56b: the second of a spell's identical replicate instances, which a
   -- minted replicate trigger names.
@@ -48,7 +48,7 @@ spec s = Spec.describe s "Parun.Codec.KeywordDesignator" $ do
       " {\"type\":\"OfInstance\",\"value\":[{\"type\":\"Exhaust\"},2]} "
 
   -- The arms must stay distinguishable on the wire: a family and a keyword can
-  -- share a spelling (`{"type":"Cycling"}` under either tag), so the outer tag
+  -- share a spelling (`Cycling` under either tag), so the outer tag
   -- is the whole of the difference.
   Spec.it s "the arms do not collide" $
     Spec.assertBool

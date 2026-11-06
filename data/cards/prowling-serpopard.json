@@ -13,18 +13,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -37,9 +33,7 @@
             "value": {
               "countered": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Creature"
               }
             }
           },
@@ -58,17 +52,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          },
-          {
-            "type": "Snake"
-          }
+          "Cat",
+          "Snake"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

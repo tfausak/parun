@@ -29,9 +29,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -86,14 +84,10 @@
                                 "name": "Treasure Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Treasure"
-                                    }
+                                    "Treasure"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -115,17 +109,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Wall"
-          }
+          "Wall"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

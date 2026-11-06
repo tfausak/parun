@@ -118,9 +118,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseDredge",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       },
       "player": "alice",
@@ -131,9 +129,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseDredge",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       },
       "player": "alice",
@@ -155,9 +151,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseDredge",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       },
       "player": "alice",
@@ -168,9 +162,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseDredge",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       },
       "player": "alice",
@@ -191,9 +183,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "DrawStep",
@@ -214,9 +204,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseDredge",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       },
       "player": "alice",
@@ -227,9 +215,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseDredge",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       },
       "player": "alice",
@@ -239,9 +225,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "player": "alice",

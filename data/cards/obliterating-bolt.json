@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -50,9 +48,7 @@
                       "effect": {
                         "type": "ZoneChangeR",
                         "value": {
-                          "destination": {
-                            "type": "Exile"
-                          },
+                          "destination": "Exile",
                           "matching": {
                             "whatObject": {
                               "type": "And",
@@ -66,38 +62,26 @@
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Creature"
-                                      }
+                                      "value": "Creature"
                                     },
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Planeswalker"
-                                      }
+                                      "value": "Planeswalker"
                                     }
                                   ]
                                 },
                                 {
                                   "type": "IsInZone",
-                                  "value": {
-                                    "type": "Battlefield"
-                                  }
+                                  "value": "Battlefield"
                                 }
                               ]
                             },
-                            "whenDestination": {
-                              "type": "Graveyard"
-                            }
+                            "whenDestination": "Graveyard"
                           }
                         }
                       },
-                      "origin": {
-                        "type": "Other"
-                      },
-                      "uses": {
-                        "type": "Unlimited"
-                      }
+                      "origin": "Other",
+                      "uses": "Unlimited"
                     }
                   }
                 ]
@@ -110,15 +94,11 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Planeswalker"
-                      }
+                      "value": "Planeswalker"
                     }
                   ]
                 },
@@ -132,9 +112,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

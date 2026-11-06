@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -25,9 +23,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Hand"
-                  }
+                  "zone": "Hand"
                 }
               ],
               "permanent": {
@@ -71,9 +67,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

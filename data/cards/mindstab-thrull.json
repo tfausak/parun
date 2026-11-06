@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -70,9 +66,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "components": [
                           {
@@ -95,14 +89,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Thrull"
-          }
+          "Thrull"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

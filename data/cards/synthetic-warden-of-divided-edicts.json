@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -32,9 +28,7 @@
             "type": "CantCastMatching",
             "value": {
               "type": "HasCardType",
-              "value": {
-                "type": "Creature"
-              }
+              "value": "Creature"
             }
           },
           "name": "creature ban",
@@ -91,17 +85,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Advisor"
-          },
-          {
-            "type": "Human"
-          }
+          "Advisor",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

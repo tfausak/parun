@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -40,12 +38,8 @@
                 "filter": {
                   "type": "Measures",
                   "value": {
-                    "comparison": {
-                      "type": "AtMost"
-                    },
-                    "measure": {
-                      "type": "ManaValue"
-                    },
+                    "comparison": "AtMost",
+                    "measure": "ManaValue",
                     "operand": {
                       "type": "Literal",
                       "value": 2
@@ -62,9 +56,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -36,18 +34,12 @@
                 "value": {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               },
-              "status": {
-                "type": "Untapped"
-              }
+              "status": "Untapped"
             }
           },
           "modal": {
@@ -91,17 +83,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Merfolk"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Merfolk",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

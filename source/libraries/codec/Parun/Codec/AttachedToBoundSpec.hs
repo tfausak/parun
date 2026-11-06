@@ -21,5 +21,5 @@ spec s = Spec.describe s "Parun.Codec.AttachedToBound" $ do
             AttachedToBound.filter = Filter.HasSubtype Subtype.Equipment
           }
       )
-      " {\"slot\":\"target\",\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Equipment\"}}} "
+      " {\"slot\":\"target\",\"filter\":{\"type\":\"HasSubtype\",\"value\":\"Equipment\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AttachedToBound.codec

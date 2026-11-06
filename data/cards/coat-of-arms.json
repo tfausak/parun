@@ -15,9 +15,7 @@
             "type": "Matching",
             "value": {
               "type": "HasCardType",
-              "value": {
-                "type": "Creature"
-              }
+              "value": "Creature"
             }
           },
           "modifications": [
@@ -35,9 +33,7 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "Not",
@@ -63,13 +59,9 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
-                        "zone": {
-                          "type": "Battlefield"
-                        }
+                        "zone": "Battlefield"
                       }
                     }
                   }
@@ -85,9 +77,7 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "Not",
@@ -113,13 +103,9 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
-                        "zone": {
-                          "type": "Battlefield"
-                        }
+                        "zone": "Battlefield"
                       }
                     }
                   }
@@ -131,9 +117,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

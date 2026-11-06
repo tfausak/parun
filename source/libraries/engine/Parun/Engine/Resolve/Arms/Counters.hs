@@ -269,8 +269,12 @@ putCounters resolving source controller legal chosen (PutCounters.MkPutCounters 
   -- Only where something is placed, so an instruction placing no counters
   -- spends no group; and around the FOLD alone, the sweep above it having
   -- taken no action for CR 608.2f to be read over.
+  --
+  -- The cause is Event.resolvingCounterCause's: Sphinx-Bone Wand's "you may put
+  -- a charge counter" is CR 118.12's cost, and no effect.
+  cause <- State.gets (Event.resolvingCounterCause controller)
   Monad.unless (null placements) . Event.simultaneously . Monad.forM_ placements $ \(target, n) ->
-    Event.putCountersWithin totalAtMost (CounterCause.ByEffect controller) target kind n
+    Event.putCountersWithin totalAtMost cause target kind n
 
 -- CR 608.2d: the chooser picks which of the objects the ref names get a
 -- part and how much, each chosen one at least one, the whole amount handed
@@ -1111,7 +1115,11 @@ moveCounters resolving source controller legal (MoveCounters.MkMoveCounters from
   -- one object. Ascending by recipient and then by kind (Map.toList), so a
   -- transcript is deterministic either way, and SUMMED, since "moved this way"
   -- counts counters and not kinds.
-  let place to (kind, n) = fmap (min n) (Event.putCounters (CounterCause.ByEffect controller) to kind n)
+  --
+  -- The cause is Event.resolvingCounterCause's: Goldberry, River-Daughter's
+  -- "move ... If you do" is CR 118.12's cost, and CR 122.5's move a put.
+  cause <- State.gets (Event.resolvingCounterCause controller)
+  let place to (kind, n) = fmap (min n) (Event.putCounters cause to kind n)
   moved <- case recipients of
     [to] -> do
       taken <- fmap (Map.unionsWith (+)) (mapM (movePair to) froms)
@@ -1289,10 +1297,13 @@ amass settle resolving source controller legal (Amass.Type.MkAmass quantity subt
       Monad.forM_ ((,) <$> mSlot <*> chose) $ \(slot, army) -> State.modify' (Common.bindSlot resolving slot army)
 
 -- CR 701.68a: each player the PlayerRef names puts N -1/-1 counters on a
--- creature they control; the keyword action is Parun.Engine.Blight.blight's, and
--- rule 701.68b's optional reading is a cost (CR 118.12). MANDATORY here, so an
--- empty pool is CR 101.3's no-op, and the pool is Blight.instructed's. A
--- reference naming nobody, or an illegal slot (CR 608.2b), blights nothing.
+-- creature they control; the keyword action is Parun.Engine.Blight.blight's. A
+-- MANDATORY blight's empty pool is CR 101.3's no-op, and its pool is
+-- Blight.instructed's. One a later "If you do" names is CR 118.12's cost
+-- (Event.payingOnResolution): its pool is Blight.payable's (CR 701.68b) and
+-- its cause Event.resolvingCounterCause's, so Doubling Season leaves Grub,
+-- Notorious Auntie's blight alone. A reference naming nobody, or an illegal
+-- slot (CR 608.2b), blights nothing.
 -- APNAP for the order (CR 101.4). Targetless: no CR 608.2b legality to
 -- re-check.
 --
@@ -1323,10 +1334,11 @@ blight resolving source controller legal (Blight.Type.MkBlight ref quantity mSlo
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       named = playerRefPlayers legal resolving source controller gs ref
       blighters = filter (\pid -> List.elem pid named) (Game.apnapOrder gs)
+      pool = if GameState.payingOnResolution gs then Blight.payable else Blight.instructed
   blightedCreatures <- Event.simultaneously . fmap Maybe.catMaybes . Monad.forM blighters $ \pid ->
     case Common.evaluateForRecipient viewOf context gs resolving source pid quantity of
       Nothing -> pure Nothing -- unevaluable quantity: no-op (the powerOf posture)
-      Just n -> Blight.blight Blight.instructed (CounterCause.ByEffect pid) resolving (Integer.toNaturalSaturating n)
+      Just n -> Blight.blight pool (Event.resolvingCounterCause pid gs) resolving (Integer.toNaturalSaturating n)
   -- CR 701.68c: "the blighted creature" is the object the blighting player chose
   -- to put the counters on, bound for a later clause of this same resolution to
   -- read (CR 608.2c) -- Grub, Notorious Auntie's token copy of it. Bound off the

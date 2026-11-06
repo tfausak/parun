@@ -13,18 +13,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -44,12 +40,8 @@
                         "value": {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "Opponent"
-                            }
+                            "holder": "Controller",
+                            "relation": "Opponent"
                           }
                         }
                       },
@@ -63,12 +55,8 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Blue"
-                              },
-                              {
-                                "type": "Black"
-                              }
+                              "Blue",
+                              "Black"
                             ],
                             "keywords": [
                               {
@@ -86,14 +74,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Faerie"
-                                }
+                                "Faerie"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -113,9 +97,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

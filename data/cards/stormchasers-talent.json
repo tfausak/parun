@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -55,9 +53,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -102,9 +98,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -121,9 +115,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "ClassLevel"
               },
@@ -156,9 +148,7 @@
                                     "type": "InSlot",
                                     "value": "target"
                                   },
-                                  "zone": {
-                                    "type": "Hand"
-                                  }
+                                  "zone": "Hand"
                                 }
                               }
                             ]
@@ -171,15 +161,11 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Instant"
-                                  }
+                                  "value": "Instant"
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Sorcery"
-                                  }
+                                  "value": "Sorcery"
                                 }
                               ]
                             },
@@ -212,9 +198,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "ClassLevel"
               },
@@ -237,9 +221,7 @@
                         "type": "PlayersTurn",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         }
                       },
                       "spell": {
@@ -250,12 +232,8 @@
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "You"
-                                }
+                                "holder": "Controller",
+                                "relation": "You"
                               }
                             },
                             {
@@ -263,15 +241,11 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Instant"
-                                  }
+                                  "value": "Instant"
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Sorcery"
-                                  }
+                                  "value": "Sorcery"
                                 }
                               ]
                             }
@@ -293,12 +267,8 @@
                                     "faces": [
                                       {
                                         "colorIndicator": [
-                                          {
-                                            "type": "Blue"
-                                          },
-                                          {
-                                            "type": "Red"
-                                          }
+                                          "Blue",
+                                          "Red"
                                         ],
                                         "keywords": [
                                           {
@@ -316,14 +286,10 @@
                                         },
                                         "typeLine": {
                                           "subtypes": [
-                                            {
-                                              "type": "Otter"
-                                            }
+                                            "Otter"
                                           ],
                                           "types": [
-                                            {
-                                              "type": "Creature"
-                                            }
+                                            "Creature"
                                           ]
                                         }
                                       }
@@ -366,12 +332,8 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Blue"
-                                  },
-                                  {
-                                    "type": "Red"
-                                  }
+                                  "Blue",
+                                  "Red"
                                 ],
                                 "keywords": [
                                   {
@@ -389,14 +351,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Otter"
-                                    }
+                                    "Otter"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -418,14 +376,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Class"
-          }
+          "Class"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

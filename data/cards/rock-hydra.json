@@ -9,9 +9,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -52,27 +50,21 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -113,18 +105,14 @@
                   "type": "PlayersTurn",
                   "value": {
                     "type": "Relative",
-                    "value": {
-                      "type": "You"
-                    }
+                    "value": "You"
                   }
                 },
                 "window": {
                   "type": "Step",
                   "value": {
                     "type": "Beginning",
-                    "value": {
-                      "type": "Upkeep"
-                    }
+                    "value": "Upkeep"
                   }
                 }
               }
@@ -140,18 +128,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -211,14 +195,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hydra"
-          }
+          "Hydra"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

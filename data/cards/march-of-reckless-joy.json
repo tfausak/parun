@@ -11,9 +11,7 @@
             },
             "whichCards": {
               "type": "HasColor",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             }
           }
         }
@@ -40,9 +38,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -66,16 +62,12 @@
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       },
                       "slot": "exiled",
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   },
                   {
@@ -99,9 +91,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

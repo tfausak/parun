@@ -48,7 +48,7 @@ spec s = Spec.describe s "Parun.Codec.Repeat" $ do
             Repeat.ifAgain = Seq.empty
           }
       )
-      " {\"chooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"body\":[\"roll\",\"copy\"],\"gate\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"InSlot\",\"value\":\"result\"},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":15}}}} "
+      " {\"chooser\":{\"type\":\"Relative\",\"value\":\"You\"},\"body\":[\"roll\",\"copy\"],\"gate\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"InSlot\",\"value\":\"result\"},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":15}}}} "
   -- Game of Chaos's shape: the gate picks who is asked, and going again first
   -- doubles the stakes.
   Spec.it s "MkRepeat with another chooser and instructions before each further run" $
@@ -63,5 +63,5 @@ spec s = Spec.describe s "Parun.Codec.Repeat" $ do
             Repeat.ifAgain = Seq.singleton (Text.pack "double")
           }
       )
-      " {\"chooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"body\":[\"flip\"],\"gate\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"InSlot\",\"value\":\"won\"},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"otherChooser\":{\"type\":\"InSlot\",\"value\":\"target\"},\"ifAgain\":[\"double\"]} "
+      " {\"chooser\":{\"type\":\"Relative\",\"value\":\"You\"},\"body\":[\"flip\"],\"gate\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"InSlot\",\"value\":\"won\"},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"otherChooser\":{\"type\":\"InSlot\",\"value\":\"target\"},\"ifAgain\":[\"double\"]} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

@@ -10,27 +10,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -51,9 +45,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "Exactly"
-              },
+              "comparison": "Exactly",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -65,19 +57,13 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "Opponent"
-                          }
+                          "holder": "Controller",
+                          "relation": "Opponent"
                         }
                       }
                     ]
@@ -87,13 +73,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -127,17 +109,11 @@
                 "type": "Matching",
                 "value": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               },
-              "from": {
-                "type": "Graveyard"
-              },
-              "whose": {
-                "type": "Opponent"
-              }
+              "from": "Graveyard",
+              "whose": "Opponent"
             }
           },
           "modal": {
@@ -153,9 +129,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -174,16 +148,12 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "origin": {
-                            "type": "Graveyard"
-                          },
+                          "origin": "Graveyard",
                           "ref": {
                             "type": "InSlot",
                             "value": "self"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ],
@@ -202,14 +172,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Giant"
-          }
+          "Giant"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

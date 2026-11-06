@@ -41,9 +41,7 @@
                         },
                         {
                           "type": "HasBlockStatus",
-                          "value": {
-                            "type": "Blocked"
-                          }
+                          "value": "Blocked"
                         }
                       ]
                     },
@@ -63,18 +61,14 @@
                   "type": "PlayersTurn",
                   "value": {
                     "type": "Relative",
-                    "value": {
-                      "type": "AnyPlayer"
-                    }
+                    "value": "AnyPlayer"
                   }
                 },
                 "window": {
                   "type": "Step",
                   "value": {
                     "type": "Combat",
-                    "value": {
-                      "type": "DeclareBlockers"
-                    }
+                    "value": "DeclareBlockers"
                   }
                 }
               }
@@ -91,9 +85,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -109,22 +101,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Human",
+          "Soldier"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

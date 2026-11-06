@@ -14,14 +14,14 @@ spec s = Spec.describe s "Parun.Codec.PlayPermissionOrigin" $ do
       s
       PlayPermissionOrigin.codec
       PlayPermissionOrigin.Adventure
-      " {\"type\":\"Adventure\"} "
+      " \"Adventure\" "
   -- CR 601.3, via Effect.GrantPlayFromExile: no Adventure exclusion rides here.
   Spec.it s "Granted" $
     Common.assertCodec
       s
       PlayPermissionOrigin.codec
       PlayPermissionOrigin.Granted
-      " {\"type\":\"Granted\"} "
+      " \"Granted\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

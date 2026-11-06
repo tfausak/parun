@@ -24,9 +24,7 @@
                             "type": "InSlot",
                             "value": "cards"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       },
                       {
@@ -36,9 +34,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -62,9 +58,7 @@
                         }
                       }
                     },
-                    "together": {
-                      "type": "InOneZone"
-                    }
+                    "together": "InOneZone"
                   },
                   "target": {
                     "filter": {
@@ -72,15 +66,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Artifact"
-                          }
+                          "value": "Artifact"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Enchantment"
-                          }
+                          "value": "Enchantment"
                         }
                       ]
                     },
@@ -103,9 +93,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -121,17 +109,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Druid"
-          },
-          {
-            "type": "Insect"
-          }
+          "Druid",
+          "Insect"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

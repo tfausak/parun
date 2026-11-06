@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -36,9 +34,7 @@
               "spell": {
                 "filter": {
                   "type": "HasColor",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 },
                 "pool": {
                   "type": "Spells"
@@ -57,9 +53,7 @@
                         "type": "InSlot",
                         "value": "permanent"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -69,9 +63,7 @@
               "permanent": {
                 "filter": {
                   "type": "HasColor",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 },
                 "pool": {
                   "type": "Permanents"
@@ -83,9 +75,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

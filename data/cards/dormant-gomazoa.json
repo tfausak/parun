@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -60,9 +56,7 @@
           "condition": {
             "type": "BecomesTargeted",
             "value": {
-              "kind": {
-                "type": "Spell"
-              },
+              "kind": "Spell",
               "subject": {
                 "type": "You"
               }
@@ -94,14 +88,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Jellyfish"
-          }
+          "Jellyfish"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       },
       "untapRestrictions": [

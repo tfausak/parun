@@ -59,9 +59,7 @@
                           "restriction": {
                             "casts": {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Sliver"
-                              }
+                              "value": "Sliver"
                             }
                           }
                         }
@@ -110,14 +108,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Sliver"
-                                    }
+                                    "Sliver"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -141,9 +135,7 @@
               "value": {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "AtLeast"
-                  },
+                  "comparison": "AtLeast",
                   "measured": {
                     "type": "Count",
                     "value": {
@@ -155,19 +147,13 @@
                         "value": [
                           {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Sliver"
-                            }
+                            "value": "Sliver"
                           },
                           {
                             "type": "HeldBy",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "relation": {
-                                "type": "You"
-                              }
+                              "holder": "Controller",
+                              "relation": "You"
                             }
                           }
                         ]
@@ -177,13 +163,9 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     }
@@ -202,9 +184,7 @@
       "oracleText": "{T}: Add {C}.\n{T}: Add one mana of any color. Spend this mana only to cast a Sliver spell.\n{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

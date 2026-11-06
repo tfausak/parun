@@ -132,9 +132,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "PrecombatMain",

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -33,9 +31,7 @@
           "modifications": [
             {
               "type": "MayAssignCombatDamage",
-              "value": {
-                "type": "ToDefendingCreature"
-              }
+              "value": "ToDefendingCreature"
             }
           ]
         }
@@ -46,14 +42,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Giant"
-          }
+          "Giant"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

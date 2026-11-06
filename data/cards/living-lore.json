@@ -10,9 +10,7 @@
             },
             "quantity": {
               "type": "Measure",
-              "value": {
-                "type": "ManaValue"
-              }
+              "value": "ManaValue"
             }
           }
         },
@@ -24,9 +22,7 @@
             },
             "quantity": {
               "type": "Measure",
-              "value": {
-                "type": "ManaValue"
-              }
+              "value": "ManaValue"
             }
           }
         }
@@ -40,9 +36,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -67,15 +61,11 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Instant"
-                        }
+                        "value": "Instant"
                       },
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Sorcery"
-                        }
+                        "value": "Sorcery"
                       }
                     ]
                   }
@@ -96,9 +86,7 @@
               "actor": {
                 "type": "Self"
               },
-              "kind": {
-                "type": "Combat"
-              }
+              "kind": "Combat"
             }
           },
           "modal": {
@@ -125,9 +113,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "components": [
                           {
@@ -150,14 +136,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Avatar"
-          }
+          "Avatar"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

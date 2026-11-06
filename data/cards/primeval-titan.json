@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -67,20 +63,14 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "BattlefieldTapped"
-                          },
+                          "destination": "BattlefieldTapped",
                           "filter": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -88,9 +78,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -107,14 +95,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Giant"
-          }
+          "Giant"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

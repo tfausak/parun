@@ -41,9 +41,7 @@
                   "target": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Planeswalker"
-                      }
+                      "value": "Planeswalker"
                     },
                     "pool": {
                       "type": "Permanents"
@@ -116,9 +114,7 @@
           "value": {
             "quality": {
               "type": "HasCardType",
-              "value": {
-                "type": "Planeswalker"
-              }
+              "value": "Planeswalker"
             },
             "spares": null
           }
@@ -142,17 +138,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Masticore"
-          }
+          "Masticore"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

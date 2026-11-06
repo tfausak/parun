@@ -10,27 +10,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -62,16 +56,12 @@
                 "filter": {
                   "type": "HeldByBound",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
+                    "holder": "Controller",
                     "slot": "eachPlayer"
                   }
                 },
                 "perPlayer": {
-                  "players": {
-                    "type": "Opponent"
-                  },
+                  "players": "Opponent",
                   "slot": "eachPlayer"
                 },
                 "pool": {
@@ -84,9 +74,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

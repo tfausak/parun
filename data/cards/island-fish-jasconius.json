@@ -14,9 +14,7 @@
             "unless": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "AtLeast"
-                },
+                "comparison": "AtLeast",
                 "measured": {
                   "type": "Count",
                   "value": {
@@ -28,15 +26,11 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Island"
-                          }
+                          "value": "Island"
                         },
                         {
                           "type": "ControlledByRole",
-                          "value": {
-                            "type": "Defending"
-                          }
+                          "value": "Defending"
                         }
                       ]
                     },
@@ -45,13 +39,9 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
-                        "zone": {
-                          "type": "Battlefield"
-                        }
+                        "zone": "Battlefield"
                       }
                     }
                   }
@@ -74,27 +64,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -115,17 +99,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -145,36 +125,28 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "mana": [
                           {
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Blue"
-                              }
+                              "value": "Blue"
                             }
                           },
                           {
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Blue"
-                              }
+                              "value": "Blue"
                             }
                           },
                           {
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Blue"
-                              }
+                              "value": "Blue"
                             }
                           }
                         ]
@@ -196,9 +168,7 @@
             "value": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "Exactly"
-                },
+                "comparison": "Exactly",
                 "measured": {
                   "type": "Count",
                   "value": {
@@ -210,19 +180,13 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Island"
-                          }
+                          "value": "Island"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -232,13 +196,9 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
-                        "zone": {
-                          "type": "Battlefield"
-                        }
+                        "zone": "Battlefield"
                       }
                     }
                   }
@@ -275,14 +235,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Fish"
-          }
+          "Fish"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       },
       "untapRestrictions": [

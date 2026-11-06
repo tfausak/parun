@@ -6,9 +6,7 @@
           "type": "Hexproof",
           "value": {
             "type": "HasColor",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
@@ -24,9 +22,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -63,9 +59,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -80,9 +74,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Green"
-                                  }
+                                  "Green"
                                 ],
                                 "name": "Saproling Token",
                                 "power": {
@@ -95,14 +87,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Saproling"
-                                    }
+                                    "Saproling"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -124,14 +112,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Spider"
-          }
+          "Spider"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

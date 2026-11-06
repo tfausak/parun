@@ -20,7 +20,7 @@ spec s = Spec.describe s "Parun.Codec.LeavesZoneTrigger" $ do
       s
       LeavesZoneTrigger.codec
       (LeavesZoneTrigger.self Zone.Graveyard)
-      " {\"from\":{\"type\":\"Graveyard\"}} "
+      " {\"from\":\"Graveyard\"} "
   -- Kishla Skimmer: whose graveyard the card left, and whose turn it has to be.
   Spec.it s "round-trips a Matching card, a pile and a turn" $
     Common.assertCodec
@@ -31,7 +31,7 @@ spec s = Spec.describe s "Parun.Codec.LeavesZoneTrigger" $ do
           LeavesZoneTrigger.whose = Just PlayerRelation.You,
           LeavesZoneTrigger.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)
         }
-      " {\"card\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"from\":{\"type\":\"Graveyard\"},\"whose\":{\"type\":\"You\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
+      " {\"card\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"from\":\"Graveyard\",\"whose\":\"You\",\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}}} "
   -- Rakshasa Vizier: a destination, once per batch.
   Spec.it s "round-trips a destination and a batch" $
     Common.assertCodec
@@ -41,5 +41,5 @@ spec s = Spec.describe s "Parun.Codec.LeavesZoneTrigger" $ do
         { LeavesZoneTrigger.to = Just Zone.Exile,
           LeavesZoneTrigger.batching = Batching.OneOrMore
         }
-      " {\"from\":{\"type\":\"Graveyard\"},\"to\":{\"type\":\"Exile\"},\"batching\":{\"type\":\"OneOrMore\"}} "
+      " {\"from\":\"Graveyard\",\"to\":\"Exile\",\"batching\":\"OneOrMore\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s LeavesZoneTrigger.codec

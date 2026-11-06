@@ -8,17 +8,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -26,9 +22,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -44,13 +38,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -74,9 +64,7 @@
                             "type": "InSlot",
                             "value": "ragavan"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -104,18 +92,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -139,9 +123,7 @@
                 "while": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -154,25 +136,17 @@
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "You"
-                                }
+                                "holder": "Controller",
+                                "relation": "You"
                               }
                             },
                             {
                               "type": "HasSupertype",
-                              "value": {
-                                "type": "Legendary"
-                              }
+                              "value": "Legendary"
                             },
                             {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Monkey"
-                              }
+                              "value": "Monkey"
                             }
                           ]
                         },
@@ -181,13 +155,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Battlefield"
-                            }
+                            "zone": "Battlefield"
                           }
                         }
                       }
@@ -229,9 +199,7 @@
                                               "type": "OfType",
                                               "value": {
                                                 "type": "Colored",
-                                                "value": {
-                                                  "type": "Red"
-                                                }
+                                                "value": "Red"
                                               }
                                             }
                                           ]
@@ -243,9 +211,7 @@
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "Red"
-                                          }
+                                          "value": "Red"
                                         }
                                       }
                                     ],
@@ -266,15 +232,11 @@
                                             "actor": {
                                               "type": "Self"
                                             },
-                                            "kind": {
-                                              "type": "Combat"
-                                            },
+                                            "kind": "Combat",
                                             "recipients": [
                                               {
                                                 "type": "Player",
-                                                "value": {
-                                                  "type": "AnyPlayer"
-                                                }
+                                                "value": "AnyPlayer"
                                               }
                                             ]
                                           }
@@ -329,14 +291,10 @@
                                                               "name": "Treasure Token",
                                                               "typeLine": {
                                                                 "subtypes": [
-                                                                  {
-                                                                    "type": "Treasure"
-                                                                  }
+                                                                  "Treasure"
                                                                 ],
                                                                 "types": [
-                                                                  {
-                                                                    "type": "Artifact"
-                                                                  }
+                                                                  "Artifact"
                                                                 ]
                                                               }
                                                             }
@@ -365,9 +323,7 @@
                                                           }
                                                         },
                                                         "slot": "exiled",
-                                                        "zone": {
-                                                          "type": "Exile"
-                                                        }
+                                                        "zone": "Exile"
                                                       }
                                                     },
                                                     {
@@ -380,9 +336,7 @@
                                                           "type": "InSlot",
                                                           "value": "exiled"
                                                         },
-                                                        "verb": {
-                                                          "type": "Cast"
-                                                        }
+                                                        "verb": "Cast"
                                                       }
                                                     }
                                                   ]
@@ -395,22 +349,14 @@
                                     ],
                                     "typeLine": {
                                       "subtypes": [
-                                        {
-                                          "type": "Monkey"
-                                        },
-                                        {
-                                          "type": "Pirate"
-                                        }
+                                        "Monkey",
+                                        "Pirate"
                                       ],
                                       "supertypes": [
-                                        {
-                                          "type": "Legendary"
-                                        }
+                                        "Legendary"
                                       ],
                                       "types": [
-                                        {
-                                          "type": "Creature"
-                                        }
+                                        "Creature"
                                       ]
                                     }
                                   }
@@ -422,9 +368,7 @@
                             "type": "Battlefield",
                             "value": {
                               "attacking": true,
-                              "tapped": {
-                                "type": "Tapped"
-                              }
+                              "tapped": "Tapped"
                             }
                           },
                           "slot": "ragavan"
@@ -446,22 +390,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Pirate"
-          }
+          "Human",
+          "Pirate"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

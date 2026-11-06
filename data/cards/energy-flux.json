@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -24,9 +22,7 @@
             "type": "Matching",
             "value": {
               "type": "HasCardType",
-              "value": {
-                "type": "Artifact"
-              }
+              "value": "Artifact"
             }
           },
           "modifications": [
@@ -40,17 +36,13 @@
                     "value": {
                       "phase": {
                         "type": "Beginning",
-                        "value": {
-                          "type": "Upkeep"
-                        }
+                        "value": "Upkeep"
                       },
                       "scope": {
                         "type": "PlayersTurn",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     }
@@ -72,9 +64,7 @@
                               }
                             ],
                             "payGate": {
-                              "branch": {
-                                "type": "IfNotPaid"
-                              },
+                              "branch": "IfNotPaid",
                               "cost": {
                                 "mana": [
                                   {
@@ -101,9 +91,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -19,6 +19,7 @@ import qualified Parun.Engine.Conspiracy as Conspiracy
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.GrandMelee as GrandMelee
 import qualified Parun.Engine.Mulligan as Mulligan
 import qualified Parun.Engine.Plane as Plane
 import qualified Parun.Engine.Planechase as Planechase
@@ -321,6 +322,7 @@ blankGame settings order active =
       GameState.drawsThisTurn = mempty,
       GameState.keptFaceDown = Nothing,
       GameState.announcedTops = Nothing,
+      GameState.actionTops = Nothing,
       GameState.loopPicks = Nothing,
       GameState.repeatPicks = Nothing,
       GameState.revealedTops = mempty,
@@ -352,6 +354,7 @@ blankGame settings order active =
       GameState.counteredWith = Map.empty,
       GameState.exilePiles = Map.empty,
       GameState.extraTurns = [],
+      GameState.turnMarkers = [],
       -- CR 100.6a: parun models no match around this game, so the match it
       -- belongs to has had no subgame yet.
       GameState.subgamesThisMatch = 0,
@@ -544,6 +547,8 @@ newGame perform matchup = do
   randomTeamFirst
   -- CR 103.1c, once every conspiracy is in its command zone (CR 315.2).
   claimStartingPlayer
+  -- CR 807.4b: from the starting player CR 103.1 settled.
+  State.modify' GrandMelee.handOut
   countFirstTurn
   seated <- State.gets GameState.turnOrder
   -- CR 103.2b: the companion reveal round, after every starting deck is recorded
@@ -792,6 +797,8 @@ startGameFromCards perform exemptions = do
   -- CR 103.1c after CR 727.1a's determination: a conspiracy stays in the
   -- command zone through a restart (CR 315.3), so it claims again.
   claimStartingPlayer
+  -- CR 807.4b: from the starting player CR 103.1 settled.
+  State.modify' GrandMelee.handOut
   countFirstTurn
   seated <- State.gets Game.stillPlayingInOrder
   -- CR 103.2b, newGame's reveal round: CR 727.1 and CR 729.2 each start a new

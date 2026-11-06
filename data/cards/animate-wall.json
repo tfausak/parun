@@ -10,9 +10,7 @@
               "value": [
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Wall"
-                  }
+                  "value": "Wall"
                 },
                 {
                   "type": "HasAttached",
@@ -29,9 +27,7 @@
         {
           "filter": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Wall"
-            }
+            "value": "Wall"
           },
           "pool": {
             "type": "Creatures"
@@ -43,9 +39,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -53,14 +47,10 @@
       "oracleText": "Enchant Wall\nEnchanted Wall can attack as though it didn't have defender.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

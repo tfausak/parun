@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -40,9 +38,7 @@
                           }
                         ]
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ]
@@ -53,12 +49,8 @@
                 "filter": {
                   "type": "ControllerRelatesToBound",
                   "value": {
-                    "hop": {
-                      "type": "Itself"
-                    },
-                    "relation": {
-                      "type": "AnotherPlayer"
-                    },
+                    "hop": "Itself",
+                    "relation": "AnotherPlayer",
                     "slot": "second"
                   }
                 },
@@ -70,12 +62,8 @@
                 "filter": {
                   "type": "ControllerRelatesToBound",
                   "value": {
-                    "hop": {
-                      "type": "Itself"
-                    },
-                    "relation": {
-                      "type": "AnotherPlayer"
-                    },
+                    "hop": "Itself",
+                    "relation": "AnotherPlayer",
                     "slot": "first"
                   }
                 },
@@ -89,9 +77,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

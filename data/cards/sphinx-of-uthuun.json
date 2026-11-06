@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -64,9 +60,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -85,9 +79,7 @@
                             "value": {
                               "chooser": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "Opponent"
-                                }
+                                "value": "Opponent"
                               },
                               "count": {
                                 "type": "UpTo"
@@ -98,16 +90,12 @@
                               },
                               "pileChooser": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               },
                               "slot": "revealed"
                             }
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -121,9 +109,7 @@
                             "type": "InSlot",
                             "value": "revealed"
                           },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       }
                     ]
@@ -136,14 +122,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Sphinx"
-          }
+          "Sphinx"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

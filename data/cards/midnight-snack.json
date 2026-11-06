@@ -18,9 +18,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -41,14 +39,10 @@
                           "quantity": {
                             "type": "LifeChanged",
                             "value": {
-                              "direction": {
-                                "type": "Gained"
-                              },
+                              "direction": "Gained",
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           }
@@ -61,9 +55,7 @@
                   "target": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -84,9 +76,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -99,17 +89,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -117,16 +103,12 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "AttackersDeclaredThisTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -176,9 +158,7 @@
                                                   "value": {
                                                     "player": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -197,14 +177,10 @@
                                 "name": "Food Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Food"
-                                    }
+                                    "Food"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -226,9 +202,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

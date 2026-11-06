@@ -16,12 +16,12 @@ spec s = Spec.describe s "Parun.Codec.TurnedUpOffDeck" $ do
       s
       TurnedUpOffDeck.codec
       (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Scheme (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 7) Set.empty)
-      " {\"card\":7,\"deck\":{\"type\":\"Scheme\"},\"player\":1} "
+      " {\"card\":7,\"deck\":\"Scheme\",\"player\":1} "
   Spec.it s "keys the cards planeswalked away from" $
     Common.assertCodec
       s
       TurnedUpOffDeck.codec
       (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Planar (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 7) (Set.fromList [ObjectId.MkObjectId 3, ObjectId.MkObjectId 5]))
-      " {\"awayFrom\":[3,5],\"card\":7,\"deck\":{\"type\":\"Planar\"},\"player\":1} "
+      " {\"awayFrom\":[3,5],\"card\":7,\"deck\":\"Planar\",\"player\":1} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s TurnedUpOffDeck.codec

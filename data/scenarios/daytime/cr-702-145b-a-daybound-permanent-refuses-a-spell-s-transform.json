@@ -43,9 +43,7 @@
       "check": {
         "View": {
           "of": "Daytime",
-          "is": {
-            "type": "Day"
-          }
+          "is": "Day"
         }
       }
     },
@@ -96,9 +94,7 @@
     {
       "View": {
         "of": "Daytime",
-        "is": {
-          "type": "Day"
-        }
+        "is": "Day"
       }
     },
     {

@@ -16,15 +16,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         },
@@ -33,15 +29,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         }
@@ -58,17 +50,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Merfolk"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Merfolk",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

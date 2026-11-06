@@ -15,27 +15,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -50,16 +44,12 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "Exactly"
-              },
+              "comparison": "Exactly",
               "measured": {
                 "type": "IsActivePlayer",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -93,17 +83,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Demon"
-          },
-          {
-            "type": "Vampire"
-          }
+          "Demon",
+          "Vampire"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

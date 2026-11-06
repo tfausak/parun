@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -44,12 +42,8 @@
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
@@ -66,9 +60,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "AgainstSlot",
                 "value": {
@@ -122,9 +114,7 @@
                                                   "value": {
                                                     "player": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -143,14 +133,10 @@
                                 "name": "Clue Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Clue"
-                                    }
+                                    "Clue"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -172,17 +158,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Advisor"
-          },
-          {
-            "type": "Angel"
-          }
+          "Advisor",
+          "Angel"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

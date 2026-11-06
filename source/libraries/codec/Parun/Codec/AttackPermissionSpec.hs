@@ -32,12 +32,12 @@ spec s = Spec.describe s "Parun.Codec.AttackPermission" $ do
           (Just (Condition.Compares (Compares.MkCompares (Quantity.IsMonarch (PlayerRef.Relative PlayerRelation.You)) Comparison.AtLeast (Quantity.Literal 1))))
           AttackWaiver.Defender
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"while\":{\"type\":\"Compares\",\"value\":{\"comparison\":{\"type\":\"AtLeast\"},\"measured\":{\"type\":\"IsMonarch\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"while\":{\"type\":\"Compares\",\"value\":{\"comparison\":\"AtLeast\",\"measured\":{\"type\":\"IsMonarch\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
   -- Instill Energy (CR 302.6): "Enchanted creature".
   Spec.it s "MkAttackPermission waiving summoning sickness" $
     Common.assertCodec
       s
       AttackPermission.codec
       (AttackPermission.MkAttackPermission Affected.Attached Nothing AttackWaiver.SummoningSickness)
-      " {\"affected\":{\"type\":\"Attached\"},\"waives\":{\"type\":\"SummoningSickness\"}} "
+      " {\"affected\":{\"type\":\"Attached\"},\"waives\":\"SummoningSickness\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AttackPermission.codec

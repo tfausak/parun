@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -43,29 +41,21 @@
                         "type": "Greatest",
                         "value": {
                           "type": "Measure",
-                          "value": {
-                            "type": "Power"
-                          }
+                          "value": "Power"
                         }
                       },
                       "filter": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       "scope": {
                         "type": "InZone",
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       }
                     }
@@ -101,9 +91,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -121,14 +109,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Insect"
-          }
+          "Insect"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

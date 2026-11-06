@@ -2193,11 +2193,14 @@ requiresSicknessCheck cost =
 -- activating: CR 302.6 asks about the controller's control since their most
 -- recent turn began, which differs where an effect lets another player tap it
 -- for mana (Piracy, `pid` standing in only where it has no controller).
-sicknessOkGiven :: Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> ObjectId -> Cost Keyword.Type.Keyword -> GameState -> Bool
-sicknessOkGiven pcs pid oid cost gs =
+--
+-- `grants` is the board's Projection.controlGrants, which an enumeration takes
+-- once rather than once per ability (#1448).
+sicknessOkGiven :: [Projection.ControlGrant] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> ObjectId -> Cost Keyword.Type.Keyword -> GameState -> Bool
+sicknessOkGiven grants pcs pid oid cost gs =
   not (requiresSicknessCheck cost)
     || not (Set.member CardType.Creature (Projection.cardTypesGiven pcs oid gs))
-    || Summoning.settledOrHastyGiven pcs (Maybe.fromMaybe pid (Projection.controllerOf oid gs)) oid gs
+    || Summoning.settledOrHastyGiven pcs (Maybe.fromMaybe pid (Projection.controllerOfGiven grants oid gs)) oid gs
 
 -- CR 606.5: multiple costs to add or remove loyalty counters are combined into a
 -- single one. Carth the Lion's added [+1] on Jace Beleren's printed [-10] is one
@@ -3124,7 +3127,7 @@ manaActivationsGiven effects measure pcs pid oid printedCost restrictions abilit
    in if payable
         && all (\component -> canPayComponent Map.empty pid oid component gs) (Cost.components cost)
         && jointlyPayable Map.empty pid oid (Cost.components cost) gs
-        && sicknessOkGiven pcs pid oid cost gs
+        && sicknessOkGiven (Projection.controlGrants gs) pcs pid oid cost gs
         -- CR 701.35a's "its activated abilities can't be activated", which reaches a
         -- mana ability too. Here rather than in Mana.manaSourcesGiven, because this
         -- is what BOTH of CR 605.3a's windows consult -- sickness's position above.
@@ -3622,7 +3625,7 @@ midPayment capacity measure pcs pid oid cost restrictions ability gs =
 -- above and nothing else. ONLY the mana half gets the pre-walked board -- the
 -- COMPONENTS are still asked through canPayComponent, whose Sacrifice,
 -- TapForTotalPower and CollectEvidence arms make per-object walks of their own
--- (#1448).
+-- (#6417).
 canPaySomeCompletionGiven :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PaymentSubject.PaymentSubject -> ManaSpending.ManaSpending -> [ObjectId] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> ObjectId -> (ManaCost.ManaCost -> [ManaCost.ManaCost]) -> (ManaCost.ManaCost -> [(ManaCost.ManaCost, [(Keyword.Substitute, Natural)])]) -> Cost Keyword.Type.Keyword -> GameState -> Bool
 canPaySomeCompletionGiven slots subject spending sources pcs pid oid total_ substitute cost gs = case Cost.mana cost of
   Nothing -> False
@@ -4870,7 +4873,7 @@ announceSubstitutionsReading slots substituting pid oid cost = case Cost.mana co
 --
 -- `moment` is which of CR 601.2h and CR 118.12 this payment is (see
 -- Parun.Types.PaymentMoment). Taken from the CALLER and never derived, since the
--- cost itself does not say -- `counterCause` below is what reads it, and the
+-- cost itself does not say -- `payComponent` below is what reads it, and the
 -- parameter is what makes a new caller state its moment rather than inherit a
 -- default.
 --
@@ -6580,7 +6583,7 @@ payComponent :: ManaAbilityPerformer.ManaAbilityPerformer -> PaymentMoment.Payme
 payComponent perform moment paidFor slots pid oid component = uncaused $ do
   gs <- State.get
   if canPayComponent slots pid oid component gs
-    then payPayable perform moment paidFor slots pid oid component
+    then payPayable perform paidFor slots pid oid component
     else pure Payment.Unpaid
   where
     uncaused = case moment of
@@ -6588,8 +6591,8 @@ payComponent perform moment paidFor slots pid oid component = uncaused $ do
       PaymentMoment.DuringResolution -> id
 
 -- `payComponent`'s arms, each reached only once CR 118.3 holds.
-payPayable :: ManaAbilityPerformer.ManaAbilityPerformer -> PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> CostComponent.CostComponent Keyword.Type.Keyword -> Game Payment.Payment
-payPayable perform moment paidFor slots pid oid component = case component of
+payPayable :: ManaAbilityPerformer.ManaAbilityPerformer -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> CostComponent.CostComponent Keyword.Type.Keyword -> Game Payment.Payment
+payPayable perform paidFor slots pid oid component = case component of
   -- CR 701.26a through tapObject; CR 107.5's "already tapped" is `payComponent`'s
   -- guard.
   CostComponent.TapThis -> do
@@ -6637,7 +6640,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- no card in `data/cards/` adds a half-life cost that way.
   CostComponent.PayHalfLife rounding -> do
     gs <- State.get
-    payPayable perform moment paidFor slots pid oid (CostComponent.PayLife (CostAmount.Fixed (halfLifeOf rounding pid gs)))
+    payPayable perform paidFor slots pid oid (CostComponent.PayLife (CostAmount.Fixed (halfLifeOf rounding pid gs)))
   -- CR 701.17a: the top `n` cards of the PAYING player's own library (CR 400.3),
   -- moved to their graveyard. `canPayComponent` above has already refused a cost
   -- milling more than the library holds (CR 701.17b); an InstructionR row resizing
@@ -6999,17 +7002,16 @@ payPayable perform moment paidFor slots pid oid component = case component of
     pure bindsNothing
   -- CR 606.4's placement, through Event.putCounters -- CR 122.6's funnel, the
   -- road PutCountersOnThis below takes and for its reason: WHICH
-  -- replacements see the counters is settled by the CAUSE, which `counterCause`
-  -- reads off the moment, rather than by which door the placement came in at.
+  -- replacements see the counters is settled by the CAUSE, rather than by
+  -- which door the placement came in at.
   --
-  -- CR 602.2b pays an activation cost as part of ACTIVATING (CR 601.2h), which
-  -- CR 609.1 gives no resolution to hang an effect on, so a loyalty symbol is
-  -- paid at OutsideResolution and arrives as CounterCause.ByPayment. That is
-  -- the whole of the split Replacement.matchesPutter draws: CR 614.16's
-  -- effect-grain row (Doubling Season, "if an EFFECT would put") refuses a
-  -- ByPayment placement, and CR 614.1's player-grain row (Vorinclex, Monstrous
-  -- Raider, "if YOU would put") takes it, the payer being a player whatever
-  -- moment they pay at. Parun.PlaneswalkerSpec pins the pair on one board --
+  -- A cost is no effect (Doubling Season's ruling of 2024-11-08), so a loyalty
+  -- symbol arrives as CounterCause.ByPayment. That is the whole of the split
+  -- Replacement.matchesPutter draws: CR 614.16's effect-grain row (Doubling
+  -- Season, "if an EFFECT would put") refuses a ByPayment placement, and CR
+  -- 614.1's player-grain row (Vorinclex, Monstrous Raider, "if YOU would put")
+  -- takes it, the payer being a player. Parun.PlaneswalkerSpec pins the pair on
+  -- one board --
   -- "CR 614.16 Doubling Season does not double a loyalty ability's own cost"
   -- and "CR 614.1 Vorinclex doubles a loyalty ability's own cost" -- against
   -- CR 306.5b's entry counters, which both cards do double.
@@ -7020,7 +7022,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- 613.7c's timestamp on the loyalty counters, which the direct write left
   -- stale.
   CostComponent.AddLoyaltyToThis n -> do
-    Monad.void (Event.putCounters (counterCause moment pid) oid CounterKind.Loyalty n)
+    Monad.void (Event.putCounters (CounterCause.ByPayment pid) oid CounterKind.Loyalty n)
     pure bindsNothing
   -- CR 606.4's other half, through Event.removeCounters -- CR 122's removal
   -- funnel, the sibling of the placement funnel above -- so the removal is
@@ -7145,30 +7147,29 @@ payPayable perform moment paidFor slots pid oid component = case component of
               then removeDivision division
               else pure Payment.Unpaid
   -- CR 122.6's placement, through the Event.putCounters funnel -- the same call
-  -- AddLoyaltyToThis above makes, and the difference is WHEN the cost is paid,
-  -- which `counterCause` below reads off the moment rather than assuming.
-  -- CR 118.12's endure is paid as the spell or ability RESOLVES, which is what
-  -- CR 609.1 calls an effect, so even CR 614.16's narrower subject reaches it:
-  -- Doubling Season doubles endure's counter, and still not a planeswalker's +1,
-  -- which is the split Parun.PlaneswalkerSpec and Parun.ReplacementSpec's blight
-  -- pair pin. Yisan, the Wanderer Bard's verse counter is an activation cost,
-  -- paid while ACTIVATING (CR 602.2b, 601.2h), so it goes on before the ability
-  -- resolves and its effect counts it. CR 614.1's passive subject -- Hardened
-  -- Scales -- reaches the placement at EITHER moment, so it says nothing about
-  -- which cause this arm hands the funnel. Paid whatever the funnel then places.
+  -- AddLoyaltyToThis above makes, and for its reason. CR 118.12's endure, paid
+  -- as the spell or ability RESOLVES, is a cost all the same; see
+  -- docs/decisions.md, "Whether a cost paid on resolution is an effect".
+  -- Doubling Season doubles neither endure's counter nor a planeswalker's +1:
+  -- the scenarios "CR 118.12 Doubling Season does not double endure's counter"
+  -- and Parun.PlaneswalkerSpec's pair pin it. Yisan, the Wanderer Bard's verse
+  -- counter is an activation cost, paid while ACTIVATING (CR 602.2b, 601.2h),
+  -- so it goes on before the ability resolves and its effect counts it. CR
+  -- 614.1's passive subject -- Hardened Scales -- reaches the placement either
+  -- way. Paid whatever the funnel then places.
   CostComponent.PutCountersOnThis placement -> do
-    Monad.void (Event.putCounters (counterCause moment pid) oid (CountersOnThis.kind placement) (CountersOnThis.count placement))
+    Monad.void (Event.putCounters (CounterCause.ByPayment pid) oid (CountersOnThis.kind placement) (CountersOnThis.count placement))
     pure bindsNothing
   -- CR 701.68a's whole procedure, which Parun.Engine.Blight owns. Unpaid on rule
   -- 701.68b's board, which canPayComponent has already refused, so reaching it
   -- means the creature left between the check and the payment.
   --
-  -- The one component paid at BOTH moments -- Soul Immolation's additional cost
-  -- under CR 601.2h, Boggart Mischief's "unless you blight 1" under CR 118.12 --
-  -- so the cause is `counterCause`'s and not a constant. Doubling Season doubles
-  -- the second and not the first; Vorinclex, Monstrous Raider doubles both.
+  -- Paid at both moments -- Soul Immolation's additional cost under CR 601.2h,
+  -- Boggart Mischief's "unless you blight 1" under CR 118.12 -- and a cost at
+  -- either, so Doubling Season doubles neither and Vorinclex, Monstrous Raider
+  -- doubles both.
   CostComponent.Blight amount -> paidAnnounced amount $ \n -> do
-    blighted <- Blight.blight Blight.payable (counterCause moment pid) oid n
+    blighted <- Blight.blight Blight.payable (CounterCause.ByPayment pid) oid n
     -- The creature chosen is DISCARDED here, where the effect arm binds it: CR
     -- 701.68c's "blighted creature" is read by a later clause of the same
     -- resolution, and a cost is paid before there is one.
@@ -7364,7 +7365,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- Necropsy's ruling, so a payment reaching here unfixed has no caller.
   CostComponent.CollectEvidenceOfTargets -> do
     gs <- State.get
-    payPayable perform moment paidFor slots pid oid (fixComputed slots gs component)
+    payPayable perform paidFor slots pid oid (fixComputed slots gs component)
   -- CR 406.2 with no prompt: CR 404.2's order determines the card. Unpaid where
   -- the graveyard holds no matching card, agreeing with canPayComponent above.
   CostComponent.ExileTopFromGraveyard criterion -> do
@@ -7374,31 +7375,6 @@ payPayable perform moment paidFor slots pid oid component = case component of
       Just candidate -> do
         Event.changeZone (ManaAbilityPerformer.settle perform) candidate Zone.Exile
         pure bindsNothing
-
--- CR 614.16's question, asked of a payment: does the placement this cost makes
--- have a resolving spell or ability's effect behind it?
---
--- CR 609.1 says it does exactly when the cost is paid under CR 118.12, as the
--- object resolves; CR 601.2h's payment and CR 508.1j's toll are made while a
--- spell is cast, an ability activated or a declaration is being made, and none of
--- those is a resolution. The PLAYER is the payer either way: rule 118.12 names
--- the player who takes the action, and rule 601.2h's payer is the one casting or
--- activating.
---
--- What this buys is Soul Immolation beside Doubling Season: the blight is the
--- payer's, and no effect's, so rule 614.16's row does not apply and X counters go
--- on rather than 2X; see #1647. Vorinclex, Monstrous Raider's row names a player
--- instead and still applies, which is the pair that says the answer is about the
--- CAUSE and not about counters-during-costs.
---
--- Not implemented: the reading Event.resolvingDiscardCause takes for a discard,
--- that a CR 118.12 cost paid on resolution is no effect; this arm and
--- Effect.Blight's cause call it one, so Doubling Season doubles Grub, Notorious
--- Auntie's blight (#4544).
-counterCause :: PaymentMoment.PaymentMoment -> PlayerId -> CounterCause.CounterCause
-counterCause moment pid = case moment of
-  PaymentMoment.OutsideResolution -> CounterCause.ByPayment pid
-  PaymentMoment.DuringResolution -> CounterCause.ByEffect pid
 
 -- The arithmetic half, pure and board-free.
 --

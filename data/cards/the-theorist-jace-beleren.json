@@ -25,9 +25,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Blue"
-                                  }
+                                  "Blue"
                                 ],
                                 "name": "Illusion Token",
                                 "power": {
@@ -40,14 +38,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Illusion"
-                                    }
+                                    "Illusion"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -92,9 +86,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -117,33 +109,25 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             }
                           ]
                         },
                         {
                           "type": "HeldByBound",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
+                            "holder": "Controller",
                             "slot": "eachPlayer"
                           }
                         }
                       ]
                     },
                     "perPlayer": {
-                      "players": {
-                        "type": "Opponent"
-                      },
+                      "players": "Opponent",
                       "slot": "eachPlayer"
                     },
                     "pool": {
@@ -179,9 +163,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -210,13 +192,9 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
-                                  "zone": {
-                                    "type": "Hand"
-                                  }
+                                  "zone": "Hand"
                                 }
                               }
                             }
@@ -228,19 +206,13 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -269,18 +241,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -293,17 +261,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "DrawStep"
-                }
+                "value": "DrawStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 }
               }
             }
@@ -319,9 +283,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -339,19 +301,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Jace"
-          }
+          "Jace"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

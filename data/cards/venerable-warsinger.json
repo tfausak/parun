@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -51,15 +47,11 @@
               "actor": {
                 "type": "Self"
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -77,9 +69,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ],
@@ -99,19 +89,13 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "Measures",
                           "value": {
-                            "comparison": {
-                              "type": "AtMost"
-                            },
-                            "measure": {
-                              "type": "ManaValue"
-                            },
+                            "comparison": "AtMost",
+                            "measure": "ManaValue",
                             "operand": {
                               "type": "EnclosingAmount"
                             }
@@ -137,17 +121,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Spirit"
-          }
+          "Cleric",
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

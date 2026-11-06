@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -73,9 +69,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -90,9 +84,7 @@
                   "target": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -106,17 +98,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horror"
-          },
-          {
-            "type": "Nightmare"
-          }
+          "Horror",
+          "Nightmare"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

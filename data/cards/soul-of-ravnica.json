@@ -13,18 +13,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -40,28 +36,20 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Count",
                             "value": {
                               "aggregation": {
                                 "type": "Distinct",
-                                "value": {
-                                  "type": "Colors"
-                                }
+                                "value": "Colors"
                               },
                               "filter": {
                                 "type": "HeldBy",
                                 "value": {
-                                  "holder": {
-                                    "type": "Controller"
-                                  },
-                                  "relation": {
-                                    "type": "You"
-                                  }
+                                  "holder": "Controller",
+                                  "relation": "You"
                                 }
                               },
                               "scope": {
@@ -69,13 +57,9 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   },
-                                  "zone": {
-                                    "type": "Battlefield"
-                                  }
+                                  "zone": "Battlefield"
                                 }
                               }
                             }
@@ -105,18 +89,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -132,28 +112,20 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Count",
                             "value": {
                               "aggregation": {
                                 "type": "Distinct",
-                                "value": {
-                                  "type": "Colors"
-                                }
+                                "value": "Colors"
                               },
                               "filter": {
                                 "type": "HeldBy",
                                 "value": {
-                                  "holder": {
-                                    "type": "Controller"
-                                  },
-                                  "relation": {
-                                    "type": "You"
-                                  }
+                                  "holder": "Controller",
+                                  "relation": "You"
                                 }
                               },
                               "scope": {
@@ -161,13 +133,9 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   },
-                                  "zone": {
-                                    "type": "Battlefield"
-                                  }
+                                  "zone": "Battlefield"
                                 }
                               }
                             }
@@ -196,18 +164,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -223,14 +187,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Avatar"
-          }
+          "Avatar"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

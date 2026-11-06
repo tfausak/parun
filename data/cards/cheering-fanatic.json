@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -46,9 +44,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "restriction": {
                             "type": "And",
@@ -82,9 +78,7 @@
                               },
                               "matching": {
                                 "type": "HasChosenName",
-                                "value": {
-                                  "type": "AnyChooser"
-                                }
+                                "value": "AnyChooser"
                               },
                               "subject": {
                                 "type": "Spells"
@@ -109,14 +103,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          }
+          "Goblin"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

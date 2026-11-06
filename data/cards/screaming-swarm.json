@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -29,9 +27,7 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "origin": {
-                            "type": "Graveyard"
-                          },
+                          "origin": "Graveyard",
                           "placement": {
                             "type": "Beneath",
                             "value": {
@@ -43,9 +39,7 @@
                             "type": "InSlot",
                             "value": "self"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -70,9 +64,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -96,15 +88,11 @@
                 "attackers": {
                   "filter": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   "floor": 1
                 },
-                "player": {
-                  "type": "You"
-                }
+                "player": "You"
               }
             }
           },
@@ -144,17 +132,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Bird"
-          },
-          {
-            "type": "Horror"
-          }
+          "Bird",
+          "Horror"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

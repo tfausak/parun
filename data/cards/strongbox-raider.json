@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -44,16 +40,12 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "AttackersDeclaredThisTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -80,16 +72,12 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -132,17 +120,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Orc"
-          },
-          {
-            "type": "Pirate"
-          }
+          "Orc",
+          "Pirate"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

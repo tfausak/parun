@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -30,9 +28,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Green"
-                              }
+                              "Green"
                             ],
                             "name": "Bearer of the Wilds",
                             "power": {
@@ -45,14 +41,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Bear"
-                                }
+                                "Bear"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -72,9 +64,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

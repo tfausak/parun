@@ -119,9 +119,7 @@
       "source": "Stymied Hopes",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       }
     },

@@ -150,9 +150,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  }
+                                  "White"
                                 ],
                                 "name": "Cat Token",
                                 "power": {
@@ -165,14 +163,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Cat"
-                                    }
+                                    "Cat"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -182,9 +176,7 @@
                             "type": "LifeTotal",
                             "value": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             }
                           }
                         }
@@ -210,18 +202,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -229,19 +217,13 @@
       "oracleText": "[+1]: Put a +1/+1 counter on up to one target creature.\n[−3]: Target creature gains flying and double strike until end of turn.\n[−8]: Create X 2/2 white Cat creature tokens, where X is your life total.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ajani"
-          }
+          "Ajani"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

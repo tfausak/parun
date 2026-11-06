@@ -38,7 +38,7 @@ spec s = Spec.describe s "Parun.Codec.FlipCoin" $ do
           FlipCoin.misses = Nothing,
           FlipCoin.flipper = FlipCoin.defaultFlipper
         }
-      " {\"count\":{\"type\":\"Literal\",\"value\":5},\"reading\":{\"type\":\"Heads\"},\"slot\":\"flip\"} "
+      " {\"count\":{\"type\":\"Literal\",\"value\":5},\"reading\":\"Heads\",\"slot\":\"flip\"} "
   -- Both tallies of one instruction (Mutalith Vortex Beast).
   Spec.it s "a flip read for its wins and its losses" $
     Common.assertCodec
@@ -64,5 +64,5 @@ spec s = Spec.describe s "Parun.Codec.FlipCoin" $ do
           FlipCoin.misses = Just (SlotName.MkSlotName (Text.pack "theirTails")),
           FlipCoin.flipper = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))
         }
-      " {\"flipper\":{\"type\":\"InSlot\",\"value\":\"target\"},\"misses\":\"theirTails\",\"reading\":{\"type\":\"Heads\"},\"slot\":\"theirHeads\"} "
+      " {\"flipper\":{\"type\":\"InSlot\",\"value\":\"target\"},\"misses\":\"theirTails\",\"reading\":\"Heads\",\"slot\":\"theirHeads\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s FlipCoin.codec

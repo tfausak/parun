@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.ChangeMode" $ do
       s
       ChangeMode.codec
       ChangeMode.Replace
-      " {\"type\":\"Replace\"} "
+      " \"Replace\" "
   Spec.it s "InAddition" $
     Common.assertCodec
       s
       ChangeMode.codec
       ChangeMode.InAddition
-      " {\"type\":\"InAddition\"} "
+      " \"InAddition\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s ChangeMode.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s ChangeMode.codec

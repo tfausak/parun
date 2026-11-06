@@ -54,9 +54,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ],
               "permanent": {
@@ -75,9 +73,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -95,14 +91,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Equipment"
-          }
+          "Equipment"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

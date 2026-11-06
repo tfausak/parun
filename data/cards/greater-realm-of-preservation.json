@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -34,15 +32,11 @@
                             "value": [
                               {
                                 "type": "HasColor",
-                                "value": {
-                                  "type": "Black"
-                                }
+                                "value": "Black"
                               },
                               {
                                 "type": "HasColor",
-                                "value": {
-                                  "type": "Red"
-                                }
+                                "value": "Red"
                               }
                             ]
                           },
@@ -72,9 +66,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -82,9 +74,7 @@
       "oracleText": "{1}{W}: The next time a black or red source of your choice would deal damage to you this turn, prevent that damage.",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

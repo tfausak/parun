@@ -17,9 +17,7 @@
                   },
                   "whichCards": {
                     "type": "LeftLibraryThisTurn",
-                    "value": {
-                      "type": "LastDrawn"
-                    }
+                    "value": "LastDrawn"
                   }
                 }
               }
@@ -42,9 +40,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -70,9 +66,7 @@
       "oracleText": "{2}, {T}, Discard the last card you drew this turn: Draw a card.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

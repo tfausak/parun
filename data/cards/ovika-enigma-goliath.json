@@ -37,18 +37,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -71,9 +67,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               },
               "spell": {
@@ -84,21 +78,15 @@
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
                       "type": "Not",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       }
                     }
                   ]
@@ -119,9 +107,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Red"
-                                  }
+                                  "Red"
                                 ],
                                 "name": "Phyrexian Goblin Token",
                                 "power": {
@@ -134,17 +120,11 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Goblin"
-                                    },
-                                    {
-                                      "type": "Phyrexian"
-                                    }
+                                    "Goblin",
+                                    "Phyrexian"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -157,9 +137,7 @@
                                 "type": "Total",
                                 "value": {
                                   "type": "Measure",
-                                  "value": {
-                                    "type": "ManaValue"
-                                  }
+                                  "value": "ManaValue"
                                 }
                               },
                               "filter": {
@@ -203,22 +181,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Nightmare"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Nightmare",
+          "Phyrexian"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -38,18 +38,14 @@
                   "type": "PlayersTurn",
                   "value": {
                     "type": "Relative",
-                    "value": {
-                      "type": "You"
-                    }
+                    "value": "You"
                   }
                 },
                 "window": {
                   "type": "Step",
                   "value": {
                     "type": "Beginning",
-                    "value": {
-                      "type": "Upkeep"
-                    }
+                    "value": "Upkeep"
                   }
                 }
               }
@@ -80,17 +76,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Golem"
-          }
+          "Golem"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       },
       "untapRestrictions": [

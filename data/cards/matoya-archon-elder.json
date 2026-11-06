@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -34,23 +32,15 @@
               {
                 "type": "PlayerActs",
                 "value": {
-                  "action": {
-                    "type": "Scry"
-                  },
-                  "player": {
-                    "type": "You"
-                  }
+                  "action": "Scry",
+                  "player": "You"
                 }
               },
               {
                 "type": "PlayerActs",
                 "value": {
-                  "action": {
-                    "type": "Surveil"
-                  },
-                  "player": {
-                    "type": "You"
-                  }
+                  "action": "Surveil",
+                  "player": "You"
                 }
               }
             ]
@@ -66,9 +56,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -86,22 +74,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Warlock"
-          }
+          "Human",
+          "Warlock"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

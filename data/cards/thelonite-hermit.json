@@ -15,25 +15,19 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Green"
-                    }
+                    "value": "Green"
                   }
                 },
                 {
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Green"
-                    }
+                    "value": "Green"
                   }
                 }
               ]
             },
-            "variant": {
-              "type": "Plain"
-            }
+            "variant": "Plain"
           }
         }
       ],
@@ -46,9 +40,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -64,9 +56,7 @@
             "type": "Matching",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Saproling"
-              }
+              "value": "Saproling"
             }
           },
           "modifications": [
@@ -111,9 +101,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Green"
-                                  }
+                                  "Green"
                                 ],
                                 "name": "Saproling Token",
                                 "power": {
@@ -126,14 +114,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Saproling"
-                                    }
+                                    "Saproling"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -155,17 +139,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Elf",
+          "Shaman"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

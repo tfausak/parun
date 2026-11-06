@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -37,9 +33,7 @@
                     "type": "Counter",
                     "value": {
                       "instead": {
-                        "zone": {
-                          "type": "Exile"
-                        }
+                        "zone": "Exile"
                       },
                       "ref": {
                         "type": "InSlot",
@@ -62,9 +56,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

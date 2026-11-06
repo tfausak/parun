@@ -27,13 +27,13 @@ spec s = Spec.describe s "Parun.Codec.Gift" $ do
       s
       Gift.codec
       (Gift.TappedFish Subtype.Elf)
-      " {\"type\":\"TappedFish\",\"value\":{\"type\":\"Elf\"}} "
+      " {\"type\":\"TappedFish\",\"value\":\"Elf\"} "
   Spec.it s "Octopus carries its creature type" $
     Common.assertCodec
       s
       Gift.codec
       (Gift.Octopus Subtype.Octopus)
-      " {\"type\":\"Octopus\",\"value\":{\"type\":\"Octopus\"}} "
+      " {\"type\":\"Octopus\",\"value\":\"Octopus\"} "
   Spec.it s "Treasure" $
     Common.assertCodec
       s

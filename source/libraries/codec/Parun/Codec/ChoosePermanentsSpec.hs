@@ -28,7 +28,7 @@ spec s = Spec.describe s "Parun.Codec.ChoosePermanents" $ do
             ChoosePermanents.rest = Nothing
           }
       )
-      " {\"permanents\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"count\":{\"type\":\"UpTo\"}},\"slot\":\"chosen\"} "
+      " {\"permanents\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"count\":{\"type\":\"UpTo\"}},\"slot\":\"chosen\"} "
   Spec.it s "MkChoosePermanents, another seat choosing up to two" $
     Common.assertCodec
       s
@@ -40,7 +40,7 @@ spec s = Spec.describe s "Parun.Codec.ChoosePermanents" $ do
             ChoosePermanents.rest = Nothing
           }
       )
-      " {\"permanents\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"chooser\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}}},\"slot\":\"chosen\"} "
+      " {\"permanents\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"chooser\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}}},\"slot\":\"chosen\"} "
   Spec.it s "MkChoosePermanents, a pile split whose piles a slot's seat chooses between" $
     Common.assertCodec
       s
@@ -52,7 +52,7 @@ spec s = Spec.describe s "Parun.Codec.ChoosePermanents" $ do
             ChoosePermanents.rest = Nothing
           }
       )
-      " {\"permanents\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"count\":{\"type\":\"UpTo\"}},\"slot\":\"chosen\",\"pileChooser\":{\"type\":\"InSlot\",\"value\":\"defender\"}} "
+      " {\"permanents\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"count\":{\"type\":\"UpTo\"}},\"slot\":\"chosen\",\"pileChooser\":{\"type\":\"InSlot\",\"value\":\"defender\"}} "
   Spec.it s "MkChoosePermanents, a division whose other pile is bound too" $
     Common.assertCodec
       s
@@ -64,5 +64,5 @@ spec s = Spec.describe s "Parun.Codec.ChoosePermanents" $ do
             ChoosePermanents.rest = Just (SlotName.MkSlotName (Text.pack "right"))
           }
       )
-      " {\"permanents\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"chooser\":{\"type\":\"InSlot\",\"value\":\"defender\"},\"count\":{\"type\":\"UpTo\"}},\"slot\":\"left\",\"rest\":\"right\"} "
+      " {\"permanents\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"chooser\":{\"type\":\"InSlot\",\"value\":\"defender\"},\"count\":{\"type\":\"UpTo\"}},\"slot\":\"left\",\"rest\":\"right\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ChoosePermanents.codec

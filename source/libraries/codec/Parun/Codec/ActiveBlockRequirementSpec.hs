@@ -30,7 +30,7 @@ spec s = Spec.describe s "Parun.Codec.ActiveBlockRequirement" $ do
           ActiveBlockRequirement.attacker = Just (RestrictedCreatures.Named (ObjectId.MkObjectId 4)),
           ActiveBlockRequirement.arity = RequirementArity.EachSubject
         }
-      " {\"source\":1,\"controller\":5,\"timestamp\":2,\"expiry\":{\"type\":\"AtEndOf\",\"value\":{\"type\":\"CombatPhase\"}},\"blocker\":{\"type\":\"Named\",\"value\":3},\"attacker\":{\"type\":\"Named\",\"value\":4},\"arity\":{\"type\":\"EachSubject\"}} "
+      " {\"source\":1,\"controller\":5,\"timestamp\":2,\"expiry\":{\"type\":\"AtEndOf\",\"value\":{\"type\":\"CombatPhase\"}},\"blocker\":{\"type\":\"Named\",\"value\":3},\"attacker\":{\"type\":\"Named\",\"value\":4},\"arity\":\"EachSubject\"} "
   -- No attacker named, one requirement per attacker any blocker obeys.
   Spec.it s "a requirement naming no attacker" $
     Common.assertCodec
@@ -45,6 +45,6 @@ spec s = Spec.describe s "Parun.Codec.ActiveBlockRequirement" $ do
           ActiveBlockRequirement.attacker = Nothing,
           ActiveBlockRequirement.arity = RequirementArity.AnySubject
         }
-      " {\"source\":1,\"controller\":5,\"timestamp\":2,\"expiry\":{\"type\":\"AtEndOf\",\"value\":{\"type\":\"CombatPhase\"}},\"blocker\":{\"type\":\"Named\",\"value\":3},\"attacker\":null,\"arity\":{\"type\":\"AnySubject\"}} "
+      " {\"source\":1,\"controller\":5,\"timestamp\":2,\"expiry\":{\"type\":\"AtEndOf\",\"value\":{\"type\":\"CombatPhase\"}},\"blocker\":{\"type\":\"Named\",\"value\":3},\"attacker\":null,\"arity\":\"AnySubject\"} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActiveBlockRequirement.codec

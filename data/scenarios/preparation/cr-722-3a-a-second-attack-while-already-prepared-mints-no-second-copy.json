@@ -114,9 +114,7 @@
           "of": "Designations",
           "object": "$encouraging-aviator",
           "is": [
-            {
-              "type": "Prepared"
-            }
+            "Prepared"
           ]
         }
       }

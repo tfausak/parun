@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -56,18 +52,14 @@
                         "type": "Search",
                         "value": {
                           "andOr": true,
-                          "destination": {
-                            "type": "RevealThenHand"
-                          },
+                          "destination": "RevealThenHand",
                           "filter": {
                             "type": "HasName",
                             "value": "Vivien, Nature's Avenger"
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -75,17 +67,11 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "zones": [
-                            {
-                              "type": "Library"
-                            },
-                            {
-                              "type": "Graveyard"
-                            }
+                            "Library",
+                            "Graveyard"
                           ]
                         }
                       }
@@ -102,17 +88,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elk"
-          },
-          {
-            "type": "Spirit"
-          }
+          "Elk",
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

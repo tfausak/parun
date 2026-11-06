@@ -14,9 +14,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               }
@@ -34,18 +32,14 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "AgainstSlot",
                             "value": {
                               "quantity": {
                                 "type": "Measure",
-                                "value": {
-                                  "type": "Power"
-                                }
+                                "value": "Power"
                               },
                               "slot": "thatSacrificedPermanent"
                             }
@@ -59,9 +53,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -87,18 +79,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -106,9 +94,7 @@
       "oracleText": "Sacrifice a creature: Draw cards equal to the sacrificed creature's power, then discard three cards.",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

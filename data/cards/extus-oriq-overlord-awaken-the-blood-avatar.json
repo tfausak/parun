@@ -15,27 +15,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -59,9 +53,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               },
               "spell": {
@@ -72,12 +64,8 @@
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
@@ -85,15 +73,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Instant"
-                          }
+                          "value": "Instant"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Sorcery"
-                          }
+                          "value": "Sorcery"
                         }
                       ]
                     }
@@ -115,9 +99,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -130,17 +112,13 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "Not",
                           "value": {
                             "type": "HasSupertype",
-                            "value": {
-                              "type": "Legendary"
-                            }
+                            "value": "Legendary"
                           }
                         }
                       ]
@@ -163,22 +141,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Warlock"
-          }
+          "Human",
+          "Warlock"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
@@ -196,19 +166,13 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -239,18 +203,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -267,15 +227,11 @@
                     "value": {
                       "filter": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       "players": {
                         "type": "Relative",
-                        "value": {
-                          "type": "Opponent"
-                        }
+                        "value": "Opponent"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -290,12 +246,8 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Black"
-                              },
-                              {
-                                "type": "Red"
-                              }
+                              "Black",
+                              "Red"
                             ],
                             "keywords": [
                               {
@@ -340,9 +292,7 @@
                                                       "value": {
                                                         "players": {
                                                           "type": "Relative",
-                                                          "value": {
-                                                            "type": "Opponent"
-                                                          }
+                                                          "value": "Opponent"
                                                         }
                                                       }
                                                     }
@@ -360,14 +310,10 @@
                             ],
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Avatar"
-                                }
+                                "Avatar"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -387,9 +333,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

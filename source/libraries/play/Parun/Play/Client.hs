@@ -19,8 +19,10 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
+import qualified Parun.Codec.CombatDamageOption as Codec.CombatDamageOption
 import qualified Parun.Codec.ManaCost as Codec.ManaCost
 import qualified Parun.Codec.ManaType as Codec.ManaType
+import qualified Parun.Codec.NumberFloor as Codec.NumberFloor
 import qualified Parun.Codec.Reply as Codec.Reply
 import qualified Parun.Codec.Request as Codec.Request
 import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
@@ -31,14 +33,17 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Play.Render as Render
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CombatDamageOption as CombatDamageOption
 import qualified Parun.Types.Hotseat as Hotseat
 import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.ManaUnit as ManaUnit
+import qualified Parun.Types.NumberFloor as NumberFloor
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.ObjectView as ObjectView
+import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerView as PlayerView
 import qualified Parun.Types.Question as Question
@@ -224,14 +229,14 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
   "ChooseNumber" -> do
     source <- field "source" offer
     least <- field "least" offer >>= naturalOf
-    meaning <- field "floor" offer >>= field "type" >>= textOf
-    let note = if meaning == Text.pack "HighBid" then Text.pack ("; " <> show least <> " lets the high bid stand") else Text.empty
+    meaning <- field "floor" offer >>= decoded Codec.NumberFloor.codec
+    let note = if meaning == NumberFloor.HighBid then Text.pack ("; " <> show least <> " lets the high bid stand") else Text.empty
     pure (ranged (Text.pack "Choose a number for " <> objectName view source) least note (field "greatest" offer >>= naturalOf))
   "ChooseOptional" -> do
     source <- field "source" offer
     pure
       ( [objectName view source <> Text.pack ": use its optional effect?", Text.pack "  1. Yes", Text.pack "  2. No"],
-        fmap (\i -> R.Object [(Text.pack "type", R.Text (Text.pack (if i == 1 then "Exercises" else "Declines")))]) . one 2
+        fmap (\i -> optionalDecision (if i == 1 then OptionalDecision.Exercises else OptionalDecision.Declines)) . one 2
       )
   -- CR 116.2c / 605.3a: Channel's life for mana, inside a payment.
   "PayLifeForMana" -> do
@@ -239,16 +244,16 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
     mana <- field "mana" offer >>= decoded Codec.ManaType.codec
     pure
       ( [Text.pack ("Pay " <> show life <> " life to add ") <> Render.manaType mana <> Text.pack "?", Text.pack "  1. Yes", Text.pack "  2. No"],
-        fmap (\i -> R.Object [(Text.pack "type", R.Text (Text.pack (if i == 1 then "Exercises" else "Declines")))]) . one 2
+        fmap (\i -> optionalDecision (if i == 1 then OptionalDecision.Exercises else OptionalDecision.Declines)) . one 2
       )
   -- CR 510.1b-c: whether the creature assigns its damage as its option allows.
   "ChooseCombatDamageOption" -> do
     source <- field "source" offer
-    option <- field "option" offer >>= field "type" >>= textOf
-    let wording = if option == Text.pack "AsThoughUnblocked" then Text.pack ": assign its combat damage as though it weren't blocked?" else Text.pack ": assign its combat damage to a creature the defending player controls?"
+    option <- field "option" offer >>= decoded Codec.CombatDamageOption.codec
+    let wording = if option == CombatDamageOption.AsThoughUnblocked then Text.pack ": assign its combat damage as though it weren't blocked?" else Text.pack ": assign its combat damage to a creature the defending player controls?"
     pure
       ( [objectName view source <> wording, Text.pack "  1. Yes", Text.pack "  2. No"],
-        fmap (\i -> R.Object [(Text.pack "type", R.Text (Text.pack (if i == 1 then "Exercises" else "Declines")))]) . one 2
+        fmap (\i -> optionalDecision (if i == 1 then OptionalDecision.Exercises else OptionalDecision.Declines)) . one 2
       )
   -- CR 510.1c-d: one amount per recipient, in the order offered.
   "AssignCombatDamage" -> do
@@ -422,7 +427,7 @@ unasked view request = do
         (i, yield) : _ <- filter (\(_, yield) -> Set.null wanted || not (Set.disjoint wanted (Set.fromList yield))) (zip [0 :: Integer ..] yields) ->
           pure ([Text.pack "Auto takes " <> foldMap Render.manaType yield <> Text.pack "."], Just (R.Number i))
     -- CR 116.2c: auto taps sources; it never spends the seat's life.
-    "PayLifeForMana" | Maybe.isJust paying -> pure ([], Just (R.Object [(Text.pack "type", R.Text (Text.pack "Declines"))]))
+    "PayLifeForMana" | Maybe.isJust paying -> pure ([], Just (optionalDecision OptionalDecision.Declines))
     -- CR 605.3a: auto never floats mana past the cost.
     "ChooseExtraManaSource" | Maybe.isJust paying -> stopPaying seat >> pure ([], Just R.Null)
     _ -> pure ([], Nothing)
@@ -489,6 +494,10 @@ manaSource reply = do
   source <- field "source" reply
   makes <- field "makes" reply >>= decoded (Common.list (Common.list Codec.ManaType.codec))
   pure (source, makes)
+
+-- | An optional prompt's answer, a bare tag (Parun.JsonCodec.Arm.enum).
+optionalDecision :: OptionalDecision.OptionalDecision -> R.Reply
+optionalDecision = R.Text . Text.pack . show
 
 decoded :: Codec.Codec a -> R.Reply -> Maybe a
 decoded codec = either (const Nothing) Just . Codec.decode codec . Codec.Reply.toValue

@@ -8,9 +8,7 @@
             "count": 2,
             "whichCards": {
               "type": "HasCardType",
-              "value": {
-                "type": "Creature"
-              }
+              "value": "Creature"
             }
           }
         }
@@ -29,9 +27,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -47,17 +43,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Giant"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Giant",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -15,16 +15,12 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Green"
-                    }
+                    "value": "Green"
                   }
                 }
               ]
             },
-            "variant": {
-              "type": "Plain"
-            }
+            "variant": "Plain"
           }
         }
       ],
@@ -37,9 +33,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -75,9 +69,7 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "IsFaceDown"
@@ -89,13 +81,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Battlefield"
-                            }
+                            "zone": "Battlefield"
                           }
                         }
                       }
@@ -111,9 +99,7 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "IsFaceDown"
@@ -125,13 +111,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Battlefield"
-                            }
+                            "zone": "Battlefield"
                           }
                         }
                       }
@@ -152,9 +134,7 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "IsFaceDown"
@@ -166,13 +146,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Battlefield"
-                            }
+                            "zone": "Battlefield"
                           }
                         }
                       }
@@ -188,9 +164,7 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "IsFaceDown"
@@ -202,13 +176,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Battlefield"
-                            }
+                            "zone": "Battlefield"
                           }
                         }
                       }
@@ -226,17 +196,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Elf",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

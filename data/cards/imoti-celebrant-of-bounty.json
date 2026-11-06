@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -45,19 +41,13 @@
               "value": [
                 {
                   "type": "IsInZone",
-                  "value": {
-                    "type": "Stack"
-                  }
+                  "value": "Stack"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 {
@@ -71,12 +61,8 @@
                   "value": {
                     "type": "Measures",
                     "value": {
-                      "comparison": {
-                        "type": "AtMost"
-                      },
-                      "measure": {
-                        "type": "ManaValue"
-                      },
+                      "comparison": "AtMost",
+                      "measure": "ManaValue",
                       "operand": {
                         "type": "Literal",
                         "value": 5
@@ -103,22 +89,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Druid"
-          },
-          {
-            "type": "Snake"
-          }
+          "Druid",
+          "Snake"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

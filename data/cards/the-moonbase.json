@@ -9,9 +9,7 @@
             "type": "Matching",
             "value": {
               "type": "HasCardType",
-              "value": {
-                "type": "Creature"
-              }
+              "value": "Creature"
             }
           },
           "modifications": [
@@ -92,28 +90,18 @@
                               "listed": {
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Cyberman"
-                                    }
+                                    "Cyberman"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    },
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Artifact",
+                                    "Creature"
                                   ]
                                 }
                               },
-                              "reason": {
-                                "type": "EnteredFaceDown"
-                              }
+                              "reason": "EnteredFaceDown"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -130,14 +118,10 @@
                     },
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     "perPlayer": {
-                      "players": {
-                        "type": "Opponent"
-                      },
+                      "players": "Opponent",
                       "slot": "eachPlayer"
                     },
                     "pool": {
@@ -156,14 +140,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Moon"
-          }
+          "Moon"
         ],
         "types": [
-          {
-            "type": "Plane"
-          }
+          "Plane"
         ]
       }
     }

@@ -48,9 +48,7 @@
                                         "recipients": [
                                           {
                                             "type": "Player",
-                                            "value": {
-                                              "type": "AnyPlayer"
-                                            }
+                                            "value": "AnyPlayer"
                                           }
                                         ]
                                       }
@@ -64,9 +62,7 @@
                                                 {
                                                   "type": "GainPlayerCounters",
                                                   "value": {
-                                                    "kind": {
-                                                      "type": "Poison"
-                                                    },
+                                                    "kind": "Poison",
                                                     "player": {
                                                       "type": "InSlot",
                                                       "value": "thatPlayer"
@@ -87,17 +83,11 @@
                                 ],
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Snake"
-                                    }
+                                    "Snake"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    },
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Artifact",
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -127,9 +117,7 @@
       "oracleText": "{4}, {T}: Create a 1/1 colorless Snake artifact creature token. It has \"Whenever this creature deals damage to a player, that player gets a poison counter.\" (A player with ten or more poison counters loses the game.)",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

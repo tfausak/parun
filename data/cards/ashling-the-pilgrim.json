@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -48,17 +46,13 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "AgainstSlot",
                           "value": {
                             "quantity": {
                               "type": "TimesThisTurn",
-                              "value": {
-                                "type": "Resolved"
-                              }
+                              "value": "Resolved"
                             },
                             "slot": "thisAbility"
                           }
@@ -99,9 +93,7 @@
                                 "type": "EachMatching",
                                 "value": {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 }
                               }
                             },
@@ -115,9 +107,7 @@
                                 "value": {
                                   "players": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   }
                                 }
                               }
@@ -142,9 +132,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -160,22 +148,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Elemental",
+          "Shaman"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

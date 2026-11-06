@@ -43,5 +43,5 @@ spec s = Spec.describe s "Parun.Codec.ForbidAttack" $ do
             ForbidAttack.aimedAt = Just (AimedAt.MkAimedAt (AimedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) (Set.singleton AttackTargetKind.OfPlayer))
           }
       )
-      " {\"duration\":{\"type\":\"UntilYourNextTurn\"},\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"aimedAt\":{\"defenders\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"kinds\":[{\"type\":\"OfPlayer\"}]}} "
+      " {\"duration\":{\"type\":\"UntilYourNextTurn\"},\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"aimedAt\":{\"defenders\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"kinds\":[\"OfPlayer\"]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ForbidAttack.codec

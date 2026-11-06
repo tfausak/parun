@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -42,9 +38,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ],
               "permanent": {
@@ -54,19 +48,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
@@ -89,14 +77,10 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Experience"
-                          },
+                          "kind": "Experience",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -117,17 +101,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -140,17 +120,13 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtMost"
-                        },
+                        "comparison": "AtMost",
                         "measured": {
                           "type": "AgainstSlot",
                           "value": {
                             "quantity": {
                               "type": "Measure",
-                              "value": {
-                                "type": "ManaValue"
-                              }
+                              "value": "ManaValue"
                             },
                             "slot": "target"
                           }
@@ -158,14 +134,10 @@
                         "threshold": {
                           "type": "PlayerCounters",
                           "value": {
-                            "kind": {
-                              "type": "Experience"
-                            },
+                            "kind": "Experience",
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             }
                           }
                         }
@@ -179,9 +151,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -190,17 +160,13 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "AgainstSlot",
                           "value": {
                             "quantity": {
                               "type": "Measure",
-                              "value": {
-                                "type": "ManaValue"
-                              }
+                              "value": "ManaValue"
                             },
                             "slot": "target"
                           }
@@ -211,14 +177,10 @@
                             "left": {
                               "type": "PlayerCounters",
                               "value": {
-                                "kind": {
-                                  "type": "Experience"
-                                },
+                                "kind": "Experience",
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 }
                               }
                             },
@@ -238,9 +200,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -250,9 +210,7 @@
                   "target": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     "pool": {
                       "type": "CardsInGraveyard",
@@ -272,22 +230,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Human",
+          "Shaman"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

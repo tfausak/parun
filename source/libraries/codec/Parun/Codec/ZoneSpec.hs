@@ -12,49 +12,49 @@ spec s = Spec.describe s "Parun.Codec.Zone" $ do
       s
       Zone.codec
       Zone.Library
-      " {\"type\":\"Library\"} "
+      " \"Library\" "
   Spec.it s "Hand" $
     Common.assertCodec
       s
       Zone.codec
       Zone.Hand
-      " {\"type\":\"Hand\"} "
+      " \"Hand\" "
   Spec.it s "Graveyard" $
     Common.assertCodec
       s
       Zone.codec
       Zone.Graveyard
-      " {\"type\":\"Graveyard\"} "
+      " \"Graveyard\" "
   Spec.it s "Battlefield" $
     Common.assertCodec
       s
       Zone.codec
       Zone.Battlefield
-      " {\"type\":\"Battlefield\"} "
+      " \"Battlefield\" "
   Spec.it s "Stack" $
     Common.assertCodec
       s
       Zone.codec
       Zone.Stack
-      " {\"type\":\"Stack\"} "
+      " \"Stack\" "
   Spec.it s "Exile" $
     Common.assertCodec
       s
       Zone.codec
       Zone.Exile
-      " {\"type\":\"Exile\"} "
+      " \"Exile\" "
   Spec.it s "Ante" $
     Common.assertCodec
       s
       Zone.codec
       Zone.Ante
-      " {\"type\":\"Ante\"} "
+      " \"Ante\" "
   Spec.it s "Command" $
     Common.assertCodec
       s
       Zone.codec
       Zone.Command
-      " {\"type\":\"Command\"} "
+      " \"Command\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

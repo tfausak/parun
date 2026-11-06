@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -40,9 +36,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -55,15 +49,11 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     }
                   ]
                 },
@@ -77,9 +67,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

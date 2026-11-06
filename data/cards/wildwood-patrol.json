@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -33,17 +31,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Centaur"
-          },
-          {
-            "type": "Scout"
-          }
+          "Centaur",
+          "Scout"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

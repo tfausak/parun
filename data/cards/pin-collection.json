@@ -25,9 +25,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -42,9 +40,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -92,15 +88,11 @@
                         "value": {
                           "free": true,
                           "kinds": [
-                            {
-                              "type": "Ability"
-                            }
+                            "Ability"
                           ],
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "ref": {
                             "type": "InSlot",
@@ -125,14 +117,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Equipment"
-          }
+          "Equipment"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

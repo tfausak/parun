@@ -143,9 +143,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "Upkeep",
@@ -175,9 +173,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "Upkeep",
@@ -231,9 +227,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "Upkeep",
@@ -300,9 +294,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "Upkeep",

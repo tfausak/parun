@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -55,9 +51,7 @@
                             "value": {
                               "type": "Compares",
                               "value": {
-                                "comparison": {
-                                  "type": "Exactly"
-                                },
+                                "comparison": "Exactly",
                                 "measured": {
                                   "type": "Count",
                                   "value": {
@@ -73,12 +67,8 @@
                                         {
                                           "type": "HeldBy",
                                           "value": {
-                                            "holder": {
-                                              "type": "Controller"
-                                            },
-                                            "relation": {
-                                              "type": "You"
-                                            }
+                                            "holder": "Controller",
+                                            "relation": "You"
                                           }
                                         }
                                       ]
@@ -88,13 +78,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         },
-                                        "zone": {
-                                          "type": "Battlefield"
-                                        }
+                                        "zone": "Battlefield"
                                       }
                                     }
                                   }
@@ -119,9 +105,7 @@
                   "target": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Artifact"
-                      }
+                      "value": "Artifact"
                     },
                     "pool": {
                       "type": "Permanents"
@@ -135,17 +119,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Human",
+          "Rogue"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

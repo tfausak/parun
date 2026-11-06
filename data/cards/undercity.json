@@ -1,9 +1,7 @@
 {
   "faces": [
     {
-      "dungeonEntryQuality": {
-        "type": "Undercity"
-      },
+      "dungeonEntryQuality": "Undercity",
       "name": "Undercity",
       "rooms": [
         {
@@ -16,31 +14,23 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "RevealThenHand"
-                          },
+                          "destination": "RevealThenHand",
                           "filter": {
                             "type": "And",
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Land"
-                                }
+                                "value": "Land"
                               },
                               {
                                 "type": "HasSupertype",
-                                "value": {
-                                  "type": "Basic"
-                                }
+                                "value": "Basic"
                               }
                             ]
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -48,9 +38,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -120,9 +108,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -264,14 +250,10 @@
                                 "name": "Treasure Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Treasure"
-                                    }
+                                    "Treasure"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -306,9 +288,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -341,9 +321,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Black"
-                                  }
+                                  "Black"
                                 ],
                                 "keywords": [
                                   {
@@ -361,14 +339,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Skeleton"
-                                    }
+                                    "Skeleton"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -410,9 +384,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -427,9 +399,7 @@
                             "value": {
                               "filter": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               "slot": "revealed"
                             }
@@ -448,9 +418,7 @@
                             ]
                           },
                           "slot": "enthroned",
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       },
                       {
@@ -475,9 +443,7 @@
                         "type": "Shuffle",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     ]
@@ -491,14 +457,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Undercity"
-          }
+          "Undercity"
         ],
         "types": [
-          {
-            "type": "Dungeon"
-          }
+          "Dungeon"
         ]
       }
     }

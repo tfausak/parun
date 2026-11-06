@@ -12,15 +12,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             }
           }
         },
@@ -29,15 +25,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             }
           }
         },
@@ -46,15 +38,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             }
           }
         }
@@ -71,17 +59,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Faerie"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Faerie",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

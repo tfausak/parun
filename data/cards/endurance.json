@@ -21,9 +21,7 @@
                   },
                   "whichCards": {
                     "type": "HasColor",
-                    "value": {
-                      "type": "Green"
-                    }
+                    "value": "Green"
                   }
                 }
               }
@@ -41,18 +39,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -83,9 +77,7 @@
                         "value": {
                           "placement": {
                             "type": "RandomOrder",
-                            "value": {
-                              "type": "Bottom"
-                            }
+                            "value": "Bottom"
                           },
                           "ref": {
                             "type": "EachCardInGraveyard",
@@ -100,9 +92,7 @@
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -129,17 +119,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          },
-          {
-            "type": "Incarnation"
-          }
+          "Elemental",
+          "Incarnation"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -7,9 +7,7 @@
           "value": {
             "quality": {
               "type": "HasCardType",
-              "value": {
-                "type": "Creature"
-              }
+              "value": "Creature"
             },
             "spares": null
           }
@@ -27,18 +25,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -61,20 +55,14 @@
                 "type": "Matching",
                 "value": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               ]
             }
@@ -92,9 +80,7 @@
                             "type": "InSlot",
                             "value": "thatDamager"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       },
                       {
@@ -104,12 +90,8 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  },
-                                  {
-                                    "type": "Black"
-                                  }
+                                  "White",
+                                  "Black"
                                 ],
                                 "keywords": [
                                   {
@@ -127,14 +109,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Spirit"
-                                    }
+                                    "Spirit"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -156,22 +134,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Advisor"
-          },
-          {
-            "type": "Human"
-          }
+          "Advisor",
+          "Human"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

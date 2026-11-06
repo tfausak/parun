@@ -18,27 +18,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -57,9 +51,7 @@
           "condition": {
             "type": "Blocks",
             "value": {
-              "role": {
-                "type": "Blocker"
-              }
+              "role": "Blocker"
             }
           },
           "modal": {
@@ -96,17 +88,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dragon"
-          },
-          {
-            "type": "Wurm"
-          }
+          "Dragon",
+          "Wurm"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

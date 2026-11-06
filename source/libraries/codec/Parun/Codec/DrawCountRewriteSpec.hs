@@ -13,5 +13,5 @@ spec s = Spec.describe s "Parun.Codec.DrawCountRewrite" $ do
       s
       DrawCountRewrite.codec
       DrawCountRewrite.EachDrawOne
-      " {\"type\":\"EachDrawOne\"} "
+      " \"EachDrawOne\" "
   Spec.it s "has a schema" $ Common.assertHasSchema s DrawCountRewrite.codec

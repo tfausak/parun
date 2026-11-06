@@ -18,7 +18,7 @@ spec s = Spec.describe s "Parun.Codec.ManaCount" $ do
       s
       ManaCount.codec
       (ManaCount.MkManaCount (PlayerRef.Relative PlayerRelation.You) (ManaFilter.OfType (ManaType.Colored Color.Green)))
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"filter\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Green\"}}} "
   -- The other end of both fields, so a codec that dropped either payload would
   -- round-trip one of these and not both.
   Spec.it s "MkManaCount, every player's whole pool" $
@@ -26,5 +26,5 @@ spec s = Spec.describe s "Parun.Codec.ManaCount" $ do
       s
       ManaCount.codec
       (ManaCount.MkManaCount (PlayerRef.Relative PlayerRelation.AnyPlayer) ManaFilter.Any)
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"filter\":{\"type\":\"Any\"}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"},\"filter\":{\"type\":\"Any\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ManaCount.codec

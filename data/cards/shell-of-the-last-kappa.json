@@ -29,9 +29,7 @@
                             "type": "InSlot",
                             "value": "spell"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -47,23 +45,17 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Instant"
-                              }
+                              "value": "Instant"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Sorcery"
-                              }
+                              "value": "Sorcery"
                             }
                           ]
                         },
                         {
                           "type": "TargetsPlayer",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       ]
                     },
@@ -133,14 +125,10 @@
       "oracleText": "{3}, {T}: Exile target instant or sorcery spell that targets you. (The spell has no effect.)\n{3}, {T}, Sacrifice Shell of the Last Kappa: You may cast a spell from among cards exiled with Shell of the Last Kappa without paying its mana cost.",
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

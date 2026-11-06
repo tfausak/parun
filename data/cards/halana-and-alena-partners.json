@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -50,17 +46,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "BeginningOfCombat"
-                }
+                "value": "BeginningOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -82,9 +74,7 @@
                             "value": {
                               "quantity": {
                                 "type": "Measure",
-                                "value": {
-                                  "type": "Power"
-                                }
+                                "value": "Power"
                               },
                               "slot": "self"
                             }
@@ -124,12 +114,8 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         },
                         {
@@ -152,22 +138,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Ranger"
-          }
+          "Human",
+          "Ranger"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

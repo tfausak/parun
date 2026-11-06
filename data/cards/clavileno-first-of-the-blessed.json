@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -42,9 +38,7 @@
             "value": {
               "type": "Declaration",
               "value": {
-                "player": {
-                  "type": "You"
-                }
+                "player": "You"
               }
             }
           },
@@ -63,12 +57,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "InAddition"
-                              },
-                              "subtype": {
-                                "type": "Demon"
-                              }
+                              "mode": "InAddition",
+                              "subtype": "Demon"
                             }
                           },
                           "ref": {
@@ -93,9 +83,7 @@
                                   "value": {
                                     "destinations": [
                                       {
-                                        "zone": {
-                                          "type": "Graveyard"
-                                        }
+                                        "zone": "Graveyard"
                                       }
                                     ]
                                   }
@@ -111,9 +99,7 @@
                                               "value": {
                                                 "player": {
                                                   "type": "Relative",
-                                                  "value": {
-                                                    "type": "You"
-                                                  }
+                                                  "value": "You"
                                                 },
                                                 "quantity": {
                                                   "type": "Literal",
@@ -128,12 +114,8 @@
                                                   "faces": [
                                                     {
                                                       "colorIndicator": [
-                                                        {
-                                                          "type": "White"
-                                                        },
-                                                        {
-                                                          "type": "Black"
-                                                        }
+                                                        "White",
+                                                        "Black"
                                                       ],
                                                       "keywords": [
                                                         {
@@ -151,17 +133,11 @@
                                                       },
                                                       "typeLine": {
                                                         "subtypes": [
-                                                          {
-                                                            "type": "Demon"
-                                                          },
-                                                          {
-                                                            "type": "Vampire"
-                                                          }
+                                                          "Demon",
+                                                          "Vampire"
                                                         ],
                                                         "types": [
-                                                          {
-                                                            "type": "Creature"
-                                                          }
+                                                          "Creature"
                                                         ]
                                                       }
                                                     }
@@ -172,9 +148,7 @@
                                                   "value": 1
                                                 },
                                                 "riders": {
-                                                  "tapped": {
-                                                    "type": "Tapped"
-                                                  }
+                                                  "tapped": "Tapped"
                                                 }
                                               }
                                             }
@@ -206,17 +180,13 @@
                         },
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Vampire"
-                          }
+                          "value": "Vampire"
                         },
                         {
                           "type": "Not",
                           "value": {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Demon"
-                            }
+                            "value": "Demon"
                           }
                         }
                       ]
@@ -233,22 +203,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Vampire"
-          }
+          "Cleric",
+          "Vampire"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

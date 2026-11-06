@@ -99,9 +99,7 @@
       "do": {
         "Answer": {
           "prompt": "OfferedMiracleReveal",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },
@@ -131,9 +129,7 @@
       "do": {
         "Answer": {
           "prompt": "OfferedCast",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

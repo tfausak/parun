@@ -7118,10 +7118,13 @@ changeZoneInBatchReturning settle asOf oid requestedDest = changeZoneAttaching s
 -- `simultaneously` group (CR 603.2c, 603.6a), one board every member's CR 616.1
 -- loop reads (applyReplacementsIn), the other members visible to CR 614.12's
 -- entry choices as changeZoneEnteringIn's batch sees them (amongPending), CR
--- 401.4 / 404.3's arrangement, and CR 613.7m's order (together).
+-- 401.4 / 404.3's arrangement, and CR 613.7m's order (Restamp.settle, run as
+-- `together` ends).
 --
 -- Parun.LeavesTriggerSpec's Rest in Peace case and data/scenarios/
--- simultaneous-moves' Banisher Priest and Palace Jailer boards prove it.
+-- simultaneous-moves' Banisher Priest and Palace Jailer boards prove it;
+-- data/scenarios/restamp's "orders permanents returning together" pair
+-- (Glorious Protector) proves the order.
 changeZonesTogether :: Game () -> [(ObjectId, Zone)] -> Game [Seq.Seq ObjectId]
 changeZonesTogether settle batch = simultaneously . together $ do
   -- Lich's Mirror's ruling, asked of the whole batch before any of it moves.
@@ -7133,7 +7136,10 @@ changeZonesTogether settle batch = simultaneously . together $ do
         State.modify' (\g -> g {GameState.enteringPending = Map.delete oid (GameState.enteringPending g)})
         new <- changeZoneAttaching settle (Just before) sofar oid dest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
         pure (foldr Set.insert sofar new, new : acc)
-  fmap (reverse . snd) (amongPending Nothing entering (Monad.foldM step (Set.empty, []) moves))
+  arrived <- fmap (reverse . snd) (amongPending Nothing entering (Monad.foldM step (Set.empty, []) moves))
+  -- CR 613.7m: noted here, ordered as `together` ends.
+  Restamp.settle (GameState.nextTimestamp before) (concatMap Foldable.toList arrived)
+  pure arrived
 
 -- changeZoneReturning's body, returning the destination incarnations' ids: one
 -- fresh id per arrival on a completed move (CR 400.7), which is one for every
@@ -10912,6 +10918,18 @@ announcing body = do
       State.modify' (\g -> g {GameState.keptFaceDown = Nothing, GameState.announcedTops = Nothing})
       pure result
 
+-- CR 401.5's window for a special action (CR 116): run `body` as the taking of
+-- one, so a library's new top card is held back until it is finished
+-- (Game.shownTop). Not `announcing`, CR 121.8 keeping a drawn card face down
+-- only while a spell is cast or an ability activated; a mana ability activated
+-- during the action opens that window inside this one.
+takingSpecialAction :: Game a -> Game a
+takingSpecialAction body = do
+  State.modify' (\g -> g {GameState.actionTops = Just (Game.libraryTops g)})
+  result <- body
+  State.modify' (\g -> g {GameState.actionTops = Nothing})
+  pure result
+
 -- CR 121.8: the spell became cast (CR 601.2i) or the ability activated (CR
 -- 602.2b), so the cards drawn meanwhile turn face up and a reveal they were
 -- offered "as it's being drawn" is offered now, CR 121.9's look included. Only
@@ -11058,12 +11076,20 @@ causedBy controller body = do
 -- Why a resolving instruction's discard happens: ByEffect (CR 609.1), unless
 -- it is CR 118.12's cost (payingOnResolution) -- Library of Leng's ruling,
 -- "costs aren't effects". Parun.ZoneChangeSpec's Tweeze case proves it.
--- Parun.Engine.Cost.counterCause still reads such a cost as an effect for
--- counters (#4544).
 resolvingDiscardCause :: GameState -> DiscardCause.DiscardCause
 resolvingDiscardCause gs
   | GameState.payingOnResolution gs = DiscardCause.Ordinary
   | otherwise = DiscardCause.ByEffect
+
+-- Why `pid`'s resolving instruction puts counters: CR 609.1's effect, unless
+-- it is CR 118.12's cost (payingOnResolution), which CR 614.16's rows do not
+-- reach; see docs/decisions.md, "Whether a cost paid on resolution is an
+-- effect". resolvingDiscardCause's twin. The scenario "CR 118.12 Doubling
+-- Season does not double Grub's blight" proves it.
+resolvingCounterCause :: PlayerId -> GameState -> CounterCause.CounterCause
+resolvingCounterCause pid gs
+  | GameState.payingOnResolution gs = CounterCause.ByPayment pid
+  | otherwise = CounterCause.ByEffect pid
 
 -- A second door rather than a return type on `discard`, the changeZoneReturning
 -- and destroyReturning shape: the ~dozen callers that only perform the discard

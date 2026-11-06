@@ -32,5 +32,5 @@ spec s = Spec.describe s "Parun.Codec.Guess" $ do
           Guess.proposition = Filter.Measures (Measures.MkMeasures Measure.ManaValue Comparison.GreaterThan (Operand.Literal 4)),
           Guess.right = SlotName.MkSlotName (Text.pack "right")
         }
-      " {\"guesser\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"proposition\":{\"type\":\"Measures\",\"value\":{\"comparison\":{\"type\":\"GreaterThan\"},\"measure\":{\"type\":\"ManaValue\"},\"operand\":{\"type\":\"Literal\",\"value\":4}}},\"right\":\"right\",\"slot\":\"chosen\",\"subject\":{\"type\":\"ChosenCardInHand\",\"value\":{\"filter\":{\"type\":\"And\",\"value\":[]},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}}} "
+      " {\"guesser\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"proposition\":{\"type\":\"Measures\",\"value\":{\"comparison\":\"GreaterThan\",\"measure\":\"ManaValue\",\"operand\":{\"type\":\"Literal\",\"value\":4}}},\"right\":\"right\",\"slot\":\"chosen\",\"subject\":{\"type\":\"ChosenCardInHand\",\"value\":{\"filter\":{\"type\":\"And\",\"value\":[]},\"player\":{\"type\":\"Relative\",\"value\":\"You\"}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Guess.codec

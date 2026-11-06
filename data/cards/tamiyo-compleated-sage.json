@@ -53,15 +53,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Artifact"
-                          }
+                          "value": "Artifact"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         }
                       ]
                     },
@@ -100,9 +96,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -130,9 +124,7 @@
                           "type": "Not",
                           "value": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           }
                         },
                         {
@@ -140,45 +132,31 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Battle"
-                              }
+                              "value": "Battle"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Enchantment"
-                              }
+                              "value": "Enchantment"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Planeswalker"
-                              }
+                              "value": "Planeswalker"
                             }
                           ]
                         },
                         {
                           "type": "Measures",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
-                            "measure": {
-                              "type": "ManaValue"
-                            },
+                            "comparison": "Exactly",
+                            "measure": "ManaValue",
                             "operand": {
                               "type": "EnclosingAmount"
                             }
@@ -247,9 +225,7 @@
                                                   "value": {
                                                     "player": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -298,19 +274,13 @@
                                 ],
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Book"
-                                    }
+                                    "Book"
                                   ],
                                   "supertypes": [
-                                    {
-                                      "type": "Legendary"
-                                    }
+                                    "Legendary"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -348,29 +318,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "HybridPhyrexian",
           "value": {
-            "left": {
-              "type": "Green"
-            },
-            "right": {
-              "type": "Blue"
-            }
+            "left": "Green",
+            "right": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -378,19 +340,13 @@
       "oracleText": "Compleated ({G/U/P} can be paid with {G}, {U}, or 2 life. If life was paid, this planeswalker enters with two fewer loyalty counters.)\n[+1]: Tap up to one target artifact or creature. It doesn't untap during its controller's next untap step.\n[−X]: Exile target nonland permanent card with mana value X from your graveyard. Create a token that's a copy of that card.\n[−7]: Create Tamiyo's Notebook, a legendary colorless Book artifact token with \"Spells you cast cost {2} less to cast\" and \"{T}: Draw a card.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Tamiyo"
-          }
+          "Tamiyo"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

@@ -24,9 +24,7 @@
                                     "type": "Total",
                                     "value": {
                                       "type": "Measure",
-                                      "value": {
-                                        "type": "ManaValue"
-                                      }
+                                      "value": "ManaValue"
                                     }
                                   },
                                   "filter": {
@@ -57,15 +55,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Planeswalker"
-                          }
+                          "value": "Planeswalker"
                         }
                       ]
                     },
@@ -93,9 +87,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -115,9 +107,7 @@
                         "discarded": "discarded",
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         },
                         "quantity": {
                           "type": "Literal",
@@ -131,9 +121,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -147,9 +135,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -160,9 +146,7 @@
                           "type": "Not",
                           "value": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           }
                         },
                         "scope": {
@@ -192,9 +176,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

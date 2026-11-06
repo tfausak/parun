@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -29,19 +27,13 @@
                 "value": [
                   {
                     "type": "IsInZone",
-                    "value": {
-                      "type": "Hand"
-                    }
+                    "value": "Hand"
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Owner"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Owner",
+                      "relation": "You"
                     }
                   }
                 ]
@@ -63,17 +55,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

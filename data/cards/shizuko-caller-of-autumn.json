@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -42,17 +38,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -74,14 +66,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Green"
-                              }
+                              "value": "Green"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfTurn"
-                          }
+                          "retention": "UntilEndOfTurn"
                         }
                       },
                       {
@@ -95,14 +83,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Green"
-                              }
+                              "value": "Green"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfTurn"
-                          }
+                          "retention": "UntilEndOfTurn"
                         }
                       },
                       {
@@ -116,14 +100,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Green"
-                              }
+                              "value": "Green"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfTurn"
-                          }
+                          "retention": "UntilEndOfTurn"
                         }
                       }
                     ]
@@ -136,22 +116,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Shaman"
-          },
-          {
-            "type": "Snake"
-          }
+          "Shaman",
+          "Snake"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

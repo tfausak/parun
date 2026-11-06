@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -67,9 +63,7 @@
                                 "value": {
                                   "players": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   }
                                 }
                               }
@@ -87,17 +81,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          },
-          {
-            "type": "Boar"
-          }
+          "Beast",
+          "Boar"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

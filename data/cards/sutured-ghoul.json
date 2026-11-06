@@ -10,9 +10,7 @@
             },
             "quantity": {
               "type": "Measure",
-              "value": {
-                "type": "Power"
-              }
+              "value": "Power"
             }
           }
         },
@@ -24,9 +22,7 @@
             },
             "quantity": {
               "type": "Measure",
-              "value": {
-                "type": "Toughness"
-              }
+              "value": "Toughness"
             }
           }
         }
@@ -45,27 +41,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -90,9 +80,7 @@
                   },
                   "filter": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               }
@@ -105,14 +93,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Zombie"
-          }
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

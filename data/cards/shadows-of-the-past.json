@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -31,9 +29,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -46,9 +42,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -68,9 +62,7 @@
               "value": {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "AtLeast"
-                  },
+                  "comparison": "AtLeast",
                   "measured": {
                     "type": "Count",
                     "value": {
@@ -79,22 +71,16 @@
                       },
                       "filter": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       "scope": {
                         "type": "InZone",
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       }
                     }
@@ -118,9 +104,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -133,18 +117,14 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ],
               "permanent": {
                 "type": "Matching",
                 "value": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               }
             }
@@ -160,9 +140,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -180,9 +158,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

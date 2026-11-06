@@ -15,5 +15,5 @@ spec s = Spec.describe s "Parun.Codec.BoundMeasure" $ do
       s
       BoundMeasure.codec
       (BoundMeasure.MkBoundMeasure (SlotName.MkSlotName (Text.pack "thatExploitedCreature")) Measure.Toughness)
-      " {\"slot\":\"thatExploitedCreature\",\"measure\":{\"type\":\"Toughness\"}} "
+      " {\"slot\":\"thatExploitedCreature\",\"measure\":\"Toughness\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s BoundMeasure.codec

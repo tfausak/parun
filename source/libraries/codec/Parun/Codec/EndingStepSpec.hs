@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.EndingStep" $ do
       s
       EndingStep.codec
       EndingStep.EndStep
-      " {\"type\":\"EndStep\"} "
+      " \"EndStep\" "
   Spec.it s "Cleanup" $
     Common.assertCodec
       s
       EndingStep.codec
       EndingStep.Cleanup
-      " {\"type\":\"Cleanup\"} "
+      " \"Cleanup\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

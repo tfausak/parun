@@ -47,9 +47,7 @@
                                 "value": {
                                   "filter": {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Aura"
-                                    }
+                                    "value": "Aura"
                                   },
                                   "slot": "yours"
                                 }
@@ -59,18 +57,14 @@
                                 "value": {
                                   "filter": {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Aura"
-                                    }
+                                    "value": "Aura"
                                   },
                                   "slot": "theirs"
                                 }
                               }
                             ]
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ],
@@ -90,12 +84,8 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "Opponent"
-                            }
+                            "holder": "Controller",
+                            "relation": "Opponent"
                           }
                         },
                         {
@@ -108,15 +98,9 @@
                             "trait": {
                               "type": "CardType",
                               "value": [
-                                {
-                                  "type": "Artifact"
-                                },
-                                {
-                                  "type": "Creature"
-                                },
-                                {
-                                  "type": "Land"
-                                }
+                                "Artifact",
+                                "Creature",
+                                "Land"
                               ]
                             }
                           }
@@ -134,12 +118,8 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         },
                         {
@@ -147,21 +127,15 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Land"
-                              }
+                              "value": "Land"
                             }
                           ]
                         }
@@ -187,9 +161,7 @@
       "oracleText": "{5}, Sacrifice this artifact: Exchange control of target artifact, creature, or land you control and target permanent an opponent controls that shares one of those types with it. If those permanents are exchanged this way, destroy all Auras attached to them.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

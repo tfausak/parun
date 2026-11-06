@@ -14,9 +14,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -34,9 +32,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -52,9 +48,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -77,9 +71,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "TimesPaid",
                 "value": {
@@ -96,9 +88,7 @@
                           "type": "OfType",
                           "value": {
                             "type": "Colored",
-                            "value": {
-                              "type": "Green"
-                            }
+                            "value": "Green"
                           }
                         }
                       ]
@@ -125,9 +115,7 @@
                             "type": "InSlot",
                             "value": "flier"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -158,9 +146,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "TimesPaid",
                 "value": {
@@ -177,9 +163,7 @@
                           "type": "OfType",
                           "value": {
                             "type": "Colored",
-                            "value": {
-                              "type": "Blue"
-                            }
+                            "value": "Blue"
                           }
                         }
                       ]
@@ -204,9 +188,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -224,17 +206,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

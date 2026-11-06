@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -50,9 +48,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Black"
-                                  }
+                                  "Black"
                                 ],
                                 "keywords": [
                                   {
@@ -70,14 +66,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Zombie"
-                                    }
+                                    "Zombie"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -99,17 +91,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Bird"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Bird",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

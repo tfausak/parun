@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -64,9 +62,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -74,14 +70,10 @@
       "oracleText": "Enchant creature\n{1}{B}: Put a -1/-1 counter on enchanted creature.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

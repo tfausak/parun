@@ -6,18 +6,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -35,9 +31,7 @@
               "matching": {
                 "onWhat": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 "subject": {
                   "type": "ByAnything"
@@ -68,9 +62,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -86,15 +78,11 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Measure",
-                            "value": {
-                              "type": "Power"
-                            }
+                            "value": "Power"
                           }
                         }
                       }
@@ -108,17 +96,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Centaur"
-          },
-          {
-            "type": "Cleric"
-          }
+          "Centaur",
+          "Cleric"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

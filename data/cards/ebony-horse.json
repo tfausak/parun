@@ -35,9 +35,7 @@
                           "duration": {
                             "type": "UntilEndOfTurn"
                           },
-                          "kind": {
-                            "type": "Combat"
-                          },
+                          "kind": "Combat",
                           "ref": {
                             "type": "InSlot",
                             "value": "target"
@@ -47,15 +45,11 @@
                       {
                         "type": "PreventAllDamage",
                         "value": {
-                          "direction": {
-                            "type": "DealtBy"
-                          },
+                          "direction": "DealtBy",
                           "duration": {
                             "type": "UntilEndOfTurn"
                           },
-                          "kind": {
-                            "type": "Combat"
-                          },
+                          "kind": "Combat",
                           "ref": {
                             "type": "InSlot",
                             "value": "target"
@@ -73,12 +67,8 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         },
                         {
@@ -106,9 +96,7 @@
       "oracleText": "{2}, {T}: Untap target attacking creature you control. Prevent all combat damage that would be dealt to and dealt by that creature this turn.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

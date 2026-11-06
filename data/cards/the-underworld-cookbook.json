@@ -65,9 +65,7 @@
                                                   "value": {
                                                     "player": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -86,14 +84,10 @@
                                 "name": "Food Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Food"
-                                    }
+                                    "Food"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -142,9 +136,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -154,9 +146,7 @@
                   "target": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     "pool": {
                       "type": "CardsInGraveyard",
@@ -184,14 +174,10 @@
       "oracleText": "{T}, Discard a card: Create a Food token. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")\n{4}, {T}, Sacrifice this artifact: Return target creature card from your graveyard to your hand.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Book"
-          }
+          "Book"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

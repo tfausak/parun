@@ -30,7 +30,7 @@ spec s = Spec.describe s "Parun.Codec.ActiveCopy" $ do
           ActiveCopy.snapshot = ProjectedCharacteristicsSpec.minimalCharacteristics,
           ActiveCopy.turned = Nothing
         }
-      " {\"source\":1,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"covers\":{\"type\":\"These\",\"value\":[3,4]},\"snapshot\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}} "
+      " {\"source\":1,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"covers\":{\"type\":\"These\",\"value\":[3,4]},\"snapshot\":{\"names\":[\"Mountain\"],\"cardTypes\":[\"Land\"]}} "
   -- CR 730.2i: a merge applied over the row, with its turned-over reading.
   Spec.it s "a merged permanent's row with its turned reading" $
     Common.assertCodec
@@ -44,7 +44,7 @@ spec s = Spec.describe s "Parun.Codec.ActiveCopy" $ do
           ActiveCopy.snapshot = ProjectedCharacteristicsSpec.minimalCharacteristics,
           ActiveCopy.turned = Just ProjectedCharacteristicsSpec.minimalCharacteristics
         }
-      " {\"source\":1,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"covers\":{\"type\":\"These\",\"value\":[3]},\"snapshot\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]},\"turned\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}} "
+      " {\"source\":1,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"covers\":{\"type\":\"These\",\"value\":[3]},\"snapshot\":{\"names\":[\"Mountain\"],\"cardTypes\":[\"Land\"]},\"turned\":{\"names\":[\"Mountain\"],\"cardTypes\":[\"Land\"]}} "
   -- Metamorphic Alteration's row, following its source's host, one object of
   -- which a later copy effect took over while the source had timestamp 5.
   Spec.it s "a row following its source's host" $
@@ -59,6 +59,6 @@ spec s = Spec.describe s "Parun.Codec.ActiveCopy" $ do
           ActiveCopy.snapshot = ProjectedCharacteristicsSpec.minimalCharacteristics,
           ActiveCopy.turned = Nothing
         }
-      " {\"source\":1,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"covers\":{\"type\":\"SourceHost\",\"value\":{\"3\":5}},\"snapshot\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}} "
+      " {\"source\":1,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"covers\":{\"type\":\"SourceHost\",\"value\":{\"3\":5}},\"snapshot\":{\"names\":[\"Mountain\"],\"cardTypes\":[\"Land\"]}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActiveCopy.codec

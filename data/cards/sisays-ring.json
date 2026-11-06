@@ -57,9 +57,7 @@
       "oracleText": "{T}: Add {C}{C}.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

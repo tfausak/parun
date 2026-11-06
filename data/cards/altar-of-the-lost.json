@@ -26,9 +26,7 @@
                           },
                           "production": {
                             "type": "AnyColor",
-                            "value": {
-                              "type": "AnyCombination"
-                            }
+                            "value": "AnyCombination"
                           },
                           "restriction": {
                             "casts": {
@@ -36,15 +34,11 @@
                               "value": [
                                 {
                                   "type": "HasKeywordFamily",
-                                  "value": {
-                                    "type": "Flashback"
-                                  }
+                                  "value": "Flashback"
                                 },
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Graveyard"
-                                  }
+                                  "value": "Graveyard"
                                 }
                               ]
                             }
@@ -84,9 +78,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

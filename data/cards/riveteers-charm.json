@@ -6,27 +6,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -49,32 +43,22 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Planeswalker"
-                                }
+                                "value": "Planeswalker"
                               }
                             ]
                           },
                           {
                             "type": "Measures",
                             "value": {
-                              "comparison": {
-                                "type": "AtLeast"
-                              },
-                              "measure": {
-                                "type": "ManaValue"
-                              },
+                              "comparison": "AtLeast",
+                              "measure": "ManaValue",
                               "operand": {
                                 "type": "OfEachOtherCandidate",
-                                "value": {
-                                  "type": "ManaValue"
-                                }
+                                "value": "ManaValue"
                               }
                             }
                           }
@@ -97,9 +81,7 @@
               "target": {
                 "filter": {
                   "type": "IsPlayer",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
                 "pool": {
                   "type": "Players"
@@ -123,16 +105,12 @@
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       },
                       "slot": "exiled",
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   },
                   {
@@ -143,9 +121,7 @@
                         "value": {
                           "step": {
                             "type": "Ending",
-                            "value": {
-                              "type": "EndStep"
-                            }
+                            "value": "EndStep"
                           }
                         }
                       },
@@ -179,9 +155,7 @@
                           }
                         }
                       },
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   }
                 ]
@@ -199,9 +173,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

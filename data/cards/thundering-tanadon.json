@@ -13,15 +13,11 @@
         },
         {
           "type": "Phyrexian",
-          "value": {
-            "type": "Green"
-          }
+          "value": "Green"
         },
         {
           "type": "Phyrexian",
-          "value": {
-            "type": "Green"
-          }
+          "value": "Green"
         }
       ],
       "name": "Thundering Tanadon",
@@ -36,20 +32,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Beast",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

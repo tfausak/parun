@@ -67,9 +67,7 @@
       "oracleText": "{2}, {T}, Sacrifice this artifact: It deals 2 damage to target creature.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

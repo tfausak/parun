@@ -171,9 +171,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$m1",
             null

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -45,14 +43,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Clamfolk"
-          }
+          "Clamfolk"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

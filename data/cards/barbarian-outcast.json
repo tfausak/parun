@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -33,9 +31,7 @@
             "value": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "Exactly"
-                },
+                "comparison": "Exactly",
                 "measured": {
                   "type": "Count",
                   "value": {
@@ -47,19 +43,13 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Swamp"
-                          }
+                          "value": "Swamp"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -69,13 +59,9 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
-                        "zone": {
-                          "type": "Battlefield"
-                        }
+                        "zone": "Battlefield"
                       }
                     }
                   }
@@ -112,20 +98,12 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Barbarian"
-          },
-          {
-            "type": "Beast"
-          },
-          {
-            "type": "Human"
-          }
+          "Barbarian",
+          "Beast",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -6,9 +6,7 @@
           "type": "BeforeStep",
           "value": {
             "type": "Combat",
-            "value": {
-              "type": "DeclareBlockers"
-            }
+            "value": "DeclareBlockers"
           }
         }
       ],
@@ -21,9 +19,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -59,9 +55,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -77,9 +71,7 @@
                             },
                             {
                               "type": "HasKeywordFamily",
-                              "value": {
-                                "type": "Rampage"
-                              }
+                              "value": "Rampage"
                             }
                           ]
                         },
@@ -88,13 +80,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Battlefield"
-                            }
+                            "zone": "Battlefield"
                           }
                         }
                       }
@@ -140,9 +128,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

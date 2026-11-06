@@ -16,11 +16,11 @@ spec s = Spec.describe s "Parun.Codec.LifeTally" $ do
       s
       LifeTally.codec
       (LifeTally.MkLifeTally {LifeTally.player = PlayerRef.Relative PlayerRelation.You, LifeTally.direction = LifeDirection.Gained, LifeTally.turn = WhichTurn.ThisTurn})
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"direction\":{\"type\":\"Gained\"}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"direction\":\"Gained\"} "
   Spec.it s "last turn" $
     Common.assertCodec
       s
       LifeTally.codec
       (LifeTally.MkLifeTally {LifeTally.player = PlayerRef.Candidate, LifeTally.direction = LifeDirection.Lost, LifeTally.turn = WhichTurn.LastTurn})
-      " {\"player\":{\"type\":\"Candidate\"},\"direction\":{\"type\":\"Lost\"},\"turn\":{\"type\":\"LastTurn\"}} "
+      " {\"player\":{\"type\":\"Candidate\"},\"direction\":\"Lost\",\"turn\":\"LastTurn\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s LifeTally.codec

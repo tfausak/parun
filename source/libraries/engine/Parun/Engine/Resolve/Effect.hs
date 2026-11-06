@@ -1119,9 +1119,9 @@ throwSettled runSubgame roll perDie = do
       -- application: a declined or failed payment leaves the number standing.
       --
       -- DuringResolution, payGatePaidBy's moment and for its reason -- the
-      -- roll is CR 609.1's effect being followed -- so the payment is CR
-      -- 733.1's own reversible action and the CR 605.3a window it opens is
-      -- the payer's to keep.
+      -- roll is a resolution being followed -- so the payment is CR 733.1's
+      -- own reversible action and the CR 605.3a window it opens is the
+      -- payer's to keep.
       --
       -- Not implemented: CR 706.2a's second sentence gives that mana window to
       -- the player who ROLLED, where Cost.pay opens it for the payer (#3981).
@@ -1644,8 +1644,7 @@ payGateCostThen runSubgame slots payer source cost = do
   -- cost, not about a cost paid during a resolution (CR 118.13b).
   (announced, _) <- Cost.announce PaymentSubject.ForNeither ManaSpending.AsProduced payer source (Cost.substitutedManas (Cost.waterbendSubstitutions (Cost.Type.components cost) slots payer source gs) pure) cost
   -- DuringResolution: rule 118.12's cost is paid as the spell or ability
-  -- resolves, which is CR 609.1's effect, so a blight paid here is CR
-  -- 614.16's subject where Soul Immolation's additional cost is not.
+  -- resolves, so its events keep the resolution's cause (Cost.payComponent).
   -- CR 733.1's reversal base: rule 118.12's payment IS the whole of
   -- the action that can fail, so the state it begins in is where a
   -- failure returns to and the CR 605.3a window is the payer's to keep

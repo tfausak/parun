@@ -27,18 +27,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -57,9 +53,7 @@
                         "type": "InSlot",
                         "value": "creatures"
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   },
                   {
@@ -67,9 +61,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -99,14 +91,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Lesson"
-          }
+          "Lesson"
         ],
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

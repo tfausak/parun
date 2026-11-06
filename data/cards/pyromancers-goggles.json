@@ -24,9 +24,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           },
                           "whenSpent": {
@@ -36,24 +34,18 @@
                               "value": [
                                 {
                                   "type": "HasColor",
-                                  "value": {
-                                    "type": "Red"
-                                  }
+                                  "value": "Red"
                                 },
                                 {
                                   "type": "Or",
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Instant"
-                                      }
+                                      "value": "Instant"
                                     },
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Sorcery"
-                                      }
+                                      "value": "Sorcery"
                                     }
                                   ]
                                 }
@@ -111,14 +103,10 @@
       "oracleText": "{T}: Add {R}. When that mana is spent to cast a red instant or sorcery spell, copy that spell and you may choose new targets for the copy.",
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

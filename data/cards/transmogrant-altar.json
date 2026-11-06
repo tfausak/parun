@@ -17,9 +17,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               }
@@ -29,9 +27,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -97,9 +93,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               }
@@ -134,17 +128,11 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Zombie"
-                                    }
+                                    "Zombie"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    },
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Artifact",
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -179,9 +167,7 @@
       "oracleText": "{B}, {T}, Sacrifice a creature: Add {C}{C}{C}.\n{2}, {T}, Sacrifice a creature: Create a 3/3 colorless Zombie artifact creature token. Activate only as a sorcery.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

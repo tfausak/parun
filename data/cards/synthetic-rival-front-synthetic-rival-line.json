@@ -11,18 +11,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
       "name": "Synthetic Rival Front",
       "typeLine": {
         "types": [
-          {
-            "type": "Battle"
-          }
+          "Battle"
         ]
       }
     },
@@ -37,18 +33,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
       "name": "Synthetic Rival Line",
       "typeLine": {
         "types": [
-          {
-            "type": "Battle"
-          }
+          "Battle"
         ]
       }
     }

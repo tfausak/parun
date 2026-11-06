@@ -14,9 +14,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -34,9 +32,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -49,15 +45,11 @@
                       "value": [
                         {
                           "type": "IsAttackingPlayer",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         },
                         {
                           "type": "IsAttackingPlaneswalker",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       ]
                     },
@@ -76,9 +68,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -86,9 +76,7 @@
       "oracleText": "{W}, Sacrifice this enchantment: Exile target creature that's attacking you or a planeswalker you control.",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

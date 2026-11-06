@@ -17,19 +17,13 @@
                     "value": [
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Spider"
-                        }
+                        "value": "Spider"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       },
                       {
@@ -55,18 +49,14 @@
                         "type": "Search",
                         "value": {
                           "andOr": true,
-                          "destination": {
-                            "type": "BattlefieldAttached"
-                          },
+                          "destination": "BattlefieldAttached",
                           "filter": {
                             "type": "HasName",
                             "value": "Arachnus Web"
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -74,18 +64,12 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "subject": "target",
                           "zones": [
-                            {
-                              "type": "Library"
-                            },
-                            {
-                              "type": "Graveyard"
-                            }
+                            "Library",
+                            "Graveyard"
                           ]
                         }
                       }
@@ -118,9 +102,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -136,14 +118,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Spider"
-          }
+          "Spider"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -17,12 +17,12 @@ spec s = Spec.describe s "Parun.Codec.DeclarationTrigger" $ do
       s
       DeclarationTrigger.codec
       (DeclarationTrigger.MkDeclarationTrigger PlayerRelation.You Nothing)
-      " {\"player\":{\"type\":\"You\"}} "
+      " {\"player\":\"You\"} "
   -- Hermes, Overseer of Elpis' "whenever you attack with one or more Birds".
   Spec.it s "a count writes its key" $
     Common.assertCodec
       s
       DeclarationTrigger.codec
       (DeclarationTrigger.MkDeclarationTrigger PlayerRelation.Opponent (Just (AttackCount.MkAttackCount 1 (Filter.HasSubtype Subtype.Bird))))
-      " {\"player\":{\"type\":\"Opponent\"},\"attackers\":{\"floor\":1,\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Bird\"}}}} "
+      " {\"player\":\"Opponent\",\"attackers\":{\"floor\":1,\"filter\":{\"type\":\"HasSubtype\",\"value\":\"Bird\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DeclarationTrigger.codec

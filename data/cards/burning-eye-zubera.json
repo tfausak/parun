@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -42,9 +38,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -52,14 +46,10 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "DamageDealtThisTurn",
-                "value": {
-                  "type": "DealtTo"
-                }
+                "value": "DealtTo"
               },
               "threshold": {
                 "type": "Literal",
@@ -107,17 +97,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Spirit"
-          },
-          {
-            "type": "Zubera"
-          }
+          "Spirit",
+          "Zubera"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

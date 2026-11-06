@@ -27,5 +27,5 @@ spec s = Spec.describe s "Parun.Codec.Divide" $ do
       s
       Divide.codec
       (Divide.MkDivide (Quantity.Literal 3) (ObjectRef.InSlot (slot "wolves")) (PlayerRef.HolderOfBound Holder.Controller Hop.Itself (slot "target")) (slot "split"))
-      " {\"quantity\":{\"type\":\"Literal\",\"value\":3},\"among\":{\"type\":\"InSlot\",\"value\":\"wolves\"},\"chooser\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"target\"}},\"slot\":\"split\"} "
+      " {\"quantity\":{\"type\":\"Literal\",\"value\":3},\"among\":{\"type\":\"InSlot\",\"value\":\"wolves\"},\"chooser\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"target\"}},\"slot\":\"split\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Divide.codec

@@ -19,5 +19,5 @@ spec s = Spec.describe s "Parun.Codec.WhenSpent" $ do
         { WhenSpent.casts = Filter.HasCardType CardType.Instant,
           WhenSpent.ability = AbilityName.MkAbilityName (Text.pack "copy")
         }
-      " {\"casts\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},\"ability\":\"copy\"} "
+      " {\"casts\":{\"type\":\"HasCardType\",\"value\":\"Instant\"},\"ability\":\"copy\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s WhenSpent.codec

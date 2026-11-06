@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -26,19 +24,13 @@
           "effect": {
             "type": "ZoneChangeR",
             "value": {
-              "destination": {
-                "type": "Library"
-              },
+              "destination": "Library",
               "matching": {
                 "whatObject": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
-                "whenDestination": {
-                  "type": "Graveyard"
-                },
+                "whenDestination": "Graveyard",
                 "whoseObject": {
                   "type": "You"
                 }
@@ -46,9 +38,7 @@
             }
           },
           "functionsFrom": [
-            {
-              "type": "Command"
-            }
+            "Command"
           ]
         }
       ],
@@ -58,22 +48,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Advisor"
-          },
-          {
-            "type": "Human"
-          }
+          "Advisor",
+          "Human"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

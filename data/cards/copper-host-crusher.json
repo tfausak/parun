@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -45,20 +41,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Bear"
-          },
-          {
-            "type": "Phyrexian"
-          },
-          {
-            "type": "Rhino"
-          }
+          "Bear",
+          "Phyrexian",
+          "Rhino"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

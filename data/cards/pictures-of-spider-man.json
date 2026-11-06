@@ -69,14 +69,10 @@
                                 "name": "Treasure Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Treasure"
-                                    }
+                                    "Treasure"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -105,9 +101,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -137,9 +131,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -165,9 +157,7 @@
                               },
                               "filter": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               "slot": "looked"
                             }
@@ -182,9 +172,7 @@
                             "type": "InSlot",
                             "value": "revealed"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -196,17 +184,13 @@
                         "value": {
                           "placement": {
                             "type": "RandomOrder",
-                            "value": {
-                              "type": "Bottom"
-                            }
+                            "value": "Bottom"
                           },
                           "ref": {
                             "type": "InSlot",
                             "value": "looked"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -219,9 +203,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

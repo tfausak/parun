@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.ReplacementOrigin" $ do
       s
       ReplacementOrigin.codec
       ReplacementOrigin.SelfReplacement
-      " {\"type\":\"SelfReplacement\"} "
+      " \"SelfReplacement\" "
   Spec.it s "Other" $
     Common.assertCodec
       s
       ReplacementOrigin.codec
       ReplacementOrigin.Other
-      " {\"type\":\"Other\"} "
+      " \"Other\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

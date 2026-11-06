@@ -19,9 +19,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -50,9 +48,7 @@
                     },
                     {
                       "type": "HasDesignation",
-                      "value": {
-                        "type": "Saddled"
-                      }
+                      "value": "Saddled"
                     }
                   ]
                 }
@@ -101,17 +97,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beaver"
-          },
-          {
-            "type": "Mount"
-          }
+          "Beaver",
+          "Mount"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

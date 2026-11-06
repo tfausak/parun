@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -41,37 +39,27 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "RevealThenHand"
-                          },
+                          "destination": "RevealThenHand",
                           "filter": {
                             "type": "And",
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Land"
-                                }
+                                "value": "Land"
                               },
                               {
                                 "type": "HasSupertype",
-                                "value": {
-                                  "type": "Basic"
-                                }
+                                "value": "Basic"
                               },
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Forest"
-                                }
+                                "value": "Forest"
                               }
                             ]
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -79,9 +67,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -106,19 +92,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -129,9 +109,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -143,19 +121,13 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       }
                     ]
@@ -165,13 +137,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -196,9 +164,7 @@
                             "value": "self"
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -214,9 +180,7 @@
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -229,22 +193,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Scout"
-          }
+          "Elf",
+          "Scout"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
@@ -278,9 +234,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -293,9 +247,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -311,9 +263,7 @@
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Land"
-                                  }
+                                  "value": "Land"
                                 }
                               ]
                             },
@@ -322,13 +272,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 },
-                                "zone": {
-                                  "type": "Library"
-                                }
+                                "zone": "Library"
                               }
                             }
                           }
@@ -347,9 +293,7 @@
                             "type": "InSlot",
                             "value": "revealed"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -358,9 +302,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -378,9 +320,7 @@
                                   "type": "Not",
                                   "value": {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Land"
-                                    }
+                                    "value": "Land"
                                   }
                                 }
                               ]
@@ -390,13 +330,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 },
-                                "zone": {
-                                  "type": "Library"
-                                }
+                                "zone": "Library"
                               }
                             }
                           }
@@ -415,9 +351,7 @@
                             "type": "InSlot",
                             "value": "revealed"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -453,9 +387,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Green"
-                                  }
+                                  "Green"
                                 ],
                                 "name": "Ashaya, the Awoken World",
                                 "power": {
@@ -468,19 +400,13 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Elemental"
-                                    }
+                                    "Elemental"
                                   ],
                                   "supertypes": [
-                                    {
-                                      "type": "Legendary"
-                                    }
+                                    "Legendary"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -534,12 +460,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Creature"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Creature",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -557,12 +479,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "InAddition"
-                              },
-                              "subtype": {
-                                "type": "Elemental"
-                              }
+                              "mode": "InAddition",
+                              "subtype": "Elemental"
                             }
                           },
                           "ref": {
@@ -610,9 +528,7 @@
                     },
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     },
                     "pool": {
                       "type": "Permanents"
@@ -625,9 +541,7 @@
         }
       ],
       "colorIndicator": [
-        {
-          "type": "Green"
-        }
+        "Green"
       ],
       "loyalty": {
         "type": "Literal",
@@ -637,19 +551,13 @@
       "oracleText": "[+1]: Reveal the top card of your library. If it's a land card, put it onto the battlefield. Otherwise, put it into your hand.\n[−2]: Create Ashaya, the Awoken World, a legendary 4/4 green Elemental creature token.\n[−7]: Untap up to six target lands. They become 6/6 Elemental creatures. They're still lands.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Nissa"
-          }
+          "Nissa"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

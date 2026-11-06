@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -23,12 +21,8 @@
           "effect": {
             "type": "Shows",
             "value": {
-              "cards": {
-                "type": "Hand"
-              },
-              "to": {
-                "type": "Everyone"
-              }
+              "cards": "Hand",
+              "to": "Everyone"
             }
           },
           "scope": {
@@ -54,9 +48,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

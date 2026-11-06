@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -36,9 +34,7 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "Not",
@@ -48,9 +44,7 @@
                   }
                 ]
               },
-              "player": {
-                "type": "You"
-              }
+              "player": "You"
             }
           },
           "modal": {
@@ -66,9 +60,7 @@
                             "type": "InSlot",
                             "value": "became"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -77,9 +69,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "AgainstSlot",
                           "value": {
@@ -143,9 +133,7 @@
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -158,17 +146,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Human",
+          "Rogue"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

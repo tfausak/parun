@@ -85,9 +85,7 @@
                                 "value": {
                                   "quantity": {
                                     "type": "Measure",
-                                    "value": {
-                                      "type": "Power"
-                                    }
+                                    "value": "Power"
                                   },
                                   "slot": "dealer"
                                 }
@@ -108,12 +106,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     "pool": {
@@ -126,12 +120,8 @@
                       "value": {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       }
                     },
@@ -189,19 +179,13 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -228,19 +212,13 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -269,18 +247,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -288,19 +262,13 @@
       "oracleText": "[+2]: Put two +1/+1 counters on up to one target creature.\n[−3]: Target creature you control deals damage equal to its power to target creature you don't control.\n[−9]: Creatures you control get +4/+4 and gain trample until end of turn.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Vivien"
-          }
+          "Vivien"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

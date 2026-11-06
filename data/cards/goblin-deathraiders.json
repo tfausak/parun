@@ -11,18 +11,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -38,17 +34,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Goblin",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

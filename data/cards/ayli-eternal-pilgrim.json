@@ -23,9 +23,7 @@
                       },
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       }
                     ]
                   }
@@ -50,18 +48,14 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "AgainstSlot",
                             "value": {
                               "quantity": {
                                 "type": "Measure",
-                                "value": {
-                                  "type": "Toughness"
-                                }
+                                "value": "Toughness"
                               },
                               "slot": "thatSacrificedPermanent"
                             }
@@ -96,9 +90,7 @@
                       },
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       }
                     ]
                   }
@@ -114,18 +106,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -143,9 +131,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -157,9 +143,7 @@
                       "type": "Not",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       }
                     },
                     "pool": {
@@ -176,16 +160,12 @@
               "value": {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "AtLeast"
-                  },
+                  "comparison": "AtLeast",
                   "measured": {
                     "type": "LifeTotal",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     }
                   },
                   "threshold": {
@@ -195,9 +175,7 @@
                         "type": "StartingLifeTotal",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       },
                       "right": {
@@ -222,18 +200,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -249,22 +223,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Kor"
-          }
+          "Cleric",
+          "Kor"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

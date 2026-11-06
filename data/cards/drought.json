@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -45,18 +41,14 @@
                         },
                         "whichPermanents": {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Swamp"
-                          }
+                          "value": "Swamp"
                         }
                       }
                     }
                   ],
                   "scale": {
                     "type": "PerColoredSymbol",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   }
                 }
               },
@@ -90,18 +82,14 @@
                         },
                         "whichPermanents": {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Swamp"
-                          }
+                          "value": "Swamp"
                         }
                       }
                     }
                   ],
                   "scale": {
                     "type": "PerColoredSymbol",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   }
                 }
               },
@@ -127,17 +115,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -159,27 +143,21 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "mana": [
                           {
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "White"
-                              }
+                              "value": "White"
                             }
                           },
                           {
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "White"
-                              }
+                              "value": "White"
                             }
                           }
                         ]
@@ -198,9 +176,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

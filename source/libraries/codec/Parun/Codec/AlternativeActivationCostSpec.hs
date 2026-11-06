@@ -24,7 +24,7 @@ spec s = Spec.describe s "Parun.Codec.AlternativeActivationCost" $ do
           AlternativeActivationCost.onlyFirst = Just (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)),
           AlternativeActivationCost.cost = ManaCost.MkManaCost []
         }
-      " {\"grantedBy\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Equip\"}},\"onlyFirst\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}},\"cost\":[]} "
+      " {\"grantedBy\":{\"type\":\"OfFamily\",\"value\":\"Equip\"},\"onlyFirst\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}},\"cost\":[]} "
   -- onlyFirst is DEFAULTED, so its absence is its own case.
   Spec.it s "every matching ability" $
     Common.assertCodec
@@ -35,6 +35,6 @@ spec s = Spec.describe s "Parun.Codec.AlternativeActivationCost" $ do
           AlternativeActivationCost.onlyFirst = Nothing,
           AlternativeActivationCost.cost = ManaCost.MkManaCost [ManaSymbol.Generic 1]
         }
-      " {\"grantedBy\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Equip\"}},\"cost\":[{\"type\":\"Generic\",\"value\":1}]} "
+      " {\"grantedBy\":{\"type\":\"OfFamily\",\"value\":\"Equip\"},\"cost\":[{\"type\":\"Generic\",\"value\":1}]} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s AlternativeActivationCost.codec

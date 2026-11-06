@@ -9,8 +9,8 @@
         "library": [ { "card": "Goblin Piker" } ] },
       { "name": "bob",
         "battlefield": [
-          { "card": "Ainok Tracker", "label": "victim", "faceDown": { "type": "Manifested" } },
-          { "card": "Goblin Piker", "label": "stolen", "controller": "alice", "faceDown": { "type": "Manifested" } } ],
+          { "card": "Ainok Tracker", "label": "victim", "faceDown": "Manifested" },
+          { "card": "Goblin Piker", "label": "stolen", "controller": "alice", "faceDown": "Manifested" } ],
         "hand": [ { "card": "Hill Giant", "label": "b-hand" } ],
         "graveyard": [ { "card": "Hill Giant", "label": "dead" } ],
         "library": [ { "card": "Goblin Piker", "label": "b-top" } ] }

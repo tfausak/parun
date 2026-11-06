@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -65,12 +61,8 @@
                               "players": {
                                 "type": "HolderOfBound",
                                 "value": {
-                                  "holder": {
-                                    "type": "Controller"
-                                  },
-                                  "hop": {
-                                    "type": "Itself"
-                                  },
+                                  "holder": "Controller",
+                                  "hop": "Itself",
                                   "slot": "target"
                                 }
                               }
@@ -95,9 +87,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

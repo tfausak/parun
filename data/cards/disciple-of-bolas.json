@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -46,9 +44,7 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "Not",
@@ -61,9 +57,7 @@
                           "permanents": "sacrificed",
                           "players": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -76,18 +70,14 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "AgainstSlot",
                             "value": {
                               "quantity": {
                                 "type": "Measure",
-                                "value": {
-                                  "type": "Power"
-                                }
+                                "value": "Power"
                               },
                               "slot": "sacrificed"
                             }
@@ -99,18 +89,14 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "AgainstSlot",
                             "value": {
                               "quantity": {
                                 "type": "Measure",
-                                "value": {
-                                  "type": "Power"
-                                }
+                                "value": "Power"
                               },
                               "slot": "sacrificed"
                             }
@@ -127,17 +113,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

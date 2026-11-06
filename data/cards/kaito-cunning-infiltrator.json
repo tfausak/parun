@@ -43,9 +43,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -60,9 +58,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -86,12 +82,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     "pool": {
@@ -129,9 +121,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Blue"
-                                  }
+                                  "Blue"
                                 ],
                                 "name": "Ninja Token",
                                 "power": {
@@ -144,14 +134,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Ninja"
-                                    }
+                                    "Ninja"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -205,9 +191,7 @@
                                           "type": "PlayersTurn",
                                           "value": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "AnyPlayer"
-                                            }
+                                            "value": "AnyPlayer"
                                           }
                                         },
                                         "spell": {
@@ -232,9 +216,7 @@
                                                       "faces": [
                                                         {
                                                           "colorIndicator": [
-                                                            {
-                                                              "type": "Blue"
-                                                            }
+                                                            "Blue"
                                                           ],
                                                           "name": "Ninja Token",
                                                           "power": {
@@ -247,14 +229,10 @@
                                                           },
                                                           "typeLine": {
                                                             "subtypes": [
-                                                              {
-                                                                "type": "Ninja"
-                                                              }
+                                                              "Ninja"
                                                             ],
                                                             "types": [
-                                                              {
-                                                                "type": "Creature"
-                                                              }
+                                                              "Creature"
                                                             ]
                                                           }
                                                         }
@@ -300,18 +278,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -329,33 +303,23 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
                 }
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -392,19 +356,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Kaito"
-          }
+          "Kaito"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

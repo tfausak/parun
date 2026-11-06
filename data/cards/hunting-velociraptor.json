@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -36,19 +34,13 @@
               "value": [
                 {
                   "type": "IsInZone",
-                  "value": {
-                    "type": "Stack"
-                  }
+                  "value": "Stack"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 {
@@ -59,9 +51,7 @@
                 },
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Dinosaur"
-                  }
+                  "value": "Dinosaur"
                 }
               ]
             }
@@ -81,9 +71,7 @@
                       "type": "OfType",
                       "value": {
                         "type": "Colored",
-                        "value": {
-                          "type": "Red"
-                        }
+                        "value": "Red"
                       }
                     }
                   ]
@@ -99,14 +87,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dinosaur"
-          }
+          "Dinosaur"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

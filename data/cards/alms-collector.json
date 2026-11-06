@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -33,9 +31,7 @@
             "type": "DrawCountR",
             "value": {
               "atLeast": 2,
-              "rewrite": {
-                "type": "EachDrawOne"
-              },
+              "rewrite": "EachDrawOne",
               "whose": {
                 "type": "Opponent"
               }
@@ -49,17 +45,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          },
-          {
-            "type": "Cleric"
-          }
+          "Cat",
+          "Cleric"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

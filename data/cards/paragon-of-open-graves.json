@@ -18,9 +18,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -65,19 +63,13 @@
                         },
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Black"
-                          }
+                          "value": "Black"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -101,9 +93,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -128,25 +118,17 @@
                 },
                 {
                   "type": "HasColor",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -175,17 +157,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Skeleton"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Skeleton",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

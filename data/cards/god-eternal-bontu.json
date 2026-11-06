@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -73,12 +69,8 @@
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "You"
                                     }
                                   }
                                 ]
@@ -93,9 +85,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "InSlot",
@@ -119,9 +109,7 @@
                 "value": {
                   "destinations": [
                     {
-                      "zone": {
-                        "type": "Graveyard"
-                      }
+                      "zone": "Graveyard"
                     }
                   ]
                 }
@@ -131,9 +119,7 @@
                 "value": {
                   "destinations": [
                     {
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   ]
                 }
@@ -160,9 +146,7 @@
                             "type": "InSlot",
                             "value": "became"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ],
@@ -178,22 +162,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "God"
-          },
-          {
-            "type": "Zombie"
-          }
+          "God",
+          "Zombie"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

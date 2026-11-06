@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -40,9 +38,7 @@
                               "value": {
                                 "quantity": {
                                   "type": "Measure",
-                                  "value": {
-                                    "type": "Power"
-                                  }
+                                  "value": "Power"
                                 },
                                 "slot": "target"
                               }
@@ -75,9 +71,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     },
@@ -96,9 +90,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -143,9 +135,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

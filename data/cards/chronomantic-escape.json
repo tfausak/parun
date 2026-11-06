@@ -15,9 +15,7 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "White"
-                    }
+                    "value": "White"
                   }
                 }
               ]
@@ -38,18 +36,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -68,9 +62,7 @@
                         "type": "Matching",
                         "value": {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         }
                       },
                       "aimedAt": {
@@ -81,9 +73,7 @@
                           }
                         },
                         "kinds": [
-                          {
-                            "type": "OfPlayer"
-                          }
+                          "OfPlayer"
                         ]
                       },
                       "duration": {
@@ -99,9 +89,7 @@
                         "value": "self"
                       },
                       "slot": "exiled",
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   },
                   {
@@ -128,9 +116,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

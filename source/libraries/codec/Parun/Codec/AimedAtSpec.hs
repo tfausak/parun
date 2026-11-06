@@ -21,5 +21,5 @@ spec s = Spec.describe s "Parun.Codec.AimedAt" $ do
             AimedAt.kinds = Set.fromList [AttackTargetKind.OfPlayer, AttackTargetKind.OfPlaneswalker]
           }
       )
-      " {\"defenders\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"kinds\":[{\"type\":\"OfPlayer\"},{\"type\":\"OfPlaneswalker\"}]} "
+      " {\"defenders\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"kinds\":[\"OfPlayer\",\"OfPlaneswalker\"]} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AimedAt.codec

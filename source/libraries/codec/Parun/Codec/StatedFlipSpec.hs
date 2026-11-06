@@ -31,5 +31,5 @@ spec s = Spec.describe s "Parun.Codec.StatedFlip" $ do
           StatedFlip.wins = True,
           StatedFlip.firstEachTurn = True
         }
-      " {\"face\":{\"type\":\"Heads\"},\"wins\":true,\"firstEachTurn\":true} "
+      " {\"face\":\"Heads\",\"wins\":true,\"firstEachTurn\":true} "
   Spec.it s "has a schema" $ Common.assertHasSchema s StatedFlip.codec

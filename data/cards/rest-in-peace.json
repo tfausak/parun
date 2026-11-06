@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -23,13 +21,9 @@
           "effect": {
             "type": "ZoneChangeR",
             "value": {
-              "destination": {
-                "type": "Exile"
-              },
+              "destination": "Exile",
               "matching": {
-                "whenDestination": {
-                  "type": "Graveyard"
-                }
+                "whenDestination": "Graveyard"
               }
             }
           }
@@ -60,9 +54,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

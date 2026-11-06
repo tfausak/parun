@@ -54,27 +54,19 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Planeswalker"
-                              }
+                              "value": "Planeswalker"
                             }
                           ]
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "Opponent"
-                            }
+                            "holder": "Controller",
+                            "relation": "Opponent"
                           }
                         }
                       ]
@@ -103,27 +95,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -156,15 +142,11 @@
                             "type": "EachCardInYourLibrary",
                             "value": {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Mountain"
-                              }
+                              "value": "Mountain"
                             }
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -186,9 +168,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -215,9 +195,7 @@
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       },
                       {
@@ -237,18 +215,14 @@
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "Red"
-                                          }
+                                          "value": "Red"
                                         }
                                       },
                                       {
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "Red"
-                                          }
+                                          "value": "Red"
                                         }
                                       }
                                     ],
@@ -291,9 +265,7 @@
                                     },
                                     "typeLine": {
                                       "types": [
-                                        {
-                                          "type": "Instant"
-                                        }
+                                        "Instant"
                                       ]
                                     }
                                   }
@@ -314,9 +286,7 @@
                         "type": "Shuffle",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     ]
@@ -329,17 +299,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Golem"
-          }
+          "Golem"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

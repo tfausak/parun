@@ -14,9 +14,7 @@
                   },
                   "whichCards": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Land"
-                    }
+                    "value": "Land"
                   }
                 }
               }
@@ -66,27 +64,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -94,9 +86,7 @@
       "oracleText": "Discard a land card: This enchantment deals 2 damage to any target.",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

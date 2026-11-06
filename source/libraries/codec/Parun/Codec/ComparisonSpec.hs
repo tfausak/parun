@@ -12,19 +12,19 @@ spec s = Spec.describe s "Parun.Codec.Comparison" $ do
       s
       Comparison.codec
       Comparison.Exactly
-      " {\"type\":\"Exactly\"} "
+      " \"Exactly\" "
   Spec.it s "AtLeast" $
     Common.assertCodec
       s
       Comparison.codec
       Comparison.AtLeast
-      " {\"type\":\"AtLeast\"} "
+      " \"AtLeast\" "
   Spec.it s "AtMost" $
     Common.assertCodec
       s
       Comparison.codec
       Comparison.AtMost
-      " {\"type\":\"AtMost\"} "
+      " \"AtMost\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

@@ -17,9 +17,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -35,9 +33,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -60,16 +56,12 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "TimesPaid",
                 "value": {
                   "type": "Printed",
-                  "value": {
-                    "type": "Kicker"
-                  }
+                  "value": "Kicker"
                 }
               },
               "threshold": {
@@ -91,9 +83,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -108,9 +98,7 @@
                           "type": "Not",
                           "value": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           }
                         },
                         {
@@ -118,45 +106,31 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Battle"
-                              }
+                              "value": "Battle"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Enchantment"
-                              }
+                              "value": "Enchantment"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Planeswalker"
-                              }
+                              "value": "Planeswalker"
                             }
                           ]
                         },
                         {
                           "type": "Measures",
                           "value": {
-                            "comparison": {
-                              "type": "AtMost"
-                            },
-                            "measure": {
-                              "type": "ManaValue"
-                            },
+                            "comparison": "AtMost",
+                            "measure": "ManaValue",
                             "operand": {
                               "type": "Literal",
                               "value": 2
@@ -183,17 +157,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Human"
-          }
+          "Cleric",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

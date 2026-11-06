@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -36,9 +34,7 @@
               },
               "matching": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Enchantment"
-                }
+                "value": "Enchantment"
               },
               "subject": {
                 "type": "Spells"
@@ -67,9 +63,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               },
               "spell": {
@@ -79,19 +73,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Enchantment"
-                      }
+                      "value": "Enchantment"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -110,9 +98,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -130,17 +116,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Centaur"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Centaur",
+          "Shaman"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

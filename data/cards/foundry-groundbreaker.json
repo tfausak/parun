@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -43,9 +41,7 @@
                         "value": {
                           "filter": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           },
                           "players": {
                             "type": "EachInSlot",
@@ -124,12 +120,8 @@
                                                         "modification": {
                                                           "type": "CardType",
                                                           "value": {
-                                                            "cardType": {
-                                                              "type": "Artifact"
-                                                            },
-                                                            "mode": {
-                                                              "type": "InAddition"
-                                                            }
+                                                            "cardType": "Artifact",
+                                                            "mode": "InAddition"
                                                           }
                                                         },
                                                         "ref": {
@@ -147,12 +139,8 @@
                                                         "modification": {
                                                           "type": "CardType",
                                                           "value": {
-                                                            "cardType": {
-                                                              "type": "Creature"
-                                                            },
-                                                            "mode": {
-                                                              "type": "InAddition"
-                                                            }
+                                                            "cardType": "Creature",
+                                                            "mode": "InAddition"
                                                           }
                                                         },
                                                         "ref": {
@@ -170,12 +158,8 @@
                                                         "modification": {
                                                           "type": "CreatureSubtype",
                                                           "value": {
-                                                            "mode": {
-                                                              "type": "InAddition"
-                                                            },
-                                                            "subtype": {
-                                                              "type": "AssemblyWorker"
-                                                            }
+                                                            "mode": "InAddition",
+                                                            "subtype": "AssemblyWorker"
                                                           }
                                                         },
                                                         "ref": {
@@ -274,9 +258,7 @@
                                                       },
                                                       {
                                                         "type": "HasSubtype",
-                                                        "value": {
-                                                          "type": "AssemblyWorker"
-                                                        }
+                                                        "value": "AssemblyWorker"
                                                       }
                                                     ]
                                                   },
@@ -293,9 +275,7 @@
                                     "name": "Mishra's Foundry",
                                     "typeLine": {
                                       "types": [
-                                        {
-                                          "type": "Land"
-                                        }
+                                        "Land"
                                       ]
                                     }
                                   }
@@ -306,9 +286,7 @@
                           "destination": {
                             "type": "Battlefield",
                             "value": {
-                              "tapped": {
-                                "type": "Tapped"
-                              }
+                              "tapped": "Tapped"
                             }
                           },
                           "quantity": {
@@ -327,17 +305,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Artificer"
-          },
-          {
-            "type": "Human"
-          }
+          "Artificer",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

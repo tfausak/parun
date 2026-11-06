@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -31,9 +29,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -52,9 +48,7 @@
               "value": [
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Ninja"
-                  }
+                  "value": "Ninja"
                 },
                 {
                   "type": "Not",
@@ -65,12 +59,8 @@
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -99,25 +89,15 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Mutant"
-          },
-          {
-            "type": "Ninja"
-          },
-          {
-            "type": "Rat"
-          }
+          "Mutant",
+          "Ninja",
+          "Rat"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

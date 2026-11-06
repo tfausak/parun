@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -65,9 +63,7 @@
         {
           "condition": {
             "type": "DamageToPlayerPrevented",
-            "value": {
-              "type": "You"
-            }
+            "value": "You"
           },
           "modal": {
             "modes": [
@@ -101,17 +97,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Human",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

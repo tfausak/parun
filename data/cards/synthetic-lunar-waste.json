@@ -11,17 +11,13 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 {
                   "type": "Not",
                   "value": {
                     "type": "HasSupertype",
-                    "value": {
-                      "type": "Basic"
-                    }
+                    "value": "Basic"
                   }
                 },
                 {
@@ -37,12 +33,8 @@
             {
               "type": "LandSubtype",
               "value": {
-                "mode": {
-                  "type": "Replace"
-                },
-                "subtype": {
-                  "type": "Mountain"
-                }
+                "mode": "Replace",
+                "subtype": "Mountain"
               }
             }
           ]
@@ -50,9 +42,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

@@ -22,5 +22,5 @@ spec s = Spec.describe s "Parun.Codec.PlayerCounters" $ do
             PlayerCounters.quantity = Quantity.Literal 2
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"kind\":{\"type\":\"Rad\"},\"quantity\":{\"type\":\"Literal\",\"value\":2}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"kind\":\"Rad\",\"quantity\":{\"type\":\"Literal\",\"value\":2}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlayerCounters.codec

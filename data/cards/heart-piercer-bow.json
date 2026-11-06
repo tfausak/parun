@@ -72,9 +72,7 @@
                     "filter": {
                       "type": "HeldByBound",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
+                        "holder": "Controller",
                         "slot": "thatPlayer"
                       }
                     },
@@ -90,14 +88,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Equipment"
-          }
+          "Equipment"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

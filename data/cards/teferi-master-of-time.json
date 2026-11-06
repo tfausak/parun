@@ -23,9 +23,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -40,9 +38,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -94,12 +90,8 @@
                       "value": {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       }
                     },
@@ -140,9 +132,7 @@
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "skips": []
                         }
@@ -168,18 +158,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -193,9 +179,7 @@
               "permanents": {
                 "type": "IsSource"
               },
-              "relaxes": {
-                "type": "Window"
-              }
+              "relaxes": "Window"
             }
           },
           "scope": {
@@ -205,19 +189,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Teferi"
-          }
+          "Teferi"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

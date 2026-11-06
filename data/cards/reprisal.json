@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -31,9 +29,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "regenerability": {
-                        "type": "CantBeRegenerated"
-                      }
+                      "regenerability": "CantBeRegenerated"
                     }
                   }
                 ]
@@ -44,12 +40,8 @@
                 "filter": {
                   "type": "Measures",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
-                    "measure": {
-                      "type": "Power"
-                    },
+                    "comparison": "AtLeast",
+                    "measure": "Power",
                     "operand": {
                       "type": "Literal",
                       "value": 4
@@ -66,9 +58,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

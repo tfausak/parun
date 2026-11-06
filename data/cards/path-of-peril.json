@@ -14,18 +14,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -41,18 +37,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -66,16 +58,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "CastUsing",
                       "value": {
                         "type": "OfFamily",
-                        "value": {
-                          "type": "Cleave"
-                        }
+                        "value": "Cleave"
                       }
                     },
                     "threshold": {
@@ -95,19 +83,13 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "Measures",
                               "value": {
-                                "comparison": {
-                                  "type": "AtMost"
-                                },
-                                "measure": {
-                                  "type": "ManaValue"
-                                },
+                                "comparison": "AtMost",
+                                "measure": "ManaValue",
                                 "operand": {
                                   "type": "Literal",
                                   "value": 2
@@ -117,9 +99,7 @@
                           ]
                         }
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -128,16 +108,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "CastUsing",
                       "value": {
                         "type": "OfFamily",
-                        "value": {
-                          "type": "Cleave"
-                        }
+                        "value": "Cleave"
                       }
                     },
                     "threshold": {
@@ -154,14 +130,10 @@
                         "type": "EachMatching",
                         "value": {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         }
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -172,9 +144,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

@@ -7,9 +7,7 @@
           "value": {
             "aggregation": {
               "type": "Distinct",
-              "value": {
-                "type": "CardTypes"
-              }
+              "value": "CardTypes"
             },
             "filter": {
               "type": "And",
@@ -20,13 +18,9 @@
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               }
             }
           }
@@ -36,9 +30,7 @@
           "value": {
             "aggregation": {
               "type": "Distinct",
-              "value": {
-                "type": "CardTypes"
-              }
+              "value": "CardTypes"
             },
             "filter": {
               "type": "And",
@@ -49,13 +41,9 @@
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               }
             }
           }
@@ -70,9 +58,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -95,14 +81,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Lhurgoyf"
-          }
+          "Lhurgoyf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

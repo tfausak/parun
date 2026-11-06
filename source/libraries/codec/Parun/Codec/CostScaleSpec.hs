@@ -21,5 +21,5 @@ spec s = Spec.describe s "Parun.Codec.CostScale" $ do
       s
       CostScale.codec
       (CostScale.PerColoredSymbol Color.Black)
-      " {\"type\":\"PerColoredSymbol\",\"value\":{\"type\":\"Black\"}} "
+      " {\"type\":\"PerColoredSymbol\",\"value\":\"Black\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CostScale.codec

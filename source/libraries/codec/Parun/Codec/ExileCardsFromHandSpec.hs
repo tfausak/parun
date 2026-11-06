@@ -41,5 +41,5 @@ spec s = Spec.describe s "Parun.Codec.ExileCardsFromHand" $ do
             ExileCardsFromHand.whichCards = Filter.HasColor Color.Black
           }
       )
-      " {\"count\":{\"type\":\"Announced\",\"value\":\"exiled\"},\"whichCards\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}}} "
+      " {\"count\":{\"type\":\"Announced\",\"value\":\"exiled\"},\"whichCards\":{\"type\":\"HasColor\",\"value\":\"Black\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

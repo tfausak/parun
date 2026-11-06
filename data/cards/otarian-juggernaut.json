@@ -12,9 +12,7 @@
           "while": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -30,13 +28,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
-                      "zone": {
-                        "type": "Graveyard"
-                      }
+                      "zone": "Graveyard"
                     }
                   }
                 }
@@ -61,9 +55,7 @@
             },
             "blockers": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Wall"
-              }
+              "value": "Wall"
             }
           }
         }
@@ -91,9 +83,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -109,13 +99,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
-                      "zone": {
-                        "type": "Graveyard"
-                      }
+                      "zone": "Graveyard"
                     }
                   }
                 }
@@ -149,17 +135,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Juggernaut"
-          }
+          "Juggernaut"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

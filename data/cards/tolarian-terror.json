@@ -20,15 +20,11 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Instant"
-                    }
+                    "value": "Instant"
                   },
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Sorcery"
-                    }
+                    "value": "Sorcery"
                   }
                 ]
               },
@@ -37,13 +33,9 @@
                 "value": {
                   "player": {
                     "type": "Relative",
-                    "value": {
-                      "type": "You"
-                    }
+                    "value": "You"
                   },
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               }
             }
@@ -74,9 +66,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -92,14 +82,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Serpent"
-          }
+          "Serpent"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

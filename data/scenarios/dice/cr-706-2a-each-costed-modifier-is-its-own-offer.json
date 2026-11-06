@@ -116,9 +116,7 @@
       "do": {
         "Answer": {
           "prompt": "RerollDie",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -129,9 +127,7 @@
       "do": {
         "Answer": {
           "prompt": "RerollDie",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },
@@ -217,9 +213,7 @@
       "do": {
         "Answer": {
           "prompt": "RerollDie",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -230,9 +224,7 @@
       "do": {
         "Answer": {
           "prompt": "RerollDie",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -254,9 +246,7 @@
       "do": {
         "Answer": {
           "prompt": "RerollDie",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -267,9 +257,7 @@
       "do": {
         "Answer": {
           "prompt": "RerollDie",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

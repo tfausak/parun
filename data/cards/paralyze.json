@@ -13,9 +13,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -57,21 +55,15 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "HolderOfBound",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "hop": {
-                      "type": "Host"
-                    },
+                    "holder": "Controller",
+                    "hop": "Host",
                     "slot": "self"
                   }
                 }
@@ -95,9 +87,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "mana": [
                           {
@@ -120,14 +110,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       },
       "untapRestrictions": [
@@ -139,9 +125,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",

@@ -15,9 +15,7 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Red"
-                    }
+                    "value": "Red"
                   }
                 }
               ]
@@ -27,9 +25,7 @@
               "orMore": true,
               "whichObjects": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Dinosaur"
-                }
+                "value": "Dinosaur"
               }
             }
           }
@@ -44,9 +40,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -71,9 +65,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -94,9 +86,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -120,9 +110,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     },
@@ -136,9 +124,7 @@
             },
             "quantity": {
               "type": "Measure",
-              "value": {
-                "type": "Power"
-              }
+              "value": "Power"
             }
           }
         },
@@ -150,17 +136,13 @@
             },
             "quantity": {
               "type": "Measure",
-              "value": {
-                "type": "Power"
-              }
+              "value": "Power"
             }
           }
         }
       },
       "colorIndicator": [
-        {
-          "type": "Red"
-        }
+        "Red"
       ],
       "name": "Mastercraft Raptor",
       "oracleText": "Mastercraft Raptor's power is equal to the total power of the exiled cards used to craft it.",
@@ -173,17 +155,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dinosaur"
-          }
+          "Dinosaur"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

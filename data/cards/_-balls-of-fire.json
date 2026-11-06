@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -34,15 +32,11 @@
                         "type": "PutSticker",
                         "value": {
                           "kinds": [
-                            {
-                              "type": "Name"
-                            }
+                            "Name"
                           ],
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "ref": {
                             "type": "InSlot",
@@ -65,25 +59,15 @@
             "type": "PlacesSticker",
             "value": {
               "kinds": [
-                {
-                  "type": "Name"
-                },
-                {
-                  "type": "Ability"
-                },
-                {
-                  "type": "PowerToughness"
-                },
-                {
-                  "type": "Art"
-                }
+                "Name",
+                "Ability",
+                "PowerToughness",
+                "Art"
               ],
               "object": {
                 "type": "IsSource"
               },
-              "placer": {
-                "type": "You"
-              }
+              "placer": "You"
             }
           },
           "modal": {
@@ -126,9 +110,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

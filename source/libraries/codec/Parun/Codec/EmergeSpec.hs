@@ -41,5 +41,5 @@ spec s = Spec.describe s "Parun.Codec.Emerge" $ do
             Emerge.quality = Just (Filter.HasCardType CardType.Artifact)
           }
       )
-      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":5}]},\"quality\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}} "
+      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":5}]},\"quality\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

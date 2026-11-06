@@ -19,9 +19,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -37,17 +35,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Artificer"
-          },
-          {
-            "type": "Human"
-          }
+          "Artificer",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -31,14 +29,10 @@
                         "type": "EachMatching",
                         "value": {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Island"
-                          }
+                          "value": "Island"
                         }
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -49,9 +43,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

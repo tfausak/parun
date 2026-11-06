@@ -157,9 +157,7 @@
                 "type": "Colorless"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -169,9 +167,7 @@
                 "type": "Colorless"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null

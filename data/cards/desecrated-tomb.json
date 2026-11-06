@@ -14,24 +14,16 @@
           "condition": {
             "type": "LeavesZone",
             "value": {
-              "batching": {
-                "type": "OneOrMore"
-              },
+              "batching": "OneOrMore",
               "card": {
                 "type": "Matching",
                 "value": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               },
-              "from": {
-                "type": "Graveyard"
-              },
-              "whose": {
-                "type": "You"
-              }
+              "from": "Graveyard",
+              "whose": "You"
             }
           },
           "modal": {
@@ -47,9 +39,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Black"
-                                  }
+                                  "Black"
                                 ],
                                 "keywords": [
                                   {
@@ -67,14 +57,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Bat"
-                                    }
+                                    "Bat"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -96,9 +82,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

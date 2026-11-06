@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -26,19 +24,13 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -59,30 +51,20 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         },
                         {
                           "type": "Measures",
                           "value": {
-                            "comparison": {
-                              "type": "AtLeast"
-                            },
-                            "measure": {
-                              "type": "Power"
-                            },
+                            "comparison": "AtLeast",
+                            "measure": "Power",
                             "operand": {
                               "type": "Literal",
                               "value": 4
@@ -96,13 +78,9 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
-                        "zone": {
-                          "type": "Battlefield"
-                        }
+                        "zone": "Battlefield"
                       }
                     }
                   }
@@ -118,30 +96,20 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         },
                         {
                           "type": "Measures",
                           "value": {
-                            "comparison": {
-                              "type": "AtLeast"
-                            },
-                            "measure": {
-                              "type": "Power"
-                            },
+                            "comparison": "AtLeast",
+                            "measure": "Power",
                             "operand": {
                               "type": "Literal",
                               "value": 4
@@ -155,13 +123,9 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
-                        "zone": {
-                          "type": "Battlefield"
-                        }
+                        "zone": "Battlefield"
                       }
                     }
                   }
@@ -173,9 +137,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

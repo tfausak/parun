@@ -26,5 +26,5 @@ spec s = Spec.describe s "Parun.Codec.Trait" $ do
       s
       Trait.codec
       (Trait.CardType (Just (Set.fromList [CardType.Artifact, CardType.Land])))
-      " {\"type\":\"CardType\",\"value\":[{\"type\":\"Artifact\"},{\"type\":\"Land\"}]} "
+      " {\"type\":\"CardType\",\"value\":[\"Artifact\",\"Land\"]} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Trait.codec

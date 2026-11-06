@@ -38,7 +38,7 @@ spec s = Spec.describe s "Parun.Codec.PrintedReplacement" $ do
             PrintedReplacement.name = Nothing
           }
       )
-      " {\"effect\":{\"type\":\"DestructionR\",\"value\":{\"rewrite\":{\"type\":\"Regenerate\"}}}} "
+      " {\"effect\":{\"type\":\"DestructionR\",\"value\":{\"rewrite\":\"Regenerate\"}}} "
   -- Jared Carthalion, True Heir's "while you're the monarch", the case that
   -- writes the key.
   Spec.it s "MkPrintedReplacement, condition written" $
@@ -60,7 +60,7 @@ spec s = Spec.describe s "Parun.Codec.PrintedReplacement" $ do
             PrintedReplacement.name = Nothing
           }
       )
-      " {\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"IsMonarch\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"effect\":{\"type\":\"DestructionR\",\"value\":{\"rewrite\":{\"type\":\"Regenerate\"}}}} "
+      " {\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"IsMonarch\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"effect\":{\"type\":\"DestructionR\",\"value\":{\"rewrite\":\"Regenerate\"}}} "
   -- Glittering Lion's "shield", the case that writes the OTHER optional key. Its
   -- own case rather than a rider on one above, because 'Fields.defaulted' decodes
   -- a mistyped key as Nothing with no error, and a nameless printed replacement
@@ -76,7 +76,7 @@ spec s = Spec.describe s "Parun.Codec.PrintedReplacement" $ do
             PrintedReplacement.name = Just (AbilityName.MkAbilityName (Text.pack "shield"))
           }
       )
-      " {\"effect\":{\"type\":\"DestructionR\",\"value\":{\"rewrite\":{\"type\":\"Regenerate\"}}},\"name\":\"shield\"} "
+      " {\"effect\":{\"type\":\"DestructionR\",\"value\":{\"rewrite\":\"Regenerate\"}},\"name\":\"shield\"} "
   -- CR 113.6b's zone clause, Nexus of Fate's shape. Optional for the condition's
   -- reason, and the three cases above pin the absent half: an encoder that always
   -- emitted the key would rewrite every card already committed.
@@ -91,5 +91,5 @@ spec s = Spec.describe s "Parun.Codec.PrintedReplacement" $ do
             PrintedReplacement.name = Nothing
           }
       )
-      " {\"effect\":{\"type\":\"DestructionR\",\"value\":{\"rewrite\":{\"type\":\"Regenerate\"}}},\"functionsFrom\":[{\"type\":\"Graveyard\"},{\"type\":\"Stack\"}]} "
+      " {\"effect\":{\"type\":\"DestructionR\",\"value\":{\"rewrite\":\"Regenerate\"}},\"functionsFrom\":[\"Graveyard\",\"Stack\"]} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

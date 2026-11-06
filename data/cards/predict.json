@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -29,9 +27,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "restriction": {
                         "type": "And",
@@ -57,9 +53,7 @@
                       "tally": {
                         "filter": {
                           "type": "HasChosenName",
-                          "value": {
-                            "type": "AnyChooser"
-                          }
+                          "value": "AnyChooser"
                         },
                         "slot": "named"
                       }
@@ -71,9 +65,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "InSlot",
                       "value": "named"
@@ -90,9 +82,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -106,9 +96,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtMost"
-                    },
+                    "comparison": "AtMost",
                     "measured": {
                       "type": "InSlot",
                       "value": "named"
@@ -125,9 +113,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -150,9 +136,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

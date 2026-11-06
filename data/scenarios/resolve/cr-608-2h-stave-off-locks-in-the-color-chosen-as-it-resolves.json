@@ -30,7 +30,7 @@
     "step": "PrecombatMain"
   },
   "timeline": [
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseColor", "with": { "type": "Red" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseColor", "with": "Red" } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$staveoff", "targets": ["$bears"], "mana": ["$plains"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Stave Off", "count": 1 } } },

@@ -6,9 +6,7 @@
           "type": "Landwalk",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Island"
-            }
+            "value": "Island"
           }
         }
       ],
@@ -17,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -35,14 +31,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Crocodile"
-          }
+          "Crocodile"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

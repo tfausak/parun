@@ -12,12 +12,12 @@ spec s = Spec.describe s "Parun.Codec.Lookback" $ do
       s
       Lookback.codec
       Lookback.ThisTurn
-      " {\"type\":\"ThisTurn\"} "
+      " \"ThisTurn\" "
   Spec.it s "AsThisObject" $
     Common.assertCodec
       s
       Lookback.codec
       Lookback.AsThisObject
-      " {\"type\":\"AsThisObject\"} "
+      " \"AsThisObject\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s Lookback.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s Lookback.codec

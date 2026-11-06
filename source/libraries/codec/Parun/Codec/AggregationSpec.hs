@@ -23,7 +23,7 @@ spec s = Spec.describe s "Parun.Codec.Aggregation" $ do
       s
       (Aggregation.codec Common.integer)
       (Aggregation.Distinct DistinctOf.CardTypes)
-      " {\"type\":\"Distinct\",\"value\":{\"type\":\"CardTypes\"}} "
+      " {\"type\":\"Distinct\",\"value\":\"CardTypes\"} "
   Spec.it s "MostSharing" $
     Common.assertCodec
       s

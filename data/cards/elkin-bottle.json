@@ -34,16 +34,12 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -54,9 +50,7 @@
                             "value": {
                               "step": {
                                 "type": "Beginning",
-                                "value": {
-                                  "type": "Upkeep"
-                                }
+                                "value": "Upkeep"
                               }
                             }
                           },
@@ -84,9 +78,7 @@
       "oracleText": "{3}, {T}: Exile the top card of your library. Until the beginning of your next upkeep, you may play that card.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

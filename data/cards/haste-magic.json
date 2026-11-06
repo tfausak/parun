@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -79,16 +77,12 @@
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       },
                       "slot": "exiled",
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   },
                   {
@@ -99,9 +93,7 @@
                         "value": {
                           "step": {
                             "type": "Ending",
-                            "value": {
-                              "type": "EndStep"
-                            }
+                            "value": "EndStep"
                           }
                         }
                       },
@@ -126,9 +118,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -18,16 +18,12 @@
             "unless": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "AtMost"
-                },
+                "comparison": "AtMost",
                 "measured": {
                   "type": "CardsDrawnThisTurn",
                   "value": {
                     "type": "Relative",
-                    "value": {
-                      "type": "You"
-                    }
+                    "value": "You"
                   }
                 },
                 "threshold": {
@@ -48,9 +44,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -66,14 +60,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Spirit"
-          }
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

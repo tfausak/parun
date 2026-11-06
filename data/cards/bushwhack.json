@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -23,31 +21,23 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "RevealThenHand"
-                      },
+                      "destination": "RevealThenHand",
                       "filter": {
                         "type": "And",
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           },
                           {
                             "type": "HasSupertype",
-                            "value": {
-                              "type": "Basic"
-                            }
+                            "value": "Basic"
                           }
                         ]
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -55,9 +45,7 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -84,12 +72,8 @@
                 "filter": {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 "pool": {
@@ -102,12 +86,8 @@
                   "value": {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   }
                 },
@@ -121,9 +101,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

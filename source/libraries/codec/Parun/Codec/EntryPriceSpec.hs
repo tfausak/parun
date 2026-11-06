@@ -16,5 +16,5 @@ spec s = Spec.describe s "Parun.Codec.EntryPrice" $ do
       s
       EntryPrice.codec
       (EntryPrice.Reveal (Filter.HasSubtype Subtype.Kithkin))
-      " {\"type\":\"Reveal\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Kithkin\"}}} "
+      " {\"type\":\"Reveal\",\"value\":{\"type\":\"HasSubtype\",\"value\":\"Kithkin\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s EntryPrice.codec

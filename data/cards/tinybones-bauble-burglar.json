@@ -18,9 +18,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -38,9 +36,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "Opponent"
-                              }
+                              "value": "Opponent"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -71,9 +67,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -84,16 +78,12 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "Exactly"
-              },
+              "comparison": "Exactly",
               "measured": {
                 "type": "IsActivePlayer",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -108,13 +98,9 @@
               "from": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 },
-                "zone": {
-                  "type": "Exile"
-                }
+                "zone": "Exile"
               },
               "matching": {
                 "type": "And",
@@ -131,23 +117,15 @@
                     "value": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Owner"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Owner",
+                        "relation": "You"
                       }
                     }
                   }
                 ]
               },
-              "spending": {
-                "type": "AnyType"
-              },
-              "verb": {
-                "type": "Play"
-              }
+              "spending": "AnyType",
+              "verb": "Play"
             }
           },
           "scope": {
@@ -175,9 +153,7 @@
                     "type": "And",
                     "value": []
                   },
-                  "player": {
-                    "type": "Opponent"
-                  }
+                  "player": "Opponent"
                 }
               }
             }
@@ -191,17 +167,13 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "origin": {
-                            "type": "Graveyard"
-                          },
+                          "origin": "Graveyard",
                           "ref": {
                             "type": "InSlot",
                             "value": "became"
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -231,22 +203,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Rogue"
-          },
-          {
-            "type": "Skeleton"
-          }
+          "Rogue",
+          "Skeleton"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

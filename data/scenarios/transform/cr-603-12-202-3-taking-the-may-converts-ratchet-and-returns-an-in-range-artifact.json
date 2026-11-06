@@ -87,9 +87,7 @@
       "player": "alice",
       "source": "$ratchet",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {

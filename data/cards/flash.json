@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -32,22 +30,16 @@
                         "value": {
                           "filter": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       },
                       "slot": "put",
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 ],
@@ -83,17 +75,13 @@
                     ],
                     "slot": "put"
                   },
-                  "branch": {
-                    "type": "IfNotPaid"
-                  },
+                  "branch": "IfNotPaid",
                   "cost": {
                     "mana": null
                   },
                   "payer": {
                     "type": "Relative",
-                    "value": {
-                      "type": "You"
-                    }
+                    "value": "You"
                   }
                 }
               }
@@ -103,9 +91,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

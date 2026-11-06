@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -37,9 +33,7 @@
             "type": "Matching",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Sliver"
-              }
+              "value": "Sliver"
             }
           },
           "modifications": [
@@ -59,9 +53,7 @@
                             "condition": {
                               "type": "Compares",
                               "value": {
-                                "comparison": {
-                                  "type": "AtLeast"
-                                },
+                                "comparison": "AtLeast",
                                 "measured": {
                                   "type": "Count",
                                   "value": {
@@ -76,13 +68,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         },
-                                        "zone": {
-                                          "type": "Battlefield"
-                                        }
+                                        "zone": "Battlefield"
                                       }
                                     }
                                   }
@@ -109,9 +97,7 @@
                                 {
                                   "type": "Compares",
                                   "value": {
-                                    "comparison": {
-                                      "type": "AtLeast"
-                                    },
+                                    "comparison": "AtLeast",
                                     "measured": {
                                       "type": "Count",
                                       "value": {
@@ -126,13 +112,9 @@
                                           "value": {
                                             "player": {
                                               "type": "Relative",
-                                              "value": {
-                                                "type": "AnyPlayer"
-                                              }
+                                              "value": "AnyPlayer"
                                             },
-                                            "zone": {
-                                              "type": "Battlefield"
-                                            }
+                                            "zone": "Battlefield"
                                           }
                                         }
                                       }
@@ -146,9 +128,7 @@
                                 {
                                   "type": "Compares",
                                   "value": {
-                                    "comparison": {
-                                      "type": "Exactly"
-                                    },
+                                    "comparison": "Exactly",
                                     "measured": {
                                       "type": "InSlot",
                                       "value": "flip"
@@ -170,9 +150,7 @@
                                     "value": "self"
                                   },
                                   "slot": "exiled",
-                                  "zone": {
-                                    "type": "Exile"
-                                  }
+                                  "zone": "Exile"
                                 }
                               },
                               {
@@ -186,17 +164,13 @@
                                         "value": {
                                           "phase": {
                                             "type": "Ending",
-                                            "value": {
-                                              "type": "EndStep"
-                                            }
+                                            "value": "EndStep"
                                           },
                                           "scope": {
                                             "type": "PlayersTurn",
                                             "value": {
                                               "type": "Relative",
-                                              "value": {
-                                                "type": "AnyPlayer"
-                                              }
+                                              "value": "AnyPlayer"
                                             }
                                           }
                                         }
@@ -210,9 +184,7 @@
                                                   {
                                                     "type": "MoveToZone",
                                                     "value": {
-                                                      "origin": {
-                                                        "type": "Exile"
-                                                      },
+                                                      "origin": "Exile",
                                                       "ref": {
                                                         "type": "InSlot",
                                                         "value": "exiled"
@@ -222,9 +194,7 @@
                                                           "type": "Owner"
                                                         }
                                                       },
-                                                      "zone": {
-                                                        "type": "Battlefield"
-                                                      }
+                                                      "zone": "Battlefield"
                                                     }
                                                   }
                                                 ]
@@ -247,9 +217,7 @@
                                 {
                                   "type": "Compares",
                                   "value": {
-                                    "comparison": {
-                                      "type": "AtLeast"
-                                    },
+                                    "comparison": "AtLeast",
                                     "measured": {
                                       "type": "Count",
                                       "value": {
@@ -264,13 +232,9 @@
                                           "value": {
                                             "player": {
                                               "type": "Relative",
-                                              "value": {
-                                                "type": "AnyPlayer"
-                                              }
+                                              "value": "AnyPlayer"
                                             },
-                                            "zone": {
-                                              "type": "Battlefield"
-                                            }
+                                            "zone": "Battlefield"
                                           }
                                         }
                                       }
@@ -284,9 +248,7 @@
                                 {
                                   "type": "Compares",
                                   "value": {
-                                    "comparison": {
-                                      "type": "Exactly"
-                                    },
+                                    "comparison": "Exactly",
                                     "measured": {
                                       "type": "InSlot",
                                       "value": "flip"
@@ -327,14 +289,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Sliver"
-          }
+          "Sliver"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

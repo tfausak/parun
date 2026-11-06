@@ -69,7 +69,7 @@ spec s = Spec.describe s "Parun.Codec.Duration" $ do
       s
       Duration.codec
       (Duration.UntilNextStepOf (NextStepOf.MkNextStepOf (Phase.Ending EndingStep.EndStep) (PlayerRef.Relative PlayerRelation.You)))
-      " {\"type\":\"UntilNextStepOf\",\"value\":{\"step\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}}}} "
+      " {\"type\":\"UntilNextStepOf\",\"value\":{\"step\":{\"type\":\"Ending\",\"value\":\"EndStep\"}}} "
   -- CR 611.2a: until the END of your next turn, a whole turn later.
   Spec.it s "UntilEndOfYourNextTurn" $
     Common.assertCodec
@@ -84,7 +84,7 @@ spec s = Spec.describe s "Parun.Codec.Duration" $ do
       s
       Duration.codec
       (Duration.UntilEndOfNextTurnOf (PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "exiled"))))
-      " {\"type\":\"UntilEndOfNextTurnOf\",\"value\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"exiled\"}}} "
+      " {\"type\":\"UntilEndOfNextTurnOf\",\"value\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"exiled\"}}} "
   -- CR 611.2a: the WINDOW, carrying the reference its seat is sampled from (Wall
   -- of Dust's "its controller's next turn").
   Spec.it s "DuringNextTurnOf carries its reference" $
@@ -92,7 +92,7 @@ spec s = Spec.describe s "Parun.Codec.Duration" $ do
       s
       Duration.codec
       (Duration.DuringNextTurnOf (PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "thatAttacker"))))
-      " {\"type\":\"DuringNextTurnOf\",\"value\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"thatAttacker\"}}} "
+      " {\"type\":\"DuringNextTurnOf\",\"value\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"thatAttacker\"}}} "
   -- CR 611.2a / 502.3: the untap step's window (Exhaustion's "their next untap
   -- step").
   Spec.it s "DuringNextUntapStepOf carries its reference" $
@@ -122,7 +122,7 @@ spec s = Spec.describe s "Parun.Codec.Duration" $ do
       s
       Duration.codec
       (Duration.ForAsLongAs (Condition.Compares (Compares.MkCompares (Quantity.Literal 0) Comparison.Exactly (Quantity.Literal 0))))
-      " {\"type\":\"ForAsLongAs\",\"value\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":0},\"comparison\":{\"type\":\"Exactly\"},\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
+      " {\"type\":\"ForAsLongAs\",\"value\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":0},\"comparison\":\"Exactly\",\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
   -- CR 500.5a: until end of combat.
   Spec.it s "UntilEndOfCombat" $
     Common.assertCodec
@@ -143,7 +143,7 @@ spec s = Spec.describe s "Parun.Codec.Duration" $ do
       s
       Duration.codec
       (Duration.UntilPaid (UntilPaid.MkUntilPaid (PlayerRef.Relative PlayerRelation.You) (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Blue)])) [])))
-      " {\"type\":\"UntilPaid\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}}]}}} "
+      " {\"type\":\"UntilPaid\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Blue\"}}]}}} "
   -- CR 611.2a / Scout's Warning: "the next ... this turn", ended by its own use.
   Spec.it s "UntilUsed" $
     Common.assertCodec

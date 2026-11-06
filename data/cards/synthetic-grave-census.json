@@ -22,9 +22,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Count",
@@ -43,9 +41,7 @@
                                 "value": {
                                   "type": "CardArrivedIn",
                                   "value": {
-                                    "to": {
-                                      "type": "Graveyard"
-                                    }
+                                    "to": "Graveyard"
                                   }
                                 }
                               }
@@ -70,9 +66,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -87,14 +81,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Zombie"
-          }
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

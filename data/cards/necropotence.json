@@ -33,9 +33,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -43,9 +41,7 @@
                             "exiledFaceDown": true
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -69,17 +65,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -97,9 +89,7 @@
                             "type": "InSlot",
                             "value": "exiled"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -115,27 +105,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -150,9 +134,7 @@
                 "type": "Step",
                 "value": {
                   "type": "Beginning",
-                  "value": {
-                    "type": "DrawStep"
-                  }
+                  "value": "DrawStep"
                 }
               },
               "whosePhase": {
@@ -174,9 +156,7 @@
                     "type": "And",
                     "value": []
                   },
-                  "player": {
-                    "type": "You"
-                  }
+                  "player": "You"
                 }
               }
             }
@@ -190,16 +170,12 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "origin": {
-                            "type": "Graveyard"
-                          },
+                          "origin": "Graveyard",
                           "ref": {
                             "type": "InSlot",
                             "value": "became"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -212,9 +188,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

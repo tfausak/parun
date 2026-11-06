@@ -11,15 +11,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             }
           }
         },
@@ -28,15 +24,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             }
           }
         },
@@ -45,15 +37,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             }
           }
         }
@@ -113,18 +101,14 @@
                                     "type": "Not",
                                     "value": {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Creature"
-                                      }
+                                      "value": "Creature"
                                     }
                                   },
                                   {
                                     "type": "Not",
                                     "value": {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Land"
-                                      }
+                                      "value": "Land"
                                     }
                                   }
                                 ]
@@ -136,9 +120,7 @@
                             }
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -150,16 +132,12 @@
                           "condition": {
                             "type": "Compares",
                             "value": {
-                              "comparison": {
-                                "type": "Exactly"
-                              },
+                              "comparison": "Exactly",
                               "measured": {
                                 "type": "IsActivePlayer",
                                 "value": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 }
                               },
                               "threshold": {
@@ -173,9 +151,7 @@
                             "value": {
                               "type": "Compares",
                               "value": {
-                                "comparison": {
-                                  "type": "Exactly"
-                                },
+                                "comparison": "Exactly",
                                 "measured": {
                                   "type": "Count",
                                   "value": {
@@ -191,12 +167,8 @@
                                         {
                                           "type": "HeldBy",
                                           "value": {
-                                            "holder": {
-                                              "type": "Controller"
-                                            },
-                                            "relation": {
-                                              "type": "You"
-                                            }
+                                            "holder": "Controller",
+                                            "relation": "You"
                                           }
                                         }
                                       ]
@@ -206,13 +178,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         },
-                                        "zone": {
-                                          "type": "Battlefield"
-                                        }
+                                        "zone": "Battlefield"
                                       }
                                     }
                                   }
@@ -228,9 +196,7 @@
                             "type": "InSlot",
                             "value": "exiled"
                           },
-                          "verb": {
-                            "type": "Cast"
-                          }
+                          "verb": "Cast"
                         }
                       }
                     ],
@@ -243,9 +209,7 @@
                   "opponent": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -259,22 +223,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Warlock"
-          }
+          "Human",
+          "Warlock"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

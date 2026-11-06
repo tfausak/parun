@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -63,19 +59,13 @@
                                     "value": [
                                       {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Creature"
-                                        }
+                                        "value": "Creature"
                                       },
                                       {
                                         "type": "HeldBy",
                                         "value": {
-                                          "holder": {
-                                            "type": "Controller"
-                                          },
-                                          "relation": {
-                                            "type": "You"
-                                          }
+                                          "holder": "Controller",
+                                          "relation": "You"
                                         }
                                       }
                                     ]
@@ -85,13 +75,9 @@
                                     "value": {
                                       "player": {
                                         "type": "Relative",
-                                        "value": {
-                                          "type": "AnyPlayer"
-                                        }
+                                        "value": "AnyPlayer"
                                       },
-                                      "zone": {
-                                        "type": "Battlefield"
-                                      }
+                                      "zone": "Battlefield"
                                     }
                                   }
                                 }
@@ -114,15 +100,11 @@
                       "value": [
                         {
                           "type": "IsPlayer",
-                          "value": {
-                            "type": "Opponent"
-                          }
+                          "value": "Opponent"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Planeswalker"
-                          }
+                          "value": "Planeswalker"
                         }
                       ]
                     },
@@ -138,17 +120,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Orc"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Orc",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

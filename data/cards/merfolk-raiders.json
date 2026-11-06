@@ -6,9 +6,7 @@
           "type": "Landwalk",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Island"
-            }
+            "value": "Island"
           }
         },
         {
@@ -24,9 +22,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -42,17 +38,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Merfolk"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Merfolk",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

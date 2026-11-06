@@ -21,21 +21,21 @@ spec s = Spec.describe s "Parun.Codec.PutIntoZoneTrigger" $ do
       s
       PutIntoZoneTrigger.codec
       (PutIntoZoneTrigger.self Zone.Graveyard)
-      " {\"to\":{\"type\":\"Graveyard\"}} "
+      " {\"to\":\"Graveyard\"} "
   -- Narcomoeba: from the library.
   Spec.it s "round-trips an origin" $
     Common.assertCodec
       s
       PutIntoZoneTrigger.codec
       (PutIntoZoneTrigger.self Zone.Graveyard) {PutIntoZoneTrigger.from = Set.singleton Zone.Library}
-      " {\"from\":[{\"type\":\"Library\"}],\"to\":{\"type\":\"Graveyard\"}} "
+      " {\"from\":[\"Library\"],\"to\":\"Graveyard\"} "
   -- CR 702.55a's haunt: during its resolution.
   Spec.it s "round-trips duringResolution" $
     Common.assertCodec
       s
       PutIntoZoneTrigger.codec
       (PutIntoZoneTrigger.self Zone.Graveyard) {PutIntoZoneTrigger.duringResolution = True}
-      " {\"to\":{\"type\":\"Graveyard\"},\"duringResolution\":true} "
+      " {\"to\":\"Graveyard\",\"duringResolution\":true} "
   -- Stonebinder's Familiar: cards, into exile, during your turn, once per batch.
   Spec.it s "round-trips a Matching card, a turn and a batch" $
     Common.assertCodec
@@ -46,5 +46,5 @@ spec s = Spec.describe s "Parun.Codec.PutIntoZoneTrigger" $ do
           PutIntoZoneTrigger.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You),
           PutIntoZoneTrigger.batching = Batching.OneOrMore
         }
-      " {\"card\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"to\":{\"type\":\"Exile\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"batching\":{\"type\":\"OneOrMore\"}} "
+      " {\"card\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"to\":\"Exile\",\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}},\"batching\":\"OneOrMore\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PutIntoZoneTrigger.codec

@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.RoomHalf" $ do
       s
       RoomHalf.codec
       RoomHalf.LeftHalf
-      " {\"type\":\"LeftHalf\"} "
+      " \"LeftHalf\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s RoomHalf.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s RoomHalf.codec

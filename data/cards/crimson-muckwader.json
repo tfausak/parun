@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -35,17 +33,11 @@
                           "effect": {
                             "type": "DestructionR",
                             "value": {
-                              "rewrite": {
-                                "type": "Regenerate"
-                              }
+                              "rewrite": "Regenerate"
                             }
                           },
-                          "origin": {
-                            "type": "Other"
-                          },
-                          "uses": {
-                            "type": "Once"
-                          }
+                          "origin": "Other",
+                          "uses": "Once"
                         }
                       }
                     ]
@@ -65,9 +57,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -88,9 +78,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -102,19 +90,13 @@
                     "value": [
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Swamp"
-                        }
+                        "value": "Swamp"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       }
                     ]
@@ -124,13 +106,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -164,14 +142,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Lizard"
-          }
+          "Lizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

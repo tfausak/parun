@@ -54,9 +54,7 @@
       "do": {
         "Answer": {
           "prompt": "CallCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       }
     },
@@ -67,9 +65,7 @@
       "do": {
         "Answer": {
           "prompt": "CallCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       }
     },
@@ -79,9 +75,7 @@
       "player": "alice",
       "source": "$pokey",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {
@@ -90,9 +84,7 @@
       "player": "alice",
       "source": "$pokey",
       "do": {
-        "ChooseOptional": {
-          "type": "Declines"
-        }
+        "ChooseOptional": "Declines"
       }
     },
     {
@@ -101,9 +93,7 @@
       "player": "alice",
       "source": "$pokey",
       "do": {
-        "ChooseOptional": {
-          "type": "Declines"
-        }
+        "ChooseOptional": "Declines"
       }
     },
     {
@@ -124,9 +114,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Tails"
-          }
+          "with": "Tails"
         }
       }
     },

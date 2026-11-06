@@ -26,9 +26,7 @@
                   "type": "Greatest",
                   "value": {
                     "type": "Measure",
-                    "value": {
-                      "type": "Toughness"
-                    }
+                    "value": "Toughness"
                   }
                 },
                 "filter": {
@@ -36,19 +34,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -58,13 +50,9 @@
                   "value": {
                     "player": {
                       "type": "Relative",
-                      "value": {
-                        "type": "AnyPlayer"
-                      }
+                      "value": "AnyPlayer"
                     },
-                    "zone": {
-                      "type": "Battlefield"
-                    }
+                    "zone": "Battlefield"
                   }
                 }
               }
@@ -83,9 +71,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -102,19 +88,13 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "Measures",
                           "value": {
-                            "comparison": {
-                              "type": "AtMost"
-                            },
-                            "measure": {
-                              "type": "ManaValue"
-                            },
+                            "comparison": "AtMost",
+                            "measure": "ManaValue",
                             "operand": {
                               "type": "EnclosingAmount"
                             }
@@ -152,9 +132,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -196,9 +174,7 @@
                             "value": {
                               "filter": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               "graveyards": {
                                 "type": "Scoped",
@@ -220,9 +196,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

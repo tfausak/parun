@@ -37,18 +37,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -68,9 +64,7 @@
             "type": "PlayerDrawsNthCard",
             "value": {
               "nth": 2,
-              "player": {
-                "type": "Opponent"
-              }
+              "player": "Opponent"
             }
           },
           "modal": {
@@ -84,9 +78,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -104,19 +96,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Serpent"
-          }
+          "Serpent"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

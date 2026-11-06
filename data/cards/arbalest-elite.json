@@ -18,9 +18,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -61,14 +59,10 @@
                             "type": "DuringNextUntapStepOf",
                             "value": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             }
                           },
-                          "what": {
-                            "type": "Untap"
-                          }
+                          "what": "Untap"
                         }
                       }
                     ]
@@ -106,18 +100,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -133,17 +123,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Archer"
-          },
-          {
-            "type": "Human"
-          }
+          "Archer",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

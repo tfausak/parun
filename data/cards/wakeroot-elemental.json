@@ -9,45 +9,35 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -74,12 +64,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Creature"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Creature",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -97,12 +83,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "InAddition"
-                              },
-                              "subtype": {
-                                "type": "Elemental"
-                              }
+                              "mode": "InAddition",
+                              "subtype": "Elemental"
                             }
                           },
                           "ref": {
@@ -164,19 +146,13 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Land"
-                          }
+                          "value": "Land"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -200,18 +176,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -227,14 +199,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          }
+          "Elemental"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

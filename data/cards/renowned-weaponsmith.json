@@ -29,15 +29,11 @@
                           "restriction": {
                             "activations": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             },
                             "casts": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             }
                           }
                         }
@@ -54,15 +50,11 @@
                           "restriction": {
                             "activations": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             },
                             "casts": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             }
                           }
                         }
@@ -86,9 +78,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -102,9 +92,7 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "RevealThenHand"
-                          },
+                          "destination": "RevealThenHand",
                           "filter": {
                             "type": "Or",
                             "value": [
@@ -120,9 +108,7 @@
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -130,9 +116,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -153,9 +137,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -171,17 +153,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Artificer"
-          },
-          {
-            "type": "Human"
-          }
+          "Artificer",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

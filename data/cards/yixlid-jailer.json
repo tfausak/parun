@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -28,9 +26,7 @@
             "type": "MatchingOffBattlefield",
             "value": {
               "type": "IsInZone",
-              "value": {
-                "type": "Graveyard"
-              }
+              "value": "Graveyard"
             }
           },
           "modifications": [
@@ -46,17 +42,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Wizard"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Wizard",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

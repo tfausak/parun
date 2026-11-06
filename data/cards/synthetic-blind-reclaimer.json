@@ -55,9 +55,7 @@
       "name": "Synthetic Blind Reclaimer",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

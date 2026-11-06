@@ -21,9 +21,7 @@
                   "value": []
                 }
               },
-              "status": {
-                "type": "Untapped"
-              }
+              "status": "Untapped"
             }
           },
           "modal": {
@@ -38,12 +36,8 @@
                           "player": {
                             "type": "HolderOfBound",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "hop": {
-                                "type": "Itself"
-                              },
+                              "holder": "Controller",
+                              "hop": "Itself",
                               "slot": "thatUntappedPermanent"
                             }
                           },
@@ -63,9 +57,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -11,9 +11,7 @@
                 "type": "IsSource"
               }
             },
-            "comparison": {
-              "type": "AtLeast"
-            },
+            "comparison": "AtLeast",
             "limit": 3
           }
         }
@@ -32,9 +30,7 @@
             },
             "searchFor": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Swamp"
-              }
+              "value": "Swamp"
             }
           }
         }
@@ -48,9 +44,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -66,14 +60,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Troll"
-          }
+          "Troll"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

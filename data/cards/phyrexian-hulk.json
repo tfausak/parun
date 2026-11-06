@@ -19,20 +19,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Golem"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Golem",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

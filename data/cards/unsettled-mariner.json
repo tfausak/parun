@@ -11,18 +11,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -41,9 +37,7 @@
           "condition": {
             "type": "BecomesTargeted",
             "value": {
-              "relation": {
-                "type": "Opponent"
-              },
+              "relation": "Opponent",
               "subject": {
                 "type": "YouOrPermanent",
                 "value": {
@@ -51,12 +45,8 @@
                   "value": {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   }
                 }
@@ -80,9 +70,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "mana": [
                           {
@@ -94,12 +82,8 @@
                       "payer": {
                         "type": "HolderOfBound",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "hop": {
-                            "type": "Itself"
-                          },
+                          "holder": "Controller",
+                          "hop": "Itself",
                           "slot": "thatTargetingObject"
                         }
                       }
@@ -113,14 +97,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Shapeshifter"
-          }
+          "Shapeshifter"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

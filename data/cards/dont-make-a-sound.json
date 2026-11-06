@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -35,9 +33,7 @@
                   }
                 ],
                 "payGate": {
-                  "branch": {
-                    "type": "IfNotPaid"
-                  },
+                  "branch": "IfNotPaid",
                   "cost": {
                     "mana": [
                       {
@@ -49,12 +45,8 @@
                   "payer": {
                     "type": "HolderOfBound",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "hop": {
-                        "type": "Itself"
-                      },
+                      "holder": "Controller",
+                      "hop": "Itself",
                       "slot": "spell"
                     }
                   }
@@ -67,9 +59,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -79,9 +69,7 @@
                   }
                 ],
                 "payGate": {
-                  "branch": {
-                    "type": "IfPaid"
-                  },
+                  "branch": "IfPaid",
                   "cost": {
                     "mana": [
                       {
@@ -94,12 +82,8 @@
                   "payer": {
                     "type": "HolderOfBound",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "hop": {
-                        "type": "Itself"
-                      },
+                      "holder": "Controller",
+                      "hop": "Itself",
                       "slot": "spell"
                     }
                   }
@@ -118,9 +102,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

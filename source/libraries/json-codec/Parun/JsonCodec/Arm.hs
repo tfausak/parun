@@ -195,7 +195,9 @@ taggedWith enc arms =
             pure (Schema.oneOf schemas)
         }
 
--- | The whole codec for an ALL-NULLARY tagged sum, derived from the datatype.
+-- | The whole codec for an ALL-NULLARY sum, derived from the datatype: every
+-- value is its bare tag, a string, since @{"type": "Red"}@ says nothing
+-- @"Red"@ does not (#2171).
 --
 -- @[minBound ..]@ is the arm list and derived 'Show' is the tag, so neither half
 -- carries anything the type does not already say. A constructor added to the
@@ -211,10 +213,25 @@ taggedWith enc arms =
 -- Only for types whose constructors are ALL nullary. One that grows a payload
 -- loses @Enum@, which is a compile error here rather than a silent wrong answer.
 --
--- Decoding is 'tagged'\'s linear scan over the arm list, unchanged: this
--- replaces a hand-written list of the same length rather than adding one.
+-- The decoder also reads the older @{"type": tag}@ object, and the schema
+-- admits it, so a document written before the change still loads. A nullary
+-- arm of a MIXED sum stays an object: that is 'tagged'\'s format, not this.
 enum :: forall a. (Bounded a, Enum a, Eq a, Show a, Typeable.Typeable a) => Codec.Codec a
-enum = taggedWith (Common.nullary . show) (fmap (\c -> nullary (show c) c) [minBound .. maxBound :: a])
+enum =
+  let values = [minBound .. maxBound :: a]
+      codec = taggedWith (Value.string . show) (fmap (\c -> nullary (show c) c) values)
+      tags = fmap (Schema.constant . Text.pack . show) values
+   in codec
+        { Codec.decode = \value -> case value of
+            Value.String _ -> Codec.decode codec . Common.nullary . Text.unpack =<< Common.asText value
+            _ -> Codec.decode codec value,
+          Codec.schema =
+            Define.define (Name.typeName (Typeable.Proxy :: Typeable.Proxy a)) . pure $
+              Schema.oneOf
+                [ Schema.oneOf tags,
+                  Schema.object [Value.pair "type" (Schema.oneOf tags)] [Text.pack "type"]
+                ]
+        }
 
 -- | The arms EXTERNALLY tagged: a nullary arm is its bare tag, a payload arm an
 -- object whose one key is its tag. For a document people write by hand, where
@@ -230,13 +247,6 @@ keyed :: forall a. (Typeable.Typeable a) => (a -> String) -> [Arm a] -> Codec.Co
 keyed tagOf arms =
   let codec = keyedAnonymous tagOf arms
    in codec {Codec.schema = Define.define (Name.typeName (Typeable.Proxy :: Typeable.Proxy a)) (Codec.schema codec)}
-
--- | 'keyed' for an ALL-NULLARY type, derived as 'enum' is: every value is a
--- bare string. Not filed in @$defs@, because a type with one wire format there
--- already -- 'Parun.Types.TapState' has 'enum''s -- would collide on its name,
--- and 'Define.define' memoizes on the name alone.
-keyedEnum :: forall a. (Bounded a, Enum a, Eq a, Show a) => Codec.Codec a
-keyedEnum = keyedAnonymous show (fmap (\c -> nullary (show c) c) [minBound .. maxBound :: a])
 
 -- | 'keyed' not filed in @$defs@, on 'anonymous'\'s ground: for a second wire
 -- format of a type that already has one there. Parun.Codec.Phase's flat step

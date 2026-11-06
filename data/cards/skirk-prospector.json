@@ -14,9 +14,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Goblin"
-                    }
+                    "value": "Goblin"
                   }
                 }
               }
@@ -36,9 +34,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         }
@@ -56,9 +52,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -74,14 +68,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          }
+          "Goblin"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

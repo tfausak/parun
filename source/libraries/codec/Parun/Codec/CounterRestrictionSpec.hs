@@ -23,7 +23,7 @@ spec s = Spec.describe s "Parun.Codec.CounterRestriction" $ do
           (Affected.Matching (Filter.HasCardType CardType.Creature))
           Nothing
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- Melira, Sylvok Outcast's second sentence, which names one.
   Spec.it s "MkCounterRestriction, a named kind" $
     Common.assertCodec
@@ -33,5 +33,5 @@ spec s = Spec.describe s "Parun.Codec.CounterRestriction" $ do
           (Affected.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You))
           (Just CounterKind.MinusOneMinusOne)
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"kind\":{\"type\":\"MinusOneMinusOne\"}} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}},\"kind\":{\"type\":\"MinusOneMinusOne\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CounterRestriction.codec

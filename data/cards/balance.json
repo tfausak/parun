@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -58,15 +56,11 @@
                                                 "value": [
                                                   {
                                                     "type": "HasCardType",
-                                                    "value": {
-                                                      "type": "Land"
-                                                    }
+                                                    "value": "Land"
                                                   },
                                                   {
                                                     "type": "HeldByRecipient",
-                                                    "value": {
-                                                      "type": "Controller"
-                                                    }
+                                                    "value": "Controller"
                                                   }
                                                 ]
                                               },
@@ -75,13 +69,9 @@
                                                 "value": {
                                                   "player": {
                                                     "type": "Relative",
-                                                    "value": {
-                                                      "type": "AnyPlayer"
-                                                    }
+                                                    "value": "AnyPlayer"
                                                   },
-                                                  "zone": {
-                                                    "type": "Battlefield"
-                                                  }
+                                                  "zone": "Battlefield"
                                                 }
                                               }
                                             }
@@ -96,9 +86,7 @@
                                         "type": "OverPlayers",
                                         "value": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         }
                                       }
                                     }
@@ -110,16 +98,12 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Land"
-                                    }
+                                    "value": "Land"
                                   },
                                   {
                                     "type": "HeldByBound",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
+                                      "holder": "Controller",
                                       "slot": "player"
                                     }
                                   }
@@ -135,9 +119,7 @@
                         "value": {
                           "players": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           }
                         }
                       },
@@ -154,9 +136,7 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Land"
-                              }
+                              "value": "Land"
                             },
                             {
                               "type": "Not",
@@ -168,9 +148,7 @@
                           ]
                         }
                       },
-                      "sacrificer": {
-                        "type": "PermanentController"
-                      }
+                      "sacrificer": "PermanentController"
                     }
                   },
                   {
@@ -180,9 +158,7 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
                         "quantity": {
                           "type": "Plus",
@@ -203,9 +179,7 @@
                                     "player": {
                                       "type": "Candidate"
                                     },
-                                    "zone": {
-                                      "type": "Hand"
-                                    }
+                                    "zone": "Hand"
                                   }
                                 }
                               }
@@ -225,22 +199,16 @@
                                         },
                                         "filter": {
                                           "type": "HeldByRecipient",
-                                          "value": {
-                                            "type": "Owner"
-                                          }
+                                          "value": "Owner"
                                         },
                                         "scope": {
                                           "type": "InZone",
                                           "value": {
                                             "player": {
                                               "type": "Relative",
-                                              "value": {
-                                                "type": "AnyPlayer"
-                                              }
+                                              "value": "AnyPlayer"
                                             },
-                                            "zone": {
-                                              "type": "Hand"
-                                            }
+                                            "zone": "Hand"
                                           }
                                         }
                                       }
@@ -255,9 +223,7 @@
                                   "type": "OverPlayers",
                                   "value": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   }
                                 }
                               }
@@ -301,15 +267,11 @@
                                                 "value": [
                                                   {
                                                     "type": "HasCardType",
-                                                    "value": {
-                                                      "type": "Creature"
-                                                    }
+                                                    "value": "Creature"
                                                   },
                                                   {
                                                     "type": "HeldByRecipient",
-                                                    "value": {
-                                                      "type": "Controller"
-                                                    }
+                                                    "value": "Controller"
                                                   }
                                                 ]
                                               },
@@ -318,13 +280,9 @@
                                                 "value": {
                                                   "player": {
                                                     "type": "Relative",
-                                                    "value": {
-                                                      "type": "AnyPlayer"
-                                                    }
+                                                    "value": "AnyPlayer"
                                                   },
-                                                  "zone": {
-                                                    "type": "Battlefield"
-                                                  }
+                                                  "zone": "Battlefield"
                                                 }
                                               }
                                             }
@@ -339,9 +297,7 @@
                                         "type": "OverPlayers",
                                         "value": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         }
                                       }
                                     }
@@ -353,16 +309,12 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "HeldByBound",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
+                                      "holder": "Controller",
                                       "slot": "player"
                                     }
                                   }
@@ -378,9 +330,7 @@
                         "value": {
                           "players": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           }
                         }
                       },
@@ -397,9 +347,7 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "Not",
@@ -411,9 +359,7 @@
                           ]
                         }
                       },
-                      "sacrificer": {
-                        "type": "PermanentController"
-                      }
+                      "sacrificer": "PermanentController"
                     }
                   }
                 ]
@@ -424,9 +370,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

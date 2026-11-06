@@ -18,9 +18,7 @@
             "unless": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "AtLeast"
-                },
+                "comparison": "AtLeast",
                 "measured": {
                   "type": "Count",
                   "value": {
@@ -35,15 +33,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "ControlledByRole",
-                          "value": {
-                            "type": "Defending"
-                          }
+                          "value": "Defending"
                         }
                       ]
                     },
@@ -52,13 +46,9 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
-                        "zone": {
-                          "type": "Battlefield"
-                        }
+                        "zone": "Battlefield"
                       }
                     }
                   }
@@ -81,9 +71,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -99,14 +87,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          }
+          "Beast"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

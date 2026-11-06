@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -47,17 +43,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -65,16 +57,12 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "AttackersDeclaredThisTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -104,9 +92,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "components": [
                           {
@@ -120,9 +106,7 @@
                                 "type": "Not",
                                 "value": {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Land"
-                                  }
+                                  "value": "Land"
                                 }
                               }
                             }
@@ -152,9 +136,7 @@
                       ],
                       "payer": {
                         "type": "Relative",
-                        "value": {
-                          "type": "Opponent"
-                        }
+                        "value": "Opponent"
                       }
                     }
                   }
@@ -166,14 +148,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Devil"
-          }
+          "Devil"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

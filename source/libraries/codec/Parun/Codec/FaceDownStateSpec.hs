@@ -22,7 +22,7 @@ spec s = Spec.describe s "Parun.Codec.FaceDownState" $ do
           FaceDownState.listed = FaceDownCharacteristics.defaultValue,
           FaceDownState.turnsUpBefore = Set.empty
         }
-      " {\"reason\":{\"type\":\"Morphed\"},\"listed\":{}} "
+      " {\"reason\":\"Morphed\",\"listed\":{}} "
   -- Disguise lists ward {2} (CR 702.168b), so the two fields differ and neither
   -- can stand in for the other.
   Spec.it s "a disguised object carries the listing its allower made" $
@@ -34,7 +34,7 @@ spec s = Spec.describe s "Parun.Codec.FaceDownState" $ do
           FaceDownState.listed = FaceDownCharacteristics.disguisedValue,
           FaceDownState.turnsUpBefore = Set.empty
         }
-      " {\"reason\":{\"type\":\"Disguised\"},\"listed\":{\"keywords\":[{\"type\":\"Ward\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}}}]}} "
+      " {\"reason\":\"Disguised\",\"listed\":{\"keywords\":[{\"type\":\"Ward\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}}}]}} "
   -- Illusionary Mask's replacement rides the status its cast gave the
   -- permanent (CR 614.1a), so the events are a third key.
   Spec.it s "a masked object carries the events it turns face up before" $
@@ -46,6 +46,6 @@ spec s = Spec.describe s "Parun.Codec.FaceDownState" $ do
           FaceDownState.listed = FaceDownCharacteristics.defaultValue,
           FaceDownState.turnsUpBefore = Set.fromList [TurnUpEvent.DealsDamage, TurnUpEvent.BecomesTapped]
         }
-      " {\"reason\":{\"type\":\"CastFaceDown\"},\"listed\":{},\"turnsUpBefore\":[{\"type\":\"DealsDamage\"},{\"type\":\"BecomesTapped\"}]} "
+      " {\"reason\":\"CastFaceDown\",\"listed\":{},\"turnsUpBefore\":[\"DealsDamage\",\"BecomesTapped\"]} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s (FaceDownState.codec Common.text)

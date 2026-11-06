@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -44,13 +40,9 @@
               "value": {
                 "attacked": {
                   "type": "Related",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "attacker": {
-                  "type": "AnyPlayer"
-                }
+                "attacker": "AnyPlayer"
               }
             }
           },
@@ -108,18 +100,14 @@
             "value": {
               "type": "Declaration",
               "value": {
-                "player": {
-                  "type": "AnyPlayer"
-                }
+                "player": "AnyPlayer"
               }
             }
           },
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtMost"
-              },
+              "comparison": "AtMost",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -131,16 +119,12 @@
                     "value": [
                       {
                         "type": "IsAttackingPlayer",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       {
                         "type": "HeldByBound",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
+                          "holder": "Controller",
                           "slot": "thatAttackingPlayer"
                         }
                       }
@@ -151,13 +135,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -217,17 +197,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Scout"
-          }
+          "Elf",
+          "Scout"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -61,9 +59,7 @@
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "Red"
-                                          }
+                                          "value": "Red"
                                         }
                                       }
                                     ],
@@ -122,14 +118,10 @@
                                     ],
                                     "typeLine": {
                                       "subtypes": [
-                                        {
-                                          "type": "Kavu"
-                                        }
+                                        "Kavu"
                                       ],
                                       "types": [
-                                        {
-                                          "type": "Creature"
-                                        }
+                                        "Creature"
                                       ]
                                     }
                                   }
@@ -180,17 +172,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Kavu"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Kavu",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

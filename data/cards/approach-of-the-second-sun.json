@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -29,9 +27,7 @@
                     {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -46,19 +42,13 @@
                                 },
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Hand"
-                                  }
+                                  "value": "Hand"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Owner"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Owner",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -68,13 +58,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
+                                  "value": "AnyPlayer"
                                 },
-                                "zone": {
-                                  "type": "Stack"
-                                }
+                                "zone": "Stack"
                               }
                             }
                           }
@@ -88,9 +74,7 @@
                     {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -103,12 +87,8 @@
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 },
                                 {
@@ -121,9 +101,7 @@
                               "type": "InHistory",
                               "value": {
                                 "type": "SpellCast",
-                                "value": {
-                                  "type": "ThisGame"
-                                }
+                                "value": "ThisGame"
                               }
                             }
                           }
@@ -141,9 +119,7 @@
                     "type": "WinGame",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     }
                   }
                 ]
@@ -155,9 +131,7 @@
                     {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtMost"
-                        },
+                        "comparison": "AtMost",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -172,19 +146,13 @@
                                 },
                                 {
                                   "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Hand"
-                                  }
+                                  "value": "Hand"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Owner"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Owner",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -194,13 +162,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
+                                  "value": "AnyPlayer"
                                 },
-                                "zone": {
-                                  "type": "Stack"
-                                }
+                                "zone": "Stack"
                               }
                             }
                           }
@@ -214,9 +178,7 @@
                     {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtMost"
-                        },
+                        "comparison": "AtMost",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -229,12 +191,8 @@
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 },
                                 {
@@ -247,9 +205,7 @@
                               "type": "InHistory",
                               "value": {
                                 "type": "SpellCast",
-                                "value": {
-                                  "type": "ThisGame"
-                                }
+                                "value": "ThisGame"
                               }
                             }
                           }
@@ -277,9 +233,7 @@
                         "type": "InSlot",
                         "value": "self"
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   },
                   {
@@ -287,9 +241,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -305,9 +257,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

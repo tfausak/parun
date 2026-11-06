@@ -23,5 +23,5 @@ spec s = Spec.describe s "Parun.Codec.ActivateManaAbilities" $ do
             ActivateManaAbilities.player = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))
           }
       )
-      " {\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"player\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
+      " {\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"player\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ActivateManaAbilities.codec

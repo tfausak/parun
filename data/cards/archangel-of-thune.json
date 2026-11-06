@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -48,12 +44,8 @@
           "condition": {
             "type": "LifeChanges",
             "value": {
-              "direction": {
-                "type": "Gained"
-              },
-              "player": {
-                "type": "You"
-              }
+              "direction": "Gained",
+              "player": "You"
             }
           },
           "modal": {
@@ -79,19 +71,13 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -109,14 +95,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Angel"
-          }
+          "Angel"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

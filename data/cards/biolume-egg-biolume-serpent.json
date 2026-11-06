@@ -8,17 +8,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -42,9 +38,7 @@
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -69,9 +63,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -102,9 +94,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -126,9 +116,7 @@
               "filter": {
                 "type": "IsSource"
               },
-              "player": {
-                "type": "You"
-              }
+              "player": "You"
             }
           },
           "modal": {
@@ -153,17 +141,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Egg"
-          },
-          {
-            "type": "Serpent"
-          }
+          "Egg",
+          "Serpent"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
@@ -181,9 +163,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Island"
-                    }
+                    "value": "Island"
                   }
                 }
               }
@@ -221,9 +201,7 @@
         }
       ],
       "colorIndicator": [
-        {
-          "type": "Blue"
-        }
+        "Blue"
       ],
       "name": "Biolume Serpent",
       "oracleText": "Sacrifice two Islands: This creature can't be blocked this turn.",
@@ -237,14 +215,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Serpent"
-          }
+          "Serpent"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

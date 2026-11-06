@@ -11,9 +11,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -34,9 +32,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -51,9 +47,7 @@
                     "type": "OverPlayers",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     }
                   }
                 }
@@ -87,14 +81,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Illusion"
-          }
+          "Illusion"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

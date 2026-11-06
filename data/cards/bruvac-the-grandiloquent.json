@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -27,9 +25,7 @@
           "effect": {
             "type": "InstructionR",
             "value": {
-              "instruction": {
-                "type": "MillCards"
-              },
+              "instruction": "MillCards",
               "rewrite": {
                 "type": "Scaled",
                 "value": {
@@ -50,22 +46,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Advisor"
-          },
-          {
-            "type": "Human"
-          }
+          "Advisor",
+          "Human"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

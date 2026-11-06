@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -65,19 +61,13 @@
                                 "value": [
                                   {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Elf"
-                                    }
+                                    "value": "Elf"
                                   },
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "You"
                                     }
                                   }
                                 ]
@@ -87,13 +77,9 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   },
-                                  "zone": {
-                                    "type": "Battlefield"
-                                  }
+                                  "zone": "Battlefield"
                                 }
                               }
                             }
@@ -107,9 +93,7 @@
                   "target": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -123,17 +107,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Elf",
+          "Shaman"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

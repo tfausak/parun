@@ -22,9 +22,7 @@
                         "value": {
                           "quantity": {
                             "type": "Measure",
-                            "value": {
-                              "type": "Power"
-                            }
+                            "value": "Power"
                           },
                           "slot": "power"
                         }
@@ -48,30 +46,20 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 },
                                 {
                                   "type": "Measures",
                                   "value": {
-                                    "comparison": {
-                                      "type": "LessThan"
-                                    },
-                                    "measure": {
-                                      "type": "Power"
-                                    },
+                                    "comparison": "LessThan",
+                                    "measure": "Power",
                                     "operand": {
                                       "type": "AmountInSlot",
                                       "value": "power"
@@ -100,18 +88,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -144,9 +128,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  }
+                                  "White"
                                 ],
                                 "name": "Soldier Token",
                                 "power": {
@@ -159,14 +141,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Soldier"
-                                    }
+                                    "Soldier"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -183,19 +161,13 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "You"
                                     }
                                   },
                                   {
@@ -211,13 +183,9 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   },
-                                  "zone": {
-                                    "type": "Battlefield"
-                                  }
+                                  "zone": "Battlefield"
                                 }
                               }
                             }
@@ -234,22 +202,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Knight"
-          }
+          "Human",
+          "Knight"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

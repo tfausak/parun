@@ -29,9 +29,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -53,9 +51,7 @@
                             "exiledFaceDown": true
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -104,13 +100,9 @@
                               "from": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
+                                  "value": "AnyPlayer"
                                 },
-                                "zone": {
-                                  "type": "Exile"
-                                }
+                                "zone": "Exile"
                               },
                               "matching": {
                                 "type": "And",
@@ -123,9 +115,7 @@
                                 }
                               },
                               "reduction": 2,
-                              "verb": {
-                                "type": "Play"
-                              }
+                              "verb": "Play"
                             }
                           },
                           "players": {
@@ -149,18 +139,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -186,12 +172,8 @@
                     "type": "And",
                     "value": []
                   },
-                  "from": {
-                    "type": "Exile"
-                  },
-                  "player": {
-                    "type": "You"
-                  }
+                  "from": "Exile",
+                  "player": "You"
                 }
               },
               {
@@ -201,9 +183,7 @@
                     "type": "PlayersTurn",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "AnyPlayer"
-                      }
+                      "value": "AnyPlayer"
                     }
                   },
                   "spell": {
@@ -211,18 +191,12 @@
                     "value": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   },
-                  "zone": {
-                    "type": "Exile"
-                  }
+                  "zone": "Exile"
                 }
               }
             ]
@@ -238,9 +212,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -258,22 +230,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Advisor"
-          },
-          {
-            "type": "Elf"
-          }
+          "Advisor",
+          "Elf"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

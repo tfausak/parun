@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -35,18 +33,14 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtMost"
-              },
+              "comparison": "AtMost",
               "measured": {
                 "type": "CompletedDungeon",
                 "value": {
                   "dungeon": "Tomb of Annihilation",
                   "player": {
                     "type": "Relative",
-                    "value": {
-                      "type": "You"
-                    }
+                    "value": "You"
                   }
                 }
               },
@@ -69,9 +63,7 @@
                             "type": "InSlot",
                             "value": "self"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       },
                       {
@@ -105,9 +97,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Black"
-                                  }
+                                  "Black"
                                 ],
                                 "name": "Zombie Token",
                                 "power": {
@@ -120,14 +110,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Zombie"
-                                    }
+                                    "Zombie"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -156,9 +142,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "components": [
                           {
@@ -170,9 +154,7 @@
                               },
                               "whichPermanents": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               }
                             }
                           }
@@ -181,9 +163,7 @@
                       },
                       "payer": {
                         "type": "Relative",
-                        "value": {
-                          "type": "Opponent"
-                        }
+                        "value": "Opponent"
                       }
                     }
                   }
@@ -195,22 +175,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Wizard"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Wizard",
+          "Zombie"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

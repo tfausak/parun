@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -49,16 +47,12 @@
                         "value": {
                           "filter": {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Equipment"
-                            }
+                            "value": "Equipment"
                           },
                           "slot": "target"
                         }
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -76,9 +70,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

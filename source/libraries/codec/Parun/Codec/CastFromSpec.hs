@@ -31,7 +31,7 @@ spec s = Spec.describe s "Parun.Codec.CastFrom" $ do
             CastFrom.from = InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You)
           }
       )
-      " {\"from\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"zone\":{\"type\":\"Graveyard\"}}} "
+      " {\"from\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"zone\":\"Graveyard\"}} "
   -- Breathless Knight's "you cast it from A graveyard": the caster is still CR
   -- 109.5's "you" and the zone's owner is the whole table, which is the pairing
   -- one reference could not state.
@@ -44,7 +44,7 @@ spec s = Spec.describe s "Parun.Codec.CastFrom" $ do
             CastFrom.from = InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.AnyPlayer)
           }
       )
-      " {\"from\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"zone\":{\"type\":\"Graveyard\"}}} "
+      " {\"from\":{\"player\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"},\"zone\":\"Graveyard\"}} "
   -- Fblthp, the Lost's agentless "was cast from your library": the halves
   -- constrained the OTHER way round, and the case that makes the caster a field
   -- rather than a default nobody overrides.
@@ -57,7 +57,7 @@ spec s = Spec.describe s "Parun.Codec.CastFrom" $ do
             CastFrom.from = InZone.MkInZone Zone.Library (PlayerRef.Relative PlayerRelation.You)
           }
       )
-      " {\"caster\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"from\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"zone\":{\"type\":\"Library\"}}} "
+      " {\"caster\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"},\"from\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"zone\":\"Library\"}} "
   -- CR 400.1's invariant is inherited rather than restated: `from` is
   -- Parun.Codec.InZone's codec, so the pairing it rejects is rejected here. The
   -- accepted payload above and this one differ in the ZONE alone.

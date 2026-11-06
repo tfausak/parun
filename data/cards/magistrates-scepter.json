@@ -66,9 +66,7 @@
                       "value": "charge"
                     }
                   },
-                  "spread": {
-                    "type": "FromAmong"
-                  },
+                  "spread": "FromAmong",
                   "whichPermanent": {
                     "type": "IsSource"
                   }
@@ -88,9 +86,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "skips": []
                         }
@@ -113,9 +109,7 @@
       "oracleText": "{4}, {T}: Put a charge counter on this artifact.\n{T}, Remove three charge counters from this artifact: Take an extra turn after this one.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -49,13 +47,9 @@
                         "type": "Colors",
                         "value": {
                           "colors": [
-                            {
-                              "type": "Blue"
-                            }
+                            "Blue"
                           ],
-                          "mode": {
-                            "type": "Replace"
-                          }
+                          "mode": "Replace"
                         }
                       },
                       "ref": {
@@ -73,12 +67,8 @@
                       "modification": {
                         "type": "CreatureSubtype",
                         "value": {
-                          "mode": {
-                            "type": "Replace"
-                          },
-                          "subtype": {
-                            "type": "Frog"
-                          }
+                          "mode": "Replace",
+                          "subtype": "Frog"
                         }
                       },
                       "ref": {
@@ -127,9 +117,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

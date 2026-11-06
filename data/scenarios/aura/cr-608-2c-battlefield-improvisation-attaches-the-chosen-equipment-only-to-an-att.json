@@ -87,9 +87,7 @@
       "player": "alice",
       "source": "Battlefield Improvisation",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {

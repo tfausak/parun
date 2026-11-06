@@ -14,9 +14,7 @@
                 "value": [
                   {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Equipment"
-                    }
+                    "value": "Equipment"
                   },
                   {
                     "type": "IsAttachedTo",
@@ -31,13 +29,9 @@
                 "value": {
                   "player": {
                     "type": "Relative",
-                    "value": {
-                      "type": "AnyPlayer"
-                    }
+                    "value": "AnyPlayer"
                   },
-                  "zone": {
-                    "type": "Battlefield"
-                  }
+                  "zone": "Battlefield"
                 }
               }
             }
@@ -64,18 +58,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -91,17 +81,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Cat",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

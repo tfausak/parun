@@ -13,17 +13,13 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 {
                   "type": "Not",
                   "value": {
                     "type": "HasSupertype",
-                    "value": {
-                      "type": "Basic"
-                    }
+                    "value": "Basic"
                   }
                 }
               ]
@@ -33,13 +29,9 @@
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               }
             }
           }
@@ -55,17 +47,13 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 {
                   "type": "Not",
                   "value": {
                     "type": "HasSupertype",
-                    "value": {
-                      "type": "Basic"
-                    }
+                    "value": "Basic"
                   }
                 }
               ]
@@ -75,13 +63,9 @@
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               }
             }
           }
@@ -104,9 +88,7 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Red"
-                    }
+                    "value": "Red"
                   }
                 }
               ]
@@ -127,18 +109,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -155,9 +133,7 @@
           "condition": {
             "type": "CountersChange",
             "value": {
-              "grouping": {
-                "type": "EachCounter"
-              },
+              "grouping": "EachCounter",
               "kind": {
                 "type": "Time"
               },
@@ -167,9 +143,7 @@
             }
           },
           "functionsFrom": [
-            {
-              "type": "Exile"
-            }
+            "Exile"
           ],
           "modal": {
             "modes": [
@@ -184,9 +158,7 @@
                             "type": "InSlot",
                             "value": "land"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -199,17 +171,13 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Land"
-                          }
+                          "value": "Land"
                         },
                         {
                           "type": "Not",
                           "value": {
                             "type": "HasSupertype",
-                            "value": {
-                              "type": "Basic"
-                            }
+                            "value": "Basic"
                           }
                         }
                       ]
@@ -226,14 +194,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Lhurgoyf"
-          }
+          "Lhurgoyf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

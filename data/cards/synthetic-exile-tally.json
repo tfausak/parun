@@ -21,9 +21,7 @@
           "condition": {
             "type": "LeavesZone",
             "value": {
-              "batching": {
-                "type": "OneOrMore"
-              },
+              "batching": "OneOrMore",
               "card": {
                 "type": "Matching",
                 "value": {
@@ -31,9 +29,7 @@
                   "value": []
                 }
               },
-              "from": {
-                "type": "Exile"
-              }
+              "from": "Exile"
             }
           },
           "modal": {
@@ -47,9 +43,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "InSlot",
@@ -67,14 +61,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Spirit"
-          }
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

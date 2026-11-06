@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -27,9 +25,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               },
               "spell": {
@@ -39,15 +35,11 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Instant"
-                      }
+                      "value": "Instant"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Sorcery"
-                      }
+                      "value": "Sorcery"
                     }
                   ]
                 }
@@ -103,9 +95,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

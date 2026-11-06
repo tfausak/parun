@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -61,9 +57,7 @@
                           },
                           "filter": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Artifact"
-                            }
+                            "value": "Artifact"
                           },
                           "players": {
                             "type": "InSlot",
@@ -71,9 +65,7 @@
                           }
                         }
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 ],
@@ -86,9 +78,7 @@
               "opponent": {
                 "filter": {
                   "type": "IsPlayer",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
                 "pool": {
                   "type": "Players"
@@ -100,9 +90,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

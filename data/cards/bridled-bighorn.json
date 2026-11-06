@@ -19,9 +19,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -50,9 +48,7 @@
                     },
                     {
                       "type": "HasDesignation",
-                      "value": {
-                        "type": "Saddled"
-                      }
+                      "value": "Saddled"
                     }
                   ]
                 }
@@ -72,9 +68,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  }
+                                  "White"
                                 ],
                                 "name": "Sheep Token",
                                 "power": {
@@ -87,14 +81,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Sheep"
-                                    }
+                                    "Sheep"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -116,17 +106,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Mount"
-          },
-          {
-            "type": "Sheep"
-          }
+          "Mount",
+          "Sheep"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

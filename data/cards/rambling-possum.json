@@ -16,9 +16,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -47,9 +45,7 @@
                     },
                     {
                       "type": "HasDesignation",
-                      "value": {
-                        "type": "Saddled"
-                      }
+                      "value": "Saddled"
                     }
                   ]
                 }
@@ -101,9 +97,7 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "SaddledSourceThisTurn"
@@ -112,9 +106,7 @@
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -127,17 +119,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Mount"
-          },
-          {
-            "type": "Possum"
-          }
+          "Mount",
+          "Possum"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

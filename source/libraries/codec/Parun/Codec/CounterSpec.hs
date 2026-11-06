@@ -47,5 +47,5 @@ spec s = Spec.describe s "Parun.Codec.Counter" $ do
       s
       Counter.codec
       (Counter.MkCounter (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "spell"))) Nothing Nothing (Just (CounterDestination.MkCounterDestination Zone.Exile (CounteredEnd.Stated LibraryPosition.Bottom) Nothing (Just (SlotName.MkSlotName (Text.pack "delayed"))))))
-      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"spell\"},\"instead\":{\"zone\":{\"type\":\"Exile\"},\"slot\":\"delayed\"}} "
+      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"spell\"},\"instead\":{\"zone\":\"Exile\",\"slot\":\"delayed\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Counter.codec

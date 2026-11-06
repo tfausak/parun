@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -52,9 +50,7 @@
                             "value": {
                               "quantity": {
                                 "type": "Measure",
-                                "value": {
-                                  "type": "Power"
-                                }
+                                "value": "Power"
                               },
                               "slot": "thatSacrificedPermanent"
                             }
@@ -67,9 +63,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "components": [
                           {
@@ -84,9 +78,7 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "Not",
@@ -103,9 +95,7 @@
                       },
                       "payer": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -120,9 +110,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -138,13 +126,9 @@
                         "value": {
                           "quantity": {
                             "type": "Measure",
-                            "value": {
-                              "type": "Power"
-                            }
+                            "value": "Power"
                           },
-                          "subtype": {
-                            "type": "Goblin"
-                          }
+                          "subtype": "Goblin"
                         }
                       }
                     ]
@@ -157,14 +141,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Wolf"
-          }
+          "Wolf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

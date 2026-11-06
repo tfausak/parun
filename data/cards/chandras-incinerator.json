@@ -12,14 +12,10 @@
           "perEach": {
             "type": "DamageDealtToPlayersThisTurn",
             "value": {
-              "kind": {
-                "type": "Noncombat"
-              },
+              "kind": "Noncombat",
               "recipient": {
                 "type": "Relative",
-                "value": {
-                  "type": "Opponent"
-                }
+                "value": "Opponent"
               }
             }
           }
@@ -39,9 +35,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -65,24 +59,16 @@
                 "value": {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               },
-              "kind": {
-                "type": "Noncombat"
-              },
+              "kind": "Noncombat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 }
               ]
             }
@@ -123,24 +109,18 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Planeswalker"
-                              }
+                              "value": "Planeswalker"
                             }
                           ]
                         },
                         {
                           "type": "HeldByBound",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
+                            "holder": "Controller",
                             "slot": "thatPlayer"
                           }
                         }
@@ -158,14 +138,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          }
+          "Elemental"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

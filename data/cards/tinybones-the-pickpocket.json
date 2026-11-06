@@ -11,9 +11,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -35,15 +33,11 @@
               "actor": {
                 "type": "Self"
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -58,9 +52,7 @@
                         "type": "OfferCast",
                         "value": {
                           "offer": {
-                            "spending": {
-                              "type": "AnyType"
-                            }
+                            "spending": "AnyType"
                           },
                           "ref": {
                             "type": "InSlot",
@@ -80,9 +72,7 @@
                           "type": "Not",
                           "value": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           }
                         },
                         {
@@ -90,33 +80,23 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Battle"
-                              }
+                              "value": "Battle"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Enchantment"
-                              }
+                              "value": "Enchantment"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Planeswalker"
-                              }
+                              "value": "Planeswalker"
                             }
                           ]
                         }
@@ -138,22 +118,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Rogue"
-          },
-          {
-            "type": "Skeleton"
-          }
+          "Rogue",
+          "Skeleton"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

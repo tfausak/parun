@@ -6,12 +6,8 @@
           "attackers": {
             "type": "Measures",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
-              "measure": {
-                "type": "Power"
-              },
+              "comparison": "AtLeast",
+              "measure": "Power",
               "operand": {
                 "type": "Literal",
                 "value": 3
@@ -46,9 +42,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -64,14 +58,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horse"
-          }
+          "Horse"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

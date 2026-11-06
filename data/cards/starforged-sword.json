@@ -20,9 +20,7 @@
           "type": "Gift",
           "value": {
             "type": "TappedFish",
-            "value": {
-              "type": "Fish"
-            }
+            "value": "Fish"
           }
         }
       ],
@@ -43,9 +41,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -88,16 +84,12 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "TimesPaid",
                 "value": {
                   "type": "Printed",
-                  "value": {
-                    "type": "Gift"
-                  }
+                  "value": "Gift"
                 }
               },
               "threshold": {
@@ -127,12 +119,8 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -149,14 +137,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Equipment"
-          }
+          "Equipment"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

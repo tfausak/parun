@@ -11,9 +11,7 @@
                   "count": 1,
                   "whichObjects": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Dragon"
-                    }
+                    "value": "Dragon"
                   }
                 }
               }
@@ -35,9 +33,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -89,9 +85,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

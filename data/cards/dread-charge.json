@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -32,25 +30,17 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "HasColor",
-                            "value": {
-                              "type": "Black"
-                            }
+                            "value": "Black"
                           },
                           {
                             "type": "HeldBy",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "relation": {
-                                "type": "You"
-                              }
+                              "holder": "Controller",
+                              "relation": "You"
                             }
                           }
                         ]
@@ -59,9 +49,7 @@
                         "type": "Not",
                         "value": {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Black"
-                          }
+                          "value": "Black"
                         }
                       },
                       "duration": {
@@ -77,9 +65,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

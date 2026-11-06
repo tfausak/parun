@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -31,9 +29,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "regenerability": {
-                        "type": "CantBeRegenerated"
-                      }
+                      "regenerability": "CantBeRegenerated"
                     }
                   },
                   {
@@ -41,9 +37,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -58,9 +52,7 @@
               "target": {
                 "filter": {
                   "type": "HasColor",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 },
                 "pool": {
                   "type": "Creatures"
@@ -72,9 +64,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

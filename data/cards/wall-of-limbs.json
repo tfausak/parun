@@ -18,18 +18,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -49,9 +45,7 @@
                           },
                           "quantity": {
                             "type": "Measure",
-                            "value": {
-                              "type": "Power"
-                            }
+                            "value": "Power"
                           }
                         }
                       }
@@ -84,9 +78,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -105,12 +97,8 @@
           "condition": {
             "type": "LifeChanges",
             "value": {
-              "direction": {
-                "type": "Gained"
-              },
-              "player": {
-                "type": "You"
-              }
+              "direction": "Gained",
+              "player": "You"
             }
           },
           "modal": {
@@ -145,17 +133,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Wall"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Wall",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

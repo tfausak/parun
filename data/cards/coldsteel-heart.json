@@ -78,14 +78,10 @@
       ],
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Snow"
-          }
+          "Snow"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

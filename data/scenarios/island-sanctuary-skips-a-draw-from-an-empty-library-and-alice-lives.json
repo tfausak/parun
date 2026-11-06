@@ -73,9 +73,7 @@
   "timeline": [
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "source": "$sanctuary",

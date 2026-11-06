@@ -60,9 +60,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -81,12 +79,8 @@
           "condition": {
             "type": "FlipsCoin",
             "value": {
-              "outcome": {
-                "type": "Won"
-              },
-              "player": {
-                "type": "You"
-              }
+              "outcome": "Won",
+              "player": "You"
             }
           },
           "modal": {
@@ -139,14 +133,10 @@
                                 "name": "Treasure Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Treasure"
-                                    }
+                                    "Treasure"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -168,17 +158,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Human",
+          "Rogue"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

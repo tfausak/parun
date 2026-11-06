@@ -34,9 +34,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "InSlot",
                           "value": "flip"
@@ -62,9 +60,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -90,9 +86,7 @@
       "oracleText": "{2}, {T}: Flip a coin. If you win the flip, sacrifice this artifact and draw three cards.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

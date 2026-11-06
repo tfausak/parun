@@ -73,9 +73,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseDredge",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       },
       "player": "alice",

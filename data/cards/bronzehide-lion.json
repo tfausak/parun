@@ -9,18 +9,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -62,18 +58,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -94,9 +86,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -119,19 +109,13 @@
                               {
                                 "type": "CardType",
                                 "value": {
-                                  "cardType": {
-                                    "type": "Enchantment"
-                                  },
-                                  "mode": {
-                                    "type": "Replace"
-                                  }
+                                  "cardType": "Enchantment",
+                                  "mode": "Replace"
                                 }
                               },
                               {
                                 "type": "AddSubtype",
-                                "value": {
-                                  "type": "Aura"
-                                }
+                                "value": "Aura"
                               },
                               {
                                 "type": "LoseAllAbilities"
@@ -142,12 +126,8 @@
                                   "filter": {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "You"
                                     }
                                   },
                                   "pool": {
@@ -166,18 +146,14 @@
                                           "type": "OfType",
                                           "value": {
                                             "type": "Colored",
-                                            "value": {
-                                              "type": "Green"
-                                            }
+                                            "value": "Green"
                                           }
                                         },
                                         {
                                           "type": "OfType",
                                           "value": {
                                             "type": "Colored",
-                                            "value": {
-                                              "type": "White"
-                                            }
+                                            "value": "White"
                                           }
                                         }
                                       ]
@@ -219,9 +195,7 @@
                               }
                             ]
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -234,14 +208,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          }
+          "Cat"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

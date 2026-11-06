@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -30,12 +28,8 @@
           "condition": {
             "type": "PlayerActs",
             "value": {
-              "action": {
-                "type": "Waterbend"
-              },
-              "player": {
-                "type": "AnyPlayer"
-              }
+              "action": "Waterbend",
+              "player": "AnyPlayer"
             }
           },
           "modal": {
@@ -70,17 +64,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

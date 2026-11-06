@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -35,9 +33,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -52,27 +48,19 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Artifact"
-                            }
+                            "value": "Artifact"
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Enchantment"
-                            }
+                            "value": "Enchantment"
                           }
                         ]
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       }
                     ]
@@ -82,13 +70,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -112,9 +96,7 @@
                             "type": "InSlot",
                             "value": "creature"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -125,12 +107,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "Opponent"
-                        }
+                        "holder": "Controller",
+                        "relation": "Opponent"
                       }
                     },
                     "pool": {
@@ -145,17 +123,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Merfolk"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Merfolk",
+          "Rogue"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

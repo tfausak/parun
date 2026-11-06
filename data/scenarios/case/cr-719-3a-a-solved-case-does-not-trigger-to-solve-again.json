@@ -264,9 +264,7 @@
           "of": "Designations",
           "object": "$case",
           "is": [
-            {
-              "type": "Solved"
-            }
+            "Solved"
           ]
         }
       }
@@ -371,9 +369,7 @@
           "of": "Designations",
           "object": "$case",
           "is": [
-            {
-              "type": "Solved"
-            }
+            "Solved"
           ]
         }
       }

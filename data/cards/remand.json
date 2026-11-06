@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -28,9 +26,7 @@
                     "type": "Counter",
                     "value": {
                       "instead": {
-                        "zone": {
-                          "type": "Hand"
-                        }
+                        "zone": "Hand"
                       },
                       "ref": {
                         "type": "InSlot",
@@ -43,9 +39,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -68,9 +62,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

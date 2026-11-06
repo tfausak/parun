@@ -32,20 +32,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Giant"
-          },
-          {
-            "type": "Robot"
-          }
+          "Giant",
+          "Robot"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

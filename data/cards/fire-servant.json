@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -42,42 +38,30 @@
                   "value": [
                     {
                       "type": "IsInZone",
-                      "value": {
-                        "type": "Stack"
-                      }
+                      "value": "Stack"
                     },
                     {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Red"
-                      }
+                      "value": "Red"
                     },
                     {
                       "type": "Or",
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Instant"
-                          }
+                          "value": "Instant"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Sorcery"
-                          }
+                          "value": "Sorcery"
                         }
                       ]
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -100,14 +84,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          }
+          "Elemental"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

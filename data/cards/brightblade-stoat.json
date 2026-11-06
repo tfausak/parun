@@ -18,9 +18,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -36,17 +34,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Soldier"
-          },
-          {
-            "type": "Weasel"
-          }
+          "Soldier",
+          "Weasel"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

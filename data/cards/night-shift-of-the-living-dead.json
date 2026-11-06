@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -35,9 +33,7 @@
                 ],
                 "mana": []
               },
-              "limit": {
-                "type": "OnceEachTurn"
-              },
+              "limit": "OnceEachTurn",
               "modifier": {
                 "type": "IncreaseOrDecrease",
                 "value": 1
@@ -55,9 +51,7 @@
             "type": "PlayerRollsResult",
             "value": {
               "result": 6,
-              "roller": {
-                "type": "You"
-              }
+              "roller": "You"
             }
           },
           "modal": {
@@ -73,9 +67,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Black"
-                                  }
+                                  "Black"
                                 ],
                                 "name": "Zombie Employee Token",
                                 "power": {
@@ -88,17 +80,11 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Employee"
-                                    },
-                                    {
-                                      "type": "Zombie"
-                                    }
+                                    "Employee",
+                                    "Zombie"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -120,9 +106,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

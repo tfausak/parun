@@ -834,7 +834,7 @@ leakUnpaid =
     <> "\"timeline\":[{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"bob\",\"do\":{\"Cast\":{\"object\":\"$piker\",\"mana\":[\"$m1\",\"$m2\",null]}}},"
     <> "{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":{\"Cast\":{\"object\":\"$leak\",\"targets\":[\"Goblin Piker\"],\"mana\":[\"$i1\",\"$i2\"]}}},"
     <> "{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":\"Pass\"},"
-    <> "{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"bob\",\"do\":{\"ChooseToPay\":{\"decision\":{\"type\":\"Pays\"},\"mana\":[null]}}}]}"
+    <> "{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"bob\",\"do\":{\"ChooseToPay\":{\"decision\":\"Pays\",\"mana\":[null]}}}]}"
 
 -- alice's Colossal Dreadmaw (6/6 trample), blocked by bob's War Mammoth (3/3),
 -- assigns 2 to the Mammoth and 4 to bob.

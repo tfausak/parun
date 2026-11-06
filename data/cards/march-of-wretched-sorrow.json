@@ -11,9 +11,7 @@
             },
             "whichCards": {
               "type": "HasColor",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             }
           }
         }
@@ -40,9 +38,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -76,9 +72,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "InSlot",
@@ -96,15 +90,11 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Planeswalker"
-                      }
+                      "value": "Planeswalker"
                     }
                   ]
                 },
@@ -118,9 +108,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -52,12 +50,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     "pool": {
@@ -79,9 +73,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -105,26 +97,18 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   }
                 ]
               },
-              "role": {
-                "type": "Attacker"
-              }
+              "role": "Attacker"
             }
           },
           "modal": {
@@ -168,14 +152,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Wolf"
-          }
+          "Wolf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

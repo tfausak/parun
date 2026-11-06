@@ -58,8 +58,8 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Exchange of Words", "do": {"ChooseTargets": {"creatures": ["$ape", "$hag"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$ape", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Forest"}}}, "count": 1}}},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$ape", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Island"}}}, "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$ape", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": "Forest"}}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$ape", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": "Island"}}, "count": 0}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$hag", "power": 4, "toughness": 4}}}
   ]
 }

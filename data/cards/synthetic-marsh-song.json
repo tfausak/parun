@@ -21,9 +21,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -37,12 +35,8 @@
             {
               "type": "LandSubtype",
               "value": {
-                "mode": {
-                  "type": "InAddition"
-                },
-                "subtype": {
-                  "type": "Swamp"
-                }
+                "mode": "InAddition",
+                "subtype": "Swamp"
               }
             }
           ]
@@ -50,14 +44,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -12,15 +12,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             }
           }
         }
@@ -37,17 +33,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Goblin",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -55,9 +51,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -73,21 +67,15 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "PlayersDealtDamageThisTurn",
                             "value": {
-                              "kind": {
-                                "type": "Combat"
-                              },
+                              "kind": "Combat",
                               "recipient": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "Opponent"
-                                }
+                                "value": "Opponent"
                               }
                             }
                           }
@@ -95,9 +83,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "components": [
                           {
@@ -112,21 +98,15 @@
                       },
                       "payer": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "perEach": {
                         "type": "PlayersDealtDamageThisTurn",
                         "value": {
-                          "kind": {
-                            "type": "Combat"
-                          },
+                          "kind": "Combat",
                           "recipient": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           }
                         }
                       }
@@ -140,22 +120,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Human"
-          }
+          "Cleric",
+          "Human"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

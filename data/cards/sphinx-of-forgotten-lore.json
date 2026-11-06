@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -66,9 +62,7 @@
                           },
                           "modification": {
                             "type": "GainKeywordAtManaCost",
-                            "value": {
-                              "type": "Flashback"
-                            }
+                            "value": "Flashback"
                           },
                           "ref": {
                             "type": "InSlot",
@@ -86,15 +80,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Instant"
-                          }
+                          "value": "Instant"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Sorcery"
-                          }
+                          "value": "Sorcery"
                         }
                       ]
                     },
@@ -116,14 +106,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Sphinx"
-          }
+          "Sphinx"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

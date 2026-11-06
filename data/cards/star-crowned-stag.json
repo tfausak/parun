@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -57,9 +55,7 @@
                   "target": {
                     "filter": {
                       "type": "ControlledByRole",
-                      "value": {
-                        "type": "Defending"
-                      }
+                      "value": "Defending"
                     },
                     "pool": {
                       "type": "Creatures"
@@ -73,14 +69,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elk"
-          }
+          "Elk"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

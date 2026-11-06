@@ -39,9 +39,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       }
     },
@@ -52,9 +50,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Tails"
-          }
+          "with": "Tails"
         }
       }
     },
@@ -65,9 +61,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseCoinResult",
-          "with": {
-            "type": "Tails"
-          }
+          "with": "Tails"
         }
       }
     },
@@ -78,9 +72,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       }
     },
@@ -91,9 +83,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       }
     },
@@ -104,9 +94,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       }
     },
@@ -117,9 +105,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Tails"
-          }
+          "with": "Tails"
         }
       }
     },
@@ -130,9 +116,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Tails"
-          }
+          "with": "Tails"
         }
       }
     },
@@ -143,9 +127,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       }
     },
@@ -156,9 +138,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseCoinResult",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       }
     },
@@ -169,9 +149,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       }
     },

@@ -9,36 +9,28 @@
                 "type": "MonocoloredHybrid",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               },
               {
                 "type": "MonocoloredHybrid",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               },
               {
                 "type": "MonocoloredHybrid",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               },
               {
                 "type": "MonocoloredHybrid",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -61,9 +53,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -92,33 +82,23 @@
                                 "value": [
                                   {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Cleric"
-                                    }
+                                    "value": "Cleric"
                                   },
                                   {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Rogue"
-                                    }
+                                    "value": "Rogue"
                                   },
                                   {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Warrior"
-                                    }
+                                    "value": "Warrior"
                                   },
                                   {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Wizard"
-                                    }
+                                    "value": "Wizard"
                                   },
                                   {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Ally"
-                                    }
+                                    "value": "Ally"
                                   }
                                 ]
                               },
@@ -135,9 +115,7 @@
                             "type": "InSlot",
                             "value": "revealed"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -149,17 +127,13 @@
                         "value": {
                           "placement": {
                             "type": "RandomOrder",
-                            "value": {
-                              "type": "Bottom"
-                            }
+                            "value": "Bottom"
                           },
                           "ref": {
                             "type": "InSlot",
                             "value": "looked"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -182,9 +156,7 @@
             "type": "PartySize",
             "value": {
               "type": "Relative",
-              "value": {
-                "type": "You"
-              }
+              "value": "You"
             }
           }
         }
@@ -198,9 +170,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -216,22 +186,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Human",
+          "Warrior"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

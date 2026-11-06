@@ -65,9 +65,7 @@
             "value": {
               "quality": {
                 "type": "HasColor",
-                "value": {
-                  "type": "Black"
-                }
+                "value": "Black"
               },
               "spares": null
             }

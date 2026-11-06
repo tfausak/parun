@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -49,16 +45,12 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HeldByBound",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
+                                "holder": "Controller",
                                 "slot": "player"
                               }
                             }
@@ -77,13 +69,9 @@
                         "type": "Colors",
                         "value": {
                           "colors": [
-                            {
-                              "type": "Blue"
-                            }
+                            "Blue"
                           ],
-                          "mode": {
-                            "type": "Replace"
-                          }
+                          "mode": "Replace"
                         }
                       },
                       "ref": {
@@ -93,16 +81,12 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HeldByBound",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
+                                "holder": "Controller",
                                 "slot": "player"
                               }
                             }
@@ -120,12 +104,8 @@
                       "modification": {
                         "type": "CreatureSubtype",
                         "value": {
-                          "mode": {
-                            "type": "Replace"
-                          },
-                          "subtype": {
-                            "type": "Frog"
-                          }
+                          "mode": "Replace",
+                          "subtype": "Frog"
                         }
                       },
                       "ref": {
@@ -135,16 +115,12 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HeldByBound",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
+                                "holder": "Controller",
                                 "slot": "player"
                               }
                             }
@@ -179,16 +155,12 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HeldByBound",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
+                                "holder": "Controller",
                                 "slot": "player"
                               }
                             }
@@ -212,9 +184,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

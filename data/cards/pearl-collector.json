@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -82,9 +80,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -111,9 +107,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -121,20 +115,14 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "LifeChanged",
                 "value": {
-                  "direction": {
-                    "type": "Gained"
-                  },
+                  "direction": "Gained",
                   "player": {
                     "type": "Relative",
-                    "value": {
-                      "type": "You"
-                    }
+                    "value": "You"
                   }
                 }
               },
@@ -144,9 +132,7 @@
               }
             }
           },
-          "limit": {
-            "type": "OncePerGame"
-          },
+          "limit": "OncePerGame",
           "modal": {
             "modes": [
               {
@@ -185,9 +171,7 @@
                                                           "type": "OfType",
                                                           "value": {
                                                             "type": "Colored",
-                                                            "value": {
-                                                              "type": "White"
-                                                            }
+                                                            "value": "White"
                                                           }
                                                         }
                                                       }
@@ -204,9 +188,7 @@
                                     "name": "Mox Pearl",
                                     "typeLine": {
                                       "types": [
-                                        {
-                                          "type": "Artifact"
-                                        }
+                                        "Artifact"
                                       ]
                                     }
                                   }
@@ -229,17 +211,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Warlock"
-          }
+          "Human",
+          "Warlock"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

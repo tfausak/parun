@@ -27,9 +27,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -39,9 +37,7 @@
                   "target": {
                     "filter": {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Wall"
-                      }
+                      "value": "Wall"
                     },
                     "pool": {
                       "type": "Permanents"
@@ -58,9 +54,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -76,14 +70,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          }
+          "Goblin"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

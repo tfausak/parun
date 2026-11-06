@@ -40,9 +40,7 @@
               "value": {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "Exactly"
-                  },
+                  "comparison": "Exactly",
                   "measured": {
                     "type": "Count",
                     "value": {
@@ -58,13 +56,9 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     }
@@ -82,9 +76,7 @@
       "name": "Synthetic Hollow Spring",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

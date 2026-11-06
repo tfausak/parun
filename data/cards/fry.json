@@ -13,9 +13,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -57,15 +55,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Planeswalker"
-                          }
+                          "value": "Planeswalker"
                         }
                       ]
                     },
@@ -74,15 +68,11 @@
                       "value": [
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "White"
-                          }
+                          "value": "White"
                         },
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Blue"
-                          }
+                          "value": "Blue"
                         }
                       ]
                     }
@@ -98,9 +88,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

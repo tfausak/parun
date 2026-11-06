@@ -11,18 +11,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -37,9 +33,7 @@
           "effect": {
             "type": "InstructionR",
             "value": {
-              "instruction": {
-                "type": "FlipCoin"
-              },
+              "instruction": "FlipCoin",
               "rewrite": {
                 "type": "RollD20Instead"
               },
@@ -53,9 +47,7 @@
           "effect": {
             "type": "DieRollR",
             "value": {
-              "rewrite": {
-                "type": "FlipCoinInstead"
-              },
+              "rewrite": "FlipCoinInstead",
               "whose": {
                 "type": "You"
               }
@@ -69,22 +61,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Brushwagg"
-          },
-          {
-            "type": "Pirate"
-          }
+          "Brushwagg",
+          "Pirate"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

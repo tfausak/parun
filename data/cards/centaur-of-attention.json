@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -102,17 +98,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "BeginningOfCombat"
-                }
+                "value": "BeginningOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -137,17 +129,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Centaur"
-          },
-          {
-            "type": "Performer"
-          }
+          "Centaur",
+          "Performer"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

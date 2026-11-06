@@ -122,9 +122,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -135,9 +133,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -148,9 +144,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -195,9 +189,7 @@
                 "type": "Colorless"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -239,9 +231,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

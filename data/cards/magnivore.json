@@ -10,22 +10,16 @@
             },
             "filter": {
               "type": "HasCardType",
-              "value": {
-                "type": "Sorcery"
-              }
+              "value": "Sorcery"
             },
             "scope": {
               "type": "InZone",
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               }
             }
           }
@@ -38,22 +32,16 @@
             },
             "filter": {
               "type": "HasCardType",
-              "value": {
-                "type": "Sorcery"
-              }
+              "value": "Sorcery"
             },
             "scope": {
               "type": "InZone",
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               }
             }
           }
@@ -73,18 +61,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -98,14 +82,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Lhurgoyf"
-          }
+          "Lhurgoyf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

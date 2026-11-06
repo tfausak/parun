@@ -18,19 +18,19 @@ spec s = Spec.describe s "Parun.Codec.CounterDestination" $ do
       s
       CounterDestination.codec
       (CounterDestination.MkCounterDestination Zone.Hand (CounteredEnd.Stated LibraryPosition.Bottom) Nothing Nothing)
-      " {\"zone\":{\"type\":\"Hand\"}} "
+      " {\"zone\":\"Hand\"} "
   -- Memory Lapse's "put it on top of its owner's library instead".
   Spec.it s "MkCounterDestination, the top of a library" $
     Common.assertCodec
       s
       CounterDestination.codec
       (CounterDestination.MkCounterDestination Zone.Library (CounteredEnd.Stated LibraryPosition.Top) Nothing Nothing)
-      " {\"zone\":{\"type\":\"Library\"},\"position\":{\"type\":\"Stated\",\"value\":{\"type\":\"Top\"}}} "
+      " {\"zone\":\"Library\",\"position\":{\"type\":\"Stated\",\"value\":\"Top\"}} "
   -- Desertion's "if an artifact or creature spell is countered this way".
   Spec.it s "MkCounterDestination, narrowed to some spells" $
     Common.assertCodec
       s
       CounterDestination.codec
       (CounterDestination.MkCounterDestination Zone.Battlefield (CounteredEnd.Stated LibraryPosition.Bottom) (Just (Filter.Or [Filter.HasCardType CardType.Artifact, Filter.HasCardType CardType.Creature])) Nothing)
-      " {\"zone\":{\"type\":\"Battlefield\"},\"only\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}]}} "
+      " {\"zone\":\"Battlefield\",\"only\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Artifact\"},{\"type\":\"HasCardType\",\"value\":\"Creature\"}]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CounterDestination.codec

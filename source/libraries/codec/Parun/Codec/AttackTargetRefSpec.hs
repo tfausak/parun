@@ -18,7 +18,7 @@ spec s = Spec.describe s "Parun.Codec.AttackTargetRef" $ do
       s
       AttackTargetRef.codec
       (AttackTargetRef.Players (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"Players\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"Players\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   -- Gideon Jura's "attack Gideon Jura".
   Spec.it s "Permanents" $
     Common.assertCodec

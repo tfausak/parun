@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -61,9 +59,7 @@
                             "type": "InSlot",
                             "value": "goblin"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -80,9 +76,7 @@
                     },
                     "filter": {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Goblin"
-                      }
+                      "value": "Goblin"
                     },
                     "pool": {
                       "type": "CardsInGraveyard",
@@ -111,9 +105,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -133,27 +125,21 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "mana": [
                           {
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         ]
                       },
                       "payer": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -165,30 +151,20 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          },
-          {
-            "type": "Warlock"
-          }
+          "Goblin",
+          "Warlock"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
     {
       "colorIndicator": [
-        {
-          "type": "Red"
-        }
+        "Red"
       ],
       "keywords": [
         {
@@ -225,9 +201,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -257,17 +231,13 @@
                                     "value": {
                                       "phase": {
                                         "type": "Ending",
-                                        "value": {
-                                          "type": "EndStep"
-                                        }
+                                        "value": "EndStep"
                                       },
                                       "scope": {
                                         "type": "PlayersTurn",
                                         "value": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         }
                                       }
                                     }
@@ -305,9 +275,7 @@
                             "attacking": {
                               "type": "Chosen"
                             },
-                            "tapped": {
-                              "type": "Tapped"
-                            }
+                            "tapped": "Tapped"
                           }
                         }
                       }
@@ -336,9 +304,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -358,27 +324,21 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "mana": [
                           {
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Black"
-                              }
+                              "value": "Black"
                             }
                           }
                         ]
                       },
                       "payer": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -390,22 +350,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Goblin",
+          "Warrior"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

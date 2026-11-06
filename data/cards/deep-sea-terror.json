@@ -14,9 +14,7 @@
             "unless": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "AtLeast"
-                },
+                "comparison": "AtLeast",
                 "measured": {
                   "type": "Count",
                   "value": {
@@ -32,13 +30,9 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         },
-                        "zone": {
-                          "type": "Graveyard"
-                        }
+                        "zone": "Graveyard"
                       }
                     }
                   }
@@ -61,18 +55,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -88,14 +78,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Serpent"
-          }
+          "Serpent"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

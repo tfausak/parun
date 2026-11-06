@@ -36,19 +36,13 @@
                                 "value": [
                                   {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Swamp"
-                                    }
+                                    "value": "Swamp"
                                   },
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "You"
                                     }
                                   }
                                 ]
@@ -58,13 +52,9 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   },
-                                  "zone": {
-                                    "type": "Battlefield"
-                                  }
+                                  "zone": "Battlefield"
                                 }
                               }
                             }
@@ -73,9 +63,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Black"
-                              }
+                              "value": "Black"
                             }
                           }
                         }
@@ -92,9 +80,7 @@
       "oracleText": "{2}, {T}: Add {B} for each Swamp you control.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

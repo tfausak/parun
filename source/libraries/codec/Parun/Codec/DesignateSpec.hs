@@ -22,7 +22,7 @@ spec s = Spec.describe s "Parun.Codec.Designate" $ do
             Designate.value = Nothing
           }
       )
-      " {\"designation\":{\"type\":\"Suspected\"},\"slot\":\"self\"} "
+      " {\"designation\":\"Suspected\",\"slot\":\"self\"} "
   -- CR 701.37c's X, which only a "Monstrosity X" writes.
   Spec.it s "MkDesignate carries the value the mark was set with" $
     Common.assertCodec
@@ -34,5 +34,5 @@ spec s = Spec.describe s "Parun.Codec.Designate" $ do
             Designate.value = Just (Quantity.InSlot (SlotName.MkSlotName (Text.pack "X")))
           }
       )
-      " {\"designation\":{\"type\":\"Monstrous\"},\"slot\":\"self\",\"value\":{\"type\":\"InSlot\",\"value\":\"X\"}} "
+      " {\"designation\":\"Monstrous\",\"slot\":\"self\",\"value\":{\"type\":\"InSlot\",\"value\":\"X\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Designate.codec

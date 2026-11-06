@@ -24,12 +24,12 @@ spec s = Spec.describe s "Parun.Codec.Protection" $ do
       s
       codec
       Protection.MkProtection {Protection.quality = Filter.HasColor Color.Black, Protection.spares = Nothing}
-      " {\"quality\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}},\"spares\":null} "
+      " {\"quality\":{\"type\":\"HasColor\",\"value\":\"Black\"},\"spares\":null} "
   -- CR 702.16n: Spectra Ward's "this effect doesn't remove Auras".
   Spec.it s "MkProtection carries CR 702.16n's exception" $
     Common.assertCodec
       s
       codec
       Protection.MkProtection {Protection.quality = Filter.HasColor Color.Blue, Protection.spares = Just (Filter.HasSubtype Subtype.Aura)}
-      " {\"quality\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Blue\"}},\"spares\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}} "
+      " {\"quality\":{\"type\":\"HasColor\",\"value\":\"Blue\"},\"spares\":{\"type\":\"HasSubtype\",\"value\":\"Aura\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

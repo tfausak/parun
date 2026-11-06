@@ -6,9 +6,7 @@
           "type": "Landwalk",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Mountain"
-            }
+            "value": "Mountain"
           }
         }
       ],
@@ -21,18 +19,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -48,17 +42,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horror"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Horror",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

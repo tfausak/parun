@@ -33,9 +33,7 @@
                       "type": "Not",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       }
                     },
                     "pool": {
@@ -58,9 +56,7 @@
       "oracleText": "{5}: Exchange control of this artifact and target nonland permanent.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -17,9 +17,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -53,12 +51,8 @@
             {
               "type": "CreatureSubtype",
               "value": {
-                "mode": {
-                  "type": "InAddition"
-                },
-                "subtype": {
-                  "type": "Knight"
-                }
+                "mode": "InAddition",
+                "subtype": "Knight"
               }
             }
           ]
@@ -66,14 +60,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

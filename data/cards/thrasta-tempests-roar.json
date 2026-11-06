@@ -23,9 +23,7 @@
                 "type": "InHistory",
                 "value": {
                   "type": "SpellCast",
-                  "value": {
-                    "type": "ThisTurn"
-                  }
+                  "value": "ThisTurn"
                 }
               }
             }
@@ -52,18 +50,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -84,9 +78,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "EnteredThisTurn"
               },
@@ -112,19 +104,13 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dinosaur"
-          }
+          "Dinosaur"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

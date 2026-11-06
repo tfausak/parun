@@ -7,17 +7,13 @@
           "value": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "SpellsCast",
                 "value": {
                   "player": {
                     "type": "Relative",
-                    "value": {
-                      "type": "You"
-                    }
+                    "value": "You"
                   }
                 }
               },
@@ -47,17 +43,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Golem"
-          }
+          "Golem"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

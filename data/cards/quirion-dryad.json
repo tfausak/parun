@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -35,9 +33,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               },
               "spell": {
@@ -48,12 +44,8 @@
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
@@ -61,27 +53,19 @@
                       "value": [
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "White"
-                          }
+                          "value": "White"
                         },
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Blue"
-                          }
+                          "value": "Blue"
                         },
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Black"
-                          }
+                          "value": "Black"
                         },
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Red"
-                          }
+                          "value": "Red"
                         }
                       ]
                     }
@@ -122,14 +106,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dryad"
-          }
+          "Dryad"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

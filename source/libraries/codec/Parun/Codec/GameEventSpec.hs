@@ -118,7 +118,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange (ObjectId.MkObjectId 1) (ObjectId.MkObjectId 2) Zone.Battlefield Zone.Graveyard) ProjectedCharacteristicsSpec.testCharacteristics))
-      ( "{\"type\":\"Moved\",\"value\":{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}},\"characteristics\":"
+      ( "{\"type\":\"Moved\",\"value\":{\"change\":{\"departed\":1,\"object\":2,\"from\":\"Battlefield\",\"to\":\"Graveyard\"},\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
           <> ",\"otherArrivals\":[]}}"
       )
@@ -129,7 +129,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.CardArrived (ZoneChange.MkZoneChange (ObjectId.MkObjectId 1) (ObjectId.MkObjectId 3) Zone.Battlefield Zone.Graveyard))
-      "{\"type\":\"CardArrived\",\"value\":{\"departed\":1,\"object\":3,\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}}}"
+      "{\"type\":\"CardArrived\",\"value\":{\"departed\":1,\"object\":3,\"from\":\"Battlefield\",\"to\":\"Graveyard\"}}"
   -- A NONZERO toxic value and a PRESENT lifelink payee, so the CR 702.164b and
   -- CR 702.15b riders round-trip rather than getting defaulted past.
   Spec.it s "DamageDealt" $
@@ -138,7 +138,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       GameEvent.codec
       (GameEvent.DamageDealt (DamageEvent.MkDamageEvent (ObjectId.MkObjectId 1) (Recipient.ToPlayer (PlayerId.MkPlayerId 1)) 2 True False False 3 (Just (PlayerId.MkPlayerId 2)) Nothing mempty False mempty DamageKind.Combat))
       ( "{\"type\":\"DamageDealt\",\"value\":{\"source\":1,\"target\":{\"type\":\"ToPlayer\",\"value\":1},\"amount\":2,"
-          <> "\"dealtByDeathtouch\":true,\"dealtByToxic\":3,\"dealtByLifelink\":2,\"kind\":{\"type\":\"Combat\"}}}"
+          <> "\"dealtByDeathtouch\":true,\"dealtByToxic\":3,\"dealtByLifelink\":2,\"kind\":\"Combat\"}}"
       )
   -- CR 615.13's record, carrying the applying instance's CR 614.5 identity
   -- alongside the damage's source and what it prevented for each recipient.
@@ -155,7 +155,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Ending EndingStep.EndStep) (PlayerId.MkPlayerId 0)))
-      " {\"type\":\"StepBegan\",\"value\":{\"phase\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}},\"player\":0}} "
+      " {\"type\":\"StepBegan\",\"value\":{\"phase\":{\"type\":\"Ending\",\"value\":\"EndStep\"},\"player\":0}} "
   Spec.it s "SpellCast" $
     Common.assertCodec
       s
@@ -163,7 +163,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       (GameEvent.SpellCast (SpellWasCast.MkSpellWasCast (PlayerId.MkPlayerId 0) (ObjectId.MkObjectId 7) ProjectedCharacteristicsSpec.testCharacteristics (Just Zone.Hand) Nothing Set.empty))
       ( "{\"type\":\"SpellCast\",\"value\":{\"player\":0,\"spell\":7,\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
-          <> ",\"zone\":{\"type\":\"Hand\"}}}"
+          <> ",\"zone\":\"Hand\"}}"
       )
   Spec.it s "SpellCopied" $
     Common.assertCodec
@@ -190,7 +190,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.Discarded (Discarded.MkDiscarded (PlayerId.MkPlayerId 0) (ObjectId.MkObjectId 7) DiscardCause.ToPayCyclingCost Nothing Nothing))
-      " {\"type\":\"Discarded\",\"value\":{\"player\":0,\"card\":7,\"cause\":{\"type\":\"ToPayCyclingCost\"},\"madness\":null}} "
+      " {\"type\":\"Discarded\",\"value\":{\"player\":0,\"card\":7,\"cause\":\"ToPayCyclingCost\",\"madness\":null}} "
   -- CR 121.1's draw, with the ordinal CR 702.94a asks about. A player id and an
   -- ordinal, deliberately different numbers, so a codec that swapped them fails.
   Spec.it s "Drew" $
@@ -371,7 +371,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.Explore (ObjectId.MkObjectId 6)))
-      " {\"type\":\"PermanentActed\",\"value\":{\"action\":{\"type\":\"Explore\"},\"permanent\":6}} "
+      " {\"type\":\"PermanentActed\",\"value\":{\"action\":\"Explore\",\"permanent\":6}} "
     Spec.assertBool
       s
       (Codec.encode GameEvent.codec (GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.Connive (ObjectId.MkObjectId 6))) /= Codec.encode GameEvent.codec (GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.Explore (ObjectId.MkObjectId 6))))
@@ -393,13 +393,13 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.BecameDesignated (BecameDesignated.MkBecameDesignated Designation.Renowned (ObjectId.MkObjectId 5)))
-      " {\"type\":\"BecameDesignated\",\"value\":{\"designation\":{\"type\":\"Renowned\"},\"object\":5}} "
+      " {\"type\":\"BecameDesignated\",\"value\":{\"designation\":\"Renowned\",\"object\":5}} "
   Spec.it s "BecameDesignated Monstrous" $
     Common.assertCodec
       s
       GameEvent.codec
       (GameEvent.BecameDesignated (BecameDesignated.MkBecameDesignated Designation.Monstrous (ObjectId.MkObjectId 5)))
-      " {\"type\":\"BecameDesignated\",\"value\":{\"designation\":{\"type\":\"Monstrous\"},\"object\":5}} "
+      " {\"type\":\"BecameDesignated\",\"value\":{\"designation\":\"Monstrous\",\"object\":5}} "
   -- CR 702.134c: the mentor first, the creature it mentored second. Distinct ids
   -- prove the order, which is what "put a shield counter on THAT creature" reads.
   Spec.it s "Mentored" $
@@ -516,7 +516,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.BecameTarget (BecameTarget.MkBecameTarget (Recipient.ToObject (ObjectId.MkObjectId 9)) (ObjectId.MkObjectId 10) StackObjectKind.ActivatedAbility (PlayerId.MkPlayerId 2)))
-      " {\"type\":\"BecameTarget\",\"value\":{\"targeted\":{\"type\":\"ToObject\",\"value\":9},\"source\":10,\"kind\":{\"type\":\"ActivatedAbility\"},\"controller\":2}} "
+      " {\"type\":\"BecameTarget\",\"value\":{\"targeted\":{\"type\":\"ToObject\",\"value\":9},\"source\":10,\"kind\":\"ActivatedAbility\",\"controller\":2}} "
   -- CR 115.1's other kind of target, and CR 112.1's other kind of stack object:
   -- Dormant Gomazoa's event, which the object case above cannot stand in for
   -- since both fields differ.
@@ -525,7 +525,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.BecameTarget (BecameTarget.MkBecameTarget (Recipient.ToPlayer (PlayerId.MkPlayerId 3)) (ObjectId.MkObjectId 11) StackObjectKind.Spell (PlayerId.MkPlayerId 2)))
-      " {\"type\":\"BecameTarget\",\"value\":{\"targeted\":{\"type\":\"ToPlayer\",\"value\":3},\"source\":11,\"kind\":{\"type\":\"Spell\"},\"controller\":2}} "
+      " {\"type\":\"BecameTarget\",\"value\":{\"targeted\":{\"type\":\"ToPlayer\",\"value\":3},\"source\":11,\"kind\":\"Spell\",\"controller\":2}} "
   -- CR 800.4a / 729.4a. The id and the zone it left: the object left the game,
   -- so there is no destination zone to carry and no new incarnation to name.
   Spec.it s "LeftTheGame" $
@@ -533,7 +533,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.LeftTheGame (LeftTheGame.MkLeftTheGame (ObjectId.MkObjectId 7) Zone.Battlefield))
-      " {\"type\":\"LeftTheGame\",\"value\":{\"object\":7,\"from\":{\"type\":\"Battlefield\"}}} "
+      " {\"type\":\"LeftTheGame\",\"value\":{\"object\":7,\"from\":\"Battlefield\"}} "
   -- CR 702.26n. The new object in exile.
   Spec.it s "ArrivedUnseen" $
     Common.assertCodec
@@ -562,7 +562,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.CompleteDungeon (PlayerId.MkPlayerId 5)))
-      " {\"type\":\"PlayerActed\",\"value\":{\"action\":{\"type\":\"CompleteDungeon\"},\"player\":5}} "
+      " {\"type\":\"PlayerActed\",\"value\":{\"action\":\"CompleteDungeon\",\"player\":5}} "
   -- CR 305.1. The player, the land as it arrived, and the zone it was played
   -- from, which is what Urianger Augurelt's condition reads.
   Spec.it s "LandPlayed" $
@@ -570,7 +570,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.LandPlayed (LandPlayed.MkLandPlayed (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 7) Zone.Exile))
-      " {\"type\":\"LandPlayed\",\"value\":{\"player\":1,\"land\":7,\"from\":{\"type\":\"Exile\"}}} "
+      " {\"type\":\"LandPlayed\",\"value\":{\"player\":1,\"land\":7,\"from\":\"Exile\"}} "
   -- CR 701.62b. The cards the process put into the graveyard ride along, the
   -- "this way" a trigger on it reads back.
   Spec.it s "ManifestedDread" $
@@ -600,7 +600,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Scheme (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 7) Set.empty))
-      " {\"type\":\"TurnedUpOffDeck\",\"value\":{\"card\":7,\"deck\":{\"type\":\"Scheme\"},\"player\":1}} "
+      " {\"type\":\"TurnedUpOffDeck\",\"value\":{\"card\":7,\"deck\":\"Scheme\",\"player\":1}} "
   -- CR 311.7.
   Spec.it s "ChaosEnsued" $
     Common.assertCodec s GameEvent.codec GameEvent.ChaosEnsued " {\"type\":\"ChaosEnsued\"} "
@@ -610,7 +610,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.PlanarDieRolled (PlanarDieRolled.MkPlanarDieRolled (PlayerId.MkPlayerId 2) PlanarDieFace.Chaos))
-      " {\"type\":\"PlanarDieRolled\",\"value\":{\"roller\":2,\"face\":{\"type\":\"Chaos\"}}} "
+      " {\"type\":\"PlanarDieRolled\",\"value\":{\"roller\":2,\"face\":\"Chaos\"}} "
   -- CR 716.2a. The object then the level BEFORE then the level AFTER, and the two
   -- levels deliberately differ by more than one: a level bar can only step N-1 to
   -- N, so a fixture crossing one threshold would round-trip a codec that dropped
@@ -662,7 +662,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = ObjectId.MkObjectId 9, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = PlayerId.MkPlayerId 1}))
-      " {\"type\":\"TappedForMana\",\"value\":{\"mana\":[{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}],\"permanent\":9,\"player\":1}} "
+      " {\"type\":\"TappedForMana\",\"value\":{\"mana\":[{\"type\":\"Colored\",\"value\":\"Green\"}],\"permanent\":9,\"player\":1}} "
     Spec.assertBool
       s
       (Codec.encode GameEvent.codec (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = ObjectId.MkObjectId 9, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = PlayerId.MkPlayerId 1})) /= Codec.encode GameEvent.codec (GameEvent.BecameTapped (ObjectId.MkObjectId 9)))
@@ -674,7 +674,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.ManaAdded (ManaAdded.MkManaAdded {ManaAdded.player = PlayerId.MkPlayerId 1, ManaAdded.source = ObjectId.MkObjectId 9, ManaAdded.mana = Set.singleton (ManaType.Colored Color.Green), ManaAdded.cause = ManaAddedCause.ManaAbility}))
-      " {\"type\":\"ManaAdded\",\"value\":{\"player\":1,\"source\":9,\"mana\":[{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}],\"cause\":{\"type\":\"ManaAbility\"}}} "
+      " {\"type\":\"ManaAdded\",\"value\":{\"player\":1,\"source\":9,\"mana\":[{\"type\":\"Colored\",\"value\":\"Green\"}],\"cause\":\"ManaAbility\"}} "
   -- CR 605.3b's moment, distinguished from the tap event about the same
   -- permanent: the amount is what this one carries and that one does not.
   Spec.it s "ManaAbilityResolved" $ do
@@ -736,7 +736,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.StickerPut (StickerPut.MkStickerPut (PlayerId.MkPlayerId 9) (ObjectId.MkObjectId 3) StickerKind.Art))
-      " {\"type\":\"StickerPut\",\"value\":{\"placer\":9,\"object\":3,\"kind\":{\"type\":\"Art\"}}} "
+      " {\"type\":\"StickerPut\",\"value\":{\"placer\":9,\"object\":3,\"kind\":\"Art\"}} "
   -- CR 608.2n. The source object and the ability, in that order, which is the
   -- pair CR 707.10b counts by: a swap would file the resolution under the
   -- ability's own id.

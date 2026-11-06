@@ -22,21 +22,21 @@ spec s = Spec.describe s "Parun.Codec.Scope" $ do
       s
       Scope.codec
       (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
-      " {\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}} "
+      " {\"type\":\"InZone\",\"value\":{\"zone\":\"Battlefield\",\"player\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}} "
   -- CR 608.2i's look-back-in-time domain.
   Spec.it s "InHistory" $
     Common.assertCodec
       s
       Scope.codec
       (Scope.InHistory (EventShape.MovedBetween (MovedBetween.MkMovedBetween Zone.Battlefield Zone.Graveyard)))
-      " {\"type\":\"InHistory\",\"value\":{\"type\":\"MovedBetween\",\"value\":{\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}}}} "
+      " {\"type\":\"InHistory\",\"value\":{\"type\":\"MovedBetween\",\"value\":{\"from\":\"Battlefield\",\"to\":\"Graveyard\"}}} "
   -- CR 102.1's domain: the players a reference names, rather than their zones.
   Spec.it s "OverPlayers" $
     Common.assertCodec
       s
       Scope.codec
       (Scope.OverPlayers (PlayerRef.Relative PlayerRelation.Opponent))
-      " {\"type\":\"OverPlayers\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}} "
+      " {\"type\":\"OverPlayers\",\"value\":{\"type\":\"Relative\",\"value\":\"Opponent\"}} "
   -- CR 400.7j's domain: the objects a slot of the surrounding announcement
   -- names, rather than a zone's residents.
   Spec.it s "OverBound" $
@@ -59,14 +59,14 @@ spec s = Spec.describe s "Parun.Codec.Scope" $ do
       s
       Scope.codec
       (Scope.InPosition ZonePosition.Top (InZone.MkInZone Zone.Library (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "player")))))
-      " {\"type\":\"TopOf\",\"value\":{\"zone\":{\"type\":\"Library\"},\"player\":{\"type\":\"InSlot\",\"value\":\"player\"}}} "
+      " {\"type\":\"TopOf\",\"value\":{\"zone\":\"Library\",\"player\":{\"type\":\"InSlot\",\"value\":\"player\"}}} "
   -- CR 404.1: the same pile, read from the source up.
   Spec.it s "AboveSource" $
     Common.assertCodec
       s
       Scope.codec
       (Scope.InPosition ZonePosition.AboveSource (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You)))
-      " {\"type\":\"AboveSource\",\"value\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
+      " {\"type\":\"AboveSource\",\"value\":{\"zone\":\"Graveyard\",\"player\":{\"type\":\"Relative\",\"value\":\"You\"}}} "
   -- CR 500.12: the permanents as the turn began.
   Spec.it s "AsTurnBegan" $
     Common.assertCodec

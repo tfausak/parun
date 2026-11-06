@@ -127,18 +127,14 @@
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "Black"
-                }
+                "value": "Black"
               }
             },
             {
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "Black"
-                }
+                "value": "Black"
               }
             }
           ]
@@ -221,9 +217,7 @@
       "do": {
         "Answer": {
           "prompt": "OfferedCast",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },
@@ -324,9 +318,7 @@
       "do": {
         "Answer": {
           "prompt": "OfferedCast",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

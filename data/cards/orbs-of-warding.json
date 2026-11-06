@@ -35,21 +35,15 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "IsInZone",
-                      "value": {
-                        "type": "Battlefield"
-                      }
+                      "value": "Battlefield"
                     }
                   ]
                 },
-                "whoRecipient": {
-                  "type": "You"
-                }
+                "whoRecipient": "You"
               },
               "rewrite": {
                 "type": "PreventUpTo",
@@ -64,9 +58,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

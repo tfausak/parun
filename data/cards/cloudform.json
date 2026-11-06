@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -36,9 +32,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -85,9 +79,7 @@
                           },
                           "modification": {
                             "type": "AddSubtype",
-                            "value": {
-                              "type": "Aura"
-                            }
+                            "value": "Aura"
                           },
                           "ref": {
                             "type": "InSlot",
@@ -127,24 +119,18 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
                           "riders": {
                             "faceDown": {
                               "listed": {},
-                              "reason": {
-                                "type": "Manifested"
-                              }
+                              "reason": "Manifested"
                             }
                           },
                           "slot": "manifested",
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       },
                       {
@@ -161,9 +147,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

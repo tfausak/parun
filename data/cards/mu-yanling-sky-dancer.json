@@ -108,9 +108,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Blue"
-                                  }
+                                  "Blue"
                                 ],
                                 "keywords": [
                                   {
@@ -128,17 +126,11 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Bird"
-                                    },
-                                    {
-                                      "type": "Elemental"
-                                    }
+                                    "Bird",
+                                    "Elemental"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -192,19 +184,13 @@
                                         "value": [
                                           {
                                             "type": "HasSubtype",
-                                            "value": {
-                                              "type": "Island"
-                                            }
+                                            "value": "Island"
                                           },
                                           {
                                             "type": "HeldBy",
                                             "value": {
-                                              "holder": {
-                                                "type": "Controller"
-                                              },
-                                              "relation": {
-                                                "type": "You"
-                                              }
+                                              "holder": "Controller",
+                                              "relation": "You"
                                             }
                                           }
                                         ]
@@ -235,9 +221,7 @@
                                                           "value": {
                                                             "player": {
                                                               "type": "Relative",
-                                                              "value": {
-                                                                "type": "You"
-                                                              }
+                                                              "value": "You"
                                                             },
                                                             "quantity": {
                                                               "type": "Literal",
@@ -283,18 +267,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -302,19 +282,13 @@
       "oracleText": "[+2]: Until your next turn, up to one target creature gets -2/-0 and loses flying.\n[−3]: Create a 4/4 blue Elemental Bird creature token with flying.\n[−8]: You get an emblem with \"Islands you control have '{T}: Draw a card.'\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Yanling"
-          }
+          "Yanling"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

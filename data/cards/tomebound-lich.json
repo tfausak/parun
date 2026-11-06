@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -58,15 +54,11 @@
                   "actor": {
                     "type": "Self"
                   },
-                  "kind": {
-                    "type": "Combat"
-                  },
+                  "kind": "Combat",
                   "recipients": [
                     {
                       "type": "Player",
-                      "value": {
-                        "type": "AnyPlayer"
-                      }
+                      "value": "AnyPlayer"
                     }
                   ]
                 }
@@ -84,9 +76,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -101,9 +91,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -122,17 +110,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Wizard"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Wizard",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

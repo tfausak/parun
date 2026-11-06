@@ -37,7 +37,7 @@ spec s = Spec.describe s "Parun.Codec.LifeLoss" $ do
           LifeLoss.cause = LifeLossCause.ByRadiation,
           LifeLoss.tally = Nothing
         }
-      " {\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"cause\":{\"type\":\"ByRadiation\"}} "
+      " {\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"cause\":\"ByRadiation\"} "
   -- CR 702.101a's "the total life lost this way", the one caller that names a
   -- slot (Parun.Engine.Keyword.extort).
   Spec.it s "rule 702.101a's loss names a tally slot" $
@@ -50,5 +50,5 @@ spec s = Spec.describe s "Parun.Codec.LifeLoss" $ do
           LifeLoss.cause = LifeLossCause.ByEffect,
           LifeLoss.tally = Just (SlotName.MkSlotName (Text.pack "extorted"))
         }
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"tally\":\"extorted\"} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"Opponent\"},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"tally\":\"extorted\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s LifeLoss.codec

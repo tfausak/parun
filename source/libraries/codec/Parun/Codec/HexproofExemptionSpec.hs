@@ -19,12 +19,12 @@ spec s = Spec.describe s "Parun.Codec.HexproofExemption" $ do
             HexproofExemption.players = True
           }
       )
-      " {\"permanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"players\":true} "
+      " {\"permanents\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"players\":true} "
   -- Glaring Spotlight's: creatures only.
   Spec.it s "omits players when it reaches none" $
     Common.assertCodec
       s
       HexproofExemption.codec
       (HexproofExemption.MkHexproofExemption {HexproofExemption.permanents = Filter.HasCardType CardType.Creature, HexproofExemption.players = False})
-      " {\"permanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"permanents\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s HexproofExemption.codec

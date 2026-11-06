@@ -24,9 +24,7 @@
                             "type": "InSlot",
                             "value": "card"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -68,17 +66,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Golem"
-          }
+          "Golem"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

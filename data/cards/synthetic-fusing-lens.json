@@ -17,25 +17,17 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Instant"
-                  }
+                  "value": "Instant"
                 },
                 {
                   "type": "IsInZone",
-                  "value": {
-                    "type": "Hand"
-                  }
+                  "value": "Hand"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Owner"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Owner",
+                    "relation": "You"
                   }
                 }
               ]
@@ -53,9 +45,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

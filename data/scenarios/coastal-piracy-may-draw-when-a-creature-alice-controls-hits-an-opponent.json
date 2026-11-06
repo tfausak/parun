@@ -83,9 +83,7 @@
       "step": "CombatDamage",
       "player": "alice",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {

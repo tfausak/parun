@@ -24,9 +24,7 @@
                             "type": "InSlot",
                             "value": "cards"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -50,9 +48,7 @@
                         }
                       }
                     },
-                    "together": {
-                      "type": "InOneZone"
-                    }
+                    "together": "InOneZone"
                   }
                 }
               }
@@ -88,9 +84,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -118,20 +112,14 @@
                                     "type": "Not",
                                     "value": {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Land"
-                                      }
+                                      "value": "Land"
                                     }
                                   },
                                   {
                                     "type": "Measures",
                                     "value": {
-                                      "comparison": {
-                                        "type": "AtMost"
-                                      },
-                                      "measure": {
-                                        "type": "ManaValue"
-                                      },
+                                      "comparison": "AtMost",
+                                      "measure": "ManaValue",
                                       "operand": {
                                         "type": "Literal",
                                         "value": 4
@@ -142,23 +130,17 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
                           "slot": "discovered",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "mana": [
                           {
@@ -182,12 +164,8 @@
                             "restriction": {
                               "type": "Measures",
                               "value": {
-                                "comparison": {
-                                  "type": "AtMost"
-                                },
-                                "measure": {
-                                  "type": "ManaValue"
-                                },
+                                "comparison": "AtMost",
+                                "measure": "ManaValue",
                                 "operand": {
                                   "type": "Literal",
                                   "value": 4
@@ -206,20 +184,14 @@
                                     "type": "Not",
                                     "value": {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Land"
-                                      }
+                                      "value": "Land"
                                     }
                                   },
                                   {
                                     "type": "Measures",
                                     "value": {
-                                      "comparison": {
-                                        "type": "AtMost"
-                                      },
-                                      "measure": {
-                                        "type": "ManaValue"
-                                      },
+                                      "comparison": "AtMost",
+                                      "measure": "ManaValue",
                                       "operand": {
                                         "type": "Literal",
                                         "value": 4
@@ -250,20 +222,14 @@
                                     "type": "Not",
                                     "value": {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Land"
-                                      }
+                                      "value": "Land"
                                     }
                                   },
                                   {
                                     "type": "Measures",
                                     "value": {
-                                      "comparison": {
-                                        "type": "AtMost"
-                                      },
-                                      "measure": {
-                                        "type": "ManaValue"
-                                      },
+                                      "comparison": "AtMost",
+                                      "measure": "ManaValue",
                                       "operand": {
                                         "type": "Literal",
                                         "value": 4
@@ -275,9 +241,7 @@
                               "slot": "discovered"
                             }
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -289,17 +253,13 @@
                         "value": {
                           "placement": {
                             "type": "RandomOrder",
-                            "value": {
-                              "type": "Bottom"
-                            }
+                            "value": "Bottom"
                           },
                           "ref": {
                             "type": "InSlot",
                             "value": "discovered"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -312,17 +272,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Gnome"
-          }
+          "Gnome"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

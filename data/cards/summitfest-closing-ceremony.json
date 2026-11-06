@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -43,9 +39,7 @@
                         "type": "OfType",
                         "value": {
                           "type": "Colored",
-                          "value": {
-                            "type": "Blue"
-                          }
+                          "value": "Blue"
                         }
                       }
                     }
@@ -60,9 +54,7 @@
                         "type": "OfType",
                         "value": {
                           "type": "Colored",
-                          "value": {
-                            "type": "Red"
-                          }
+                          "value": "Red"
                         }
                       }
                     }
@@ -72,9 +64,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -98,9 +88,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               },
               "spell": {
@@ -111,12 +99,8 @@
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
@@ -124,15 +108,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Instant"
-                          }
+                          "value": "Instant"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Sorcery"
-                          }
+                          "value": "Sorcery"
                         }
                       ]
                     },
@@ -148,37 +128,19 @@
             }
           },
           "functionsFrom": [
-            {
-              "type": "Library"
-            },
-            {
-              "type": "Hand"
-            },
-            {
-              "type": "Graveyard"
-            },
-            {
-              "type": "Battlefield"
-            },
-            {
-              "type": "Stack"
-            },
-            {
-              "type": "Exile"
-            },
-            {
-              "type": "Command"
-            },
-            {
-              "type": "Ante"
-            }
+            "Library",
+            "Hand",
+            "Graveyard",
+            "Battlefield",
+            "Stack",
+            "Exile",
+            "Command",
+            "Ante"
           ],
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "AgainstSlot",
                 "value": {
@@ -232,9 +194,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

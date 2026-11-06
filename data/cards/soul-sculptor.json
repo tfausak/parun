@@ -18,9 +18,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -40,21 +38,15 @@
                               "type": "SpellCast",
                               "value": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               }
                             }
                           },
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Enchantment"
-                              },
-                              "mode": {
-                                "type": "Replace"
-                              }
+                              "cardType": "Enchantment",
+                              "mode": "Replace"
                             }
                           },
                           "ref": {
@@ -72,9 +64,7 @@
                               "type": "SpellCast",
                               "value": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               }
                             }
                           },
@@ -111,9 +101,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -129,14 +117,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          }
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

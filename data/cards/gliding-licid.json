@@ -14,9 +14,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -39,9 +37,7 @@
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "Blue"
-                                      }
+                                      "value": "Blue"
                                     }
                                   }
                                 ]
@@ -70,9 +66,7 @@
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "Blue"
-                                      }
+                                      "value": "Blue"
                                     }
                                   }
                                 ]
@@ -82,12 +76,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Enchantment"
-                              },
-                              "mode": {
-                                "type": "Replace"
-                              }
+                              "cardType": "Enchantment",
+                              "mode": "Replace"
                             }
                           },
                           "ref": {
@@ -108,9 +98,7 @@
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "Blue"
-                                      }
+                                      "value": "Blue"
                                     }
                                   }
                                 ]
@@ -119,9 +107,7 @@
                           },
                           "modification": {
                             "type": "AddSubtype",
-                            "value": {
-                              "type": "Aura"
-                            }
+                            "value": "Aura"
                           },
                           "ref": {
                             "type": "InSlot",
@@ -141,9 +127,7 @@
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "Blue"
-                                      }
+                                      "value": "Blue"
                                     }
                                   }
                                 ]
@@ -193,9 +177,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -214,9 +196,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -243,14 +223,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Licid"
-          }
+          "Licid"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -36,15 +34,9 @@
           "condition": {
             "type": "LifeChanges",
             "value": {
-              "direction": {
-                "type": "Gained"
-              },
-              "frequency": {
-                "type": "FirstTimeEachTurn"
-              },
-              "player": {
-                "type": "You"
-              }
+              "direction": "Gained",
+              "frequency": "FirstTimeEachTurn",
+              "player": "You"
             }
           },
           "modal": {
@@ -58,9 +50,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -78,17 +68,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Angel"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Angel",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -117,9 +117,7 @@
       "step": "PrecombatMain",
       "player": "bob",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {
@@ -127,9 +125,7 @@
       "step": "PrecombatMain",
       "player": "carol",
       "do": {
-        "ChooseOptional": {
-          "type": "Declines"
-        }
+        "ChooseOptional": "Declines"
       }
     },
     {

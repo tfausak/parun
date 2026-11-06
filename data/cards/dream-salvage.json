@@ -7,15 +7,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             }
           }
         }
@@ -33,9 +29,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "CardsDiscardedThisTurn",
@@ -53,9 +47,7 @@
               "target": {
                 "filter": {
                   "type": "IsPlayer",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
                 "pool": {
                   "type": "Players"
@@ -67,9 +59,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -24,7 +24,7 @@ spec s = Spec.describe s "Parun.Codec.ZoneChange" $ do
             ZoneChange.to = Zone.Graveyard
           }
       )
-      " {\"departed\":1,\"object\":2,\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}} "
+      " {\"departed\":1,\"object\":2,\"from\":\"Battlefield\",\"to\":\"Graveyard\"} "
   -- The same id on both sides, which is ProposedEvent.WouldChangeZone's shape:
   -- nothing has moved yet, so nothing "became" anything.
   Spec.it s "MkZoneChange, the same id throughout" $
@@ -38,5 +38,5 @@ spec s = Spec.describe s "Parun.Codec.ZoneChange" $ do
             ZoneChange.to = Zone.Graveyard
           }
       )
-      " {\"departed\":3,\"object\":3,\"from\":{\"type\":\"Library\"},\"to\":{\"type\":\"Graveyard\"}} "
+      " {\"departed\":3,\"object\":3,\"from\":\"Library\",\"to\":\"Graveyard\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ZoneChange.codec

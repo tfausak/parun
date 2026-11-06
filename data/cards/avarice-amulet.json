@@ -60,17 +60,13 @@
                     "value": {
                       "phase": {
                         "type": "Beginning",
-                        "value": {
-                          "type": "Upkeep"
-                        }
+                        "value": "Upkeep"
                       },
                       "scope": {
                         "type": "PlayersTurn",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     }
@@ -86,9 +82,7 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
                                   "quantity": {
                                     "type": "Literal",
@@ -115,9 +109,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ],
               "permanent": {
@@ -154,9 +146,7 @@
                   "target": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -170,14 +160,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Equipment"
-          }
+          "Equipment"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

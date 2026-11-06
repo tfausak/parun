@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -31,12 +29,8 @@
           "condition": {
             "type": "PlayerActs",
             "value": {
-              "action": {
-                "type": "RollDice"
-              },
-              "player": {
-                "type": "You"
-              }
+              "action": "RollDice",
+              "player": "You"
             }
           },
           "modal": {
@@ -52,9 +46,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Blue"
-                                  }
+                                  "Blue"
                                 ],
                                 "keywords": [
                                   {
@@ -72,17 +64,11 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Dragon"
-                                    },
-                                    {
-                                      "type": "Faerie"
-                                    }
+                                    "Dragon",
+                                    "Faerie"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -104,17 +90,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Gnome"
-          },
-          {
-            "type": "Warlock"
-          }
+          "Gnome",
+          "Warlock"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

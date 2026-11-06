@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -51,9 +49,7 @@
                           "duration": {
                             "type": "UntilEndOfTurn"
                           },
-                          "what": {
-                            "type": "Block"
-                          }
+                          "what": "Block"
                         }
                       }
                     ]
@@ -73,17 +69,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          },
-          {
-            "type": "Scout"
-          }
+          "Goblin",
+          "Scout"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

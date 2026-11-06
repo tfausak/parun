@@ -11,9 +11,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -34,20 +32,14 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "HasPlayerDesignation",
                 "value": {
-                  "designation": {
-                    "type": "CitysBlessing"
-                  },
+                  "designation": "CitysBlessing",
                   "player": {
                     "type": "Relative",
-                    "value": {
-                      "type": "You"
-                    }
+                    "value": "You"
                   }
                 }
               },
@@ -73,17 +65,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Soldier"
-          },
-          {
-            "type": "Vampire"
-          }
+          "Soldier",
+          "Vampire"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

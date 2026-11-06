@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -35,9 +33,7 @@
                   }
                 ],
                 "payGate": {
-                  "branch": {
-                    "type": "IfNotPaid"
-                  },
+                  "branch": "IfNotPaid",
                   "cost": {
                     "mana": [
                       {
@@ -49,12 +45,8 @@
                   "payer": {
                     "type": "HolderOfBound",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "hop": {
-                        "type": "Itself"
-                      },
+                      "holder": "Controller",
+                      "hop": "Itself",
                       "slot": "spell"
                     }
                   }
@@ -64,9 +56,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -78,15 +68,11 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Instant"
-                              }
+                              "value": "Instant"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Sorcery"
-                              }
+                              "value": "Sorcery"
                             }
                           ]
                         },
@@ -95,13 +81,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
-                            "zone": {
-                              "type": "Graveyard"
-                            }
+                            "zone": "Graveyard"
                           }
                         }
                       }
@@ -118,9 +100,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -143,9 +123,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

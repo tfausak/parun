@@ -57,9 +57,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "White"
-                              }
+                              "value": "White"
                             }
                           }
                         }
@@ -96,9 +94,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Black"
-                              }
+                              "value": "Black"
                             }
                           }
                         }
@@ -132,9 +128,7 @@
       "oracleText": "{T}: Add {C}.\n{T}: Add {W} or {B}. This land deals 1 damage to you.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

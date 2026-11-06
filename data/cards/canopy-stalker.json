@@ -3,9 +3,7 @@
     {
       "blockRequirements": [
         {
-          "arity": {
-            "type": "AnySubject"
-          },
+          "arity": "AnySubject",
           "attacker": {
             "type": "Matching",
             "value": {
@@ -23,9 +21,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -46,9 +42,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -64,9 +58,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Count",
@@ -76,21 +68,15 @@
                               },
                               "filter": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               "scope": {
                                 "type": "InHistory",
                                 "value": {
                                   "type": "MovedBetween",
                                   "value": {
-                                    "from": {
-                                      "type": "Battlefield"
-                                    },
-                                    "to": {
-                                      "type": "Graveyard"
-                                    }
+                                    "from": "Battlefield",
+                                    "to": "Graveyard"
                                   }
                                 }
                               }
@@ -108,14 +94,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          }
+          "Cat"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

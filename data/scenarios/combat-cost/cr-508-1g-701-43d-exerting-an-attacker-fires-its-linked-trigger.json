@@ -44,9 +44,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseExert",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },

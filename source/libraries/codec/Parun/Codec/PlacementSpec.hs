@@ -35,7 +35,7 @@ spec s = Spec.describe s "Parun.Codec.Placement" $ do
           Placement.Type.faceDown = Just FaceDownReason.Type.Manifested,
           Placement.Type.protector = Just (Label.Type.MkLabel (Text.pack "carol"))
         }
-      " {\"card\":\"Goblin Piker\",\"label\":\"piker\",\"tapped\":true,\"ready\":true,\"damage\":1,\"counters\":[{\"key\":{\"type\":\"PlusOnePlusOne\"},\"value\":2}],\"token\":true,\"controller\":\"bob\",\"attached\":\"bear\",\"commander\":true,\"face\":\"Nightfall Predator\",\"faceDown\":{\"type\":\"Manifested\"},\"protector\":\"carol\"} "
+      " {\"card\":\"Goblin Piker\",\"label\":\"piker\",\"tapped\":true,\"ready\":true,\"damage\":1,\"counters\":[{\"key\":{\"type\":\"PlusOnePlusOne\"},\"value\":2}],\"token\":true,\"controller\":\"bob\",\"attached\":\"bear\",\"commander\":true,\"face\":\"Nightfall Predator\",\"faceDown\":\"Manifested\",\"protector\":\"carol\"} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s Placement.codec
 

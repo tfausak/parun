@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -22,9 +20,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -37,12 +33,8 @@
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "Opponent"
-                                }
+                                "holder": "Controller",
+                                "relation": "Opponent"
                               }
                             },
                             {
@@ -50,15 +42,11 @@
                               "value": [
                                 {
                                   "type": "HasColor",
-                                  "value": {
-                                    "type": "Blue"
-                                  }
+                                  "value": "Blue"
                                 },
                                 {
                                   "type": "HasColor",
-                                  "value": {
-                                    "type": "Black"
-                                  }
+                                  "value": "Black"
                                 }
                               ]
                             }
@@ -68,9 +56,7 @@
                           "type": "InHistory",
                           "value": {
                             "type": "SpellCast",
-                            "value": {
-                              "type": "ThisTurn"
-                            }
+                            "value": "ThisTurn"
                           }
                         }
                       }
@@ -87,9 +73,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -137,9 +121,7 @@
                         "value": {
                           "quality": {
                             "type": "HasColor",
-                            "value": {
-                              "type": "Blue"
-                            }
+                            "value": "Blue"
                           },
                           "scope": {
                             "type": "Opponent"
@@ -165,9 +147,7 @@
                         "value": {
                           "quality": {
                             "type": "HasColor",
-                            "value": {
-                              "type": "Black"
-                            }
+                            "value": "Black"
                           },
                           "scope": {
                             "type": "Opponent"
@@ -194,9 +174,7 @@
                           "type": "Hexproof",
                           "value": {
                             "type": "HasColor",
-                            "value": {
-                              "type": "Blue"
-                            }
+                            "value": "Blue"
                           }
                         }
                       },
@@ -208,19 +186,13 @@
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "You"
-                                }
+                                "holder": "Controller",
+                                "relation": "You"
                               }
                             },
                             {
                               "type": "IsInZone",
-                              "value": {
-                                "type": "Battlefield"
-                              }
+                              "value": "Battlefield"
                             }
                           ]
                         }
@@ -239,9 +211,7 @@
                           "type": "Hexproof",
                           "value": {
                             "type": "HasColor",
-                            "value": {
-                              "type": "Black"
-                            }
+                            "value": "Black"
                           }
                         }
                       },
@@ -253,19 +223,13 @@
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "You"
-                                }
+                                "holder": "Controller",
+                                "relation": "You"
                               }
                             },
                             {
                               "type": "IsInZone",
-                              "value": {
-                                "type": "Battlefield"
-                              }
+                              "value": "Battlefield"
                             }
                           ]
                         }
@@ -280,9 +244,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -18,9 +18,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -49,9 +47,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -71,9 +67,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "components": [
                           {
@@ -121,9 +115,7 @@
                       "type": "Not",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       }
                     },
                     "pool": {
@@ -155,21 +147,15 @@
                             "value": {
                               "filter": {
                                 "type": "IsInZone",
-                                "value": {
-                                  "type": "Graveyard"
-                                }
+                                "value": "Graveyard"
                               },
                               "slot": "thatDiscardedCard"
                             }
                           },
                           "riders": {
-                            "tapped": {
-                              "type": "Tapped"
-                            }
+                            "tapped": "Tapped"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -207,27 +193,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -288,22 +268,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Djinn"
-          },
-          {
-            "type": "Noble"
-          }
+          "Djinn",
+          "Noble"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

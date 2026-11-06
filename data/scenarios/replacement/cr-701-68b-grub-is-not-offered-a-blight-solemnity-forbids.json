@@ -1,0 +1,102 @@
+{
+  "description": "CR 701.68b Grub is not offered a blight Solemnity forbids",
+  "note": "With Solemnity out no creature alice controls can take a -1/-1 counter, so she is unable to blight and can't choose to: Grub's \"you may\" raises no prompt (an unscheduled ChooseOptional fails the scenario), and with no blight there is no token copy.",
+  "board": {
+    "active": "alice",
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Grub, Storied Matriarch",
+            "label": "grub",
+            "ready": true
+          },
+          {
+            "card": "Wall of Stone",
+            "label": "wall",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain"
+          },
+          {
+            "card": "Solemnity",
+            "label": "solemnity"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "source": "$grub",
+      "do": {
+        "ChooseToPay": {
+          "decision": "Pays",
+          "mana": [
+            "$mountain"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$grub"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "Names": {
+          "object": "$grub",
+          "names": [
+            "Grub, Notorious Auntie"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "$wall",
+          "kind": {
+            "type": "MinusOneMinusOne"
+          },
+          "count": 0
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Wall of Stone",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

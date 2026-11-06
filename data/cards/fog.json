@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -30,21 +28,15 @@
                         "type": "DamageR",
                         "value": {
                           "matching": {
-                            "whichKind": {
-                              "type": "Combat"
-                            }
+                            "whichKind": "Combat"
                           },
                           "rewrite": {
                             "type": "PreventAll"
                           }
                         }
                       },
-                      "origin": {
-                        "type": "Other"
-                      },
-                      "uses": {
-                        "type": "Unlimited"
-                      }
+                      "origin": "Other",
+                      "uses": "Unlimited"
                     }
                   }
                 ]
@@ -55,9 +47,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

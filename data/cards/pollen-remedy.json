@@ -15,9 +15,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Land"
-                    }
+                    "value": "Land"
                   }
                 }
               }
@@ -31,9 +29,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -87,9 +83,7 @@
                           "type": "TimesPaid",
                           "value": {
                             "type": "Printed",
-                            "value": {
-                              "type": "Kicker"
-                            }
+                            "value": "Kicker"
                           }
                         }
                       }
@@ -106,9 +100,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

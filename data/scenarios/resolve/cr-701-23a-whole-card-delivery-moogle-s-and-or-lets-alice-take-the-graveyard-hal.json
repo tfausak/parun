@@ -80,9 +80,7 @@
         "Answer": {
           "prompt": "ChooseSearchZones",
           "with": [
-            {
-              "type": "Graveyard"
-            }
+            "Graveyard"
           ]
         }
       }

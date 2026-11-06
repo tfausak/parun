@@ -10,24 +10,18 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
           },
-          "limit": {
-            "type": "OncePerGame"
-          },
+          "limit": "OncePerGame",
           "modal": {
             "modes": [
               {
@@ -56,17 +50,11 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Construct"
-                                    }
+                                    "Construct"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    },
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Artifact",
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -88,9 +76,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Conspiracy"
-          }
+          "Conspiracy"
         ]
       }
     }

@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -37,34 +35,22 @@
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "Measures",
                   "value": {
-                    "comparison": {
-                      "type": "GreaterThan"
-                    },
-                    "measure": {
-                      "type": "Toughness"
-                    },
+                    "comparison": "GreaterThan",
+                    "measure": "Toughness",
                     "operand": {
                       "type": "Own",
-                      "value": {
-                        "type": "Power"
-                      }
+                      "value": "Power"
                     }
                   }
                 }
@@ -74,9 +60,7 @@
           "modifications": [
             {
               "type": "AssignCombatDamage",
-              "value": {
-                "type": "EqualToToughness"
-              }
+              "value": "EqualToToughness"
             }
           ]
         },
@@ -100,20 +84,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Robot"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Robot",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -33,13 +31,9 @@
             "value": {
               "filter": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Artifact"
-                }
+                "value": "Artifact"
               },
-              "player": {
-                "type": "Opponent"
-              }
+              "player": "Opponent"
             }
           },
           "modal": {
@@ -75,17 +69,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Detective"
-          },
-          {
-            "type": "Human"
-          }
+          "Detective",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -131,9 +131,7 @@
       "player": "alice",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$s3"
           ]

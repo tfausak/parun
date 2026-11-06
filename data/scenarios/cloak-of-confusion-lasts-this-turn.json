@@ -90,9 +90,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "DeclareBlockers",
@@ -132,9 +130,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Declines"
-        }
+        "ChooseOptional": "Declines"
       },
       "player": "alice",
       "step": "DeclareBlockers",

@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -44,19 +42,13 @@
                 "value": [
                   {
                     "type": "WasCastFrom",
-                    "value": {
-                      "type": "Graveyard"
-                    }
+                    "value": "Graveyard"
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Owner"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Owner",
+                      "relation": "You"
                     }
                   }
                 ]
@@ -84,9 +76,7 @@
               "value": [
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Spirit"
-                  }
+                  "value": "Spirit"
                 },
                 {
                   "type": "Not",
@@ -97,12 +87,8 @@
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -131,17 +117,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Knight"
-          },
-          {
-            "type": "Spirit"
-          }
+          "Knight",
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

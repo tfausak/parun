@@ -27,9 +27,7 @@
               },
               "matching": {
                 "type": "HasColor",
-                "value": {
-                  "type": "Blue"
-                }
+                "value": "Blue"
               },
               "subject": {
                 "type": "Spells"
@@ -43,9 +41,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

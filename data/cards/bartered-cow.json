@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -36,9 +34,7 @@
                 "value": {
                   "destinations": [
                     {
-                      "zone": {
-                        "type": "Graveyard"
-                      }
+                      "zone": "Graveyard"
                     }
                   ]
                 }
@@ -94,9 +90,7 @@
                                                   "value": {
                                                     "player": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -115,14 +109,10 @@
                                 "name": "Food Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Food"
-                                    }
+                                    "Food"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -144,14 +134,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ox"
-          }
+          "Ox"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

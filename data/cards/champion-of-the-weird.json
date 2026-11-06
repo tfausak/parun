@@ -48,9 +48,7 @@
                   "target": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -72,9 +70,7 @@
           "type": "BeholdAndExile",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Goblin"
-            }
+            "value": "Goblin"
           }
         }
       ],
@@ -87,9 +83,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -126,9 +120,7 @@
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -141,17 +133,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Berserker"
-          },
-          {
-            "type": "Goblin"
-          }
+          "Berserker",
+          "Goblin"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

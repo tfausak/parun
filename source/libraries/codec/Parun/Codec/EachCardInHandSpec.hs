@@ -25,7 +25,7 @@ spec s = Spec.describe s "Parun.Codec.EachCardInHand" $ do
             EachCardInHand.filter = Just (Filter.Not (Filter.HasCardType CardType.Land))
           }
       )
-      " {\"hands\":{\"type\":\"InSlot\",\"value\":\"target\"},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}} "
+      " {\"hands\":{\"type\":\"InSlot\",\"value\":\"target\"},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}} "
   -- Amnesia's reveal: the whole hand, which Parun.Types.Filter has no
   -- tautological arm to say, so the absent key is the only spelling.
   Spec.it s "MkEachCardInHand, no filter, and the key is omitted" $

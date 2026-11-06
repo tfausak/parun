@@ -65,9 +65,7 @@
                           },
                           "modification": {
                             "type": "ChosenColor",
-                            "value": {
-                              "type": "Replace"
-                            }
+                            "value": "Replace"
                           },
                           "ref": {
                             "type": "InSlot",
@@ -108,17 +106,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Scarecrow"
-          }
+          "Scarecrow"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

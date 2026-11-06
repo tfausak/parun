@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -78,14 +76,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Devil"
-          }
+          "Devil"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

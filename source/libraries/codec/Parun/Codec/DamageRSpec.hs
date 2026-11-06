@@ -35,5 +35,5 @@ spec s = Spec.describe s "Parun.Codec.DamageR" $ do
             DamageR.riders = Seq.empty
           }
       )
-      " {\"matching\":{\"whichKind\":{\"type\":\"Combat\"}},\"rewrite\":{\"type\":\"PreventAll\"}} "
+      " {\"matching\":{\"whichKind\":\"Combat\"},\"rewrite\":{\"type\":\"PreventAll\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s (DamageR.codec (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))

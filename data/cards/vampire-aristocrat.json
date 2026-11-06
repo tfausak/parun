@@ -14,9 +14,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               }
@@ -71,9 +69,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -89,20 +85,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Noble"
-          },
-          {
-            "type": "Rogue"
-          },
-          {
-            "type": "Vampire"
-          }
+          "Noble",
+          "Rogue",
+          "Vampire"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

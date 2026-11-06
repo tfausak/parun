@@ -9,9 +9,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -42,16 +40,12 @@
                                     "value": [
                                       {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Creature"
-                                        }
+                                        "value": "Creature"
                                       },
                                       {
                                         "type": "HeldByBound",
                                         "value": {
-                                          "holder": {
-                                            "type": "Controller"
-                                          },
+                                          "holder": "Controller",
                                           "slot": "opponent"
                                         }
                                       }
@@ -62,13 +56,9 @@
                                     "value": {
                                       "player": {
                                         "type": "Relative",
-                                        "value": {
-                                          "type": "AnyPlayer"
-                                        }
+                                        "value": "AnyPlayer"
                                       },
-                                      "zone": {
-                                        "type": "Battlefield"
-                                      }
+                                      "zone": "Battlefield"
                                     }
                                   }
                                 }
@@ -77,9 +67,7 @@
                                 "type": "InSlot",
                                 "value": "X"
                               },
-                              "rounding": {
-                                "type": "Down"
-                              }
+                              "rounding": "Down"
                             }
                           },
                           "ref": {
@@ -89,16 +77,12 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldByBound",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
+                                    "holder": "Controller",
                                     "slot": "opponent"
                                   }
                                 }
@@ -116,9 +100,7 @@
               "opponent": {
                 "filter": {
                   "type": "IsPlayer",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
                 "pool": {
                   "type": "Players"
@@ -130,9 +112,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

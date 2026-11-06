@@ -73,9 +73,7 @@
       "do": {
         "Answer": {
           "prompt": "OfferedExtra",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

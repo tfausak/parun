@@ -16,5 +16,5 @@ spec s = Spec.describe s "Parun.Codec.ManaSpent" $ do
       s
       ManaSpent.codec
       (ManaSpent.OfTypeOnX (ManaType.Colored Color.Black))
-      " {\"type\":\"OfTypeOnX\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Black\"}}} "
+      " {\"type\":\"OfTypeOnX\",\"value\":{\"type\":\"Colored\",\"value\":\"Black\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ManaSpent.codec

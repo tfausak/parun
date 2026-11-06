@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -31,9 +29,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Green"
-                              }
+                              "Green"
                             ],
                             "keywords": [
                               {
@@ -51,17 +47,11 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Tyranid"
-                                },
-                                {
-                                  "type": "Warrior"
-                                }
+                                "Tyranid",
+                                "Warrior"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -81,9 +71,7 @@
                             "type": "OverPlayers",
                             "value": {
                               "type": "Relative",
-                              "value": {
-                                "type": "Opponent"
-                              }
+                              "value": "Opponent"
                             }
                           }
                         }
@@ -98,9 +86,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

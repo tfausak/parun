@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -47,33 +43,21 @@
                   "value": [
                     {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Kithkin"
-                      }
+                      "value": "Kithkin"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Owner"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Owner",
+                        "relation": "You"
                       }
                     }
                   ]
                 }
               },
-              "from": {
-                "type": "Library"
-              },
-              "to": {
-                "type": "Hand"
-              },
-              "whose": {
-                "type": "You"
-              }
+              "from": "Library",
+              "to": "Hand",
+              "whose": "You"
             }
           },
           "modal": {
@@ -110,9 +94,7 @@
             "value": {
               "type": "Declaration",
               "value": {
-                "player": {
-                  "type": "You"
-                }
+                "player": "You"
               }
             }
           },
@@ -149,15 +131,11 @@
                                 "value": [
                                   {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Kithkin"
-                                    }
+                                    "value": "Kithkin"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   }
                                 ]
                               },
@@ -181,20 +159,12 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Bard"
-          },
-          {
-            "type": "Kithkin"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Bard",
+          "Kithkin",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

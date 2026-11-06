@@ -12,49 +12,49 @@ spec s = Spec.describe s "Parun.Codec.FaceDownReason" $ do
       s
       FaceDownReason.codec
       FaceDownReason.Morphed
-      " {\"type\":\"Morphed\"} "
+      " \"Morphed\" "
   Spec.it s "Disguised" $
     Common.assertCodec
       s
       FaceDownReason.codec
       FaceDownReason.Disguised
-      " {\"type\":\"Disguised\"} "
+      " \"Disguised\" "
   Spec.it s "Manifested" $
     Common.assertCodec
       s
       FaceDownReason.codec
       FaceDownReason.Manifested
-      " {\"type\":\"Manifested\"} "
+      " \"Manifested\" "
   Spec.it s "Cloaked" $
     Common.assertCodec
       s
       FaceDownReason.codec
       FaceDownReason.Cloaked
-      " {\"type\":\"Cloaked\"} "
+      " \"Cloaked\" "
   Spec.it s "TurnedFaceDown" $
     Common.assertCodec
       s
       FaceDownReason.codec
       FaceDownReason.TurnedFaceDown
-      " {\"type\":\"TurnedFaceDown\"} "
+      " \"TurnedFaceDown\" "
   Spec.it s "EnteredFaceDown" $
     Common.assertCodec
       s
       FaceDownReason.codec
       FaceDownReason.EnteredFaceDown
-      " {\"type\":\"EnteredFaceDown\"} "
+      " \"EnteredFaceDown\" "
   Spec.it s "CastFaceDown" $
     Common.assertCodec
       s
       FaceDownReason.codec
       FaceDownReason.CastFaceDown
-      " {\"type\":\"CastFaceDown\"} "
+      " \"CastFaceDown\" "
   Spec.it s "HiddenAgenda" $
     Common.assertCodec
       s
       FaceDownReason.codec
       FaceDownReason.HiddenAgenda
-      " {\"type\":\"HiddenAgenda\"} "
+      " \"HiddenAgenda\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

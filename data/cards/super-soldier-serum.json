@@ -17,9 +17,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -58,19 +56,13 @@
             },
             {
               "type": "AddSupertype",
-              "value": {
-                "type": "Legendary"
-              }
+              "value": "Legendary"
             },
             {
               "type": "CreatureSubtype",
               "value": {
-                "mode": {
-                  "type": "InAddition"
-                },
-                "subtype": {
-                  "type": "Soldier"
-                }
+                "mode": "InAddition",
+                "subtype": "Soldier"
               }
             }
           ]
@@ -104,9 +96,7 @@
                       "type": "IsSource"
                     }
                   },
-                  "role": {
-                    "type": "Blocker"
-                  }
+                  "role": "Blocker"
                 }
               }
             ]
@@ -155,19 +145,13 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Equipment"
-                          }
+                          "value": "Equipment"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -184,14 +168,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

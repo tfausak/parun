@@ -12,19 +12,19 @@ spec s = Spec.describe s "Parun.Codec.DiceReading" $ do
       s
       DiceReading.codec
       DiceReading.ChooseOne
-      " {\"type\":\"ChooseOne\"} "
+      " \"ChooseOne\" "
   Spec.it s "Total" $
     Common.assertCodec
       s
       DiceReading.codec
       DiceReading.Total
-      " {\"type\":\"Total\"} "
+      " \"Total\" "
   Spec.it s "Both" $
     Common.assertCodec
       s
       DiceReading.codec
       DiceReading.Both
-      " {\"type\":\"Both\"} "
+      " \"Both\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s DiceReading.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s DiceReading.codec

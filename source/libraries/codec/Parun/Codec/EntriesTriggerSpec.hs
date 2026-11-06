@@ -20,6 +20,6 @@ spec s = Spec.describe s "Parun.Codec.EntriesTrigger" $ do
             EntriesTrigger.triggering = EntryTriggering.NoTrigger
           }
       )
-      " {\"entrants\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"triggering\":{\"type\":\"NoTrigger\"}} "
+      " {\"entrants\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"triggering\":\"NoTrigger\"} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s EntriesTrigger.codec

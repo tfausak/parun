@@ -14,18 +14,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -41,9 +37,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -77,17 +71,13 @@
                                 "value": {
                                   "phase": {
                                     "type": "Ending",
-                                    "value": {
-                                      "type": "EndStep"
-                                    }
+                                    "value": "EndStep"
                                   },
                                   "scope": {
                                     "type": "PlayersTurn",
                                     "value": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "AnyPlayer"
-                                      }
+                                      "value": "AnyPlayer"
                                     }
                                   }
                                 }
@@ -131,12 +121,8 @@
                 "filter": {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 "pool": {
@@ -149,9 +135,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

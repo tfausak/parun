@@ -33,7 +33,7 @@ spec s = Spec.describe s "Parun.Codec.FaceDownCharacteristics" $ do
                 TypeLine.subtypes = Set.singleton Subtype.Cyberman
               }
         }
-      " {\"typeLine\":{\"subtypes\":[{\"type\":\"Cyberman\"}],\"types\":[{\"type\":\"Artifact\"},{\"type\":\"Creature\"}]}} "
+      " {\"typeLine\":{\"subtypes\":[\"Cyberman\"],\"types\":[\"Artifact\",\"Creature\"]}} "
   -- CR 702.168b's and CR 701.58a's ward {2}, the one listing in the rules that
   -- names a keyword -- minted by
   -- Parun.Types.FaceDownCharacteristics.disguisedValue rather than by a card, and

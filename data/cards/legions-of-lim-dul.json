@@ -9,15 +9,11 @@
             "value": [
               {
                 "type": "HasSupertype",
-                "value": {
-                  "type": "Snow"
-                }
+                "value": "Snow"
               },
               {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Swamp"
-                }
+                "value": "Swamp"
               }
             ]
           }
@@ -32,18 +28,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -59,14 +51,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Zombie"
-          }
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

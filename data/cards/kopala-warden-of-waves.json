@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -53,26 +49,18 @@
                 "value": [
                   {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Merfolk"
-                    }
+                    "value": "Merfolk"
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   },
                   {
                     "type": "IsInZone",
-                    "value": {
-                      "type": "Battlefield"
-                    }
+                    "value": "Battlefield"
                   }
                 ]
               }
@@ -108,26 +96,18 @@
                 "value": [
                   {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Merfolk"
-                    }
+                    "value": "Merfolk"
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   },
                   {
                     "type": "IsInZone",
-                    "value": {
-                      "type": "Battlefield"
-                    }
+                    "value": "Battlefield"
                   }
                 ]
               }
@@ -148,22 +128,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Merfolk"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Merfolk",
+          "Wizard"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

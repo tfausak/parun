@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -29,17 +27,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -47,9 +41,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -65,9 +57,7 @@
                     "value": {
                       "type": "Superlative",
                       "value": {
-                        "comparison": {
-                          "type": "GreaterThan"
-                        },
+                        "comparison": "GreaterThan",
                         "measure": {
                           "type": "LifeTotal"
                         }
@@ -101,9 +91,7 @@
                           "to": {
                             "type": "Superlative",
                             "value": {
-                              "comparison": {
-                                "type": "GreaterThan"
-                              },
+                              "comparison": "GreaterThan",
                               "measure": {
                                 "type": "LifeTotal"
                               }
@@ -121,14 +109,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ogre"
-          }
+          "Ogre"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

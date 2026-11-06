@@ -25,9 +25,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -40,9 +38,7 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Planeswalker"
-                          }
+                          "value": "Planeswalker"
                         },
                         {
                           "type": "Not",
@@ -84,9 +80,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Black"
-                                  }
+                                  "Black"
                                 ],
                                 "keywords": [
                                   {
@@ -104,14 +98,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Beast"
-                                    }
+                                    "Beast"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -156,9 +146,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       },
                       {
@@ -166,18 +154,14 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "AgainstSlot",
                             "value": {
                               "quantity": {
                                 "type": "Measure",
-                                "value": {
-                                  "type": "Toughness"
-                                }
+                                "value": "Toughness"
                               },
                               "slot": "target"
                             }
@@ -236,15 +220,11 @@
                                             "value": [
                                               {
                                                 "type": "HasCardType",
-                                                "value": {
-                                                  "type": "Creature"
-                                                }
+                                                "value": "Creature"
                                               },
                                               {
                                                 "type": "IsAttackingPlayer",
-                                                "value": {
-                                                  "type": "You"
-                                                }
+                                                "value": "You"
                                               }
                                             ]
                                           }
@@ -324,9 +304,7 @@
                   "target": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -351,18 +329,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -370,19 +344,13 @@
       "oracleText": "[+1]: Destroy another target planeswalker.\n[+1]: Create a 3/3 black Beast creature token with deathtouch.\n[−3]: Destroy target creature. You gain life equal to its toughness.\n[−8]: Target opponent gets an emblem with \"Whenever a creature attacks you, it gets +5/+5 and gains trample until end of turn.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Garruk"
-          }
+          "Garruk"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

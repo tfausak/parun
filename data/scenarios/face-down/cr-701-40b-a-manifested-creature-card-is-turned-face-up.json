@@ -9,9 +9,7 @@
           {
             "card": "Goblin Piker",
             "label": "piker",
-            "faceDown": {
-              "type": "Manifested"
-            }
+            "faceDown": "Manifested"
           },
           {
             "card": "Mountain",

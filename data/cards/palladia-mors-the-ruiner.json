@@ -21,27 +21,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -69,9 +63,7 @@
                       "party": {
                         "type": "Anyone"
                       },
-                      "window": {
-                        "type": "AsThisObject"
-                      }
+                      "window": "AsThisObject"
                     }
                   }
                 }
@@ -94,22 +86,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dragon"
-          },
-          {
-            "type": "Elder"
-          }
+          "Dragon",
+          "Elder"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -14,9 +14,7 @@
               ]
             },
             "quality": null,
-            "target": {
-              "type": "Planeswalker"
-            }
+            "target": "Planeswalker"
           }
         },
         {
@@ -51,9 +49,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -91,19 +87,13 @@
           "modifications": [
             {
               "type": "LoseCardType",
-              "value": {
-                "type": "Planeswalker"
-              }
+              "value": "Planeswalker"
             },
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Creature"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Creature",
+                "mode": "InAddition"
               }
             }
           ]
@@ -111,19 +101,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Equipment"
-          }
+          "Equipment"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

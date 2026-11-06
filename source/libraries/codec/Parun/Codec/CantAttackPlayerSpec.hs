@@ -31,5 +31,5 @@ spec s = Spec.describe s "Parun.Codec.CantAttackPlayer" $ do
             CantAttackPlayer.name = Nothing
           }
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"defenders\":{\"type\":\"You\"},\"kinds\":[{\"type\":\"OfPlayer\"},{\"type\":\"OfPlaneswalker\"}]} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"defenders\":{\"type\":\"You\"},\"kinds\":[\"OfPlayer\",\"OfPlaneswalker\"]} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CantAttackPlayer.codec

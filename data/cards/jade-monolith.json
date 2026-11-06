@@ -35,9 +35,7 @@
                             "type": "InSlot",
                             "value": "you"
                           },
-                          "uses": {
-                            "type": "Once"
-                          }
+                          "uses": "Once"
                         }
                       }
                     ]
@@ -65,9 +63,7 @@
       "oracleText": "{1}: The next time a source of your choice would deal damage to target creature this turn, that source deals that damage to you instead.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

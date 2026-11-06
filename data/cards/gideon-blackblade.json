@@ -122,12 +122,8 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -167,9 +163,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -181,9 +175,7 @@
                       "type": "Not",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       }
                     },
                     "pool": {
@@ -209,18 +201,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -231,16 +219,12 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "Exactly"
-              },
+              "comparison": "Exactly",
               "measured": {
                 "type": "IsActivePlayer",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -275,16 +259,12 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "Exactly"
-              },
+              "comparison": "Exactly",
               "measured": {
                 "type": "IsActivePlayer",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -297,34 +277,22 @@
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Creature"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Creature",
+                "mode": "InAddition"
               }
             },
             {
               "type": "CreatureSubtype",
               "value": {
-                "mode": {
-                  "type": "InAddition"
-                },
-                "subtype": {
-                  "type": "Human"
-                }
+                "mode": "InAddition",
+                "subtype": "Human"
               }
             },
             {
               "type": "CreatureSubtype",
               "value": {
-                "mode": {
-                  "type": "InAddition"
-                },
-                "subtype": {
-                  "type": "Soldier"
-                }
+                "mode": "InAddition",
+                "subtype": "Soldier"
               }
             },
             {
@@ -351,19 +319,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Gideon"
-          }
+          "Gideon"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

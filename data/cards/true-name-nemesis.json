@@ -21,18 +21,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -52,9 +48,7 @@
               },
               "rewrite": {
                 "type": "ChoosePlayer",
-                "value": {
-                  "type": "AnyPlayer"
-                }
+                "value": "AnyPlayer"
               }
             }
           }
@@ -66,17 +60,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Merfolk"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Merfolk",
+          "Rogue"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

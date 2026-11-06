@@ -22,7 +22,7 @@ spec s = Spec.describe s "Parun.Codec.ManaFilter" $ do
       s
       ManaFilter.codec
       (ManaFilter.OfType (ManaType.Colored Color.Green))
-      " {\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}} "
+      " {\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Green\"}} "
   -- CR 106.1b's sixth type, which is not a colour.
   Spec.it s "OfType, colorless" $
     Common.assertCodec
@@ -37,6 +37,6 @@ spec s = Spec.describe s "Parun.Codec.ManaFilter" $ do
       s
       ManaFilter.codec
       (ManaFilter.NotOfType (ManaType.Colored Color.White))
-      " {\"type\":\"NotOfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}}} "
+      " {\"type\":\"NotOfType\",\"value\":{\"type\":\"Colored\",\"value\":\"White\"}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ManaFilter.codec

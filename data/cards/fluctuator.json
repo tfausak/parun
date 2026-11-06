@@ -34,9 +34,7 @@
                 "value": {
                   "grantedBy": {
                     "type": "OfFamily",
-                    "value": {
-                      "type": "Cycling"
-                    }
+                    "value": "Cycling"
                   }
                 }
               }
@@ -49,9 +47,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

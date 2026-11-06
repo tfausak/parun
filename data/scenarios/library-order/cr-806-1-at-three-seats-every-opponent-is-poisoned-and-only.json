@@ -25,8 +25,8 @@
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$prologue", "mana": ["$island-1", "$island-2"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": { "type": "Poison" }, "count": 1 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "carol", "kind": { "type": "Poison" }, "count": 1 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": { "type": "Poison" }, "count": 0 } } }
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": "Poison", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "carol", "kind": "Poison", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": "Poison", "count": 0 } } }
   ]
 }

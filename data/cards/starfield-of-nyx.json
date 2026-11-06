@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -27,9 +25,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Enchantment"
-                  }
+                  "value": "Enchantment"
                 },
                 {
                   "type": "Not",
@@ -41,20 +37,14 @@
                   "type": "Not",
                   "value": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Aura"
-                    }
+                    "value": "Aura"
                   }
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -63,9 +53,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -77,19 +65,13 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Enchantment"
-                        }
+                        "value": "Enchantment"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       }
                     ]
@@ -99,13 +81,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -120,12 +98,8 @@
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Creature"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Creature",
+                "mode": "InAddition"
               }
             },
             {
@@ -133,15 +107,11 @@
               "value": {
                 "power": {
                   "type": "Measure",
-                  "value": {
-                    "type": "ManaValue"
-                  }
+                  "value": "ManaValue"
                 },
                 "toughness": {
                   "type": "Measure",
-                  "value": {
-                    "type": "ManaValue"
-                  }
+                  "value": "ManaValue"
                 }
               }
             }
@@ -155,17 +125,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -183,9 +149,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ],
@@ -198,9 +162,7 @@
                   "target": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Enchantment"
-                      }
+                      "value": "Enchantment"
                     },
                     "pool": {
                       "type": "CardsInGraveyard",
@@ -220,9 +182,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -23,31 +23,23 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "BattlefieldTapped"
-                          },
+                          "destination": "BattlefieldTapped",
                           "filter": {
                             "type": "And",
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Land"
-                                }
+                                "value": "Land"
                               },
                               {
                                 "type": "HasSupertype",
-                                "value": {
-                                  "type": "Basic"
-                                }
+                                "value": "Basic"
                               }
                             ]
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -55,9 +47,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "slot": "found"
                         }
@@ -68,9 +58,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -82,19 +70,13 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Land"
-                                  }
+                                  "value": "Land"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -104,13 +86,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
+                                  "value": "AnyPlayer"
                                 },
-                                "zone": {
-                                  "type": "Battlefield"
-                                }
+                                "zone": "Battlefield"
                               }
                             }
                           }
@@ -141,9 +119,7 @@
       "oracleText": "{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, untap that land.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

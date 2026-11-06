@@ -21,12 +21,12 @@ spec s = Spec.describe s "Parun.Codec.SpeedDecrease" $ do
       s
       SpeedDecrease.codec
       (SpeedDecrease.MkSpeedDecrease (PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "permanent"))) (Quantity.Literal 1) 1)
-      " {\"player\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"permanent\"}},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"floor\":1} "
+      " {\"player\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"permanent\"}},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"floor\":1} "
   -- A card printing no floor sentence writes none, and 0 is what that means.
   Spec.it s "MkSpeedDecrease, no floor: the key is omitted" $
     Common.assertCodec
       s
       SpeedDecrease.codec
       (SpeedDecrease.MkSpeedDecrease (PlayerRef.Relative PlayerRelation.AnyPlayer) (Quantity.Literal 2) 0)
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"quantity\":{\"type\":\"Literal\",\"value\":2}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"},\"quantity\":{\"type\":\"Literal\",\"value\":2}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s SpeedDecrease.codec

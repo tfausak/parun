@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -48,9 +46,7 @@
                     "value": {
                       "placement": {
                         "type": "Stated",
-                        "value": {
-                          "type": "Top"
-                        }
+                        "value": "Top"
                       },
                       "ref": {
                         "type": "ChosenCardFromAmong",
@@ -62,9 +58,7 @@
                           "slot": "looked"
                         }
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -74,9 +68,7 @@
               "target": {
                 "filter": {
                   "type": "IsPlayer",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
                 "pool": {
                   "type": "Players"
@@ -88,9 +80,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

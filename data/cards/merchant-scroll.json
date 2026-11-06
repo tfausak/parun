@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -27,31 +25,23 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "RevealThenHand"
-                      },
+                      "destination": "RevealThenHand",
                       "filter": {
                         "type": "And",
                         "value": [
                           {
                             "type": "HasColor",
-                            "value": {
-                              "type": "Blue"
-                            }
+                            "value": "Blue"
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Instant"
-                            }
+                            "value": "Instant"
                           }
                         ]
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -59,9 +49,7 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -73,9 +61,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

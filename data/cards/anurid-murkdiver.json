@@ -6,9 +6,7 @@
           "type": "Landwalk",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Swamp"
-            }
+            "value": "Swamp"
           }
         }
       ],
@@ -21,18 +19,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -48,20 +42,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          },
-          {
-            "type": "Frog"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Beast",
+          "Frog",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

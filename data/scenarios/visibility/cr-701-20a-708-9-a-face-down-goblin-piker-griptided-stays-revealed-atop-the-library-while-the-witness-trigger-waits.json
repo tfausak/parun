@@ -13,7 +13,7 @@
         "hand": [ { "card": "Griptide", "label": "griptide" } ],
         "library": [ { "card": "Swamp" }, { "card": "Swamp" }, { "card": "Swamp" } ] },
       { "name": "bob",
-        "battlefield": [ { "card": "Goblin Piker", "label": "piker", "faceDown": { "type": "Manifested" } } ],
+        "battlefield": [ { "card": "Goblin Piker", "label": "piker", "faceDown": "Manifested" } ],
         "library": [ { "card": "Forest" }, { "card": "Forest" } ] }
     ],
     "active": "alice",

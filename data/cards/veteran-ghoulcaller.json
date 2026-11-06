@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -41,24 +39,14 @@
                 "value": {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Owner"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Owner",
+                    "relation": "You"
                   }
                 }
               },
-              "from": {
-                "type": "Graveyard"
-              },
-              "to": {
-                "type": "Hand"
-              },
-              "whose": {
-                "type": "You"
-              }
+              "from": "Graveyard",
+              "to": "Hand",
+              "whose": "You"
             }
           },
           "modal": {
@@ -92,17 +80,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Human",
+          "Rogue"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

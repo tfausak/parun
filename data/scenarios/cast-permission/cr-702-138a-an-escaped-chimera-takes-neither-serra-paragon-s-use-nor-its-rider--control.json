@@ -122,9 +122,7 @@
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               }
             }
           ],

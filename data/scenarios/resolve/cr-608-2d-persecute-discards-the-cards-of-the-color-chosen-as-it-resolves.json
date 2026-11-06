@@ -67,9 +67,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseColor",
-          "with": {
-            "type": "Red"
-          }
+          "with": "Red"
         }
       }
     },

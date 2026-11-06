@@ -17,7 +17,7 @@ spec s = Spec.describe s "Parun.Codec.ManaRestriction" $ do
       s
       ManaRestriction.codec
       (ManaRestriction.onlyCasts (Filter.HasCardType CardType.Artifact))
-      " {\"casts\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}} "
+      " {\"casts\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}} "
   -- Omen Hawker: the other key, with CR 106.6 saying nothing about which
   -- abilities -- @And []@ being Parun.Types.Filter's trivial predicate.
   Spec.it s "only activations" $
@@ -36,7 +36,7 @@ spec s = Spec.describe s "Parun.Codec.ManaRestriction" $ do
         { ManaRestriction.casts = Just (Filter.HasCardType CardType.Artifact),
           ManaRestriction.activations = Just (Filter.HasCardType CardType.Artifact)
         }
-      " {\"casts\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}},\"activations\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}} "
+      " {\"casts\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"},\"activations\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}} "
   -- Sorcerer Class's "only to cast an instant or sorcery spell or to gain a
   -- Class level": a cast key beside CR 716.2c's ability key.
   Spec.it s "casts and keyword activations" $
@@ -47,7 +47,7 @@ spec s = Spec.describe s "Parun.Codec.ManaRestriction" $ do
         { ManaRestriction.casts = Just (Filter.HasCardType CardType.Instant),
           ManaRestriction.keywordActivations = Just (KeywordDesignator.OfFamily KeywordFamily.ClassLevel)
         }
-      " {\"casts\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},\"keywordActivations\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"ClassLevel\"}}} "
+      " {\"casts\":{\"type\":\"HasCardType\",\"value\":\"Instant\"},\"keywordActivations\":{\"type\":\"OfFamily\",\"value\":\"ClassLevel\"}} "
   -- Overgrown Zealot's "spend this mana only to turn permanents face up": the
   -- special-action key alone, with CR 116.2b saying nothing about WHICH
   -- permanents.
@@ -69,7 +69,7 @@ spec s = Spec.describe s "Parun.Codec.ManaRestriction" $ do
           ManaRestriction.unlocks = Just (Filter.And []),
           ManaRestriction.turnsFaceUp = Just (Filter.And [])
         }
-      " {\"casts\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Enchantment\"}},\"unlocks\":{\"type\":\"And\",\"value\":[]},\"turnsFaceUp\":{\"type\":\"And\",\"value\":[]}} "
+      " {\"casts\":{\"type\":\"HasCardType\",\"value\":\"Enchantment\"},\"unlocks\":{\"type\":\"And\",\"value\":[]},\"turnsFaceUp\":{\"type\":\"And\",\"value\":[]}} "
   -- Hydraulic Helper's "can't be spent to cast a nonartifact spell": the cast
   -- key under a prohibition, leaving every other payment open.
   Spec.it s "a prohibition" $
@@ -80,5 +80,5 @@ spec s = Spec.describe s "Parun.Codec.ManaRestriction" $ do
         { ManaRestriction.casts = Just (Filter.Not (Filter.HasCardType CardType.Artifact)),
           ManaRestriction.prohibits = True
         }
-      " {\"casts\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}},\"prohibits\":true} "
+      " {\"casts\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}},\"prohibits\":true} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ManaRestriction.codec

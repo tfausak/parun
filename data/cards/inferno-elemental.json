@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -47,14 +43,10 @@
                     "type": "EachCreature",
                     "value": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     }
                   },
-                  "role": {
-                    "type": "Blocker"
-                  }
+                  "role": "Blocker"
                 }
               },
               {
@@ -64,14 +56,10 @@
                     "type": "EachCreature",
                     "value": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     }
                   },
-                  "role": {
-                    "type": "Attacker"
-                  }
+                  "role": "Attacker"
                 }
               }
             ]
@@ -118,14 +106,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          }
+          "Elemental"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

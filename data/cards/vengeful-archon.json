@@ -45,9 +45,7 @@
                               }
                             }
                           ],
-                          "whoRecipient": {
-                            "type": "You"
-                          }
+                          "whoRecipient": "You"
                         }
                       }
                     ]
@@ -79,27 +77,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -115,14 +107,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Archon"
-          }
+          "Archon"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

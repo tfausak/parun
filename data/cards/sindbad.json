@@ -22,9 +22,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -48,9 +46,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -68,9 +64,7 @@
                                   "type": "Not",
                                   "value": {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Land"
-                                    }
+                                    "value": "Land"
                                   }
                                 }
                               ]
@@ -80,13 +74,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 },
-                                "zone": {
-                                  "type": "Hand"
-                                }
+                                "zone": "Hand"
                               }
                             }
                           }
@@ -127,9 +117,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -145,14 +133,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          }
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

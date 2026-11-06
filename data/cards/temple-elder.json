@@ -22,9 +22,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -45,9 +43,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             },
@@ -55,9 +51,7 @@
               "type": "BeforeStep",
               "value": {
                 "type": "Combat",
-                "value": {
-                  "type": "DeclareAttackers"
-                }
+                "value": "DeclareAttackers"
               }
             }
           ]
@@ -72,9 +66,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -90,17 +82,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Human"
-          }
+          "Cleric",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

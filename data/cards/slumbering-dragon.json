@@ -14,9 +14,7 @@
             "unless": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "AtLeast"
-                },
+                "comparison": "AtLeast",
                 "measured": {
                   "type": "ObjectCounters",
                   "value": {
@@ -43,9 +41,7 @@
             "unless": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "AtLeast"
-                },
+                "comparison": "AtLeast",
                 "measured": {
                   "type": "ObjectCounters",
                   "value": {
@@ -71,9 +67,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -100,9 +94,7 @@
                 },
                 "target": {
                   "type": "Defending",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -139,14 +131,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dragon"
-          }
+          "Dragon"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

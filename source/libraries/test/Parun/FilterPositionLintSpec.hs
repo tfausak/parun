@@ -595,8 +595,10 @@ manaValueComparisons wanted value = case value of
   Value.Object o ->
     let pairs = Object.unwrap o
         named k = [Pair.value p | p <- pairs, String.unwrap (Pair.name p) == Text.pack k]
+        -- An Arm.enum value is its bare tag, a mixed sum's a @type@ key.
         tagOf v = case v of
           Value.Object x -> [t | p <- Object.unwrap x, String.unwrap (Pair.name p) == Text.pack "type", Value.String t <- [Pair.value p]]
+          Value.String t -> [t]
           _ -> []
         isManaValue v = fmap String.unwrap (tagOf v) == [Text.pack "ManaValue"]
         operandTags = concatMap (fmap String.unwrap . tagOf) (named "operand")

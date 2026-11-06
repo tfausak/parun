@@ -48,15 +48,11 @@
                 "value": {
                   "left": {
                     "type": "Colored",
-                    "value": {
-                      "type": "White"
-                    }
+                    "value": "White"
                   },
                   "right": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Blue"
-                    }
+                    "value": "Blue"
                   }
                 }
               }
@@ -75,9 +71,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "White"
-                              }
+                              "value": "White"
                             }
                           }
                         }
@@ -89,9 +83,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "White"
-                              }
+                              "value": "White"
                             }
                           }
                         }
@@ -111,9 +103,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "White"
-                              }
+                              "value": "White"
                             }
                           }
                         }
@@ -125,9 +115,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Blue"
-                              }
+                              "value": "Blue"
                             }
                           }
                         }
@@ -147,9 +135,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Blue"
-                              }
+                              "value": "Blue"
                             }
                           }
                         }
@@ -161,9 +147,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Blue"
-                              }
+                              "value": "Blue"
                             }
                           }
                         }
@@ -180,9 +164,7 @@
       "oracleText": "{T}: Add {C}.\n{W/U}, {T}: Add {W}{W}, {W}{U}, or {U}{U}.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

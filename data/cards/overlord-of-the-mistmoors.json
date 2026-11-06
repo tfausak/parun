@@ -15,18 +15,14 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "White"
-                    }
+                    "value": "White"
                   }
                 },
                 {
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "White"
-                    }
+                    "value": "White"
                   }
                 }
               ]
@@ -44,18 +40,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -100,9 +92,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  }
+                                  "White"
                                 ],
                                 "keywords": [
                                   {
@@ -120,14 +110,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Insect"
-                                    }
+                                    "Insect"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -149,20 +135,12 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Avatar"
-          },
-          {
-            "type": "Horror"
-          }
+          "Avatar",
+          "Horror"
         ],
         "types": [
-          {
-            "type": "Creature"
-          },
-          {
-            "type": "Enchantment"
-          }
+          "Creature",
+          "Enchantment"
         ]
       }
     }

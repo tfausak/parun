@@ -24,7 +24,7 @@ spec s = Spec.describe s "Parun.Codec.InZone" $ do
       s
       InZone.codec
       (InZone.MkInZone {InZone.zone = Zone.Battlefield, InZone.player = PlayerRef.Relative PlayerRelation.AnyPlayer})
-      " {\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}} "
+      " {\"zone\":\"Battlefield\",\"player\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}} "
   -- CR 400.1's per-player half: a graveyard is one player's, so every reference
   -- naming players is a question that zone can answer.
   Spec.it s "a per-player zone takes any reference" $
@@ -32,7 +32,7 @@ spec s = Spec.describe s "Parun.Codec.InZone" $ do
       s
       InZone.codec
       (InZone.MkInZone {InZone.zone = Zone.Graveyard, InZone.player = PlayerRef.Relative PlayerRelation.Opponent})
-      " {\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}} "
+      " {\"zone\":\"Graveyard\",\"player\":{\"type\":\"Relative\",\"value\":\"Opponent\"}} "
   -- CR 400.1's invariant, at the point card data enters the engine. The first
   -- payload below and the accepted one above differ in the ZONE alone -- the
   -- same reference either way -- so what is rejected is the pairing rather than
@@ -48,11 +48,11 @@ spec s = Spec.describe s "Parun.Codec.InZone" $ do
       "a shared zone paired with a slot is rejected"
     Spec.assertBool
       s
-      (not (decodes " {\"zone\":{\"type\":\"Stack\"},\"player\":{\"type\":\"Candidate\"}} "))
+      (not (decodes " {\"zone\":\"Stack\",\"player\":{\"type\":\"Candidate\"}} "))
       "a shared zone paired with the fold's candidate is rejected"
     Spec.assertBool
       s
-      (not (decodes " {\"zone\":{\"type\":\"Command\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "))
+      (not (decodes " {\"zone\":\"Command\",\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "))
       "the command zone is shared too"
     -- The other three zones CR 400.1 gives each player their own copy of, so a
     -- rejection reading the ZONE wrongly is caught rather than passing as a

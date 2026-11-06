@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -34,9 +32,7 @@
                             "value": "target"
                           },
                           "slot": "returned",
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       },
                       {
@@ -73,9 +69,7 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "Stickered"
@@ -110,17 +104,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -138,9 +128,7 @@
                             "type": "InSlot",
                             "value": "returned"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -160,9 +148,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -191,14 +177,10 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Ticket"
-                          },
+                          "kind": "Ticket",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -214,24 +196,14 @@
                         "type": "PutSticker",
                         "value": {
                           "kinds": [
-                            {
-                              "type": "Name"
-                            },
-                            {
-                              "type": "Ability"
-                            },
-                            {
-                              "type": "PowerToughness"
-                            },
-                            {
-                              "type": "Art"
-                            }
+                            "Name",
+                            "Ability",
+                            "PowerToughness",
+                            "Art"
                           ],
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "ref": {
                             "type": "ChosenCardInGraveyard",
@@ -241,9 +213,7 @@
                               },
                               "filter": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               "players": {
                                 "type": "Scoped",
@@ -268,17 +238,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Employee"
-          },
-          {
-            "type": "Vampire"
-          }
+          "Employee",
+          "Vampire"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

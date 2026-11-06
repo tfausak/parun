@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -31,12 +29,8 @@
           "condition": {
             "type": "PlayerActs",
             "value": {
-              "action": {
-                "type": "Scry"
-              },
-              "player": {
-                "type": "You"
-              }
+              "action": "Scry",
+              "player": "You"
             }
           },
           "modal": {
@@ -73,9 +67,7 @@
                       {
                         "type": "RequireBlock",
                         "value": {
-                          "arity": {
-                            "type": "AnySubject"
-                          },
+                          "arity": "AnySubject",
                           "attacker": {
                             "type": "Named",
                             "value": {
@@ -87,9 +79,7 @@
                             "type": "Matching",
                             "value": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             }
                           },
                           "duration": {
@@ -174,22 +164,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Noble"
-          }
+          "Elf",
+          "Noble"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

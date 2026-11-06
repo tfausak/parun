@@ -14,9 +14,7 @@
             "unless": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "AtMost"
-                },
+                "comparison": "AtMost",
                 "measured": {
                   "type": "Count",
                   "value": {
@@ -28,15 +26,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "ControlledByRole",
-                          "value": {
-                            "type": "Defending"
-                          }
+                          "value": "Defending"
                         },
                         {
                           "type": "Not",
@@ -47,12 +41,8 @@
                         {
                           "type": "Measures",
                           "value": {
-                            "comparison": {
-                              "type": "AtLeast"
-                            },
-                            "measure": {
-                              "type": "Power"
-                            },
+                            "comparison": "AtLeast",
+                            "measure": "Power",
                             "operand": {
                               "type": "Literal",
                               "value": 3
@@ -66,13 +56,9 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
-                        "zone": {
-                          "type": "Battlefield"
-                        }
+                        "zone": "Battlefield"
                       }
                     }
                   }
@@ -97,12 +83,8 @@
             "attackers": {
               "type": "Measures",
               "value": {
-                "comparison": {
-                  "type": "AtLeast"
-                },
-                "measure": {
-                  "type": "Power"
-                },
+                "comparison": "AtLeast",
+                "measure": "Power",
                 "operand": {
                   "type": "Literal",
                   "value": 3
@@ -126,18 +108,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -153,17 +131,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          },
-          {
-            "type": "Mutant"
-          }
+          "Goblin",
+          "Mutant"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

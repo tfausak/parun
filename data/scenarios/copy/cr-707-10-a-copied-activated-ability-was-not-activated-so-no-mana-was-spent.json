@@ -114,21 +114,13 @@
               {
                 "manaType": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 },
                 "tags": [
-                  {
-                    "type": "Treasure"
-                  },
-                  {
-                    "type": "Artifact"
-                  }
+                  "Treasure",
+                  "Artifact"
                 ],
-                "retention": {
-                  "type": "Ordinary"
-                },
+                "retention": "Ordinary",
                 "restriction": null,
                 "rider": null,
                 "sourceChoices": null

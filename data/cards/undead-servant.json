@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -45,9 +43,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Black"
-                                  }
+                                  "Black"
                                 ],
                                 "name": "Zombie Token",
                                 "power": {
@@ -60,14 +56,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Zombie"
-                                    }
+                                    "Zombie"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -88,13 +80,9 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
-                                  "zone": {
-                                    "type": "Graveyard"
-                                  }
+                                  "zone": "Graveyard"
                                 }
                               }
                             }
@@ -111,14 +99,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Zombie"
-          }
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

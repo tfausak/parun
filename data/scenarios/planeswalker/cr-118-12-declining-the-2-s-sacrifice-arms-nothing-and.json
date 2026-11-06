@@ -24,7 +24,7 @@
   },
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$grist", "ability": 1 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } }, "source": "$grist" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseToPay": { "decision": "Declines" } }, "source": "$grist" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Jace Beleren", "count": 1 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Goblin Piker", "count": 1 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Jace Beleren", "count": 0 } } },

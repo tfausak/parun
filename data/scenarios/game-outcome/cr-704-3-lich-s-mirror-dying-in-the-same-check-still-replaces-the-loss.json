@@ -97,9 +97,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseRedirect",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },

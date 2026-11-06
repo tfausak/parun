@@ -14,6 +14,6 @@ spec s = Spec.describe s "Parun.Codec.PlanarDieRolled" $ do
       s
       PlanarDieRolled.codec
       (PlanarDieRolled.MkPlanarDieRolled (PlayerId.MkPlayerId 1) PlanarDieFace.Planeswalker)
-      " {\"roller\":1,\"face\":{\"type\":\"Planeswalker\"}} "
+      " {\"roller\":1,\"face\":\"Planeswalker\"} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s PlanarDieRolled.codec

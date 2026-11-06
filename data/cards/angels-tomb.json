@@ -21,19 +21,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -56,12 +50,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Creature"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Creature",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -79,12 +69,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "InAddition"
-                              },
-                              "subtype": {
-                                "type": "Angel"
-                              }
+                              "mode": "InAddition",
+                              "subtype": "Angel"
                             }
                           },
                           "ref": {
@@ -103,13 +89,9 @@
                             "type": "Colors",
                             "value": {
                               "colors": [
-                                {
-                                  "type": "White"
-                                }
+                                "White"
                               ],
-                              "mode": {
-                                "type": "Replace"
-                              }
+                              "mode": "Replace"
                             }
                           },
                           "ref": {
@@ -174,9 +156,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

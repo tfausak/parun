@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -36,9 +34,7 @@
                 "whatRecipient": {
                   "type": "IsSource"
                 },
-                "whichKind": {
-                  "type": "Combat"
-                }
+                "whichKind": "Combat"
               },
               "rewrite": {
                 "type": "PreventAll"
@@ -53,14 +49,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Angel"
-          }
+          "Angel"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

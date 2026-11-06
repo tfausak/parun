@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -36,9 +34,7 @@
               },
               "matching": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Creature"
               },
               "subject": {
                 "type": "Spells"
@@ -70,19 +66,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
@@ -126,9 +116,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -137,9 +125,7 @@
                             },
                             "filter": {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Dinosaur"
-                              }
+                              "value": "Dinosaur"
                             },
                             "scope": {
                               "type": "OverBound",
@@ -189,14 +175,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dinosaur"
-          }
+          "Dinosaur"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -12,15 +12,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             }
           }
         },
@@ -29,15 +25,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             }
           }
         }
@@ -54,17 +46,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Berserker"
-          },
-          {
-            "type": "Human"
-          }
+          "Berserker",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

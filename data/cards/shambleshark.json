@@ -14,18 +14,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -41,17 +37,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Crab"
-          },
-          {
-            "type": "Shark"
-          }
+          "Crab",
+          "Shark"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

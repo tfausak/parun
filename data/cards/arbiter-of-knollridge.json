@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -48,9 +46,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           },
                           "quantity": {
                             "type": "Count",
@@ -72,9 +68,7 @@
                                 "type": "OverPlayers",
                                 "value": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
+                                  "value": "AnyPlayer"
                                 }
                               }
                             }
@@ -91,17 +85,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Giant"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Giant",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

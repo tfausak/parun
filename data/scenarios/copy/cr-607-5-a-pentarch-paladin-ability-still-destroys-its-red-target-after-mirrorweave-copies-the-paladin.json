@@ -31,7 +31,7 @@
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$paladin", "mana": ["$p1", "$p2", "$p3", "$p4", "$p5", null] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseColor", "with": { "type": "Red" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseColor", "with": "Red" } } },
     { "turn": 2, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": [] } },
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Pentarch Paladin", "targets": ["$giant"], "mana": ["$p1", "$p2", null] } } },
     { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$mirrorweave", "targets": ["$giant"], "mana": ["$p3", "$p4", "$p5", "$p6"] } } },

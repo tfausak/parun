@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -33,9 +31,7 @@
             "value": {
               "type": "Declaration",
               "value": {
-                "player": {
-                  "type": "You"
-                }
+                "player": "You"
               }
             }
           },
@@ -83,19 +79,13 @@
                         },
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Goblin"
-                          }
+                          "value": "Goblin"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -112,17 +102,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Goblin",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

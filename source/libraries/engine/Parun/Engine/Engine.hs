@@ -39,6 +39,7 @@ import qualified Parun.Engine.FaceDown as FaceDown
 import qualified Parun.Engine.Foretell as Foretell
 import qualified Parun.Engine.Fragmented as Fragmented
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.GrandMelee as GrandMelee
 import qualified Parun.Engine.Ignore as Ignore
 import qualified Parun.Engine.Initiative as Initiative
 import qualified Parun.Engine.LaterPayment as LaterPayment
@@ -143,6 +144,7 @@ import qualified Parun.Types.TriggerLimit as TriggerLimit
 import qualified Parun.Types.TriggerSource as TriggerSource
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
+import qualified Parun.Types.TurnMarker as TurnMarker
 import qualified Parun.Types.UntapHold as UntapHold
 import qualified Parun.Types.Zone as Zone
 
@@ -206,11 +208,15 @@ nextStillPlaying gs pid =
 --
 -- CR 805.5b: under the shared team turns option the active TEAM receives
 -- priority, so a departed active player's still-playing teammate is asked first.
+--
+-- CR 807.5a: a Grand Melee game passes over a player without priority for the
+-- stack (GrandMelee.eligible), as passPriorityFrom does.
 priorityHolder :: GameState -> PlayerId
 priorityHolder gs =
   case filter (\pid -> List.elem pid (Game.stillPlaying gs)) (Turn.activePlayers gs) of
     holder : _ -> holder
-    [] -> nextStillPlaying gs (GameState.activePlayer gs)
+    -- No active player is still playing, so this is nextStillPlaying, eligible.
+    [] -> passPriorityFrom gs {GameState.passed = Set.empty} (GameState.activePlayer gs)
 
 -- CR 117.3d / 805.5: who is asked after `pid` passes or leaves, given who has
 -- passed in succession. Under the shared team turns option the team holds
@@ -218,12 +224,13 @@ priorityHolder gs =
 -- before it moves on (CR 805.5b's "no player on that team wishes to do
 -- anything"), and then it goes to the next player in turn order off the team.
 -- Without the option a player's team is themselves, and this is
--- nextStillPlaying.
+-- nextStillPlaying. CR 807.5a: never to a player without priority for the
+-- stack (GrandMelee.eligible).
 passPriorityFrom :: GameState -> PlayerId -> PlayerId
 passPriorityFrom gs pid =
   let playing = Game.stillPlaying gs
       order = GameState.turnOrder gs
-      scan = filter (\p -> List.elem p playing) (drop 1 (dropWhile (/= pid) order) <> order)
+      scan = filter (\p -> List.elem p playing && GrandMelee.eligible gs p) (drop 1 (dropWhile (/= pid) order) <> order)
       teammate = Turn.sharesTurn gs pid
    in case filter (\p -> teammate p && not (Set.member p (GameState.passed gs))) scan of
         p : _ -> p
@@ -1377,6 +1384,7 @@ grantAfterSettle holder = do
 -- the step.
 priorityLoop :: Game ()
 priorityLoop = do
+  offerConcessions
   -- CR 800.4j: the active player, unless they have left the game.
   holder <- State.gets priorityHolder
   -- settleForPriority (CR 117.5) runs where the board can CHANGE -- once at entry,
@@ -1476,7 +1484,7 @@ priorityLoop = do
                               -- a team passing only when all its players do.
                               Action.Type.Pass -> do
                                 let passed = Set.insert p (GameState.passed gs)
-                                    everyone = all (`Set.member` passed) (Game.stillPlaying gs)
+                                    everyone = all (`Set.member` passed) (filter (GrandMelee.eligible gs) (Game.stillPlaying gs))
                                 -- modify' over `State.put gs {...}`: `gs` predates
                                 -- the prompt, and putting it back would discard
                                 -- GameState.lastChoice (CR 104.4b), making every
@@ -1516,7 +1524,7 @@ priorityLoop = do
                               Action.Type.Play oid mName -> do
                                 -- CR 116.2a: the special action, made under a
                                 -- CR 601.3 permission (Cast.playLand).
-                                Cast.playLand (Resolve.runReplacementEffects playSubgame) False p oid mName
+                                Event.takingSpecialAction $ Cast.playLand (Resolve.runReplacementEffects playSubgame) False p oid mName
                                 grantAfterSettle p
                                 loop trail'
                               Action.Type.Cast oid name facing -> do
@@ -1547,8 +1555,10 @@ priorityLoop = do
                               -- window to respond. Priority is retained and the
                               -- pass count restarts, CR 117.4's "passing in
                               -- succession" meaning without actions in between.
+                              -- Every special action runs in CR 401.5's window
+                              -- (Event.takingSpecialAction).
                               Action.Type.TurnFaceUp oid procedure -> do
-                                FaceDown.turnFaceUp performManaAbility p procedure oid
+                                Event.takingSpecialAction $ FaceDown.turnFaceUp performManaAbility p procedure oid
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2m / 709.5e: a special action too, the
@@ -1556,7 +1566,7 @@ priorityLoop = do
                               -- sees is the DESIGNATION, which settleForPriority
                               -- gathers like any other.
                               Action.Type.Unlock oid half -> do
-                                Room.unlock performManaAbility p oid half
+                                Event.takingSpecialAction $ Room.unlock performManaAbility p oid half
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2e: a special action too, the TurnFaceUp
@@ -1566,25 +1576,25 @@ priorityLoop = do
                               -- Ordinary and not ToPayCyclingCost, CR 702.29c's
                               -- cause being a cycling ability's cost.
                               Action.Type.DiscardFromHand oid -> do
-                                Event.discard (Resolve.runReplacementEffects playSubgame) DiscardCause.Ordinary p oid
+                                Event.takingSpecialAction $ Event.discard (Resolve.runReplacementEffects playSubgame) DiscardCause.Ordinary p oid
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2k / 702.170b: a special action too, the
                               -- TurnFaceUp arm's shape.
                               Action.Type.Plot oid cost -> do
-                                Plot.plot performManaAbility p oid cost
+                                Event.takingSpecialAction $ Plot.plot performManaAbility p oid cost
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2h / 702.143b: a special action too.
                               Action.Type.Foretell oid -> do
-                                Foretell.foretell performManaAbility p oid
+                                Event.takingSpecialAction $ Foretell.foretell performManaAbility p oid
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2f / 702.62a: a special action too, and
                               -- the one whose window is the card's own
                               -- castability rather than a phase.
                               Action.Type.Suspend oid -> do
-                                Suspend.suspend performManaAbility p oid
+                                Event.takingSpecialAction $ Suspend.suspend performManaAbility p oid
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2g / 702.139a: a special action too, and
@@ -1592,19 +1602,19 @@ priorityLoop = do
                               -- names the card, outside the game having no
                               -- object to name it with (CR 400.11).
                               Action.Type.PutCompanionIntoHand -> do
-                                Companion.take performManaAbility p
+                                Event.takingSpecialAction $ Companion.take performManaAbility p
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2i / 901.9: a special action too, and one
                               -- that takes no object; CR 901.9a-c give the roller
                               -- priority afterwards whatever the die shows.
                               Action.Type.RollPlanarDie -> do
-                                Planechase.roll performManaAbility p
+                                Event.takingSpecialAction $ Planechase.roll performManaAbility p
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2j / 702.106c: a special action too.
                               Action.Type.TurnConspiracyFaceUp oid -> do
-                                Conspiracy.turnFaceUp p oid
+                                Event.takingSpecialAction $ Conspiracy.turnFaceUp p oid
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2c: a special action too, and the one whose
@@ -1612,24 +1622,25 @@ priorityLoop = do
                               -- from printed text. CR 613.1's next projection is
                               -- what makes the ending visible; nothing is undone.
                               Action.Type.EndEffect _ resolution -> do
-                                EndEffect.endEffect performManaAbility p resolution
+                                Event.takingSpecialAction $ EndEffect.endEffect performManaAbility p resolution
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2c: a special action too, whose payment
                               -- leaves the offer in place.
                               Action.Type.MakeLaterPayment _ createdAt -> do
-                                paid <- LaterPayment.pay performManaAbility p createdAt
-                                Foldable.for_ paid (Resolve.runLaterPayment playSubgame)
+                                Event.takingSpecialAction $ do
+                                  paid <- LaterPayment.pay performManaAbility p createdAt
+                                  Foldable.for_ paid (Resolve.runLaterPayment playSubgame)
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2c / 116.3: Channel's life for mana.
                               Action.Type.PayLifeForMana life mana -> do
-                                _ <- Cost.payLifeForMana performManaAbility p life mana
+                                _ <- Event.takingSpecialAction (Cost.payLifeForMana performManaAbility p life mana)
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2d: a special action too.
                               Action.Type.Ignore oid name -> do
-                                Ignore.ignore performManaAbility p oid name
+                                Event.takingSpecialAction $ Ignore.ignore performManaAbility p oid name
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 605.3a's first window, and CR 605.3b's
@@ -1685,6 +1696,21 @@ priorityLoop = do
   grantAfterSettle holder
   loop LoopTrail.empty
 
+-- CR 104.3a / 807.5a: a Grand Melee player without priority for the stack
+-- (GrandMelee.eligible) is never asked Prompt.Concede in the loop below, so
+-- they are asked here, in turn order, as each priority window opens. Asked of
+-- the TRUE player, as the loop asks.
+offerConcessions :: Game ()
+offerConcessions = do
+  gs <- State.get
+  Monad.when (GameSettings.grandMelee (GameState.settings gs))
+    . Monad.forM_ (filter (not . GrandMelee.eligible gs) (Game.stillPlayingInOrder gs))
+    $ \p -> do
+      concession <- Game.ask (Prompt.Concede p)
+      case concession of
+        Concession.Concedes -> Departure.leaveGame Departure.Type.Conceded p
+        Concession.Continues -> pure ()
+
 -- CR 500.7 / 800.4k / 800.4m: this turn is over, so begin the next one -- a
 -- pending EXTRA turn if there is one, and otherwise the turn of the next SEAT in
 -- the seating order whose player is still in the game (takeNextTurn's question).
@@ -1720,9 +1746,15 @@ turnAnchorOf gs = Maybe.fromMaybe (GameState.activePlayer gs) (GameState.turnAnc
 -- effect's entries are already one per team (Parun.Engine.Resolve.Effect's
 -- TakeExtraTurn arm).
 --
--- Not implemented: CR 807.4i/j's Grand Melee turn markers (#3003).
+-- CR 807.4: a Grand Melee game's markers decide instead (takeMarkedTurn).
 takeNextTurn :: GameState -> GameState
-takeNextTurn gs = case GameState.extraTurns gs of
+takeNextTurn gs
+  | not (null (GameState.turnMarkers gs)) = takeMarkedTurn gs
+  | otherwise = takeOrdinaryTurn gs
+
+-- takeNextTurn without turn markers.
+takeOrdinaryTurn :: GameState -> GameState
+takeOrdinaryTurn gs = case GameState.extraTurns gs of
   [] -> walkToNextTurn (length (GameState.turnOrder gs)) (turnAnchorOf gs) (turnAnchorOf gs) gs
   entry : rest ->
     let pid = ExtraTurn.taker entry
@@ -1740,7 +1772,36 @@ takeNextTurn gs = case GameState.extraTurns gs of
           -- rescheduled here too. No board reaches it, an extra turn for a
           -- departed player needing a phased-out permanent besides, so it is
           -- the rule written out at its second site rather than a proved one.
-            takeNextTurn (expireLastTurn pid (Phasing.orphanSchedule pid swept))
+            takeOrdinaryTurn (expireLastTurn pid (Phasing.orphanSchedule pid swept))
+
+-- CR 807.4c-d / 807.4g / 807.4i-j: the marker under way is kept, passed or
+-- removed (GrandMelee.passTurn), then the next marker whose holder can begin
+-- begins its turn, their pending extra turn first (GrandMelee.begin). An extra
+-- turn whose taker has left is spent, and a departed seat the marker passed on
+-- its way to the holder is a turn that would have begun, as on
+-- walkToNextTurn's skip branch (CR 800.4k, 800.4m, 702.26n).
+takeMarkedTurn :: GameState -> GameState
+takeMarkedTurn gs =
+  let playing = Game.stillPlaying gs
+      (gone, staying) = List.partition (\entry -> List.notElem (ExtraTurn.taker entry) playing) (GameState.extraTurns gs)
+      spent = List.foldl' (flip wouldHaveBegun) gs {GameState.extraTurns = staying} (fmap ExtraTurn.taker gone)
+      (ended, passed) = GrandMelee.passTurn spent
+   in case GrandMelee.nextMarker ended passed of
+        Nothing -> passed
+        Just marker ->
+          let pid = TurnMarker.holder marker
+              (entry, begun) = GrandMelee.begin marker passed
+              -- docs/decisions.md, "When a departed Grand Melee player's turn
+              -- would have begun".
+              skipped = GrandMelee.departedRightOf pid begun
+              swept = dropAtTurnOfTeam pid (List.foldl' (flip wouldHaveBegun) begun skipped) {GameState.turnAnchor = Nothing}
+           in case entry of
+                Just extra -> Replacement.installTurnSkips extra (beginTurn (Just (ExtraTurn.createdAt extra)) pid swept)
+                Nothing -> beginTurnOf pid swept
+
+-- CR 800.4k / 800.4m / 702.26n: a turn `pid` would have begun and doesn't.
+wouldHaveBegun :: PlayerId -> GameState -> GameState
+wouldHaveBegun pid gs = expireLastTurn pid (Phasing.orphanSchedule pid (dropAtTurnOfTeam pid gs))
 
 -- One seat at a time, bounded by the number of seats, so it terminates even when
 -- every seat has departed. The fallback returns the state without beginning a

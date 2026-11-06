@@ -41,5 +41,5 @@ spec s = Spec.describe s "Parun.Codec.AttackLimitUnless" $ do
                   (Compares.MkCompares (Quantity.Literal 1) Comparison.AtLeast (Quantity.Literal 1))
           }
       )
-      " {\"limit\":3,\"unless\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":1},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
+      " {\"limit\":3,\"unless\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":1},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AttackLimitUnless.codec

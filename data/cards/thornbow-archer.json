@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -42,9 +40,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           },
                           "quantity": {
                             "type": "Plus",
@@ -66,15 +62,11 @@
                                       "value": [
                                         {
                                           "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Elf"
-                                          }
+                                          "value": "Elf"
                                         },
                                         {
                                           "type": "HeldByRecipient",
-                                          "value": {
-                                            "type": "Controller"
-                                          }
+                                          "value": "Controller"
                                         }
                                       ]
                                     },
@@ -83,13 +75,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         },
-                                        "zone": {
-                                          "type": "Battlefield"
-                                        }
+                                        "zone": "Battlefield"
                                       }
                                     }
                                   }
@@ -109,17 +97,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Archer"
-          },
-          {
-            "type": "Elf"
-          }
+          "Archer",
+          "Elf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

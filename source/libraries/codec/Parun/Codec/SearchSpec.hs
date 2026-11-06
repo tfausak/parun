@@ -45,7 +45,7 @@ spec s = Spec.describe s "Parun.Codec.Search" $ do
             Search.andOr = True
           }
       )
-      " {\"searcher\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"owner\":{\"type\":\"InSlot\",\"value\":\"player\"},\"zones\":[{\"type\":\"Library\"},{\"type\":\"Graveyard\"}],\"outsideTheGame\":true,\"andOr\":true,\"quantity\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"descriptions\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}],\"upTo\":true,\"destination\":{\"type\":\"BattlefieldTapped\"},\"slot\":\"found\",\"handSlot\":\"hand\",\"differentIn\":[{\"type\":\"Names\"},{\"type\":\"Powers\"}],\"exactly\":true} "
+      " {\"searcher\":{\"type\":\"Relative\",\"value\":\"You\"},\"owner\":{\"type\":\"InSlot\",\"value\":\"player\"},\"zones\":[\"Library\",\"Graveyard\"],\"outsideTheGame\":true,\"andOr\":true,\"quantity\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"descriptions\":[{\"type\":\"HasCardType\",\"value\":\"Creature\"},{\"type\":\"HasCardType\",\"value\":\"Artifact\"}],\"upTo\":true,\"destination\":\"BattlefieldTapped\",\"slot\":\"found\",\"handSlot\":\"hand\",\"differentIn\":[\"Names\",\"Powers\"],\"exactly\":true} "
   -- The other reading of the same count: no "upTo" key means the quantity is a
   -- quota. Paired with the case above so each key's absence is asserted, not
   -- just its presence -- a required key would have made every card file
@@ -73,7 +73,7 @@ spec s = Spec.describe s "Parun.Codec.Search" $ do
             Search.andOr = False
           }
       )
-      " {\"searcher\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"owner\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"destination\":{\"type\":\"BattlefieldTapped\"}} "
+      " {\"searcher\":{\"type\":\"Relative\",\"value\":\"You\"},\"owner\":{\"type\":\"Relative\",\"value\":\"You\"},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"destination\":\"BattlefieldTapped\"} "
   -- CR 701.23a's other reading of the count: Mana Severance's "any number of
   -- land cards" states none at all, which is a null on the wire rather than an
   -- absent key. Round-tripped explicitly because nothing else forces a case for
@@ -100,5 +100,5 @@ spec s = Spec.describe s "Parun.Codec.Search" $ do
             Search.andOr = False
           }
       )
-      " {\"searcher\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"owner\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"quantity\":null,\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"destination\":{\"type\":\"Exile\"}} "
+      " {\"searcher\":{\"type\":\"Relative\",\"value\":\"You\"},\"owner\":{\"type\":\"Relative\",\"value\":\"You\"},\"quantity\":null,\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"destination\":\"Exile\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Search.codec

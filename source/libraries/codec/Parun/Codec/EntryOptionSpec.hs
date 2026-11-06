@@ -31,6 +31,6 @@ spec s = Spec.describe s "Parun.Codec.EntryOption" $ do
       s
       EntryOption.codec
       (EntryOption.MkEntryOption {EntryOption.power = 1, EntryOption.toughness = 6, EntryOption.keywords = Set.singleton Keyword.Defender, EntryOption.subtypes = Set.singleton Subtype.Wall})
-      " {\"power\":1,\"toughness\":6,\"keywords\":[{\"type\":\"Defender\"}],\"subtypes\":[{\"type\":\"Wall\"}]} "
+      " {\"power\":1,\"toughness\":6,\"keywords\":[{\"type\":\"Defender\"}],\"subtypes\":[\"Wall\"]} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s EntryOption.codec

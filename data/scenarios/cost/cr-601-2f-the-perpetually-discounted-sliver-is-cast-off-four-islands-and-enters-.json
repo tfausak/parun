@@ -84,9 +84,7 @@
       "player": "alice",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$i1",
             null
@@ -151,9 +149,7 @@
       "player": "alice",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "source": "$richlau"

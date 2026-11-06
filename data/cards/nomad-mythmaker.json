@@ -14,9 +14,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -42,34 +40,24 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "IsInZone",
-                                    "value": {
-                                      "type": "Battlefield"
-                                    }
+                                    "value": "Battlefield"
                                   },
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "You"
                                     }
                                   }
                                 ]
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -79,9 +67,7 @@
                   "target": {
                     "filter": {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Aura"
-                      }
+                      "value": "Aura"
                     },
                     "pool": {
                       "type": "CardsInGraveyard",
@@ -108,9 +94,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -126,20 +110,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Nomad"
-          }
+          "Cleric",
+          "Human",
+          "Nomad"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

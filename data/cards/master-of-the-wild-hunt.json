@@ -27,25 +27,17 @@
                               "value": [
                                 {
                                   "type": "HasSubtype",
-                                  "value": {
-                                    "type": "Wolf"
-                                  }
+                                  "value": "Wolf"
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 },
                                 {
@@ -75,9 +67,7 @@
                                       "value": {
                                         "quantity": {
                                           "type": "Measure",
-                                          "value": {
-                                            "type": "Power"
-                                          }
+                                          "value": "Power"
                                         },
                                         "slot": "wolf"
                                       }
@@ -108,12 +98,8 @@
                           "chooser": {
                             "type": "HolderOfBound",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "hop": {
-                                "type": "Itself"
-                              },
+                              "holder": "Controller",
+                              "hop": "Itself",
                               "slot": "target"
                             }
                           },
@@ -122,9 +108,7 @@
                             "value": {
                               "quantity": {
                                 "type": "Measure",
-                                "value": {
-                                  "type": "Power"
-                                }
+                                "value": "Power"
                               },
                               "slot": "target"
                             }
@@ -174,18 +158,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -206,17 +186,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -234,9 +210,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Green"
-                                  }
+                                  "Green"
                                 ],
                                 "name": "Wolf Token",
                                 "power": {
@@ -249,14 +223,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Wolf"
-                                    }
+                                    "Wolf"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -278,17 +248,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Human",
+          "Shaman"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

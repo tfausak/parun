@@ -32,15 +32,11 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Instant"
-                                  }
+                                  "value": "Instant"
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Sorcery"
-                                  }
+                                  "value": "Sorcery"
                                 }
                               ]
                             }
@@ -64,9 +60,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -82,17 +76,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Merfolk"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Merfolk",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

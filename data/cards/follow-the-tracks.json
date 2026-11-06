@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -50,9 +48,7 @@
                                           "type": "OfType",
                                           "value": {
                                             "type": "Colored",
-                                            "value": {
-                                              "type": "Black"
-                                            }
+                                            "value": "Black"
                                           }
                                         }
                                       ]
@@ -73,25 +69,17 @@
                                                           "type": "Not",
                                                           "value": {
                                                             "type": "HasCardType",
-                                                            "value": {
-                                                              "type": "Land"
-                                                            }
+                                                            "value": "Land"
                                                           }
                                                         },
                                                         "player": {
                                                           "type": "Relative",
-                                                          "value": {
-                                                            "type": "You"
-                                                          }
+                                                          "value": "You"
                                                         },
-                                                        "zone": {
-                                                          "type": "Library"
-                                                        }
+                                                        "zone": "Library"
                                                       }
                                                     },
-                                                    "zone": {
-                                                      "type": "Hand"
-                                                    }
+                                                    "zone": "Hand"
                                                   }
                                                 }
                                               ]
@@ -125,17 +113,11 @@
                                 ],
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Gate"
-                                    },
-                                    {
-                                      "type": "Swamp"
-                                    }
+                                    "Gate",
+                                    "Swamp"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Land"
-                                    }
+                                    "Land"
                                   ]
                                 }
                               }
@@ -161,9 +143,7 @@
                                           "type": "OfType",
                                           "value": {
                                             "type": "Colored",
-                                            "value": {
-                                              "type": "Green"
-                                            }
+                                            "value": "Green"
                                           }
                                         }
                                       ]
@@ -184,25 +164,17 @@
                                                           "type": "Not",
                                                           "value": {
                                                             "type": "HasCardType",
-                                                            "value": {
-                                                              "type": "Land"
-                                                            }
+                                                            "value": "Land"
                                                           }
                                                         },
                                                         "player": {
                                                           "type": "Relative",
-                                                          "value": {
-                                                            "type": "You"
-                                                          }
+                                                          "value": "You"
                                                         },
-                                                        "zone": {
-                                                          "type": "Library"
-                                                        }
+                                                        "zone": "Library"
                                                       }
                                                     },
-                                                    "zone": {
-                                                      "type": "Hand"
-                                                    }
+                                                    "zone": "Hand"
                                                   }
                                                 }
                                               ]
@@ -236,17 +208,11 @@
                                 ],
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Forest"
-                                    },
-                                    {
-                                      "type": "Gate"
-                                    }
+                                    "Forest",
+                                    "Gate"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Land"
-                                    }
+                                    "Land"
                                   ]
                                 }
                               }
@@ -272,9 +238,7 @@
                                           "type": "OfType",
                                           "value": {
                                             "type": "Colored",
-                                            "value": {
-                                              "type": "Blue"
-                                            }
+                                            "value": "Blue"
                                           }
                                         }
                                       ]
@@ -295,25 +259,17 @@
                                                           "type": "Not",
                                                           "value": {
                                                             "type": "HasCardType",
-                                                            "value": {
-                                                              "type": "Land"
-                                                            }
+                                                            "value": "Land"
                                                           }
                                                         },
                                                         "player": {
                                                           "type": "Relative",
-                                                          "value": {
-                                                            "type": "You"
-                                                          }
+                                                          "value": "You"
                                                         },
-                                                        "zone": {
-                                                          "type": "Library"
-                                                        }
+                                                        "zone": "Library"
                                                       }
                                                     },
-                                                    "zone": {
-                                                      "type": "Hand"
-                                                    }
+                                                    "zone": "Hand"
                                                   }
                                                 }
                                               ]
@@ -347,17 +303,11 @@
                                 ],
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Gate"
-                                    },
-                                    {
-                                      "type": "Island"
-                                    }
+                                    "Gate",
+                                    "Island"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Land"
-                                    }
+                                    "Land"
                                   ]
                                 }
                               }
@@ -383,9 +333,7 @@
                                           "type": "OfType",
                                           "value": {
                                             "type": "Colored",
-                                            "value": {
-                                              "type": "White"
-                                            }
+                                            "value": "White"
                                           }
                                         }
                                       ]
@@ -406,25 +354,17 @@
                                                           "type": "Not",
                                                           "value": {
                                                             "type": "HasCardType",
-                                                            "value": {
-                                                              "type": "Land"
-                                                            }
+                                                            "value": "Land"
                                                           }
                                                         },
                                                         "player": {
                                                           "type": "Relative",
-                                                          "value": {
-                                                            "type": "You"
-                                                          }
+                                                          "value": "You"
                                                         },
-                                                        "zone": {
-                                                          "type": "Library"
-                                                        }
+                                                        "zone": "Library"
                                                       }
                                                     },
-                                                    "zone": {
-                                                      "type": "Hand"
-                                                    }
+                                                    "zone": "Hand"
                                                   }
                                                 }
                                               ]
@@ -458,17 +398,11 @@
                                 ],
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Gate"
-                                    },
-                                    {
-                                      "type": "Plains"
-                                    }
+                                    "Gate",
+                                    "Plains"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Land"
-                                    }
+                                    "Land"
                                   ]
                                 }
                               }
@@ -494,9 +428,7 @@
                                           "type": "OfType",
                                           "value": {
                                             "type": "Colored",
-                                            "value": {
-                                              "type": "Red"
-                                            }
+                                            "value": "Red"
                                           }
                                         }
                                       ]
@@ -517,25 +449,17 @@
                                                           "type": "Not",
                                                           "value": {
                                                             "type": "HasCardType",
-                                                            "value": {
-                                                              "type": "Land"
-                                                            }
+                                                            "value": "Land"
                                                           }
                                                         },
                                                         "player": {
                                                           "type": "Relative",
-                                                          "value": {
-                                                            "type": "You"
-                                                          }
+                                                          "value": "You"
                                                         },
-                                                        "zone": {
-                                                          "type": "Library"
-                                                        }
+                                                        "zone": "Library"
                                                       }
                                                     },
-                                                    "zone": {
-                                                      "type": "Hand"
-                                                    }
+                                                    "zone": "Hand"
                                                   }
                                                 }
                                               ]
@@ -569,17 +493,11 @@
                                 ],
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Gate"
-                                    },
-                                    {
-                                      "type": "Mountain"
-                                    }
+                                    "Gate",
+                                    "Mountain"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Land"
-                                    }
+                                    "Land"
                                   ]
                                 }
                               }
@@ -590,9 +508,7 @@
                       "destination": {
                         "type": "Battlefield"
                       },
-                      "selection": {
-                        "type": "ByChoice"
-                      }
+                      "selection": "ByChoice"
                     }
                   }
                 ]
@@ -603,9 +519,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

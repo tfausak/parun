@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -31,9 +29,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   },
                   {
@@ -56,9 +52,7 @@
                                     "type": "Not",
                                     "value": {
                                       "type": "HasSubtype",
-                                      "value": {
-                                        "type": "Spirit"
-                                      }
+                                      "value": "Spirit"
                                     }
                                   }
                                 }
@@ -76,9 +70,7 @@
                                     "type": "Not",
                                     "value": {
                                       "type": "HasSubtype",
-                                      "value": {
-                                        "type": "Spirit"
-                                      }
+                                      "value": "Spirit"
                                     }
                                   }
                                 }
@@ -95,14 +87,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Spirit"
-                                }
+                                "Spirit"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -136,9 +124,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

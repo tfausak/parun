@@ -34,9 +34,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -49,9 +47,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -67,9 +63,7 @@
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 }
                               ]
                             },
@@ -78,13 +72,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 },
-                                "zone": {
-                                  "type": "Library"
-                                }
+                                "zone": "Library"
                               }
                             }
                           }
@@ -103,9 +93,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Green"
-                                  }
+                                  "Green"
                                 ],
                                 "name": "Saproling Token",
                                 "power": {
@@ -118,14 +106,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Saproling"
-                                    }
+                                    "Saproling"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -143,9 +127,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -161,9 +143,7 @@
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Land"
-                                  }
+                                  "value": "Land"
                                 }
                               ]
                             },
@@ -172,13 +152,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 },
-                                "zone": {
-                                  "type": "Library"
-                                }
+                                "zone": "Library"
                               }
                             }
                           }
@@ -197,9 +173,7 @@
                             "type": "InSlot",
                             "value": "revealed"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -208,9 +182,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -231,18 +203,14 @@
                                       "type": "Not",
                                       "value": {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Creature"
-                                        }
+                                        "value": "Creature"
                                       }
                                     },
                                     {
                                       "type": "Not",
                                       "value": {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Land"
-                                        }
+                                        "value": "Land"
                                       }
                                     }
                                   ]
@@ -254,13 +222,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 },
-                                "zone": {
-                                  "type": "Library"
-                                }
+                                "zone": "Library"
                               }
                             }
                           }
@@ -277,9 +241,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -305,9 +267,7 @@
       "oracleText": "{2}, {T}: Reveal the top card of your library. If it's a creature card, create a 1/1 green Saproling creature token. If it's a land card, put that card onto the battlefield under your control. If it's a noncreature, nonland card, you gain 2 life.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

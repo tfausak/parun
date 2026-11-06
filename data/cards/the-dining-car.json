@@ -49,9 +49,7 @@
                                                   "value": {
                                                     "player": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -70,14 +68,10 @@
                                 "name": "Food Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Food"
-                                    }
+                                    "Food"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -85,9 +79,7 @@
                           },
                           "creator": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -108,17 +100,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -137,24 +125,16 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "Measures",
                                 "value": {
-                                  "comparison": {
-                                    "type": "AtMost"
-                                  },
-                                  "measure": {
-                                    "type": "Toughness"
-                                  },
+                                  "comparison": "AtMost",
+                                  "measure": "Toughness",
                                   "operand": {
                                     "type": "OfEachOtherCandidate",
-                                    "value": {
-                                      "type": "Toughness"
-                                    }
+                                    "value": "Toughness"
                                   }
                                 }
                               }
@@ -162,9 +142,7 @@
                           },
                           "players": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -204,9 +182,7 @@
                                                   "value": {
                                                     "player": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -225,14 +201,10 @@
                                 "name": "Clue Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Clue"
-                                    }
+                                    "Clue"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -286,9 +258,7 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Artifact"
-                                    }
+                                    "value": "Artifact"
                                   },
                                   {
                                     "type": "IsToken"
@@ -296,12 +266,8 @@
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "You"
                                     }
                                   }
                                 ]
@@ -330,14 +296,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Spacecraft"
-          }
+          "Spacecraft"
         ],
         "types": [
-          {
-            "type": "Plane"
-          }
+          "Plane"
         ]
       }
     }

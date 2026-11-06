@@ -24,5 +24,5 @@ spec s = Spec.describe s "Parun.Codec.EachCardFromAmong" $ do
             EachCardFromAmong.filter = Filter.HasCardType CardType.Land
           }
       )
-      " {\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}} "
+      " {\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s EachCardFromAmong.codec

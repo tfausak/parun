@@ -9,9 +9,7 @@
               "type": "LifeTotal",
               "value": {
                 "type": "Relative",
-                "value": {
-                  "type": "You"
-                }
+                "value": "You"
               }
             },
             "right": {
@@ -36,9 +34,7 @@
                     "type": "OverPlayers",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     }
                   }
                 }
@@ -53,9 +49,7 @@
               "type": "LifeTotal",
               "value": {
                 "type": "Relative",
-                "value": {
-                  "type": "You"
-                }
+                "value": "You"
               }
             },
             "right": {
@@ -80,9 +74,7 @@
                     "type": "OverPlayers",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     }
                   }
                 }
@@ -104,27 +96,21 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   }
                 },
                 {
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   }
                 },
                 {
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   }
                 }
               ]
@@ -145,18 +131,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -173,9 +155,7 @@
           "condition": {
             "type": "CountersChange",
             "value": {
-              "grouping": {
-                "type": "EachCounter"
-              },
+              "grouping": "EachCounter",
               "kind": {
                 "type": "Time"
               },
@@ -185,9 +165,7 @@
             }
           },
           "functionsFrom": [
-            {
-              "type": "Exile"
-            }
+            "Exile"
           ],
           "modal": {
             "modes": [
@@ -213,9 +191,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -240,14 +216,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horror"
-          }
+          "Horror"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

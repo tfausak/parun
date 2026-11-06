@@ -10,11 +10,11 @@
     ]
   },
   "timeline": [
-    { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "Answer": { "prompt": "CallCoin", "with": { "type": "Heads" } } } },
-    { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "Answer": { "prompt": "FlipCoin", "with": { "type": "Heads" } } } },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "Answer": { "prompt": "CallCoin", "with": "Heads" } } },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "Answer": { "prompt": "FlipCoin", "with": "Heads" } } },
     { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "Activate": { "object": "$amulet", "ability": 0, "targets": ["$bob"], "costOrder": [0, 1] } } },
     { "turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "Upkeep", "player": "bob", "do": { "ChooseOptional": { "type": "Declines" } } }
+    { "turn": 1, "step": "Upkeep", "player": "bob", "do": { "ChooseOptional": "Declines" } }
   ],
   "final": [
     { "View": { "of": "Result", "is": { "won": "alice" } } },

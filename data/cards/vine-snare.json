@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -39,19 +37,13 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "Measures",
                                   "value": {
-                                    "comparison": {
-                                      "type": "AtMost"
-                                    },
-                                    "measure": {
-                                      "type": "Power"
-                                    },
+                                    "comparison": "AtMost",
+                                    "measure": "Power",
                                     "operand": {
                                       "type": "Literal",
                                       "value": 4
@@ -60,21 +52,15 @@
                                 }
                               ]
                             },
-                            "whichKind": {
-                              "type": "Combat"
-                            }
+                            "whichKind": "Combat"
                           },
                           "rewrite": {
                             "type": "PreventAll"
                           }
                         }
                       },
-                      "origin": {
-                        "type": "Other"
-                      },
-                      "uses": {
-                        "type": "Unlimited"
-                      }
+                      "origin": "Other",
+                      "uses": "Unlimited"
                     }
                   }
                 ]
@@ -85,9 +71,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

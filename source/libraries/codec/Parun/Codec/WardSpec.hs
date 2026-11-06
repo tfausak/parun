@@ -54,7 +54,7 @@ spec s = Spec.describe s "Parun.Codec.Ward" $ do
                 )
           }
       )
-      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"perEach\":{\"type\":\"PlayerCounters\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"kind\":{\"type\":\"Experience\"}}}} "
+      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"perEach\":{\"type\":\"PlayerCounters\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"kind\":\"Experience\"}}} "
   -- CR 702.21b: Phyrexian Fleshgorger's "pay life equal to this creature's
   -- power", one life per point of power.
   Spec.it s "MkWard with a power-sized life payment" $

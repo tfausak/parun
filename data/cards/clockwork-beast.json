@@ -66,18 +66,14 @@
                   "type": "PlayersTurn",
                   "value": {
                     "type": "Relative",
-                    "value": {
-                      "type": "You"
-                    }
+                    "value": "You"
                   }
                 },
                 "window": {
                   "type": "Step",
                   "value": {
                     "type": "Beginning",
-                    "value": {
-                      "type": "Upkeep"
-                    }
+                    "value": "Upkeep"
                   }
                 }
               }
@@ -138,17 +134,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "EndOfCombat"
-                }
+                "value": "EndOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -156,9 +148,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -189,13 +179,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -239,17 +225,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          }
+          "Beast"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

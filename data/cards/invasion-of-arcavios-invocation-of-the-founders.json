@@ -11,18 +11,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -44,32 +40,24 @@
                         "type": "Search",
                         "value": {
                           "andOr": true,
-                          "destination": {
-                            "type": "RevealThenHand"
-                          },
+                          "destination": "RevealThenHand",
                           "filter": {
                             "type": "Or",
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Instant"
-                                }
+                                "value": "Instant"
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Sorcery"
-                                }
+                                "value": "Sorcery"
                               }
                             ]
                           },
                           "outsideTheGame": true,
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -77,17 +65,11 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "zones": [
-                            {
-                              "type": "Library"
-                            },
-                            {
-                              "type": "Graveyard"
-                            }
+                            "Library",
+                            "Graveyard"
                           ]
                         }
                       }
@@ -101,22 +83,16 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Siege"
-          }
+          "Siege"
         ],
         "types": [
-          {
-            "type": "Battle"
-          }
+          "Battle"
         ]
       }
     },
     {
       "colorIndicator": [
-        {
-          "type": "Blue"
-        }
+        "Blue"
       ],
       "name": "Invocation of the Founders",
       "oracleText": "Whenever you cast an instant or sorcery spell from your hand, you may copy that spell. You may choose new targets for the copy.",
@@ -129,9 +105,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               },
               "spell": {
@@ -142,12 +116,8 @@
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
@@ -155,24 +125,18 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Instant"
-                          }
+                          "value": "Instant"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Sorcery"
-                          }
+                          "value": "Sorcery"
                         }
                       ]
                     }
                   ]
                 }
               },
-              "zone": {
-                "type": "Hand"
-              }
+              "zone": "Hand"
             }
           },
           "modal": {
@@ -206,9 +170,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

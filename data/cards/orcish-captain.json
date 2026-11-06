@@ -29,9 +29,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "InSlot",
                           "value": "flip"
@@ -74,9 +72,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "InSlot",
                           "value": "flip"
@@ -120,9 +116,7 @@
                   "target": {
                     "filter": {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Orc"
-                      }
+                      "value": "Orc"
                     },
                     "pool": {
                       "type": "Creatures"
@@ -139,9 +133,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -157,17 +149,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Orc"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Orc",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

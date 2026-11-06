@@ -12,9 +12,7 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "HasAttached",
@@ -29,12 +27,8 @@
               "type": "You"
             },
             "kinds": [
-              {
-                "type": "OfPlayer"
-              },
-              {
-                "type": "OfPlaneswalker"
-              }
+              "OfPlayer",
+              "OfPlaneswalker"
             ]
           }
         }
@@ -55,9 +49,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -72,9 +64,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -110,14 +100,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

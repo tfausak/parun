@@ -10,27 +10,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -51,17 +45,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "BeginningOfCombat"
-                }
+                "value": "BeginningOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -79,17 +69,13 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Green"
-                                  }
+                                  "Green"
                                 ],
                                 "enchant": [
                                   {
                                     "filter": {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Land"
-                                      }
+                                      "value": "Land"
                                     },
                                     "pool": {
                                       "type": "Permanents"
@@ -106,9 +92,7 @@
                                         "value": [
                                           {
                                             "type": "HasCardType",
-                                            "value": {
-                                              "type": "Land"
-                                            }
+                                            "value": "Land"
                                           },
                                           {
                                             "type": "HasAttached",
@@ -161,14 +145,10 @@
                                 ],
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Aura"
-                                    }
+                                    "Aura"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Enchantment"
-                                    }
+                                    "Enchantment"
                                   ]
                                 }
                               }
@@ -203,19 +183,13 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Land"
-                          }
+                          "value": "Land"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -253,21 +227,15 @@
                               {
                                 "type": "HeldBy",
                                 "value": {
-                                  "holder": {
-                                    "type": "Controller"
-                                  },
-                                  "relation": {
-                                    "type": "You"
-                                  }
+                                  "holder": "Controller",
+                                  "relation": "You"
                                 }
                               },
                               {
                                 "type": "HasAttached",
                                 "value": {
                                   "type": "HasSubtype",
-                                  "value": {
-                                    "type": "Aura"
-                                  }
+                                  "value": "Aura"
                                 }
                               }
                             ]
@@ -284,22 +252,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Human",
+          "Soldier"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

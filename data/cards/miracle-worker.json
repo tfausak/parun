@@ -24,9 +24,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -39,9 +37,7 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Aura"
-                          }
+                          "value": "Aura"
                         },
                         {
                           "type": "AttachedTo",
@@ -50,19 +46,13 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "HeldBy",
                                 "value": {
-                                  "holder": {
-                                    "type": "Controller"
-                                  },
-                                  "relation": {
-                                    "type": "You"
-                                  }
+                                  "holder": "Controller",
+                                  "relation": "You"
                                 }
                               }
                             ]
@@ -85,9 +75,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -103,17 +91,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Human"
-          }
+          "Cleric",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

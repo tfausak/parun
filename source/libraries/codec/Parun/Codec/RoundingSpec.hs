@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.Rounding" $ do
       s
       Rounding.codec
       Rounding.Up
-      " {\"type\":\"Up\"} "
+      " \"Up\" "
   Spec.it s "Down" $
     Common.assertCodec
       s
       Rounding.codec
       Rounding.Down
-      " {\"type\":\"Down\"} "
+      " \"Down\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

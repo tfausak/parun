@@ -23,9 +23,7 @@
                       },
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       }
                     ]
                   }
@@ -83,9 +81,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -101,14 +97,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Harpy"
-          }
+          "Harpy"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

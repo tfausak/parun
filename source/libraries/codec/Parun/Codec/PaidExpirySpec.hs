@@ -26,5 +26,5 @@ spec s = Spec.describe s "Parun.Codec.PaidExpiry" $ do
             PaidExpiry.resolution = ObjectId.MkObjectId 7
           }
       )
-      " {\"player\":0,\"cost\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}}]},\"resolution\":7} "
+      " {\"player\":0,\"cost\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Blue\"}}]},\"resolution\":7} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Codec.codec

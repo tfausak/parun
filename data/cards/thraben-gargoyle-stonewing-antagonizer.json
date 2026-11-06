@@ -55,17 +55,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Gargoyle"
-          }
+          "Gargoyle"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     },
@@ -87,20 +81,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Gargoyle"
-          },
-          {
-            "type": "Horror"
-          }
+          "Gargoyle",
+          "Horror"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

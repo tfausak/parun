@@ -14,9 +14,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Artifact"
-                    }
+                    "value": "Artifact"
                   }
                 }
               }
@@ -71,9 +69,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -89,14 +85,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Atog"
-          }
+          "Atog"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -26,7 +26,7 @@
     { "turn": 1, "step": "DeclareAttackers", "player": "carol", "do": { "Attack": ["$attacker"] } },
     { "turn": 1, "step": "DeclareAttackers", "player": "carol", "source": "$attacker", "do": { "ChooseAttackTarget": "$bob" } },
     { "turn": 1, "step": "DeclareAttackers", "player": "carol", "source": "$curse", "do": { "ChooseTargets": { "target": ["$island"] } } },
-    { "turn": 1, "step": "DeclareAttackers", "player": "carol", "source": "$curse", "do": { "ChooseOptional": { "type": "Declines" } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "carol", "source": "$curse", "do": { "ChooseOptional": "Declines" } },
     { "turn": 1, "step": "DeclareAttackers", "player": "carol", "check": { "Tapped": { "object": "$island", "tapped": false } } }
   ]
 }

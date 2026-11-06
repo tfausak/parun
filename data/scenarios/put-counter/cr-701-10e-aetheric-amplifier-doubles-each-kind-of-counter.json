@@ -6,8 +6,8 @@
       {
         "name": "alice",
         "counters": [
-          { "key": { "type": "Energy" }, "value": 3 },
-          { "key": { "type": "Poison" }, "value": 2 }
+          { "key": "Energy", "value": 3 },
+          { "key": "Poison", "value": 2 }
         ],
         "battlefield": [
           { "card": "Aetheric Amplifier", "label": "amplifier", "ready": true },
@@ -19,7 +19,7 @@
       },
       {
         "name": "bob",
-        "counters": [{ "key": { "type": "Poison" }, "value": 1 }]
+        "counters": [{ "key": "Poison", "value": 1 }]
       }
     ],
     "active": "alice",
@@ -28,13 +28,13 @@
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$amplifier", "ability": 1, "modes": [1], "mana": ["$f1", "$f2", "$f3", "$f4", null] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": { "type": "Energy" }, "count": 6 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": { "type": "Poison" }, "count": 4 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": { "type": "Rad" }, "count": 0 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": { "type": "Experience" }, "count": 0 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": { "type": "Poison" }, "count": 1 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": { "type": "Energy" }, "count": 0 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": { "type": "Rad" }, "count": 0 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": { "type": "Experience" }, "count": 0 } } }
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": "Energy", "count": 6 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": "Poison", "count": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": "Rad", "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": "Experience", "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": "Poison", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": "Energy", "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": "Rad", "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": "Experience", "count": 0 } } }
   ]
 }

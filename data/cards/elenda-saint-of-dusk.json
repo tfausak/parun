@@ -6,9 +6,7 @@
           "type": "Hexproof",
           "value": {
             "type": "HasCardType",
-            "value": {
-              "type": "Instant"
-            }
+            "value": "Instant"
           }
         },
         {
@@ -24,18 +22,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -56,25 +50,19 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "GreaterThan"
-              },
+              "comparison": "GreaterThan",
               "measured": {
                 "type": "LifeTotal",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
                 "type": "StartingLifeTotal",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -111,16 +99,12 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "LifeTotal",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -130,9 +114,7 @@
                     "type": "StartingLifeTotal",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     }
                   },
                   "right": {
@@ -166,22 +148,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Knight"
-          },
-          {
-            "type": "Vampire"
-          }
+          "Knight",
+          "Vampire"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

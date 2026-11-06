@@ -9,9 +9,7 @@
         "name": "alice",
         "counters": [
           {
-            "key": {
-              "type": "Experience"
-            },
+            "key": "Experience",
             "value": 5
           }
         ],

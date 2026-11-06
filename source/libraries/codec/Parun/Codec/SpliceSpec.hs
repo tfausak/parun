@@ -32,5 +32,5 @@ spec s = Spec.describe s "Parun.Codec.Splice" $ do
             Splice.cost = Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Red)]), Cost.components = []}
           }
       )
-      " {\"onto\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Arcane\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}}}]}} "
+      " {\"onto\":{\"type\":\"HasSubtype\",\"value\":\"Arcane\"},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Red\"}}]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

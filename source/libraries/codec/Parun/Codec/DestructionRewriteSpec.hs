@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.DestructionRewrite" $ do
       s
       DestructionRewrite.codec
       DestructionRewrite.Regenerate
-      " {\"type\":\"Regenerate\"} "
+      " \"Regenerate\" "
   -- CR 122.1c's replacement half. Minted from a permanent's shield counters and
   -- never authored on a card, so this codec is the only place its wire form is
   -- pinned.
@@ -21,7 +21,7 @@ spec s = Spec.describe s "Parun.Codec.DestructionRewrite" $ do
       s
       DestructionRewrite.codec
       DestructionRewrite.RemoveShieldCounter
-      " {\"type\":\"RemoveShieldCounter\"} "
+      " \"RemoveShieldCounter\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

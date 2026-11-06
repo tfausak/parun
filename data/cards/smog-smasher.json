@@ -18,9 +18,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -41,16 +39,12 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Speed",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -70,17 +64,13 @@
                     "value": {
                       "phase": {
                         "type": "Combat",
-                        "value": {
-                          "type": "BeginningOfCombat"
-                        }
+                        "value": "BeginningOfCombat"
                       },
                       "scope": {
                         "type": "PlayersTurn",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     }
@@ -103,9 +93,7 @@
                                     }
                                   },
                                   "slot": "them",
-                                  "zone": {
-                                    "type": "Battlefield"
-                                  }
+                                  "zone": "Battlefield"
                                 }
                               },
                               {
@@ -137,17 +125,13 @@
                                         "value": {
                                           "phase": {
                                             "type": "Ending",
-                                            "value": {
-                                              "type": "EndStep"
-                                            }
+                                            "value": "EndStep"
                                           },
                                           "scope": {
                                             "type": "PlayersTurn",
                                             "value": {
                                               "type": "Relative",
-                                              "value": {
-                                                "type": "AnyPlayer"
-                                              }
+                                              "value": "AnyPlayer"
                                             }
                                           }
                                         }
@@ -204,26 +188,18 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   }
                 ]
               },
-              "recipient": {
-                "type": "AnyPlayer"
-              }
+              "recipient": "AnyPlayer"
             }
           },
           "modal": {
@@ -270,17 +246,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Berserker"
-          },
-          {
-            "type": "Mutant"
-          }
+          "Berserker",
+          "Mutant"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

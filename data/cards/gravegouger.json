@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -45,9 +43,7 @@
                             "type": "InSlot",
                             "value": "cards"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -71,9 +67,7 @@
                         }
                       }
                     },
-                    "together": {
-                      "type": "InOneZone"
-                    }
+                    "together": "InOneZone"
                   }
                 }
               }
@@ -102,9 +96,7 @@
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       }
                     ]
@@ -117,17 +109,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horror"
-          },
-          {
-            "type": "Nightmare"
-          }
+          "Horror",
+          "Nightmare"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -20,7 +20,7 @@
     "step": "Upkeep"
   },
   "timeline": [
-    { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } }, "source": "$jaguar" },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "ChooseToPay": { "decision": "Declines" } }, "source": "$jaguar" },
     { "turn": 1, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$forest-1", "tapped": false } } },
     { "turn": 1, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$forest-2", "tapped": false } } },
     { "turn": 1, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$forest-3", "tapped": false } } },

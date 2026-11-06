@@ -14,9 +14,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Forest"
-                    }
+                    "value": "Forest"
                   }
                 }
               }
@@ -34,9 +32,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -57,18 +53,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -76,9 +68,7 @@
       "oracleText": "Sacrifice a Forest: You gain 3 life.",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

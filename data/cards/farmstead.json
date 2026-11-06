@@ -5,9 +5,7 @@
         {
           "filter": {
             "type": "HasCardType",
-            "value": {
-              "type": "Land"
-            }
+            "value": "Land"
           },
           "pool": {
             "type": "Permanents"
@@ -19,27 +17,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -54,9 +46,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 {
                   "type": "HasAttached",
@@ -78,17 +68,13 @@
                     "value": {
                       "phase": {
                         "type": "Beginning",
-                        "value": {
-                          "type": "Upkeep"
-                        }
+                        "value": "Upkeep"
                       },
                       "scope": {
                         "type": "PlayersTurn",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     }
@@ -104,9 +90,7 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
                                   "quantity": {
                                     "type": "Literal",
@@ -116,27 +100,21 @@
                               }
                             ],
                             "payGate": {
-                              "branch": {
-                                "type": "IfPaid"
-                              },
+                              "branch": "IfPaid",
                               "cost": {
                                 "mana": [
                                   {
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "White"
-                                      }
+                                      "value": "White"
                                     }
                                   },
                                   {
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "White"
-                                      }
+                                      "value": "White"
                                     }
                                   }
                                 ]
@@ -159,14 +137,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

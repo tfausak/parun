@@ -39,5 +39,5 @@ spec s = Spec.describe s "Parun.Codec.PlayerStaticAbility" $ do
           PlayerStaticAbility.name = Nothing,
           PlayerStaticAbility.effect = PlayerEffect.CantCastMoreThan 1
         }
-      " {\"scope\":{\"type\":\"AnyPlayer\"},\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"IsActivePlayer\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"comparison\":{\"type\":\"Exactly\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"effect\":{\"type\":\"CantCastMoreThan\",\"value\":1}} "
+      " {\"scope\":{\"type\":\"AnyPlayer\"},\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"IsActivePlayer\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}},\"comparison\":\"Exactly\",\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"effect\":{\"type\":\"CantCastMoreThan\",\"value\":1}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlayerStaticAbility.codec

@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -59,16 +55,12 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldByBound",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
+                                    "holder": "Controller",
                                     "slot": "target"
                                   }
                                 }
@@ -83,18 +75,14 @@
                     "type": "Search",
                     "value": {
                       "andOr": true,
-                      "destination": {
-                        "type": "RevealThenHand"
-                      },
+                      "destination": "RevealThenHand",
                       "filter": {
                         "type": "HasName",
                         "value": "Chandra, Flame's Fury"
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -102,17 +90,11 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "zones": [
-                        {
-                          "type": "Library"
-                        },
-                        {
-                          "type": "Graveyard"
-                        }
+                        "Library",
+                        "Graveyard"
                       ]
                     }
                   }
@@ -131,9 +113,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

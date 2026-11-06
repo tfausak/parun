@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -34,17 +30,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -71,24 +63,18 @@
                                     "value": [
                                       {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Land"
-                                        }
+                                        "value": "Land"
                                       },
                                       {
                                         "type": "Not",
                                         "value": {
                                           "type": "HasSupertype",
-                                          "value": {
-                                            "type": "Basic"
-                                          }
+                                          "value": "Basic"
                                         }
                                       },
                                       {
                                         "type": "HeldByRecipient",
-                                        "value": {
-                                          "type": "Controller"
-                                        }
+                                        "value": "Controller"
                                       }
                                     ]
                                   },
@@ -97,13 +83,9 @@
                                     "value": {
                                       "player": {
                                         "type": "Relative",
-                                        "value": {
-                                          "type": "AnyPlayer"
-                                        }
+                                        "value": "AnyPlayer"
                                       },
-                                      "zone": {
-                                        "type": "Battlefield"
-                                      }
+                                      "zone": "Battlefield"
                                     }
                                   }
                                 }
@@ -126,9 +108,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

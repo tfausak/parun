@@ -13,7 +13,7 @@
   "timeline": [
     { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "Activate": { "object": "$amulet", "ability": 0, "targets": ["$bob"], "costOrder": [0, 1] } } },
     { "turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "Upkeep", "player": "bob", "do": { "ChooseOptional": { "type": "Exercises" } } }
+    { "turn": 1, "step": "Upkeep", "player": "bob", "do": { "ChooseOptional": "Exercises" } }
   ],
   "final": [
     { "View": { "of": "Result", "is": null } },

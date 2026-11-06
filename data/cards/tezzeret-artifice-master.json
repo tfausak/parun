@@ -40,17 +40,11 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Thopter"
-                                    }
+                                    "Thopter"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    },
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Artifact",
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -87,9 +81,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtMost"
-                        },
+                        "comparison": "AtMost",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -101,19 +93,13 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Artifact"
-                                  }
+                                  "value": "Artifact"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -123,13 +109,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
+                                  "value": "AnyPlayer"
                                 },
-                                "zone": {
-                                  "type": "Battlefield"
-                                }
+                                "zone": "Battlefield"
                               }
                             }
                           }
@@ -146,9 +128,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -162,9 +142,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -176,19 +154,13 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Artifact"
-                                  }
+                                  "value": "Artifact"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -198,13 +170,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
+                                  "value": "AnyPlayer"
                                 },
-                                "zone": {
-                                  "type": "Battlefield"
-                                }
+                                "zone": "Battlefield"
                               }
                             }
                           }
@@ -221,9 +189,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -271,17 +237,13 @@
                                       "value": {
                                         "phase": {
                                           "type": "Ending",
-                                          "value": {
-                                            "type": "EndStep"
-                                          }
+                                          "value": "EndStep"
                                         },
                                         "scope": {
                                           "type": "PlayersTurn",
                                           "value": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "You"
-                                            }
+                                            "value": "You"
                                           }
                                         }
                                       }
@@ -295,55 +257,39 @@
                                                 {
                                                   "type": "Search",
                                                   "value": {
-                                                    "destination": {
-                                                      "type": "Battlefield"
-                                                    },
+                                                    "destination": "Battlefield",
                                                     "filter": {
                                                       "type": "Or",
                                                       "value": [
                                                         {
                                                           "type": "HasCardType",
-                                                          "value": {
-                                                            "type": "Artifact"
-                                                          }
+                                                          "value": "Artifact"
                                                         },
                                                         {
                                                           "type": "HasCardType",
-                                                          "value": {
-                                                            "type": "Battle"
-                                                          }
+                                                          "value": "Battle"
                                                         },
                                                         {
                                                           "type": "HasCardType",
-                                                          "value": {
-                                                            "type": "Creature"
-                                                          }
+                                                          "value": "Creature"
                                                         },
                                                         {
                                                           "type": "HasCardType",
-                                                          "value": {
-                                                            "type": "Enchantment"
-                                                          }
+                                                          "value": "Enchantment"
                                                         },
                                                         {
                                                           "type": "HasCardType",
-                                                          "value": {
-                                                            "type": "Land"
-                                                          }
+                                                          "value": "Land"
                                                         },
                                                         {
                                                           "type": "HasCardType",
-                                                          "value": {
-                                                            "type": "Planeswalker"
-                                                          }
+                                                          "value": "Planeswalker"
                                                         }
                                                       ]
                                                     },
                                                     "owner": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -351,9 +297,7 @@
                                                     },
                                                     "searcher": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     }
                                                   }
                                                 }
@@ -391,18 +335,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -410,19 +350,13 @@
       "oracleText": "[+1]: Create a 1/1 colorless Thopter artifact creature token with flying.\n[0]: Draw a card. If you control three or more artifacts, draw two cards instead.\n[−9]: You get an emblem with \"At the beginning of your end step, search your library for a permanent card, put it onto the battlefield, then shuffle.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Tezzeret"
-          }
+          "Tezzeret"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -47,12 +43,8 @@
             "value": {
               "destinations": [
                 {
-                  "owner": {
-                    "type": "You"
-                  },
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "owner": "You",
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -85,25 +77,15 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Soldier"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Human",
+          "Soldier",
+          "Warrior"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

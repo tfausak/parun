@@ -29,7 +29,7 @@ spec s = Spec.describe s "Parun.Codec.ActiveObjectProhibition" $ do
           ActiveObjectProhibition.what = Prohibition.Activate,
           ActiveObjectProhibition.affected = RestrictedCreatures.Named (ObjectId.MkObjectId 3)
         }
-      " {\"source\":1,\"controller\":4,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"what\":{\"type\":\"Activate\"},\"affected\":{\"type\":\"Named\",\"value\":3}} "
+      " {\"source\":1,\"controller\":4,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"what\":\"Activate\",\"affected\":{\"type\":\"Named\",\"value\":3}} "
   -- CR 611.2c: a class, inert until that player's untap step (Exhaustion).
   Spec.it s "a class that doesn't untap during a player's untap step" $
     Common.assertCodec
@@ -43,6 +43,6 @@ spec s = Spec.describe s "Parun.Codec.ActiveObjectProhibition" $ do
           ActiveObjectProhibition.what = Prohibition.Untap,
           ActiveObjectProhibition.affected = RestrictedCreatures.Matching (Filter.HasCardType CardType.Creature)
         }
-      " {\"source\":1,\"controller\":4,\"timestamp\":2,\"expiry\":{\"type\":\"DuringUntapStepOf\",\"value\":5},\"what\":{\"type\":\"Untap\"},\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"source\":1,\"controller\":4,\"timestamp\":2,\"expiry\":{\"type\":\"DuringUntapStepOf\",\"value\":5},\"what\":\"Untap\",\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActiveObjectProhibition.codec

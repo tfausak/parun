@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -67,9 +63,7 @@
                         "value": {
                           "filter": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           "players": {
                             "type": "EachInSlot",
@@ -91,19 +85,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Demon"
-          }
+          "Demon"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

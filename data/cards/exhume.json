@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -35,9 +33,7 @@
                           },
                           "filter": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           "players": {
                             "type": "Scoped",
@@ -52,9 +48,7 @@
                           "type": "Owner"
                         }
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 ]
@@ -65,9 +59,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

@@ -14,9 +14,7 @@
             "unless": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "AtLeast"
-                },
+                "comparison": "AtLeast",
                 "measured": {
                   "type": "Count",
                   "value": {
@@ -32,13 +30,9 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
-                        "zone": {
-                          "type": "Exile"
-                        }
+                        "zone": "Exile"
                       }
                     }
                   }
@@ -63,9 +57,7 @@
             "unless": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "AtLeast"
-                },
+                "comparison": "AtLeast",
                 "measured": {
                   "type": "Count",
                   "value": {
@@ -81,13 +73,9 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
-                        "zone": {
-                          "type": "Exile"
-                        }
+                        "zone": "Exile"
                       }
                     }
                   }
@@ -121,18 +109,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -151,9 +135,7 @@
           "condition": {
             "type": "PutIntoZone",
             "value": {
-              "batching": {
-                "type": "OneOrMore"
-              },
+              "batching": "OneOrMore",
               "card": {
                 "type": "Matching",
                 "value": {
@@ -164,25 +146,17 @@
                 }
               },
               "from": [
-                {
-                  "type": "Graveyard"
-                },
-                {
-                  "type": "Battlefield"
-                }
+                "Graveyard",
+                "Battlefield"
               ],
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
-              "to": {
-                "type": "Exile"
-              }
+              "to": "Exile"
             }
           },
           "modal": {
@@ -196,9 +170,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -211,9 +183,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -231,19 +201,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "God"
-          }
+          "God"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

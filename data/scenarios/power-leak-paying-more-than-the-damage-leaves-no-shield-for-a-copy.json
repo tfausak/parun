@@ -14,11 +14,11 @@
     {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
     {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
     {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"Answer": {"prompt": "ChooseNumber", "with": 3}}, "source": "$leak"},
-    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$i3", "$i4", "$i5", null]}}, "source": "$leak"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"ChooseToPay": {"decision": "Pays", "mana": ["$i3", "$i4", "$i5", null]}}, "source": "$leak"},
     {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}},
     {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
     {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"Answer": {"prompt": "ChooseNumber", "with": 1}}, "source": "$leak"},
-    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}, "source": "$leak"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"ChooseToPay": {"decision": "Declines"}}, "source": "$leak"},
     {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 18}}}
   ]
 }

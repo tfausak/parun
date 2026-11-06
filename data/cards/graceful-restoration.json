@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -53,9 +49,7 @@
                           }
                         ]
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 ]
@@ -65,9 +59,7 @@
               "target": {
                 "filter": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 "pool": {
                   "type": "CardsInGraveyard",
@@ -92,9 +84,7 @@
                         "type": "InSlot",
                         "value": "targets"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 ]
@@ -114,19 +104,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "Measures",
                       "value": {
-                        "comparison": {
-                          "type": "AtMost"
-                        },
-                        "measure": {
-                          "type": "Power"
-                        },
+                        "comparison": "AtMost",
+                        "measure": "Power",
                         "operand": {
                           "type": "Literal",
                           "value": 2
@@ -151,9 +135,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

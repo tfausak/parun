@@ -48,7 +48,7 @@ spec s = Spec.describe s "Parun.Codec.CreateCopy" $ do
       s
       (CreateCopy.codec Common.text)
       (CreateCopy.MkCreateCopy (Quantity.Literal 1) (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) EntryRiders.defaultValue {EntryRiders.tapped = TapState.Tapped, EntryRiders.attacking = Just EntryAttack.Chosen} (Just (SlotName.MkSlotName (Text.pack "token"))) [] False)
-      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"riders\":{\"tapped\":{\"type\":\"Tapped\"},\"attacking\":{\"type\":\"Chosen\"}},\"slot\":\"token\"} "
+      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"riders\":{\"tapped\":\"Tapped\",\"attacking\":{\"type\":\"Chosen\"}},\"slot\":\"token\"} "
   Spec.it s "MkCreateCopy, linked to its source" $
     Common.assertCodec
       s

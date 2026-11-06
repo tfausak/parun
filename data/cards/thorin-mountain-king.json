@@ -23,9 +23,7 @@
                                 "value": {
                                   "quantity": {
                                     "type": "Measure",
-                                    "value": {
-                                      "type": "Power"
-                                    }
+                                    "value": "Power"
                                   },
                                   "slot": "creature"
                                 }
@@ -74,9 +72,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -129,12 +125,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     "pool": {
@@ -153,19 +145,13 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Equipment"
-                          }
+                          "value": "Equipment"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -182,22 +168,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dwarf"
-          },
-          {
-            "type": "Noble"
-          }
+          "Dwarf",
+          "Noble"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

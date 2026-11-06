@@ -23,9 +23,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -40,9 +38,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -173,9 +169,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -228,13 +222,9 @@
                                     "value": {
                                       "player": {
                                         "type": "Relative",
-                                        "value": {
-                                          "type": "You"
-                                        }
+                                        "value": "You"
                                       },
-                                      "zone": {
-                                        "type": "Hand"
-                                      }
+                                      "zone": "Hand"
                                     }
                                   }
                                 }
@@ -275,18 +265,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -294,22 +280,14 @@
       "oracleText": "[+1]: Draw a card, then discard a card.\n[+1]: Target creature gets +2/+0 and gains first strike and trample until end of turn.\n[−8]: Draw four cards. When you do, The Royal Scions deals damage to any target equal to the number of cards in your hand.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Rowan"
-          },
-          {
-            "type": "Will"
-          }
+          "Rowan",
+          "Will"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

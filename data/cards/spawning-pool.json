@@ -24,9 +24,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Black"
-                              }
+                              "value": "Black"
                             }
                           }
                         }
@@ -49,9 +47,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -71,12 +67,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Creature"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Creature",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -94,12 +86,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "InAddition"
-                              },
-                              "subtype": {
-                                "type": "Skeleton"
-                              }
+                              "mode": "InAddition",
+                              "subtype": "Skeleton"
                             }
                           },
                           "ref": {
@@ -118,13 +106,9 @@
                             "type": "Colors",
                             "value": {
                               "colors": [
-                                {
-                                  "type": "Black"
-                                }
+                                "Black"
                               ],
-                              "mode": {
-                                "type": "Replace"
-                              }
+                              "mode": "Replace"
                             }
                           },
                           "ref": {
@@ -175,9 +159,7 @@
                                       "type": "OfType",
                                       "value": {
                                         "type": "Colored",
-                                        "value": {
-                                          "type": "Black"
-                                        }
+                                        "value": "Black"
                                       }
                                     }
                                   ]
@@ -197,17 +179,11 @@
                                                 "effect": {
                                                   "type": "DestructionR",
                                                   "value": {
-                                                    "rewrite": {
-                                                      "type": "Regenerate"
-                                                    }
+                                                    "rewrite": "Regenerate"
                                                   }
                                                 },
-                                                "origin": {
-                                                  "type": "Other"
-                                                },
-                                                "uses": {
-                                                  "type": "Once"
-                                                }
+                                                "origin": "Other",
+                                                "uses": "Once"
                                               }
                                             }
                                           ]
@@ -252,9 +228,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

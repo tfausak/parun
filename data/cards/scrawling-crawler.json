@@ -24,17 +24,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -50,9 +46,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -71,9 +65,7 @@
           "condition": {
             "type": "PlayerDrawsNthCard",
             "value": {
-              "player": {
-                "type": "Opponent"
-              }
+              "player": "Opponent"
             }
           },
           "modal": {
@@ -105,20 +97,12 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Construct"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Construct",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

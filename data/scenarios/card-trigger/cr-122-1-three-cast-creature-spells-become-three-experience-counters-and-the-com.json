@@ -76,9 +76,7 @@
       "check": {
         "PlayerCounters": {
           "player": "alice",
-          "kind": {
-            "type": "Experience"
-          },
+          "kind": "Experience",
           "count": 0
         }
       }
@@ -170,9 +168,7 @@
       "check": {
         "PlayerCounters": {
           "player": "alice",
-          "kind": {
-            "type": "Experience"
-          },
+          "kind": "Experience",
           "count": 3
         }
       }
@@ -184,9 +180,7 @@
       "check": {
         "PlayerCounters": {
           "player": "bob",
-          "kind": {
-            "type": "Experience"
-          },
+          "kind": "Experience",
           "count": 0
         }
       }
@@ -242,9 +236,7 @@
       "check": {
         "PlayerCounters": {
           "player": "alice",
-          "kind": {
-            "type": "Experience"
-          },
+          "kind": "Experience",
           "count": 3
         }
       }

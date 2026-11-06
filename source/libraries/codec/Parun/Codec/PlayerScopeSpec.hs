@@ -35,7 +35,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerScope" $ do
       s
       PlayerScope.codec
       (PlayerScope.Superlative (Superlative.MkSuperlative PlayerMeasure.PermanentsControlled Comparison.GreaterThan))
-      " {\"type\":\"Superlative\",\"value\":{\"measure\":{\"type\":\"PermanentsControlled\"},\"comparison\":{\"type\":\"GreaterThan\"}}} "
+      " {\"type\":\"Superlative\",\"value\":{\"measure\":{\"type\":\"PermanentsControlled\"},\"comparison\":\"GreaterThan\"}} "
   -- Exhaustive over the relation, whose arms the codec derives: this is what
   -- would catch a relation the derivation missed, or one spelled unlike the
   -- relation's own tag.
@@ -49,7 +49,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerScope" $ do
       s
       PlayerScope.codec
       (PlayerScope.InRole TurnRole.Active)
-      " {\"type\":\"InRole\",\"value\":{\"type\":\"Active\"}} "
+      " {\"type\":\"InRole\",\"value\":\"Active\"} "
   -- Booby Trap's "the chosen player" (CR 607.2d).
   Spec.it s "ChosenPlayer" $
     Common.assertCodec

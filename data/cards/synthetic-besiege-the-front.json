@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -32,12 +30,8 @@
                       "modification": {
                         "type": "CardType",
                         "value": {
-                          "cardType": {
-                            "type": "Battle"
-                          },
-                          "mode": {
-                            "type": "InAddition"
-                          }
+                          "cardType": "Battle",
+                          "mode": "InAddition"
                         }
                       },
                       "ref": {
@@ -77,9 +71,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

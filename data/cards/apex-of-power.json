@@ -10,27 +10,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -54,16 +48,12 @@
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       },
                       "slot": "exiled",
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   },
                   {
@@ -76,9 +66,7 @@
                         "type": "InSlot",
                         "value": "exiled"
                       },
-                      "verb": {
-                        "type": "Cast"
-                      }
+                      "verb": "Cast"
                     }
                   }
                 ]
@@ -87,9 +75,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -104,19 +90,13 @@
                             },
                             {
                               "type": "WasCastFrom",
-                              "value": {
-                                "type": "Hand"
-                              }
+                              "value": "Hand"
                             },
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Owner"
-                                },
-                                "relation": {
-                                  "type": "You"
-                                }
+                                "holder": "Owner",
+                                "relation": "You"
                               }
                             }
                           ]
@@ -126,13 +106,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Stack"
-                            }
+                            "zone": "Stack"
                           }
                         }
                       }
@@ -164,9 +140,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

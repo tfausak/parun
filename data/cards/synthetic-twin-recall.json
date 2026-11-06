@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -26,16 +24,12 @@
                   {
                     "type": "MoveToZone",
                     "value": {
-                      "origin": {
-                        "type": "Exile"
-                      },
+                      "origin": "Exile",
                       "ref": {
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "zone": {
-                        "type": "Graveyard"
-                      }
+                      "zone": "Graveyard"
                     }
                   }
                 ]
@@ -60,9 +54,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -24,18 +24,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -43,14 +39,10 @@
       "oracleText": "No more than two creatures can attack each combat.\nNo more than two creatures can block each combat.",
       "typeLine": {
         "supertypes": [
-          {
-            "type": "World"
-          }
+          "World"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

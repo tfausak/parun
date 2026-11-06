@@ -34,17 +34,11 @@
                                       "type": "IsBound",
                                       "value": "regenerated"
                                     },
-                                    "rewrite": {
-                                      "type": "Regenerate"
-                                    }
+                                    "rewrite": "Regenerate"
                                   }
                                 },
-                                "origin": {
-                                  "type": "Other"
-                                },
-                                "uses": {
-                                  "type": "Once"
-                                }
+                                "origin": "Other",
+                                "uses": "Once"
                               }
                             }
                           ],
@@ -96,17 +90,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -134,9 +124,7 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HasAttached",
@@ -146,9 +134,7 @@
                                 },
                                 {
                                   "type": "HasColor",
-                                  "value": {
-                                    "type": "Black"
-                                  }
+                                  "value": "Black"
                                 }
                               ]
                             }
@@ -165,14 +151,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Equipment"
-          }
+          "Equipment"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

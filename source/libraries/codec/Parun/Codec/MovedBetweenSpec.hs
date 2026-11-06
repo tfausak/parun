@@ -15,5 +15,5 @@ spec s = Spec.describe s "Parun.Codec.MovedBetween" $ do
       s
       MovedBetween.codec
       (MovedBetween.MkMovedBetween {MovedBetween.from = Zone.Battlefield, MovedBetween.to = Zone.Graveyard})
-      " {\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}} "
+      " {\"from\":\"Battlefield\",\"to\":\"Graveyard\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s MovedBetween.codec

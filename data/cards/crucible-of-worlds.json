@@ -16,13 +16,9 @@
             "value": {
               "player": {
                 "type": "Relative",
-                "value": {
-                  "type": "You"
-                }
+                "value": "You"
               },
-              "zone": {
-                "type": "Graveyard"
-              }
+              "zone": "Graveyard"
             }
           },
           "scope": {
@@ -32,9 +28,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

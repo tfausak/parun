@@ -20,9 +20,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -30,14 +28,10 @@
       "oracleText": "Enchant tapped creature\nEnchanted creature doesn't untap during its controller's untap step.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       },
       "untapRestrictions": [

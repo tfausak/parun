@@ -73,7 +73,7 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       s
       codec
       (Modification.GainKeywordAtManaCost CostKeyword.Scavenge)
-      " {\"type\":\"GainKeywordAtManaCost\",\"value\":{\"type\":\"Scavenge\"}} "
+      " {\"type\":\"GainKeywordAtManaCost\",\"value\":\"Scavenge\"} "
   -- layer 6, CR 702.5a: the granted enchant ability. The payload is a
   -- whole TargetSlot, so this arm's wire form is the one Face.enchant's entries
   -- already take.
@@ -136,7 +136,7 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       s
       codec
       (Modification.LoseKeywordFamily KeywordFamily.Landwalk)
-      " {\"type\":\"LoseKeywordFamily\",\"value\":{\"type\":\"Landwalk\"}} "
+      " {\"type\":\"LoseKeywordFamily\",\"value\":\"Landwalk\"} "
   -- layer 7b (Humility 1/1; Opalescence mana value).
   Spec.it s "SetBasePowerToughness" $
     Common.assertCodec
@@ -157,7 +157,7 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       s
       codec
       (Modification.LandSubtype ChangeMode.Replace Subtype.Mountain)
-      " {\"type\":\"LandSubtype\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"subtype\":{\"type\":\"Mountain\"}}} "
+      " {\"type\":\"LandSubtype\",\"value\":{\"mode\":\"Replace\",\"subtype\":\"Mountain\"}} "
   -- The mode and family only: the subtype is read from the effect's source at
   -- projection time, so it is not on the wire.
   Spec.it s "ChosenSubtype" $
@@ -165,28 +165,28 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       s
       codec
       (Modification.ChosenSubtype ChangeMode.InAddition SubtypeFamily.CreatureType)
-      " {\"type\":\"ChosenSubtype\",\"value\":{\"family\":{\"type\":\"CreatureType\"},\"mode\":{\"type\":\"InAddition\"}}} "
+      " {\"type\":\"ChosenSubtype\",\"value\":{\"family\":\"CreatureType\",\"mode\":\"InAddition\"}} "
   -- layer 4, CR 305.7 add (Urborg -> Swamp).
   Spec.it s "LandSubtype InAddition" $
     Common.assertCodec
       s
       codec
       (Modification.LandSubtype ChangeMode.InAddition Subtype.Swamp)
-      " {\"type\":\"LandSubtype\",\"value\":{\"mode\":{\"type\":\"InAddition\"},\"subtype\":{\"type\":\"Swamp\"}}} "
+      " {\"type\":\"LandSubtype\",\"value\":{\"mode\":\"InAddition\",\"subtype\":\"Swamp\"}} "
   -- layer 4, CR 205.1a set (Turn to Frog -> Frog).
   Spec.it s "CreatureSubtype Replace" $
     Common.assertCodec
       s
       codec
       (Modification.CreatureSubtype ChangeMode.Replace Subtype.Frog)
-      " {\"type\":\"CreatureSubtype\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"subtype\":{\"type\":\"Frog\"}}} "
+      " {\"type\":\"CreatureSubtype\",\"value\":{\"mode\":\"Replace\",\"subtype\":\"Frog\"}} "
   -- layer 4, CR 205.1b add (Life and Limb -> Saproling).
   Spec.it s "CreatureSubtype InAddition" $
     Common.assertCodec
       s
       codec
       (Modification.CreatureSubtype ChangeMode.InAddition Subtype.Saproling)
-      " {\"type\":\"CreatureSubtype\",\"value\":{\"mode\":{\"type\":\"InAddition\"},\"subtype\":{\"type\":\"Saproling\"}}} "
+      " {\"type\":\"CreatureSubtype\",\"value\":{\"mode\":\"InAddition\",\"subtype\":\"Saproling\"}} "
   -- layer 4, CR 205.1b add over the whole of CR 205.3m (Wings of Velis Vel).
   Spec.it s "AddEveryCreatureSubtype" $
     Common.assertCodec
@@ -200,14 +200,14 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       s
       codec
       (Modification.LoseEverySubtype CardType.Land)
-      " {\"type\":\"LoseEverySubtype\",\"value\":{\"type\":\"Land\"}} "
+      " {\"type\":\"LoseEverySubtype\",\"value\":\"Land\"} "
   -- layer 4, CR 205.1a set to a linked card's creature types (Duplicant).
   Spec.it s "SetCreatureSubtypesOfLastCardExiledWith carries its filter" $
     Common.assertCodec
       s
       codec
       (Modification.SetCreatureSubtypesOfLastCardExiledWith (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"SetCreatureSubtypesOfLastCardExiledWith\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"SetCreatureSubtypesOfLastCardExiledWith\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- layer 4, CR 205.1b add outside the land and creature families (Ygra, Eater
   -- of All). A different subtype from every arm above, so a codec that crossed
   -- this arm with one of them cannot pass both.
@@ -216,7 +216,7 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       s
       codec
       (Modification.AddSubtype Subtype.Food)
-      " {\"type\":\"AddSubtype\",\"value\":{\"type\":\"Food\"}} "
+      " {\"type\":\"AddSubtype\",\"value\":\"Food\"} "
   -- layer 4, CR 205.1a removal (Haunted Plate Mail). A different subtype from
   -- the add above, so a codec that crossed the two cannot pass both.
   Spec.it s "RemoveSubtype" $
@@ -224,7 +224,7 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       s
       codec
       (Modification.RemoveSubtype Subtype.Equipment)
-      " {\"type\":\"RemoveSubtype\",\"value\":{\"type\":\"Equipment\"}} "
+      " {\"type\":\"RemoveSubtype\",\"value\":\"Equipment\"} "
   -- layer 4, CR 205.1a set (Song of the Dryads -> land). A different card type
   -- from the add below, so a codec that crossed the two modes cannot pass both.
   Spec.it s "CardType Replace" $
@@ -232,35 +232,35 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       s
       codec
       (Modification.CardType ChangeMode.Replace CardType.Land)
-      " {\"type\":\"CardType\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"cardType\":{\"type\":\"Land\"}}} "
+      " {\"type\":\"CardType\",\"value\":{\"mode\":\"Replace\",\"cardType\":\"Land\"}} "
   -- layer 4, CR 205.1b add (Opalescence -> Creature).
   Spec.it s "CardType InAddition" $
     Common.assertCodec
       s
       codec
       (Modification.CardType ChangeMode.InAddition CardType.Creature)
-      " {\"type\":\"CardType\",\"value\":{\"mode\":{\"type\":\"InAddition\"},\"cardType\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"CardType\",\"value\":{\"mode\":\"InAddition\",\"cardType\":\"Creature\"}} "
   -- layer 4, CR 205.1a removal (CR 702.151b -> not a creature).
   Spec.it s "LoseCardType" $
     Common.assertCodec
       s
       codec
       (Modification.LoseCardType CardType.Creature)
-      " {\"type\":\"LoseCardType\",\"value\":{\"type\":\"Creature\"}} "
+      " {\"type\":\"LoseCardType\",\"value\":\"Creature\"} "
   -- layer 4, CR 205.4b grant (Leyline of Singularity -> legendary).
   Spec.it s "AddSupertype" $
     Common.assertCodec
       s
       codec
       (Modification.AddSupertype Supertype.Legendary)
-      " {\"type\":\"AddSupertype\",\"value\":{\"type\":\"Legendary\"}} "
+      " {\"type\":\"AddSupertype\",\"value\":\"Legendary\"} "
   -- layer 4, CR 205.4b removal (Arcum's Weathervane -> no longer snow).
   Spec.it s "RemoveSupertype" $
     Common.assertCodec
       s
       codec
       (Modification.RemoveSupertype Supertype.Snow)
-      " {\"type\":\"RemoveSupertype\",\"value\":{\"type\":\"Snow\"}} "
+      " {\"type\":\"RemoveSupertype\",\"value\":\"Snow\"} "
   -- layer 3, CR 612 (Magical Hack: from -> to).
   Spec.it s "ChangeWord" $
     Common.assertCodec
@@ -291,14 +291,14 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       s
       codec
       (Modification.Colors ChangeMode.Replace (Set.singleton Color.Blue))
-      " {\"type\":\"Colors\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"colors\":[{\"type\":\"Blue\"}]}} "
+      " {\"type\":\"Colors\",\"value\":{\"mode\":\"Replace\",\"colors\":[\"Blue\"]}} "
   -- layer 5, CR 613.1e / 105.3: an ADD, not a set.
   Spec.it s "Colors InAddition" $
     Common.assertCodec
       s
       codec
       (Modification.Colors ChangeMode.InAddition (Set.singleton Color.Blue))
-      " {\"type\":\"Colors\",\"value\":{\"mode\":{\"type\":\"InAddition\"},\"colors\":[{\"type\":\"Blue\"}]}} "
+      " {\"type\":\"Colors\",\"value\":{\"mode\":\"InAddition\",\"colors\":[\"Blue\"]}} "
   -- layer 5, CR 613.1e / 105.3: the colour is read at projection time off the
   -- effect's source, so the arm carries only whether it replaces or adds.
   Spec.it s "ChosenColor" $
@@ -306,7 +306,7 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       s
       codec
       (Modification.ChosenColor ChangeMode.Replace)
-      " {\"type\":\"ChosenColor\",\"value\":{\"type\":\"Replace\"}} "
+      " {\"type\":\"ChosenColor\",\"value\":\"Replace\"} "
   -- layer 6, CR 702.165a: the abilities come off the effect's SOURCE, so the arm
   -- carries only the keywords printed above the backup line.
   Spec.it s "GainAbilitiesOfSource" $
@@ -337,7 +337,7 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       s
       codec
       (Modification.AddNamesMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not (Filter.HasSupertype Supertype.Legendary)]))
-      " {\"type\":\"AddNamesMatching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"Not\",\"value\":{\"type\":\"HasSupertype\",\"value\":{\"type\":\"Legendary\"}}}]}} "
+      " {\"type\":\"AddNamesMatching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Creature\"},{\"type\":\"Not\",\"value\":{\"type\":\"HasSupertype\",\"value\":\"Legendary\"}}]}} "
   -- layer 3, CR 612.6: Volrath's Shapeshifter's "full text of that card",
   -- here with no text of its own beside it.
   Spec.it s "SetName carries the name" $
@@ -357,7 +357,7 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       s
       codec
       (Modification.HasFullText (FullText.MkFullText (PlayerRef.Relative PlayerRelation.You) []))
-      " {\"type\":\"HasFullText\",\"value\":{\"graveyard\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"alsoHas\":[]}} "
+      " {\"type\":\"HasFullText\",\"value\":{\"graveyard\":{\"type\":\"Relative\",\"value\":\"You\"},\"alsoHas\":[]}} "
   -- layer 7d, CR 613.4d: switches power and toughness. Payload-free.
   Spec.it s "SwitchPowerToughness" $
     Common.assertCodec
@@ -370,13 +370,13 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       s
       codec
       (Modification.AssignCombatDamage CombatDamageAmount.EqualToToughness)
-      " {\"type\":\"AssignCombatDamage\",\"value\":{\"type\":\"EqualToToughness\"}} "
+      " {\"type\":\"AssignCombatDamage\",\"value\":\"EqualToToughness\"} "
   Spec.it s "MayAssignCombatDamage" $
     Common.assertCodec
       s
       codec
       (Modification.MayAssignCombatDamage CombatDamageOption.AsThoughUnblocked)
-      " {\"type\":\"MayAssignCombatDamage\",\"value\":{\"type\":\"AsThoughUnblocked\"}} "
+      " {\"type\":\"MayAssignCombatDamage\",\"value\":\"AsThoughUnblocked\"} "
   -- layer 6, CR 702.184c: this object's controller's station abilities read
   -- toughness instead of power. Payload-free, self-only.
   Spec.it s "GrantsStationToughness" $

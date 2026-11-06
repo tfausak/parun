@@ -13,18 +13,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -44,19 +40,13 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "HeldBy",
                                 "value": {
-                                  "holder": {
-                                    "type": "Controller"
-                                  },
-                                  "relation": {
-                                    "type": "You"
-                                  }
+                                  "holder": "Controller",
+                                  "relation": "You"
                                 }
                               }
                             ]
@@ -66,12 +56,8 @@
                       {
                         "type": "AddPhases",
                         "value": [
-                          {
-                            "type": "ExtraCombat"
-                          },
-                          {
-                            "type": "ExtraMain"
-                          }
+                          "ExtraCombat",
+                          "ExtraMain"
                         ]
                       }
                     ]
@@ -96,9 +82,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -106,9 +90,7 @@
       "oracleText": "{3}{R}{R}: Untap all creatures you control. After this main phase, there is an additional combat phase followed by an additional main phase. Activate only as a sorcery.",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -21,5 +21,5 @@ spec s = Spec.describe s "Parun.Codec.PlayerDesignationTally" $ do
             PlayerDesignationTally.designation = PlayerDesignation.CitysBlessing
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"designation\":{\"type\":\"CitysBlessing\"}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"designation\":\"CitysBlessing\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlayerDesignationTally.codec

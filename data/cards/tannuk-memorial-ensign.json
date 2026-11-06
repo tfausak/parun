@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -47,19 +43,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -87,9 +77,7 @@
                                 "value": {
                                   "players": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "Opponent"
-                                    }
+                                    "value": "Opponent"
                                   }
                                 }
                               }
@@ -103,17 +91,13 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "AgainstSlot",
                           "value": {
                             "quantity": {
                               "type": "TimesThisTurn",
-                              "value": {
-                                "type": "Resolved"
-                              }
+                              "value": "Resolved"
                             },
                             "slot": "thisAbility"
                           }
@@ -130,9 +114,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -150,22 +132,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Kavu"
-          },
-          {
-            "type": "Pilot"
-          }
+          "Kavu",
+          "Pilot"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

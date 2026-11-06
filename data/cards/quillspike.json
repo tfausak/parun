@@ -23,19 +23,13 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       }
                     ]
@@ -49,15 +43,11 @@
                 "value": {
                   "left": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   },
                   "right": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Green"
-                    }
+                    "value": "Green"
                   }
                 }
               }
@@ -112,15 +102,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             }
           }
         }
@@ -137,14 +123,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          }
+          "Beast"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

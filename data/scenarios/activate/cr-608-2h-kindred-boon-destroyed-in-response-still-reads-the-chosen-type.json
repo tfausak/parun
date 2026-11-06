@@ -31,7 +31,7 @@
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$boon", "mana": ["$p1", "$p2", "$p3", "$p4", null] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCreatureType", "with": { "type": "Goblin" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCreatureType", "with": "Goblin" } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Kindred Boon", "targets": ["$piker"], "mana": ["$p5", "$p6"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$disenchant", "targets": ["Kindred Boon"], "mana": ["$b1", "$b2"] } } },

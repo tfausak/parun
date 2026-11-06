@@ -21,7 +21,7 @@ spec s = Spec.describe s "Parun.Codec.AttachRewrite" $ do
       s
       (AttachRewrite.codec Common.text Common.text)
       (AttachRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty (CopyDomain.InPile ExiledPile.CraftMaterials) Nothing CopyRecipient.ItsHost False))
-      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"among\":{\"type\":\"InPile\",\"value\":{\"type\":\"CraftMaterials\"}},\"recipient\":{\"type\":\"ItsHost\"},\"optional\":false}} "
+      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"among\":{\"type\":\"InPile\",\"value\":{\"type\":\"CraftMaterials\"}},\"recipient\":\"ItsHost\",\"optional\":false}} "
   Spec.it s "ChooseQuality (Sanctuary Blade)" $
     Common.assertCodec s (AttachRewrite.codec Common.text Common.text) (AttachRewrite.ChooseQuality (ChosenQuality.Colors (ChooseBetween.MkChooseBetween 1 1))) " {\"type\":\"ChooseQuality\",\"value\":{\"type\":\"Colors\",\"value\":{\"least\":1,\"most\":1}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s (AttachRewrite.codec Common.text Common.text)

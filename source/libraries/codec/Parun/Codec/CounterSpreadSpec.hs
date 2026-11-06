@@ -12,14 +12,14 @@ spec s = Spec.describe s "Parun.Codec.CounterSpread" $ do
       s
       CounterSpread.codec
       CounterSpread.FromOne
-      " {\"type\":\"FromOne\"} "
+      " \"FromOne\" "
 
   Spec.it s "FromAmong" $
     Common.assertCodec
       s
       CounterSpread.codec
       CounterSpread.FromAmong
-      " {\"type\":\"FromAmong\"} "
+      " \"FromAmong\" "
 
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s CounterSpread.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s CounterSpread.codec

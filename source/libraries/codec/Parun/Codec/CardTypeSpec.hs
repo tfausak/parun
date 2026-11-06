@@ -12,105 +12,105 @@ spec s = Spec.describe s "Parun.Codec.CardType" $ do
       s
       CardType.codec
       CardType.Artifact
-      " {\"type\":\"Artifact\"} "
+      " \"Artifact\" "
 
   Spec.it s "Battle" $ do
     Common.assertCodec
       s
       CardType.codec
       CardType.Battle
-      " {\"type\":\"Battle\"} "
+      " \"Battle\" "
 
   Spec.it s "Conspiracy" $ do
     Common.assertCodec
       s
       CardType.codec
       CardType.Conspiracy
-      " {\"type\":\"Conspiracy\"} "
+      " \"Conspiracy\" "
 
   Spec.it s "Creature" $ do
     Common.assertCodec
       s
       CardType.codec
       CardType.Creature
-      " {\"type\":\"Creature\"} "
+      " \"Creature\" "
 
   Spec.it s "Dungeon" $ do
     Common.assertCodec
       s
       CardType.codec
       CardType.Dungeon
-      " {\"type\":\"Dungeon\"} "
+      " \"Dungeon\" "
 
   Spec.it s "Enchantment" $ do
     Common.assertCodec
       s
       CardType.codec
       CardType.Enchantment
-      " {\"type\":\"Enchantment\"} "
+      " \"Enchantment\" "
 
   Spec.it s "Instant" $ do
     Common.assertCodec
       s
       CardType.codec
       CardType.Instant
-      " {\"type\":\"Instant\"} "
+      " \"Instant\" "
 
   Spec.it s "Kindred" $ do
     Common.assertCodec
       s
       CardType.codec
       CardType.Kindred
-      " {\"type\":\"Kindred\"} "
+      " \"Kindred\" "
 
   Spec.it s "Land" $ do
     Common.assertCodec
       s
       CardType.codec
       CardType.Land
-      " {\"type\":\"Land\"} "
+      " \"Land\" "
 
   Spec.it s "Phenomenon" $ do
     Common.assertCodec
       s
       CardType.codec
       CardType.Phenomenon
-      " {\"type\":\"Phenomenon\"} "
+      " \"Phenomenon\" "
 
   Spec.it s "Plane" $ do
     Common.assertCodec
       s
       CardType.codec
       CardType.Plane
-      " {\"type\":\"Plane\"} "
+      " \"Plane\" "
 
   Spec.it s "Planeswalker" $ do
     Common.assertCodec
       s
       CardType.codec
       CardType.Planeswalker
-      " {\"type\":\"Planeswalker\"} "
+      " \"Planeswalker\" "
 
   Spec.it s "Scheme" $ do
     Common.assertCodec
       s
       CardType.codec
       CardType.Scheme
-      " {\"type\":\"Scheme\"} "
+      " \"Scheme\" "
 
   Spec.it s "Sorcery" $ do
     Common.assertCodec
       s
       CardType.codec
       CardType.Sorcery
-      " {\"type\":\"Sorcery\"} "
+      " \"Sorcery\" "
 
   Spec.it s "Vanguard" $ do
     Common.assertCodec
       s
       CardType.codec
       CardType.Vanguard
-      " {\"type\":\"Vanguard\"} "
+      " \"Vanguard\" "
 
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the

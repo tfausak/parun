@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -47,9 +43,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ],
               "permanent": {
@@ -59,19 +53,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
@@ -105,9 +93,7 @@
                             "value": "self"
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -123,9 +109,7 @@
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -139,9 +123,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Black"
-                                  }
+                                  "Black"
                                 ],
                                 "name": "Zombie Token",
                                 "power": {
@@ -154,14 +136,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Zombie"
-                                    }
+                                    "Zombie"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -189,22 +167,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Human"
-          }
+          "Cleric",
+          "Human"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
@@ -233,9 +203,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -277,9 +245,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -296,28 +262,20 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "Not",
                           "value": {
                             "type": "HasSupertype",
-                            "value": {
-                              "type": "Legendary"
-                            }
+                            "value": "Legendary"
                           }
                         },
                         {
                           "type": "Measures",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
-                            "measure": {
-                              "type": "ManaValue"
-                            },
+                            "comparison": "Exactly",
+                            "measure": "ManaValue",
                             "operand": {
                               "type": "EnclosingAmount"
                             }
@@ -372,17 +330,13 @@
                                       "value": {
                                         "phase": {
                                           "type": "Ending",
-                                          "value": {
-                                            "type": "EndStep"
-                                          }
+                                          "value": "EndStep"
                                         },
                                         "scope": {
                                           "type": "PlayersTurn",
                                           "value": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "AnyPlayer"
-                                            }
+                                            "value": "AnyPlayer"
                                           }
                                         }
                                       }
@@ -396,16 +350,12 @@
                                                 {
                                                   "type": "MoveToZone",
                                                   "value": {
-                                                    "origin": {
-                                                      "type": "Graveyard"
-                                                    },
+                                                    "origin": "Graveyard",
                                                     "ref": {
                                                       "type": "InSlot",
                                                       "value": "became"
                                                     },
-                                                    "zone": {
-                                                      "type": "Battlefield"
-                                                    }
+                                                    "zone": "Battlefield"
                                                   }
                                                 }
                                               ]
@@ -424,18 +374,14 @@
                                       "value": {
                                         "destinations": [
                                           {
-                                            "zone": {
-                                              "type": "Graveyard"
-                                            }
+                                            "zone": "Graveyard"
                                           }
                                         ],
                                         "permanent": {
                                           "type": "Matching",
                                           "value": {
                                             "type": "HasCardType",
-                                            "value": {
-                                              "type": "Creature"
-                                            }
+                                            "value": "Creature"
                                           }
                                         }
                                       }
@@ -474,9 +420,7 @@
         }
       ],
       "colorIndicator": [
-        {
-          "type": "Black"
-        }
+        "Black"
       ],
       "loyalty": {
         "type": "Literal",
@@ -486,19 +430,13 @@
       "oracleText": "[+2]: Each player discards a card.\n[−X]: Return target nonlegendary creature card with mana value X from your graveyard to the battlefield.\n[−8]: You get an emblem with \"Whenever a creature dies, return it to the battlefield under your control at the beginning of the next end step.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Liliana"
-          }
+          "Liliana"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

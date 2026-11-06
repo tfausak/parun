@@ -6,18 +6,14 @@
           "type": "LifeTotal",
           "value": {
             "type": "Relative",
-            "value": {
-              "type": "You"
-            }
+            "value": "You"
           }
         },
         "toughness": {
           "type": "LifeTotal",
           "value": {
             "type": "Relative",
-            "value": {
-              "type": "You"
-            }
+            "value": "You"
           }
         }
       },
@@ -30,27 +26,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -67,9 +57,7 @@
           "condition": {
             "type": "PutIntoZone",
             "value": {
-              "to": {
-                "type": "Graveyard"
-              }
+              "to": "Graveyard"
             }
           },
           "modal": {
@@ -97,14 +85,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Avatar"
-          }
+          "Avatar"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }
