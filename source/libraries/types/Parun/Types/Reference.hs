@@ -19,4 +19,7 @@ data Reference
   | -- | CR 601.2a: the spell this card became when it was last cast this turn,
     -- whether or not it is still on the stack.
     SpellOf Reference
+  | -- | CR 405.2: the object this many places from the top of the stack,
+    -- 1-based.
+    OnStack Natural
   deriving (Eq, Ord, Show)
