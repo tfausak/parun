@@ -101,8 +101,13 @@
                   {
                     "effects": [
                       {
-                        "type": "ChooseSector",
-                        "value": "sector"
+                        "type": "ChooseGroup",
+                        "value": {
+                          "among": {
+                            "type": "Sectors"
+                          },
+                          "slot": "sector"
+                        }
                       },
                       {
                         "type": "PutCounters",
@@ -161,8 +166,13 @@
                   {
                     "effects": [
                       {
-                        "type": "ChooseSector",
-                        "value": "sector"
+                        "type": "ChooseGroup",
+                        "value": {
+                          "among": {
+                            "type": "Sectors"
+                          },
+                          "slot": "sector"
+                        }
                       },
                       {
                         "type": "Destroy",

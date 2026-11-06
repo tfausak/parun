@@ -18,6 +18,11 @@ data ChoosePermanents = MkChoosePermanents
     -- permanents -- and that pile is what is bound: Stand or Fall's "separate
     -- all creatures that player controls into two piles and that player
     -- chooses one". Elided rather than written null.
-    pileChooser :: Maybe PlayerRef.PlayerRef
+    pileChooser :: Maybe PlayerRef.PlayerRef,
+    -- | CR 700.3: where the matching permanents left out of the bound ones are
+    -- bound, the other pile: Raging River's "divides all creatures without
+    -- flying they control into a "left" pile and a "right" pile". Elided
+    -- rather than written null.
+    rest :: Maybe SlotName.SlotName
   }
   deriving (Eq, Ord, Show)

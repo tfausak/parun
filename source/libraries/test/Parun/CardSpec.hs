@@ -130,6 +130,7 @@ import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.ChooseCardName as ChooseCardName
+import qualified Parun.Types.ChooseGroup as ChooseGroup
 import qualified Parun.Types.ChooseNumber as ChooseNumber
 import qualified Parun.Types.ChoosePermanents as ChoosePermanents
 import qualified Parun.Types.ChosenCardFromAmong as ChosenCardFromAmong
@@ -258,6 +259,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Grouping as Grouping
 import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HandAction as HandAction
 import qualified Parun.Types.HexproofExemption as HexproofExemption
@@ -715,6 +717,7 @@ objectRefPositions =
    in [ ("deal-damage", Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList [DamagePart.MkDamagePart (plantedRef "dd1") (Quantity.Type.Literal 1), DamagePart.MkDamagePart (plantedRef "dd2") (Quantity.Type.Literal 1)]) Nothing Nothing Nothing Nothing Nothing), [plantedRef "dd1", plantedRef "dd2"]),
         ("modify-target", Effect.ModifyTarget (ModifyTarget.MkModifyTarget Duration.UntilEndOfTurn (Modification.GainKeyword Keyword.Flying) (plantedRef "mt") Nothing), [plantedRef "mt"]),
         ("restart-game", Effect.RestartGame (Just (plantedRef "rg")), [plantedRef "rg"]),
+        ("choose-group", Effect.ChooseGroup (ChooseGroup.MkChooseGroup (Grouping.Piles (SlotName.MkSlotName (Text.pack "cg1") NonEmpty.:| [SlotName.MkSlotName (Text.pack "cg2")])) (SlotName.MkSlotName (Text.pack "cg")) (Just (plantedRef "cg-about"))), [plantedRef "cg1", plantedRef "cg2", plantedRef "cg-about"]),
         ("destroy", Effect.Destroy (Destroy.MkDestroy (plantedRef "de") Regenerability.Regenerable Nothing Nothing Nothing), [plantedRef "de"]),
         ("attach-all", Effect.AttachAll (AttachAll.MkAttachAll (plantedRef "aa") Filter.Type.IsSource), [plantedRef "aa"]),
         ("move-to-zone", Effect.MoveToZone (MoveToZone.MkMoveToZone (plantedRef "mz") Zone.Exile plainRiders Nothing Nothing LibraryPlacement.OwnerChooses Nothing), [plantedRef "mz"]),
@@ -837,7 +840,7 @@ playerRefPositions =
         ("divide", Effect.Divide (Divide.MkDivide one (plantedRef "dv") (plantedPlayer "dv") (SlotName.MkSlotName (Text.pack "split"))), [plantedPlayer "dv"]),
         ("cloak", Effect.Cloak (plantedPlayer "ck"), [plantedPlayer "ck"]),
         ("manifestDread", Effect.ManifestDread (plantedPlayer "md"), [plantedPlayer "md"]),
-        ("choose-permanents", Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents (Filter.Type.And []) (plantedPlayer "cp") (HowMany.UpTo Nothing) Zone.Battlefield) (SlotName.MkSlotName (Text.pack "cp")) (Just (plantedPlayer "cp-piles"))), [plantedPlayer "cp", plantedPlayer "cp-piles"]),
+        ("choose-permanents", Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents (Filter.Type.And []) (plantedPlayer "cp") (HowMany.UpTo Nothing) Zone.Battlefield) (SlotName.MkSlotName (Text.pack "cp")) (Just (plantedPlayer "cp-piles")) Nothing), [plantedPlayer "cp", plantedPlayer "cp-piles"]),
         ("discard-counted", Effect.Discard (Discard.Counted (CountedDiscard.MkCountedDiscard (plantedPlayer "dc") one Nothing)), [plantedPlayer "dc"]),
         ("discard-any-number", Effect.Discard (Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard (plantedPlayer "da") (AnyNumberMatching.MkAnyNumberMatching (Filter.Type.And []) Nothing) Nothing)), [plantedPlayer "da"]),
         ("player-sacrifices", Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (plantedPlayer "ps") (Filter.Type.And []) one Nothing), [plantedPlayer "ps"]),
@@ -1464,7 +1467,7 @@ ownCounts effect = case effect of
   Effect.ChoosePlayer _ -> []
   Effect.ChoosePlayerAtRandom _ -> []
   Effect.ChoosePermanents choice -> foldMap quantityCounts (HowMany.quantity (ChosenPermanents.count (ChoosePermanents.permanents choice)))
-  Effect.ChooseSector _ -> []
+  Effect.ChooseGroup _ -> []
   -- CR 706.2's modifier and CR 706.1's count are Quantities, so their Counts
   -- are reachable here.
   Effect.RollDie rollDie -> quantityCounts (RollDie.count rollDie) <> foldMap quantityCounts (RollDie.modifier rollDie)
@@ -1964,7 +1967,7 @@ effectNestedEffects effect = case effect of
   Effect.ChoosePlayer {} -> []
   Effect.ChoosePlayerAtRandom {} -> []
   Effect.ChoosePermanents {} -> []
-  Effect.ChooseSector {} -> []
+  Effect.ChooseGroup {} -> []
   Effect.RollDie {} -> []
   Effect.FlipCoin {} -> []
   -- CR 603.7a: the delayed ability an arm carries, as Face.delayedAbilities'
@@ -2553,7 +2556,7 @@ effectReplacements effect = case effect of
   Effect.ChoosePlayer _ -> []
   Effect.ChoosePlayerAtRandom _ -> []
   Effect.ChoosePermanents _ -> []
-  Effect.ChooseSector _ -> []
+  Effect.ChooseGroup _ -> []
   Effect.RollDie {} -> []
   Effect.FlipCoin {} -> []
   Effect.TakeExtraTurn {} -> []
@@ -3132,7 +3135,7 @@ effectMintedFaces effect = case effect of
   Effect.ChoosePlayer _ -> []
   Effect.ChoosePlayerAtRandom _ -> []
   Effect.ChoosePermanents _ -> []
-  Effect.ChooseSector _ -> []
+  Effect.ChooseGroup _ -> []
   Effect.RollDie {} -> []
   Effect.FlipCoin {} -> []
   Effect.TakeExtraTurn {} -> []
@@ -6183,8 +6186,8 @@ effectFilters effect = case effect of
   Effect.PlaySubgame _ -> []
   Effect.ChoosePlayer _ -> []
   Effect.ChoosePlayerAtRandom _ -> []
-  Effect.ChooseSector _ -> []
-  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents f _ count _) _ _) -> unframed [f] <> frame Unframed (foldMap quantityFilters (HowMany.quantity count))
+  Effect.ChooseGroup _ -> []
+  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents f _ count _) _ _ _) -> unframed [f] <> frame Unframed (foldMap quantityFilters (HowMany.quantity count))
   -- CR 706.2's modifier is a Quantity, so its filters are reachable here.
   Effect.RollDie rollDie -> frame Unframed (quantityFilters (RollDie.count rollDie) <> foldMap quantityFilters (RollDie.modifier rollDie))
   -- CR 705.1's number of coins is a Quantity, so its filters are reachable here.

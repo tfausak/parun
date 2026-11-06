@@ -2,7 +2,7 @@
 
 -- Covers CR 702.158's space sculptor (Parun.Engine.SpaceSculptor and
 -- Parun.Engine.Sector): CR 704.5u's sector assignment and its choice order, CR
--- 702.158b's ending, CR 702.158d's "choose a sector" (Effect.ChooseSector) and
+-- 702.158b's ending, CR 702.158d's "choose a sector" (Effect.ChooseGroup) and
 -- CR 702.158e's "same sector" (Filter.Shares Sector Source), all
 -- through Space Beleren.
 --

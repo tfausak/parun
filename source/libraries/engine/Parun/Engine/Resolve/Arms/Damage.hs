@@ -54,6 +54,7 @@ import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CarryOver as CarryOver
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.ChangeWord as ChangeWord
+import qualified Parun.Types.ChooseGroup as ChooseGroup
 import qualified Parun.Types.ChoosePermanents as ChoosePermanents
 import qualified Parun.Types.ChoosePlayer as ChoosePlayer
 import qualified Parun.Types.ChoosePlayerAtRandom as ChoosePlayerAtRandom
@@ -82,6 +83,7 @@ import Parun.Types.Game (Game)
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Grouping as Grouping
 import qualified Parun.Types.HandActionPerformer as HandActionPerformer
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.Mana as Mana.Type
@@ -1178,6 +1180,10 @@ choosePlayerAtRandom resolving source controller choice = do
 -- scenarios "CR 700.3 / 509.1b Stand or Fall" and "CR 700.3 / 802.2 Stand or
 -- Fall at three seats".
 --
+-- CR 700.3 where a rest slot is named: the pick is one pile, asked as a
+-- division, and the rest of the matching permanents the other, each bound --
+-- Raging River's "left" and "right". Proved by the raging-river scenarios.
+--
 -- CR 101.4b: inside a loop, the pick joins GameState.loopPicks beside its
 -- chooser -- the seat asked, or where nobody was, the one seat the chooser ref
 -- names -- so a later pick's prompt carries it. Proved by
@@ -1186,10 +1192,12 @@ choosePlayerAtRandom resolving source controller choice = do
 -- one's pick, asked or not" (Summon: Valefor). A pile chooser's take is
 -- Common.takePile's to record.
 choosePermanents :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ChoosePermanents.ChoosePermanents -> Game ()
-choosePermanents resolving source controller legal (ChoosePermanents.MkChoosePermanents choice slot pileChooser) = do
+choosePermanents resolving source controller legal (ChoosePermanents.MkChoosePermanents choice slot pileChooser rest) = do
+  candidates <- State.gets (\gs -> chosenCandidates legal resolving controller source gs choice)
   picked <- case pileChooser of
     Nothing -> do
-      (asked, picked) <- Common.chosenPermanents AnyNumberOf.Permanents legal resolving controller source choice
+      let purpose = maybe AnyNumberOf.Permanents (const AnyNumberOf.IntoPile) rest
+      (asked, picked) <- Common.chosenPermanents purpose legal resolving controller source choice
       gs <- State.get
       let named = case Common.decidersOf legal resolving source controller gs (ChosenPermanents.chooser choice) of
             [seat] -> Just seat
@@ -1206,6 +1214,9 @@ choosePermanents resolving source controller legal (ChoosePermanents.MkChoosePer
         _ -> snd <$> Common.chosenPermanents AnyNumberOf.IntoPile legal resolving controller source choice
       Common.takePile resolving source controller legal chooserRef matching split
   Monad.unless (null picked) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList picked)))
+  Monad.forM_ rest $ \restSlot -> do
+    let others = filter (`notElem` picked) candidates
+    Monad.unless (null others) (State.modify' (Common.bindObjectsSlot resolving restSlot (Seq.fromList others)))
 
 -- CR 702.158d: "choose one of the three sector designations, then perform
 -- that action on each creature with that designation". The resolving
@@ -1213,14 +1224,27 @@ choosePermanents resolving source controller legal (ChoosePermanents.MkChoosePer
 -- permanents in the chosen sector are bound as a group, ChoosePermanents'
 -- posture, for the following instruction's Filter.IsBound. An empty sector
 -- binds nothing, so that instruction acts on nothing (CR 101.3).
-chooseSector :: ObjectId -> ObjectId -> PlayerId -> SlotName -> Game ()
-chooseSector resolving source controller slot = do
-  picked <- Game.chooseAmong (\decider who -> Prompt.ChooseDesignation decider who source) controller (NonEmpty.toList Sector.sectors)
-  Monad.forM_ picked $ \sector -> do
-    gs <- State.get
-    let inSector oid = maybe False (Set.member sector . Object.designations) (Game.lookupObject oid gs)
-        members = filter inSector (Set.toList (GameState.battlefield gs))
-    Monad.unless (null members) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList members)))
+--
+-- CR 700.3: Raging River's "choose "left" or "right"" over the piles an
+-- earlier instruction bound, asked as Prompt.ChoosePile. Piles alike are one
+-- candidate, which is not asked: the label is read only through its pile.
+-- The prompt names the object the choice is for, where the payload says.
+-- Proved by the raging-river scenarios.
+chooseGroup :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ChooseGroup.ChooseGroup -> Game ()
+chooseGroup resolving source controller legal (ChooseGroup.MkChooseGroup among slot about) = do
+  subject <- State.gets (\gs -> Maybe.fromMaybe source (Maybe.listToMaybe . objectRefObjects legal resolving controller source gs =<< about))
+  members <- case among of
+    Grouping.Sectors -> do
+      picked <- Game.chooseAmong (\decider who -> Prompt.ChooseDesignation decider who subject) controller (NonEmpty.toList Sector.sectors)
+      gs <- State.get
+      let inSector sector oid = maybe False (Set.member sector . Object.designations) (Game.lookupObject oid gs)
+      pure (foldMap (\sector -> filter (inSector sector) (Set.toList (GameState.battlefield gs))) picked)
+    Grouping.Piles slots -> do
+      gs <- State.get
+      let piles = ListUtils.nubOrd [Set.fromList (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot pile)) | pile <- NonEmpty.toList slots]
+      earlier <- State.gets (Maybe.fromMaybe Seq.empty . GameState.loopPicks)
+      foldMap Set.toList <$> Game.chooseAmong (\decider asked offered -> Prompt.ChoosePile decider asked subject offered earlier) controller piles
+  Monad.unless (null members) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList members)))
 
 -- CR 706.1: roll a die of the stated kind, and bind CR 706.4's result at the
 -- slot for a later effect of this same resolution to read (Ancient Copper

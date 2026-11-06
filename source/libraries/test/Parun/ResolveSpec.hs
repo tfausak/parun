@@ -999,7 +999,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     bears <- S.printingOf s registry "Grizzly Bears"
     let (land, bare) = S.addPermanent forest S.alice (Setup.emptyGame S.bothPlayers)
         (_, withBear) = S.addPermanent bears S.alice bare
-        choosing count = Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents (Filter.Type.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) count Zone.Battlefield) (SlotName.MkSlotName (Text.pack "chosen")) Nothing)
+        choosing count = Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents (Filter.Type.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) count Zone.Battlefield) (SlotName.MkSlotName (Text.pack "chosen")) Nothing Nothing)
         impossible = Resolve.effectIsImpossible land land S.alice Map.empty
     Spec.assertEqWith
       s

@@ -477,7 +477,7 @@ manaProduced effect = case effect of
   Effect.ChoosePlayer _ -> Nothing
   Effect.ChoosePlayerAtRandom _ -> Nothing
   Effect.ChoosePermanents _ -> Nothing
-  Effect.ChooseSector _ -> Nothing
+  Effect.ChooseGroup _ -> Nothing
   Effect.RollDie {} -> Nothing
   Effect.FlipCoin {} -> Nothing
   Effect.Guess {} -> Nothing
@@ -675,7 +675,7 @@ playerChoice effect = case effect of
   Effect.ChoosePlayer choice -> Just choice
   Effect.ChoosePlayerAtRandom _ -> Nothing
   Effect.ChoosePermanents _ -> Nothing
-  Effect.ChooseSector _ -> Nothing
+  Effect.ChooseGroup _ -> Nothing
   Effect.RollDie {} -> Nothing
   Effect.FlipCoin {} -> Nothing
   Effect.Guess {} -> Nothing
@@ -967,7 +967,7 @@ movesLibraryCard effect = case effect of
   Effect.ChoosePlayer _ -> False
   Effect.ChoosePlayerAtRandom _ -> False
   Effect.ChoosePermanents _ -> False
-  Effect.ChooseSector _ -> False
+  Effect.ChooseGroup _ -> False
   Effect.RollDie {} -> False
   Effect.FlipCoin {} -> False
   Effect.Guess {} -> False

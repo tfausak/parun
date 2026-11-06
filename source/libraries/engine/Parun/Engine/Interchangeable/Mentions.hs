@@ -119,6 +119,7 @@ import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.ChooseCardName as ChooseCardName
+import qualified Parun.Types.ChooseGroup as ChooseGroup
 import qualified Parun.Types.ChooseNumber as ChooseNumber
 import qualified Parun.Types.ChoosePermanents as ChoosePermanents
 import qualified Parun.Types.ChoosePlayer as ChoosePlayer
@@ -269,6 +270,7 @@ import qualified Parun.Types.GameLossR as GameLossR
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Grouping as Grouping
 import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HandAction as HandAction
 import qualified Parun.Types.HexproofExemption as HexproofExemption
@@ -984,7 +986,16 @@ chooseNumberNames asking x = case x of
 
 choosePermanentsNames :: (Monoid r) => Asking r -> ChoosePermanents.ChoosePermanents -> r
 choosePermanentsNames asking x = case x of
-  ChoosePermanents.MkChoosePermanents permanents slot pileChooser -> chosenPermanentsNames asking permanents <> slotNames asking slot <> foldMap (playerRefNames asking) pileChooser
+  ChoosePermanents.MkChoosePermanents permanents slot pileChooser rest -> chosenPermanentsNames asking permanents <> slotNames asking slot <> foldMap (playerRefNames asking) pileChooser <> foldMap (slotNames asking) rest
+
+chooseGroupNames :: (Monoid r) => Asking r -> ChooseGroup.ChooseGroup -> r
+chooseGroupNames asking x = case x of
+  ChooseGroup.MkChooseGroup among slot about -> groupingNames asking among <> slotNames asking slot <> foldMap (objectRefNames asking) about
+
+groupingNames :: (Monoid r) => Asking r -> Grouping.Grouping -> r
+groupingNames asking x = case x of
+  Grouping.Sectors -> mempty
+  Grouping.Piles slots -> foldMap (slotNames asking) slots
 
 choosePlayerNames :: Asking r -> ChoosePlayer.ChoosePlayer -> r
 choosePlayerNames asking x = case x of
@@ -1584,7 +1595,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.ChoosePlayer choosePlayer -> choosePlayerNames asking choosePlayer
   Effect.ChoosePlayerAtRandom choosePlayerAtRandom -> choosePlayerAtRandomNames asking choosePlayerAtRandom
   Effect.ChoosePermanents choosePermanents -> choosePermanentsNames asking choosePermanents
-  Effect.ChooseSector slot -> slotNames asking slot
+  Effect.ChooseGroup choice -> chooseGroupNames asking choice
   Effect.RollDie rollDie -> rollDieNames asking rollDie
   Effect.Reroll -> mempty
   Effect.RerollStoredResults slotName -> slotNames asking slotName

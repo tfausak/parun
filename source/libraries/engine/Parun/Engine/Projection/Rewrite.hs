@@ -1089,10 +1089,10 @@ rewriteEffect pairs effect = case effect of
   Effect.AttachAll (AttachAll.MkAttachAll ref destination) -> Effect.AttachAll (AttachAll.MkAttachAll (rewriteObjectRef pairs ref) (Filter.rewrite pairs destination))
   Effect.PlaySubgame _ -> effect
   Effect.ChoosePlayer _ -> effect
-  Effect.ChooseSector _ -> effect
+  Effect.ChooseGroup _ -> effect
   Effect.ChoosePlayerAtRandom _ -> effect
-  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents choice slot pileChooser) ->
-    Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (rewriteChosenPermanents pairs choice) slot pileChooser)
+  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents choice slot pileChooser rest) ->
+    Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (rewriteChosenPermanents pairs choice) slot pileChooser rest)
   -- CR 706.1's number of sides is a numeral rather than a computed count; how
   -- many dice, and the modifier added to each result, are the Quantities,
   -- PutCounters' descent above. The slots no word rule 612 can swap.

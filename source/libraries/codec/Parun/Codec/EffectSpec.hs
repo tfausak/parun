@@ -41,6 +41,7 @@ import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.ChooseBetween as ChooseBetween
 import qualified Parun.Types.ChooseCardName as ChooseCardName
+import qualified Parun.Types.ChooseGroup as ChooseGroup
 import qualified Parun.Types.ChooseNumber as ChooseNumber
 import qualified Parun.Types.ChoosePermanents as ChoosePermanents
 import qualified Parun.Types.ChoosePlayer as ChoosePlayer
@@ -119,6 +120,7 @@ import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Parun.Types.GainControl as GainControl
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
+import qualified Parun.Types.Grouping as Grouping
 import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
@@ -2336,15 +2338,15 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))) (HowMany.UpTo (Just (Quantity.Literal 2))) Zone.Battlefield) (SlotName.MkSlotName (Text.pack "chosen")) Nothing))
+      (Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))) (HowMany.UpTo (Just (Quantity.Literal 2))) Zone.Battlefield) (SlotName.MkSlotName (Text.pack "chosen")) Nothing Nothing))
       " {\"type\":\"ChoosePermanents\",\"value\":{\"permanents\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"chooser\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}}},\"slot\":\"chosen\"}} "
-  Spec.it s "ChooseSector" $
+  Spec.it s "ChooseGroup" $
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.ChooseSector (SlotName.MkSlotName (Text.pack "sector")))
-      " {\"type\":\"ChooseSector\",\"value\":\"sector\"} "
+      (Effect.ChooseGroup (ChooseGroup.MkChooseGroup Grouping.Sectors (SlotName.MkSlotName (Text.pack "sector")) Nothing))
+      " {\"type\":\"ChooseGroup\",\"value\":{\"among\":{\"type\":\"Sectors\"},\"slot\":\"sector\"}} "
   Spec.it s "RollDie" $
     Common.assertJsonCodec
       s

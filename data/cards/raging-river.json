@@ -1,0 +1,218 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Raging River",
+      "oracleText": "Whenever one or more creatures you control attack, each defending player divides all creatures without flying they control into a \"left\" pile and a \"right\" pile. Then, for each attacking creature you control, choose \"left\" or \"right.\" That creature can't be blocked this combat except by creatures with flying and creatures in a pile with the chosen label.",
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "Attacks",
+            "value": {
+              "type": "Declaration",
+              "value": {
+                "attackers": {
+                  "filter": {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  "floor": 1
+                },
+                "player": {
+                  "type": "You"
+                }
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ForEach",
+                        "value": {
+                          "body": [
+                            {
+                              "type": "ChoosePermanents",
+                              "value": {
+                                "permanents": {
+                                  "chooser": {
+                                    "type": "InSlot",
+                                    "value": "defender"
+                                  },
+                                  "count": {
+                                    "type": "UpTo"
+                                  },
+                                  "filter": {
+                                    "type": "And",
+                                    "value": [
+                                      {
+                                        "type": "HasCardType",
+                                        "value": {
+                                          "type": "Creature"
+                                        }
+                                      },
+                                      {
+                                        "type": "Not",
+                                        "value": {
+                                          "type": "HasKeyword",
+                                          "value": {
+                                            "type": "Flying"
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "type": "HeldByBound",
+                                        "value": {
+                                          "holder": {
+                                            "type": "Controller"
+                                          },
+                                          "slot": "defender"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                "rest": "right",
+                                "slot": "left"
+                              }
+                            }
+                          ],
+                          "ref": {
+                            "type": "Players",
+                            "value": {
+                              "players": {
+                                "type": "InRole",
+                                "value": {
+                                  "type": "Defending"
+                                }
+                              }
+                            }
+                          },
+                          "slot": "defender"
+                        }
+                      },
+                      {
+                        "type": "ForEach",
+                        "value": {
+                          "body": [
+                            {
+                              "type": "ChooseGroup",
+                              "value": {
+                                "about": {
+                                  "type": "InSlot",
+                                  "value": "attacker"
+                                },
+                                "among": {
+                                  "type": "Piles",
+                                  "value": [
+                                    "left",
+                                    "right"
+                                  ]
+                                },
+                                "slot": "chosenPile"
+                              }
+                            },
+                            {
+                              "type": "ForbidBeingBlocked",
+                              "value": {
+                                "affected": {
+                                  "type": "IsBound",
+                                  "value": "attacker"
+                                },
+                                "blockers": {
+                                  "type": "Not",
+                                  "value": {
+                                    "type": "Or",
+                                    "value": [
+                                      {
+                                        "type": "HasKeyword",
+                                        "value": {
+                                          "type": "Flying"
+                                        }
+                                      },
+                                      {
+                                        "type": "IsBound",
+                                        "value": "chosenPile"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "duration": {
+                                  "type": "UntilEndOfCombat"
+                                }
+                              }
+                            }
+                          ],
+                          "ref": {
+                            "type": "EachMatching",
+                            "value": {
+                              "type": "And",
+                              "value": [
+                                {
+                                  "type": "HasCardType",
+                                  "value": {
+                                    "type": "Creature"
+                                  }
+                                },
+                                {
+                                  "type": "IsAttacking"
+                                },
+                                {
+                                  "type": "HeldBy",
+                                  "value": {
+                                    "holder": {
+                                      "type": "Controller"
+                                    },
+                                    "relation": {
+                                      "type": "You"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          "slot": "attacker"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -3384,11 +3384,11 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.ExileHaunting {} -> False
   Effect.PlaySubgame {} -> False
   Effect.ChoosePlayer {} -> False
-  Effect.ChooseSector {} -> False
+  Effect.ChooseGroup {} -> False
   Effect.ChoosePlayerAtRandom {} -> False
   -- The ask askingObjects makes of the same choice, so "choose a creature"
   -- over an empty board is impossible and "up to" never is.
-  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents choice _ _) -> choosesFromNothing (ObjectRef.ChosenPermanents choice)
+  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents choice _ _ _) -> choosesFromNothing (ObjectRef.ChosenPermanents choice)
   Effect.RollDie {} -> False
   Effect.FlipCoin {} -> False
   Effect.Guess guess -> choosesFromNothing (Guess.subject guess)
