@@ -130,6 +130,7 @@ import qualified Parun.Types.Sickness as Sickness
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Staged as Staged
 import qualified Parun.Types.Status as Status
+import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapPermanents as TapPermanents
 import qualified Parun.Types.TapState as TapState
@@ -3018,6 +3019,39 @@ humiliationSpec s registry =
              in maybe False (\oid -> S.castable S.alice oid discarded) mId
       Spec.assertBool s (not (castableIn (board True))) "CR 613.1f the humiliated card back in hand cannot be cast for {B/R}"
       Spec.assertBool s (castableIn (board False)) "the control: with the Piker humiliated instead, the Swamp pays {B/R}"
+    -- alice controls no creature, so the printed sacrifice cannot be paid.
+    Spec.it s "CR 118.8 a Demon of Catastrophes that perpetually lost all abilities is cast without a sacrifice" $ do
+      swamp <- S.printingOf s registry "Swamp"
+      demon <- S.printingOf s registry "Demon of Catastrophes"
+      board <- build (S.landsInPlay swamp 4) demon
+      let castableIn (mId, gs) = maybe False (\oid -> S.castable S.alice oid gs) mId
+          resolvedIn (mId, gs) = maybe gs (\oid -> S.runPure S.identityAnswer gs (S.cast S.alice oid >> Stack.resolveTop)) mId
+          demons = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Demon of Catastrophes")) S.alice
+      Spec.assertBool s (castableIn (board True)) "CR 613.1f the humiliated Demon is cast for {2}{B}{B} alone"
+      Spec.assertEqWith s "and resolves onto the battlefield" (demons (resolvedIn (board True))) 1
+      Spec.assertBool s (not (castableIn (board False))) "the control: with the Piker humiliated instead, alice has no creature to sacrifice"
+    -- The choice cost: no Elf to behold, and two Forests pay {1}{G} but not {2} more.
+    Spec.it s "CR 118.8 a Lys Alana Dignitary that perpetually lost all abilities owes no behold-or-pay" $ do
+      forest <- S.printingOf s registry "Forest"
+      dignitary <- S.printingOf s registry "Lys Alana Dignitary"
+      board <- build (S.landsInPlay forest 2) dignitary
+      let castableIn (mId, gs) = maybe False (\oid -> S.castable S.alice oid gs) mId
+      Spec.assertBool s (castableIn (board True)) "CR 613.1f the humiliated Dignitary is cast for {1}{G} alone"
+      Spec.assertBool s (not (castableIn (board False))) "the control: with the Piker humiliated instead, it costs {3}{G}"
+    -- CR 608.2g's road (Parun.Engine.Resolve.Effect's offer): alice's Wild
+    -- Evocation reveals the Demon, her only card in hand, at her upkeep, and
+    -- she casts it without paying its mana cost if able. CR 118.9d keeps the
+    -- sacrifice on that cost, so only the wipe makes it payable.
+    Spec.it s "CR 118.9d a Demon of Catastrophes that perpetually lost all abilities is cast by Wild Evocation" $ do
+      demon <- S.printingOf s registry "Demon of Catastrophes"
+      evocation <- S.printingOf s registry "Wild Evocation"
+      board <- build (snd (S.addPermanent evocation S.alice (Setup.emptyGame S.bothPlayers))) demon
+      let upkeep = Phase.Beginning BeginningStep.Upkeep
+          atUpkeep gs = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan upkeep S.alice)) (gs {GameState.phase = upkeep, GameState.activePlayer = S.alice})
+          run (_, gs) = S.runPure S.identityAnswer (S.runPure S.identityAnswer (atUpkeep gs) Engine.settleForPriority) Engine.priorityLoop
+          demons = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Demon of Catastrophes")) S.alice
+      Spec.assertEqWith s "CR 613.1f the humiliated Demon is cast and resolves" (demons (run (board True))) 1
+      Spec.assertEqWith s "the control: with the Piker humiliated instead, it stays in hand" (demons (run (board False)), S.handSize S.alice (run (board False))) (0, 1)
 
 -- alice holds Thrasta, Tempest's Roar ({10}{G}{G}) and `elves` copies of
 -- Glistener Elf ({G}), with `forests` untapped Forests and priority in her own
