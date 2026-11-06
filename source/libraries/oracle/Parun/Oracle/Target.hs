@@ -68,6 +68,10 @@ data Context = MkContext
     -- | The objects an earlier instruction of the mode changed the power and
     -- toughness of, whose next change is "an additional" one (Wild Might).
     pumped :: [ObjectRef.ObjectRef],
+    -- | The slots an earlier instruction of the mode bound one coin flip of
+    -- yours at (CR 705.2), which a later clause reads as "you win the flip"
+    -- (Winter Sky).
+    flips :: [SlotName.SlotName],
     -- | What the instructions call the object the source is attached to (CR
     -- 303.4b, CR 301.5a): "enchanted creature", "equipped creature", or
     -- nothing for a source that attaches to nothing.
@@ -370,6 +374,7 @@ object context determiner ref = case ref of
     r : rs <- traverse (object context determiner) (NonEmpty.toList refs)
     Monad.guard (all (== r) rs && null (mentions r) && number r == Filter.Singular)
     [r]
+  ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.You) Nothing) -> [MkReference (Text.pack "you") [] Filter.Singular]
   ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.AnyPlayer) Nothing) -> [MkReference (Text.pack "each player") [] Filter.Plural]
   ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.Opponent) Nothing) -> [MkReference (Text.pack "each opponent") [] Filter.Plural]
   _ -> []

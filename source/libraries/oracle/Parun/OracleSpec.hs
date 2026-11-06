@@ -39,6 +39,7 @@ import qualified Parun.Types.ChooseBetween as ChooseBetween
 import qualified Parun.Types.ChosenPermanents as ChosenPermanents
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.ClauseIndex as ClauseIndex
+import qualified Parun.Types.CoinReading as CoinReading
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.CombatRestriction as CombatRestriction
 import qualified Parun.Types.CombatStep as CombatStep
@@ -84,6 +85,7 @@ import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.FlipCoin as FlipCoin
 import qualified Parun.Types.ForbidBeingBlocked as ForbidBeingBlocked
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.HiddenZone as HiddenZone
@@ -792,6 +794,20 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "Tap two untapped creatures you control that share a creature type: Draw a card.")) (costed [CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed 2) untapped True)])
     Spec.assertEq s (Just (Text.pack "Exile seven other cards from your graveyard: Draw a card.")) (costed [CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard 7 (Filter.Not Filter.IsSource))])
     Spec.assertEq s (Just (Text.pack "Exile an instant or sorcery card from your graveyard: Draw a card.")) (costed [CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard 1 (Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery]))])
+
+  -- CR 705.1 / CR 705.2: "flip a coin", its outcome read by a later clause as
+  -- won or lost (Winter Sky), and flipping a coin as a cost (Karplusan Minotaur).
+  Spec.it s "render prints a coin flip and the clauses gated on it" $ do
+    let coin = SlotName.MkSlotName (Text.pack "flip")
+        flipping reading = Effect.FlipCoin FlipCoin.MkFlipCoin {FlipCoin.count = FlipCoin.defaultCount, FlipCoin.reading = reading, FlipCoin.slot = coin, FlipCoin.misses = Nothing, FlipCoin.flipper = FlipCoin.defaultFlipper}
+        flipped n e = (clause [e]) {Clause.condition = Just (Condition.Compares (Compares.MkCompares (Quantity.InSlot coin) Comparison.Exactly (Quantity.Literal n)))}
+        you' = ObjectRef.Players (PlayersWho.MkPlayersWho (PlayerRef.Relative PlayerRelation.You) Nothing)
+        sky reading = spell [clause [flipping reading], flipped 1 (draw (PlayerRef.Relative PlayerRelation.You) 1), flipped 0 (damageBy [(you', Quantity.Literal 1)])] []
+    Spec.assertEq s (Just (Text.pack "Flip a coin. If you win the flip, draw a card. If you lose the flip, Spark deals 1 damage to you.")) (Oracle.render (sky CoinReading.Wins))
+    -- A flip no one wins (CR 705.2's first sentence) is no "if you win".
+    Spec.assertEq s Nothing (Oracle.render (sky CoinReading.Heads))
+    let minotaur = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.FlipCoin]) (draw (PlayerRef.Relative PlayerRelation.You) 1)
+    Spec.assertEq s (Just (Text.pack "Flip a coin: Draw a card.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [minotaur]})))
 
   -- CR 107.7: a loyalty ability's cost is its loyalty symbol, the minus a
   -- minus sign; the printed loyalty (CR 306.5a) is no rules text.

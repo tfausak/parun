@@ -35,6 +35,7 @@ import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.ManaSpec as ManaSpec
 import qualified Parun.Play.Bot as Bot
+import qualified Parun.Play.Client as Client
 import qualified Parun.Play.Game as Game
 import qualified Parun.Play.Render as Render
 import qualified Parun.Registry as Registry
@@ -44,6 +45,8 @@ import qualified Parun.Types.Action as Action
 import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.BecameAttached as BecameAttached
+import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
@@ -51,7 +54,9 @@ import qualified Parun.Types.ClauseIndex as ClauseIndex
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.CombatStep as CombatStep
+import qualified Parun.Types.Convoking as Convoking
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Deck as Deck
 import qualified Parun.Types.Dividing as Dividing
@@ -72,6 +77,7 @@ import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.MulliganDecision as MulliganDecision
 import qualified Parun.Types.MulliganOffer as MulliganOffer
 import qualified Parun.Types.NumberFloor as NumberFloor
@@ -82,6 +88,7 @@ import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayOptions as PlayOptions
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerView as PlayerView.Type
+import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Result as Result
@@ -93,6 +100,7 @@ import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Terminal as Terminal
 import qualified Parun.Types.Undoing as Undoing
 import qualified Parun.Types.Zone as Zone
+import qualified Parun.Types.ZoneChange as ZoneChange
 import qualified Text.Read as Read
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -120,7 +128,7 @@ spec s registry = Spec.describe s "Client" $ do
   Spec.it s "a change of seat waits for the seat leaving to finish reading, clears the screen, and waits before showing the next seat" $ do
     matchup <- BotSpec.bears s registry
     let people = Map.fromList [(S.alice, Game.human (screen 300 plays) (const (Right Nothing))), (S.bob, Game.human (screen 300 plays) (const (Right Nothing)))]
-        shown = reverse (written (State.execState (Game.run [] people Hotseat.fresh (SplitMix.MkSplitMix 1) Map.empty matchup) blank))
+        shown = reverse (written (State.execState (Game.run [] people (const (pure ())) Hotseat.fresh (SplitMix.MkSplitMix 1) Map.empty matchup) blank))
         handOffs = [i | (i, l) <- zip [0 :: Int ..] shown, Text.isPrefixOf (Text.pack "Pass to ") l]
         at i = Maybe.listToMaybe (drop i shown)
         -- The last hand-off may be cut short by the end of input.
@@ -165,7 +173,7 @@ spec s registry = Spec.describe s "Client" $ do
     hand <- maybe (Spec.assertFailure s "no card in hand") pure (Maybe.listToMaybe (Game.Engine.zoneMembers Zone.Hand S.alice gs))
     let revealed = GameEvent.Revealed (Revealed.MkRevealed S.bob (ObjectId.MkObjectId 7) RevealCause.LeavingFaceDown S.emptyCharacteristics)
         decider = Decider.MkDecider S.alice
-        witnessing = gs {GameState.events = Seq.singleton (LoggedEvent.MkLoggedEvent (EventGroup.MkEventGroup 0) revealed)}
+        witnessing = gs {GameState.events = Seq.fromList (fmap (LoggedEvent.MkLoggedEvent (EventGroup.MkEventGroup 0)) [revealed, revealed])}
         nextTurn = gs {GameState.events = Seq.empty, GameState.turnNumber = GameState.turnNumber gs + 1}
         passing = Answerer.unwrap human (Asked.MkAsked [] witnessing (Prompt.ChooseAction decider S.alice [Action.Pass]))
         acting = Answerer.unwrap human (Asked.MkAsked [] nextTurn (Prompt.ChooseAction decider S.alice [Action.Play hand Nothing, Action.Pass]))
@@ -175,7 +183,7 @@ spec s registry = Spec.describe s "Client" $ do
         (facingBob, facingAlice) = break (Text.isPrefixOf (Text.pack "Pass to Player 1")) shown
         news = filter (Text.isPrefixOf (Text.pack "Since you last looked: "))
     Spec.assertEqWith s "nothing said while the screen faces Player 2" facingBob [Text.pack "<clear>"]
-    Spec.assertEqWith s "shown once, at the hand-off" (news facingAlice) [Text.pack "Since you last looked: Player 2 reveals a face-down card."]
+    Spec.assertEqWith s "shown once, at the hand-off, sentence after sentence" (news facingAlice) [Text.pack "Since you last looked: Player 2 reveals a face-down card. Player 2 reveals a face-down card."]
     Spec.assertEqWith s "asked twice" (filter menuHeading facingAlice) [Text.pack "Choose an action, or press Enter to pass:", Text.pack "Choose an action, or press Enter to pass:"]
 
   Spec.it s "CR 514.1 a discard to hand size at cleanup is shown the other seat at its next question, a turn later" $ do
@@ -577,7 +585,7 @@ spec s registry = Spec.describe s "Client" $ do
         attacking = Prompt.DeclareAttackers (Decider.MkDecider S.alice) S.alice [g1, g2]
         byName = readout lookUp gs ["card raging goblin", "1"] attacking
         byNumber = readout lookUp gs ["card 2", "1"] attacking
-    Spec.assertEqWith s "by name" (cardLines byName) ([Text.pack "Raging Goblin 2/2 (1 damage, 1 counter)", Text.pack "Raging Goblin {R}", Text.pack "Creature \8212 Berserker Goblin", Text.pack "2/2", Text.pack "Counters: 1 +1/+1"] <> Text.lines text)
+    Spec.assertEqWith s "by name" (cardLines byName) ([Text.pack "Raging Goblin 2/2 (1 damage, 1 +1/+1 counter)", Text.pack "Raging Goblin {R}", Text.pack "Creature \8212 Berserker Goblin", Text.pack "2/2", Text.pack "Counters: 1 +1/+1"] <> Text.lines text)
     Spec.assertBool s (not (null (Text.lines text))) "Raging Goblin has Oracle text"
     Spec.assertBool s (Text.pack "Type card and a number from a list, or a card's name, to read that card." `elem` byName) "the first screen says how"
     Spec.assertEqWith
@@ -650,6 +658,50 @@ spec s registry = Spec.describe s "Client" $ do
         Text.pack "Player 1 draws 7 cards.",
         Text.pack "Player 1 keeps."
       ]
+
+  Spec.it s "CR 701.3a / 702.51a / 122.1 each logged entry is told with its subject, a token as created and a move to the stack as nothing" $ do
+    gs <- started s registry
+    ensoul <- S.printingOf s registry "Ensoul Artifact"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    totem <- S.printingOf s registry "Living Totem"
+    wurm <- S.printingOf s registry "Siege Wurm"
+    let (aura, g1) = S.addPermanent ensoul S.alice gs
+        (bear, g2) = S.addPermanent bears S.alice g1
+        (totemId, g3) = S.addPermanent totem S.alice g2
+        (wurmId, board) = S.addPermanent wurm S.alice g3
+        soldier = S.emptyCharacteristics {ProjectedCharacteristics.names = Set.singleton (CardName.MkCardName (Text.pack "Soldier Token"))}
+        moved from to = GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange (ObjectId.MkObjectId 90) (ObjectId.MkObjectId 91) from to) soldier) {Moved.seenArriving = True}
+        logged =
+          [ GameEvent.BecameAttached (BecameAttached.MkBecameAttached aura (Recipient.ToObject bear)),
+            GameEvent.BecameUnattached (BecameUnattached.MkBecameUnattached aura (Recipient.ToObject bear)),
+            GameEvent.Convoked (Convoking.MkConvoking wurmId (Set.fromList [bear, totemId])),
+            GameEvent.CountersPut (CountersPlaced.MkCountersPlaced S.alice wurmId CounterKind.PlusOnePlusOne 0 1),
+            moved Zone.Battlefield Zone.Battlefield,
+            moved Zone.Hand Zone.Stack
+          ]
+        witnessing = board {GameState.events = Seq.fromList (fmap (LoggedEvent.MkLoggedEvent (EventGroup.MkEventGroup 0)) logged)}
+        view = PlayerView.viewFor S.alice witnessing
+    Spec.assertEqWith
+      s
+      "told"
+      (Render.events view (Render.witnessed view))
+      [ Text.pack "Ensoul Artifact becomes attached to Grizzly Bears.",
+        Text.pack "Ensoul Artifact becomes unattached from Grizzly Bears.",
+        Text.pack "Grizzly Bears and Living Totem convoke Siege Wurm.",
+        Text.pack "Player 1 puts 1 +1/+1 counter on Siege Wurm.",
+        Text.pack "Soldier Token is created."
+      ]
+
+  Spec.it s "CR 104.3 the entries that end the game are shown before its result" $ do
+    matchup <- BotSpec.bears s registry
+    let terminal = screen 3000 plays
+        seats = Map.fromList [(S.alice, Game.human terminal (const (Right Nothing))), (S.bob, Game.bot)]
+        (outcome, sc) = State.runState (Game.run [] seats (Client.ending terminal [S.alice]) Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) Map.empty matchup) blank
+        loser = case outcome of
+          Right (Result.Won winner, _) -> Just (if winner == S.alice then S.bob else S.alice)
+          _ -> Nothing
+    Spec.assertBool s (Maybe.isJust loser) ("won: " <> show (fmap fst outcome))
+    Spec.assertBool s (any (\pid -> Render.player pid <> Text.pack " loses the game." `elem` pending sc) loser) ("shown after the last answer: " <> show (pending sc))
 
   Spec.it s "CR 103.5 a mulligan is asked before the first turn, not in its untap step" $ do
     gs <- started s registry
@@ -760,7 +812,7 @@ botOrDefault = Driver.seated Bot.bot (Answerer.MkAnswerer (pure . Replay.default
 against :: (Screen -> Maybe Text.Text) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), [Text.Text])
 against typist matchup =
   let seats = Map.fromList [(S.alice, Game.human (screen 3000 typist) (const (Right Nothing))), (S.bob, Game.bot)]
-      (outcome, sc) = State.runState (Game.run [] seats Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) Map.empty matchup) blank
+      (outcome, sc) = State.runState (Game.run [] seats (const (pure ())) Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) Map.empty matchup) blank
    in (outcome, reverse (written sc))
 
 -- Since the last line typed.

@@ -24,6 +24,7 @@ import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Parun.Extra.Integer as Integer
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Play.Client as Client
 import qualified Parun.Play.Game as Game
 import qualified Parun.Play.Protocol as Protocol
 import qualified Parun.Play.Record as Record
@@ -123,7 +124,8 @@ play options lookUp (one, two) = do
       interrupted e = case e of
         Exception.UserInterrupt -> pure (Left (Text.pack "interrupted"))
         _ -> Exception.throwIO e
-  outcome <- Exception.catch (Game.run observers seats hotseat generator orders matchup) interrupted
+      finish = if PlayOptions.json options then const (pure ()) else Client.ending terminal (fmap idOf people)
+  outcome <- Exception.catch (Game.run observers seats finish hotseat generator orders matchup) interrupted
   Monad.forM_ (PlayOptions.save options) $ \path -> do
     timeline <- IORef.readIORef entries
     let entrants = fmap (\(pid, deck) -> (Record.labelOf labels pid, Map.findWithDefault GraveyardOrder.Indifferent pid orders, deck)) matchup

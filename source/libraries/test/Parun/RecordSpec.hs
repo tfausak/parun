@@ -141,7 +141,7 @@ recorded seats matchup = fmap fst (watched 1 seats Map.empty matchup)
 -- recorded's game at a seed, each seat at its graveyard order in `orders`.
 watched :: Word.Word64 -> Map.Map PlayerId.PlayerId (Answerer.Answerer (Asked.Asked GameState.GameState) (Game.Play Base)) -> Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), (Seq.Seq Timed.Timed, Maybe GameState.GameState))
 watched seed seats orders matchup =
-  let played = Game.run [Record.recording labels sink, lastAsked] seats Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix seed) orders matchup
+  let played = Game.run [Record.recording labels sink, lastAsked] seats (const (pure ())) Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix seed) orders matchup
    in State.evalState (State.runStateT played (Seq.empty, Nothing)) ClientSpec.blank
 
 lastAsked :: Observer.Observer (Game.Play Base)

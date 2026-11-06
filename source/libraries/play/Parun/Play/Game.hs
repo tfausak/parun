@@ -54,10 +54,16 @@ wired exchange = Protocol.over (\line -> Trans.lift (Client.lift2 (exchange line
 
 -- | A plain two-player game, from setup to its result; the head of the
 -- matchup plays first, and each seat starts at its graveyard order in
--- `orders` (Driver.match). Left is why play stopped before the end.
-run :: (Monad m) => [Observer.Observer (Play m)] -> Map.Map PlayerId.PlayerId (Answerer.Answerer (Asked.Asked GameState.GameState) (Play m)) -> Hotseat.Hotseat -> SplitMix.SplitMix -> Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> m (Either Text.Text (Result.Result, GameState.GameState))
-run observers seats hotseat generator orders matchup =
-  Except.runExceptT (State.evalStateT (State.evalStateT (Driver.match observers (Driver.bySeat seats Chance.chance) GameSettings.plain orders matchup) generator) hotseat)
+-- `orders` (Driver.match). `finish` is shown the final state before the
+-- result is returned (Client.ending). Left is why play stopped before the end.
+run :: (Monad m) => [Observer.Observer (Play m)] -> Map.Map PlayerId.PlayerId (Answerer.Answerer (Asked.Asked GameState.GameState) (Play m)) -> (GameState.GameState -> Client.Client m ()) -> Hotseat.Hotseat -> SplitMix.SplitMix -> Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> m (Either Text.Text (Result.Result, GameState.GameState))
+run observers seats finish hotseat generator orders matchup =
+  Except.runExceptT (State.evalStateT (State.evalStateT played generator) hotseat)
+  where
+    played = do
+      (result, gs) <- Driver.match observers (Driver.bySeat seats Chance.chance) GameSettings.plain orders matchup
+      Trans.lift (finish gs)
+      pure (result, gs)
 
 -- | Something of the base monad's, from inside a game.
 underneath :: (Monad m) => m a -> Play m a

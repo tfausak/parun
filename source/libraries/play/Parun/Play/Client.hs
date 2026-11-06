@@ -25,6 +25,7 @@ import qualified Parun.Codec.ManaType as Codec.ManaType
 import qualified Parun.Codec.NumberFloor as Codec.NumberFloor
 import qualified Parun.Codec.Reply as Codec.Reply
 import qualified Parun.Codec.Request as Codec.Request
+import qualified Parun.Engine.PlayerView as PlayerView.Engine
 import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Extra.Natural as Natural
@@ -35,6 +36,7 @@ import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CombatDamageOption as CombatDamageOption
 import qualified Parun.Types.GameEvent as GameEvent
+import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Hotseat as Hotseat
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Mana as Mana
@@ -782,8 +784,21 @@ tell handed seat = do
   State.modify' (\h -> h {Hotseat.news = Map.delete seat (Hotseat.news h)})
   pure $
     if handed
-      then [Text.pack "Since you last looked: " <> Text.intercalate (Text.pack "; ") news | not (null news)]
+      then [Text.pack "Since you last looked: " <> Text.unwords news | not (null news)]
       else news
+
+-- | At the game's end, each person seat's news it was not yet shown (the
+-- entries after its last question: the killing blow, say), the seat the
+-- screen faces first and any other handed the screen only if it has news.
+ending :: (Monad m) => Terminal.Terminal m -> [PlayerId.PlayerId] -> GameState.GameState -> Client m ()
+ending terminal people gs = do
+  facing <- State.gets Hotseat.facing
+  Monad.forM_ (List.sortOn ((/= facing) . Just) people) $ \seat -> do
+    collect (PlayerView.Engine.viewFor seat gs)
+    pending <- State.gets (maybe False (not . null) . Map.lookup seat . Hotseat.news)
+    Monad.when pending $ do
+      handed <- handOff terminal seat
+      mapM_ (say terminal) =<< tell handed seat
 
 say :: (Monad m) => Terminal.Terminal m -> Text.Text -> Client m ()
 say terminal line = do
