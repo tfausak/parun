@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 
 -- Covers: CR 809's Emperor variant -- Parun.Engine.Emperor's setUp (CR 809.3,
--- 809.6a), Parun.Engine.Setup.randomEmperorFirst (CR 809.4) and fallsWith (CR 809.5b, 809.5c, read by Parun.Engine.Departure's
+-- 809.6a; its seating refusal is Parun.SeatingSpec's), Parun.Engine.Setup.randomEmperorFirst (CR 809.4) and fallsWith (CR 809.5b, 809.5c, read by Parun.Engine.Departure's
 -- departTogether), Parun.Engine.Combat's attackableOpponents under
 -- AttackOption.Adjacent (CR 809.3c) over Parun.Engine.Game.neighbours, and
 -- Parun.Engine.Departure's outcomeAfterLeaving for a team (CR 104.2c).
@@ -14,6 +14,7 @@ module Parun.EmperorSpec where
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
 import qualified Parun.Engine.Emperor as Emperor
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Event as Event
@@ -117,7 +118,10 @@ spec s registry = Spec.describe s "Emperor" $ do
     seats = [S.alice, S.bob, S.carol, S.dave, erin, frank]
     teams = Teams.MkTeams (Map.fromList (zip seats (fmap TeamId.MkTeamId [0, 0, 0, 1, 1, 1])))
     emperors = Emperors.MkEmperors (Map.fromList [(TeamId.MkTeamId 0, S.bob), (TeamId.MkTeamId 1, erin)])
-    emperorGame = Emperor.setUp teams emperors (Setup.emptyGame (S.alice NonEmpty.:| drop 1 seats))
+    -- Emperor.setUp's game, or the bare table where it refuses the seating,
+    -- which the ranges test would catch.
+    emperorGame = Maybe.fromMaybe table (Emperor.setUp teams emperors table)
+    table = Setup.emptyGame (S.alice NonEmpty.:| drop 1 seats)
     resolveAll gs = snd (Engine.runGamePure S.identityAnswer gs Engine.priorityLoop)
     onMainOf pid gs = gs {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = pid, GameState.priority = Just pid}
     castResolved :: PlayerId.PlayerId -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState

@@ -43,6 +43,9 @@ data ScenarioFailure
   | -- | A seat whose life differs from a teammate's on a board whose teams share
     -- a life total (CR 810.4).
     MkUnsharedLife Label.Label
+  | -- | A seat the board's teams and emperors don't allow there (CR 808.2, 809.2,
+    -- 809.6a, 811.3; Parun.Engine.Seating.misseated).
+    MkMisseated Label.Label
   | -- | The monarch names no seat.
     MkUnknownMonarch Label.Label
   | -- | The reference named no live object, with whether the board did label

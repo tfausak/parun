@@ -954,6 +954,7 @@ import qualified Parun.SacrificeRestrictionSpec
 import qualified Parun.SaddleSpec
 import qualified Parun.SagaSpec
 import qualified Parun.ScenarioSpec
+import qualified Parun.SeatingSpec
 import qualified Parun.SetupSpec
 import qualified Parun.ShieldCounterSpec
 import qualified Parun.SlugSpec
@@ -1987,6 +1988,7 @@ spec s registry corpus = do
   Parun.ScenarioSpec.loadSpec s
   Parun.ScenarioSpec.referenceSpec s
   Parun.ScenarioSpec.spec s registry
+  Parun.SeatingSpec.spec s registry
   Parun.SetupSpec.spec s registry
   Parun.ShieldCounterSpec.spec s registry
   Parun.SlugSpec.spec s

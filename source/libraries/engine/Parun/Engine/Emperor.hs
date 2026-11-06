@@ -7,6 +7,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Numeric.Natural as Natural
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Seating as Seating
 import qualified Parun.Extra.Int as Int
 import qualified Parun.Types.AttackOption as AttackOption
 import qualified Parun.Types.Departure as Departure
@@ -20,26 +21,29 @@ import qualified Parun.Types.Teams as Teams
 
 -- | CR 809.3: an Emperor game's options over this game's seating
 -- (GameState.turnOrder), its teams and each team's emperor -- CR 809.3a's
--- ranges, CR 809.3b's deploy creatures option and CR 809.3c's attack option.
+-- ranges, CR 809.3b's deploy creatures option and CR 809.3c's attack option --
+-- or Nothing over a seating Parun.Engine.Seating.misseated refuses (CR 809.2,
+-- 809.6a).
 --
 -- The ranges are CR 809.6a's minima, which at three players a team are CR
--- 809.3a's 1 for a general and 2 for an emperor.
---
--- Not implemented: CR 809.2's and CR 809.6a's seating, which is the caller's
--- and unchecked (#4497). CR 809.4's starting emperor is
+-- 809.3a's 1 for a general and 2 for an emperor. CR 809.4's starting emperor is
 -- Parun.Engine.Setup.randomEmperorFirst.
-setUp :: Teams.Teams -> Emperors.Emperors -> GameState -> GameState
+setUp :: Teams.Teams -> Emperors.Emperors -> GameState -> Maybe GameState
 setUp teams emperors gs =
-  gs
-    { GameState.settings =
-        (GameState.settings gs)
-          { GameSettings.teams = teams,
-            GameSettings.emperors = emperors,
-            GameSettings.rangeOfInfluence = RangeOfInfluence.MkRangeOfInfluence (ranges teams emperors (GameState.turnOrder gs)),
-            GameSettings.deployCreatures = True,
-            GameSettings.attackOption = Just AttackOption.Adjacent
+  let set =
+        gs
+          { GameState.settings =
+              (GameState.settings gs)
+                { GameSettings.teams = teams,
+                  GameSettings.emperors = emperors,
+                  GameSettings.rangeOfInfluence = RangeOfInfluence.MkRangeOfInfluence (ranges teams emperors (GameState.turnOrder gs)),
+                  GameSettings.deployCreatures = True,
+                  GameSettings.attackOption = Just AttackOption.Adjacent
+                }
           }
-    }
+   in case Seating.misseated set of
+        Nothing -> Just set
+        Just _ -> Nothing
 
 -- CR 809.6a: each general's range reaches the nearest general of an opposing
 -- team, and each emperor's the second nearest. A player with too few opposing

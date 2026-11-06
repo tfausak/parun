@@ -102,6 +102,14 @@ spec s registry = Spec.describe s "Scenario" $ do
     result <- Scenario.stage registry setup
     Spec.assertEqWith s "teamless emperor" result (Left (ScenarioFailure.MkIllegalEmperor (Label.MkLabel (Text.pack "alice"))))
 
+  -- CR 808.2: teams 1, 2, 1, 2 round the table; carol opens team 1's second
+  -- run.
+  Spec.it s "CR 808.2 a board splitting a team is rejected" $ do
+    let onTeam n pid = (S.playerSetup pid) {Seat.team = Just (TeamId.MkTeamId n)}
+        setup = S.board (onTeam 1 S.alice NonEmpty.:| [onTeam 2 S.bob, onTeam 1 S.carol, onTeam 2 S.dave]) S.alice S.precombatMain
+    result <- Scenario.stage registry setup
+    Spec.assertEqWith s "split team" result (Left (ScenarioFailure.MkMisseated (Label.MkLabel (Text.pack "carol"))))
+
   Spec.it s "CR 810.4 teammates showing different life totals on a shared-life board are rejected" $ do
     let alice = (S.playerSetup S.alice) {Seat.team = Just (TeamId.MkTeamId 1), Seat.life = 7}
         bob = (S.playerSetup S.bob) {Seat.team = Just (TeamId.MkTeamId 1)}
