@@ -115,6 +115,7 @@ codec =
           Arm.payload "PlayerLosesGame" PlayerRelation.codec TriggerCondition.PlayerLosesGame (\x -> case x of TriggerCondition.PlayerLosesGame y -> Just y; _ -> Nothing),
           Arm.payload "PlayerPlaysLand" PlaysLand.codec TriggerCondition.PlayerPlaysLand (\x -> case x of TriggerCondition.PlayerPlaysLand y -> Just y; _ -> Nothing),
           Arm.payload "PlayerManifestsDread" PlayerRelation.codec TriggerCondition.PlayerManifestsDread (\x -> case x of TriggerCondition.PlayerManifestsDread y -> Just y; _ -> Nothing),
+          Arm.payload "PlayerFacesDilemma" PlayerRelation.codec TriggerCondition.PlayerFacesDilemma (\x -> case x of TriggerCondition.PlayerFacesDilemma y -> Just y; _ -> Nothing),
           Arm.payload "PlayerRollsResult" (DieResult.codec PlayerRelation.codec) TriggerCondition.PlayerRollsResult (\x -> case x of TriggerCondition.PlayerRollsResult y -> Just y; _ -> Nothing),
           Arm.nullary "Visit" TriggerCondition.Visit,
           Arm.nullary "ChaosEnsues" TriggerCondition.ChaosEnsues,
@@ -185,6 +186,7 @@ tagOf x = case x of
   TriggerCondition.PlayerLosesGame {} -> "PlayerLosesGame"
   TriggerCondition.PlayerPlaysLand {} -> "PlayerPlaysLand"
   TriggerCondition.PlayerManifestsDread {} -> "PlayerManifestsDread"
+  TriggerCondition.PlayerFacesDilemma {} -> "PlayerFacesDilemma"
   TriggerCondition.PlayerRollsResult {} -> "PlayerRollsResult"
   TriggerCondition.Visit {} -> "Visit"
   TriggerCondition.ChaosEnsues {} -> "ChaosEnsues"

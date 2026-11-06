@@ -1,0 +1,27 @@
+{
+  "description": "CR 700.17 / 700.2: Naturalize is not modal, so casting it faces no dilemma and Seven of Nine draws nothing.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "GG",
+        "battlefield": [{"card": "Seven of Nine"}],
+        "hand": [{"card": "Naturalize", "label": "naturalize"}],
+        "library": [{"card": "Gray Ogre"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{"card": "Sol Ring", "label": "ring"}],
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$naturalize", "targets": ["$ring"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Sol Ring", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Gray Ogre", "count": 0}}}
+  ]
+}

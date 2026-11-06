@@ -119,6 +119,7 @@ import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.ExploitTrigger as ExploitTrigger
 import qualified Parun.Types.Exploited as Exploited
 import qualified Parun.Types.Face as Face
+import qualified Parun.Types.FacedDilemma as FacedDilemma
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.FlipOutcome as FlipOutcome
 import qualified Parun.Types.FloatingCandidate as FloatingCandidate
@@ -2229,6 +2230,8 @@ representativeEvents cond =
         TriggerCondition.PlayerManifestsDread _ ->
           noTable (GameEvent.ManifestedDread (ManifestedDread.MkManifestedDread S.bob Seq.empty))
             NonEmpty.:| [noTable (GameEvent.ManifestedDread (ManifestedDread.MkManifestedDread S.bob (Seq.singleton arrived)))]
+        -- CR 700.17's own event: facing a dilemma binds nothing.
+        TriggerCondition.PlayerFacesDilemma _ -> one (GameEvent.FacedDilemma (FacedDilemma.MkFacedDilemma S.bob departed))
         -- CR 706.2's per-die event, carrying the number the condition states.
         TriggerCondition.PlayerRollsResult watched -> one (GameEvent.DieResultSettled DieResult.MkDieResult {DieResult.roller = S.bob, DieResult.result = DieResult.result watched})
         -- CR 701.52a's own event, and the only one this condition admits.
@@ -2536,6 +2539,7 @@ everyTriggerCondition =
     TriggerCondition.PlayerPlaysLand (PlaysLand.MkPlaysLand PlayerRelation.You Nothing (Filter.Type.And [])),
     TriggerCondition.PlayerManifestsDread PlayerRelation.You,
     TriggerCondition.PlayerManifestsDread PlayerRelation.Opponent,
+    TriggerCondition.PlayerFacesDilemma PlayerRelation.You,
     TriggerCondition.PlayerRollsResult DieResult.MkDieResult {DieResult.roller = PlayerRelation.You, DieResult.result = 6},
     TriggerCondition.PlayerRollsResult DieResult.MkDieResult {DieResult.roller = PlayerRelation.Opponent, DieResult.result = 6},
     TriggerCondition.Visit,

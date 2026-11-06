@@ -1385,6 +1385,7 @@ eventBindingSlots cond = case cond of
   -- the graveyard, which binds nothing. The `became` it binds otherwise is
   -- eventBindingSlotsSometimes'.
   TriggerCondition.PlayerManifestsDread _ -> Set.empty
+  TriggerCondition.PlayerFacesDilemma _ -> Set.empty
   -- The object the sticker went on, for Tusk and Whiskers' "that creature".
   TriggerCondition.PlacesSticker _ -> Set.singleton Binding.became
   TriggerCondition.PlayerRollsResult _ -> Set.empty

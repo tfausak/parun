@@ -49,6 +49,7 @@ import qualified Parun.Types.Drew as Drew
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Exploited as Exploited
 import qualified Parun.Types.Face as Face
+import qualified Parun.Types.FacedDilemma as FacedDilemma
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.HalfUnlocked as HalfUnlocked
 import qualified Parun.Types.Hybrid as Hybrid
@@ -455,6 +456,7 @@ event view logged = case LoggedEvent.event logged of
   GameEvent.LeftTheGame l -> said [name (LeftTheGame.object l), Text.pack "leaves the game"]
   GameEvent.LostTheGame pid -> said [player pid, Text.pack "loses the game"]
   GameEvent.ManifestedDread d -> said [player (ManifestedDread.player d), Text.pack "manifests dread"]
+  GameEvent.FacedDilemma d -> said [player (FacedDilemma.player d), Text.pack "faces a dilemma over", name (FacedDilemma.object d)]
   GameEvent.DieResultSettled r -> said [player (DieResult.roller r), Text.pack "rolls", Text.pack (show (DieResult.result r))]
   GameEvent.RolledToVisit r -> said [player (DieResult.roller r), Text.pack "rolls", Text.pack (show (DieResult.result r)), Text.pack "to visit their Attractions"]
   GameEvent.PlanarDieRolled r -> said [player (PlanarDieRolled.roller r), Text.pack "rolls", planarFace (PlanarDieRolled.face r), Text.pack "on the planar die"]

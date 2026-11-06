@@ -29,6 +29,7 @@ import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.Drew as Drew
 import qualified Parun.Types.Exploited as Exploited
+import qualified Parun.Types.FacedDilemma as FacedDilemma
 import qualified Parun.Types.HalfUnlocked as HalfUnlocked
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LeftTheGame as LeftTheGame
@@ -444,6 +445,10 @@ data GameEvent
   | -- | CR 701.62b: a player manifested dread, once per CR 701.62a process and
     -- whether or not any of it was possible.
     ManifestedDread ManifestedDread.ManifestedDread
+  | -- | CR 700.17: a player faced a dilemma, choosing one or more modes for a
+    -- modal spell or ability (CR 700.2) as it was cast, activated or put on the
+    -- stack.
+    FacedDilemma FacedDilemma.FacedDilemma
   | -- | CR 706.2: one die's result, after every modifier, recorded per die the
     -- instruction left unignored (CR 706.6) -- what "whenever you roll a 6"
     -- reads, where PlayerAction.RollDice is one entry per instruction.

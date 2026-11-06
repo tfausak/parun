@@ -33,6 +33,7 @@ import qualified Parun.Types.Card as Card
 import qualified Parun.Types.Completion as Completion
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.Crewing as Crewing
+import qualified Parun.Types.FacedDilemma as FacedDilemma
 import Parun.Types.Game (Game)
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
@@ -186,6 +187,10 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
   if not (Modal.selectionSatisfiedBy legal selection chosenModes)
     then reject
     else do
+      -- CR 700.17: the activating player faced a dilemma, rewound with the rest
+      -- of the activation by a rejection below.
+      Monad.when (Modal.facesDilemma chosenModes (ActivatedAbility.modal ability)) $
+        State.modify' (Event.recordEvent (GameEvent.FacedDilemma (FacedDilemma.MkFacedDilemma pid abilId)))
       -- CR 602.2b routes the rest of the activation through CR 601.2b-i, so CR
       -- 601.2b's announcement of a variable cost (CR 107.3) governs an activation
       -- cost's {X} too, and it is asked HERE -- after the modes, before CR

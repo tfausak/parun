@@ -70,6 +70,7 @@ import qualified Parun.Types.Face as Face
 import qualified Parun.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Parun.Types.FaceDownReason as FaceDownReason
 import qualified Parun.Types.FaceDownState as FaceDownState
+import qualified Parun.Types.FacedDilemma as FacedDilemma
 import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.Filter as Filter.Type
 import Parun.Types.Game (Game)
@@ -3489,6 +3490,10 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
   if Maybe.isNothing answeredChooser || not (Modal.selectionSatisfiedBy legal selection chosenModes)
     then reject
     else do
+      -- CR 700.17: the chooser faced a dilemma. A rejection below rewinds it
+      -- with the rest of the proposal.
+      Monad.when (Modal.facesDilemma chosenModes modal) $
+        State.modify' (Event.recordEvent (GameEvent.FacedDilemma (FacedDilemma.MkFacedDilemma modeChooser sid)))
       -- CR 601.2b: the cost to be paid is announced after the modes and before X
       -- and targets. Only PAYABLE candidates are offered (CR 118.9b makes an
       -- alternative optional, so a player who can afford both is really

@@ -3224,6 +3224,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.PlayerLosesGame _playerRelation -> mempty
   TriggerCondition.PlayerPlaysLand playsLand -> playsLandNames asking playsLand
   TriggerCondition.PlayerManifestsDread _playerRelation -> mempty
+  TriggerCondition.PlayerFacesDilemma _playerRelation -> mempty
   TriggerCondition.ChaosEnsues -> mempty
   TriggerCondition.PlayerRollsPlaneswalker _playerRelation -> mempty
   TriggerCondition.SelfTurnedUpOffDeck -> mempty
