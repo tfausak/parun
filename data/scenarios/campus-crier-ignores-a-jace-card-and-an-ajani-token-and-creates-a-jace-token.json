@@ -19,6 +19,19 @@
               }
             ],
             "label": "jace"
+          },
+          {
+            "card": "Ajani Goldmane",
+            "counters": [
+              {
+                "key": {
+                  "type": "Loyalty"
+                },
+                "value": 4
+              }
+            ],
+            "label": "ajani",
+            "token": true
           }
         ],
         "graveyard": [
@@ -63,7 +76,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "CR 701.71a A Jace planeswalker that is not a token is no candidate: Campus Crier creates a Jace token and leaves Jace Beleren's loyalty alone",
+  "description": "CR 701.71a Neither a Jace planeswalker card nor a non-Jace planeswalker token is a Jace planeswalker token: Campus Crier creates one and leaves both loyalties alone",
   "timeline": [
     {
       "do": {
@@ -106,6 +119,20 @@
             "type": "Loyalty"
           },
           "object": "$jace"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Counters": {
+          "count": 4,
+          "kind": {
+            "type": "Loyalty"
+          },
+          "object": "$ajani"
         }
       },
       "player": "alice",
