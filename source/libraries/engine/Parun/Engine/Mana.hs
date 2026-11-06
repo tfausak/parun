@@ -1418,7 +1418,7 @@ endManaRetention gs =
 --
 -- Takes the window that is ending rather than being a bare
 -- endCombatManaRetention, so its three callers spell it exactly as they spell
--- Expiry.dropAtEndOf beside it: Engine.runStepThatBegan for a combat phase whose
+-- Expiry.dropAtEndOf beside it: Engine.endStep for a combat phase whose
 -- last step ended, and Parun.Engine.Resolve's CR 724.1d and CR 724.2d arms for
 -- one ended part-way through with no last step to ask.
 --

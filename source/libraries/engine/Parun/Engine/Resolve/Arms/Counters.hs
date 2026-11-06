@@ -1762,8 +1762,8 @@ endTurn runDamageRewriteEffect runReplacementEffects runSubgame = do
   -- leave combat if this happened during one; the game skips straight to the
   -- cleanup step, or to a NEW cleanup step if this IS one.
   --
-  -- What ends the step is Engine.runStepThatBegan, which resumes after the
-  -- signal below stops the priority round and runs CR 500.5's expiries and CR
+  -- What ends the step is Engine.endStep, reached once the
+  -- signal below stops the priority round, which runs CR 500.5's expiries and CR
   -- 703.4q's mana emptying exactly as it would for a step that ended by
   -- itself. Nothing of that is duplicated here.
   --
@@ -1782,7 +1782,7 @@ endTurn runDamageRewriteEffect runReplacementEffects runSubgame = do
         -- Both sweeps, for the same reason: a mana unit's "until end of combat"
         -- retention carries no Expiry, so Expiry.dropAtEndOf cannot reach it
         -- (CR 500.5a). The mana itself is taken by the CR 500.5 sweep this
-        -- step's own end runs in Engine.runStepThatBegan, once this has made
+        -- step's own end runs in Engine.endStep, once this has made
         -- the units ordinary.
         expired = case phase of
           Phase.Ending _ -> cleared
@@ -1841,7 +1841,7 @@ endCombatPhase runDamageRewriteEffect runReplacementEffects runSubgame = do
       -- and the game skips the steps between here and the next phase.
       --
       -- The expiry is this rule's, not CR 500.5's through
-      -- Engine.runStepThatBegan: that sweep asks Turn.phaseEndingAt, which
+      -- Engine.endStep: that sweep asks Turn.phaseEndingAt, which
       -- answers from the phase's last step, and CR 724.2e is precisely the
       -- claim that the end of combat step never runs. EQUALITY on
       -- PhaseSelector.CombatPhase, so an "until end of turn" effect installed
@@ -1857,7 +1857,7 @@ endCombatPhase runDamageRewriteEffect runReplacementEffects runSubgame = do
          in -- Both sweeps, the CR 724.1d arm's reason above: an "until end of
             -- combat" mana retention rides the UNIT and carries no Expiry, so
             -- the phase ending here has to end it too. The mana goes with this
-            -- step's own CR 500.5 sweep in Engine.runStepThatBegan.
+            -- step's own CR 500.5 sweep in Engine.endStep.
             Mana.endRetentionAtEndOf PhaseSelector.CombatPhase (Expiry.dropAtEndOf PhaseSelector.CombatPhase skipped)
       -- CR 724.2f: no player gets priority during this process. The SAME signal
       -- CR 724.1f raises, because the two rules want the same thing of

@@ -256,7 +256,7 @@ data GameState = MkGameState
     pendingReplacementEffects :: Seq.Seq PendingReplacementEffect.PendingReplacementEffect,
     -- | CR 614.10b: the actions a skip put first in the next step, phase or turn
     -- to actually occur (PhaseRewrite.MaySkipFor), drained by
-    -- Parun.Engine.Engine.runStepThatBegan as that step begins.
+    -- Parun.Engine.Engine.startStep as that step begins.
     pendingSkipEffects :: Seq.Seq PendingSkipEffect.PendingSkipEffect,
     -- | CR 616.1 and Lich's Mirror's ruling: the objects a state-based action
     -- check moves, keyed to the source of the replacement whose effects run in

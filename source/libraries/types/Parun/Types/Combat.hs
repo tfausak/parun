@@ -171,7 +171,7 @@ data Combat = MkCombat
     -- CR 508.4's exclusion of a creature put onto the battlefield attacking
     -- carries over verbatim; what differs is only the lifetime.
     --
-    -- CLEARED AS EVERY STEP ENDS, in Parun.Engine.Engine.runStepThatBegan, and
+    -- CLEARED AS EVERY STEP ENDS, in Parun.Engine.Engine.endStep, and
     -- not by clearCombat: CR 500.1's step is the span the clause names, and CR
     -- 511.3's is a phase. Every step and not just combat's, because CR 500.11
     -- lets any step be skipped, and a reset sitting on one step's path outlives
