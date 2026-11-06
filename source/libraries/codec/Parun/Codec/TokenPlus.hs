@@ -11,10 +11,12 @@ codec cardCodec =
   Arm.tagged
     tagOf
     [ Arm.payload "One" cardCodec TokenPlus.One (\x -> case x of TokenPlus.One y -> Just y; _ -> Nothing),
-      Arm.payload "ThatMany" cardCodec TokenPlus.ThatMany (\x -> case x of TokenPlus.ThatMany y -> Just y; _ -> Nothing)
+      Arm.payload "ThatMany" cardCodec TokenPlus.ThatMany (\x -> case x of TokenPlus.ThatMany y -> Just y; _ -> Nothing),
+      Arm.payload "Instead" cardCodec TokenPlus.Instead (\x -> case x of TokenPlus.Instead y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: TokenPlus.TokenPlus card -> String
 tagOf x = case x of
   TokenPlus.One {} -> "One"
   TokenPlus.ThatMany {} -> "ThatMany"
+  TokenPlus.Instead {} -> "Instead"

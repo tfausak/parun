@@ -218,8 +218,6 @@ first.
   Pyromancer; Way of the Warlord; Way of the Wildspeaker. No keyword action
   creates or empowers a Jace planeswalker token (CR 701.71a); amass is the
   sibling.
-- #6492: Draconic Visitor. A token replacement scales or appends tokens but
-  can't substitute different ones (CR 614.1a).
 - #6486: Blossom-Blessed Angel; Carnivorous Cultivator; Diviner of Victory;
   Emergency Phytomedic; Fatehold Chronologist; Hallway Heckler; Heartwood
   Crafter; Konstrari Improviser; Pompous Battlemage; Prudent Fateseer; Pyre

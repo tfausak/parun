@@ -1,0 +1,101 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Flying"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": "Red"
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": "Red"
+          }
+        }
+      ],
+      "name": "Draconic Visitor",
+      "oracleText": "Flying\nIf one or more artifact tokens would be created under your control, that many 5/5 red Dragon creature tokens with flying are created instead.",
+      "power": {
+        "type": "Literal",
+        "value": 5
+      },
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "TokenR",
+            "value": {
+              "matching": {
+                "whatToken": {
+                  "type": "HasCardType",
+                  "value": "Artifact"
+                },
+                "whose": {
+                  "type": "You"
+                }
+              },
+              "plus": {
+                "type": "Instead",
+                "value": {
+                  "faces": [
+                    {
+                      "colorIndicator": [
+                        "Red"
+                      ],
+                      "keywords": [
+                        {
+                          "type": "Flying"
+                        }
+                      ],
+                      "name": "Dragon Token",
+                      "power": {
+                        "type": "Literal",
+                        "value": 5
+                      },
+                      "toughness": {
+                        "type": "Literal",
+                        "value": 5
+                      },
+                      "typeLine": {
+                        "subtypes": [
+                          "Dragon"
+                        ],
+                        "types": [
+                          "Creature"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 5
+      },
+      "typeLine": {
+        "subtypes": [
+          "Dragon"
+        ],
+        "types": [
+          "Creature"
+        ]
+      }
+    }
+  ]
+}

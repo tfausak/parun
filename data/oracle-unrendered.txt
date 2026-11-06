@@ -742,6 +742,7 @@ doubling-chant
 doubling-cube
 doubling-season
 dovin-hand-of-control
+draconic-visitor
 drafnas-restoration
 drag-to-the-bottom
 dragon-egg

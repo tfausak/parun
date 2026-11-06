@@ -295,6 +295,7 @@ import qualified Parun.Types.Throw as Throw
 import qualified Parun.Types.ThrowKind as ThrowKind
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.TokenLot as TokenLot
+import qualified Parun.Types.TokenPattern as TokenPattern
 import qualified Parun.Types.TokenPlus as TokenPlus
 import qualified Parun.Types.TokenR as TokenR
 import qualified Parun.Types.Transformed as Transformed
@@ -5101,8 +5102,15 @@ apply settle batch applied batchPrevented candidate event =
     --
     -- CR 614.16: an effects-only row scales only the lots an effect makes
     -- (Replacement.reachesLot), and a lot this row appends is one.
+    --
+    -- CR 614.1a: Draconic Visitor's "that many ... are created instead" swaps
+    -- each matched lot for the row's card at the same count, in the same event,
+    -- so the riders still reach it (its ruling) and a later row scales it. An
+    -- unmatched lot stays. The data/scenarios/draconic-visitor-* files are the
+    -- proof, the Chatterfang race for the unmatched lot.
     (ReplacementEffect.TokenR (TokenR.MkTokenR pat scaling plus), ProposedEvent.WouldCreateTokens pid lots) -> do
       Replacement.consume (ReplacementCandidate.identity candidate)
+      gs <- State.get
       let scaleLot factor lot
             | Replacement.reachesLot pat lot = lot {TokenLot.count = Replacement.scale factor (TokenLot.count lot)}
             | otherwise = lot
@@ -5114,6 +5122,12 @@ apply settle batch applied batchPrevented candidate event =
             -- Chatterfang's "that many": every token the event would create as
             -- this row applies, its own scaling included.
             Just (TokenPlus.ThatMany card) -> scaled Seq.|> lotOf card (sum (fmap TokenLot.count scaled))
+            Just (TokenPlus.Instead card) ->
+              let swap lot
+                    | Replacement.reachesLot pat lot && Replacement.matchesTokenLot gs (Replacement.candidateContext gs candidate) (TokenPattern.whatToken pat) pid lot =
+                        lot {TokenLot.card = card, TokenLot.copy = Nothing}
+                    | otherwise = lot
+               in fmap swap scaled
       pure (Just (ProposedEvent.WouldCreateTokens pid appended))
     -- Unreachable: `applies` admits TokenR only against WouldCreateTokens.
     (ReplacementEffect.TokenR {}, _) -> pure (Just event)
