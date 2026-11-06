@@ -8,11 +8,13 @@ data Subtype
   | Bobblehead
   | Book
   | Clue
+  | Communicator
   | Contraption
   | Equipment
   | Food
   | Fortification
   | Gold
+  | Heartwood
   | Incubator
   | Infinity
   | Junk
@@ -62,6 +64,7 @@ data Subtype
   | Aminatou
   | Angrath
   | Arlinn
+  | Arzakon
   | Ashiok
   | Bahamut
   | Basri
@@ -77,13 +80,16 @@ data Subtype
   | Dihada
   | Domri
   | Dovin
+  | Dyfed
   | Ellywick
   | Elminster
   | Elspeth
   | Estrid
+  | Feroz
   | Freyalise
   | Garruk
   | Gideon
+  | Greensleeves
   | Grist
   | Guff
   | Huatli
@@ -115,6 +121,7 @@ data Subtype
   | Samut
   | Sarkhan
   | Serra
+  | Sifa
   | Sivitri
   | Sorin
   | Szat
@@ -123,6 +130,7 @@ data Subtype
   | Teferi
   | Teyo
   | Tezzeret
+  | Thomil
   | Tibalt
   | Tyvar
   | Ugin
@@ -133,6 +141,7 @@ data Subtype
   | Vronos
   | Will
   | Windgrace
+  | Worzel
   | Wrenn
   | Xenagos
   | Yanggu
@@ -146,9 +155,12 @@ data Subtype
   | Trap
   | -- CR 205.3m
     Advisor
+  | Aenar
   | Aetherborn
   | Alien
   | Ally
+  | Andorian
+  | Android
   | Angel
   | Antelope
   | Ape
@@ -165,6 +177,7 @@ data Subtype
   | Avatar
   | Azra
   | Badger
+  | Bajoran
   | Balloon
   | Barbarian
   | Bard
@@ -176,16 +189,21 @@ data Subtype
   | Beeble
   | Beholder
   | Berserker
+  | Betazoid
   | Bird
   | Bison
   | Blinkmoth
   | Boar
+  | Bolian
   | Borg
+  | Brikar
   | Bringer
   | Brushwagg
+  | Caitian
   | Camarid
   | Camel
   | Capybara
+  | Cardassian
   | Caribou
   | Carrier
   | Cat
@@ -210,6 +228,7 @@ data Subtype
   | Dauthi
   | Demigod
   | Demon
+  | Denobulan
   | Deserter
   | Detective
   | Devil
@@ -226,8 +245,10 @@ data Subtype
   | Dryad
   | Dwarf
   | Echidna
+  | Edosian
   | Efreet
   | Egg
+  | ElAurian
   | Elder
   | Eldrazi
   | Elemental
@@ -236,8 +257,10 @@ data Subtype
   | Elk
   | Employee
   | Eternal
+  | Excalbian
   | Eye
   | Faerie
+  | Ferengi
   | Ferret
   | Fish
   | Flagbearer
@@ -260,6 +283,7 @@ data Subtype
   | God
   | Golem
   | Gorgon
+  | Gorn
   | Graveborn
   | Gremlin
   | Griffin
@@ -273,6 +297,7 @@ data Subtype
   | Hero
   | Hippo
   | Hippogriff
+  | Hirogen
   | Homarid
   | Homunculus
   | Horror
@@ -281,6 +306,7 @@ data Subtype
   | Hydra
   | Hyena
   | Illusion
+  | Illyrian
   | Imp
   | Incarnation
   | Inhuman
@@ -289,16 +315,21 @@ data Subtype
   | Insect
   | Jackal
   | Jellyfish
+  | JemHadar
   | Juggernaut
   | Kangaroo
   | Kavu
+  | Kelpien
   | Kirin
   | Kithkin
+  | Klingon
   | Knight
   | Kobold
   | Kor
   | Kraken
   | Kree
+  | Kwejian
+  | Lanthanite
   | Llama
   | Lamia
   | Lammasu
@@ -311,6 +342,8 @@ data Subtype
   | Lobster
   | Manticore
   | Masticore
+  | Medusan
+  | Melkotian
   | Mercenary
   | Merfolk
   | Metathran
@@ -329,6 +362,7 @@ data Subtype
   | Mutant
   | Myr
   | Mystic
+  | Nakuhl
   | Nautilus
   | Necron
   | Nephilim
@@ -339,12 +373,15 @@ data Subtype
   | Noggle
   | Nomad
   | Nymph
+  | Ocampa
   | Octopus
+  | Officer
   | Ogre
   | Ooze
   | Orb
   | Orc
   | Orgg
+  | Orion
   | Otter
   | Ouphe
   | Ox
@@ -369,6 +406,7 @@ data Subtype
   | Primarch
   | Prism
   | Processor
+  | Q
   | Qu
   | Rabbit
   | Raccoon
@@ -380,6 +418,7 @@ data Subtype
   | Rigger
   | Robot
   | Rogue
+  | Romulan
   | Sable
   | Salamander
   | Samurai
@@ -432,15 +471,23 @@ data Subtype
   | Survivor
   | Symbiote
   | Synth
+  | Talaxian
+  | Talosian
+  | Tamarian
+  | Tellarite
   | Tentacle
   | Tetravite
   | Thalakos
+  | Tholian
   | Thopter
   | Thrull
   | Tiefling
   | TimeLord
+  | Tosk
   | Toy
   | Treefolk
+  | Tribble
+  | Trill
   | Trilobite
   | Triskelavite
   | Troll
@@ -450,9 +497,12 @@ data Subtype
   | Utrom
   | Vampire
   | Varmint
+  | VauNAkat
   | Vedalken
   | Villain
   | Volver
+  | Vorta
+  | Vulcan
   | Wall
   | Walrus
   | Warlock
@@ -468,6 +518,7 @@ data Subtype
   | Worm
   | Wraith
   | Wurm
+  | Xindi
   | Yeti
   | Zombie
   | Zubera

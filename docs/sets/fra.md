@@ -11,6 +11,8 @@ These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at; "verify" marks a clause the
 census did not settle.
 
+- Aerid Konstrari: `_CreatableToken:HeartwoodToken`
+
 - Afterthought Sentry: `_Target:UptoOneTargetGraveyardCard`
 
 - Ajani Resolute: `field: Loyalty`
@@ -167,12 +169,17 @@ census did not settle.
 
 - Heartstring Puller: `_CreatableToken:NamedTokenWithPT`
 
+- Heartwood Crafter: translate skips preparation cards; verify the clauses
+  besides "enters prepared"
+
 - Hexhaven Battalion: not yet run through `parun translate` since empower Jace
   landed (#6507)
 
 - Hexhaven Dueling Arena: `_Permanents:AttackedThisTurn`
 
 - Hexhaven Invigorator: `_Trigger:WhenAPermanentIsDealtDamage`
+
+- Hungering Puppetbeast: `_CreatableToken:HeartwoodToken`
 
 - Hunter's Axe: `_Rule:TriggerA`
 
@@ -215,6 +222,9 @@ census did not settle.
 - Konstrari Annex: `_ReplacementActionWouldEnter:Unless`
 
 - Konstrari Charm: `_Actions:Modal_ChooseOne`
+
+- Konstrari Improviser: translate skips preparation cards; verify the clauses
+  besides "enters prepared"
 
 - Koth, the Geomancer: `_Action:If`
 
@@ -373,6 +383,8 @@ census did not settle.
 - Tam's Resistance: not yet run through `parun translate` since empower Jace
   landed (#6507)
 
+- Tenured Tethermage: `_Action:CreateTokens`
+
 - Tether Technician: `_Action:Reflexive_Discard_WhenYouDo`
 
 - Tetsuko Umezawa, Fugitive: `_Permanents:PowerIs`
@@ -487,6 +499,8 @@ census did not settle.
 
 - Winter, Tormented Loner: `_Action:Reflexive_Sacrifice_WhenYouDo`
 
+- Woodwork Prodigy // Soul Tether: translate skips preparation cards
+
 - Wrath of the Bloodmane: `_Rule:CastEffect`
 
 - Wrecking Gecko: `_Rule:Ward`
@@ -503,13 +517,4 @@ census did not settle.
 
 ## Needs a capability
 
-Each card is tracked by its issue and is added when that issue lands. Hardest
-first.
-
-- #6526: Aerid Konstrari; Heartwood Crafter // Soul Tether; Hungering
-  Puppetbeast; Konstrari Improviser // Soul Tether; Tenured Tethermage; Woodwork
-  Prodigy // Soul Tether. No Heartwood artifact type in `Parun.Types.Subtype`
-  (CR 205.3g, 111.10x); besides it, Aerid Konstrari stops at
-  `_CreatableToken:HeartwoodToken`, Tenured Tethermage at
-  `_Action:CreateTokens`, and translate skips the three preparation cards
-  (verify the clauses besides "enters prepared").
+None.
