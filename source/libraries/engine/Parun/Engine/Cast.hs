@@ -1154,6 +1154,17 @@ stampCastFrom sid castFrom gs =
         Map.adjust (\o -> o {Object.castFrom = castFrom}) sid (GameState.objects gs)
     }
 
+-- CR 722.3d: record on the spell that it was cast as a prepare spell -- cast
+-- from the copy CR 722.3c minted -- which CR 400.7 would otherwise forget, so
+-- Filter.IsPreparedSpell can answer (docs/decisions.md, "What "a prepared
+-- spell" names"). stampCastFrom's shape above.
+stampCastPrepared :: ObjectId -> Bool -> GameState -> GameState
+stampCastPrepared sid prepared gs =
+  gs
+    { GameState.objects =
+        Map.adjust (\o -> o {Object.castPrepared = prepared}) sid (GameState.objects gs)
+    }
+
 -- CR 702.143c: record on the spell the turn the card it was became foretold,
 -- which CR 400.7 would otherwise forget, so Quantity.WasForetold answers "this
 -- spell was foretold" whatever cost it was cast for. stampCastFrom's shape above.
@@ -2781,6 +2792,9 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
           -- CR 702.143c's "a spell that was a foretold card before it was cast",
           -- carried across the move for `castFrom`'s reason.
           State.modify' (stampForetold sid (Game.lookupObject oid before >>= Object.foretold))
+          -- CR 722.3d's "a spell cast as a prepare spell", carried across the
+          -- move for `castFrom`'s reason, off `preparedFor`.
+          State.modify' (stampCastPrepared sid (Maybe.isJust preparedFor))
           -- CR 601.2e's re-asking, at the announced mana value, of a prohibition
           -- and of the permission the cast is made under, judged on the same
           -- proposal board candidateAllowed judged them on, and of a flash

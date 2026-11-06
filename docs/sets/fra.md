@@ -231,7 +231,6 @@ first.
   701.23j).
 - #6494: Tomik, Orzhov Lawmage. An attack limit scopes to players, never to one
   planeswalker (CR 508.1c).
-- #6488: Codie, Ravenous Codex. No filter matches a prepared spell (CR 722.3d).
 - #6487: Infinite Coursework. No effect removes the prepared designation (CR
   722.3b).
 - #6490: Desperate Futurescribe; Proctor of Potential; Surveillance Phantasm. No

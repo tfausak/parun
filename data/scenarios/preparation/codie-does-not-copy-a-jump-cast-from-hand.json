@@ -1,0 +1,29 @@
+{
+  "description": "Codie does not copy a Jump cast from hand, which is no prepared spell",
+  "note": "The printed Jump shares the prepare spell's name and text, so the only difference between it and the Aviator's copy is CR 722.3c's road to the stack. alice casts it from hand at the Piker; had Codie triggered, its copy would be a second Jump on the stack after the first pass.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Codie, Ravenous Codex", "label": "codie", "ready": true },
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Island", "label": "island-1" }
+        ],
+        "hand": [{ "card": "Jump", "label": "jump" }]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$jump", "targets": ["$piker"], "mana": ["$island-1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Stack", "card": "Jump", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Stack", "card": "Jump", "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "$piker", "keyword": { "type": "Flying" }, "count": 1 } } }
+  ]
+}

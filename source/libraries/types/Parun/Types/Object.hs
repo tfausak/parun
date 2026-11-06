@@ -675,6 +675,13 @@ data Object = MkObject
     -- Filter.IsPrototyped reads it, beside the copiable PC.prototyped that
     -- answers for a copy (CR 718.3c / 718.3d).
     prototyped :: Bool,
+    -- | CR 722.3d: was this SPELL cast as a prepare spell -- cast from the copy
+    -- CR 722.3c mints -- or is it a copy of one? Stamped by Parun.Engine.Cast
+    -- onto the stack incarnation, off the `preparedCopyOf` the cast copy carried
+    -- before CR 601.2a's move. A spell copy carries it (CR 707.10), which is
+    -- rule 722.3d's "the copy is also a prepare spell". Filter.IsPreparedSpell
+    -- reads it. Per-incarnation (CR 400.7).
+    castPrepared :: Bool,
     -- | CR 702.27a: was this SPELL's buyback cost paid? Stamped by
     -- Parun.Engine.Cast at CR 601.2b onto the stack incarnation, and read by
     -- Parun.Engine.Resolve.finishSpell, which is rule 702.27a's "as it resolves"
@@ -1034,6 +1041,7 @@ new o s z t =
       -- Parun.Engine.Event.changeZoneAttaching's mkObj for the one move CR 718.4
       -- keeps it across, `bestowed` above's route.
       prototyped = False,
+      castPrepared = False,
       -- CR 702.27a's record is written back by nothing: the move it replaces ENDS
       -- in the hand, so the card that arrives there is a new object that was
       -- never bought back.
