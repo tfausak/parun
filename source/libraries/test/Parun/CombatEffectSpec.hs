@@ -582,9 +582,9 @@ boundedDeclarationSpec s registry = Spec.describe s "BoundedDeclaration" $ do
     ajani <- S.printingOf s registry "Ajani Goldmane"
     piker <- S.printingOf s registry "Goblin Piker"
     let walkers holder gs0 =
-          let (jaceId, g1) = S.addPermanent jace holder gs0
-              (ajaniId, g2) = S.addPermanent ajani holder g1
-           in (jaceId, ajaniId, S.addCounter CounterKind.Loyalty 3 jaceId (S.addCounter CounterKind.Loyalty 4 ajaniId g2))
+          let (j, g1) = S.addPermanent jace holder gs0
+              (a, g2) = S.addPermanent ajani holder g1
+           in (j, a, S.addCounter CounterKind.Loyalty 3 j (S.addCounter CounterKind.Loyalty 4 a g2))
         (bare, mine, _) = S.combatBoardOf [piker, piker, piker] []
         (jaceId, ajaniId, control) = walkers S.bob bare
         gs = snd (S.addPermanent tomik S.bob control)

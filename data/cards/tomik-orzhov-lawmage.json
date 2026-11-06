@@ -8,7 +8,8 @@
               {
                 "type": "TapThis"
               }
-            ]
+            ],
+            "mana": []
           },
           "modal": {
             "modes": [
@@ -129,8 +130,8 @@
       },
       "typeLine": {
         "subtypes": [
-          "Human",
-          "Advisor"
+          "Advisor",
+          "Human"
         ],
         "supertypes": [
           "Legendary"
