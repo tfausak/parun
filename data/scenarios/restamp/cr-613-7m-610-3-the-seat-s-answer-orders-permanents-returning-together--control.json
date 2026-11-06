@@ -179,17 +179,6 @@
       "player": "alice",
       "step": "PrecombatMain",
       "turn": 1
-    },
-    {
-      "do": {
-        "OrderTimestamps": [
-          "Human Token",
-          "Human Token#2"
-        ]
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
     }
   ]
 }

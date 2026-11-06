@@ -148,17 +148,6 @@
       "turn": 1
     },
     {
-      "do": {
-        "OrderTimestamps": [
-          "Soldier Token",
-          "Soldier Token#2"
-        ]
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
       "do": "Pass",
       "player": "alice",
       "step": "PrecombatMain",
@@ -239,17 +228,6 @@
     },
     {
       "do": "Pass",
-      "player": "bob",
-      "step": "PrecombatMain",
-      "turn": 2
-    },
-    {
-      "do": {
-        "OrderTimestamps": [
-          "Soldier Token#3",
-          "Soldier Token#4"
-        ]
-      },
       "player": "bob",
       "step": "PrecombatMain",
       "turn": 2

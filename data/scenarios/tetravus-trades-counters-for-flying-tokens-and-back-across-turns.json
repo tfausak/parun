@@ -168,17 +168,6 @@
       "turn": 3
     },
     {
-      "do": {
-        "OrderTimestamps": [
-          "Tetravite Token",
-          "Tetravite Token#2"
-        ]
-      },
-      "player": "alice",
-      "step": "Upkeep",
-      "turn": 3
-    },
-    {
       "check": {
         "Counters": {
           "count": 1,

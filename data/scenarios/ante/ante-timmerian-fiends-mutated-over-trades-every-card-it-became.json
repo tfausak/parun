@@ -181,20 +181,6 @@
     },
     {
       "do": {
-        "Answer": {
-          "prompt": "OrderTimestamps",
-          "with": [
-            0,
-            1
-          ]
-        }
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "do": {
         "Activate": {
           "ability": 0,
           "mana": [

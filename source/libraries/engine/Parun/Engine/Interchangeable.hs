@@ -307,6 +307,10 @@ representatives pcs gs candidates =
 -- bookkeeping. They are in the list rather than in the account above because
 -- requiring a field empty is the direction that cannot make a player's choice,
 -- so an unreachable row is the cheap side to be wrong on.
+--
+-- GameState.arrivals is required to hold no arrival rather than to be closed: an
+-- open scope with none names no object, and every simultaneous move opens one
+-- (Event.simultaneously), Restamp.order's batches included.
 quiet :: GameState -> Bool
 quiet gs =
   Seq.null (GameState.broughtIn gs)
@@ -319,7 +323,7 @@ quiet gs =
     && Map.null (GameState.copyExceptionCounters gs)
     && Map.null (GameState.detachedBindings gs)
     && Maybe.isNothing (GameState.enteringTogether gs)
-    && Maybe.isNothing (GameState.arrivals gs)
+    && all Seq.null (GameState.arrivals gs)
     && Map.null (GameState.contested gs)
 
 -- Whether a stored row, or the combat in progress, MIGHT name this object.

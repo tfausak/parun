@@ -202,17 +202,6 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Human Token",
-          "Human Token#2"
-        ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "PowerToughness": {
           "object": "$piker",
@@ -222,5 +211,5 @@
       }
     }
   ],
-  "note": "The ReferenceCards answers are the test's fixture reference: nothing at mana values 1 to 4, the Godhead at 5, the Archon at 6. One OrderTimestamps is asked of alice for the conjure loop, and it must name exactly the group offered, the Godhead and the Archon; naming the Archon first stamps the Godhead last, so bob's Piker is 1/1 while the Archon's trigger is still on the stack. The Human tokens' order is that trigger's, after the test's moment. The control keeps the arrival order and the Piker is 3/3."
+  "note": "The ReferenceCards answers are the test's fixture reference: nothing at mana values 1 to 4, the Godhead at 5, the Archon at 6. One OrderTimestamps is asked of alice for the conjure loop, and it must name exactly the group offered, the Godhead and the Archon; naming the Archon first stamps the Godhead last, so bob's Piker is 1/1 while the Archon's trigger is still on the stack. The control keeps the arrival order and the Piker is 3/3."
 }

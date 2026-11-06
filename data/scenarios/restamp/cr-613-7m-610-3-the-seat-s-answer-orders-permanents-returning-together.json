@@ -60,7 +60,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 613.7m 610.3 the seat's answer orders permanents returning together",
-  "note": "Glorious Protector exiles Harmonious Archon and Godhead of Awe, and Doom Blade ends its duration, so both return at one moment (CR 610.3). Both write the Hill Giant's base power and toughness in layer 7b, so the later stamp decides it: alice stamps Godhead later and the Giant is 1/1. The control file stamps the Archon later and the Giant is 3/3. The one OrderTimestamps entry names both, so a second prompt or a group of one fails the run. Playing on resolves the returned Archon's enters trigger, whose two Human tokens alice orders after the check.",
+  "note": "Glorious Protector exiles Harmonious Archon and Godhead of Awe, and Doom Blade ends its duration, so both return at one moment (CR 610.3). Both write the Hill Giant's base power and toughness in layer 7b, so the later stamp decides it: alice stamps Godhead later and the Giant is 1/1. The control file stamps the Archon later and the Giant is 3/3. The one OrderTimestamps entry names both, so a second prompt or a group of one fails the run. Playing on resolves the returned Archon's enters trigger, whose two interchangeable Human tokens ask no order.",
   "timeline": [
     {
       "do": {
@@ -176,17 +176,6 @@
     },
     {
       "do": "Pass",
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "do": {
-        "OrderTimestamps": [
-          "Human Token",
-          "Human Token#2"
-        ]
-      },
       "player": "alice",
       "step": "PrecombatMain",
       "turn": 1

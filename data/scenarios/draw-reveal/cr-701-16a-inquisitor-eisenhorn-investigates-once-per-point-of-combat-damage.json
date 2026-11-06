@@ -14,7 +14,6 @@
   },
   "timeline": [
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$eisenhorn"] } },
-    { "turn": 1, "step": "CombatDamage", "player": "alice", "do": { "OrderTimestamps": ["Clue Token", "Clue Token#2"] } },
     { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } },
     { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Clue Token", "count": 2 } } }
   ]

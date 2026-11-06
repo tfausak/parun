@@ -122,19 +122,6 @@
       "turn": 1
     },
     {
-      "do": {
-        "OrderTimestamps": [
-          "Tetravite Token",
-          "Tetravite Token#2",
-          "Tetravite Token#3",
-          "Tetravite Token#4"
-        ]
-      },
-      "player": "alice",
-      "step": "Upkeep",
-      "turn": 1
-    },
-    {
       "check": {
         "Count": {
           "card": "Tetravite Token",

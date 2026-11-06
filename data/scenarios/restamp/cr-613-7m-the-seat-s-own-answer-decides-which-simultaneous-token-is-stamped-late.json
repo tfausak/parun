@@ -1,6 +1,6 @@
 {
   "description": "CR 613.7m the seat's own answer decides which simultaneous token is stamped later",
-  "note": "Alice reverses the offered order, so the Clone token that copied Harmonious Archon is stamped last and the Hill Giant reads its base 3/3. Kicked Rite of Replication makes five Clone tokens; the first ChooseCopyTarget answer takes the Archon, the other four Godhead of Awe. The one OrderTimestamps entry names all five, so a second prompt or a smaller group fails the run. The control file answers with the arrival order and the Giant is 1/1. Playing on resolves the Archon copy's enters trigger, whose two Human tokens alice orders after the check.",
+  "note": "Alice reverses the offered order, so the Clone token that copied Harmonious Archon is stamped last and the Hill Giant reads its base 3/3. Kicked Rite of Replication makes five Clone tokens; the first ChooseCopyTarget answer takes the Archon, the other four Godhead of Awe. The one OrderTimestamps entry names all five, so a second prompt or a smaller group fails the run. The control file answers with the arrival order and the Giant is 1/1. Playing on resolves the Archon copy's enters trigger, whose two interchangeable Human tokens ask no order.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -209,17 +209,6 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": "Pass"
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Human Token",
-          "Human Token#2"
-        ]
-      }
     }
   ]
 }

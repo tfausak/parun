@@ -80,20 +80,6 @@
       "turn": 1
     },
     {
-      "do": {
-        "OrderTimestamps": [
-          "Zombie Token",
-          "Zombie Token#2",
-          "Zombie Token#3",
-          "Zombie Token#4",
-          "Zombie Token#5"
-        ]
-      },
-      "player": "alice",
-      "step": "Upkeep",
-      "turn": 1
-    },
-    {
       "check": {
         "Count": {
           "card": "Zombie Token",

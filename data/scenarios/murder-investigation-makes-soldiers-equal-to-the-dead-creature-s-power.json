@@ -189,24 +189,6 @@
       "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Soldier Token",
-          "Soldier Token#2",
-          "Soldier Token#3",
-          "Soldier Token#4",
-          "Soldier Token#5",
-          "Soldier Token#6",
-          "Soldier Token#7",
-          "Soldier Token#8",
-          "Soldier Token#9"
-        ]
-      }
-    },
-    {
       "check": {
         "Count": {
           "card": "Soldier Token",

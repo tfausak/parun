@@ -6,7 +6,6 @@
     {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$giant"]}},
     {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$nest": ["$giant"]}}},
     {"turn": 1, "step": "CombatDamage", "player": "bob", "do": "Pass"},
-    {"turn": 1, "step": "CombatDamage", "player": "alice", "do": {"OrderTimestamps": ["Insect Token", "Insect Token#2", "Insect Token#3"]}},
     {"turn": 1, "step": "CombatDamage", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Insect Token", "count": 3}}},
     {"turn": 1, "step": "CombatDamage", "player": "bob", "check": {"Keywords": {"object": "Insect Token", "keyword": {"type": "Deathtouch"}, "count": 1}}},
     {"turn": 1, "step": "CombatDamage", "player": "bob", "check": {"Keywords": {"object": "Insect Token", "keyword": {"type": "Flying"}, "count": 1}}}

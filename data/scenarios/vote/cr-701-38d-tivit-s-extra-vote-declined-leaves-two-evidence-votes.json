@@ -104,17 +104,6 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": {
-        "OrderTimestamps": [
-          "Clue Token",
-          "Clue Token#2"
-        ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
         "Cast": {
           "object": "$tivit",
           "mana": [

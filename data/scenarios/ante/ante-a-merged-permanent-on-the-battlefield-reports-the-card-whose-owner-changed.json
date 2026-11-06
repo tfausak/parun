@@ -171,20 +171,6 @@
           "with": "Over"
         }
       }
-    },
-    {
-      "turn": 3,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "OrderTimestamps",
-          "with": [
-            0,
-            1
-          ]
-        }
-      }
     }
   ],
   "final": [

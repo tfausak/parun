@@ -62,28 +62,6 @@
       "turn": 1
     },
     {
-      "do": {
-        "OrderTimestamps": [
-          "Warrior Token",
-          "Warrior Token#2"
-        ]
-      },
-      "player": "alice",
-      "step": "DeclareAttackers",
-      "turn": 1
-    },
-    {
-      "do": {
-        "OrderTimestamps": [
-          "Warrior Token#3",
-          "Warrior Token#4"
-        ]
-      },
-      "player": "alice",
-      "step": "DeclareAttackers",
-      "turn": 1
-    },
-    {
       "check": {
         "Count": {
           "card": "Warrior Token",
