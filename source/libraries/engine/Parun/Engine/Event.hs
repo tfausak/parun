@@ -4162,9 +4162,13 @@ apply settle batch applied batchPrevented candidate event =
       -- the batch comes off the floor instead (Replacement.floorLeft), proved by
       -- the scenario
       -- temple-altisaur-lets-1-of-earthquake-through-once-though-pariah-adds-to-it.
+      --
+      -- A one-use row (Forcefield's next instance) is spent only when it
+      -- shrank the event: CR 609.7b, "if for any reason the shield prevents no
+      -- damage ... the shield isn't used up". A static row has no use to spend.
       DamageRewrite.PreventAllBut surviving -> do
-        Replacement.consume (ReplacementCandidate.identity candidate)
         let left = min (Maybe.fromMaybe surviving (Replacement.floorLeft batchPrevented candidate event)) (DamageEvent.amount de)
+        Monad.when (left < DamageEvent.amount de) (Replacement.consume (ReplacementCandidate.identity candidate))
         if left == 0
           then pure Nothing
           else pure (Just (ProposedEvent.WouldDealDamage de {DamageEvent.amount = left}))

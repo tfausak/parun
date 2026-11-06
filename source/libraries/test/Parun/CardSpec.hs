@@ -1386,7 +1386,7 @@ ownCounts effect = case effect of
   Effect.LaterPayment (LaterPayment.MkLaterPayment duration _ effects) -> durationCounts duration <> concatMap effectCounts effects
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity rider) -> durationCounts duration <> quantityCounts quantity <> concatMap effectCounts rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ rider) -> durationCounts duration <> concatMap effectCounts rider
-  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance duration _ _ rider _) -> durationCounts duration <> concatMap effectCounts rider
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance duration _ _ _ rider _) -> durationCounts duration <> concatMap effectCounts rider
   Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ _ _ _ _ _ _) -> durationCounts duration <> foldMap quantityCounts amount
   -- CR 708.2's listed characteristics are card data, so the listed power and
   -- toughness are walked for the reason Create's minted face is. The listed type
@@ -1820,7 +1820,7 @@ effectNestedEffects effect = case effect of
   Effect.LaterPayment (LaterPayment.MkLaterPayment _ _ effects) -> Foldable.toList effects
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ riders) -> Foldable.toList riders
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ riders) -> Foldable.toList riders
-  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ riders _) -> Foldable.toList riders
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ _ riders _) -> Foldable.toList riders
   -- CR 608.2f's body, run once per member of the fold.
   Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> Foldable.toList body
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ _ body) -> Foldable.toList body
@@ -2483,7 +2483,7 @@ effectReplacements effect = case effect of
   Effect.LaterPayment (LaterPayment.MkLaterPayment _ _ effects) -> concatMap effectReplacements effects
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ rider) -> concatMap effectReplacements rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> concatMap effectReplacements rider
-  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ rider _) -> concatMap effectReplacements rider
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ _ rider _) -> concatMap effectReplacements rider
   -- CR 608.2f's body can too, for the same reason.
   Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> concatMap effectReplacements body
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ _ body) -> concatMap effectReplacements body
@@ -3062,7 +3062,7 @@ effectMintedFaces effect = case effect of
   Effect.LaterPayment (LaterPayment.MkLaterPayment _ _ effects) -> concatMap effectMintedFaces effects
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ rider) -> concatMap effectMintedFaces rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> concatMap effectMintedFaces rider
-  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ rider _) -> concatMap effectMintedFaces rider
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ _ rider _) -> concatMap effectMintedFaces rider
   -- CR 608.2f's body can too, for the same reason.
   Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> concatMap effectMintedFaces body
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ _ body) -> concatMap effectMintedFaces body
@@ -6079,7 +6079,7 @@ effectFilters effect = case effect of
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ ref whatRecipient _ _ chosenSource whatSource rider) ->
     frame Unframed (durationFilters duration) <> fmap ((,) ChosenSourceFramed) (Maybe.maybeToList chosenSource) <> unframed (Maybe.maybeToList whatRecipient) <> [(ReplacementRowFramed, whatSource)] <> frame SourceHostFramed (foldMap objectRefFilters ref) <> concatMap effectFilters rider
   -- The two arms above's reads over the fields CR 615.8's shield carries.
-  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance duration ref chosenSource rider _) ->
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance duration _ ref chosenSource rider _) ->
     frame Unframed (durationFilters duration) <> [(ChosenSourceFramed, chosenSource)] <> frame SourceHostFramed (objectRefFilters ref) <> concatMap effectFilters rider
   -- BOTH refs, or a Filter inside a redirect's destination escapes this lint.
   -- The chosen source, the recipient description and the property-named source

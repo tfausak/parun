@@ -1,0 +1,13 @@
+{
+  "description": "CR 609.7b: a 1-damage first-strike hit leaves nothing for Forcefield to prevent, so the shield waits for the pumped regular hit",
+  "note": "Bob's Fencing Ace (1, double strike) is unblocked and chosen. Its first-strike hit of 1 prevents nothing and does not spend the shield; Fists of the Anvil then makes it 5, and the regular hit is cut to 1, so alice is at 18. A shield spent by the first hit gives 14.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "bob", "battlefield": [{"card": "Fencing Ace", "label": "ace", "ready": true}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}], "hand": [{"card": "Fists of the Anvil", "label": "fists"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Forcefield", "label": "ff"}, {"card": "Plains", "label": "plains"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$ace"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Activate": {"object": "$ff", "ability": 0, "mana": ["$plains"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "CombatDamage", "player": "bob", "check": {"Life": {"player": "alice", "life": 19}}},
+    {"turn": 1, "step": "CombatDamage", "player": "bob", "do": {"Cast": {"object": "$fists", "mana": ["$m1", "$m2"], "targets": ["$ace"]}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 18}}}
+  ]
+}

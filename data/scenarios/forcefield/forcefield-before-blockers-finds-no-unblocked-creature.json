@@ -1,0 +1,11 @@
+{
+  "description": "CR 509.1h / 609.7a: activated before blockers are declared, Forcefield finds no unblocked creature to choose and shields nothing",
+  "note": "Bob's Hill Giant attacks and is neither blocked nor unblocked when the ability resolves in the declare attackers step, so no choice is offered (an unscheduled prompt would fail the scenario) and alice takes all 3: 17.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Forcefield", "label": "ff"}, {"card": "Plains", "label": "plains"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Activate": {"object": "$ff", "ability": 0, "mana": ["$plains"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PostcombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 17}}}
+  ]
+}

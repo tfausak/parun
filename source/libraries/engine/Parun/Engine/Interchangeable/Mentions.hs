@@ -2661,7 +2661,7 @@ preventNextDamageNames asking onEffect x = case x of
 
 nextDamageInstanceNames :: (Monoid r) => Asking r -> (effect -> r) -> NextDamageInstance.NextDamageInstance effect -> r
 nextDamageInstanceNames asking onEffect x = case x of
-  NextDamageInstance.MkNextDamageInstance duration ref chosenSource riders _outcome -> durationNames asking duration <> objectRefNames asking ref <> filterNames asking chosenSource <> foldMap onEffect riders
+  NextDamageInstance.MkNextDamageInstance duration _kind ref chosenSource riders _outcome -> durationNames asking duration <> objectRefNames asking ref <> filterNames asking chosenSource <> foldMap onEffect riders
 
 preventionNames :: (Monoid r) => Asking r -> Prevention.Prevention -> r
 preventionNames asking x = case x of

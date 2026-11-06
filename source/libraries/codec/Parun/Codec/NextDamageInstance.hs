@@ -4,6 +4,7 @@ module Parun.Codec.NextDamageInstance where
 
 import qualified Data.Sequence as Seq
 import qualified Data.Typeable as Typeable
+import qualified Parun.Codec.DamageKind as DamageKind
 import qualified Parun.Codec.Duration as Duration
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
@@ -31,6 +32,7 @@ codec ::
   Codec.Codec (NextDamageInstance.NextDamageInstance effect)
 codec effectCodec = Fields.object $ do
   duration <- Fields.required "duration" Duration.codec NextDamageInstance.duration
+  kind <- Fields.defaulted "kind" Nothing (Common.maybe DamageKind.codec) NextDamageInstance.kind
   ref <- Fields.required "ref" ObjectRef.codec NextDamageInstance.ref
   chosenSource <- Fields.defaulted "chosenSource" (Filter.And []) (Filter.codec Keyword.codec) NextDamageInstance.chosenSource
   riders <- Fields.defaulted "riders" Seq.empty (Common.seq effectCodec) NextDamageInstance.riders
@@ -38,6 +40,7 @@ codec effectCodec = Fields.object $ do
   pure
     NextDamageInstance.MkNextDamageInstance
       { NextDamageInstance.duration = duration,
+        NextDamageInstance.kind = kind,
         NextDamageInstance.ref = ref,
         NextDamageInstance.chosenSource = chosenSource,
         NextDamageInstance.riders = riders,

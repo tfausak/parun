@@ -1,0 +1,11 @@
+{
+  "description": "CR 615.8: the double striker's first-strike hit is Forcefield's next time; its regular hit is dealt whole",
+  "note": "Bob's Dragon-Style Twins (3, double strike) is unblocked and chosen: 1 then 3, so alice is at 16. A shield that stayed would give 18.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "bob", "battlefield": [{"card": "Dragon-Style Twins", "label": "twins", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Forcefield", "label": "ff"}, {"card": "Plains", "label": "plains"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$twins"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Activate": {"object": "$ff", "ability": 0, "mana": ["$plains"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PostcombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 16}}}
+  ]
+}
