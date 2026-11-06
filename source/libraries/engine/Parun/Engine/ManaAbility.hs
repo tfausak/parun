@@ -147,12 +147,15 @@ abilityKinds intrinsic roster =
 -- "could add mana", and CR 605.2 keeps it a mana ability where the game state
 -- stops it producing.
 isTriggeredManaAbility :: Maybe GameEvent.GameEvent -> TriggeredAbility.TriggeredAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
-isTriggeredManaAbility event ab =
-  let effects = Modal.allEffects (TriggeredAbility.modal ab)
-   in firedFromManaAbility event
-        && triggersFromMana (TriggeredAbility.condition ab)
-        && not (null (Maybe.mapMaybe manaProduced effects))
-        && Map.null (Modal.allTargetSlots (TriggeredAbility.modal ab))
+isTriggeredManaAbility event ab = firedFromManaAbility event && mayBeTriggeredManaAbility ab
+
+-- CR 605.1b asked of the ability alone, whatever fired it: every clause of
+-- `isTriggeredManaAbility` but CR 605.5a's.
+mayBeTriggeredManaAbility :: TriggeredAbility.TriggeredAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
+mayBeTriggeredManaAbility ab =
+  triggersFromMana (TriggeredAbility.condition ab)
+    && not (null (Maybe.mapMaybe manaProduced (Modal.allEffects (TriggeredAbility.modal ab))))
+    && Map.null (Modal.allTargetSlots (TriggeredAbility.modal ab))
 
 -- CR 605.5a asked of the event a trigger fired from: was an activated mana
 -- ability what happened? `triggersFromMana` is the same question asked of the

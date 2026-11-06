@@ -583,11 +583,11 @@ plainYield mana = MkYield {yieldMana = mana, yieldDoubling = Map.empty, yieldX =
 -- `xCeiling` is the largest X a route announcing one is priced at
 -- (`announcing` below); payableResolutionsGiven says why its bound is exact.
 --
--- `sample` is Trigger.battlefieldCandidates of `gs` and `rewritesOf` is
--- Replacement.manaRewrites of it, handed in so a sweep samples the board and
--- gathers its replacements once rather than per source.
-manaSuppliesGiven :: Natural -> Capacity -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> (ObjectId -> [ManaType]) -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> [Maybe ManaRestriction.ManaRestriction] -> ObjectId -> GameState -> [(Activations.Activations, Yield, ManaCost, Activations.Activations)]
-manaSuppliesGiven xCeiling capacity sample rewritesOf pcs pid borrowed oid gs =
+-- `watch` is `watchOf gs` and `rewritesOf` is Replacement.manaRewrites of it,
+-- handed in so a sweep samples the board and gathers its replacements once
+-- rather than per source.
+manaSuppliesGiven :: Natural -> Capacity -> Watch -> (ObjectId -> [ManaType]) -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> [Maybe ManaRestriction.ManaRestriction] -> ObjectId -> GameState -> [(Activations.Activations, Yield, ManaCost, Activations.Activations)]
+manaSuppliesGiven xCeiling capacity watch rewritesOf pcs pid borrowed oid gs =
   let -- Applied HERE and not left to the caller: this is the one reader of a
       -- route's yield on the supply side, so wrapping it once is what makes the
       -- model a property of the walk rather than of who called it. Idempotent,
@@ -760,7 +760,7 @@ manaSuppliesGiven xCeiling capacity sample rewritesOf pcs pid borrowed oid gs =
       -- restriction, which narrows only the route's own mana (CR 106.6).
       triggered option (activations, yield, manaCost, own) =
         [ (activations, yield {yieldMana = Mana.MkMana (unitsOf (yieldMana yield) <> unitsOf bonus)}, manaCost, own)
-        | bonus <- triggeredYields sample pid (choosable option) oid option (yieldMana yield) gs
+        | bonus <- triggeredYields watch pid (choosable option) oid option (yieldMana yield) gs
         ]
       counted = concatMap (\option -> foldMap (\extra -> concatMap (triggered option . restricted extra) (perCandidate option)) (routeAccess (mayTakeRoute controls pid oid gs) borrowed (ManaOption.cost option) (ManaOption.ability option))) options
       available = filter (\(activations, _, _, _) -> Activations.times activations > 0) counted
@@ -771,6 +771,38 @@ manaSuppliesGiven xCeiling capacity sample rewritesOf pcs pid borrowed oid gs =
    in fmap
         (\yield -> List.maximumBy (Ord.comparing rankOf) (filter ((==) yield . yieldOf) available))
         (ListUtils.nubOrd (fmap yieldOf available))
+
+-- What Parun.Engine.Mana.triggeredYields reads of one board, taken once for
+-- every source a sweep measures: the CR 603.10 sample, the trigger scan's
+-- standing sources, and the objects among either holding an ability CR 605.1b
+-- could make a triggered mana ability (#6515). The scan offers the holders
+-- alone, so a source's measure does not walk the board; the three events a
+-- mana ability records name no object for the scan to recover, so the sample
+-- and the standing sources are every candidate it has.
+data Watch = MkWatch
+  { watchSample :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics),
+    watchStanding :: Trigger.Standing,
+    watchHolders :: Set.Set ObjectId
+  }
+
+-- `gs`'s Watch.
+watchOf :: GameState -> Watch
+watchOf gs =
+  let sample = Trigger.battlefieldCandidates gs
+      standing = Trigger.standingOf gs
+      holders sources = Map.keysSet (Map.filter (any (ManaAbility.mayBeTriggeredManaAbility . snd) . snd) sources)
+   in MkWatch
+        { watchSample = sample,
+          watchStanding = standing,
+          watchHolders =
+            Set.unions
+              [ holders (Trigger.onBattlefieldOf sample),
+                holders (Trigger.standingGraveyards standing),
+                holders (Trigger.standingExile standing),
+                holders (Trigger.standingStated standing),
+                holders (Trigger.standingCommand standing)
+              ]
+        }
 
 -- Whether one clause of a mana option adds mana by CR 701.10f's doubling
 -- (ManaProduction.Pooled), whose yield is the pool it is added to.
@@ -786,10 +818,12 @@ manaSuppliesGiven xCeiling capacity sample rewritesOf pcs pid borrowed oid gs =
 -- option's own yield. One round is the whole of it: a trigger's mana is
 -- resolution mana, which fires no triggered mana ability (CR 605.5a).
 --
--- `sample` is the CR 603.10 board every event is filed with: `gs`'s own, the
--- copy differing from it only in its log.
-triggeredYields :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> PlayerId -> Map.Map SlotName.SlotName (Set.Set PlayerId) -> ObjectId -> ManaOption -> Mana -> GameState -> [Mana]
-triggeredYields sample pid chosen oid option share gs =
+-- `watch` is `watchOf gs`: its sample is the CR 603.10 board every event is
+-- filed with, and its standing sources are the scan's, both `gs`'s own, the
+-- copy differing from it only in its log. The scan offers only the watch's
+-- holders: what it leaves out triggers no mana ability.
+triggeredYields :: Watch -> PlayerId -> Map.Map SlotName.SlotName (Set.Set PlayerId) -> ObjectId -> ManaOption -> Mana -> GameState -> [Mana]
+triggeredYields watch pid chosen oid option share gs =
   let made = yieldUnits option
       types = Set.fromList (fmap ManaUnit.manaType (made <> unitsOf share))
       tapped =
@@ -804,9 +838,9 @@ triggeredYields sample pid chosen oid option share gs =
         ]
       resolved = GameEvent.ManaAbilityResolved (ManaAbilityResolved.MkManaAbilityResolved {ManaAbilityResolved.permanent = oid, ManaAbilityResolved.amount = Natural.length made})
       events = tapped <> added <> [resolved]
-      board = List.foldl' (flip (Event.recordEventOver sample)) gs events
+      board = List.foldl' (flip (Event.recordEventOver (watchSample watch))) gs events
       recorded = Foldable.toList (Seq.drop (Seq.length (GameState.events board) - length events) (GameState.events board))
-      fired = filter (\pending -> ManaAbility.isTriggeredManaAbility (fmap LoggedEvent.event (PendingTrigger.firedBy pending)) (PendingTrigger.ability pending)) (Event.reactionTriggers recorded board)
+      fired = filter (\pending -> ManaAbility.isTriggeredManaAbility (fmap LoggedEvent.event (PendingTrigger.firedBy pending)) (PendingTrigger.ability pending)) (Event.reactionTriggersGiven (Just (watchHolders watch)) (watchStanding watch) recorded board)
    in fmap (Mana.MkMana . concat) (traverse (triggerAdds pid board) fired)
 
 -- What one fired triggered mana ability adds to `pid`'s pool, a list entry per
@@ -3118,8 +3152,8 @@ data Sources = MkSources
     -- The capacity the list was swept under, which re-measures a source at a
     -- nonzero announced X.
     sourceCapacity :: Capacity,
-    -- The CR 603.10 sample every supply's triggeredYields files, taken once.
-    sourceSample :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics),
+    -- What every supply's triggeredYields reads of the board, taken once.
+    sourceWatch :: Watch,
     -- Replacement.manaRewrites of the board, its replacements gathered once.
     sourceRewrites :: ObjectId -> [ManaType],
     -- Each of `sourceIds`' supplies at X = 0, in the same order.
@@ -3136,14 +3170,14 @@ supplySourcesGiven :: Capacity -> [Projection.ControlGrant] -> Map.Map ObjectId 
 supplySourcesGiven capacity grants pcs pid gs =
   let ids = manaSourcesGiven Set.empty (supplyCapacity capacity) grants pcs pid gs
       borrowed = PlayerEffect.tapForManaGrants pid gs
-      sample = Trigger.battlefieldCandidates gs
+      watch = watchOf gs
       rewritesOf = Replacement.manaRewrites gs
    in MkSources
         { sourceIds = ids,
           sourceCapacity = capacity,
-          sourceSample = sample,
+          sourceWatch = watch,
           sourceRewrites = rewritesOf,
-          sourceSupplies = fmap (\oid -> manaSuppliesGiven 0 capacity sample rewritesOf pcs pid (borrowed oid) oid gs) ids,
+          sourceSupplies = fmap (\oid -> manaSuppliesGiven 0 capacity watch rewritesOf pcs pid (borrowed oid) oid gs) ids,
           sourceBorrowed = borrowed,
           sourceClauses = PlayerEffect.spendManaAsThough pid gs,
           sourceLifeForMana = PlayerEffect.lifeForMana pid gs,
@@ -3236,7 +3270,7 @@ payableResolutionsGiven subject spending swept pcs pid committed committedEnergy
         | costClauses == clauses = serves
         | otherwise = serves . rewriteSupply costClauses
       pooled = fmap (rewriteSupply clauses . supplyOf admitting) (unitsOf (Game.poolOf pid gs))
-      suppliesAt limit oid = manaSuppliesGiven limit capacity (sourceSample swept) (sourceRewrites swept) pcs pid (sourceBorrowed swept oid) oid gs
+      suppliesAt limit oid = manaSuppliesGiven limit capacity (sourceWatch swept) (sourceRewrites swept) pcs pid (sourceBorrowed swept oid) oid gs
       -- CR 601.2b / 602.2b: a route announcing its own X (Wizard's Rockets)
       -- is priced at every X up to D * 2^(m - 1), where D is what the cost and
       -- every other mana-eating group demand at most and m how many such

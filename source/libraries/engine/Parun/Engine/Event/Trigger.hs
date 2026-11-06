@@ -196,6 +196,351 @@ battlefieldCandidates gs =
             (Set.toAscList (GameState.battlefield gs))
         )
 
+-- CR 702.70a: a keyword can BE a triggered ability, so a permanent's
+-- abilities are its printed-and-granted ones plus the ones rule 702 mints
+-- from its keywords. Derived from POST-LAYER counts, so Humility takes them
+-- away and a layer-6 grant adds them without special-casing. Shared by both
+-- candidate sources, so a live and a last-known permanent read alike.
+-- CR 310.12b's Siege ability is minted off the same finished projection, rule
+-- 310 giving it and no card printing it; Battle.triggeredAbilitiesOf reads
+-- PC.lostAllAbilities, so Humility takes it like the keywords, and the scan
+-- never learns which rule produced any of these.
+--
+-- Through Projection.mintedTriggeredAbilitiesOf, which applies no CR 612 text
+-- change to the words rule 702 writes (CR 702.1). Rule 310.12b's Siege ability is minted without
+-- that function too.
+abilitiesOf :: PC.ProjectedCharacteristics -> [TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
+abilitiesOf pc = PC.triggeredAbilities pc <> Projection.mintedTriggeredAbilitiesOf pc <> Battle.triggeredAbilitiesOf pc
+
+-- CR 113.6m's "functions ONLY in that zone", asked of a permanent read AS
+-- BEING ON THE BATTLEFIELD: a Squee, Goblin Nabob standing there does not
+-- see its own upkeep, because the ability that watches for it functions in
+-- the graveyard. The mirror of the filter
+-- Parun.Engine.Activatable.abilitiesForGiven puts on its battlefield arm.
+--
+-- Applied to every reading that says "this permanent was on the
+-- battlefield": the live `onBattlefield` set, eventTriggersGiven's two
+-- group-scoped unions (`laterGroups` and `sameGroup`), which recover a permanent that WAS
+-- on the battlefield at this event and has left by the CR 117.5 boundary,
+-- and `leftBattlefield` -- CR 603.10a's look-back at the permanent THIS
+-- event removed. Last known information (CR 608.2h) is how a departed
+-- permanent is read, not a statement about which zone it is being read IN,
+-- so the zone CR 113.6m compares against is the battlefield either way.
+--
+-- Safe for `leftBattlefield` because `zonesFunctionedIn`'s
+-- `conditionPutsSelfInto` reads the rule's own exception: a dies trigger
+-- whose effect names the graveyard it just died into is exempted back to
+-- the battlefield default, the same way `enchantedObjectLeaves` exempts an
+-- Aura's own death trigger. Endless Cockroaches ("when this creature dies,
+-- return it to its owner's hand") is the shape the rule means, though its
+-- own payload never reaches the exception today: its effect states no
+-- ORIGIN, which is the zone CR 113.6m pins to, so
+-- Parun.Engine.EffectZone.zonesFunctionedFrom already names no zone for it
+-- (Parun.ZoneTriggerSpec's `becameSlotSpec` proves the trigger fires either
+-- way). Ivory Gargoyle's delayed-trigger pair (CR 113.6m's final
+-- sentence, #2500) is what reaches the exception instead, its delayed
+-- payload stating the graveyard it moves the card out of:
+-- `Parun.LeavesTriggerSpec.ivoryGargoyleSpec` proves a mutation dropping the
+-- exception empties this event's own candidate list.
+--
+-- The delayed map is the projection's too (CR 707.2), so a copy reads the
+-- text it copied. A granted ability's arm carries its delayed ability
+-- (Parun.AbilitySlotLintSpec's quoted-arm lint) and EffectZone reads it off
+-- the arm, so the host's map never has to hold the grantor's text.
+-- Parun.Engine.Activatable.abilitiesForGiven carries the same pairing and
+-- the same note.
+battlefieldAbilitiesOf :: PC.ProjectedCharacteristics -> [(TriggerCondition, TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))]
+battlefieldAbilitiesOf pc = Maybe.mapMaybe (functionsIn (PC.subtypes pc) (PC.delayedAbilities pc) Zone.Battlefield) (abilitiesOf pc)
+
+-- CR 603.10's first sentence, per EVENT GROUP: the permanents that existed
+-- immediately after the event, with the abilities and the CR 603.3a
+-- controller each of them had THEN. The three readings the live board gets
+-- wrong are the three this recovers, and each has a board that tells them
+-- apart: a permanent that entered later in the batch was not there to be
+-- checked against an earlier event, one whose abilities were stripped after
+-- the event still triggered on it (Parun.TriggerSpec's "abilities as of the
+-- event"), and one whose layer-2 controller changed after it (CR 514.2's
+-- "until end of turn" ending between CR 514.1's discard and CR 514.3a's
+-- placement) triggered under the old one.
+--
+-- Out of the record and into the pair the rest of the scan's unions use.
+-- Only the STORED shape is named (#126); eventTriggersGiven's `candidates`
+-- unions this with sibling maps that are computed there and never serialized.
+--
+-- `battlefieldAt` is the sample, and its fallback to the LIVE board is the
+-- honest reading for an event this module never recorded: a fixture that
+-- appends to the log directly has no sampled board, and the game as it
+-- stands is the only one there is. Lazy, so a scan whose every group is
+-- sampled never projects it.
+onBattlefieldOf :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> Map.Map ObjectId (PlayerId, [(TriggerCondition, TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))])
+onBattlefieldOf =
+  Map.map
+    (\candidate -> (BattlefieldCandidate.controller candidate, battlefieldAbilitiesOf (BattlefieldCandidate.characteristics candidate)))
+
+-- The trigger sources an event scan reads off the game as it stands rather
+-- than off an event: the zones CR 113.6 lets a non-permanent's abilities
+-- function in. Each is a function of the board alone, so many scans of one
+-- board share one (Mana.triggeredYields, #6515).
+data Standing = MkStanding
+  { standingGraveyards :: Map.Map ObjectId (PlayerId, [(TriggerCondition, TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))]),
+    standingExile :: Map.Map ObjectId (PlayerId, [(TriggerCondition, TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))]),
+    standingStated :: Map.Map ObjectId (PlayerId, [(TriggerCondition, TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))]),
+    standingCommand :: Map.Map ObjectId (PlayerId, [(TriggerCondition, TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))])
+  }
+
+-- `gs`'s Standing.
+standingOf :: GameState -> Standing
+standingOf gs =
+  let -- CR 113.6k and CR 113.6m: every card in every graveyard carrying at least
+      -- one ability those rules put there. The one source that widens the SCANNED
+      -- ZONE rather than recovering an object an event names, which is why the
+      -- walk itself happens once outside the event loop; what an individual event
+      -- may see of the answer is eventTriggersGiven's `arrivedLater` subtraction.
+      --
+      -- Narrow by construction, which keeps a large graveyard cheap: membership is
+      -- decided by `functionsIn` over the card's ability face first
+      -- (Projection.abilityFaceOf: the printing with any copy stamp laid over it,
+      -- so a duplicate of a Clone of Bloodghast passes) -- a total case over a
+      -- closed condition type and a walk of the ability's own effects, no
+      -- projection and no board walk -- and only a card passing it, or any card
+      -- while a grant of a keyword minting one is in force
+      -- (`graveyardGrantInForce`), is projected.
+      -- Cards contributing nothing are dropped rather than carried as empty
+      -- entries.
+      --
+      -- The abilities offered are the PROJECTION's (CR 613.1 names no zone), so
+      -- Yixlid Jailer's "cards in graveyards lose all abilities" silences them --
+      -- Parun.ZoneTriggerSpec's "CR 613.1f Yixlid Jailer keeps a milled Narcomoeba
+      -- from triggering" proves it. A card whose ability face has no such
+      -- ability is projected only while a keyword grant or a triggered-ability
+      -- grant is in force (`graveyardGrantInForce`), which is how Kami of
+      -- Mourning's perpetual grant is seen -- Parun.ZoneTriggerSpec's "CR 113.6m a
+      -- Kami of Mourning grant returns the card when a greater creature dies".
+      -- The controller is the OWNER, CR 113.8's second clause: a card in a
+      -- graveyard has no controller (CR 108.4).
+      --
+      -- CR 603.10a does not apply to what this serves -- a card ENTERING a
+      -- graveyard is on none of its look-back list -- so CR 603.10's normal first
+      -- sentence governs: an event is checked against the objects that existed
+      -- immediately after IT, not against the board at the end of the batch. This
+      -- read is the whole graveyard as it stands, so eventTriggersGiven's
+      -- `arrivedLater` narrows it per event group. A card that has left the
+      -- graveyard by the boundary is the one this read cannot reach;
+      -- eventTriggersGiven's `leftGraveyard` is its source.
+      --
+      -- Its `_ -> Nothing` arm is what keeps the two disjoint: `Game.lookupObject`
+      -- fails for an id that has ceased, and a ceased id is exactly the one the
+      -- other source answers for.
+      --
+      -- The KEYWORD-MINTED abilities join the printed ones and are NOT filtered by
+      -- `functionsIn`, `exileCandidate`'s split below and for its reason: CR
+      -- 702.59a states the zone itself -- "functions only while the card with
+      -- recover is in a player's graveyard" -- so rule 113.6's default has already
+      -- been overridden by the rule that mints it.
+      -- Parun.Engine.Keyword.graveyardTriggeredAbilitiesOf is what decides which
+      -- keywords reach this: recover, and CR 702.55a's haunt on an instant or
+      -- sorcery -- which is why it is handed the face's card TYPES as well.
+      graveyardCandidate oid = case Game.lookupObject oid gs of
+        Just obj
+          | Just face <- Projection.abilityFaceOf oid obj gs ->
+              let inGraveyard subtypes cardTypes triggered keywords = Maybe.mapMaybe (functionsIn subtypes (Face.delayedAbilities face) Zone.Graveyard) triggered <> fmap whole (Keyword.graveyardTriggeredAbilitiesOf cardTypes keywords)
+               in case inGraveyard (TypeLine.subtypes (Face.typeLine face)) (TypeLine.types (Face.typeLine face)) (Face.triggeredAbilities face) (Face.keywordSet face) of
+                    [] | not graveyardGrantInForce -> Nothing
+                    _ ->
+                      let pc = Projection.project oid gs
+                       in case inGraveyard (PC.subtypes pc) (PC.cardTypes pc) (PC.triggeredAbilities pc) (Map.keysSet (PC.keywords pc)) of
+                            [] -> Nothing
+                            abilities -> Just (oid, (Object.owner obj, abilities))
+        _ -> Nothing
+      -- Does anything grant a keyword that mints a graveyard trigger? A thunk,
+      -- `exileGrantInForce`'s twin. Haunt mints only on an instant or sorcery,
+      -- so the roster is asked with both types: a superset.
+      -- A triggered ability granted outright counts too (CR 613.1f), in the same
+      -- walk.
+      graveyardGrantInForce = Projection.mintingOrTriggeredGrantInForce (Keyword.graveyardTriggeredAbilitiesOf Projection.spellStaticTypes) gs
+      inGraveyards =
+        Map.fromList
+          (concatMap (Maybe.mapMaybe graveyardCandidate . Foldable.toList) (Map.elems (GameState.graveyard gs)))
+      -- CR 113.6k's third zone, `inGraveyards` one zone over: every card in exile
+      -- carrying an ability that functions from there. Rule 702.55c is the
+      -- sentence it exists for -- "triggered abilities of cards with haunt that
+      -- refer to the haunted creature can trigger in the exile zone" -- and CR
+      -- 113.6k's own example is the card that bears one.
+      --
+      -- FILTERED BY `functionsIn`, unlike the command zone's source: there the rule
+      -- at issue is CR 113.6p, which is about the OBJECT, and every emblem or
+      -- vanguard ability would fail a condition test; here the rule at issue IS CR
+      -- 113.6k, so the filter is the gate itself. Without it an exiled Doomed
+      -- Traveler would be offered its dies trigger, and an exiled Desolation Twin
+      -- its cast trigger, from a zone CR 113.6 says neither functions in.
+      --
+      -- ONE STANDING SCAN over the whole zone, computed outside the event loop for
+      -- `inGraveyards`' reason: a haunting card sits in exile indefinitely and no
+      -- event names it, so nothing narrower could find it.
+      --
+      -- Abilities come from the PROJECTION (CR 613.1 names no zone), so Delay's
+      -- "it gains suspend" mints suspend's two triggered abilities on the card it
+      -- exiled -- Parun.SpecialActionSpec's "CR 702.62a Delay" group proves it.
+      -- Gated so the scan does not project every exiled card: a card is
+      -- projected only when its ability face (Projection.abilityFaceOf) yields
+      -- such an ability, some grantor writes a keyword that mints one,
+      -- or some grantor hands out a triggered ability (`exileGrantInForce`).
+      --
+      -- The controller is the OWNER (CR 108.4a), for `inGraveyards`' reason: CR
+      -- 108.4 gives a card in exile no controller at all, so Blind Hunter's "you
+      -- gain 2 life" pays the player who owns the haunting card.
+      -- A card exiled FACE DOWN is skipped: CR 406.3a leaves it no
+      -- characteristics, so it bears no ability to function from anywhere. The
+      -- sibling gates are Parun.Engine.Projection's, which drop the same card's
+      -- static abilities and replacement rows. A REGRESSION FENCE rather than a
+      -- proof: no card in data/cards both reaches exile face down and prints a
+      -- triggered ability that functions there -- parun's face-down exilers are
+      -- foretell (CR 702.143a), Ignorant Bliss and Extract Power -- so removing
+      -- this guard leaves the suite green.
+      --
+      -- The KEYWORD-MINTED abilities join the printed ones and are NOT filtered
+      -- by `functionsIn`, which is the whole difference between the two halves
+      -- of this list: CR 702.62a states the zone itself -- "the second and third
+      -- are triggered abilities that FUNCTION IN THE EXILE ZONE" -- so rule
+      -- 113.6's default has already been overridden by the rule that mints them,
+      -- and asking again would only re-derive it from a condition (an upkeep)
+      -- that says nothing about exile. Parun.Engine.Keyword.exileTriggeredAbilitiesOf
+      -- is what decides which keywords reach this: suspend. CR 702.35a's
+      -- madness trigger is `exiledForMadness`'s, off the discard event.
+      exileCandidate oid = case Game.lookupObject oid gs of
+        Just obj
+          | not (Object.exiledFaceDown obj),
+            Just face <- Projection.abilityFaceOf oid obj gs ->
+              let inExileZone subtypes triggered keywords = Maybe.mapMaybe (functionsIn subtypes (Face.delayedAbilities face) Zone.Exile) triggered <> fmap whole (Keyword.exileTriggeredAbilitiesOf keywords)
+                  onFace = inExileZone (TypeLine.subtypes (Face.typeLine face)) (Face.triggeredAbilities face) (Face.keywordSet face)
+               in if null onFace && not exileGrantInForce
+                    then Nothing
+                    else
+                      let pc = Projection.project oid gs
+                       in case inExileZone (PC.subtypes pc) (PC.triggeredAbilities pc) (Map.keysSet (PC.keywords pc)) of
+                            [] -> Nothing
+                            abilities -> Just (oid, (Object.owner obj, abilities))
+        _ -> Nothing
+      -- Does anything grant a keyword that mints an exile trigger, or a triggered
+      -- ability outright? A thunk:
+      -- only an exiled card whose ability face yields none forces it.
+      exileGrantInForce = Projection.mintingOrTriggeredGrantInForce Keyword.exileTriggeredAbilitiesOf gs
+      inExile = Map.fromList (Maybe.mapMaybe exileCandidate (Set.toAscList (GameState.exile gs)))
+      -- CR 113.6b's zones that no source above stands in: a card in a hand, a
+      -- library, the ante zone or the command zone, or a spell on the stack,
+      -- whose triggered ability STATES that it functions there (Summitfest
+      -- Closing Ceremony's covercast). The battlefield, graveyard and exile
+      -- sources need nothing new, since `functionsIn` answers the stated set.
+      --
+      -- ONE STANDING SCAN, `inExile`'s shape and for its reason: the card sits
+      -- in its zone indefinitely and the event it watches names somebody else.
+      -- Gated so the scan does not build a face for every card in every
+      -- library (#1935's cost): Projection.mayStateZone's fold over the printed
+      -- faces first, and a card is projected only when its ability face states
+      -- the zone it is in, or some grantor hands out a triggered ability that
+      -- states a zone (`statedGrantInForce`). That grant limb is a REGRESSION
+      -- FENCE rather than a proof: no card in data/cards grants a triggered
+      -- ability that states its zones, so dropping it leaves the suite green.
+      --
+      -- The command zone's emblems, vanguards and planes are `inCommand`'s
+      -- (CR 113.6p), so they are left out here and the two stay disjoint. A
+      -- spell the event cast is `spellCast`'s too, and a revealed miracle
+      -- `revealedInHand`'s; eventTriggersGiven's `candidates` lists both ahead
+      -- of this, so the left bias hands that id their keyword-minted superset.
+      --
+      -- The controller is the OWNER off the stack (CR 113.8's second clause:
+      -- CR 108.4 gives such a card no controller) and the spell's controller on
+      -- it (CR 113.8's first).
+      --
+      -- Not implemented: Arena keeps a covercast trigger from a hidden zone
+      -- hidden from opponents; here it is put on the stack in the open (#6391).
+      statesHere zone = any (Set.member zone . TriggeredAbility.functionsFrom) . Face.triggeredAbilities
+      statedCandidate zone oid = case Game.lookupObject oid gs of
+        Just obj
+          | statedGrantInForce || Projection.mayStateZone (statesHere zone) gs obj,
+            Just face <- Projection.abilityFaceOf oid obj gs,
+            statedGrantInForce || statesHere zone face,
+            not (zone == Zone.Command && Vanguard.functionsFromCommandZone oid gs) ->
+              let pc = Projection.project oid gs
+                  controller = if zone == Zone.Stack then Maybe.fromMaybe (Object.owner obj) (Projection.controllerOf oid gs) else Object.owner obj
+               in case Maybe.mapMaybe (functionsIn (PC.subtypes pc) (PC.delayedAbilities pc) zone) (PC.triggeredAbilities pc) of
+                    [] -> Nothing
+                    abilities -> Just (oid, (controller, abilities))
+        _ -> Nothing
+      statedGrantInForce =
+        Projection.grantInForce
+          ( \m -> case m of
+              Modification.GainAbility (GrantedAbility.Triggered ability) -> not (Set.null (TriggeredAbility.functionsFrom ability))
+              _ -> False
+          )
+          gs
+      inStatedZones =
+        Map.fromList
+          ( Projection.foldZoneCards GameState.hand (Maybe.maybeToList . statedCandidate Zone.Hand) gs
+              <> Projection.foldZoneCards GameState.library (Maybe.maybeToList . statedCandidate Zone.Library) gs
+              <> Maybe.mapMaybe (statedCandidate Zone.Stack) (GameState.stack gs)
+              <> Maybe.mapMaybe (statedCandidate Zone.Command) (Set.toAscList (GameState.command gs))
+              <> Maybe.mapMaybe (statedCandidate Zone.Ante) (Set.toAscList (GameState.ante gs))
+          )
+      -- CR 114.4 / CR 113.6p: "abilities of emblems function in the command zone".
+      -- The third source that widens the SCANNED ZONE rather than recovering an
+      -- object an event names, so it is computed once outside the event loop as
+      -- `onBattlefield` and `inGraveyards` are.
+      --
+      -- NOT filtered through `functionsIn`, where `inGraveyards` is. CR 113.6k
+      -- decides one CONDITION at a time and answers for the ability's usual zone;
+      -- CR 114.4 is about the OBJECT, and says every ability of this one functions
+      -- here. Filtering would drop them all: an emblem's "at the beginning of your
+      -- upkeep" is a condition that triggers perfectly well from the battlefield,
+      -- so CR 113.6's default sends it there and the emblem would never be asked.
+      --
+      -- EMBLEMS AND VANGUARDS, where a graveyard walk takes the whole zone, for
+      -- the reason Parun.Engine.CombatRestriction.inForce narrows the same walk:
+      -- the command zone also holds a commander and a dungeon card, whose
+      -- abilities CR 113.6 leaves functioning on the battlefield and CR 309.4c
+      -- mints rather than prints. Vanguard.functionsFromCommandZone is that list
+      -- (CR 113.6p), read the same way by all four walks over this zone, and
+      -- reading the rulebook's own list is not casing on an effect's identity. CR
+      -- 313.4 / CR 902.7 put the vanguard card on it in the same words -- "its
+      -- triggered abilities may trigger" -- so it takes the same unfiltered walk
+      -- and for the same reason.
+      --
+      -- The controller is the OWNER: CR 114.2 makes an emblem both owned and
+      -- controlled by the player it was created for, and createEmblem leaves
+      -- Object.enteredUnder empty so Projection.defaultControllerOf answers the
+      -- same. CR 603.3a's control sample is not consulted, and cannot disagree:
+      -- CR 110.2 gives a PERMANENT a controller, and CR 114.5 says an emblem is
+      -- not one, so no layer-2 effect (CR 613.1b) has an emblem to move.
+      --
+      -- Abilities come from the emblem's own card, which is the whole of it (CR
+      -- 114.3) -- no projection is involved, which is the posture
+      -- Projection.gatherGiven's emblem walk takes for its static half: an emblem
+      -- is not a creature, so the pool's CR 613.1f removers never reach it.
+      -- CR 902.6 gives the vanguard card the same owner-is-controller answer CR
+      -- 114.2 gives an emblem, so the two share this line as well: rule 902.6's
+      -- "the controller of a face-up vanguard card is its owner". A face-up
+      -- plane card's is the planar controller instead (CR 901.6), which
+      -- Plane.commandControllerOf answers.
+      commandCandidate oid = case Game.lookupObject oid gs of
+        Nothing -> Nothing
+        Just obj ->
+          if not (Vanguard.functionsFromCommandZone oid gs)
+            then Nothing
+            else case Projection.abilityFaceOf oid obj gs of
+              Nothing -> Nothing
+              Just face -> case Face.triggeredAbilities face of
+                [] -> Nothing
+                abilities -> Just (oid, (Plane.commandControllerOf oid obj gs, fmap whole abilities))
+      inCommand =
+        Map.fromList
+          (Maybe.mapMaybe commandCandidate (Set.toAscList (GameState.command gs)))
+   in MkStanding
+        { standingGraveyards = inGraveyards,
+          standingExile = inExile,
+          standingStated = inStatedZones,
+          standingCommand = inCommand
+        }
+
 -- CR 603.10, FIRST sentence: the battlefield as it stood immediately after the
 -- event `group` names, which is the board that rule checks a trigger condition
 -- against. `recordEvent` files one sample per group; the live board answers for a
@@ -556,7 +901,7 @@ looksBack condition = case condition of
   TriggerCondition.PlayerRollsPlaneswalker _ -> False
   TriggerCondition.SelfTurnedUpOffDeck -> False
   -- CR 603.10g: on the rule's list of exceptions, though no zone change of a
-  -- permanent. eventTriggers' `walkedAwayFrom` is the source it decides for.
+  -- permanent. eventTriggersGiven's `walkedAwayFrom` is the source it decides for.
   TriggerCondition.SelfPlaneswalkedAwayFrom -> True
   TriggerCondition.FlipsCoin _ -> False
   -- CR 603.10a's list does not reach an attachment either. CR 701.3a moves a
@@ -1080,82 +1425,21 @@ counterOccurrences matches cond event = case cond of
 -- matching event gave it, where appending the batch's triggers to the block would
 -- have moved them.
 eventTriggers :: [LoggedEvent.LoggedEvent] -> GameState -> [PendingTrigger]
-eventTriggers events gs =
-  let -- CR 702.70a: a keyword can BE a triggered ability, so a permanent's
-      -- abilities are its printed-and-granted ones plus the ones rule 702 mints
-      -- from its keywords. Derived from POST-LAYER counts, so Humility takes them
-      -- away and a layer-6 grant adds them without special-casing. Shared by both
-      -- candidate sources, so a live and a last-known permanent read alike.
-      -- CR 310.12b's Siege ability is minted off the same finished projection, rule
-      -- 310 giving it and no card printing it; Battle.triggeredAbilitiesOf reads
-      -- PC.lostAllAbilities, so Humility takes it like the keywords, and the scan
-      -- below never learns which rule produced any of these.
-      --
-      -- Through Projection.mintedTriggeredAbilitiesOf, which applies no CR 612 text
-      -- change to the words rule 702 writes (CR 702.1). Rule 310.12b's Siege ability is minted without
-      -- that function too.
-      abilitiesOf pc = PC.triggeredAbilities pc <> Projection.mintedTriggeredAbilitiesOf pc <> Battle.triggeredAbilitiesOf pc
-      -- CR 113.6m's "functions ONLY in that zone", asked of a permanent read AS
-      -- BEING ON THE BATTLEFIELD: a Squee, Goblin Nabob standing there does not
-      -- see its own upkeep, because the ability that watches for it functions in
-      -- the graveyard. The mirror of the filter
-      -- Parun.Engine.Activatable.abilitiesForGiven puts on its battlefield arm.
-      --
-      -- Applied to every reading that says "this permanent was on the
-      -- battlefield": the live `onBattlefield` set, the two group-scoped unions
-      -- below (`laterGroups` and `sameGroup`), which recover a permanent that WAS
-      -- on the battlefield at this event and has left by the CR 117.5 boundary,
-      -- and `leftBattlefield` -- CR 603.10a's look-back at the permanent THIS
-      -- event removed. Last known information (CR 608.2h) is how a departed
-      -- permanent is read, not a statement about which zone it is being read IN,
-      -- so the zone CR 113.6m compares against is the battlefield either way.
-      --
-      -- Safe for `leftBattlefield` because `zonesFunctionedIn`'s
-      -- `conditionPutsSelfInto` reads the rule's own exception: a dies trigger
-      -- whose effect names the graveyard it just died into is exempted back to
-      -- the battlefield default, the same way `enchantedObjectLeaves` exempts an
-      -- Aura's own death trigger. Endless Cockroaches ("when this creature dies,
-      -- return it to its owner's hand") is the shape the rule means, though its
-      -- own payload never reaches the exception today: its effect states no
-      -- ORIGIN, which is the zone CR 113.6m pins to, so
-      -- Parun.Engine.EffectZone.zonesFunctionedFrom already names no zone for it
-      -- (Parun.ZoneTriggerSpec's `becameSlotSpec` proves the trigger fires either
-      -- way). Ivory Gargoyle's delayed-trigger pair (CR 113.6m's final
-      -- sentence, #2500) is what reaches the exception instead, its delayed
-      -- payload stating the graveyard it moves the card out of:
-      -- `Parun.LeavesTriggerSpec.ivoryGargoyleSpec` proves a mutation dropping the
-      -- exception empties this event's own candidate list.
-      --
-      -- The delayed map is the projection's too (CR 707.2), so a copy reads the
-      -- text it copied. A granted ability's arm carries its delayed ability
-      -- (Parun.AbilitySlotLintSpec's quoted-arm lint) and EffectZone reads it off
-      -- the arm, so the host's map never has to hold the grantor's text.
-      -- Parun.Engine.Activatable.abilitiesForGiven carries the same pairing and
-      -- the same note.
-      battlefieldAbilitiesOf _ pc = Maybe.mapMaybe (functionsIn (PC.subtypes pc) (PC.delayedAbilities pc) Zone.Battlefield) (abilitiesOf pc)
-      -- CR 603.10's first sentence, per EVENT GROUP: the permanents that existed
-      -- immediately after the event, with the abilities and the CR 603.3a
-      -- controller each of them had THEN. The three readings the live board gets
-      -- wrong are the three this recovers, and each has a board that tells them
-      -- apart: a permanent that entered later in the batch was not there to be
-      -- checked against an earlier event, one whose abilities were stripped after
-      -- the event still triggered on it (Parun.TriggerSpec's "abilities as of the
-      -- event"), and one whose layer-2 controller changed after it (CR 514.2's
-      -- "until end of turn" ending between CR 514.1's discard and CR 514.3a's
-      -- placement) triggered under the old one.
-      --
-      -- Out of the record and into the pair the rest of the scan's unions use.
-      -- Only the STORED shape is named (#126); `candidates` below unions this
-      -- with six sibling maps that are computed here and never serialized.
-      --
-      -- `battlefieldAt` is the sample, and its fallback to the LIVE board is the
-      -- honest reading for an event this module never recorded: a fixture that
-      -- appends to the log directly has no sampled board, and the game as it
-      -- stands is the only one there is. Lazy, so a scan whose every group is
-      -- sampled never projects it.
-      onBattlefieldOf =
-        Map.mapWithKey
-          (\oid candidate -> (BattlefieldCandidate.controller candidate, battlefieldAbilitiesOf oid (BattlefieldCandidate.characteristics candidate)))
+eventTriggers events gs = eventTriggersGiven Nothing (standingOf gs) events gs
+
+-- `eventTriggers` over a `standing` taken once for many scans of one board,
+-- and offering only the trigger sources in `scope` (every one for Nothing):
+-- its answer is the whole scan's, less the triggers of sources outside it.
+-- `standing` MUST be `gs`'s own up to its log, Mana.triggeredYields' reason.
+eventTriggersGiven :: Maybe (Set.Set ObjectId) -> Standing -> [LoggedEvent.LoggedEvent] -> GameState -> [PendingTrigger]
+eventTriggersGiven scope standing events gs =
+  let -- The scope, applied to every source alike, so the triggers it leaves
+      -- are exactly the whole scan's triggers from objects in it.
+      restrict m = maybe m (Map.restrictKeys m) scope
+      inGraveyards = restrict (standingGraveyards standing)
+      inExile = restrict (standingExile standing)
+      inStatedZones = restrict (standingStated standing)
+      inCommand = restrict (standingCommand standing)
       -- The permanent this event took OFF the battlefield, read from
       -- CR 608.2h last known information -- both the abilities and the objects'
       -- appearance immediately prior to the event, which is what CR 603.10 says
@@ -1216,10 +1500,10 @@ eventTriggers events gs =
             lookingBack = filter (looksBack . fst)
          in case LoggedEvent.event logged of
               GameEvent.ControlChanged (ControlChanged.MkControlChanged oid before _) ->
-                let abilities = maybe (foldMap snd (Map.lookup oid onBattlefield)) (battlefieldAbilitiesOf oid . Projection.project oid) (filed oid)
+                let abilities = maybe (foldMap snd (Map.lookup oid onBattlefield)) (battlefieldAbilitiesOf . Projection.project oid) (filed oid)
                  in Map.singleton oid (before, lookingBack abilities)
               GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.PhaseOut oid) -> case filed oid of
-                Just board | Just controller <- Projection.controllerOf oid board -> Map.singleton oid (controller, lookingBack (battlefieldAbilitiesOf oid (Projection.project oid board)))
+                Just board | Just controller <- Projection.controllerOf oid board -> Map.singleton oid (controller, lookingBack (battlefieldAbilitiesOf (Projection.project oid board)))
                 _ -> Map.empty
               _ -> Map.empty
       leftBattlefield event = case event of
@@ -1230,7 +1514,7 @@ eventTriggers events gs =
                 Just lk ->
                   Map.singleton
                     (ZoneChange.departed zc)
-                    (LastKnown.controller lk, battlefieldAbilitiesOf (ZoneChange.departed zc) (LastKnown.characteristics lk))
+                    (LastKnown.controller lk, battlefieldAbilitiesOf (LastKnown.characteristics lk))
         -- CR 800.4a's removal, recovered the same way and from the same record:
         -- the permanent is not on the battlefield at the CR 117.5 boundary
         -- because it is not in the game at all, so last known information is the
@@ -1244,7 +1528,7 @@ eventTriggers events gs =
         GameEvent.LeftTheGame (LeftTheGame.MkLeftTheGame oid from)
           | from == Zone.Battlefield -> case Map.lookup oid (GameState.lastKnown gs) of
               Nothing -> Map.empty
-              Just lk -> Map.singleton oid (LastKnown.controller lk, battlefieldAbilitiesOf oid (LastKnown.characteristics lk))
+              Just lk -> Map.singleton oid (LastKnown.controller lk, battlefieldAbilitiesOf (LastKnown.characteristics lk))
           | otherwise -> Map.empty
         GameEvent.Milled {} -> Map.empty
         GameEvent.ArrivedUnseen _ -> Map.empty
@@ -1654,75 +1938,6 @@ eventTriggers events gs =
         GameEvent.ActivatedAbilityResolved _ -> Map.empty
         GameEvent.TriggeredAbilityResolved _ -> Map.empty
         GameEvent.CardArrived _ -> Map.empty
-      -- CR 113.6k and CR 113.6m: every card in every graveyard carrying at least
-      -- one ability those rules put there. The one source that widens the SCANNED
-      -- ZONE rather than recovering an object an event names, which is why the
-      -- walk itself happens once outside the event loop; what an individual event
-      -- may see of the answer is `arrivedLater`'s subtraction below.
-      --
-      -- Narrow by construction, which keeps a large graveyard cheap: membership is
-      -- decided by `functionsIn` over the card's ability face first
-      -- (Projection.abilityFaceOf: the printing with any copy stamp laid over it,
-      -- so a duplicate of a Clone of Bloodghast passes) -- a total case over a
-      -- closed condition type and a walk of the ability's own effects, no
-      -- projection and no board walk -- and only a card passing it, or any card
-      -- while a grant of a keyword minting one is in force
-      -- (`graveyardGrantInForce`), is projected.
-      -- Cards contributing nothing are dropped rather than carried as empty
-      -- entries.
-      --
-      -- The abilities offered are the PROJECTION's (CR 613.1 names no zone), so
-      -- Yixlid Jailer's "cards in graveyards lose all abilities" silences them --
-      -- Parun.ZoneTriggerSpec's "CR 613.1f Yixlid Jailer keeps a milled Narcomoeba
-      -- from triggering" proves it. A card whose ability face has no such
-      -- ability is projected only while a keyword grant or a triggered-ability
-      -- grant is in force (`graveyardGrantInForce`), which is how Kami of
-      -- Mourning's perpetual grant is seen -- Parun.ZoneTriggerSpec's "CR 113.6m a
-      -- Kami of Mourning grant returns the card when a greater creature dies".
-      -- The controller is the OWNER, CR 113.8's second clause: a card in a
-      -- graveyard has no controller (CR 108.4).
-      --
-      -- CR 603.10a does not apply to what this serves -- a card ENTERING a
-      -- graveyard is on none of its look-back list -- so CR 603.10's normal first
-      -- sentence governs: an event is checked against the objects that existed
-      -- immediately after IT, not against the board at the end of the batch. This
-      -- read is the whole graveyard as it stands, so `arrivedLater` below narrows
-      -- it per event group. A card that has left the graveyard by the boundary is
-      -- the one this read cannot reach; `leftGraveyard` below is its source.
-      --
-      -- Its `_ -> Nothing` arm is what keeps the two disjoint: `Game.lookupObject`
-      -- fails for an id that has ceased, and a ceased id is exactly the one the
-      -- other source answers for.
-      --
-      -- The KEYWORD-MINTED abilities join the printed ones and are NOT filtered by
-      -- `functionsIn`, `exileCandidate`'s split below and for its reason: CR
-      -- 702.59a states the zone itself -- "functions only while the card with
-      -- recover is in a player's graveyard" -- so rule 113.6's default has already
-      -- been overridden by the rule that mints it.
-      -- Parun.Engine.Keyword.graveyardTriggeredAbilitiesOf is what decides which
-      -- keywords reach this: recover, and CR 702.55a's haunt on an instant or
-      -- sorcery -- which is why it is handed the face's card TYPES as well.
-      graveyardCandidate oid = case Game.lookupObject oid gs of
-        Just obj
-          | Just face <- Projection.abilityFaceOf oid obj gs ->
-              let inGraveyard subtypes cardTypes triggered keywords = Maybe.mapMaybe (functionsIn subtypes (Face.delayedAbilities face) Zone.Graveyard) triggered <> fmap whole (Keyword.graveyardTriggeredAbilitiesOf cardTypes keywords)
-               in case inGraveyard (TypeLine.subtypes (Face.typeLine face)) (TypeLine.types (Face.typeLine face)) (Face.triggeredAbilities face) (Face.keywordSet face) of
-                    [] | not graveyardGrantInForce -> Nothing
-                    _ ->
-                      let pc = Projection.project oid gs
-                       in case inGraveyard (PC.subtypes pc) (PC.cardTypes pc) (PC.triggeredAbilities pc) (Map.keysSet (PC.keywords pc)) of
-                            [] -> Nothing
-                            abilities -> Just (oid, (Object.owner obj, abilities))
-        _ -> Nothing
-      -- Does anything grant a keyword that mints a graveyard trigger? A thunk,
-      -- `exileGrantInForce`'s twin. Haunt mints only on an instant or sorcery,
-      -- so the roster is asked with both types: a superset.
-      -- A triggered ability granted outright counts too (CR 613.1f), in the same
-      -- walk.
-      graveyardGrantInForce = Projection.mintingOrTriggeredGrantInForce (Keyword.graveyardTriggeredAbilitiesOf Projection.spellStaticTypes) gs
-      inGraveyards =
-        Map.fromList
-          (concatMap (Maybe.mapMaybe graveyardCandidate . Foldable.toList) (Map.elems (GameState.graveyard gs)))
       -- A card this event took OUT of a graveyard, recovered from CR 608.2h last
       -- known information: the graveyard twin of `leftBattlefield`, and what
       -- `leftGraveyardLater` above offers to the batch's earlier events. Corpse
@@ -1782,127 +1997,6 @@ eventTriggers events gs =
                     [] -> Map.empty
                     abilities -> Map.singleton (ZoneChange.departed zc) (LastKnown.controller lk, abilities)
         _ -> Map.empty
-      -- CR 113.6k's third zone, `inGraveyards` one zone over: every card in exile
-      -- carrying an ability that functions from there. Rule 702.55c is the
-      -- sentence it exists for -- "triggered abilities of cards with haunt that
-      -- refer to the haunted creature can trigger in the exile zone" -- and CR
-      -- 113.6k's own example is the card that bears one.
-      --
-      -- FILTERED BY `functionsIn`, unlike the command zone's source: there the rule
-      -- at issue is CR 113.6p, which is about the OBJECT, and every emblem or
-      -- vanguard ability would fail a condition test; here the rule at issue IS CR
-      -- 113.6k, so the filter is the gate itself. Without it an exiled Doomed
-      -- Traveler would be offered its dies trigger, and an exiled Desolation Twin
-      -- its cast trigger, from a zone CR 113.6 says neither functions in.
-      --
-      -- ONE STANDING SCAN over the whole zone, computed outside the event loop for
-      -- `inGraveyards`' reason: a haunting card sits in exile indefinitely and no
-      -- event names it, so nothing narrower could find it.
-      --
-      -- Abilities come from the PROJECTION (CR 613.1 names no zone), so Delay's
-      -- "it gains suspend" mints suspend's two triggered abilities on the card it
-      -- exiled -- Parun.SpecialActionSpec's "CR 702.62a Delay" group proves it.
-      -- Gated so the scan does not project every exiled card: a card is
-      -- projected only when its ability face (Projection.abilityFaceOf) yields
-      -- such an ability, some grantor writes a keyword that mints one,
-      -- or some grantor hands out a triggered ability (`exileGrantInForce`).
-      --
-      -- The controller is the OWNER (CR 108.4a), for `inGraveyards`' reason: CR
-      -- 108.4 gives a card in exile no controller at all, so Blind Hunter's "you
-      -- gain 2 life" pays the player who owns the haunting card.
-      -- A card exiled FACE DOWN is skipped: CR 406.3a leaves it no
-      -- characteristics, so it bears no ability to function from anywhere. The
-      -- sibling gates are Parun.Engine.Projection's, which drop the same card's
-      -- static abilities and replacement rows. A REGRESSION FENCE rather than a
-      -- proof: no card in data/cards both reaches exile face down and prints a
-      -- triggered ability that functions there -- parun's face-down exilers are
-      -- foretell (CR 702.143a), Ignorant Bliss and Extract Power -- so removing
-      -- this guard leaves the suite green.
-      --
-      -- The KEYWORD-MINTED abilities join the printed ones and are NOT filtered
-      -- by `functionsIn`, which is the whole difference between the two halves
-      -- of this list: CR 702.62a states the zone itself -- "the second and third
-      -- are triggered abilities that FUNCTION IN THE EXILE ZONE" -- so rule
-      -- 113.6's default has already been overridden by the rule that mints them,
-      -- and asking again would only re-derive it from a condition (an upkeep)
-      -- that says nothing about exile. Parun.Engine.Keyword.exileTriggeredAbilitiesOf
-      -- is what decides which keywords reach this: suspend. CR 702.35a's
-      -- madness trigger is `exiledForMadness`'s, off the discard event.
-      exileCandidate oid = case Game.lookupObject oid gs of
-        Just obj
-          | not (Object.exiledFaceDown obj),
-            Just face <- Projection.abilityFaceOf oid obj gs ->
-              let inExileZone subtypes triggered keywords = Maybe.mapMaybe (functionsIn subtypes (Face.delayedAbilities face) Zone.Exile) triggered <> fmap whole (Keyword.exileTriggeredAbilitiesOf keywords)
-                  onFace = inExileZone (TypeLine.subtypes (Face.typeLine face)) (Face.triggeredAbilities face) (Face.keywordSet face)
-               in if null onFace && not exileGrantInForce
-                    then Nothing
-                    else
-                      let pc = Projection.project oid gs
-                       in case inExileZone (PC.subtypes pc) (PC.triggeredAbilities pc) (Map.keysSet (PC.keywords pc)) of
-                            [] -> Nothing
-                            abilities -> Just (oid, (Object.owner obj, abilities))
-        _ -> Nothing
-      -- Does anything grant a keyword that mints an exile trigger, or a triggered
-      -- ability outright? A thunk:
-      -- only an exiled card whose ability face yields none forces it.
-      exileGrantInForce = Projection.mintingOrTriggeredGrantInForce Keyword.exileTriggeredAbilitiesOf gs
-      inExile = Map.fromList (Maybe.mapMaybe exileCandidate (Set.toAscList (GameState.exile gs)))
-      -- CR 113.6b's zones that no source above stands in: a card in a hand, a
-      -- library, the ante zone or the command zone, or a spell on the stack,
-      -- whose triggered ability STATES that it functions there (Summitfest
-      -- Closing Ceremony's covercast). The battlefield, graveyard and exile
-      -- sources need nothing new, since `functionsIn` answers the stated set.
-      --
-      -- ONE STANDING SCAN, `inExile`'s shape and for its reason: the card sits
-      -- in its zone indefinitely and the event it watches names somebody else.
-      -- Gated so the scan does not build a face for every card in every
-      -- library (#1935's cost): Projection.mayStateZone's fold over the printed
-      -- faces first, and a card is projected only when its ability face states
-      -- the zone it is in, or some grantor hands out a triggered ability that
-      -- states a zone (`statedGrantInForce`). That grant limb is a REGRESSION
-      -- FENCE rather than a proof: no card in data/cards grants a triggered
-      -- ability that states its zones, so dropping it leaves the suite green.
-      --
-      -- The command zone's emblems, vanguards and planes are `inCommand`'s
-      -- (CR 113.6p), so they are left out here and the two stay disjoint. A
-      -- spell the event cast is `spellCast`'s too, and a revealed miracle
-      -- `revealedInHand`'s; `candidates` lists both ahead of this, so the
-      -- left bias hands that id their keyword-minted superset.
-      --
-      -- The controller is the OWNER off the stack (CR 113.8's second clause:
-      -- CR 108.4 gives such a card no controller) and the spell's controller on
-      -- it (CR 113.8's first).
-      --
-      -- Not implemented: Arena keeps a covercast trigger from a hidden zone
-      -- hidden from opponents; here it is put on the stack in the open (#6391).
-      statesHere zone = any (Set.member zone . TriggeredAbility.functionsFrom) . Face.triggeredAbilities
-      statedCandidate zone oid = case Game.lookupObject oid gs of
-        Just obj
-          | statedGrantInForce || Projection.mayStateZone (statesHere zone) gs obj,
-            Just face <- Projection.abilityFaceOf oid obj gs,
-            statedGrantInForce || statesHere zone face,
-            not (zone == Zone.Command && Vanguard.functionsFromCommandZone oid gs) ->
-              let pc = Projection.project oid gs
-                  controller = if zone == Zone.Stack then Maybe.fromMaybe (Object.owner obj) (Projection.controllerOf oid gs) else Object.owner obj
-               in case Maybe.mapMaybe (functionsIn (PC.subtypes pc) (PC.delayedAbilities pc) zone) (PC.triggeredAbilities pc) of
-                    [] -> Nothing
-                    abilities -> Just (oid, (controller, abilities))
-        _ -> Nothing
-      statedGrantInForce =
-        Projection.grantInForce
-          ( \m -> case m of
-              Modification.GainAbility (GrantedAbility.Triggered ability) -> not (Set.null (TriggeredAbility.functionsFrom ability))
-              _ -> False
-          )
-          gs
-      inStatedZones =
-        Map.fromList
-          ( Projection.foldZoneCards GameState.hand (Maybe.maybeToList . statedCandidate Zone.Hand) gs
-              <> Projection.foldZoneCards GameState.library (Maybe.maybeToList . statedCandidate Zone.Library) gs
-              <> Maybe.mapMaybe (statedCandidate Zone.Stack) (GameState.stack gs)
-              <> Maybe.mapMaybe (statedCandidate Zone.Command) (Set.toAscList (GameState.command gs))
-              <> Maybe.mapMaybe (statedCandidate Zone.Ante) (Set.toAscList (GameState.ante gs))
-          )
       -- CR 702.35a's SECOND ability, for the card its first ability exiled:
       -- minted off the madness ability the discard RECORDED as applied
       -- (Discarded.madness), `spellCast`'s event scope, and not off the exiled
@@ -2051,58 +2145,6 @@ eventTriggers events gs =
         GameEvent.ActivatedAbilityResolved _ -> Map.empty
         GameEvent.TriggeredAbilityResolved _ -> Map.empty
         GameEvent.CardArrived _ -> Map.empty
-      -- CR 114.4 / CR 113.6p: "abilities of emblems function in the command zone".
-      -- The third source that widens the SCANNED ZONE rather than recovering an
-      -- object an event names, so it is computed once outside the event loop as
-      -- `onBattlefield` and `inGraveyards` are.
-      --
-      -- NOT filtered through `functionsIn`, where `inGraveyards` is. CR 113.6k
-      -- decides one CONDITION at a time and answers for the ability's usual zone;
-      -- CR 114.4 is about the OBJECT, and says every ability of this one functions
-      -- here. Filtering would drop them all: an emblem's "at the beginning of your
-      -- upkeep" is a condition that triggers perfectly well from the battlefield,
-      -- so CR 113.6's default sends it there and the emblem would never be asked.
-      --
-      -- EMBLEMS AND VANGUARDS, where a graveyard walk takes the whole zone, for
-      -- the reason Parun.Engine.CombatRestriction.inForce narrows the same walk:
-      -- the command zone also holds a commander and a dungeon card, whose
-      -- abilities CR 113.6 leaves functioning on the battlefield and CR 309.4c
-      -- mints rather than prints. Vanguard.functionsFromCommandZone is that list
-      -- (CR 113.6p), read the same way by all four walks over this zone, and
-      -- reading the rulebook's own list is not casing on an effect's identity. CR
-      -- 313.4 / CR 902.7 put the vanguard card on it in the same words -- "its
-      -- triggered abilities may trigger" -- so it takes the same unfiltered walk
-      -- and for the same reason.
-      --
-      -- The controller is the OWNER: CR 114.2 makes an emblem both owned and
-      -- controlled by the player it was created for, and createEmblem leaves
-      -- Object.enteredUnder empty so Projection.defaultControllerOf answers the
-      -- same. CR 603.3a's control sample is not consulted, and cannot disagree:
-      -- CR 110.2 gives a PERMANENT a controller, and CR 114.5 says an emblem is
-      -- not one, so no layer-2 effect (CR 613.1b) has an emblem to move.
-      --
-      -- Abilities come from the emblem's own card, which is the whole of it (CR
-      -- 114.3) -- no projection is involved, which is the posture
-      -- Projection.gatherGiven's emblem walk takes for its static half: an emblem
-      -- is not a creature, so the pool's CR 613.1f removers never reach it.
-      -- CR 902.6 gives the vanguard card the same owner-is-controller answer CR
-      -- 114.2 gives an emblem, so the two share this line as well: rule 902.6's
-      -- "the controller of a face-up vanguard card is its owner". A face-up
-      -- plane card's is the planar controller instead (CR 901.6), which
-      -- Plane.commandControllerOf answers.
-      commandCandidate oid = case Game.lookupObject oid gs of
-        Nothing -> Nothing
-        Just obj ->
-          if not (Vanguard.functionsFromCommandZone oid gs)
-            then Nothing
-            else case Projection.abilityFaceOf oid obj gs of
-              Nothing -> Nothing
-              Just face -> case Face.triggeredAbilities face of
-                [] -> Nothing
-                abilities -> Just (oid, (Plane.commandControllerOf oid obj gs, fmap whole abilities))
-      inCommand =
-        Map.fromList
-          (Maybe.mapMaybe commandCandidate (Set.toAscList (GameState.command gs)))
       -- CR 113.6k's last zone: the card a player just revealed from their HAND as
       -- they drew it (CR 702.94a, CR 121.9). The ability is borne by an object that
       -- is on nobody's battlefield, in nobody's graveyard and on no stack -- rule
@@ -2324,8 +2366,8 @@ eventTriggers events gs =
       -- no other. `revealedInHand` and `spellCast` overlap `inStatedZones`, which
       -- comes last so the bias hands them the id: each offers the stated
       -- abilities the scan would, plus its keyword-minted ones.
-      candidates onBattlefield logged later same graveyard = let event = LoggedEvent.event logged in Map.toAscList (Map.unions [lookedBackAt onBattlefield logged, onBattlefield, leftBattlefield event, later, same, walkedAwayFrom event, cycledCard event, spellCast event, revealedInHand event, graveyard, inCommand, Map.unionWith (\(c, a) (_, b) -> (c, a <> b)) inExile (exiledForMadness event), inStatedZones])
-      scanOne board later same graveyard logged = concatMap (forOne board logged) (candidates (onBattlefieldOf board) logged later same graveyard)
+      candidates onBattlefield logged later same graveyard = let event = LoggedEvent.event logged in Map.toAscList (restrict (Map.unions [lookedBackAt onBattlefield logged, onBattlefield, leftBattlefield event, later, same, walkedAwayFrom event, cycledCard event, spellCast event, revealedInHand event, graveyard, inCommand, Map.unionWith (\(c, a) (_, b) -> (c, a <> b)) inExile (exiledForMadness event), inStatedZones]))
+      scanOne board later same graveyard logged = concatMap (forOne board logged) (candidates (onBattlefieldOf (restrict board)) logged later same graveyard)
       -- The battlefield reading is per GROUP and so is hoisted out of the block:
       -- every event in one group happened at the same time, so they share it. A
       -- group with no events cannot occur, which `eventGroups` states in the type.
@@ -2887,7 +2929,7 @@ zonesTriggeredFrom cond =
         -- A bystander never left at all. Haunted is CR 113.6k's third zone, which
         -- rule 702.55c states outright: only a card Effect.ExileHaunting put in
         -- exile is in GameState.haunting, so exile is the one zone it can trigger
-        -- from, and eventTriggers' `inExile` serves it. A Bound subject's bearer
+        -- from, and standingOf's `inExile` serves it. A Bound subject's bearer
         -- is a GameState.delayedTriggers entry, so its answer is never consulted.
         TriggerCondition.Leaves t -> case LeavesTrigger.permanent t of
           LeavingPermanent.Haunted -> Set.singleton Zone.Exile
@@ -2904,8 +2946,8 @@ zonesTriggeredFrom cond =
         -- discard can never trigger from the battlefield, and the zone the card
         -- winds up in is the one the scan meets it in. That is the graveyard rule
         -- 701.9a moves it to, cycling's included (rule 702.29c's second sentence;
-        -- eventTriggers' `inGraveyards` and `cycledCard` serve it, and
-        -- Parun.TriggerSpec's Bartered Cow cases go red if this answers the
+        -- standingOf's `inGraveyards` and eventTriggersGiven's `cycledCard`
+        -- serve it, and Parun.TriggerSpec's Bartered Cow cases go red if this answers the
         -- battlefield); for ExiledForMadness it is the exile rule 702.35a's
         -- replacement put it in -- unread in practice, since the exile scan takes
         -- keyword-minted abilities without asking `functionsIn` (`exileCandidate`).
@@ -2939,7 +2981,7 @@ zonesTriggeredFrom cond =
           ActingPermanent.Matching _ -> battlefield
         -- CR 113.6k: a card leaving a graveyard is in one until it leaves, so the
         -- zone it leaves is the one a Self subject can trigger from.
-        -- eventTriggers' `leftGraveyardSame` is what serves it, the departure
+        -- eventTriggersGiven's `leftGraveyardSame` is what serves it, the departure
         -- being its own event. A Matching card takes CR 113.6's default: Kishla
         -- Skimmer watches its controller's graveyard from the battlefield.
         TriggerCondition.LeavesZone t -> case LeavesZoneTrigger.card t of
@@ -3023,7 +3065,7 @@ zonesTriggeredFrom cond =
 -- would not terminate. No card in the pool can do that, and the first that could
 -- is the one that must revisit this.
 --
--- The command zone too, for eventTriggers' `inCommand` reasons and by the same
+-- The command zone too, for standingOf's `inCommand` reasons and by the same
 -- walk: CR 114.4 makes an emblem's abilities function there, and CR 603.8 does not
 -- restrict the bearer. Parun.ZoneTriggerSpec's "CommandZoneStateTrigger" proves it.
 stateTriggersOn :: GameState -> [PendingTrigger]
@@ -3044,7 +3086,7 @@ stateTriggersOn gs
       -- what "you" in the condition means. Outside the layer fold, so the ViewOf
       -- is the FULL projection rather than the layer-bounded one.
       Just ctrl -> forOne oid ctrl (Projection.triggeredAbilitiesOf oid gs)
-    -- eventTriggers' `commandCandidate`, read the same way: CR 113.6p's objects
+    -- standingOf's `commandCandidate`, read the same way: CR 113.6p's objects
     -- only, unfiltered by `functionsIn` (CR 114.4 is about the object), the owner
     -- as controller (CR 114.2, CR 902.6), and the ability face's (CR 114.3).
     inCommand oid = case Game.lookupObject oid gs of

@@ -4330,6 +4330,16 @@ manaFlareSpec s registry = Spec.describe s "Mana Flare" $ do
         second = S.runPure (making Color.Blue) untapped (S.tapForMana tundraId)
     Spec.assertEqWith s "the first tap's {W} and Mana Flare's" (poolTypes S.alice first) [ManaType.Colored Color.White, ManaType.Colored Color.White]
     Spec.assertEqWith s "then the second's {U} and Mana Flare's" (poolTypes S.alice second) [ManaType.Colored Color.White, ManaType.Colored Color.White, ManaType.Colored Color.Blue, ManaType.Colored Color.Blue]
+  -- What a source's measure scans (#6515): the Flare, and not Young
+  -- Pyromancer, whose trigger is no mana ability, nor the Forest it measures.
+  Spec.it s "CR 605.1b a supply's trigger scan watches the Flare alone" $ do
+    flare <- S.printingOf s registry "Mana Flare"
+    pyromancer <- S.printingOf s registry "Young Pyromancer"
+    forest <- S.printingOf s registry "Forest"
+    let (flareId, g1) = S.addPermanent flare S.alice (Setup.emptyGame S.bothPlayers)
+        (_, g2) = S.addPermanent pyromancer S.alice g1
+        (_, board) = S.addPermanent forest S.alice g2
+    Spec.assertEqWith s "the holders" (Mana.watchHolders (Mana.watchOf board)) (Set.singleton flareId)
 
 -- What is floating, as types in pool order -- poolSize's discriminating twin,
 -- for a case where the SIZE is the same under either answer.
