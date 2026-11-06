@@ -1205,8 +1205,9 @@ nextDamageInstance resolving source controller legal chosen (NextDamageInstance.
       rider = Common.preventionRider chosen controller source riderEffects
       rewrite = case outcome of
         NextDamageOutcome.Prevented -> DamageRewrite.PreventAll
-        -- CR 615.10's floor on the one instance: Forcefield's "prevent all but 1
-        -- of that damage". Uses.Once still makes it the NEXT instance.
+        -- CR 615.1's partial prevention of the one instance: Forcefield's
+        -- "prevent all but 1 of that damage". Uses.Once still makes it the NEXT
+        -- instance.
         NextDamageOutcome.PreventedAllBut surviving -> DamageRewrite.PreventAllBut surviving
         NextDamageOutcome.AlsoToSourceController -> DamageRewrite.AlsoToSourceController
   -- No recipient is CR 608.2b's gone target, so there is nothing to shield and
