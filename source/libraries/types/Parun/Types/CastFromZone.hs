@@ -24,8 +24,10 @@ import qualified Parun.Types.PermissionVerb as PermissionVerb
 -- record's rather than that list's: Yawgmoth's Will writes PlayerRef.Relative You
 -- and reaches no other graveyard for it.
 --
--- The Filter reads the PRINTED card in the zone, so a continuous effect changing
--- a card's own characteristics there is invisible to the narrowing (#4712).
+-- The Filter reads the card's CR 613.1 view in the zone, so a continuous effect
+-- changing it there widens or narrows the permission: the cast-permission
+-- scenarios Liliana's minus 3 casts a Hill Giant Maskwood Nexus makes a Zombie
+-- and Mystic Forge stops offering Ugin once Painter's Servant names green.
 -- The LIMIT is the permission's own, which is what makes the whole record the
 -- key Parun.Types.GameState.castPermissionsUsedThisTurn spends: two Assemble the
 -- Players grant two budgets, and the source object beside this value is what
