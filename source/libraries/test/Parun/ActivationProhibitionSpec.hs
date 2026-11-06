@@ -184,7 +184,7 @@ unenchantedSpec s registry = Spec.describe s "Unenchanted" $ do
 -- The named Troll withheld beside its twin, and the paired board aimed at the
 -- twin, are scenarios under data/scenarios/activation-prohibition/. What stays
 -- here reads the stored row itself, which no scenario check can.
-storedSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+storedSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 storedSpec s registry = Spec.describe s "Stored" $ do
   -- CR 400.7: the replayed Troll is a new object, so the row names nothing on
   -- the board and that Troll may regenerate. `replayed` below has the board.
