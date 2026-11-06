@@ -129,17 +129,6 @@
     },
     {
       "check": {
-        "Blockers": {
-          "attacker": "$wurm",
-          "blockers": []
-        }
-      },
-      "player": "alice",
-      "step": "EndOfCombat",
-      "turn": 1
-    },
-    {
-      "check": {
         "Life": {
           "life": 20,
           "player": "bob"
@@ -156,6 +145,17 @@
           "count": 2,
           "player": "bob",
           "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Blockers": {
+          "attacker": "$wurm",
+          "blockers": []
         }
       },
       "player": "alice",
