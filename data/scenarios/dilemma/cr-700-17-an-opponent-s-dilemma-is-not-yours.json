@@ -1,0 +1,26 @@
+{
+  "description": "CR 700.17 / 109.5: alice choosing Return to Nature's mode faces her a dilemma, not bob, so bob's Seven of Nine draws nothing.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "GG",
+        "hand": [{"card": "Return to Nature", "label": "nature"}],
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{"card": "Seven of Nine"}, {"card": "Sol Ring", "label": "ring"}, {"card": "Glorious Anthem"}],
+        "library": [{"card": "Gray Ogre"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$nature", "modes": [0], "targets": ["$ring"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Sol Ring", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Gray Ogre", "count": 0}}}
+  ]
+}

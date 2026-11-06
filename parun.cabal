@@ -828,6 +828,8 @@ library codec
     Parun.Codec.ExtraVotes
     Parun.Codec.ExtraVotesSpec
     Parun.Codec.Face
+    Parun.Codec.FacedDilemma
+    Parun.Codec.FacedDilemmaSpec
     Parun.Codec.FaceDownCharacteristics
     Parun.Codec.FaceDownCharacteristicsSpec
     Parun.Codec.FaceDownReason
@@ -2879,6 +2881,7 @@ library types
     Parun.Types.ExtraTurn
     Parun.Types.ExtraVotes
     Parun.Types.Face
+    Parun.Types.FacedDilemma
     Parun.Types.FaceDownCharacteristics
     Parun.Types.FaceDownReason
     Parun.Types.FaceDownState

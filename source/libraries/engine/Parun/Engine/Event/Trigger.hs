@@ -92,6 +92,7 @@ import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.Exploited as Exploited
 import qualified Parun.Types.Face as Face
+import qualified Parun.Types.FacedDilemma as FacedDilemma
 import Parun.Types.Game (Game)
 import Parun.Types.GameEvent (GameEvent)
 import qualified Parun.Types.GameEvent as GameEvent
@@ -321,6 +322,7 @@ movedOf event = case event of
   GameEvent.LandPlayed {} -> Nothing
   GameEvent.LostTheGame _ -> Nothing
   GameEvent.ManifestedDread {} -> Nothing
+  GameEvent.FacedDilemma {} -> Nothing
   GameEvent.DieResultSettled _ -> Nothing
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
@@ -479,6 +481,7 @@ participants event =
         GameEvent.LandPlayed l -> ([LandPlayed.land l], [LandPlayed.player l])
         GameEvent.LostTheGame pid -> player pid
         GameEvent.ManifestedDread d -> (Foldable.toList (ManifestedDread.cards d), [ManifestedDread.player d])
+        GameEvent.FacedDilemma d -> ([FacedDilemma.object d], [FacedDilemma.player d])
         GameEvent.DieResultSettled r -> player (DieResult.roller r)
         GameEvent.RolledToVisit r -> player (DieResult.roller r)
         GameEvent.PlanarDieRolled r -> player (PlanarDieRolled.roller r)
@@ -535,6 +538,7 @@ looksBack condition = case condition of
   -- leaving a HAND. So CR 603.10's first sentence governs.
   TriggerCondition.PlayerPlaysLand _ -> False
   TriggerCondition.PlayerManifestsDread _ -> False
+  TriggerCondition.PlayerFacesDilemma _ -> False
   TriggerCondition.SelfBecomesPlotted -> False
   -- Not on CR 603.10a's list, and no zone change: a permanent acts where it
   -- stands -- CR 701.43c can only exert one ON the battlefield, CR 702.100b's
@@ -760,6 +764,7 @@ batchScoped condition = case condition of
   TriggerCondition.PlacesSticker _ -> False
   TriggerCondition.PlayerPlaysLand _ -> False
   TriggerCondition.PlayerManifestsDread _ -> False
+  TriggerCondition.PlayerFacesDilemma _ -> False
   TriggerCondition.SelfBecomesPlotted -> False
   TriggerCondition.PermanentActs _ -> False
   TriggerCondition.PlayerRollsResult _ -> False
@@ -1247,6 +1252,7 @@ eventTriggers events gs =
         GameEvent.LandPlayed {} -> Map.empty
         GameEvent.LostTheGame _ -> Map.empty
         GameEvent.ManifestedDread {} -> Map.empty
+        GameEvent.FacedDilemma {} -> Map.empty
         GameEvent.DieResultSettled _ -> Map.empty
         GameEvent.RolledToVisit _ -> Map.empty
         GameEvent.PlanarDieRolled _ -> Map.empty
@@ -1628,6 +1634,7 @@ eventTriggers events gs =
         GameEvent.LandPlayed {} -> Map.empty
         GameEvent.LostTheGame _ -> Map.empty
         GameEvent.ManifestedDread {} -> Map.empty
+        GameEvent.FacedDilemma {} -> Map.empty
         GameEvent.DieResultSettled _ -> Map.empty
         GameEvent.RolledToVisit _ -> Map.empty
         GameEvent.PlanarDieRolled _ -> Map.empty
@@ -2024,6 +2031,7 @@ eventTriggers events gs =
         GameEvent.LandPlayed {} -> Map.empty
         GameEvent.LostTheGame _ -> Map.empty
         GameEvent.ManifestedDread {} -> Map.empty
+        GameEvent.FacedDilemma {} -> Map.empty
         GameEvent.DieResultSettled _ -> Map.empty
         GameEvent.RolledToVisit _ -> Map.empty
         GameEvent.PlanarDieRolled _ -> Map.empty
@@ -2189,6 +2197,7 @@ eventTriggers events gs =
         GameEvent.LandPlayed {} -> Map.empty
         GameEvent.LostTheGame _ -> Map.empty
         GameEvent.ManifestedDread {} -> Map.empty
+        GameEvent.FacedDilemma {} -> Map.empty
         GameEvent.DieResultSettled _ -> Map.empty
         GameEvent.RolledToVisit _ -> Map.empty
         GameEvent.PlanarDieRolled _ -> Map.empty
@@ -2721,6 +2730,7 @@ zonesTriggeredFrom cond =
         TriggerCondition.PlayerActs _ -> battlefield
         TriggerCondition.PlayerPlaysLand _ -> battlefield
         TriggerCondition.PlayerManifestsDread _ -> battlefield
+        TriggerCondition.PlayerFacesDilemma _ -> battlefield
         -- CR 113.6's default: Withengar Unbound is a creature.
         TriggerCondition.PlayerLosesGame _ -> battlefield
         -- CR 113.6's default: Renegade Krasis and Wildgrowth Walker are creatures,
@@ -3088,6 +3098,7 @@ stateTriggersOn gs
             -- that could be true standing still.
             TriggerCondition.PlayerPlaysLand _ -> False
             TriggerCondition.PlayerManifestsDread _ -> False
+            TriggerCondition.PlayerFacesDilemma _ -> False
             TriggerCondition.SelfBecomesPlotted -> False
             -- CR 603.2 again: a permanent's act HAPPENS, with its own log entry,
             -- and leaves no state behind that says it did -- CR 702.100b's and CR
@@ -3877,6 +3888,7 @@ resnapshot gs without event =
         GameEvent.LandPlayed {} -> Just event
         GameEvent.LostTheGame {} -> Just event
         GameEvent.ManifestedDread {} -> Just event
+        GameEvent.FacedDilemma {} -> Just event
         GameEvent.DieResultSettled {} -> Just event
         GameEvent.RolledToVisit {} -> Just event
         GameEvent.PlanarDieRolled {} -> Just event

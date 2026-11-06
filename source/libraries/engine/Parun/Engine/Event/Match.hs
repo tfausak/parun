@@ -98,6 +98,7 @@ import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.ExploitTrigger as ExploitTrigger
 import qualified Parun.Types.Exploited as Exploited
+import qualified Parun.Types.FacedDilemma as FacedDilemma
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.FlipOutcome as FlipOutcome
 import Parun.Types.GameEvent (GameEvent)
@@ -834,6 +835,7 @@ anyTriggerReads event = case event of
   GameEvent.LostTheGame {} -> True
   GameEvent.LandPlayed {} -> True
   GameEvent.ManifestedDread {} -> True
+  GameEvent.FacedDilemma {} -> True
   GameEvent.DieResultSettled {} -> True
   GameEvent.RolledToVisit {} -> True
   GameEvent.PlanarDieRolled {} -> True
@@ -1954,6 +1956,11 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- rather than the moves inside it.
   TriggerCondition.PlayerManifestsDread relation -> case event of
     GameEvent.ManifestedDread ev -> PlayerRelation.holds (Game.teams gs) relation you (ManifestedDread.player ev)
+    _ -> False
+  -- CR 700.17: "whenever you face a dilemma", the player who chose the modes
+  -- read against CR 109.5's "you".
+  TriggerCondition.PlayerFacesDilemma relation -> case event of
+    GameEvent.FacedDilemma ev -> PlayerRelation.holds (Game.teams gs) relation you (FacedDilemma.player ev)
     _ -> False
   -- CR 706.2: one die's RESULT, after every modifier, was the stated number,
   -- the roller read against CR 109.5's "you" as PlayerActs does.

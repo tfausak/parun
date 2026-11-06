@@ -97,6 +97,7 @@ import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.ExtraTurn as ExtraTurn
+import qualified Parun.Types.FacedDilemma as FacedDilemma
 import Parun.Types.Game (Game)
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameSettings as GameSettings
@@ -1027,6 +1028,9 @@ placeBorne srcId pending = do
       chosenModes <- case Modal.forcedSelection legal selection of
         Just forced -> pure forced
         Nothing -> fmap Seq.sort (Game.choose (Prompt.ChooseModes decider controller abilId legal selection))
+      -- CR 700.17: the controller faced a dilemma.
+      Monad.when (Modal.facesDilemma chosenModes modal) $
+        State.modify' (Event.recordEvent (GameEvent.FacedDilemma (FacedDilemma.MkFacedDilemma controller abilId)))
       -- Remembered as chosen, before targets: a mode chosen for an instance
       -- that never resolves still counts (Demonic Pact's rulings), which
       -- data/scenarios' demonic-pact-counts-a-mode-chosen-for-a-countered-trigger

@@ -2227,6 +2227,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.PlacesSticker p -> TriggerCondition.PlacesSticker p {PlacesSticker.object = Filter.rewrite pairs (PlacesSticker.object p)}
   TriggerCondition.PlayerPlaysLand payload -> TriggerCondition.PlayerPlaysLand payload {PlaysLand.filter = Filter.rewrite pairs (PlaysLand.filter payload)}
   TriggerCondition.PlayerManifestsDread _ -> condition
+  TriggerCondition.PlayerFacesDilemma _ -> condition
   TriggerCondition.PlayerRollsResult _ -> condition
   TriggerCondition.Visit -> condition
   TriggerCondition.ChaosEnsues -> condition

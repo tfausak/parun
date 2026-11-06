@@ -255,6 +255,9 @@ data TriggerCondition
   | -- | CR 701.62b: "whenever you manifest dread" (Paranormal Analyst), against
     -- GameEvent.ManifestedDread.
     PlayerManifestsDread PlayerRelation.PlayerRelation
+  | -- | CR 700.17: "whenever you face a dilemma" (Melkotian Adjudicator),
+    -- against GameEvent.FacedDilemma.
+    PlayerFacesDilemma PlayerRelation.PlayerRelation
   | -- | CR 311.7: "whenever chaos ensues", a plane's chaos ability, against a
     -- GameEvent.ChaosEnsued.
     ChaosEnsues

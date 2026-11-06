@@ -482,3 +482,10 @@ selections legal selection =
 -- paid.
 modeCount :: Modal.Modal card ability -> Natural
 modeCount = Natural.length . Modal.modes
+
+-- | CR 700.17: does choosing these modes face a dilemma? Only a modal spell or
+-- ability has modes to choose, CR 700.2 making that two or more, and choosing
+-- none faces nothing. A mana ability's "Add {W} or {U}" is two modes without
+-- being modal, but never reaches a mode choice (CR 605.3b).
+facesDilemma :: Seq.Seq ModeIndex.ModeIndex -> Modal.Modal card ability -> Bool
+facesDilemma chosen modal = modeCount modal >= 2 && not (Seq.null chosen)

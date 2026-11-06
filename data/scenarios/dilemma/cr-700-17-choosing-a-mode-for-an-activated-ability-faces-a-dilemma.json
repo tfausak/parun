@@ -1,0 +1,24 @@
+{
+  "description": "CR 700.17 / 700.2a: choosing a mode for Pyramids' activated ability faces a dilemma, so Seven of Nine draws the Gray Ogre.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "CC",
+        "battlefield": [{"card": "Seven of Nine"}, {"card": "Pyramids", "label": "pyramids"}, {"card": "Forest", "label": "forest", "tapped": true}, {"card": "Wild Growth", "attached": "forest"}],
+        "library": [{"card": "Gray Ogre"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      },
+      {
+        "name": "bob",
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$pyramids", "ability": 0, "modes": [1], "targets": ["$forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Gray Ogre", "count": 1}}}
+  ]
+}

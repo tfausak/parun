@@ -391,6 +391,7 @@ import qualified Parun.Codec.FaceDownCharacteristicsSpec
 import qualified Parun.Codec.FaceDownReasonSpec
 import qualified Parun.Codec.FaceDownStateSpec
 import qualified Parun.Codec.FaceSpec
+import qualified Parun.Codec.FacedDilemmaSpec
 import qualified Parun.Codec.FacingSpec
 import qualified Parun.Codec.FightSpec
 import qualified Parun.Codec.FilterSpec
@@ -1400,6 +1401,7 @@ spec s registry corpus = do
   Parun.Codec.ExpansionSpec.spec s
   Parun.Codec.ExpirySpec.spec s
   Parun.Codec.ExploitedSpec.spec s
+  Parun.Codec.FacedDilemmaSpec.spec s
   Parun.Codec.ExtraPhaseSpec.spec s
   Parun.Codec.ExtraTurnSpec.spec s
   Parun.Codec.ExtraVotesSpec.spec s
