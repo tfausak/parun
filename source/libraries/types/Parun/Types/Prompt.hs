@@ -132,8 +132,9 @@ data Prompt r where
   -- more places, and the caller clamps the answer into range.
   RandomDepth :: Natural.Natural -> Prompt Natural.Natural
   -- | Which player randomness named out of the offered set
-  -- (Parun.Types.Effect.ChoosePlayerAtRandom); RandomObject's shape, asked only
-  -- for two or more.
+  -- (Parun.Types.Effect.ChoosePlayerAtRandom, Parun.Engine.Setup.randomSeating's
+  -- next seat, CR 806.3 / 807.3); RandomObject's shape, asked only for two or
+  -- more.
   --
   -- ONE prompt where the deciding twin is two (ChooseOpponent beside
   -- ChoosePlayer), because those two differ over an interpreter contract about

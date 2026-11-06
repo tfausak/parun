@@ -3161,6 +3161,7 @@ library types
     Parun.Types.PrintedReplacement
     Parun.Types.Printing
     Parun.Types.PrintingId
+    Parun.Types.PriorityWindow
     Parun.Types.ProductionTag
     Parun.Types.Program
     Parun.Types.Prohibit

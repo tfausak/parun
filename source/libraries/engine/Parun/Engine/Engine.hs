@@ -122,6 +122,7 @@ import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PhasedOut as PhasedOut
 import qualified Parun.Types.PlayerControl as PlayerControl
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PriorityWindow as PriorityWindow
 import qualified Parun.Types.Program as Program
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import Parun.Types.Prompt (Prompt)
@@ -1387,323 +1388,338 @@ grantAfterSettle holder = do
 -- the step.
 priorityLoop :: Game ()
 priorityLoop = do
-  offerConcessions
-  -- CR 800.4j: the active player, unless they have left the game.
-  holder <- State.gets priorityHolder
-  -- settleForPriority (CR 117.5) runs where the board can CHANGE -- once at entry,
-  -- and after each resolution or board-changing action -- never after a bare
-  -- priority pass, which leaves the game state untouched. Observably identical to
-  -- settling on every priority grant.
+  openPriorityWindow
   let loop trail = do
-        -- CR 104.4b, checked HERE as well as at playGame's loop head: a
-        -- resolution cycle repeats inside one priority round and never reaches it.
-        Departure.checkMandatoryLoop 0
-        finished <- State.gets (Maybe.isJust . GameState.result)
-        restarted <- State.gets GameState.restartSignal
-        case restarted of
-          -- CR 727.4: a restart resolved under this loop, so the game it was
-          -- running has ended (CR 727.1) and been rebuilt. Stop without granting
-          -- priority and without touching GameState.priority, which the rebuild
-          -- already set to Nothing.
-          RestartSignal.Restarted -> pure ()
-          RestartSignal.Playing ->
-            if finished
-              then State.modify' (\gs -> gs {GameState.priority = Nothing})
-              else do
-                gs <- State.get
-                case GameState.priority gs of
-                  Nothing -> pure ()
-                  Just p ->
-                    if List.elem p (Game.stillPlaying gs)
-                      then do
-                        -- CR 104.3a: asked before anything else, and keyed to `p` --
-                        -- the TRUE player, never `Decide.deciderFor p`.
-                        -- Prompt.Concede carries no Decider precisely so this
-                        -- cannot be got wrong (CR 723.6).
-                        concession <- Game.ask (Prompt.Concede p)
-                        case concession of
-                          Concession.Concedes -> do
-                            -- CR 104.3a: leaves the game IMMEDIATELY. Not a
-                            -- state-based action (CR 104.3b), so it does not wait
-                            -- for a settle and nothing goes on the stack.
-                            Departure.leaveGame Departure.Type.Conceded p
-                            -- CR 800.4a: priority passes to the next still-playing
-                            -- player; nextStillPlaying looks `p` up in the full
-                            -- seating order, so it finds the successor even though
-                            -- leaveGame has already run. The pass count restarts
-                            -- (CR 117.4); the CR does not settle that directly,
-                            -- but not resetting risks resolving a spell a player
-                            -- would have responded to. See docs/decisions.md,
-                            -- "Whether a concession restarts the pass count".
-                            -- CR 117.5: the departure changed the board, so the
-                            -- next player's priority waits on a settle.
-                            next <- State.gets (\g -> passPriorityFrom g {GameState.passed = Set.empty} p)
-                            grantAfterSettle next
-                            loop trail
-                          Concession.Continues -> do
-                            let decider = Decide.deciderFor p gs
-                                actions = Action.legalActions p gs
-                            -- CR 104.4b: a menu that is only Pass offers no
-                            -- optional action, so it does not break a loop of
-                            -- mandatory actions -- still ASKED, just not RECORDED
-                            -- as a choice. Matched two-deep rather than `length
-                            -- actions > 1`: Action.legalActions is lazy, so taking
-                            -- the length would force the whole spine at every
-                            -- grant -- a 70% slowdown on Parun.ReplaySpec.
-                            let offersAChoice = case actions of
-                                  _ : _ : _ -> True
-                                  _ -> False
-                                -- CR 732.3: a fragmented loop narrows the named
-                                -- player's menu, and refuses the completions
-                                -- an activation on it may not repeat, asked only
-                                -- where the raw menu offered a choice, so a
-                                -- Pass-only grant pays nothing for it. Narrowed
-                                -- to Pass alone, the menu goes the way any
-                                -- Pass-only menu does.
-                                here = Fragmented.digest gs
-                                settled = if offersAChoice then Fragmented.settle here trail else trail
-                                (refused, refusedCompletions) = if offersAChoice then Fragmented.forbidden here gs p settled else (Set.empty, Set.empty)
-                                menu = if Set.null refused then actions else filter (\action -> Set.notMember (Fragmented.choiceKey here action) refused) actions
-                                narrowedChoice = case menu of
-                                  _ : _ : _ -> True
-                                  _ -> False
-                            answered <-
-                              if offersAChoice && narrowedChoice
-                                then Game.choose (Prompt.ChooseAction decider p menu)
-                                else Game.ask (Prompt.ChooseAction decider p menu)
-                            -- CR 733.1: why the player's last action was
-                            -- reversed is news only until they choose the next.
-                            Game.clearUndoing p
-                            -- FILTERED, NOT TRUSTED: everything Action.legalActions
-                            -- computed -- CR 302.6's tap-sickness gate, CR 307.5
-                            -- timing, cost payability, CR 305.2's land allowance,
-                            -- CR 117.1a's casting timing and every prohibition --
-                            -- is enforced here, acting on an unoffered answer
-                            -- making all of it advisory. Rejecting to Pass keeps
-                            -- the loop total and cannot wedge the game.
-                            let chosen = if List.elem answered menu then answered else Action.Type.Pass
-                                refusing completion = not (Set.null refusedCompletions) && Set.member (Fragmented.choiceKey here chosen, Fragmented.completionKey here completion) refusedCompletions
-                                trail' = if offersAChoice then Fragmented.record here p chosen settled else trail
-                            case chosen of
-                              -- CR 117.4 / 805.5b: every team has passed in
-                              -- succession once every still-playing player has,
-                              -- a team passing only when all its players do.
-                              Action.Type.Pass -> do
-                                let passed = Set.insert p (GameState.passed gs)
-                                    everyone = all (`Set.member` passed) (filter (GrandMelee.eligible gs) (Game.stillPlaying gs))
-                                -- modify' over `State.put gs {...}`: `gs` predates
-                                -- the prompt, and putting it back would discard
-                                -- GameState.lastChoice (CR 104.4b), making every
-                                -- loop look mandatory.
-                                if everyone
-                                  then case GameState.stack gs of
-                                    [] -> State.modify' (\g -> g {GameState.priority = Nothing, GameState.passed = passed})
-                                    _ -> do
-                                      -- CR 117.3b: nobody holds priority from
-                                      -- the last pass until after resolution.
-                                      State.modify' (\g -> g {GameState.priority = Nothing})
-                                      Stack.resolveTopWith playSubgame
-                                      ended <- State.gets GameState.endTurnSignal
-                                      case ended of
-                                        -- CR 724.1f / CR 724.2f: an effect ended
-                                        -- the turn, or the combat phase, as that
-                                        -- object resolved, so no player gets
-                                        -- priority for the rest of this process.
-                                        -- Returning BEFORE settleForPriority is
-                                        -- the point: both rules put the abilities
-                                        -- that triggered during the process onto
-                                        -- the stack at the step CR 724.1d or CR
-                                        -- 724.2d jumped to, and settling here
-                                        -- would place them now. That rule has
-                                        -- already ended this step, so
-                                        -- runStepThatBegan resumes and sweeps it
-                                        -- exactly as it would a step that ended by
-                                        -- itself.
-                                        EndTurnSignal.Ended -> State.modify' (\g -> g {GameState.priority = Nothing})
-                                        EndTurnSignal.Running -> do
-                                          settleForPriority
-                                          State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just (priorityHolder g)})
-                                          loop trail'
-                                  else do
-                                    State.modify' (\g -> g {GameState.passed = passed, GameState.priority = Just (passPriorityFrom gs {GameState.passed = passed} p)})
-                                    loop trail'
-                              Action.Type.Play oid mName -> do
-                                -- CR 116.2a: the special action, made under a
-                                -- CR 601.3 permission (Cast.playLand).
-                                Event.takingSpecialAction $ Cast.playLand (Resolve.runReplacementEffects playSubgame) False p oid mName
-                                grantAfterSettle p
-                                loop trail'
-                              Action.Type.Cast oid name facing -> do
-                                -- CR 611.2a's spend is Cast.castSpellWith's own,
-                                -- so the two other doors into a cast -- a search's
-                                -- CR 601.3 offer and Parun.Engine.Resolve's -- spend
-                                -- the same grant this one does.
-                                --
-                                -- CR 732.3: completed as the state it leaves, the
-                                -- spell's announcement and payment on it
-                                -- (Fragmented.paid), and reversed as an illegal
-                                -- action (CR 733.1) where a fragmented loop has
-                                -- already completed it so here -- the
-                                -- ActivateManaAbility arm's shape, and its
-                                -- exclusion of a cast that touched a library.
-                                -- Parun.FragmentedSpec's Blinking Spirit case
-                                -- proves the refusal.
-                                pre <- State.get
-                                Cast.castSpell performManaAbility p oid name facing
-                                post <- State.get
-                                let completion = Completion.MkCompletion {Completion.announcement = Nothing, Completion.paid = Fragmented.paid Nothing post}
-                                    completed = if Cost.touchedLibrary pre post then Nothing else Just completion
-                                Monad.when (any refusing completed) (Cost.restoreKeepingLibraryActions pre >> Game.noteUndoing p Undoing.RepeatedLoop)
-                                grantAfterSettle p
-                                loop (Fragmented.complete completed trail')
-                              -- CR 116.2b / 702.37e / 701.40b: a special action, so
-                              -- nothing goes on the stack and no player gets a
-                              -- window to respond. Priority is retained and the
-                              -- pass count restarts, CR 117.4's "passing in
-                              -- succession" meaning without actions in between.
-                              -- Every special action runs in CR 401.5's window
-                              -- (Event.takingSpecialAction).
-                              Action.Type.TurnFaceUp oid procedure -> do
-                                Event.takingSpecialAction $ FaceDown.turnFaceUp performManaAbility p procedure oid
-                                grantAfterSettle p
-                                loop trail'
-                              -- CR 116.2m / 709.5e: a special action too, the
-                              -- TurnFaceUp arm's shape. What CR 709.5h's trigger
-                              -- sees is the DESIGNATION, which settleForPriority
-                              -- gathers like any other.
-                              Action.Type.Unlock oid half -> do
-                                Event.takingSpecialAction $ Room.unlock performManaAbility p oid half
-                                grantAfterSettle p
-                                loop trail'
-                              -- CR 116.2e: a special action too, the TurnFaceUp
-                              -- arm's shape. The discard goes through the CR
-                              -- 701.9a funnel rather than a zone move, so an
-                              -- ability that triggers on a discard sees it --
-                              -- Ordinary and not ToPayCyclingCost, CR 702.29c's
-                              -- cause being a cycling ability's cost.
-                              Action.Type.DiscardFromHand oid -> do
-                                Event.takingSpecialAction $ Event.discard (Resolve.runReplacementEffects playSubgame) DiscardCause.Ordinary p oid
-                                grantAfterSettle p
-                                loop trail'
-                              -- CR 116.2k / 702.170b: a special action too, the
-                              -- TurnFaceUp arm's shape.
-                              Action.Type.Plot oid cost -> do
-                                Event.takingSpecialAction $ Plot.plot performManaAbility p oid cost
-                                grantAfterSettle p
-                                loop trail'
-                              -- CR 116.2h / 702.143b: a special action too.
-                              Action.Type.Foretell oid -> do
-                                Event.takingSpecialAction $ Foretell.foretell performManaAbility p oid
-                                grantAfterSettle p
-                                loop trail'
-                              -- CR 116.2f / 702.62a: a special action too, and
-                              -- the one whose window is the card's own
-                              -- castability rather than a phase.
-                              Action.Type.Suspend oid -> do
-                                Event.takingSpecialAction $ Suspend.suspend performManaAbility p oid
-                                grantAfterSettle p
-                                loop trail'
-                              -- CR 116.2g / 702.139a: a special action too, and
-                              -- the one that takes no object -- Player.companion
-                              -- names the card, outside the game having no
-                              -- object to name it with (CR 400.11).
-                              Action.Type.PutCompanionIntoHand -> do
-                                Event.takingSpecialAction $ Companion.take performManaAbility p
-                                grantAfterSettle p
-                                loop trail'
-                              -- CR 116.2i / 901.9: a special action too, and one
-                              -- that takes no object; CR 901.9a-c give the roller
-                              -- priority afterwards whatever the die shows.
-                              Action.Type.RollPlanarDie -> do
-                                Event.takingSpecialAction $ Planechase.roll performManaAbility p
-                                grantAfterSettle p
-                                loop trail'
-                              -- CR 116.2j / 702.106c: a special action too.
-                              Action.Type.TurnConspiracyFaceUp oid -> do
-                                Event.takingSpecialAction $ Conspiracy.turnFaceUp p oid
-                                grantAfterSettle p
-                                loop trail'
-                              -- CR 116.2c: a special action too, and the one whose
-                              -- permission came from a resolution rather than
-                              -- from printed text. CR 613.1's next projection is
-                              -- what makes the ending visible; nothing is undone.
-                              Action.Type.EndEffect _ resolution -> do
-                                Event.takingSpecialAction $ EndEffect.endEffect performManaAbility p resolution
-                                grantAfterSettle p
-                                loop trail'
-                              -- CR 116.2c: a special action too, whose payment
-                              -- leaves the offer in place.
-                              Action.Type.MakeLaterPayment _ createdAt -> do
-                                Event.takingSpecialAction $ do
-                                  paid <- LaterPayment.pay performManaAbility p createdAt
-                                  Foldable.for_ paid (Resolve.runLaterPayment playSubgame)
-                                grantAfterSettle p
-                                loop trail'
-                              -- CR 116.2c / 116.3: Channel's life for mana.
-                              Action.Type.PayLifeForMana life mana -> do
-                                _ <- Event.takingSpecialAction (Cost.payLifeForMana performManaAbility p life mana)
-                                grantAfterSettle p
-                                loop trail'
-                              -- CR 116.2d: a special action too.
-                              Action.Type.Ignore oid name -> do
-                                Event.takingSpecialAction $ Ignore.ignore performManaAbility p oid name
-                                grantAfterSettle p
-                                loop trail'
-                              -- CR 605.3a's first window, and CR 605.3b's
-                              -- immediacy: the ability does not go on the stack,
-                              -- so activating it is over by the time this returns.
-                              -- Cost.tapForMana is the same activation CR 605.3a's
-                              -- other two windows take, so this arm decides only
-                              -- WHEN it may happen; its answer is discarded, a
-                              -- mana ability whose cost went unpaid having changed
-                              -- nothing (CR 601.2h).
-                              --
-                              -- CR 732.3: completed as the state it leaves
-                              -- (Fragmented.paid), and reversed as an illegal
-                              -- action (CR 733.1) where a fragmented loop has
-                              -- already completed it so here. One that touched a
-                              -- library is never refused, since CR 733.1's last
-                              -- sentence forbids reversing it. One that activated
-                              -- another mana ability to pay its cost is never
-                              -- refused either, a deliberate under-detection: the
-                              -- loop is caught a step later. Both exclusions are
-                              -- a REGRESSION FENCE: no test loops such a mana
-                              -- ability. Parun.FragmentedSpec's Freed from the
-                              -- Real cases prove the refusal.
-                              --
-                              -- Compared by the state it leaves, so a tap for
-                              -- another colour is not refused, though CR 605.3b
-                              -- and 608.2d make the colour a resolution choice,
-                              -- which `Fragmented.forbidden` otherwise ignores.
-                              -- Another deliberate under-detection: parun asks for
-                              -- the colour at activation (Prompt.ChooseManaYield).
-                              Action.Type.ActivateManaAbility oid -> do
-                                pre <- State.get
-                                (_, (nested, _), _, _) <- Cost.tapForManaWith performManaAbility id Set.empty Set.empty p oid
-                                post <- State.get
-                                let completion = Completion.MkCompletion {Completion.announcement = Nothing, Completion.paid = Fragmented.paid Nothing post}
-                                    completed = if null nested && not (Cost.touchedLibrary pre post) then Just completion else Nothing
-                                Monad.when (any refusing completed) (Cost.restoreKeepingLibraryActions pre >> Game.noteUndoing p Undoing.RepeatedLoop)
-                                grantAfterSettle p
-                                loop (Fragmented.complete completed trail')
-                              Action.Type.Activate oid ability -> do
-                                completed <- Activate.activateAbilityWith refusing playSubgame p oid ability
-                                grantAfterSettle p
-                                loop (Fragmented.complete completed trail')
-                      else do
-                        -- CR 800.4a (last sentence): `p` departed in the settle
-                        -- before its grant -- e.g. paying a life cost inside
-                        -- settleForPriority (CR 119.4) -- before being asked
-                        -- anything. Departure.depart does not touch
-                        -- GameState.priority, so the granted `Just p` would
-                        -- otherwise survive to the Concede prompt.
-                        State.modify' (\g -> g {GameState.priority = Just (passPriorityFrom g p)})
-                        loop trail
-  grantAfterSettle holder
+        window <- priorityDecision trail
+        case window of
+          PriorityWindow.Open trail' -> loop trail'
+          PriorityWindow.Closed -> pure ()
   loop LoopTrail.empty
 
+-- CR 117.3a: a priority round opens with the active player's grant, unless they
+-- have left the game (CR 800.4j).
+openPriorityWindow :: Game ()
+openPriorityWindow = do
+  offerConcessions
+  holder <- State.gets priorityHolder
+  grantAfterSettle holder
+
+-- One priority decision: ask the holder for an action and carry it out, the
+-- window staying open with the trail it leaves or closing (CR 117.4).
+--
+-- settleForPriority (CR 117.5) runs where the board can CHANGE -- once as the
+-- window opens, and after each resolution or board-changing action -- never
+-- after a bare priority pass, which leaves the game state untouched. Observably
+-- identical to settling on every priority grant.
+priorityDecision :: LoopTrail.LoopTrail -> Game PriorityWindow.PriorityWindow
+priorityDecision trail = do
+  -- CR 104.4b, checked HERE as well as at playGame's loop head: a
+  -- resolution cycle repeats inside one priority round and never reaches it.
+  Departure.checkMandatoryLoop 0
+  finished <- State.gets (Maybe.isJust . GameState.result)
+  restarted <- State.gets GameState.restartSignal
+  case restarted of
+    -- CR 727.4: a restart resolved under this loop, so the game it was
+    -- running has ended (CR 727.1) and been rebuilt. Stop without granting
+    -- priority and without touching GameState.priority, which the rebuild
+    -- already set to Nothing.
+    RestartSignal.Restarted -> pure PriorityWindow.Closed
+    RestartSignal.Playing ->
+      if finished
+        then PriorityWindow.Closed <$ State.modify' (\gs -> gs {GameState.priority = Nothing})
+        else do
+          gs <- State.get
+          case GameState.priority gs of
+            Nothing -> pure PriorityWindow.Closed
+            Just p ->
+              if List.elem p (Game.stillPlaying gs)
+                then do
+                  -- CR 104.3a: asked before anything else, and keyed to `p` --
+                  -- the TRUE player, never `Decide.deciderFor p`.
+                  -- Prompt.Concede carries no Decider precisely so this
+                  -- cannot be got wrong (CR 723.6).
+                  concession <- Game.ask (Prompt.Concede p)
+                  case concession of
+                    Concession.Concedes -> do
+                      -- CR 104.3a: leaves the game IMMEDIATELY. Not a
+                      -- state-based action (CR 104.3b), so it does not wait
+                      -- for a settle and nothing goes on the stack.
+                      Departure.leaveGame Departure.Type.Conceded p
+                      -- CR 800.4a: priority passes to the next still-playing
+                      -- player; nextStillPlaying looks `p` up in the full
+                      -- seating order, so it finds the successor even though
+                      -- leaveGame has already run. The pass count restarts
+                      -- (CR 117.4); the CR does not settle that directly,
+                      -- but not resetting risks resolving a spell a player
+                      -- would have responded to. See docs/decisions.md,
+                      -- "Whether a concession restarts the pass count".
+                      -- CR 117.5: the departure changed the board, so the
+                      -- next player's priority waits on a settle.
+                      next <- State.gets (\g -> passPriorityFrom g {GameState.passed = Set.empty} p)
+                      grantAfterSettle next
+                      pure (PriorityWindow.Open trail)
+                    Concession.Continues -> do
+                      let decider = Decide.deciderFor p gs
+                          actions = Action.legalActions p gs
+                      -- CR 104.4b: a menu that is only Pass offers no
+                      -- optional action, so it does not break a loop of
+                      -- mandatory actions -- still ASKED, just not RECORDED
+                      -- as a choice. Matched two-deep rather than `length
+                      -- actions > 1`: Action.legalActions is lazy, so taking
+                      -- the length would force the whole spine at every
+                      -- grant -- a 70% slowdown on Parun.ReplaySpec.
+                      let offersAChoice = case actions of
+                            _ : _ : _ -> True
+                            _ -> False
+                          -- CR 732.3: a fragmented loop narrows the named
+                          -- player's menu, and refuses the completions
+                          -- an activation on it may not repeat, asked only
+                          -- where the raw menu offered a choice, so a
+                          -- Pass-only grant pays nothing for it. Narrowed
+                          -- to Pass alone, the menu goes the way any
+                          -- Pass-only menu does.
+                          here = Fragmented.digest gs
+                          settled = if offersAChoice then Fragmented.settle here trail else trail
+                          (refused, refusedCompletions) = if offersAChoice then Fragmented.forbidden here gs p settled else (Set.empty, Set.empty)
+                          menu = if Set.null refused then actions else filter (\action -> Set.notMember (Fragmented.choiceKey here action) refused) actions
+                          narrowedChoice = case menu of
+                            _ : _ : _ -> True
+                            _ -> False
+                      answered <-
+                        if offersAChoice && narrowedChoice
+                          then Game.choose (Prompt.ChooseAction decider p menu)
+                          else Game.ask (Prompt.ChooseAction decider p menu)
+                      -- CR 733.1: why the player's last action was
+                      -- reversed is news only until they choose the next.
+                      Game.clearUndoing p
+                      -- FILTERED, NOT TRUSTED: everything Action.legalActions
+                      -- computed -- CR 302.6's tap-sickness gate, CR 307.5
+                      -- timing, cost payability, CR 305.2's land allowance,
+                      -- CR 117.1a's casting timing and every prohibition --
+                      -- is enforced here, acting on an unoffered answer
+                      -- making all of it advisory. Rejecting to Pass keeps
+                      -- the loop total and cannot wedge the game.
+                      let chosen = if List.elem answered menu then answered else Action.Type.Pass
+                          refusing completion = not (Set.null refusedCompletions) && Set.member (Fragmented.choiceKey here chosen, Fragmented.completionKey here completion) refusedCompletions
+                          trail' = if offersAChoice then Fragmented.record here p chosen settled else trail
+                      case chosen of
+                        -- CR 117.4 / 805.5b: every team has passed in
+                        -- succession once every still-playing player has,
+                        -- a team passing only when all its players do.
+                        Action.Type.Pass -> do
+                          let passed = Set.insert p (GameState.passed gs)
+                              everyone = all (`Set.member` passed) (filter (GrandMelee.eligible gs) (Game.stillPlaying gs))
+                          -- modify' over `State.put gs {...}`: `gs` predates
+                          -- the prompt, and putting it back would discard
+                          -- GameState.lastChoice (CR 104.4b), making every
+                          -- loop look mandatory.
+                          if everyone
+                            then case GameState.stack gs of
+                              [] -> PriorityWindow.Closed <$ State.modify' (\g -> g {GameState.priority = Nothing, GameState.passed = passed})
+                              _ -> do
+                                -- CR 117.3b: nobody holds priority from
+                                -- the last pass until after resolution.
+                                State.modify' (\g -> g {GameState.priority = Nothing})
+                                Stack.resolveTopWith playSubgame
+                                ended <- State.gets GameState.endTurnSignal
+                                case ended of
+                                  -- CR 724.1f / CR 724.2f: an effect ended
+                                  -- the turn, or the combat phase, as that
+                                  -- object resolved, so no player gets
+                                  -- priority for the rest of this process.
+                                  -- Returning BEFORE settleForPriority is
+                                  -- the point: both rules put the abilities
+                                  -- that triggered during the process onto
+                                  -- the stack at the step CR 724.1d or CR
+                                  -- 724.2d jumped to, and settling here
+                                  -- would place them now. That rule has
+                                  -- already ended this step, so
+                                  -- endStep sweeps it
+                                  -- exactly as it would a step that ended by
+                                  -- itself.
+                                  EndTurnSignal.Ended -> PriorityWindow.Closed <$ State.modify' (\g -> g {GameState.priority = Nothing})
+                                  EndTurnSignal.Running -> do
+                                    settleForPriority
+                                    State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just (priorityHolder g)})
+                                    pure (PriorityWindow.Open trail')
+                            else do
+                              State.modify' (\g -> g {GameState.passed = passed, GameState.priority = Just (passPriorityFrom gs {GameState.passed = passed} p)})
+                              pure (PriorityWindow.Open trail')
+                        Action.Type.Play oid mName -> do
+                          -- CR 116.2a: the special action, made under a
+                          -- CR 601.3 permission (Cast.playLand).
+                          Event.takingSpecialAction $ Cast.playLand (Resolve.runReplacementEffects playSubgame) False p oid mName
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open trail')
+                        Action.Type.Cast oid name facing -> do
+                          -- CR 611.2a's spend is Cast.castSpellWith's own,
+                          -- so the two other doors into a cast -- a search's
+                          -- CR 601.3 offer and Parun.Engine.Resolve's -- spend
+                          -- the same grant this one does.
+                          --
+                          -- CR 732.3: completed as the state it leaves, the
+                          -- spell's announcement and payment on it
+                          -- (Fragmented.paid), and reversed as an illegal
+                          -- action (CR 733.1) where a fragmented loop has
+                          -- already completed it so here -- the
+                          -- ActivateManaAbility arm's shape, and its
+                          -- exclusion of a cast that touched a library.
+                          -- Parun.FragmentedSpec's Blinking Spirit case
+                          -- proves the refusal.
+                          pre <- State.get
+                          Cast.castSpell performManaAbility p oid name facing
+                          post <- State.get
+                          let completion = Completion.MkCompletion {Completion.announcement = Nothing, Completion.paid = Fragmented.paid Nothing post}
+                              completed = if Cost.touchedLibrary pre post then Nothing else Just completion
+                          Monad.when (any refusing completed) (Cost.restoreKeepingLibraryActions pre >> Game.noteUndoing p Undoing.RepeatedLoop)
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open (Fragmented.complete completed trail'))
+                        -- CR 116.2b / 702.37e / 701.40b: a special action, so
+                        -- nothing goes on the stack and no player gets a
+                        -- window to respond. Priority is retained and the
+                        -- pass count restarts, CR 117.4's "passing in
+                        -- succession" meaning without actions in between.
+                        -- Every special action runs in CR 401.5's window
+                        -- (Event.takingSpecialAction).
+                        Action.Type.TurnFaceUp oid procedure -> do
+                          Event.takingSpecialAction $ FaceDown.turnFaceUp performManaAbility p procedure oid
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open trail')
+                        -- CR 116.2m / 709.5e: a special action too, the
+                        -- TurnFaceUp arm's shape. What CR 709.5h's trigger
+                        -- sees is the DESIGNATION, which settleForPriority
+                        -- gathers like any other.
+                        Action.Type.Unlock oid half -> do
+                          Event.takingSpecialAction $ Room.unlock performManaAbility p oid half
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open trail')
+                        -- CR 116.2e: a special action too, the TurnFaceUp
+                        -- arm's shape. The discard goes through the CR
+                        -- 701.9a funnel rather than a zone move, so an
+                        -- ability that triggers on a discard sees it --
+                        -- Ordinary and not ToPayCyclingCost, CR 702.29c's
+                        -- cause being a cycling ability's cost.
+                        Action.Type.DiscardFromHand oid -> do
+                          Event.takingSpecialAction $ Event.discard (Resolve.runReplacementEffects playSubgame) DiscardCause.Ordinary p oid
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open trail')
+                        -- CR 116.2k / 702.170b: a special action too, the
+                        -- TurnFaceUp arm's shape.
+                        Action.Type.Plot oid cost -> do
+                          Event.takingSpecialAction $ Plot.plot performManaAbility p oid cost
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open trail')
+                        -- CR 116.2h / 702.143b: a special action too.
+                        Action.Type.Foretell oid -> do
+                          Event.takingSpecialAction $ Foretell.foretell performManaAbility p oid
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open trail')
+                        -- CR 116.2f / 702.62a: a special action too, and
+                        -- the one whose window is the card's own
+                        -- castability rather than a phase.
+                        Action.Type.Suspend oid -> do
+                          Event.takingSpecialAction $ Suspend.suspend performManaAbility p oid
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open trail')
+                        -- CR 116.2g / 702.139a: a special action too, and
+                        -- the one that takes no object -- Player.companion
+                        -- names the card, outside the game having no
+                        -- object to name it with (CR 400.11).
+                        Action.Type.PutCompanionIntoHand -> do
+                          Event.takingSpecialAction $ Companion.take performManaAbility p
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open trail')
+                        -- CR 116.2i / 901.9: a special action too, and one
+                        -- that takes no object; CR 901.9a-c give the roller
+                        -- priority afterwards whatever the die shows.
+                        Action.Type.RollPlanarDie -> do
+                          Event.takingSpecialAction $ Planechase.roll performManaAbility p
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open trail')
+                        -- CR 116.2j / 702.106c: a special action too.
+                        Action.Type.TurnConspiracyFaceUp oid -> do
+                          Event.takingSpecialAction $ Conspiracy.turnFaceUp p oid
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open trail')
+                        -- CR 116.2c: a special action too, and the one whose
+                        -- permission came from a resolution rather than
+                        -- from printed text. CR 613.1's next projection is
+                        -- what makes the ending visible; nothing is undone.
+                        Action.Type.EndEffect _ resolution -> do
+                          Event.takingSpecialAction $ EndEffect.endEffect performManaAbility p resolution
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open trail')
+                        -- CR 116.2c: a special action too, whose payment
+                        -- leaves the offer in place.
+                        Action.Type.MakeLaterPayment _ createdAt -> do
+                          Event.takingSpecialAction $ do
+                            paid <- LaterPayment.pay performManaAbility p createdAt
+                            Foldable.for_ paid (Resolve.runLaterPayment playSubgame)
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open trail')
+                        -- CR 116.2c / 116.3: Channel's life for mana.
+                        Action.Type.PayLifeForMana life mana -> do
+                          _ <- Event.takingSpecialAction (Cost.payLifeForMana performManaAbility p life mana)
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open trail')
+                        -- CR 116.2d: a special action too.
+                        Action.Type.Ignore oid name -> do
+                          Event.takingSpecialAction $ Ignore.ignore performManaAbility p oid name
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open trail')
+                        -- CR 605.3a's first window, and CR 605.3b's
+                        -- immediacy: the ability does not go on the stack,
+                        -- so activating it is over by the time this returns.
+                        -- Cost.tapForMana is the same activation CR 605.3a's
+                        -- other two windows take, so this arm decides only
+                        -- WHEN it may happen; its answer is discarded, a
+                        -- mana ability whose cost went unpaid having changed
+                        -- nothing (CR 601.2h).
+                        --
+                        -- CR 732.3: completed as the state it leaves
+                        -- (Fragmented.paid), and reversed as an illegal
+                        -- action (CR 733.1) where a fragmented loop has
+                        -- already completed it so here. One that touched a
+                        -- library is never refused, since CR 733.1's last
+                        -- sentence forbids reversing it. One that activated
+                        -- another mana ability to pay its cost is never
+                        -- refused either, a deliberate under-detection: the
+                        -- loop is caught a step later. Both exclusions are
+                        -- a REGRESSION FENCE: no test loops such a mana
+                        -- ability. Parun.FragmentedSpec's Freed from the
+                        -- Real cases prove the refusal.
+                        --
+                        -- Compared by the state it leaves, so a tap for
+                        -- another colour is not refused, though CR 605.3b
+                        -- and 608.2d make the colour a resolution choice,
+                        -- which `Fragmented.forbidden` otherwise ignores.
+                        -- Another deliberate under-detection: parun asks for
+                        -- the colour at activation (Prompt.ChooseManaYield).
+                        Action.Type.ActivateManaAbility oid -> do
+                          pre <- State.get
+                          (_, (nested, _), _, _) <- Cost.tapForManaWith performManaAbility id Set.empty Set.empty p oid
+                          post <- State.get
+                          let completion = Completion.MkCompletion {Completion.announcement = Nothing, Completion.paid = Fragmented.paid Nothing post}
+                              completed = if null nested && not (Cost.touchedLibrary pre post) then Just completion else Nothing
+                          Monad.when (any refusing completed) (Cost.restoreKeepingLibraryActions pre >> Game.noteUndoing p Undoing.RepeatedLoop)
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open (Fragmented.complete completed trail'))
+                        Action.Type.Activate oid ability -> do
+                          completed <- Activate.activateAbilityWith refusing playSubgame p oid ability
+                          grantAfterSettle p
+                          pure (PriorityWindow.Open (Fragmented.complete completed trail'))
+                else do
+                  -- CR 800.4a (last sentence): `p` departed in the settle
+                  -- before its grant -- e.g. paying a life cost inside
+                  -- settleForPriority (CR 119.4) -- before being asked
+                  -- anything. Departure.depart does not touch
+                  -- GameState.priority, so the granted `Just p` would
+                  -- otherwise survive to the Concede prompt.
+                  State.modify' (\g -> g {GameState.priority = Just (passPriorityFrom g p)})
+                  pure (PriorityWindow.Open trail)
+
 -- CR 104.3a / 807.5a: a Grand Melee player without priority for the stack
--- (GrandMelee.eligible) is never asked Prompt.Concede in the loop below, so
+-- (GrandMelee.eligible) is never asked Prompt.Concede in priorityDecision, so
 -- they are asked here, in turn order, as each priority window opens. Asked of
 -- the TRUE player, as the loop asks.
 offerConcessions :: Game ()
@@ -2265,9 +2281,19 @@ endPhase ending = do
   Monad.when (ending == PhaseSelector.CombatPhase) (State.modify' Combat.clearCombat)
 
 -- The body of a step that was not skipped, split out only so `runStep`'s CR
--- 614.1b check reads as a guard rather than as a nesting level.
+-- 614.1b check reads as a guard rather than as a nesting level: the step's
+-- start, its priority window if it grants one, then its end.
 runStepThatBegan :: Phase.Phase -> Game ()
 runStepThatBegan phase = do
+  started <- startStep phase
+  Foldable.for_ started $ \grants -> do
+    Monad.when grants priorityLoop
+    endStep phase
+
+-- Everything a step does before its priority window: Nothing if the game ended
+-- first, else whether the step grants priority (CR 117.3a).
+startStep :: Phase.Phase -> Game (Maybe Bool)
+startStep phase = do
   -- CR 603.2b: the step began. Recorded BEFORE the step's turn-based actions, so
   -- the first priority boundary of this step scans it. No player receives priority
   -- during the untap step (CR 502.4), so an ability that triggers then is held
@@ -2318,48 +2344,51 @@ runStepThatBegan phase = do
   -- 603.8 sees it; data/scenarios/trigger's Teferi's Curse scenario proves it.
   Monad.when grants (Monad.void performSettle)
   finished <- State.gets (Maybe.isJust . GameState.result)
-  Monad.unless finished $ do
-    Monad.when grants priorityLoop
-    restarted <- State.gets GameState.restartSignal
-    case restarted of
-      -- CR 727.4: a restart replaced the game during this step's priority round.
-      -- Unwind. `advance` in particular MUST NOT run -- it would pop the FRESH
-      -- schedule and skip turn 1's untap step entirely.
-      RestartSignal.Restarted -> pure ()
-      RestartSignal.Playing -> do
-        -- CR 500.5, whole and in its own order: as a step or phase ends, effects
-        -- lasting until the end of it expire, then any unspent mana empties. TWO
-        -- windows end here, not one, and CR 500.5a is why: an "until end of
-        -- combat" effect expires at the end of the combat PHASE, not at the
-        -- beginning of the end of combat step (CR 511.2), so such an animation is
-        -- live for the whole of that step. The step is swept before the phase, CR
-        -- 500.1 nesting the one inside the other; nothing observes the order.
-        State.modify' (Expiry.dropAtEndOf (PhaseSelector.Step phase))
-        -- Everything the ending PHASE owes -- CR 500.5's phase-grain expiries, CR
-        -- 703.4q's pool and CR 511.3's removal from combat -- shared with
-        -- skipStep so that the two roads out of a phase cannot drift apart. It
-        -- carries CR 500.5's pool empty, which is why the DEFAULT is the arm that
-        -- runs it here: a step whose phase ends with it empties the pool once, in
-        -- the rule's own "Then" position.
-        maybe (Mana.emptyManaPools (Resolve.runReplacementEffects playSubgame)) endPhase (Turn.phaseEndingAt phase)
-        -- CR 508.6 read on CR 500.1's span: the step-scoped half of the attack
-        -- record ends with the step, so this runs at EVERY step's end and not
-        -- just at combat's. See Parun.Engine.Combat.clearAttackedThisStep for why
-        -- the wider reach is the point rather than laziness.
-        State.modify' Combat.clearAttackedThisStep
-        -- CR 508.8: drop the two combat steps that have nothing to do if nobody
-        -- attacked. Asked as the declare attackers step ENDS, not when its
-        -- turn-based action finishes, because the rule's second clause -- put onto
-        -- the battlefield attacking -- can only happen in the priority round this
-        -- line sits after (Hanweir Garrison). NOT guarded by `live`: a turn
-        -- with no active player declares no attackers, CR 508.8's own condition.
-        Monad.when (phase == Phase.Combat CombatStep.DeclareAttackers) (State.modify' Combat.skipEmptyCombat)
-        -- No CR 704.3 check as the step ends: no player gets priority here, so a
-        -- state this step's end leaves waits for the next step's settle, which
-        -- keeps its board for CR 603.8. The Teferi's Curse scenario proves it as
-        -- the untap step ends.
-        stillFinished <- State.gets (Maybe.isJust . GameState.result)
-        Monad.unless stillFinished advance
+  pure (if finished then Nothing else Just grants)
+
+-- Everything a step does after its priority window, as it ends.
+endStep :: Phase.Phase -> Game ()
+endStep phase = do
+  restarted <- State.gets GameState.restartSignal
+  case restarted of
+    -- CR 727.4: a restart replaced the game during this step's priority round.
+    -- Unwind. `advance` in particular MUST NOT run -- it would pop the FRESH
+    -- schedule and skip turn 1's untap step entirely.
+    RestartSignal.Restarted -> pure ()
+    RestartSignal.Playing -> do
+      -- CR 500.5, whole and in its own order: as a step or phase ends, effects
+      -- lasting until the end of it expire, then any unspent mana empties. TWO
+      -- windows end here, not one, and CR 500.5a is why: an "until end of
+      -- combat" effect expires at the end of the combat PHASE, not at the
+      -- beginning of the end of combat step (CR 511.2), so such an animation is
+      -- live for the whole of that step. The step is swept before the phase, CR
+      -- 500.1 nesting the one inside the other; nothing observes the order.
+      State.modify' (Expiry.dropAtEndOf (PhaseSelector.Step phase))
+      -- Everything the ending PHASE owes -- CR 500.5's phase-grain expiries, CR
+      -- 703.4q's pool and CR 511.3's removal from combat -- shared with
+      -- skipStep so that the two roads out of a phase cannot drift apart. It
+      -- carries CR 500.5's pool empty, which is why the DEFAULT is the arm that
+      -- runs it here: a step whose phase ends with it empties the pool once, in
+      -- the rule's own "Then" position.
+      maybe (Mana.emptyManaPools (Resolve.runReplacementEffects playSubgame)) endPhase (Turn.phaseEndingAt phase)
+      -- CR 508.6 read on CR 500.1's span: the step-scoped half of the attack
+      -- record ends with the step, so this runs at EVERY step's end and not
+      -- just at combat's. See Parun.Engine.Combat.clearAttackedThisStep for why
+      -- the wider reach is the point rather than laziness.
+      State.modify' Combat.clearAttackedThisStep
+      -- CR 508.8: drop the two combat steps that have nothing to do if nobody
+      -- attacked. Asked as the declare attackers step ENDS, not when its
+      -- turn-based action finishes, because the rule's second clause -- put onto
+      -- the battlefield attacking -- can only happen in the priority round this
+      -- line sits after (Hanweir Garrison). NOT guarded by `live`: a turn
+      -- with no active player declares no attackers, CR 508.8's own condition.
+      Monad.when (phase == Phase.Combat CombatStep.DeclareAttackers) (State.modify' Combat.skipEmptyCombat)
+      -- No CR 704.3 check as the step ends: no player gets priority here, so a
+      -- state this step's end leaves waits for the next step's settle, which
+      -- keeps its board for CR 603.8. The Teferi's Curse scenario proves it as
+      -- the untap step ends.
+      stillFinished <- State.gets (Maybe.isJust . GameState.result)
+      Monad.unless stillFinished advance
 
 -- Whether THIS step grants a priority round. Every step but one answers from the
 -- phase alone (Turn.grantsPriority); the cleanup step's answer is CR 514.3

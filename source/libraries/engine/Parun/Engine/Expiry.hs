@@ -734,7 +734,7 @@ keepWhere survives = editExpiries (\source expiry -> if survives source expiry t
 
 -- CR 500.5's first clause: effects lasting until the end of a step or phase
 -- expire as it ends. The window that is ending is passed in, because only the
--- caller knows which one it is -- Engine.runStepThatBegan for a step that ended
+-- caller knows which one it is -- Engine.endStep for a step that ended
 -- by itself, and at the end of the last step of a stepped phase there are TWO,
 -- the step and the phase, so it calls this twice. Parun.Engine.Resolve's CR 724.1
 -- and CR 724.2 arms are the other callers, for a PHASE ended part-way through,

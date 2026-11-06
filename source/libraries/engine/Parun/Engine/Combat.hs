@@ -134,7 +134,7 @@ clearAttackedThisStep gs =
 
 -- CR 508.8: if no creatures were declared as attackers or put onto the
 -- battlefield attacking, skip the declare blockers and combat damage steps.
--- Engine.runStepThatBegan asks it as the declare attackers step ENDS.
+-- Engine.endStep asks it as the declare attackers step ENDS.
 --
 -- Combat.attacked and NOT Map.null on Combat.attackers: CR 506.4's removal takes
 -- away the attacking, never the declaration, so asking the map skipped both steps
@@ -2591,7 +2591,7 @@ attemptAttackDeclaration perform pid asked forced rejected = do
                             (Combat.declaredAttackedBy (GameState.combat g)),
                         -- CR 508.6's same record on CR 500.1's narrower span,
                         -- written here for the reason above and emptied as the
-                        -- step ends (Parun.Engine.Engine.runStepThatBegan).
+                        -- step ends (Parun.Engine.Engine.endStep).
                         Combat.declaredAttackedThisStep =
                           Set.union (Set.fromList (Map.elems kept)) (Combat.declaredAttackedThisStep (GameState.combat g))
                       }

@@ -1247,7 +1247,7 @@ endCombatPhaseSpec s registry = Spec.describe s "EndTheCombatPhase" $ do
   -- CR 724.2d/724.2e: the schedule assertion, in its own case so no zone
   -- assertion can absorb a mutation to the jump. The combat damage and end of
   -- combat steps never run, which is the whole of CR 724.2e in parun -- an "at end
-  -- of combat" trigger fires from Engine.runStepThatBegan and nowhere else.
+  -- of combat" trigger fires from Engine.startStep and nowhere else.
   Spec.it s "CR 724.2d ending the combat phase skips straight to the next phase" $ do
     ((gs, _, _, spell, _, _), _, _) <- board
     let phases = snd (runTurn (castingMandate spell) gs)
@@ -1387,7 +1387,7 @@ skippedEndOfCombatSpec s registry = Spec.describe s "SkippedEndOfCombat" $ do
     Spec.assertBool s (not (Projection.isCreatureOf jade after)) "and the animation expired with the phase"
   -- The skip itself, in its own case so no sweep assertion below can absorb a
   -- mutation to it. CR 614.6: a replaced event never happens, and the CR 603.2b
-  -- record Engine.runStepThatBegan writes is what says whether it did.
+  -- record Engine.startStep writes is what says whether it did.
   Spec.it s "CR 614.10a the end of combat step never begins, and the phase ends anyway" $ do
     (gs, _, _, _, spell) <- board
     let after = atPostcombatMain S.aggressiveAnswer (cast spell gs)
