@@ -1,0 +1,189 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "m",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "p",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Jared Carthalion, True Heir",
+            "label": "jared"
+          }
+        ],
+        "name": "alice",
+        "range": 1,
+        "team": 1
+      },
+      {
+        "name": "bob",
+        "range": 1,
+        "team": 1
+      },
+      {
+        "name": "carol",
+        "range": 1,
+        "team": 1
+      },
+      {
+        "name": "dave",
+        "range": 1,
+        "team": 1
+      },
+      {
+        "name": "erin",
+        "range": 1,
+        "team": 2
+      },
+      {
+        "name": "frank",
+        "range": 1,
+        "team": 2
+      }
+    ],
+    "sharedTeamTurns": true,
+    "step": "PrecombatMain"
+  },
+  "description": "CR 801.5a / 805.2 the primary player crowns a teammate outside their own range",
+  "note": "Shared team turns, alice, bob, carol and dave against erin and frank, every range 1; alice is the team's primary player. Her Jared Carthalion, True Heir makes frank the monarch and keeps her from the crown this turn. bob concedes, so carol stays two seats from alice (CR 801.2c), then frank concedes. Each eligible active player sits outside alice's range, yet the team's choice is not cut to it: alice and the departed bob are refused as unoffered, and alice names dave.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$m",
+            "$f",
+            "$p"
+          ],
+          "object": "$jared"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "frank",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseTargets": {
+          "opponent": [
+            "$frank"
+          ]
+        }
+      },
+      "player": "alice",
+      "source": "Jared Carthalion, True Heir",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "frank",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Monarch": {
+          "player": "frank"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Concede",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Concede",
+      "player": "frank",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "ChooseActivePlayer",
+          "with": "alice"
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "ChooseActivePlayer",
+          "with": "bob"
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseActivePlayer",
+          "with": "dave"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Monarch": {
+          "player": "dave"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

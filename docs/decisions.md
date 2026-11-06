@@ -833,6 +833,33 @@ Entries are ordered by the first rule each cites.
   controls.
 - **Issue**: #4142.
 
+## Whose range of influence cuts a team's choice
+
+- **Question**: Under shared team turns and limited range, a team's choice
+  falls to its primary player when the team disagrees. Is it cut to the
+  primary player's range (CR 801.5a), to the union of the choosing players'
+  ranges, or not at all?
+- **Rules**: CR 725.4, 726.4, 702.22k, 801.2, 801.2b, 801.5a, 801.5c, 805.2,
+  805.9; CR of 2026-09-25.
+- **Decision**: The union of the ranges of the players whose choice it is. The
+  primary player settles the team's choice among answers its players could
+  give; it is not a new choice of one player. The active team choosing who
+  takes the monarch or initiative contains every candidate, each in their own
+  range (CR 801.2b), so nothing is cut. Banding creatures of several
+  controllers cut the active player who divides to their controllers' ranges.
+- **Rejected**: The primary player's range: when it holds no eligible
+  candidate (Jared Carthalion, True Heir on the primary player, the adjacent
+  teammate gone) the team has an answer it cannot give, and CR 801.5c's
+  hand-off speaks of an effect's controller, not a rule's team. No cut for
+  banding: CR 805.9 makes it the abilities' controllers' choice, and CR 801.5a
+  binds each of them.
+- **Site**: `Parun.Engine.Game.heirOnDeparture` and
+  `Parun.Engine.Damage.blockerChooser`, proved by the scenarios "CR 801.5a /
+  805.2 the primary player crowns a teammate outside their own range" and "CR
+  801.5a / 805.9 banding creatures of two controllers offer an active player in
+  either range".
+- **Issue**: #4918.
+
 ## Whether a melded permanent is one mutate component or two
 
 - **Question**: A mutating spell merges with a melded permanent. CR 701.42a
