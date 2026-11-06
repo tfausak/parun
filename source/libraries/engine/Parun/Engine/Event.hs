@@ -2332,16 +2332,13 @@ loop settle asOf batch diverting allowances applied prevented exiledBy shuffling
     -- hallowed-moonlight-exiles-a-token-that-enters-as-a-copy-of-a-creature and
     -- hallowed-moonlight-exiles-a-card-that-enters-as-a-copy-of-a-creature.
     --
-    -- CR 616.1e: for a minted object (`from` the battlefield, runEntry's
-    -- convention), a redirect and the CR 616.1e entry rewrites still applicable
-    -- are one choice for its controller, and CR 616.1f re-collects after each.
-    -- Proved by the scenarios
-    -- hallowed-moonlight-exiles-a-wood-elemental-token-before-it-sacrifices and
-    -- hallowed-moonlight-exiles-a-wood-elemental-token-after-it-sacrifices.
-    --
-    -- Not implemented: that choice for a card moved onto the battlefield, whose
-    -- diverted entry is rolled back with the rewrites already applied; the
-    -- redirect goes first there (#6383).
+    -- CR 616.1e: a redirect and the CR 616.1e entry rewrites still applicable
+    -- are one choice for the entering object's controller, and CR 616.1f
+    -- re-collects after each. Proved by the scenarios
+    -- hallowed-moonlight-exiles-a-wood-elemental-token-before-it-sacrifices,
+    -- hallowed-moonlight-exiles-a-wood-elemental-token-after-it-sacrifices and
+    -- their two -card- twins; a card's diverted entry keeps what applied first
+    -- (unenter).
     bucket
       | Just from <- diverting,
         ProposedEvent.WouldEnter oid <- event,
@@ -2352,7 +2349,7 @@ loop settle asOf batch diverting allowances applied prevented exiledBy shuffling
                 Just (ProposedEvent.WouldChangeZone zc _ _ _)
                   | ZoneChange.to zc == Zone.Battlefield -> loop settle asOf batch Nothing allowances applied prevented exiledBy shuffling split event
                 _ -> pure (redirected, [], prevented, exiledBy, shuffling, split)
-          if from /= Zone.Battlefield || null bucket || null redirects || not (all ((== ReplacementBucket.Other) . Replacement.bucketOf) redirects)
+          if null bucket || null redirects || not (all ((== ReplacementBucket.Other) . Replacement.bucketOf) redirects)
             then continue =<< divertEntry batch from oid
             else do
               picked <- Replacement.choose gs event (bucket <> redirects)
@@ -8498,13 +8495,14 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                         if fromZone == Zone.Stack then changeZoneReturning settle oid Zone.Graveyard else pure Seq.empty
                       -- CR 614.6 / 614.12: a battlefield-bound redirect, asked inside
                       -- the entry loop (Replacement.matchesPrinted), takes the card,
-                      -- so the entry is unmade and the modified event is the move,
+                      -- so the entry is unmade for the card alone (unenter) and the
+                      -- modified event is the move,
                       -- from where it was, that happens instead; the answer is where
                       -- it landed, as for a redirect the loop above settled. Proved
                       -- by the scenario
                       -- hallowed-moonlight-exiles-a-card-that-enters-as-a-copy-of-a-creature.
                       Just (EntryRefusal.Diverted zone end) -> do
-                        State.put unentered
+                        State.modify' (unenter unentered oid newId)
                         changeZoneWithCause settle discarded asOf batch oid zone end Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried resolving Seq.empty
                     pure (fmap (\r -> (r, if fromZone == Zone.Stack || isDiverted r then fallen else Seq.empty)) refusal)
               -- Read off the refusal and not off whether `newId` still names an
@@ -9958,6 +9956,39 @@ placeDiverted oid zone position = do
           arrived = (Object.newIncarnation obj) {Object.zone = zone}
        in Game.insertIntoZone zone position (Object.owner obj) oid g1 {GameState.objects = Map.insert oid arrived (GameState.objects g1)}
     recordMintedArrival zone oid
+
+-- CR 614.6 / 616.1e: a card's entry a redirect took, unmade for the card alone,
+-- so what the entry loop applied before the redirect stands (Wood Elemental's
+-- sacrifice): `newId` is gone, and `oid` is back where `unentered` held it, with
+-- what the move re-keyed to `newId` (carryOver, perpetuate) re-keyed back. A
+-- stored effect made inside the loop names `newId` no more. Proved by the
+-- scenarios hallowed-moonlight-exiles-a-wood-elemental-card-after-it-sacrifices
+-- and hallowed-moonlight-exiles-a-card-that-enters-as-a-copy-of-a-creature.
+unenter :: GameState -> ObjectId -> ObjectId -> GameState -> GameState
+unenter unentered oid newId gs =
+  let restore field = Map.alter (const (Map.lookup oid (field unentered))) oid
+      unanchor eff
+        | ContinuousEffect.timestamp eff < GameState.nextTimestamp unentered = Just (reanchor newId (Set.singleton oid) eff)
+        | Affected.TheseObjects oids <- ContinuousEffect.affected eff,
+          Set.member newId oids =
+            let rest = Set.delete newId oids
+             in if Set.null rest then Nothing else Just eff {ContinuousEffect.affected = Affected.TheseObjects rest}
+        | otherwise = Just eff
+      deleted = Game.deleteObject newId gs
+      placed = maybe deleted (\origin -> Game.returnToOrigin oid origin deleted) (Game.entryOriginOf oid unentered)
+      stacked = case List.elemIndex oid (GameState.stack unentered) of
+        Just index -> let (above, below) = List.splitAt index (GameState.stack placed) in above <> (oid : below)
+        Nothing -> GameState.stack placed
+   in placed
+        { GameState.objects = restore GameState.objects (GameState.objects placed),
+          GameState.stack = stacked,
+          GameState.stackedIn = restore GameState.stackedIn (GameState.stackedIn placed),
+          GameState.lastKnown = restore GameState.lastKnown (GameState.lastKnown placed),
+          GameState.stackArchive = restore GameState.stackArchive (GameState.stackArchive placed),
+          GameState.continuousEffects = Maybe.mapMaybe unanchor (GameState.continuousEffects placed),
+          GameState.replacements = fmap (rewatch newId oid . reenter newId oid) (GameState.replacements placed),
+          GameState.exiledWith = fmap (relink newId oid) (GameState.exiledWith placed)
+        }
 
 -- CR 614.1a on the two roads that MINT onto the battlefield: an object whose
 -- EntryRewrite.SacrificeToEnter went unpaid, or whose ExileFromGraveyard with
