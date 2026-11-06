@@ -54,6 +54,8 @@ import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.Claim as Claim.Type
+import qualified Parun.Types.ClaimAxis as ClaimAxis
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CounterKind as CounterKind
@@ -2655,6 +2657,40 @@ pluralBoardSpec s registry = Spec.describe s "plural sources" $ do
     Spec.assertBool s (not (pays 9 (boardOf 8))) "CR 118.3 but not a {9}"
     Spec.assertBool s (not (pays 21 (boardOf 20))) "nor twenty Elves a {21}"
 
+-- Mana.canPayCommittingGiven answers a cost demanding no mana ({T}, {0}) by the
+-- board activating nothing, without payableResolutionsGiven's walk (#6417). The
+-- plural board puts every kind of option beside it -- life (Treasonous Ogre),
+-- a contending tap (Springleaf Drum), eaten mana (Transmogrant Altar, Chromatic
+-- Star) -- and each case pins the shortcut to the walk's answer, on both sides
+-- of every guard it keeps: CR 119.4's life, CR 107.14's energy and CR 118.3's
+-- claims.
+demandsNoManaSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+demandsNoManaSpec s registry = Spec.describe s "a cost demanding no mana" $ do
+  Spec.it s "CR 118.3 the board activating nothing answers what the walk answers" $ do
+    ogre <- S.printingOf s registry "Treasonous Ogre"
+    drum <- S.printingOf s registry "Springleaf Drum"
+    elves <- S.printingOf s registry "Llanowar Elves"
+    altar <- S.printingOf s registry "Transmogrant Altar"
+    star <- S.printingOf s registry "Chromatic Star"
+    let (elfId, g1) = S.addPermanent elves S.alice (Setup.emptyGame S.bothPlayers)
+        gs = Foldable.foldl' (\board printing -> snd (S.addPermanent printing S.alice board)) g1 ([ogre, ogre, drum, altar, star] <> replicate 3 elves)
+        pcs = Projection.projectAll gs
+        sources = Mana.manaSourcesGiven Set.empty (Mana.supplyCapacity Cost.manaActivations) (Projection.controlGrants gs) pcs S.alice gs
+        tapping = Claim.Type.MkClaim {Claim.Type.axis = ClaimAxis.Tapping, Claim.Type.pool = Set.singleton elfId, Claim.Type.count = 1, Claim.Type.threshold = Nothing}
+        ask life energy claims symbols =
+          let cost = ManaCost.MkManaCost symbols
+           in ( Mana.canPayCommittingGiven PaymentSubject.ForNeither Cost.manaActivations ManaSpending.AsProduced sources pcs S.alice life energy claims cost gs,
+                not (null (Mana.payableResolutionsGiven PaymentSubject.ForNeither Cost.manaActivations ManaSpending.AsProduced sources pcs S.alice life energy claims cost gs))
+              )
+    Spec.assertBool s (not (null sources)) "the board offers sources for the walk to take"
+    Spec.assertEqWith s "nothing committed pays" (ask 0 0 [] []) (True, True)
+    Spec.assertEqWith s "and so does a {0}" (ask 0 0 [] [ManaSymbol.Generic 0]) (True, True)
+    Spec.assertEqWith s "CR 119.4 twenty life pays at twenty" (ask 20 0 [] []) (True, True)
+    Spec.assertEqWith s "CR 119.4 but not twenty-one" (ask 21 0 [] []) (False, False)
+    Spec.assertEqWith s "CR 107.14 no energy pays none" (ask 0 1 [] []) (False, False)
+    Spec.assertEqWith s "CR 118.3 one Elf taps once" (ask 0 0 [tapping] []) (True, True)
+    Spec.assertEqWith s "CR 118.3 but not twice" (ask 0 0 [tapping, tapping] []) (False, False)
+
 -- alice, active, in her precombat main phase: one Transmogrant Altar, one Goblin
 -- Piker for the sacrifice to take, and optionally a Swamp to pay the {B} and a
 -- pair of spells in her hand. Returns the Altar and whichever spells were dealt.
@@ -3907,6 +3943,7 @@ spec s registry = Spec.describe s "Parun.Engine.Mana" $ do
   phyrexianAltarSpec s registry
   transmograntAltarSpec s registry
   pluralBoardSpec s registry
+  demandsNoManaSpec s registry
   grinningIgnusSpec s registry
   mysticGateSpec s registry
   skyshroudElfSpec s registry
