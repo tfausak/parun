@@ -26,6 +26,7 @@ import qualified Parun.Types.Card as Card
 import qualified Parun.Types.ChooseBetween as ChooseBetween
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.ClauseIndex as ClauseIndex
+import qualified Parun.Types.CoinReading as CoinReading
 import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
@@ -48,6 +49,7 @@ import qualified Parun.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.Filter as Filter.Type
+import qualified Parun.Types.FlipCoin as FlipCoin
 import qualified Parun.Types.ForEach as ForEach
 import qualified Parun.Types.ForbidBeingBlocked as ForbidBeingBlocked
 import qualified Parun.Types.HiddenZone as HiddenZone
@@ -348,6 +350,10 @@ condition context c = case c of
       Monad.guard (null (Target.mentions it) && Target.number it == Filter.Singular)
       [(Target.wording it <> Text.pack " was a token", False)]
     _ -> stated
+  -- CR 705.2: an earlier instruction's flip, won or lost.
+  Condition.Compares (Compares.MkCompares (Quantity.InSlot s) Comparison.Exactly (Quantity.Literal n))
+    | elem s (Target.flips context), n == 1 -> [(Text.pack "you win the flip", False)]
+    | elem s (Target.flips context), n == 0 -> [(Text.pack "you lose the flip", False)]
   _ -> stated
   where
     spell = elem (Text.pack "\n") (Target.breaks context)
@@ -418,7 +424,15 @@ instructions context es = case es of
 
 -- | The context once these instructions have named their objects.
 noting :: Target.Context -> [Effect.Effect card ability] -> Target.Context
-noting context es = context {Target.earlier = Target.earlier context <> concatMap objectsOf es, Target.pumped = Target.pumped context <> concatMap pumpedOf es}
+noting context es = context {Target.earlier = Target.earlier context <> concatMap objectsOf es, Target.pumped = Target.pumped context <> concatMap pumpedOf es, Target.flips = Target.flips context <> concatMap flipsOf es}
+
+-- | The slot an instruction binds one coin flip of yours at, won or lost (CR
+-- 705.2), if it is one: "Flip a coin. If you win the flip, ..."
+flipsOf :: Effect.Effect card ability -> [SlotName.SlotName]
+flipsOf e = case e of
+  Effect.FlipCoin f
+    | f == FlipCoin.MkFlipCoin {FlipCoin.count = FlipCoin.defaultCount, FlipCoin.reading = CoinReading.Wins, FlipCoin.slot = FlipCoin.slot f, FlipCoin.misses = Nothing, FlipCoin.flipper = FlipCoin.defaultFlipper} -> [FlipCoin.slot f]
+  _ -> []
 
 -- | The objects an instruction changes the power and toughness of: "Untap
 -- target creature. It gets +2/+4" (Inspirit) names it again without one.
@@ -620,8 +634,8 @@ joined context predicates = case predicates of
              | (vp, vq, e) <- sharedX
              ]
     -- Free: two sentences (Afterlife Insurance), "and" (Bad Deal) or, after
-    -- an imperative, ", then" (Macabre Waltz).
-    | implied p || implied q -> apart <> together <> togetherX <> thenImperative <> imperativeAnd
+    -- an imperative, ", then" (Macabre Waltz) or "and" (Sorcerer's Strongbox).
+    | implied p || implied q -> apart <> together <> togetherX <> thenImperative <> andImperative <> imperativeAnd
     -- Free: "and" (Vampiric Feast) or two sentences (Soul Shred).
     | otherwise -> together <> apart <> togetherX <> durationFirst
     where
@@ -635,6 +649,7 @@ joined context predicates = case predicates of
       together = [(Prose.sentence (clauseText p <> Text.pack " and " <> clauseText q) <> trailing q, allMentions p <> allMentions q)]
       apart = [(text, allMentions p <> allMentions q) | text <- followedBy context (sentences p) (sentences q)]
       thenImperative = [(Prose.sentence (clauseText p <> Text.pack ", then " <> verb q) <> trailing q, allMentions p <> mentions q) | Maybe.isNothing (subject p), implied q]
+      andImperative = [(Prose.sentence (clauseText p <> Text.pack " and " <> verb q) <> trailing q, allMentions p <> mentions q) | Maybe.isNothing (subject p), implied q]
       -- Free: an imperative joined to a stated subject (Vampire Gourmand).
       imperativeAnd = [(Prose.sentence (verb p <> Text.pack " and " <> clauseText q) <> trailing q, allMentions p <> allMentions q) | implied p, not (implied q)]
       -- Free for one count read by two subjects: "equal to" each time, above,
@@ -713,6 +728,12 @@ effect context e = case e of
     a <- Target.amounts context (PlayerQuantity.quantity g)
     n <- life a
     naming (Target.names a) (declarative context (PlayerQuantity.player g) (Text.pack "gain " <> n) (Text.pack "gains " <> n))
+  -- "Flip a coin" (CR 705.1): one coin, whose outcome a later clause reads
+  -- ('condition').
+  Effect.FlipCoin f
+    | FlipCoin.count f == FlipCoin.defaultCount,
+      Maybe.isNothing (FlipCoin.misses f) ->
+        imperative context (FlipCoin.flipper f) (Text.pack "flip a coin") (Text.pack "flips a coin")
   Effect.LoseGame who -> declarative context who (Text.pack "lose the game") (Text.pack "loses the game")
   Effect.LoseLife l
     | LifeLoss.cause l == LifeLossCause.ByEffect,
