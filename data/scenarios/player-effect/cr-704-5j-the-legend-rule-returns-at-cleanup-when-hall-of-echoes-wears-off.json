@@ -11,6 +11,26 @@
           {
             "card": "Isamaru, Hound of Konda",
             "label": "isamaru"
+          },
+          {
+            "card": "Island",
+            "label": "i1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i2",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i3",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i4",
+            "ready": true
           }
         ],
         "graveyard": [],
@@ -46,7 +66,7 @@
             "card": "Island"
           }
         ],
-        "manaPool": "CCCCCCCCU",
+        "manaPool": "CCCCC",
         "name": "alice"
       },
       {
@@ -114,7 +134,10 @@
       "do": {
         "Cast": {
           "mana": [
-            null
+            "$i1",
+            "$i2",
+            "$i3",
+            "$i4"
           ],
           "object": "$clone"
         }
@@ -166,7 +189,11 @@
         "View": {
           "is": [
             "$hall",
-            "$isamaru"
+            "$isamaru",
+            "$i1",
+            "$i2",
+            "$i3",
+            "$i4"
           ],
           "of": "Zone",
           "player": "alice",
