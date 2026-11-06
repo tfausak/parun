@@ -1,0 +1,168 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "hand": [
+          {
+            "card": "Wear",
+            "label": "wt"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "manaPool": "RRW",
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Chromatic Sphere",
+            "label": "sphere"
+          },
+          {
+            "card": "Ghostly Prison",
+            "label": "prison"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Spell Blast",
+            "label": "blast"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "manaPool": "UUUU",
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 702.102b / 709.4d: a fused Wear // Tear on the stack has mana value 3, so Spell Blast needs X=3",
+  "note": "Wear alone is mana value 2, so X=2 would counter an unfused Wear; the companion scenario casts it alone. alice's pool pays {1}{R}{W} with no choice, and bob's pays X=3.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "face": "Wear//Tear",
+          "object": "$wt",
+          "targetsBySlot": {
+            "artifact": [
+              "$sphere"
+            ],
+            "enchantment": [
+              "$prison"
+            ]
+          }
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "bob",
+      "refuse": {
+        "Cast": {
+          "object": "$blast",
+          "targets": [
+            "Wear"
+          ],
+          "x": 2
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$blast",
+          "targets": [
+            "Wear"
+          ],
+          "x": 3
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Wear",
+          "count": 1,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Chromatic Sphere",
+          "count": 1,
+          "player": "bob",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Ghostly Prison",
+          "count": 1,
+          "player": "bob",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
