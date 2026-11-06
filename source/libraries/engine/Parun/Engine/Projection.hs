@@ -1528,7 +1528,7 @@ anyCopiableKeyword p oid gs = case copiableSnapshotOf oid gs of
 
 -- CR 707.2: does this object's copiable rules text give it a card type or subtype
 -- that intrinsicReplacementsOf mints a CR 614.1c entry row from -- CR 306.5b's
--- planeswalker, CR 310.4b's battle or CR 714.3a's Saga? The fourth of
+-- planeswalker, CR 310.4b's battle or CR 715.3a's Saga? The fourth of
 -- staticAbilitiesOf's shape, and a PREDICATE for anyCopiableKeyword's reason: the
 -- two arms hold different containers, a projection's two type sets against a
 -- face's one type line.
@@ -2781,7 +2781,7 @@ statesZone zone = Set.member zone . StaticAbility.functionsFrom
 -- abilities (CR 113.6b throughout).
 --
 -- A SUPERSET, and that is the whole of its correctness argument. Every face an
--- object shows is one of its card's faces (CR 709.3b, CR 712.8a, CR 715.4) or a
+-- object shows is one of its card's faces (CR 709.3b, CR 712.6a, CR 716.4) or a
 -- merge of several (CR 709.4's combined view, CR 709.5's subtracted one), and
 -- Card.merge2 builds a merge out of the halves' own fields -- so no shown face
 -- carries an ability that no printed face carries. A True answer decides
@@ -3568,7 +3568,7 @@ counterGathered gs =
                 -- CR 122.1e: a loyalty counter grants nothing, and no CR 613 layer
                 -- reads loyalty.
                 CounterKind.Loyalty -> []
-                -- CR 714.3: nor a lore counter.
+                -- CR 715.3: nor a lore counter.
                 CounterKind.Lore -> []
                 -- Nor a defense counter: no CR 613 layer reads defense either.
                 CounterKind.Defense -> []
@@ -4113,7 +4113,7 @@ filterReads f = case f of
   -- CR 406.3a leaves a face-down exiled card no characteristics at all, so
   -- being one is not a characteristic either and no layer writes it.
   Filter.Type.IsExiledFaceDown -> Set.empty
-  -- Reads nothing: CR 712.8d/e make which face is up the thing characteristics
+  -- Reads nothing: CR 712.6c/e make which face is up the thing characteristics
   -- are read OFF rather than one of them, so no Modification writes Object.face.
   Filter.Type.Transformed -> Set.empty
   -- CR 109.3 / 613.1f: the aspect GainAbility, LoseNamedAbility and
@@ -4156,10 +4156,10 @@ filterReads f = case f of
   -- on this atom.
   Filter.Type.TagWasSpent _ -> Set.empty
   Filter.Type.Paid _ -> Set.empty
-  -- CR 718.2a: a copiable value, which only layer 1 writes and no Aspect names,
+  -- CR 719.2a: a copiable value, which only layer 1 writes and no Aspect names,
   -- HasName's reason.
   Filter.Type.IsPrototyped -> Set.empty
-  -- CR 722.3c / 109.3: how a spell was cast is no characteristic, WasCastFrom's
+  -- CR 723.3c / 109.3: how a spell was cast is no characteristic, WasCastFrom's
   -- reason.
   Filter.Type.IsPreparedSpell -> Set.empty
   -- Reads nothing: CR 701.54b keeps the ring-bearer designation off the copiable
@@ -4814,15 +4814,15 @@ project oid gs = projectFrom (gather gs) oid gs
 -- (Binding.withoutCopyEffect), since a copy effect changes the permanent and
 -- never the card. A counterfactual board, as Projection.View's
 -- copiableCharacteristicsFaceUp; Game.withFacing turns a merged permanent's
--- components with it (CR 730.2f). A token's, a copy's or a merge's own values
--- are no copy effect's (CR 111.3, 730.2a), so they stay -- a merge's as read
+-- components with it (CR 731.2f). A token's, a copy's or a merge's own values
+-- are no copy effect's (CR 111.3, 731.2a), so they stay -- a merge's as read
 -- with the copy effects its sides had left out. A card exiled face down shows
 -- the card too (CR 406.3), on a board where it is not.
 --
 -- data/scenarios/visibility proves each road: the CR 708.10 Cytoshape case the
 -- stored one, the CR 701.20a Clone case the stamped one, the CR 111.3 token
--- cases the kept own values, and the CR 730.2a Clone case a merge's over an
--- earlier stamp. Parun.MutateSpec's "CR 730.2a a face-down pile Infinite
+-- cases the kept own values, and the CR 731.2a Clone case a merge's over an
+-- earlier stamp. Parun.MutateSpec's "CR 731.2a a face-down pile Infinite
 -- Reflection made a copy is revealed with its merge" proves a merge's under a
 -- later one.
 projectShown :: ObjectId -> GameState -> ProjectedCharacteristics
@@ -5909,7 +5909,7 @@ stunCounters oid gs = case Game.lookupObject oid gs of
 
 -- CR 306.5b / 614.1c: a planeswalker's intrinsic "enters with loyalty counters"
 -- replacement, CR 310.4b's twin for a battle's defense, and rule 702.136a's riot
--- and CR 714.3a's Saga lore counter beside them. The keyword call at the end
+-- and CR 715.3a's Saga lore counter beside them. The keyword call at the end
 -- also mints CR 702.37b's megamorph row, a CR 614.1e one.
 --
 -- CR 310.9a's protector is NOT here, though it too is chosen as a battle enters:
@@ -5919,7 +5919,7 @@ stunCounters oid gs = case Game.lookupObject oid gs of
 -- Minted from the finished projection rather than stored on the card, so it is
 -- keyed on the PROJECTED card type and reads the PROJECTED loyalty, a copiable
 -- value under CR 707.2 (CR 707.5). Minting AFTER the layer fold puts the intrinsic
--- rows -- CR 306.5b's, CR 310.4b's and CR 714.3's -- outside the lists a CR
+-- rows -- CR 306.5b's, CR 310.4b's and CR 715.3's -- outside the lists a CR
 -- 613.1f wipe empties, so each reads PC.lostAllAbilities instead, as
 -- Parun.Engine.Subtype.intrinsicManaAbilityOf does; riot, being a keyword, is
 -- inside the fold. The scenario
@@ -5977,8 +5977,8 @@ intrinsicReplacementsOf announcedX phyrexianLifePaid castUsing pc =
     -- layer 3 through Filter.rewriteKeyword.
     <> Keyword.mintedReplacementsOf (PC.keywords pc)
     <> Keyword.castForReplacementsOf castUsing (PC.keywords pc)
-    -- CR 714.3a's intrinsic lore counter -- or CR 714.3b's chosen number, which
-    -- rule 714.3b substitutes for it on a Saga with read ahead -- minted off the
+    -- CR 715.3a's intrinsic lore counter -- or CR 715.3b's chosen number, which
+    -- rule 715.3b substitutes for it on a Saga with read ahead -- minted off the
     -- same projection as CR 306.5b's, and lost the same way.
     <> Saga.entryReplacementsOf pc
 
@@ -6000,7 +6000,7 @@ intrinsicReplacementsOf announcedX phyrexianLifePaid castUsing pc =
 -- answers off the text it copied rather than the copier's (CR 707.2), which is
 -- what Parun.CopySpec's copiedAbilitySpec proves a disjunct at a time.
 --
--- CR 730.2a's MERGE is inside that same copy-awareness and needs no route of its
+-- CR 731.2a's MERGE is inside that same copy-awareness and needs no route of its
 -- own: Parun.Engine.Event.merge stamps the merged copiable record where a copy
 -- effect stamps its snapshot (CR 613.2a puts the two in one sublayer), so all
 -- four readers see an under component's replacement effect. Parun.MutateSpec's
@@ -6042,7 +6042,7 @@ replacementsAffecting gs =
       baseHas oid | not (null (turnUpOf oid gs)) = True
       baseHas oid =
         not (null (copiableReplacementsOf oid gs))
-          -- The TYPE disjunct keeps CR 306.5b's, CR 310.4b's and CR 714.3a's
+          -- The TYPE disjunct keeps CR 306.5b's, CR 310.4b's and CR 715.3a's
           -- intrinsic replacements inside the short-circuit: none of the three
           -- appears in any base face's list.
           || copiableMintsType oid gs
@@ -6480,7 +6480,7 @@ grantsKeywordWhere p m = case m of
 
 -- Does this modification write a card type or subtype that intrinsicReplacementsOf
 -- mints an entry replacement from -- CR 306.5b's planeswalker, CR 310.4b's battle
--- or CR 714.3a's Saga?
+-- or CR 715.3a's Saga?
 --
 -- grantsKeywordWhere's twin, and exhaustive for its reason: a modification added
 -- later that also writes the type line would otherwise answer False and take its
@@ -6650,7 +6650,7 @@ grantsAbilityWhere p m = case m of
   Modification.Intensify _ -> False
 
 -- CR 306.5b / 310.4b: the card types intrinsicReplacementsOf mints a CR 614.1c row
--- from. Rule 714.3a's Saga is a SUBTYPE and so is asked one function up.
+-- from. Rule 715.3a's Saga is a SUBTYPE and so is asked one function up.
 mintingCardType :: CardType.CardType -> Bool
 mintingCardType cardType = cardType == CardType.Planeswalker || cardType == CardType.Battle
 

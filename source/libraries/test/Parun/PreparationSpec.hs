@@ -1,11 +1,11 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- Covers CR 722 preparation cards end to end: Parun.Types.Layout's Preparation
--- arm and the Parun.Engine.Card functions that read it (CR 722.4's normal view
--- through `combined`, CR 722.3's offer through `castableFaces`, CR 722.2a's inset
+-- Covers CR 723 preparation cards end to end: Parun.Types.Layout's Preparation
+-- arm and the Parun.Engine.Card functions that read it (CR 723.4's normal view
+-- through `combined`, CR 723.3's offer through `castableFaces`, CR 723.2a's inset
 -- frame through `prepareFace`), Parun.Types.Designation's Prepared arm with CR
--- 722.3a's two gates on gaining it, Parun.Engine.Prepare's mint of CR 722.3c's
+-- 723.3a's two gates on gaining it, Parun.Engine.Prepare's mint of CR 723.3c's
 -- copy into exile and its residency condition, Source.OfCardCopy and the CR
 -- 704.5e sweep Parun.Engine.Sba makes of it, the casting permission
 -- Parun.Engine.Cast.permitsCastPrepared reads, and CR 601.2i's unpreparing at the
@@ -23,19 +23,19 @@
 -- other road, so "the Piker is flying" means the copy resolved. Aurelia, the
 -- Warleader supplies CR 500.8's additional combat phase, which is how the
 -- already-prepared case gets a SECOND attack out of one turn. Clone with
--- Concordant Crossroads is CR 722.2b's board -- a permanent that has a prepare
+-- Concordant Crossroads is CR 723.2b's board -- a permanent that has a prepare
 -- spell because of what it COPIED and not because of what is printed under it,
 -- with the haste that lets it attack the turn it arrives -- and Reality Ripple is
 -- CR 702.26b's.
 --
--- CR 722.3c's "or phases in prepared" branch has its own board: Reality Ripple
+-- CR 723.3c's "or phases in prepared" branch has its own board: Reality Ripple
 -- takes the prepared Aviator away and alice's next untap step brings it back
--- (CR 702.26a), and Twincast is CR 722.3d's -- a copy of the cast Jump, re-aimed
+-- (CR 702.26a), and Twincast is CR 723.3d's -- a copy of the cast Jump, re-aimed
 -- under CR 707.10c at Russet Wolves, which is the second creature only that case
--- needs. Rule 722.3d's second sentence is Codie, Ravenous Codex's "a prepared
+-- needs. Rule 723.3d's second sentence is Codie, Ravenous Codex's "a prepared
 -- spell", asked of the Twincast copy.
 --
--- CR 722.5's alternative name needs nothing here, for Parun.FlipSpec's CR 710.5
+-- CR 723.5's alternative name needs nothing here, for Parun.FlipSpec's CR 710.5
 -- reason: Prompt.ChooseCardName offers no candidate list.
 module Parun.PreparationSpec where
 
@@ -83,7 +83,7 @@ cloneName = CardName.MkCardName (Text.pack "Clone")
 twincastName = CardName.MkCardName (Text.pack "Twincast")
 
 -- Every cast this player is offered, by the NAME of the half being offered --
--- Parun.AdventureSpec's read of the same menu, and the shape CR 722.3's claim is
+-- Parun.AdventureSpec's read of the same menu, and the shape CR 723.3's claim is
 -- about: the inset frame is not among the things a player may cast.
 namesOffered :: GameState.GameState -> [CardName.CardName]
 namesOffered gs =
@@ -91,7 +91,7 @@ namesOffered gs =
     (\action -> case action of A.Cast _ n _ -> Just n; _ -> Nothing)
     (Action.legalActions S.alice gs)
 
--- The exiled objects that are CR 722.3c's copy, by id. Read off
+-- The exiled objects that are CR 723.3c's copy, by id. Read off
 -- Object.preparedCopyOf rather than off the name, so a case can tell "the copy is
 -- gone" from "something else named Jump is in exile" -- and so the count is the
 -- rule's own subject rather than a coincidence of naming.
@@ -146,13 +146,13 @@ aliasOrFail s built name = case Map.lookup (Label.MkLabel (Text.pack name)) (Sta
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Preparation" $ do
-  -- CR 722.4: "in every zone, a preparation card has only its normal
-  -- characteristics." Stricter than either sibling layout -- CR 715.4 and CR
-  -- 720.4 both carve the stack out and this rule carves nothing out -- so a hand
+  -- CR 723.4: "in every zone, a preparation card has only its normal
+  -- characteristics." Stricter than either sibling layout -- CR 716.4 and CR
+  -- 721.4 both carve the stack out and this rule carves nothing out -- so a hand
   -- and a library are asked, and the falsifier is CR 709.4's combined reading,
   -- which would name the card "Encouraging Aviator//Jump", make it an instant as
   -- well as a creature, and price it at the two halves' 4.
-  Spec.it s "CR 722.4 a preparation card off the battlefield is only Encouraging Aviator" $ do
+  Spec.it s "CR 723.4 a preparation card off the battlefield is only Encouraging Aviator" $ do
     aviator <- S.printingOf s registry "Encouraging Aviator"
     let inZone zone = S.addObjectIn zone aviator S.alice (Setup.emptyGame S.bothPlayers)
         (handId, inHand) = inZone Zone.Hand
@@ -163,24 +163,24 @@ spec s registry = Spec.describe s "Preparation" $ do
     Spec.assertBool s (not (Set.member CardType.Instant (Projection.cardTypesOf handId inHand))) "and not an instant"
     Spec.assertEqWith s "in a library, the same" (Projection.namesOf libraryId inLibrary) (Set.singleton aviatorName)
     Spec.assertBool s (not (Set.member CardType.Instant (Projection.cardTypesOf libraryId inLibrary))) "and still not an instant"
-  -- CR 722.3: "Preparation cards can't be cast using the alternative
-  -- characteristics found within their inset frames." Where CR 715.3 and CR 720.3
+  -- CR 723.3: "Preparation cards can't be cast using the alternative
+  -- characteristics found within their inset frames." Where CR 716.3 and CR 721.3
   -- offer BOTH halves off the same card in the same hand -- Parun.AdventureSpec's
-  -- "CR 715.3 both halves are offered from a hand" is the contrast -- this layout
+  -- "CR 716.3 both halves are offered from a hand" is the contrast -- this layout
   -- offers one, ever.
   --
   -- Three Islands, so {2}{U} and {U} are both payable and an absent Jump offer is
   -- the layout rather than mana; and a Piker on the battlefield, so Jump would
   -- have a legal target if it were offered at all.
-  Spec.it s "CR 722.3 the prepare spell is never offered from a hand" $ do
+  Spec.it s "CR 723.3 the prepare spell is never offered from a hand" $ do
     aviator <- S.printingOf s registry "Encouraging Aviator"
     island <- S.printingOf s registry "Island"
     piker <- S.printingOf s registry "Goblin Piker"
     let (_, board) = S.addPermanent piker S.alice (S.landsInPlay island 3)
         (gs, _) = S.handOne aviator board
     Spec.assertEqWith s "only the creature half" (namesOffered gs) [aviatorName]
-  -- THE proving case, and the whole mechanic in one board. CR 722.3a: the printed
-  -- trigger makes the attacking Aviator prepared. CR 722.3c: "its controller
+  -- THE proving case, and the whole mechanic in one board. CR 723.3a: the printed
+  -- trigger makes the attacking Aviator prepared. CR 723.3c: "its controller
   -- creates a copy of that object in exile, except that copy has only the
   -- characteristics of that permanent's prepare spell ... for as long as the copy
   -- remains in exile, the prepared permanent's controller may cast the copy."
@@ -192,7 +192,7 @@ spec s registry = Spec.describe s "Preparation" $ do
   -- passes every post-attack assertion on its own. So the same board is asked for
   -- Jump's offer before the attack, when the Aviator is not prepared and exile is
   -- empty.
-  Spec.it s "CR 722.3c attacking mints a castable Jump copy, and casting it unprepares the Aviator" $ do
+  Spec.it s "CR 723.3c attacking mints a castable Jump copy, and casting it unprepares the Aviator" $ do
     built <- S.buildBoardOrFail s registry aviatorDuel
     aviatorId <- aliasOrFail s built "aviator"
     pikerId <- aliasOrFail s built "piker"
@@ -201,19 +201,19 @@ spec s registry = Spec.describe s "Preparation" $ do
     Spec.assertEqWith s "before: nothing in exile" (prepareCopies start) []
     Spec.assertBool s (notElem jumpName (namesOffered start)) "before: no Jump is offered"
     (_, attacked) <- S.runScriptOrFail s attackScript built S.combatGame
-    Spec.assertBool s (isPrepared aviatorId attacked) "CR 722.3a: the Aviator is prepared"
+    Spec.assertBool s (isPrepared aviatorId attacked) "CR 723.3a: the Aviator is prepared"
     case prepareCopies attacked of
       [copyId] -> do
-        -- CR 722.3c's "only the characteristics of that permanent's prepare
+        -- CR 723.3c's "only the characteristics of that permanent's prepare
         -- spell", and "those characteristics become the copy's normal
         -- characteristics": the copy is Jump and nothing of the Aviator's.
-        Spec.assertEqWith s "CR 722.3c: the copy is Jump" (Projection.namesOf copyId attacked) (Set.singleton jumpName)
+        Spec.assertEqWith s "CR 723.3c: the copy is Jump" (Projection.namesOf copyId attacked) (Set.singleton jumpName)
         Spec.assertBool s (Set.member CardType.Instant (Projection.cardTypesOf copyId attacked)) "and an instant"
         Spec.assertBool s (not (Set.member CardType.Creature (Projection.cardTypesOf copyId attacked))) "and not a creature"
         Spec.assertEqWith s "and mana value 1, the inset frame's {U}" (PC.manaValue (Projection.project copyId attacked)) (Just 1)
-        -- CR 722.3c's permission names ONE player, so it is not an offer to the
+        -- CR 723.3c's permission names ONE player, so it is not an offer to the
         -- table.
-        Spec.assertBool s (Cast.castable S.alice copyId jumpName Facing.FaceUp attacked) "CR 722.3c: alice may cast the copy"
+        Spec.assertBool s (Cast.castable S.alice copyId jumpName Facing.FaceUp attacked) "CR 723.3c: alice may cast the copy"
         Spec.assertBool s (not (Cast.castable S.bob copyId jumpName Facing.FaceUp attacked)) "and bob may not"
         Spec.assertBool s (elem jumpName (namesOffered attacked)) "after: Jump is offered"
         Spec.assertBool s (not (Projection.hasKeyword Keyword.Flying pikerId attacked)) "the Piker does not have flying yet"
@@ -221,16 +221,16 @@ spec s registry = Spec.describe s "Preparation" $ do
             resolved = S.runPure (jumpAt pikerId) cast Stack.resolveTop
         -- THE gameplay assertion, first so no proxy can absorb a mutation: the
         -- copy resolved and did what the prepare spell says.
-        Spec.assertBool s (Projection.hasKeyword Keyword.Flying pikerId resolved) "CR 722.3c: the cast copy gives the Piker flying"
+        Spec.assertBool s (Projection.hasKeyword Keyword.Flying pikerId resolved) "CR 723.3c: the cast copy gives the Piker flying"
         Spec.assertBool s (not (isPrepared aviatorId resolved)) "CR 601.2i: the Aviator is no longer prepared"
         Spec.assertEqWith s "and no copy is left in exile" (prepareCopies resolved) []
       other -> Spec.assertFailure s ("expected exactly one copy in exile, got " <> show (length other))
-  -- CR 722.3d: "if a prepare spell is copied, the copy is also a prepare spell.
+  -- CR 723.3d: "if a prepare spell is copied, the copy is also a prepare spell.
   -- Any rule or effect that refers to a spell cast as a prepare spell refers to
   -- the copy as well." Codie, Ravenous Codex's "a prepared spell" is that
   -- reference, Filter.IsPreparedSpell. The copy in EXILE is the falsifier of a
   -- reading off Source.OfCardCopy: it is the same object, not yet cast.
-  Spec.it s "CR 722.3d a Twincast copy of the cast Jump is a prepared spell too" $ do
+  Spec.it s "CR 723.3d a Twincast copy of the cast Jump is a prepared spell too" $ do
     built <- S.buildBoardOrFail s registry aviatorDuel
     pikerId <- aliasOrFail s built "piker"
     island <- S.printingOf s registry "Island"
@@ -244,22 +244,22 @@ spec s registry = Spec.describe s "Preparation" $ do
         let cast = S.runPure (jumpAt pikerId) withTwincast (Cast.castSpell S.manaPerformer S.alice copyId jumpName Facing.FaceUp)
         case GameState.stack cast of
           [jumpId] -> do
-            Spec.assertBool s (prepared jumpId cast) "CR 722.3d: the cast Jump is a prepared spell"
+            Spec.assertBool s (prepared jumpId cast) "CR 723.3d: the cast Jump is a prepared spell"
             let aimed = [Recipient.ToObject jumpId, Recipient.ToCreature pikerId]
                 twincastCast = S.runPure (aimedAmong aimed) cast (Cast.castSpell S.manaPerformer S.alice twincastId twincastName Facing.FaceUp)
                 copied = S.runPure (aimedAmong aimed) twincastCast Stack.resolveTop
             case GameState.stack copied of
               [twinId, original] | original == jumpId -> do
                 Spec.assertBool s (twinId /= jumpId) "Twincast put a new object on the stack"
-                Spec.assertBool s (prepared twinId copied) "CR 722.3d: the copy is a prepared spell too"
+                Spec.assertBool s (prepared twinId copied) "CR 723.3d: the copy is a prepared spell too"
               other -> Spec.assertFailure s ("expected the copy above the cast Jump, got " <> show other)
           other -> Spec.assertFailure s ("expected the cast Jump alone on the stack, got " <> show other)
       other -> Spec.assertFailure s ("expected exactly one copy in exile, got " <> show (length other))
-  -- CR 722.3c's residency condition, the half CR 704.5e's exception is scoped to:
+  -- CR 723.3c's residency condition, the half CR 704.5e's exception is scoped to:
   -- "this copy remains in exile for as long as the prepared permanent remains on
   -- the battlefield and has the prepared designation." The Aviator is put into its
   -- owner's hand, and the state-based check that follows removes the copy.
-  Spec.it s "CR 722.3c the copy leaves exile when the Aviator leaves the battlefield" $ do
+  Spec.it s "CR 723.3c the copy leaves exile when the Aviator leaves the battlefield" $ do
     built <- S.buildBoardOrFail s registry aviatorDuel
     aviatorId <- aliasOrFail s built "aviator"
     (_, attacked) <- S.runScriptOrFail s attackScript built S.combatGame

@@ -77,13 +77,13 @@ data TriggerCondition
     -- damage to a player" (Pia Nalaar, Chief Mechanic), once per CR 510.2 step,
     -- damagers' controller and damaged player.
     PermanentsDealCombatDamageToPlayer PermanentsDealCombatDamageToPlayer.PermanentsDealCombatDamageToPlayer
-  | -- | CR 725.2: a creature dealt combat damage to the monarch. Borne by no
+  | -- | CR 726.2: a creature dealt combat damage to the monarch. Borne by no
     -- card.
     CreatureDealtCombatDamageToMonarch
-  | -- | CR 726.2: one or more creatures a player controls dealt combat damage to
+  | -- | CR 727.2: one or more creatures a player controls dealt combat damage to
     -- the player who has the initiative. Borne by no card.
     CreaturesDealtCombatDamageToInitiative
-  | -- | CR 726.2: "you" took the initiative. Borne by no card.
+  | -- | CR 727.2: "you" took the initiative. Borne by no card.
     PlayerTookInitiative
   | -- | CR 702.94a: "when you reveal this card this way" -- miracle's triggered
     -- half, linked (CR 603.11) to the static half. Self-scoped.
@@ -161,10 +161,10 @@ data TriggerCondition
     -- life during your turn" too.
     LifeChanges LifeTrigger.LifeTrigger
   | -- | CR 603.2 / 122.6: counters of a kind were put on or removed from a
-    -- permanent (CR 714.2b's chapters, CR 310.12b's Siege, Chandra, Fire
+    -- permanent (CR 715.2b's chapters, CR 310.12b's Siege, Chandra, Fire
     -- Artisan, Protean Hydra, Wickersmith's Tools, Cloaked Cadet).
     CountersChange CounterTrigger.CounterTrigger
-  | -- | CR 716.2a: "when this Class becomes level N" (Stormchaser's Talent), a
+  | -- | CR 717.2a: "when this Class becomes level N" (Stormchaser's Talent), a
     -- crossing rather than an equality.
     SelfBecomesClassLevel ClassLevel.ClassLevel
   | -- | CR 601.2i: a spell became cast, the bearer itself (Desolation Twin) or one
@@ -198,7 +198,7 @@ data TriggerCondition
   | -- | CR 708.7 through CR 603.2: a face-down permanent is turned face up, the
     -- bearer itself (Skirk Marauder) or one the Filter admits (Aven Farseer).
     TurnedFaceUp ActingPermanent.ActingPermanent
-  | -- | CR 701.27e: a permanent transformed, the bearer (Howlpack Piper) or one
+  | -- | CR 701.27f: a permanent transformed, the bearer (Howlpack Piper) or one
     -- the Filter admits (Cult of the Waxing Moon), into a face of a name or any.
     Transforms TransformTrigger.TransformTrigger
   | -- | CR 708.9: "whenever a face-down permanent is revealed as it leaves the
@@ -236,7 +236,7 @@ data TriggerCondition
     -- you control triggers" (Historian's Boon), against
     -- GameEvent.AbilityTriggered.
     SagaFinalChapterTriggers PlayerRelation.PlayerRelation
-  | -- | CR 725.1: "whenever [a player] becomes the monarch" (Custodi Lich),
+  | -- | CR 726.1: "whenever [a player] becomes the monarch" (Custodi Lich),
     -- however the crown was won.
     PlayerBecomesMonarch PlayerRelation.PlayerRelation
   | -- | CR 603.10d / 603.7: "when you lose control of" the bearer (Khârn, the
@@ -292,7 +292,7 @@ data TriggerCondition
     AttachmentChanges AttachmentTrigger.AttachmentTrigger
   | -- | CR 603.12's reflexive triggered ability: "when you do" (The Fugitive
     -- Doctor). Nullary, and it matches no GameEvent -- the arm runs only when
-    -- the action it hangs off actually happened, CR 701.28e's ignored convert
+    -- the action it hangs off actually happened, CR 701.28f's ignored convert
     -- being the one that does not (Parun.Engine.Resolve.Common.applyClauseEffects), so
     -- Parun.Engine.Event.Trigger.delayedPending fires it once at the next gather.
     --

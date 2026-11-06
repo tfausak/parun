@@ -3,7 +3,7 @@ module Parun.Types.HistoryRead where
 import qualified Data.Set as Set
 import qualified Parun.Types.PlayerAction as PlayerAction
 
--- | CR 732.3: which part of the turn's history -- GameState.events, or
+-- | CR 733.3: which part of the turn's history -- GameState.events, or
 -- GameState.activationsThisTurn -- a construct reads, as
 -- Parun.Engine.Interchangeable.Mentions classifies the effect DSL and
 -- Parun.Engine.Fragmented asks. Loop-local, so no codec.
@@ -40,7 +40,7 @@ data HistoryRead
     LifeLosses
   | -- | Loyalty abilities activated (CR 606.3).
     LoyaltyActivations
-  | -- | Players who became the monarch (CR 725.1).
+  | -- | Players who became the monarch (CR 726.1).
     MonarchChanges
   | -- | Cards milled (CR 701.17a).
     Mills

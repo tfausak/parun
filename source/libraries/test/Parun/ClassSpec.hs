@@ -1,10 +1,10 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- Covers CR 716's Class cards, which need no engine subsystem of their own. A
--- class level bar is a keyword ability (CR 716.2) whose meaning rule 716.2a spells
+-- Covers CR 717's Class cards, which need no engine subsystem of their own. A
+-- class level bar is a keyword ability (CR 717.2) whose meaning rule 717.2a spells
 -- out in full: the activated half is the card's activated ability written with
--- Keyword.ClassLevel on it, which adds rule 716.2a's two riders as
+-- Keyword.ClassLevel on it, which adds rule 717.2a's two riders as
 -- ActivationRestriction.OnlyIf and ActivationRestriction.SorcerySpeed
 -- (Parun.Engine.Keyword.printedRiders), and the static half is an ordinary
 -- StaticAbility with a CR 604.2 clause. The mark both halves read is
@@ -28,21 +28,21 @@
 -- for what its level-2 section is: "Creatures you control get +1/+1", a plain
 -- layer 7c modification, so nothing but the level gate is under test. Its TOP
 -- section -- "Spells your opponents cast during your turn cost {1} more to cast",
--- which CR 716.3 makes an ability the Class has at all times -- is transcribed
+-- which CR 717.3 makes an ability the Class has at all times -- is transcribed
 -- too, and topSectionSpec below is what proves it. Its LEVEL-3 section --
 -- "Whenever you attack, until end of turn, target attacking creature gets +1/+1
 -- for each other attacking creature and gains double strike" -- is transcribed
 -- as well, and levelThreeSpec below is what proves it. Nothing on the card is
 -- omitted.
 --
--- CR 716.1 is a frame rule with no rules meaning -- the striated text box and the
+-- CR 717.1 is a frame rule with no rules meaning -- the striated text box and the
 -- sideways type line -- so nothing here asserts about the layout, and
 -- data/cards/paladin-class.json states none.
 --
--- CR 716.2c's "to gain a Class level" needs Sorcerer Class, and
+-- CR 717.2c's "to gain a Class level" needs Sorcerer Class, and
 -- gainClassLevelSpec below is what proves it.
 --
--- CR 716's "when this Class becomes level N" trigger needs a second card, and
+-- CR 717's "when this Class becomes level N" trigger needs a second card, and
 -- becomesLevelSpec below is what proves it: Stormchaser's Talent, BLB, joins
 -- Paladin Class for that one group.
 module Parun.ClassSpec where
@@ -103,7 +103,7 @@ spec s registry = Spec.describe s "Class" $ do
   becomesLevelSpec s registry
   gainClassLevelSpec s registry
 
--- CR 716.3: the text above the first class level bar is an ability the Class has
+-- CR 717.3: the text above the first class level bar is an ability the Class has
 -- at ALL times -- no bar precedes it, so no level gates it. Paladin Class prints
 -- "Spells your opponents cast during your turn cost {1} more to cast", and the
 -- clause under test is the "during your turn": a CR 604.2 condition on the
@@ -114,7 +114,7 @@ spec s registry = Spec.describe s "Class" $ do
 -- about paying it, so affordability cannot enter any assertion here.
 --
 -- The two boards below differ in EXACTLY one thing, GameState.activePlayer, and
--- the Class is never levelled -- CR 716.3's section is not a level bar's, so a
+-- the Class is never levelled -- CR 717.3's section is not a level bar's, so a
 -- level would be a second moving part with nothing to prove.
 taxBoard :: Printing.Printing -> Printing.Printing -> PlayerId.PlayerId -> (ObjectId.ObjectId, GameState.GameState)
 taxBoard paladinClass lightningBolt active =
@@ -145,7 +145,7 @@ topSectionSpec s registry = Spec.describe s "Top text box section" $ do
   -- TAXED player's perspective rather than the Class controller's taxes on
   -- neither -- so the pair discriminates both wrong readings, which no single
   -- board can.
-  Spec.it s "CR 716.3 / CR 102.1 the tax applies only during the Class controller's turn" $ do
+  Spec.it s "CR 717.3 / CR 102.1 the tax applies only during the Class controller's turn" $ do
     paladinClass <- S.printingOf s registry "Paladin Class"
     lightningBolt <- S.printingOf s registry "Lightning Bolt"
     let (bolt, alicesTurn) = taxBoard paladinClass lightningBolt S.alice
@@ -163,7 +163,7 @@ topSectionSpec s registry = Spec.describe s "Top text box section" $ do
   -- The scope half, which the case above cannot see: "your opponents" and "each
   -- player" agree on every board where only an opponent casts. alice casting on
   -- her own turn -- the one turn the condition is true -- is where they differ.
-  Spec.it s "CR 716.3 the Class controller's own spell is untaxed on her own turn" $ do
+  Spec.it s "CR 717.3 the Class controller's own spell is untaxed on her own turn" $ do
     paladinClass <- S.printingOf s registry "Paladin Class"
     lightningBolt <- S.printingOf s registry "Lightning Bolt"
     let (_, withClass) = S.addPermanent paladinClass S.alice (Setup.emptyGame S.bothPlayers)
@@ -185,7 +185,7 @@ topSectionSpec s registry = Spec.describe s "Top text box section" $ do
 -- different numbers, so a +1/+1 that landed on only one of them could not read as
 -- the whole modification.
 --
--- Both permanents are placed rather than cast: CR 716 says nothing about how a
+-- Both permanents are placed rather than cast: CR 717 says nothing about how a
 -- Class arrives, and Paladin Class has no entry trigger.
 board :: Printing.Printing -> Printing.Printing -> Printing.Printing -> (ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
 board paladinClass plains piker =
@@ -200,8 +200,8 @@ board paladinClass plains piker =
           }
       )
 
--- CR 716.2b's mark itself, which no characteristic reports. Nothing is a Class
--- that has never been levelled, which CR 716.2d then reads as level 1 -- the
+-- CR 717.2b's mark itself, which no characteristic reports. Nothing is a Class
+-- that has never been levelled, which CR 717.2d then reads as level 1 -- the
 -- default lives at Parun.Engine.Quantity's read and deliberately not here.
 levelOf :: ObjectId.ObjectId -> GameState.GameState -> Maybe ClassLevel.ClassLevel
 levelOf oid gs = Game.lookupObject oid gs >>= Object.classLevel
@@ -219,7 +219,7 @@ barsOffered oid gs =
     )
 
 -- Activate the first bar alice is OFFERED on this permanent and resolve it.
--- Offered rather than merely present: CR 716.2a leaves every bar on the Class at
+-- Offered rather than merely present: CR 717.2a leaves every bar on the Class at
 -- every level and CR 602.5's riders are what pick one out, so the enumeration is
 -- the only thing that knows which. Stack.resolveTop rather than the priority
 -- loop: the narrowest path that shows the write, with no settle in between that
@@ -231,29 +231,29 @@ gainLevel oid gs = case [ability | Action.Type.Activate o ability <- Action.lega
     let activated = S.runPure S.identityAnswer gs (Activate.activateAbility S.alice oid ability)
      in S.runPure S.identityAnswer activated Stack.resolveTop
 
--- CR 716.2a's static half: "As long as this Class is level N or greater, it has
+-- CR 717.2a's static half: "As long as this Class is level N or greater, it has
 -- [abilities]."
 sectionSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 sectionSpec s registry = Spec.describe s "Level bar section" $ do
   -- The two readings this case must tell apart: a level-gated section that is off
   -- until the level is gained, and one that is simply always on. The Piker's
   -- printed 2/1 is what the second would have destroyed.
-  Spec.it s "CR 716.2d a Class with no level reads as level 1, so its level-2 section is off" $ do
+  Spec.it s "CR 717.2d a Class with no level reads as level 1, so its level-2 section is off" $ do
     paladinClass <- S.printingOf s registry "Paladin Class"
     plains <- S.printingOf s registry "Plains"
     piker <- S.printingOf s registry "Goblin Piker"
     let (classId, pikerId, gs) = board paladinClass plains piker
     Spec.assertEqWith s "the Piker is its printed 2/1" (S.powerToughnessOf pikerId gs) (Just (2, 1))
-    Spec.assertEqWith s "CR 716.2b: no level designation has been written" (levelOf classId gs) Nothing
+    Spec.assertEqWith s "CR 717.2b: no level designation has been written" (levelOf classId gs) Nothing
 
--- CR 716.2a's static half at the LAST section, which is where Paladin Class's
+-- CR 717.2a's static half at the LAST section, which is where Paladin Class's
 -- ladder ends: "Whenever you attack, until end of turn, target attacking
 -- creature gets +1/+1 for each other attacking creature and gains double
 -- strike."
 --
 -- Three rules meet here, each with its own falsifier on the boards below:
 --
---   * CR 716.2a. The section is a static ability gated on level 3 that grants
+--   * CR 717.2a. The section is a static ability gated on level 3 that grants
 --     the Class a quoted TRIGGERED ability (CR 613.1f). The level-2 board is the
 --     negative, and differs from the positive in exactly one field.
 --   * CR 508.3d. "Whenever you attack" asks about the attacking PLAYER and
@@ -286,7 +286,7 @@ attackBoard paladinClass piker level =
       (classId, withClass) = S.addPermanent paladinClass S.alice gs
    in (pikers, classId, atLevel classId level withClass)
 
--- CR 716.2b's designation, written straight onto the permanent.
+-- CR 717.2b's designation, written straight onto the permanent.
 atLevel :: ObjectId.ObjectId -> Natural.Natural -> GameState.GameState -> GameState.GameState
 atLevel oid level gs =
   gs
@@ -307,7 +307,7 @@ levelThreeSpec s registry =
         _ -> S.aggressiveAnswer p
       atBlockers aim = S.runToStep (Phase.Combat CombatStep.DeclareBlockers) (answering aim)
    in Spec.describe s "Level 3 section" $ do
-        Spec.it s "CR 716.2a / CR 508.3d the level-3 trigger pumps by each OTHER attacker and grants double strike" $ do
+        Spec.it s "CR 717.2a / CR 508.3d the level-3 trigger pumps by each OTHER attacker and grants double strike" $ do
           paladinClass <- S.printingOf s registry "Paladin Class"
           piker <- S.printingOf s registry "Goblin Piker"
           case attackBoard paladinClass piker 3 of
@@ -323,14 +323,14 @@ levelThreeSpec s registry =
               Spec.assertEqWith s "the untargeted attackers are 3/2 -- the level-2 section alone" (fmap (\oid -> S.powerToughnessOf oid after) others) (fmap (const (Just (3, 2))) others)
               Spec.assertBool s (not (any (\oid -> Projection.hasKeyword Keyword.DoubleStrike oid after) others)) "and none of them gained double strike"
               -- The preconditions the readings above rest on.
-              Spec.assertEqWith s "CR 716.2b the Class really is level 3" (levelOf classId after) (Just (ClassLevel.MkClassLevel 3))
+              Spec.assertEqWith s "CR 717.2b the Class really is level 3" (levelOf classId after) (Just (ClassLevel.MkClassLevel 3))
               Spec.assertEqWith s "CR 508.1b all four Pikers really were declared attacking bob" (Combat.Type.attackers (GameState.combat after)) (Map.fromList (fmap (\oid -> (oid, AttackTarget.OfPlayer S.bob)) (target : others)))
             _ -> Spec.assertFailure s "fixture should give alice four Pikers and a Class"
-        -- The same board with the level as the only difference. CR 716.2a gates
+        -- The same board with the level as the only difference. CR 717.2a gates
         -- the section on "level N or greater", so at level 2 there is no trigger
         -- at all -- and the level-2 section's own +1/+1 is still on, which is
         -- what says the board is otherwise identical rather than broken.
-        Spec.it s "CR 716.2a the level-3 section is off while the Class is level 2" $ do
+        Spec.it s "CR 717.2a the level-3 section is off while the Class is level 2" $ do
           paladinClass <- S.printingOf s registry "Paladin Class"
           piker <- S.printingOf s registry "Goblin Piker"
           case attackBoard paladinClass piker 2 of
@@ -338,11 +338,11 @@ levelThreeSpec s registry =
               let after = atBlockers target gs
               Spec.assertEqWith s "the would-be target is 3/2 -- the level-2 section and nothing more" (S.powerToughnessOf target after) (Just (3, 2))
               Spec.assertBool s (not (Projection.hasKeyword Keyword.DoubleStrike target after)) "and it gained no double strike"
-              Spec.assertEqWith s "CR 716.2b the Class really is level 2" (levelOf classId after) (Just (ClassLevel.MkClassLevel 2))
+              Spec.assertEqWith s "CR 717.2b the Class really is level 2" (levelOf classId after) (Just (ClassLevel.MkClassLevel 2))
               Spec.assertEqWith s "CR 508.1b and all four Pikers really did attack" (Combat.Type.attackers (GameState.combat after)) (Map.fromList (fmap (\oid -> (oid, AttackTarget.OfPlayer S.bob)) (target : others)))
             _ -> Spec.assertFailure s "fixture should give alice four Pikers and a Class"
 
--- CR 716.2a's activated half: "[Cost]: This Class's level becomes N. Activate only
+-- CR 717.2a's activated half: "[Cost]: This Class's level becomes N. Activate only
 -- if this Class is level N-1 and only as a sorcery."
 ladderSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 ladderSpec s registry = Spec.describe s "Level bar activation" $ do
@@ -350,7 +350,7 @@ ladderSpec s registry = Spec.describe s "Level bar activation" $ do
   -- "only if this Class is level N-1" is the last entry: with no such clause the
   -- level-2 bar stays offered forever, and the third activation would put the
   -- level back to 2.
-  Spec.it s "CR 716.2a a bar is activatable only from level N-1" $ do
+  Spec.it s "CR 717.2a a bar is activatable only from level N-1" $ do
     paladinClass <- S.printingOf s registry "Paladin Class"
     plains <- S.printingOf s registry "Plains"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -369,7 +369,7 @@ ladderSpec s registry = Spec.describe s "Level bar activation" $ do
   -- Two boards differing in exactly one thing: whose turn it is. Both hold the
   -- same twelve untapped Plains, so the bar is affordable on each, and CR 307.5's
   -- "it must be during the main phase of their turn" is the only thing that moves.
-  Spec.it s "CR 716.2a a level bar is activatable only as a sorcery" $ do
+  Spec.it s "CR 717.2a a level bar is activatable only as a sorcery" $ do
     paladinClass <- S.printingOf s registry "Paladin Class"
     plains <- S.printingOf s registry "Plains"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -378,7 +378,7 @@ ladderSpec s registry = Spec.describe s "Level bar activation" $ do
     Spec.assertEqWith s "offered on alice's own main phase" (barsOffered classId gs) 1
     Spec.assertEqWith s "not offered on bob's turn" (barsOffered classId bobsTurn) 0
 
--- CR 716.2a's rider is "Activate only if this Class is level N-1", and CR 602.5
+-- CR 717.2a's rider is "Activate only if this Class is level N-1", and CR 602.5
 -- makes that a prohibition on activating an ability the object HAS. The other
 -- reading -- ActivatedAbility.condition, which GRANTS the bar only at level N-1 --
 -- refuses the same activations, so the two come apart only where a card reads the
@@ -386,7 +386,7 @@ ladderSpec s registry = Spec.describe s "Level bar activation" $ do
 --
 -- Paladin Class at level THREE is where they differ most sharply: its ladder is
 -- spent, so under the grant gate neither bar is among its abilities and the Class
--- has none, while rule 716.2a leaves both bars on it, prohibited.
+-- has none, while rule 717.2a leaves both bars on it, prohibited.
 --
 -- Synthetic Ability Audit is the reader -- "Creatures get +1/+0 for each permanent
 -- with an activated ability that isn't a mana ability", which is
@@ -406,7 +406,7 @@ ladderSpec s registry = Spec.describe s "Level bar activation" $ do
 -- Class can carry an activated ability of any kind.
 barsHadSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 barsHadSpec s registry = Spec.describe s "Bars the Class has" $ do
-  Spec.it s "CR 716.2a / CR 602.1 a Class has its level bars at every level, activatable or not" $ do
+  Spec.it s "CR 717.2a / CR 602.1 a Class has its level bars at every level, activatable or not" $ do
     audit <- S.printingOf s registry "Synthetic Ability Audit"
     paladinClass <- S.printingOf s registry "Paladin Class"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -415,12 +415,12 @@ barsHadSpec s registry = Spec.describe s "Bars the Class has" $ do
         (_, lonePiker, loneBoard) = auditBoard audit paladinClass piker Nothing
     Spec.assertEqWith
       s
-      "CR 716.2a: bob's Piker is 3/1, the audit counting a level-3 Class whose bars are all prohibited"
+      "CR 717.2a: bob's Piker is 3/1, the audit counting a level-3 Class whose bars are all prohibited"
       (S.powerToughnessOf topPiker topBoard)
       (Just (3, 1))
     Spec.assertEqWith
       s
-      "CR 716.2a: a level-1 Class, whose first bar IS activatable, is counted the same"
+      "CR 717.2a: a level-1 Class, whose first bar IS activatable, is counted the same"
       (S.powerToughnessOf freshPiker freshBoard)
       (Just (3, 1))
     Spec.assertEqWith
@@ -428,7 +428,7 @@ barsHadSpec s registry = Spec.describe s "Bars the Class has" $ do
       "the same board without the Class: the audit counts nothing and the Piker is its printed 2/1"
       (S.powerToughnessOf lonePiker loneBoard)
       (Just (2, 1))
-    Spec.assertEqWith s "CR 716.2b: the first board's Class is at level 3" (fmap (`levelOf` topBoard) topClass) (Just (Just (ClassLevel.MkClassLevel 3)))
+    Spec.assertEqWith s "CR 717.2b: the first board's Class is at level 3" (fmap (`levelOf` topBoard) topClass) (Just (Just (ClassLevel.MkClassLevel 3)))
 
 -- alice's audit and bob's Piker, plus alice's Class at the given level when there
 -- is one. The three boards differ in exactly one thing apiece: whether the Class
@@ -444,7 +444,7 @@ auditBoard audit paladinClass piker level =
           let (classId, withClass) = S.addPermanent paladinClass S.alice withPiker
            in (Just classId, pikerId, atLevel classId n withClass)
 
--- CR 716.2b: "A level is a designation that any permanent can have. A Class
+-- CR 717.2b: "A level is a designation that any permanent can have. A Class
 -- retains its level even if it stops being a Class."
 --
 -- Song of the Dryads is what makes a Class stop being one: "Enchanted
@@ -463,18 +463,18 @@ auditBoard audit paladinClass piker level =
 -- over the corpus: Paladin Class and Stormchaser's Talent, each reading only
 -- itself). So the case asserts the strip too --
 -- the Piker is 2/1 while the Class is a Forest land, for rule 305.7's reason and
--- not for rule 716.2b's, which the level assertion beside it is what shows.
+-- not for rule 717.2b's, which the level assertion beside it is what shows.
 --
 -- The Class is levelled to 2 BEFORE the Song arrives, and the Piker's 3/2 once
 -- the Song moves off is the reading: an engine that discarded the level when the
--- permanent stopped being a Class leaves it at CR 716.2d's default of 1 there and
+-- permanent stopped being a Class leaves it at CR 717.2d's default of 1 there and
 -- the Piker its printed 2/1. Levelling first is what makes the two readings
 -- differ -- on an unlevelled Class both report 1.
 --
 -- A state-based pass runs while the permanent is not a Class, so a wipe placed
 -- there would be caught rather than skipped over.
 
--- The three boards rule 716.2b's sentence needs, in order: the levelled Class
+-- The three boards rule 717.2b's sentence needs, in order: the levelled Class
 -- untouched, the same Class with the Song on it and the SBAs settled, and the
 -- Song moved off onto the Mountain. Each differs from the one before it in
 -- exactly one thing, and the level is written once, before any of them.
@@ -497,9 +497,9 @@ retentionBoards paladinClass plains piker mountain song =
       enchanted = S.settleSba (S.attachTo songId (Recipient.ToObject classId) unattached)
    in (classId, pikerId, unattached, enchanted, S.attachTo songId (Recipient.ToObject mountainId) enchanted)
 
--- CR 716.2b's last sentence: "Levels are not a copiable characteristic." CR 707.2
+-- CR 717.2b's last sentence: "Levels are not a copiable characteristic." CR 707.2
 -- is the list this is an exclusion from -- the copiable values are the ones
--- derived from the printed text -- and CR 716.2d is what the copy reads instead,
+-- derived from the printed text -- and CR 717.2d is what the copy reads instead,
 -- a permanent with no level being treated as level 1.
 --
 -- Copy Enchantment {2}{U} ("You may have this enchantment enter as a copy of any
@@ -507,10 +507,10 @@ retentionBoards paladinClass plains piker mountain song =
 -- `eligible = HasCardType Enchantment`, so a Class on the battlefield is offered
 -- where Clone's "any creature" would not offer one.
 --
--- The OBSERVABLE is CR 716.2a's activated half rather than its static one: which
+-- The OBSERVABLE is CR 717.2a's activated half rather than its static one: which
 -- level bar the copy may activate, and the level that activation lands on. The
 -- original is levelled to 2 FIRST, so the two readings come apart -- a copy at CR
--- 716.2d's default of 1 is offered the {2}{W} bar and reaches level 2, while a
+-- 717.2d's default of 1 is offered the {2}{W} bar and reaches level 2, while a
 -- copy carrying the original's level would be offered the {4}{W} bar and reach
 -- level 3. On an UNLEVELLED original both readings say the same thing, which is
 -- why the level is written before the copy is made.
@@ -518,13 +518,13 @@ retentionBoards paladinClass plains piker mountain song =
 -- CR 707.2a's half rides the same fixture, in the two cases after this one: the
 -- copy DOES acquire the copied object's static and player abilities, which is
 -- what makes a second level-2 section reachable at all. The Piker's 3/2 in the
--- case below is still rule 716.2b's answer and not rule 707.2a's -- the copy
--- enters at CR 716.2d's level 1, so its level-2 section is off however the
+-- case below is still rule 717.2b's answer and not rule 707.2a's -- the copy
+-- enters at CR 717.2d's level 1, so its level-2 section is off however the
 -- abilities are read -- so it is the LEVELLED copy that tells the two apart.
 
 designationSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 designationSpec s registry = Spec.describe s "Level designation" $ do
-  Spec.it s "CR 716.2b a Class retains its level even if it stops being a Class" $ do
+  Spec.it s "CR 717.2b a Class retains its level even if it stops being a Class" $ do
     paladinClass <- S.printingOf s registry "Paladin Class"
     plains <- S.printingOf s registry "Plains"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -534,18 +534,18 @@ designationSpec s registry = Spec.describe s "Level designation" $ do
     -- The gameplay-level assertion the case exists for, first: the level-2
     -- section is on again once the permanent is a Class again, which it can only
     -- be if the level outlived the stretch in which it was not one.
-    Spec.assertEqWith s "CR 716.2b the Piker is 3/2 again once the Aura moves off" (S.powerToughnessOf pikerId moved) (Just (3, 2))
+    Spec.assertEqWith s "CR 717.2b the Piker is 3/2 again once the Aura moves off" (S.powerToughnessOf pikerId moved) (Just (3, 2))
     Spec.assertEqWith s "and the level it resumes at is the one it retained" (levelOf classId moved) (Just (ClassLevel.MkClassLevel 2))
     -- What the stretch itself looks like, and the preconditions the assertions
     -- above rest on: were the subtype not stripped, nothing here would be about
-    -- rule 716.2b at all.
+    -- rule 717.2b at all.
     Spec.assertEqWith s "before: an Enchantment -- Class, level 2, with its section on" (Projection.cardTypesOf classId unattached, Projection.subtypesOf classId unattached, S.powerToughnessOf pikerId unattached) (Set.singleton CardType.Enchantment, Set.singleton Subtype.Class, Just (3, 2))
     Spec.assertEqWith s "CR 205.1a: Land REPLACES Enchantment, and the Class subtype goes with the type it correlates with" (Projection.cardTypesOf classId enchanted, Projection.subtypesOf classId enchanted) (Set.singleton CardType.Land, Set.singleton Subtype.Forest)
     Spec.assertEqWith s "CR 305.7: the section is off while it is a Forest land because its abilities are stripped" (S.powerToughnessOf pikerId enchanted) (Just (2, 1))
-    Spec.assertEqWith s "CR 716.2b: and NOT because the level went anywhere" (levelOf classId enchanted) (Just (ClassLevel.MkClassLevel 2))
+    Spec.assertEqWith s "CR 717.2b: and NOT because the level went anywhere" (levelOf classId enchanted) (Just (ClassLevel.MkClassLevel 2))
     Spec.assertEqWith s "with the Aura gone it is an Enchantment -- Class once more" (Projection.cardTypesOf classId moved, Projection.subtypesOf classId moved) (Set.singleton CardType.Enchantment, Set.singleton Subtype.Class)
 
--- CR 716.2a's static half at a section that grants a TRIGGERED ability watching
+-- CR 717.2a's static half at a section that grants a TRIGGERED ability watching
 -- the very level change that turned the section on: "When this Class becomes
 -- level 2, return target instant or sorcery card from your graveyard to your
 -- hand" (Stormchaser's Talent, BLB).
@@ -556,7 +556,7 @@ designationSpec s registry = Spec.describe s "Level designation" $ do
 -- unattached, losing control, a countered spell, a player losing, planeswalking
 -- away -- and "becomes level N" is on none of it. So the abilities checked
 -- against the event are the ones existing immediately AFTER it, which is after
--- CR 716.2a's static half has granted this one.
+-- CR 717.2a's static half has granted this one.
 --
 -- Stormchaser's Talent rather than Paladin Class because Paladin Class prints no
 -- such trigger. Its whole text is transcribed in
@@ -564,7 +564,7 @@ designationSpec s registry = Spec.describe s "Level designation" $ do
 -- bars, the level-2 trigger under test, and the level-3 section's "whenever you
 -- cast an instant or sorcery spell".
 --
--- The Class is PLACED rather than cast, so its CR 716.3 enters trigger never
+-- The Class is PLACED rather than cast, so its CR 717.3 enters trigger never
 -- fires and no Otter token is on the board -- one moving part fewer, and nothing
 -- below reads a creature count.
 --
@@ -650,7 +650,7 @@ climbAiming classId aim gs =
 
 becomesLevelSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 becomesLevelSpec s registry = Spec.describe s "Becomes level trigger" $ do
-  Spec.it s "CR 716.2a / CR 603.10 the level-2 section's trigger fires on the very activation that grants it" $ do
+  Spec.it s "CR 717.2a / CR 603.10 the level-2 section's trigger fires on the very activation that grants it" $ do
     talent <- S.printingOf s registry "Stormchaser's Talent"
     island <- S.printingOf s registry "Island"
     bolt <- S.printingOf s registry "Lightning Bolt"
@@ -669,10 +669,10 @@ becomesLevelSpec s registry = Spec.describe s "Becomes level trigger" $ do
     -- The preconditions the readings above rest on: the level really moved, and
     -- the id the trigger targeted really is gone from the graveyard (CR 400.7
     -- minted a new object in the hand).
-    Spec.assertEqWith s "CR 716.2a the level BECAME 2" (levelOf classId after) (Just (ClassLevel.MkClassLevel 2))
+    Spec.assertEqWith s "CR 717.2a the level BECAME 2" (levelOf classId after) (Just (ClassLevel.MkClassLevel 2))
     Spec.assertBool s (notElem mineId (Game.zoneMembers Zone.Graveyard S.alice after)) "CR 400.7 the object it was targeted under is gone from the graveyard"
   -- The crossing, on the same board with the level as the only difference. CR
-  -- 716.2a's ladder takes a Class from 2 to 3 here, and "becomes level 2" must
+  -- 717.2a's ladder takes a Class from 2 to 3 here, and "becomes level 2" must
   -- not fire again: the condition asks whether the level was BELOW 2 and reached
   -- 2, which an equality on the resulting level cannot answer and a bare
   -- "reached at least 2" gets wrong.
@@ -680,7 +680,7 @@ becomesLevelSpec s registry = Spec.describe s "Becomes level trigger" $ do
   -- The level-2 section is still ON at level 3 (its gate is "2 or greater"), so
   -- the granted trigger exists throughout -- which is what makes this a statement
   -- about the crossing rather than about the section.
-  Spec.it s "CR 716.2a the level-2 trigger does not fire again when the Class goes from 2 to 3" $ do
+  Spec.it s "CR 717.2a the level-2 trigger does not fire again when the Class goes from 2 to 3" $ do
     talent <- S.printingOf s registry "Stormchaser's Talent"
     island <- S.printingOf s registry "Island"
     bolt <- S.printingOf s registry "Lightning Bolt"
@@ -689,9 +689,9 @@ becomesLevelSpec s registry = Spec.describe s "Becomes level trigger" $ do
         after = climbAiming classId mineId (atLevel classId 2 gs)
     Spec.assertEqWith s "the Lightning Bolt is still in alice's graveyard" (namesIn Zone.Graveyard S.alice after) [CardName.MkCardName (Text.pack "Lightning Bolt")]
     Spec.assertEqWith s "and her hand is empty" (namesIn Zone.Hand S.alice after) []
-    Spec.assertEqWith s "CR 716.2a the level really did move on to 3" (levelOf classId after) (Just (ClassLevel.MkClassLevel 3))
+    Spec.assertEqWith s "CR 717.2a the level really did move on to 3" (levelOf classId after) (Just (ClassLevel.MkClassLevel 3))
 
--- CR 716.2c: "to gain a Class level" means "to activate an ability indicated by
+-- CR 717.2c: "to gain a Class level" means "to activate an ability indicated by
 -- a class level bar". Sorcerer Class, AFR 233, prints it: at level 2 creatures
 -- its controller controls have "{T}: Add {U} or {R}. Spend this mana only to
 -- cast an instant or sorcery spell or to gain a Class level." The clause is
@@ -726,7 +726,7 @@ redFrom redSource p = case p of
 
 gainClassLevelSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 gainClassLevelSpec s registry = Spec.describe s "Gaining a Class level" $ do
-  Spec.it s "CR 716.2c Sorcerer Class's mana pays to gain a Class level" $ do
+  Spec.it s "CR 717.2c Sorcerer Class's mana pays to gain a Class level" $ do
     sorcererClass <- S.printingOf s registry "Sorcerer Class"
     shivan <- S.printingOf s registry "Shivan Dragon"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -736,7 +736,7 @@ gainClassLevelSpec s registry = Spec.describe s "Gaining a Class level" $ do
           ability : _ ->
             let activated = S.runPure (redFrom shivanId) gs (Activate.activateAbility S.alice classId ability)
              in S.runPure S.identityAnswer activated Stack.resolveTop
-    Spec.assertEqWith s "CR 716.2c the level-3 bar is paid with the creatures' mana" (levelOf classId after) (Just (ClassLevel.MkClassLevel 3))
+    Spec.assertEqWith s "CR 717.2c the level-3 bar is paid with the creatures' mana" (levelOf classId after) (Just (ClassLevel.MkClassLevel 3))
     Spec.assertEqWith s "and every creature tapped for it" (S.tappedCount S.alice after) 5
   -- The same mana refuses an activation no class level bar indicates; the
   -- Mountain board is the control.
@@ -752,7 +752,7 @@ gainClassLevelSpec s registry = Spec.describe s "Gaining a Class level" $ do
   -- damage to each opponent equal to the number of instant and sorcery spells
   -- you've cast this turn." alice casts Goblin Piker, then Divination: two
   -- spells, one of them a sorcery, so bob takes 1 and not 2.
-  Spec.it s "CR 716.2a / CR 120.1 the level-3 trigger has the spell deal damage by instants and sorceries cast" $ do
+  Spec.it s "CR 717.2a / CR 120.1 the level-3 trigger has the spell deal damage by instants and sorceries cast" $ do
     sorcererClass <- S.printingOf s registry "Sorcerer Class"
     shivan <- S.printingOf s registry "Shivan Dragon"
     piker <- S.printingOf s registry "Goblin Piker"

@@ -1,0 +1,114 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Swamp",
+            "label": "swamp1",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp2",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp3",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp4",
+            "ready": true
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Flying Men",
+            "label": "men"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Synthetic Raising Truce",
+            "label": "raising"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "attached": "alice",
+            "card": "Curse of Death's Hold",
+            "label": "curse"
+          },
+          {
+            "card": "City in a Bottle",
+            "label": "city"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "BeginningOfCombat"
+  },
+  "description": "CR 725.2f a state trigger matched only before CR 725.2c's check goes on the stack in the next phase",
+  "note": "As the CR 725.1f file, with Synthetic Raising Truce ending the combat phase instead: CR 725.2c's check buries the 0/0 Flying Men with no trigger placed, and City in a Bottle's ability goes on the stack in the postcombat main phase (CR 725.2f). Read at that phase's settle instead, the stack is empty.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$swamp1",
+            "$swamp2",
+            "$swamp3",
+            "$swamp4"
+          ],
+          "object": "$raising",
+          "targets": [
+            "$men"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "BeginningOfCombat",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "BeginningOfCombat",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $city"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PostcombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Flying Men",
+          "count": 1,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "PostcombatMain",
+      "turn": 1
+    }
+  ]
+}

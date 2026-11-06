@@ -5,7 +5,7 @@ import qualified Parun.Types.Keyword as Keyword
 
 -- | CR 603.2: whose counters a counter trigger watches.
 data CounterHolder
-  = -- | The bearer, compared by id (CR 714.2b's "this Saga").
+  = -- | The bearer, compared by id (CR 715.2b's "this Saga").
     Self
   | -- | A permanent the Filter admits, judged with last known information (CR
     -- 608.2h).

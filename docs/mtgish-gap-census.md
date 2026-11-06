@@ -157,7 +157,7 @@ parun's layer system exists (`Layer`, `ProjectedCharacteristics`, the projection
 | Layer | mtgish operations | parun status |
 |---|---|---|
 | **1 copy** | `IsACopyOf`, `SetCopiablePT`, `AddCopiableAbility`, mutate | **GAP** — no copy mechanism anywhere (Clone, copy-spell). CR 707 (verify). |
-| **2 control** | `SetController` | **GAP (deep)** — `Object` has only `owner`, **no `controller` field**, so a changed controller has nowhere to live; `Modification` has no control op. Player-control (Mindslaver, `GameState.pendingControl`, CR 723) is a *different* mechanism and does **not** cover Control Magic / Threaten (CR 613 layer 2 — verify). |
+| **2 control** | `SetController` | **GAP (deep)** — `Object` has only `owner`, **no `controller` field**, so a changed controller has nowhere to live; `Modification` has no control op. Player-control (Mindslaver, `GameState.pendingControl`, CR 724) is a *different* mechanism and does **not** cover Control Magic / Threaten (CR 613 layer 2 — verify). |
 | 3 text | `SetName`, `HasTextOf…` | COVERED for subtype and colour words (`ChangeWord`); name-change is VOCAB. |
 | 4 type | add/set/remove card/creature/land types | COVERED (the common ops); breadth is VOCAB. |
 | **5 color** | `AddColor`, `SetColor` | **GAP** — `Modification` cannot change color; `Color` type exists but no op feeds it. |
@@ -172,7 +172,7 @@ section, and §5 flags the layer system as the canary.
 
 Each of these is a small closed-half rules section the card pool needs; mtgish
 carries first-class support (Actions + Expirations + Triggers). parun has none, and
-M5 lists only the "nightmares" (723/727/729/732/733), not these:
+M5 lists only the "nightmares" (724/728/730/733/734), not these:
 
 | Subsystem | mtgish evidence | parun / roadmap |
 |---|---|---|
@@ -330,7 +330,7 @@ Ranked by machinery risk × leverage (design.md's own ordering philosophy), for
   (M4f ✓), modal (M4g ✓ — M4 complete); player-control/restart/subgames (M5); LLM
   transpiler (M6). M4g's fast-follow (modality on activated/triggered abilities)
   is VOCAB on the existing `Mode`/`Modal` payload, not a gap.
-- **RING-2 (§6):** ante, dexterity, Contraptions (on the CR 717 Attractions
+- **RING-2 (§6):** ante, dexterity, Contraptions (on the CR 718 Attractions
   substrate).
 - **OOS (§6):** draft/Conspiracy (second VM), un-set social/art-content cards.
 

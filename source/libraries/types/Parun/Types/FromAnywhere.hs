@@ -2,7 +2,7 @@ module Parun.Types.FromAnywhere where
 
 import qualified Parun.Types.SlotName as SlotName
 
--- | CR 400.7j / 730.3c with the printed "from anywhere": the objects a slot
+-- | CR 400.7j / 731.3c with the printed "from anywhere": the objects a slot
 -- holds, followed to wherever they are now -- Timmerian Fiends' "Timmerian
 -- Fiends from anywhere".
 --

@@ -35,7 +35,7 @@ import qualified Parun.Types.Zone as Zone
 -- one that needs no "you" at all -- CR 108.4a answers the controller of a card
 -- already in exile with its owner, so PlayerRef.HolderOfBound says it.
 --
--- ONE seat, since Parun.Types.ExilePlayPermission holds one (CR 715.3d: "that
+-- ONE seat, since Parun.Types.ExilePlayPermission holds one (CR 716.3d: "that
 -- card ... that player"). So Parun.Engine.Resolve.Arms.Zones's arm grants nothing for
 -- a reference naming nobody, and nothing for one naming several --
 -- PlayerRef.InSlot's own collapse. A holder per card is Parun.Types.ForEach's

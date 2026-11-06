@@ -121,8 +121,8 @@ data Quantity
     StartingLifeTotal PlayerRef.PlayerRef
   | -- | CR 702.179: that player's speed; no speed reads 0 (CR 702.179f).
     Speed PlayerRef.PlayerRef
-  | -- | CR 725.1: 1 if that player is the monarch, else 0; no monarch reads 0
-    -- (CR 725.5).
+  | -- | CR 726.1: 1 if that player is the monarch, else 0; no monarch reads 0
+    -- (CR 726.5).
     IsMonarch PlayerRef.PlayerRef
   | -- | CR 702.131c \/ 702.195b: 1 if that player has that rest-of-game mark, else
     -- 0; a player who has never had it reads 0.
@@ -158,8 +158,8 @@ data Quantity
     -- quantity is evaluated against that share one value, whatever their kinds
     -- of die; no stored result reads 0 (Centaur of Attention).
     StoredResultsOfSameValue
-  | -- | CR 716.2b: the level of the object this quantity is evaluated against;
-    -- no level reads 1 (CR 716.2d, Parun.Types.ClassLevel.defaulted).
+  | -- | CR 717.2b: the level of the object this quantity is evaluated against;
+    -- no level reads 1 (CR 717.2d, Parun.Types.ClassLevel.defaulted).
     ClassLevel
   | -- | CR 702.143c: 1 if the spell this quantity is evaluated against was a
     -- foretold card before it was cast, whatever cost it was cast for, else 0.
@@ -319,7 +319,7 @@ data Quantity
     -- turn for the cost that keyword family offers -- "a spell was warped this
     -- turn" is this compared against 1.
     SpellsCastUsingThisTurn KeywordFamily.KeywordFamily
-  | -- | CR 100.6a \/ 729.1a: how many subgames have begun this match, counting one
+  | -- | CR 100.6a \/ 730.1a: how many subgames have begun this match, counting one
     -- in progress -- Shahrazad and Sindbad's "if there haven't been any subgames
     -- this match", which is this compared to 0. Read off
     -- GameState.subgamesThisMatch, the only match-scoped record parun keeps.

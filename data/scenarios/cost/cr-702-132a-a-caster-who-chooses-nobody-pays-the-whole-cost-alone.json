@@ -1,6 +1,6 @@
 {
   "description": "CR 702.132a a caster who chooses nobody pays the whole cost alone",
-  "note": "Alice names no assistant and stops paying after her Forest's {G}; with nobody named, bob's Plains are never asked, the payment fails, and CR 601.2e takes the cast back. CR 733.1's ReverseManaAbilities is answered Exercises, as the Haskell answerer does.",
+  "note": "Alice names no assistant and stops paying after her Forest's {G}; with nobody named, bob's Plains are never asked, the payment fails, and CR 601.2e takes the cast back. CR 734.1's ReverseManaAbilities is answered Exercises, as the Haskell answerer does.",
   "board": {
     "seats": [
       {

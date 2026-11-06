@@ -1,6 +1,6 @@
 {
   "description": "CR 603.7 an Ivory Gargoyle under a Cubwarden still arms its delayed ability",
-  "note": "Cubwarden mutates over Ivory Gargoyle and Doom Blade kills the merged permanent; the under component's dies trigger resolves and arms the return, which brings the Gargoyle back at the end step (with the Cubwarden, CR 730.3c).",
+  "note": "Cubwarden mutates over Ivory Gargoyle and Doom Blade kills the merged permanent; the under component's dies trigger resolves and arms the return, which brings the Gargoyle back at the end step (with the Cubwarden, CR 731.3c).",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",

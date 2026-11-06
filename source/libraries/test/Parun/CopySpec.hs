@@ -1128,10 +1128,10 @@ aimMimicry subjectId originalId p = case p of
 
 copySpellSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 copySpellSpec s registry = Spec.describe s "Parun.Engine.Copy" $ do
-  -- CR 707.2 / 715.3d: Synthetic Mimicry makes Battle Display, cast as an
+  -- CR 707.2 / 716.3d: Synthetic Mimicry makes Battle Display, cast as an
   -- Adventure at the Bonesplitter, a copy of the Bolt. Once it is one it is no
   -- longer an Adventure, so it resolves into the graveyard rather than into
-  -- exile. CR 720.3d's Omen rider reads the same face.
+  -- exile. CR 721.3d's Omen rider reads the same face.
   Spec.it s "CR 707.2 an Adventure that becomes a copy of a Bolt goes to the graveyard" $ do
     mountain <- S.printingOf s registry "Mountain"
     island <- S.printingOf s registry "Island"
@@ -1508,7 +1508,7 @@ copiedAbilitySpec s registry = Spec.describe s "Parun.Engine.Copy" $ do
   -- Site four: the TYPE disjunct of that same baseHas (Projection.copiableMintsType),
   -- which reads a card type and a subtype -- both copiable values, CR 707.2 says
   -- so outright -- for CR 306.5b's planeswalker, CR 310.4b's battle and CR
-  -- 714.3a's Saga -- one case each. Copy Enchantment reaches the SUBTYPE half,
+  -- 715.3a's Saga -- one case each. Copy Enchantment reaches the SUBTYPE half,
   -- since a Saga is an enchantment (CR 205.3h); Clever Impersonator's "any
   -- nonland permanent" reaches both equalities of the CARD TYPE half.
   --
@@ -1521,13 +1521,13 @@ copiedAbilitySpec s registry = Spec.describe s "Parun.Engine.Copy" $ do
   -- disjunct off the copier's face gathers nothing at all.
   --
   -- CR 707.2's last sentence keeps the second entry honest -- counters are not
-  -- copied -- so the counter it ends with is CR 714.3a's own, minted for it.
+  -- copied -- so the counter it ends with is CR 715.3a's own, minted for it.
   --
   -- `newest` names the SECOND copy on the settled board rather than a pre-settle
   -- one (the planeswalker case below needs that): a Saga with no lore counters is
   -- below its final chapter number, so CR 704.5s does not sacrifice it and the
   -- wrong reading leaves it on the battlefield reporting zero.
-  Spec.it s "CR 707.2 a copy of a Saga enters with CR 714.3a's lore counter" $ do
+  Spec.it s "CR 707.2 a copy of a Saga enters with CR 715.3a's lore counter" $ do
     benalia <- S.printingOf s registry "History of Benalia"
     copyEnchantment <- S.printingOf s registry "Copy Enchantment"
     let (benaliaId, board0) = S.addPermanent benalia S.alice (Setup.emptyGame S.bothPlayers)
@@ -1544,9 +1544,9 @@ copiedAbilitySpec s registry = Spec.describe s "Parun.Engine.Copy" $ do
           Nothing -> Spec.assertFailure s "the second Copy Enchantment left the battlefield unexpectedly"
           Just copy2 -> do
             -- The gameplay-level assertion this case exists for, ahead of every
-            -- proxy: the copy of a copy of a Saga is a Saga, so CR 714.3a mints
+            -- proxy: the copy of a copy of a Saga is a Saga, so CR 715.3a mints
             -- its entry row even with no printed Saga left on the battlefield.
-            Spec.assertEqWith s "CR 714.3a one lore counter on the copy of a copy" (S.counterOf CounterKind.Lore copy2 final) 1
+            Spec.assertEqWith s "CR 715.3a one lore counter on the copy of a copy" (S.counterOf CounterKind.Lore copy2 final) 1
             Spec.assertBool s (elem Subtype.Saga (Set.toList (Projection.subtypesOf copy2 final))) "and it really is a Saga (CR 707.2)"
             Spec.assertEqWith s "CR 707.3 by the copied card's name, not the copier's" (Projection.namesOf copy2 final) (Set.singleton (cardNamed "History of Benalia"))
         -- The preconditions, after the behaviour so neither can absorb a mutation

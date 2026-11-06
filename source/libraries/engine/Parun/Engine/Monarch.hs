@@ -32,7 +32,7 @@ import qualified Parun.Types.TriggerCondition as TriggerCondition
 import Parun.Types.TriggeredAbility (TriggeredAbility)
 import qualified Parun.Types.TurnScope as TurnScope
 
--- CR 725.2's end step draw. Controller-scoped to the monarch, so
+-- CR 726.2's end step draw. Controller-scoped to the monarch, so
 -- @Relative You@ plus the monarch as "you" is exactly the monarch's own end
 -- step.
 endStepDraw :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
@@ -41,7 +41,7 @@ endStepDraw =
     (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))))
     (Seq.singleton (Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 1) Nothing)))
 
--- CR 725.2's crown steal. Controlled by the current monarch; makes a DIFFERENT
+-- CR 726.2's crown steal. Controlled by the current monarch; makes a DIFFERENT
 -- player (the damager's controller) the monarch.
 crownSteal :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 crownSteal =
@@ -49,17 +49,17 @@ crownSteal =
     TriggerCondition.CreatureDealtCombatDamageToMonarch
     (Seq.singleton (Effect.BecomeMonarch MonarchTarget.ControllerOfSource))
 
--- CR 725.2: the monarch's inherent abilities, each paired with its controller,
+-- CR 726.2: the monarch's inherent abilities, each paired with its controller,
 -- for Event.Trigger.inherentTriggers. Present only while there is a monarch,
 -- and controlled by "the player who was the monarch at the time the abilities
 -- triggered", which is the monarch read here.
 --
 -- The monarch is read LIVE, where the crown steal's damager comes off CR
--- 603.10's sample, and that is sound: inside one settle only CR 725.4's
+-- 603.10's sample, and that is sound: inside one settle only CR 726.4's
 -- departure hand-off can move the crown between the damage and the gather, and
 -- the steal it would then have gathered is controlled by the departed monarch,
 -- whom CR 800.4d keeps off the stack -- so the active player holds the crown
--- either way. Proved by Parun.EventTriggerSpec's "CR 725.4/800.4d lethal combat
+-- either way. Proved by Parun.EventTriggerSpec's "CR 726.4/800.4d lethal combat
 -- damage to the monarch crowns the active player, not the damager's
 -- controller".
 abilities :: GameState -> [(PlayerId, TriggeredAbility Card (GrantedAbility.GrantedAbility Card))]
@@ -67,17 +67,17 @@ abilities gs = case GameState.monarch gs of
   Nothing -> []
   Just monarch -> [(monarch, endStepDraw), (monarch, crownSteal)]
 
--- CR 725.1 / CR 725.3: crown a player. The ONE writer of GameState.monarch once
+-- CR 726.1 / CR 726.3: crown a player. The ONE writer of GameState.monarch once
 -- a game is under way (Parun.Engine.Setup only ever initialises it to Nothing, and
--- CR 725.4's third sentence below un-crowns rather than crowns), so everything
+-- CR 726.4's third sentence below un-crowns rather than crowns), so everything
 -- that must happen AS a player becomes the monarch happens here: the crown moves,
--- CR 603.2 gets its event, and every CR 725 exile watch an opponent's crowning
+-- CR 603.2 gets its event, and every CR 726 exile watch an opponent's crowning
 -- discharges is marked.
 --
 -- A player who is ALREADY the monarch does not become the monarch: Custodi Lich's
 -- ruling (Gatherer, 2016-08-23) is explicit -- "abilities that trigger whenever
 -- you become the monarch trigger only if you aren't already the monarch" -- and
--- CR 725.3's "as a player becomes the monarch, the current monarch ceases to be
+-- CR 726.3's "as a player becomes the monarch, the current monarch ceases to be
 -- the monarch" describes a handoff between two players. So the instruction is
 -- carried out (the crown is where the effect says it is) while nothing is
 -- recorded and no watch is marked. Both readers of "becomes the monarch" -- the
@@ -85,7 +85,7 @@ abilities gs = case GameState.monarch gs of
 -- construction, which is the reason this is one function rather than a write at
 -- each call site.
 --
--- CR 725 (Palace Jailer): the return of an object whose watch this has
+-- CR 726 (Palace Jailer): the return of an object whose watch this has
 -- marked is Parun.Engine.MoveDuration.returnDue's, CR 610.3's second one-shot
 -- effect. The test is for an EVENT, not a state: a new monarch being CROWNED who
 -- is an opponent, not merely an opponent currently holding the crown. Palace
@@ -108,7 +108,7 @@ crown pid gs =
           --
           -- When the controller has LEFT the game, CR 800.4i freezes their
           -- opponent set at departure, and the same predicate computes it: CR
-          -- 725.4 guarantees the crowned player is still in the game, so a
+          -- 726.4 guarantees the crowned player is still in the game, so a
           -- departed controller is never crowned, and CR 808.1's teams are
           -- settled before the game begins (CR 808.3). Nothing needs to be
           -- stored.
@@ -124,14 +124,14 @@ crown pid gs =
                 GameState.movedUntil = fmap mark (GameState.movedUntil gs)
               }
 
--- CR 725.4: reassign the crown when the monarch leaves the game. Who takes it is
--- Game.heirOnDeparture's question, shared with CR 726.4.
+-- CR 726.4: reassign the crown when the monarch leaves the game. Who takes it is
+-- Game.heirOnDeparture's question, shared with CR 727.4.
 --
 -- Called with `leaving` ALREADY marked departed, so "is leaving the game" and
 -- "has left the game" are one test and the rule's first two sentences collapse
 -- to "is an active player still in the game?".
 --
--- "Who can become the monarch" is CR 725.4's own words, and the eligibility half
+-- "Who can become the monarch" is CR 726.4's own words, and the eligibility half
 -- of it is Parun.Engine.PlayerEffect's question (Jared Carthalion, True Heir).
 -- Applied to the ACTIVE player too, though the rule's first sentence states no
 -- gate. The rejected reading is the literal one: CR 101.2 stops sentence 1, an
@@ -139,14 +139,14 @@ crown pid gs =
 -- eligible seat fails sentence 3's, and nobody is crowned.
 -- docs/decisions.md, "Whether an ineligible active player takes the crown".
 --
--- The write, the CR 725.1 event record and the exile watches are ONE step,
+-- The write, the CR 726.1 event record and the exile watches are ONE step,
 -- because this crowns through `crown` -- for the reason
 -- Departure.departTogether gives for keeping this call inside itself: a
 -- crowning that records nothing is a crowning CR 603.2 cannot see, and
 -- separating them lets a later caller move the crown silently. A rule rather than an effect moves it here, which changes
--- nothing -- CR 725.2's stolen crown is a rule too and goes the same way.
+-- nothing -- CR 726.2's stolen crown is a rule too and goes the same way.
 --
--- CR 725.4's third sentence is the ONE arm that writes GameState.monarch
+-- CR 726.4's third sentence is the ONE arm that writes GameState.monarch
 -- directly, and rightly: it crowns nobody, so it records no event and marks no
 -- watch. "An opponent becomes the monarch" is never satisfied by there being no
 -- monarch.

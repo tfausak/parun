@@ -3,7 +3,7 @@ module Parun.Types.ClassLevelChange where
 import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.ObjectId as ObjectId
 
--- | CR 716.2a: a permanent's class level BECAME something, with the level before
+-- | CR 717.2a: a permanent's class level BECAME something, with the level before
 -- and the level after.
 
 -- The pair rather than the new level alone, for
@@ -12,7 +12,7 @@ import qualified Parun.Types.ObjectId as ObjectId
 -- resulting level alone cannot answer, since a Class already at level 3 whose
 -- level is set to 3 again became nothing.
 --
--- Both halves are a ClassLevel rather than a Maybe: CR 716.2d reads a permanent
+-- Both halves are a ClassLevel rather than a Maybe: CR 717.2d reads a permanent
 -- with no level as level 1, so `before` is the DEFAULTED level and "has no level"
 -- has no separate meaning to a trigger. Object.classLevel keeps the Maybe,
 -- because "has never been levelled" is still a distinct state of the permanent.

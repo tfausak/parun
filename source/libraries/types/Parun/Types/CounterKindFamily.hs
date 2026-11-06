@@ -35,7 +35,7 @@ data CounterKindFamily
     Keyword
   | -- | CR 122.1e: Parun.Types.CounterKind.Loyalty.
     Loyalty
-  | -- | CR 714.3: Parun.Types.CounterKind.Lore.
+  | -- | CR 715.3: Parun.Types.CounterKind.Lore.
     Lore
   | -- | CR 122.1g: Parun.Types.CounterKind.Defense.
     Defense

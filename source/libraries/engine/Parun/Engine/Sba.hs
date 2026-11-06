@@ -617,7 +617,7 @@ chooseLegendVictims (controller, candidates) = do
 --
 -- An unstamped world permanent is not a candidate. Engine.sampleWorldSince runs
 -- ahead of every pass Engine.performSettle makes, so anything world there has a
--- stamp. The CR 724.1c and 724.2c passes (Resolve.Effect's EndTurn and
+-- stamp. The CR 725.1c and 725.2c passes (Resolve.Effect's EndTurn and
 -- EndCombatPhase arms) sample nothing, so a permanent that became world earlier
 -- in the same resolution would go unjudged until the next settle. No card does
 -- that: MTGJSON AtomicCards.json `[Ee]nd the (turn|combat phase)`, 2026-10-20,
@@ -812,7 +812,7 @@ checkOnce instead boards = do
       supersededRoles = roleVictims pcs grants gs
       -- CR 704.5aa, from the SAME pre-pass state again. Lives in
       -- Parun.Engine.Speed with the rest of rule 702.179 rather than here, the way
-      -- Parun.Engine.Monarch keeps rule 725's settle-loop work: this module owns
+      -- Parun.Engine.Monarch keeps rule 726's settle-loop work: this module owns
       -- WHEN a state-based action is checked, not what each one means.
       revving = Speed.startingEngines pcs gs
       -- CR 704.5t / 309.6, from the SAME pre-pass state. Lives in
@@ -834,8 +834,8 @@ checkOnce instead boards = do
       -- CR 704.6f / 312.7: face-up phenomena whose triggered abilities have all
       -- left the stack, reading the unscanned events for CR 704.5t's reason.
       spentPhenomena = Planechase.spentPhenomena (Trigger.eventTriggers (Event.unscannedGrouped gs) gs) gs
-      -- CR 704.5s / 714.4, from the SAME pre-pass state as everything above.
-      -- Lives in Parun.Engine.Saga with the rest of rule 714, the way CR 704.5aa
+      -- CR 704.5s / 715.4, from the SAME pre-pass state as everything above.
+      -- Lives in Parun.Engine.Saga with the rest of rule 715, the way CR 704.5aa
       -- lives in Parun.Engine.Speed.
       --
       -- The unscanned event log is an input because CR 704.5s exempts a Saga whose
@@ -968,7 +968,7 @@ checkOnce instead boards = do
   -- CR 104.3 / 614.1a: each loss is offered to the replacements that watch it
   -- BEFORE anything below moves, in REVERSE of `leaving` -- the order the
   -- `foldr` this replaced applied them in, kept because CR 800.4a's fourth
-  -- clause emits zone changes and CR 725.4 hands the crown along, so who goes
+  -- clause emits zone changes and CR 726.4 hands the crown along, so who goes
   -- first is observable.
   queued <- State.gets (Seq.length . GameState.pendingReplacementEffects)
   departing <- Departure.losing (Just gs) True Departure.Type.Lost (List.reverse leaving)
@@ -1056,7 +1056,7 @@ checkOnce instead boards = do
   -- the put-into-graveyard batch's board for CR 704.3's reason. A member Lich's
   -- Mirror's reset took is gone, and the move finds nothing (CR 614.7).
   Monad.mapM_ (\oid -> Event.changeZoneInBatch (pure ()) gs oid Zone.Graveyard) standing
-  -- CR 704.5s / 714.4: the Saga's controller SACRIFICES it. Neither a
+  -- CR 704.5s / 715.4: the Saga's controller SACRIFICES it. Neither a
   -- put-into-graveyard nor a destruction, so it joins neither batch above -- CR
   -- 701.21a is its own game action, ungated by indestructible and offering
   -- regeneration nothing, and it goes through Parun.Engine.Event.sacrificeInBatch,
@@ -1066,7 +1066,7 @@ checkOnce instead boards = do
   -- the whole check is one event, so a replacement effect belonging to a Saga this
   -- pass is itself sacrificing is still in force for the rest of the batch. Two
   -- Sagas finishing together is the board that shows it, and
-  -- Parun.SagaSpec's "CR 704.3 / 714.4 two Sagas finishing together are sacrificed
+  -- Parun.SagaSpec's "CR 704.3 / 715.4 two Sagas finishing together are sacrificed
   -- as one event" is the proof.
   --
   -- The funnel's own existence check stays live, which is what drops a Saga some
@@ -1081,7 +1081,7 @@ checkOnce instead boards = do
   let -- CR 704.5d and CR 704.5e: the objects the rules say cease to exist outside
       -- a zone of their own -- a token anywhere but the battlefield, a copy of a
       -- spell anywhere but the stack, a copy of a card anywhere but the stack, the
-      -- battlefield and CR 722.3c's exile. ONE pass, because CR 704.3 makes the
+      -- battlefield and CR 723.3c's exile. ONE pass, because CR 704.3 makes the
       -- whole check one event and the arms differ only in which zones they keep.
       --
       -- Computed from the post-bury state so a token that just died (now in the
@@ -1106,14 +1106,14 @@ checkOnce instead boards = do
           --
           -- What reaches it is the copy's own resolution: CR 608.2n puts the
           -- resolved copy into its owner's graveyard like any other spell, and
-          -- this removes it there. CR 724.1b's exile and CR 701.6a's countering
+          -- this removes it there. CR 725.1b's exile and CR 701.6a's countering
           -- arrive the same way.
           --
           Source.OfSpellCopy _ -> Object.zone obj /= Zone.Stack
           -- The rule's SECOND sentence, and the one exception the rules state to
           -- it. CR 704.5e: "if a copy of a card is in any zone other than the
           -- stack or the battlefield, it ceases to exist" -- so the same shape
-          -- again with two zones instead of one. CR 722.3c adds exile for as long
+          -- again with two zones instead of one. CR 723.3c adds exile for as long
           -- as its own condition holds ("this copy remains in exile for as long as
           -- the prepared permanent remains on the battlefield and has the prepared
           -- designation. This is an exception to rule 704.5e"), which
@@ -1122,7 +1122,7 @@ checkOnce instead boards = do
           -- So this pass is what ENDS the copy as well as what keeps it: nothing
           -- else has to watch the permanent leave or unprepare, because the
           -- condition is read live here on the next check. Parun.PreparationSpec's
-          -- "CR 722.3c the copy leaves exile when the Aviator does" is what proves
+          -- "CR 723.3c the copy leaves exile when the Aviator does" is what proves
           -- that half.
           Source.OfCardCopy _
             | Object.zone obj == Zone.Exile -> not (Prepare.copyStands obj departed)

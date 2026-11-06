@@ -58,7 +58,7 @@
 -- The last case is hexproof's other axis: not who is targeting but WHETHER THE
 -- KEYWORD IS THERE AT ALL. Dawnglade Regent grants it through a CR 604.2 "as
 -- long as you're the monarch" clause, so the same Doom Blade answers both ways
--- across CR 725.5's no-monarch window.
+-- across CR 726.5's no-monarch window.
 --
 -- The last group is the other side of the split again, and the only one about a
 -- slot's own FILTER rather than about a restriction or a pool: Razorfin

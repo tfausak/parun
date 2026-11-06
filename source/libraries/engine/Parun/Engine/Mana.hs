@@ -1403,7 +1403,7 @@ chargeForLostMana settle gs losses =
 -- retention still standing at cleanup, and it stays one even now that every road
 -- out of a combat phase ends an UntilEndOfCombat retention as the phase goes
 -- (Engine.endPhase) -- a turn can end while a combat phase is still under way
--- (CR 724.1d), and CR 500.8 lets a combat phase be added anywhere. -Werror
+-- (CR 725.1d), and CR 500.8 lets a combat phase be added anywhere. -Werror
 -- cannot see the arm list here, the record update naming no constructor.
 endManaRetention :: GameState -> GameState
 endManaRetention gs =
@@ -1419,7 +1419,7 @@ endManaRetention gs =
 -- Takes the window that is ending rather than being a bare
 -- endCombatManaRetention, so its three callers spell it exactly as they spell
 -- Expiry.dropAtEndOf beside it: Engine.endStep for a combat phase whose
--- last step ended, and Parun.Engine.Resolve's CR 724.1d and CR 724.2d arms for
+-- last step ended, and Parun.Engine.Resolve's CR 725.1d and CR 725.2d arms for
 -- one ended part-way through with no last step to ask.
 --
 -- EQUALITY on the selector, not Turn.inWindow's containment, for exactly
@@ -1489,15 +1489,15 @@ manaSourcesGiven inFlight capacity grants pcs pid gs =
       own = Projection.controlsGiven grants pid gs
       mine = Set.fromList own
       others = filter (`Set.notMember` mine) (Set.toList (GameState.battlefield gs))
-      -- CR 723.7, in the one form a card prints it: Word of Command's "the
+      -- CR 724.7, in the one form a card prints it: Word of Command's "the
       -- player can activate mana abilities only if they're from lands that
       -- player controls". Read off the control row rather than from the
       -- resolving effect, so this stays a question about the PLAYER; every
-      -- uncontrolled player and every CR 723.1 control answers False and the
+      -- uncontrolled player and every CR 724.1 control answers False and the
       -- filter is the identity.
       --
-      -- Rule 723.7's other half -- "and only if mana they produce is spent to
-      -- ... play that card" -- needs no line here: a CR 723.2 control lives
+      -- Rule 724.7's other half -- "and only if mana they produce is spent to
+      -- ... play that card" -- needs no line here: a CR 724.2 control lives
       -- inside one resolution, and the only payment window inside Word of
       -- Command's is the cast it forces.
       --
@@ -1729,7 +1729,7 @@ admitsUnder subject pid gs =
         PaymentSubject.Activating oid _ _ -> Just (ManaRestriction.activations, oid)
         PaymentSubject.Unlocking oid -> Just (ManaRestriction.unlocks, oid)
         PaymentSubject.TurningFaceUp oid -> Just (ManaRestriction.turnsFaceUp, oid)
-      -- CR 716.2c: the one half asked of the ABILITY rather than of an object --
+      -- CR 717.2c: the one half asked of the ABILITY rather than of an object --
       -- its keyword stamp against the designator, no view needed.
       byKeyword restriction = case subject of
         PaymentSubject.Activating _ stamp _ -> any (\designator -> any (Keyword.Engine.designates designator) stamp) (ManaRestriction.keywordActivations restriction)
@@ -3205,7 +3205,7 @@ payableResolutionsGiven subject spending swept pcs pid committed committedEnergy
       -- the cost's own demands -- typed and generic alike -- ask that same set.
       --
       -- A nested source's subject carries no keyword stamp: Sorcerer Class's
-      -- CR 716.2c clause names a class level bar, whose ability sets a level and
+      -- CR 717.2c clause names a class level bar, whose ability sets a level and
       -- so is no mana ability (CR 605.1a).
       subjects = Set.toList (Set.fromList (subject : fmap (\oid -> PaymentSubject.Activating oid Nothing Nothing) sources))
       admittedBy = fmap (\each -> (each, admitsUnder each pid gs)) subjects

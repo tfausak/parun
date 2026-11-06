@@ -172,13 +172,13 @@ data Effect card ability
   | -- | CR 701.13 / Rest in Peace: exile every card in every graveyard.
     -- Targetless and bulk; a general exile-from-zone is future.
     ExileAllGraveyards
-  | -- | CR 727.1 / 727.1a: restart the game, with the resolving controller as
-    -- the new game's starting player; the ObjectRef is CR 727.5's exemption.
+  | -- | CR 728.1 / 728.1a: restart the game, with the resolving controller as
+    -- the new game's starting player; the ObjectRef is CR 728.5's exemption.
     RestartGame (Maybe ObjectRef.ObjectRef)
-  | -- | CR 723.1: you control target player during that player's next turn
+  | -- | CR 724.1: you control target player during that player's next turn
     -- (Mindslaver).
     ControlPlayerNextTurn SlotName.SlotName
-  | -- | CR 723.2: you control the slot's player until this object finishes
+  | -- | CR 724.2: you control the slot's player until this object finishes
     -- resolving (Word of Command). Its second span, while the forced spell
     -- resolves, is Parun.Types.OfferCast's controlWhileResolving.
     ControlPlayerThisResolution ControlPlayer.ControlPlayer
@@ -303,7 +303,7 @@ data Effect card ability
     Discard Discard.Discard
   | -- | CR 119.3: the players the LifeLoss names each lose this much life -- not
     -- damage aimed at a player, CR 119.2 running one way only -- and, for rule
-    -- 728.1's ability alone, say so as CR 728.1a's loss rather than as CR 119.3's.
+    -- 729.1's ability alone, say so as CR 729.1a's loss rather than as CR 119.3's.
     LoseLife LifeLoss.LifeLoss
   | -- | CR 119.3: the players the PlayerRef names each gain this much life,
     -- LoseLife's mirror but for the sign.
@@ -442,7 +442,7 @@ data Effect card ability
     -- a player-counter kind (energy, experience, poison, rad).
     GainPlayerCounters PlayerCounters.PlayerCounters
   | -- | CR 122: the players the PlayerRef names each lose N counters of a
-    -- player-counter kind (CR 728.1); removing more than they have removes what
+    -- player-counter kind (CR 729.1); removing more than they have removes what
     -- they have.
     RemovePlayerCounters RemovePlayerCounters.RemovePlayerCounters
   | -- | CR 107.14: "you may pay any amount of {E}" -- the resolving controller
@@ -485,17 +485,17 @@ data Effect card ability
     -- below.
     Transform ObjectRef.ObjectRef
   | -- | CR 701.28a: the Transformers cards' word for Transform above, kept a
-    -- second opcode because CR 701.28c-f restate the gates in convert's own
+    -- second opcode because CR 701.28d-g restate the gates in convert's own
     -- words, and sharing one implementation so the two cannot drift.
     Convert ObjectRef.ObjectRef
   | -- | CR 710.2: flip the permanents the ObjectRef names, so each shows its
     -- alternative characteristics. Not Transform above: CR 710.1's flip card has
-    -- the normal Magic card back, so CR 701.27c withholds a turn from it, and
+    -- the normal Magic card back, so CR 701.27d withholds a turn from it, and
     -- what changes here is a status (CR 110.5) rather than which face is up.
     Flip ObjectRef.ObjectRef
   | -- | CR 701.42a: meld the cards the payload's ObjectRef names -- put them
     -- onto the battlefield with their back faces up and combined, as one
-    -- permanent (CR 712.14c).
+    -- permanent (CR 713.6).
     Meld (Meld.Meld card)
   | -- | CR 702.26b: the permanents the ObjectRef names phase out. Not a zone
     -- change (CR 702.26d), and CR 702.26a fixes when it ends.
@@ -540,11 +540,11 @@ data Effect card ability
   | -- | CR 500.8: add phases to a turn, directly after the specified phase, in
     -- written order (Aggravated Assault). Targetless.
     AddPhases [ExtraPhase.ExtraPhase]
-  | -- | CR 724.1: end the turn (Time Stop). Nullary, that rule's six steps
-    -- fixing the whole procedure, including CR 724.1f's suppression of priority.
+  | -- | CR 725.1: end the turn (Time Stop). Nullary, that rule's six steps
+    -- fixing the whole procedure, including CR 725.1f's suppression of priority.
     EndTurn
-  | -- | CR 724.2: end the combat phase (Mandate of Peace, which rule 724.2 says
-    -- is the only card that does). EndTurn's shape, differing in what CR 724.2d
+  | -- | CR 725.2: end the combat phase (Mandate of Peace, which rule 725.2 says
+    -- is the only card that does). EndTurn's shape, differing in what CR 725.2d
     -- leaves at the head of the schedule.
     EndCombatPhase
   | -- | CR 613.1b / 611.2c: install a layer-2 control effect giving one player
@@ -585,25 +585,25 @@ data Effect card ability
     -- given abilities, put into the command zone. The abilities ride a Card so
     -- the emblem reuses the whole ability pipeline.
     CreateEmblem (CreateEmblem.CreateEmblem card)
-  | -- | CR 725: a player the MonarchTarget names becomes the monarch.
+  | -- | CR 726: a player the MonarchTarget names becomes the monarch.
     BecomeMonarch MonarchTarget.MonarchTarget
-  | -- | CR 726.1: a player the InitiativeTarget names takes the initiative.
+  | -- | CR 727.1: a player the InitiativeTarget names takes the initiative.
     TakeTheInitiative InitiativeTarget.InitiativeTarget
   | -- | CR 310.9f: the resolving controller becomes the protector of the slot's battle.
     BecomeProtector SlotName.SlotName
   | -- | The permanent in the slot gains this designation -- CR 702.112a's
-    -- renown, CR 701.37a's monstrous, CR 701.60a's suspect and CR 719.3a's
+    -- renown, CR 701.37a's monstrous, CR 701.60a's suspect and CR 720.3a's
     -- solved. Writes Object.designations, which CR 613 could not carry, and is
     -- idempotent (CR 702.112c, CR 701.60d). CR 701.37c's X rides along in the
     -- payload's `value` and is written to Object.designationValues on the same
     -- transition.
     Designate Designate.Designate
-  | -- | CR 716.2a's first half: "[Cost]: This Class's level becomes N." Writes
-    -- Object.classLevel, CR 716.2b making a level a designation; the "only if
+  | -- | CR 717.2a's first half: "[Cost]: This Class's level becomes N." Writes
+    -- Object.classLevel, CR 717.2b making a level a designation; the "only if
     -- this Class is level N-1" half rides the ability's own
     -- ActivationRestriction.OnlyIf, CR 602.5's rider.
     SetClassLevel SetClassLevel.SetClassLevel
-  | -- | CR 701.60a and CR 722.3b: the named permanents lose a designation.
+  | -- | CR 701.60a and CR 723.3b: the named permanents lose a designation.
     Undesignate Undesignate.Undesignate
   | -- | CR 709.5f and CR 709.5g: lock or unlock halves of the slot's permanent
     -- (Keys to the House). One opcode over a setting, the two rules being one
@@ -635,7 +635,7 @@ data Effect card ability
     -- both of rule 702.174b's abilities, after the gift's own effect
     -- (Parun.Engine.Keyword.gift, Parun.Engine.Resolve.giftOnSpellResolution).
     GiveGift
-  | -- | CR 731.1: "it becomes day" / "it becomes night" -- the game gains that
+  | -- | CR 732.1: "it becomes day" / "it becomes night" -- the game gains that
     -- designation, which CR 702.145c and CR 702.145f make daybound and
     -- nightbound permanents transform for.
     ItBecomes Daytime.Daytime
@@ -643,7 +643,7 @@ data Effect card ability
     -- the SlotName's target names; the link is filed in GameState.haunting,
     -- which CR 702.55b reads.
     ExileHaunting ExileHaunting.ExileHaunting
-  | -- | CR 729.1 / 729.1b: play a Magic subgame, then bind its winner into this
+  | -- | CR 730.1 / 730.1b: play a Magic subgame, then bind its winner into this
     -- slot; nothing is bound for a draw. A definition, never a target.
     PlaySubgame SlotName.SlotName
   | -- | CR 608.2d: the resolving controller chooses one player from the payload's

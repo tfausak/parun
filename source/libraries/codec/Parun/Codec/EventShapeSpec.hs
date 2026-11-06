@@ -26,7 +26,7 @@ spec s = Spec.describe s "Parun.Codec.EventShape" $ do
       EventShape.codec
       (EventShape.MovedFrom Zone.Battlefield)
       " {\"type\":\"MovedFrom\",\"value\":\"Battlefield\"} "
-  -- CR 712.21e's second half: the destination, and the origins that do not
+  -- CR 713.8e's second half: the destination, and the origins that do not
   -- count. Parun.Codec.CardArrivedInSpec covers the payload's own two shapes;
   -- this case is here for the tag the arm wraps it in.
   Spec.it s "CardArrivedIn" $

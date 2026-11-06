@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- Covers: Parun.Engine.Daytime (CR 731, "Day and Night", and CR 702.145's
+-- Covers: Parun.Engine.Daytime (CR 732, "Day and Night", and CR 702.145's
 -- daybound and nightbound), the CR 502.2 turn-based action Parun.Engine.Engine
 -- runs from it, the CR 117.5 settle arm beside it, Parun.Types.Daytime, and
 -- GameState's daytime and spellsCastLastTurn fields.
@@ -11,10 +11,10 @@
 -- replacement effect (CR 614.1d) ranked by CR 616.1d,
 -- Parun.Types.EntryRewrite's EntersTransformed, minted from rule 702.145b by
 -- Parun.Engine.Keyword.mintedReplacementsFor and applied by Parun.Engine.Event's
--- arm. NOT CR 712.13a, which governs a resolving double-faced spell and is the
+-- arm. NOT CR 701.27j, which governs a resolving double-faced spell and is the
 -- stack road alone -- the case citations below are on that road and say so. See
 -- entrySpec, whose fixture is Infestation Expert // Infested Werewolf, and the
--- synthetic Dusklit Conjurer for an instant back face (CR 712.13a, 304.4).
+-- synthetic Dusklit Conjurer for an instant back face (CR 701.27j, 304.4).
 --
 -- Also CR 702.145b's third static ability and CR 702.145e's second -- "this
 -- permanent can't transform except due to its daybound/nightbound ability" --
@@ -24,7 +24,7 @@
 -- Gameplay-level throughout. Tovolar, Dire Overlord // Tovolar, the Midnight
 -- Scourge is the whole fixture, and one card supplies every half of the rule: a
 -- daybound front face (so a board with it on it becomes day, CR 702.145d), an
--- upkeep trigger that says "it becomes night" (CR 731.1), and a nightbound back
+-- upkeep trigger that says "it becomes night" (CR 732.1), and a nightbound back
 -- face for the night to turn it over onto (CR 702.145c). Russet Wolves is here
 -- only to reach the trigger's "three or more Wolves and/or Werewolves";
 -- data/scenarios/daytime adds Moonmist, Forest and Humility, and anyNumberSpec
@@ -107,7 +107,7 @@ untapStep :: GameState.GameState -> GameState.GameState
 untapStep gs = S.runPure S.identityAnswer gs (Engine.runTurnBasedActions (Phase.Beginning BeginningStep.Untap))
 
 -- Alice's board: Tovolar and `wolves` Russet Wolves, settled. Nothing has
--- happened yet, so the game still has neither designation (CR 731.1).
+-- happened yet, so the game still has neither designation (CR 732.1).
 tovolarBoard :: Printing.Printing -> Printing.Printing -> Int -> (ObjectId.ObjectId, GameState.GameState)
 tovolarBoard tovolar wolf wolves =
   let (tovolarId, gs) = S.addPermanent tovolar S.alice (Setup.emptyGame S.bothPlayers)
@@ -193,26 +193,26 @@ castExpert spellId gs =
 
 entrySpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 entrySpec s registry = Spec.describe s "EntersTransformed" $ do
-  -- CR 712.13a through CR 702.145b's FIRST static ability: "if it is night and
+  -- CR 701.27j through CR 702.145b's FIRST static ability: "if it is night and
   -- this permanent is represented by a double-faced card, it enters transformed."
-  -- Infestation Expert is cast with its front face up (CR 712.11) and reaches the
+  -- Infestation Expert is cast with its front face up (CR 712.8) and reaches the
   -- battlefield showing its back face.
   --
   -- THE FACE IS THE DISCRIMINATOR, and it is asserted at a moment that tells the
   -- competing readings apart. Three of them put a permanent on this board showing
   -- Infested Werewolf:
   --
-  --   * it entered transformed -- CR 712.13a, the rule;
+  --   * it entered transformed -- CR 701.27j, the rule;
   --   * it entered front face up and the CR 702.145c sweep turned it over
   --     (Parun.Engine.Daytime.turnDue, which is what this engine did before);
-  --   * it was never front face up at all, a back-face cast (CR 712.11a) -- which
-  --     this board rules out by casting the card from hand, where CR 712.8a shows
+  --   * it was never front face up at all, a back-face cast (CR 712.8a) -- which
+  --     this board rules out by casting the card from hand, where CR 712.6a shows
   --     only the front face.
   --
   -- The first two are separated by asserting on `entered`, the board the spell's
   -- resolution leaves, which is BEFORE the settle the sweep runs in.
   --
-  Spec.it s "CR 712.13a/702.145b a daybound spell cast at night enters transformed" $ do
+  Spec.it s "CR 701.27j/702.145b a daybound spell cast at night enters transformed" $ do
     tovolar <- S.printingOf s registry "Tovolar, Dire Overlord"
     forest <- S.printingOf s registry "Forest"
     expert <- S.printingOf s registry "Infestation Expert"
@@ -233,10 +233,10 @@ entrySpec s registry = Spec.describe s "EntersTransformed" $ do
     Spec.assertEqWith s "it is day when the spell resolves" (GameState.daytime board) (Just Daytime.Day)
     Spec.assertEqWith s "the permanent is showing its front face" (expertFaces entered) [expertFront]
     Spec.assertEqWith s "and its front face's trigger made one Insect" (S.countOnBattlefieldByName insectToken S.alice triggered) 1
-  -- CR 712.13a's second sentence, on the synthetic Dusklit Conjurer: daybound
+  -- CR 701.27j's second sentence, on the synthetic Dusklit Conjurer: daybound
   -- makes it enter transformed, its back face is an instant, so it goes to its
   -- owner's graveyard instead of the battlefield.
-  Spec.it s "CR 712.13a a spell entering transformed onto an instant back face goes to the graveyard" $ do
+  Spec.it s "CR 701.27j a spell entering transformed onto an instant back face goes to the graveyard" $ do
     tovolar <- S.printingOf s registry "Tovolar, Dire Overlord"
     forest <- S.printingOf s registry "Forest"
     conjurer <- S.printingOf s registry "Synthetic Dusklit Conjurer"
@@ -248,7 +248,7 @@ entrySpec s registry = Spec.describe s "EntersTransformed" $ do
     Spec.assertEqWith s "and the stack is empty" (GameState.stack entered) []
   -- The control: by day the same card enters front face up, so the case above
   -- turns on the back face and not on the card failing to resolve.
-  Spec.it s "CR 712.13 by day that spell enters front face up" $ do
+  Spec.it s "CR 712.10 by day that spell enters front face up" $ do
     tovolar <- S.printingOf s registry "Tovolar, Dire Overlord"
     forest <- S.printingOf s registry "Forest"
     conjurer <- S.printingOf s registry "Synthetic Dusklit Conjurer"
@@ -256,9 +256,9 @@ entrySpec s registry = Spec.describe s "EntersTransformed" $ do
         (entered, _) = castExpert spellId board
     Spec.assertEqWith s "it is day when the spell resolves" (GameState.daytime board) (Just Daytime.Day)
     Spec.assertEqWith s "the permanent is showing its front face" (conjurerFaces entered) [conjurerFront]
-  -- CR 712.13a's copy clause: Double Major copies the spell, the copy enters
+  -- CR 701.27j's copy clause: Double Major copies the spell, the copy enters
   -- transformed too, and neither it nor the original reaches the battlefield.
-  Spec.it s "CR 712.13a a copy of that spell doesn't enter the battlefield either" $ do
+  Spec.it s "CR 701.27j a copy of that spell doesn't enter the battlefield either" $ do
     tovolar <- S.printingOf s registry "Tovolar, Dire Overlord"
     forest <- S.printingOf s registry "Forest"
     island <- S.printingOf s registry "Island"
@@ -278,7 +278,7 @@ entrySpec s registry = Spec.describe s "EntersTransformed" $ do
         Spec.assertEqWith s "neither the copy nor the original is on the battlefield" (conjurerFaces after) []
         Spec.assertEqWith s "the card is in alice's graveyard" (cardsIn Zone.Graveyard conjurer after) 1
         Spec.assertEqWith s "and the stack is empty" (GameState.stack after) []
-  -- Off the stack road CR 712.13a is silent and CR 304.4 answers: Exhume puts
+  -- Off the stack road CR 701.27j is silent and CR 304.4 answers: Exhume puts
   -- the card onto the battlefield at night, daybound makes it an instant as it
   -- enters, and an instant that would enter remains in its previous zone.
   Spec.it s "CR 304.4 put onto the battlefield at night, that card stays in the graveyard" $ do
@@ -328,9 +328,9 @@ pinTarget recipient p = case p of
 
 designationSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 designationSpec s registry = Spec.describe s "Designation" $ do
-  -- CR 731.1's first two sentences: the designation exists, and a game starts
+  -- CR 732.1's first two sentences: the designation exists, and a game starts
   -- with neither. The falsifier for an engine that started every game at day.
-  Spec.it s "CR 731.1 a game with no daybound permanent stays neither day nor night" $ do
+  Spec.it s "CR 732.1 a game with no daybound permanent stays neither day nor night" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (_, gs) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
     Spec.assertEqWith s "neither, before anything settles" (GameState.daytime gs) Nothing
@@ -352,9 +352,9 @@ transformSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n
 transformSpec s registry = Spec.describe s "Transform" $ do
   -- The whole card, driven through the engine: alice's upkeep begins, CR 603.4's
   -- intervening "if" holds (Tovolar is himself a Werewolf, so two Wolves make
-  -- three), the trigger resolves, CR 731.1 makes it night, and CR 702.145c turns
+  -- three), the trigger resolves, CR 732.1 makes it night, and CR 702.145c turns
   -- the daybound permanent over as that happens.
-  Spec.it s "CR 731.1/702.145c Tovolar's upkeep trigger makes it night and transforms him" $ do
+  Spec.it s "CR 732.1/702.145c Tovolar's upkeep trigger makes it night and transforms him" $ do
     tovolar <- S.printingOf s registry "Tovolar, Dire Overlord"
     wolf <- S.printingOf s registry "Russet Wolves"
     let (tovolarId, board) = tovolarBoard tovolar wolf 2
@@ -428,7 +428,7 @@ anyNumberSpec s registry = Spec.describe s "AnyNumber" $ do
     Spec.assertEqWith s "and CR 702.145c turned Tovolar over" (faceNameOf tovolarId after) (Just backName)
   -- The offer is FILTERED, not trusted (#222). bob's Daybreak Ranger is the
   -- discriminating victim rather than the Russet Wolves beside it: the Wolf is a
-  -- single-faced card, so CR 701.27c withholds its turn whatever the engine did
+  -- single-faced card, so CR 701.27d withholds its turn whatever the engine did
   -- with the answer, where bob's Ranger would turn over the moment an answer was
   -- taken on trust.
   Spec.it s "CR 608.2d an answer naming what was never offered turns nothing over" $ do
@@ -538,11 +538,11 @@ untapCheckSpec s registry = Spec.describe s "UntapCheck" $ do
     let (_, board) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
         after = untapStep (afterCasting 0 (settle board))
     Spec.assertEqWith s "still neither" (GameState.daytime after) Nothing
-  -- CR 731.2's input, taken through the rules rather than written: alice casts a
+  -- CR 732.2's input, taken through the rules rather than written: alice casts a
   -- Lightning Bolt, the turn is handed on, and the count the next untap step will
   -- read is the one her turn ended with. The event log it is folded from is
   -- cleared by that same handoff, which is why the snapshot exists at all.
-  Spec.it s "CR 731.2 the handoff records what the previous turn's active player cast" $ do
+  Spec.it s "CR 732.2 the handoff records what the previous turn's active player cast" $ do
     mountain <- S.printingOf s registry "Mountain"
     lightningBolt <- S.printingOf s registry "Lightning Bolt"
     let (gs, spellId) = S.handOne lightningBolt (S.landsInPlay mountain 1)

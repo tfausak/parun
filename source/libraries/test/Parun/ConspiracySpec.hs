@@ -195,10 +195,10 @@ spec s registry = Spec.describe s "Conspiracy" $ do
     Spec.assertEqWith s "without the conspiracy, no Construct" (constructsControlledBy S.bob control) 0
     Spec.assertEqWith s "and alice, who has none, gets none" (constructsControlledBy S.alice second) 0
 
-  -- CR 315.3 against CR 727.2: a restart puts every card into its owner's new
+  -- CR 315.3 against CR 728.2: a restart puts every card into its owner's new
   -- library, and the conspiracy stays in the command zone -- where the new game's
   -- first upkeep triggers it again.
-  Spec.it s "CR 315.3 / 727.1 a restarted game keeps the conspiracy in the command zone" $ do
+  Spec.it s "CR 315.3 / 728.1 a restarted game keeps the conspiracy in the command zone" $ do
     mountain <- S.printingOf s registry "Mountain"
     dispatch <- S.printingOf s registry "Sentinel Dispatch"
     let played = upkeep S.bob 2 (upkeep S.alice 1 (built mountain [dispatch]))
@@ -250,9 +250,9 @@ spec s registry = Spec.describe s "Conspiracy" $ do
       Spec.assertEqWith s "one draw, over bob and carol alone" (draws carolAsked) [[S.bob, S.carol]]
       Spec.assertEqWith s "the same draw in the other log" (draws bobAsked) [[S.bob, S.carol]]
 
-    -- CR 727.1a then CR 103.1c: alice restarts the game, and bob's Power Play,
+    -- CR 728.1a then CR 103.1c: alice restarts the game, and bob's Power Play,
     -- still in his command zone (CR 315.3), supersedes her claim.
-    Spec.it s "CR 103.1c / 727.1a Power Play supersedes a restart's starting player" $ do
+    Spec.it s "CR 103.1c / 728.1a Power Play supersedes a restart's starting player" $ do
       mountain <- S.printingOf s registry "Mountain"
       powerPlay <- S.printingOf s registry "Power Play"
       let restart conspiracies = S.runPure keepAnswer (built mountain conspiracies) (Setup.restartGame S.performer Set.empty S.alice)
@@ -340,12 +340,12 @@ spec s registry = Spec.describe s "Conspiracy" $ do
           Spec.assertEqWith s "alice reveals it as the game ends" (revealsIn (ended gs)) [(S.alice, agenda)]
           Spec.assertEqWith s "and had she turned it face up, there is nothing to reveal" (revealsIn (ended up)) []
 
-    -- CR 727.1 / 103.2e / 315.2: the new game places its conspiracies again,
+    -- CR 728.1 / 103.2e / 315.2: the new game places its conspiracies again,
     -- so hidden agenda turns the card face down and asks again -- even one alice
     -- turned face up in the restarted game, since nothing done there carries
     -- over (Karn Liberated's ruling; Immediate Action's "you can
     -- name a different card in each new game").
-    Spec.it s "CR 727.1 / 702.106a a restarted game puts a hidden agenda face down again and asks a fresh name" $ do
+    Spec.it s "CR 728.1 / 702.106a a restarted game puts a hidden agenda face down again and asks a fresh name" $ do
       mountain <- S.printingOf s registry "Mountain"
       action <- S.printingOf s registry "Immediate Action"
       let (gs, _) = started 0 ((S.alice, deckOf mountain [action]) NonEmpty.:| [(S.bob, deckOf mountain [])])

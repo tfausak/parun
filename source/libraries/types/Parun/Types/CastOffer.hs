@@ -19,7 +19,7 @@ import qualified Parun.Types.TurnUpEvent as TurnUpEvent
 -- "from another effect" in the rule's own words.
 --
 -- TWO independent riders, because the rules make them independent. `transformed`
--- is CR 712.11a, which is about which FACE is put onto the stack and says
+-- is CR 712.8a, which is about which FACE is put onto the stack and says
 -- nothing about what is paid; `withoutPayingManaCost` is CR 118.9's alternative
 -- cost, which is about payment and says nothing about faces. Cards print each
 -- without the other -- a cascade's "you may cast it without paying its mana
@@ -59,7 +59,7 @@ data CastOffer = MkCastOffer
     -- A rider of its own, `payingInstead`'s reason: rule 702.85a states it in a
     -- sentence separate from the permission, and it narrows neither the payment
     -- nor the face-up-ness but WHICH HALF may be taken. Asked per castable half
-    -- for CR 709.3a's and CR 712.11c's reason, which is the whole point of it:
+    -- for CR 709.3a's and CR 712.8c's reason, which is the whole point of it:
     -- the CARD's mana value already passed the walk that exiled it, and an
     -- adventurer card's other half (Fae of Wishes' Granted, {3}{U} behind a
     -- {1}{U} creature) is the spell whose mana value the rule asks about second.

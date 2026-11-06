@@ -1,9 +1,9 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- Covers CR 719's Case cards, which need no engine subsystem of their own: the
--- whole of rule 719 is Parun.Types.Designation's Solved arm plus the two ordinary
--- abilities CR 719.3a and CR 719.3c say the keywords mean. So what this file
+-- Covers CR 720's Case cards, which need no engine subsystem of their own: the
+-- whole of rule 720 is Parun.Types.Designation's Solved arm plus the two ordinary
+-- abilities CR 720.3a and CR 720.3c say the keywords mean. So what this file
 -- exercises is the marker's lifecycle through the modules that already carry a
 -- designation -- Parun.Engine.Resolve's Designate arm writes it,
 -- Parun.Engine.Quantity's HasDesignation arm reads it, and
@@ -17,7 +17,7 @@
 -- permission (#670) or a swept set of damage dealers.
 --
 -- Case of the Pilfered Proof, MKM 9, carries the second, and is here for its
--- FIRST clause rather than for rule 719: a CR 603.1b two-condition trigger whose
+-- FIRST clause rather than for rule 720: a CR 603.1b two-condition trigger whose
 -- branches name one subject. Its Solved clause is CR 702.169b's static reading
 -- and a CR 614.1a token replacement, so the two Cases cover both shapes rule
 -- 702.169 gives "Solved --".
@@ -25,16 +25,16 @@
 -- Case of the Gorgon's Kiss, MKM 79, carries the last: an entry trigger, and a
 -- Solved clause that is a type-changing static.
 --
--- CR 719.1 and CR 719.2 are frame rules with no rules meaning, so nothing here
+-- CR 720.1 and CR 720.2 are frame rules with no rules meaning, so nothing here
 -- asserts about the layout.
 --
--- CR 719.3a's "and this Case is not solved" is proven by the scenario
--- cr-719-3a-a-solved-case-does-not-trigger-to-solve-again, which meets the
+-- CR 720.3a's "and this Case is not solved" is proven by the scenario
+-- cr-720-3a-a-solved-case-does-not-trigger-to-solve-again, which meets the
 -- condition on a later turn and finds no trigger on the stack.
 --
--- CR 719.3c makes the Solved ability not EXIST while the Case is unsolved, and
+-- CR 720.3c makes the Solved ability not EXIST while the Case is unsolved, and
 -- the card writes it as an ability that exists and declines to trigger (CR
--- 603.4). The two are observably identical on this producer: CR 719.3b makes
+-- 603.4). The two are observably identical on this producer: CR 720.3b makes
 -- solved permanent while the permanent is on the battlefield, so the intervening
 -- clause cannot flip between trigger and resolution, and nothing in parun can ask
 -- a permanent which abilities it has.
@@ -98,11 +98,11 @@ throughEndStep gs =
       (GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Ending EndingStep.EndStep) S.alice))
       (gs {GameState.phase = Phase.Ending EndingStep.EndStep})
 
--- CR 719.3b's marker itself, which no characteristic reports.
+-- CR 720.3b's marker itself, which no characteristic reports.
 solvedness :: ObjectId.ObjectId -> GameState.GameState -> Bool
 solvedness oid gs = maybe False (Set.member Designation.Solved . Object.designations) (Game.lookupObject oid gs)
 
--- The Case's first clause, which is not a CR 719 rule at all -- ordinary printed
+-- The Case's first clause, which is not a CR 720 rule at all -- ordinary printed
 -- text, and the same PlayerEffect.ModifyCost Baral, Chief of Compliance
 -- prints. Here to prove the transcription rather than the capability.
 reductionSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -173,7 +173,7 @@ pilferedProofSpec s registry = Spec.describe s "Case of the Pilfered Proof" $ do
   -- Clue; the Case, once solved, makes it two.
   --
   -- Two boards differing in ONE thing: whether a third Detective is on the
-  -- battlefield when the end step arrives, which is rule 719.3a's condition.
+  -- battlefield when the end step arrives, which is rule 720.3a's condition.
   Spec.it s "CR 702.169b a solved Case adds a Clue to a token creation" $ do
     proof <- S.printingOf s registry "Case of the Pilfered Proof"
     stalker <- S.printingOf s registry "Basilica Stalker"
@@ -189,7 +189,7 @@ pilferedProofSpec s registry = Spec.describe s "Case of the Pilfered Proof" $ do
            in (solvedness caseId solved, S.countOnBattlefieldByName clue S.alice after)
     Spec.assertEqWith s "CR 614.1a solved: those tokens plus a Clue token" (snd (run 3)) 2
     Spec.assertEqWith s "unsolved: the investigate's one Clue and no more" (snd (run 2)) 1
-    Spec.assertEqWith s "CR 719.3a three Detectives solve it" (fst (run 3)) True
+    Spec.assertEqWith s "CR 720.3a three Detectives solve it" (fst (run 3)) True
     Spec.assertEqWith s "two do not" (fst (run 2)) False
 
 -- alice's board for the Case: the Case itself, ONE Detective already on the
@@ -228,7 +228,7 @@ enteredOne before after =
 -- against a melded permanent in Parun.MeldSpec.
 gorgonsKissSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 gorgonsKissSpec s registry = Spec.describe s "Case of the Gorgon's Kiss" $ do
-  -- CR 719.3a's three creature cards, then CR 702.169b's "as long as this Case
+  -- CR 720.3a's three creature cards, then CR 702.169b's "as long as this Case
   -- is solved": a 4/4 Gorgon creature with deathtouch and lifelink, still an
   -- enchantment. Two cards leave it the enchantment it was.
   Spec.it s "CR 702.169b a solved Case is a 4/4 Gorgon creature with deathtouch and lifelink" $ do
@@ -246,4 +246,4 @@ gorgonsKissSpec s registry = Spec.describe s "Case of the Gorgon's Kiss" $ do
     Spec.assertEqWith s "a Gorgon and still a Case" (Projection.subtypesOf solvedId solved) (Set.fromList [Subtype.Case, Subtype.Gorgon])
     Spec.assertBool s (Projection.hasKeyword Keyword.Deathtouch solvedId solved) "with deathtouch"
     Spec.assertBool s (Projection.hasKeyword Keyword.Lifelink solvedId solved) "and lifelink"
-    Spec.assertEqWith s "CR 719.3a two creature cards leave it unsolved and no creature" (Projection.cardTypesOf unsolvedId unsolved) (Set.fromList [CardType.Enchantment])
+    Spec.assertEqWith s "CR 720.3a two creature cards leave it unsolved and no creature" (Projection.cardTypesOf unsolvedId unsolved) (Set.fromList [CardType.Enchantment])

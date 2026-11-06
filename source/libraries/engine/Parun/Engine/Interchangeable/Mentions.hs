@@ -2,10 +2,10 @@
 -- an ability, a replacement, a cost, a duration, a card -- through the leaves
 -- an Asking names: whether it might name one object, which
 -- Parun.Engine.Interchangeable asks of every stored row; which of the turn's
--- history it reads (CR 732.3), which Parun.Engine.Fragmented asks of every
+-- history it reads (CR 733.3), which Parun.Engine.Fragmented asks of every
 -- printing; whether it reads what its source's prevention effect stopped
 -- (CR 615.13), which Parun.Engine.Replacement.choose asks of a waiting ability;
--- and which combined back faces it carries (CR 712.4a), which
+-- and which combined back faces it carries (CR 713.1a), which
 -- Parun.Interpreter.chosenFace asks of the reference (CR 201.4e).
 --
 -- One function per type, each matching every constructor POSITIONALLY, so a
@@ -496,18 +496,18 @@ data Asking r = MkAsking
     -- | A Filter atom reading a record kept per object id, which whole-object
     -- Eq does not compare.
     keyed :: r,
-    -- | A read of the turn's history (CR 732.3).
+    -- | A read of the turn's history (CR 733.3).
     history :: HistoryRead.HistoryRead -> r,
     -- | A read of what the source's own prevention effect stopped (CR 615.13).
     prevention :: r,
     -- | A read of the counters the source's own effects moved (CR 607.1).
     counterLinks :: r,
     -- | What an inline card answers as a meld pair's combined back face (CR
-    -- 712.4a), given what it answers as any inline card.
+    -- 713.1a), given what it answers as any inline card.
     melded :: r -> r
   }
 
--- | CR 201.4e / 712.4a: the combined back faces a card's meld instructions
+-- | CR 201.4e / 713.1a: the combined back faces a card's meld instructions
 -- carry inline, each the whole card the melded permanent shows.
 combinedBackFaces :: Card.Card -> [Card.Card]
 combinedBackFaces = snd . foldMap (faceNames asking (\card -> ([card], []))) . Card.faces
@@ -562,7 +562,7 @@ slotNames :: Asking r -> SlotName.SlotName -> r
 slotNames asking _slot = contextNames asking
 
 -- A history read of the turn a tally names: the turn in progress is read
--- (CR 732.3), and last turn's log, which no loop of this turn can grow, is not.
+-- (CR 733.3), and last turn's log, which no loop of this turn can grow, is not.
 turnHistory :: (Monoid r) => Asking r -> WhichTurn.WhichTurn -> HistoryRead.HistoryRead -> r
 turnHistory asking which reading = case which of
   WhichTurn.ThisTurn -> history asking reading

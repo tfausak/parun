@@ -1,10 +1,10 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- Covers CR 720 end to end: Parun.Types.Layout's Omen arm, the Parun.Engine.Card
--- arms that read it (CR 720.4's normal-characteristics view and CR 720.3's
+-- Covers CR 721 end to end: Parun.Types.Layout's Omen arm, the Parun.Engine.Card
+-- arms that read it (CR 721.4's normal-characteristics view and CR 721.3's
 -- castable halves) plus Card.isOmen, and Parun.Engine.Resolve.finishSpell, where
--- CR 720.3d's shuffle-back is the one clause that is a consequence of the layout
+-- CR 721.3d's shuffle-back is the one clause that is a consequence of the layout
 -- rather than of the card's printed opcodes.
 --
 -- Every case runs against the printed Riling Dawnbreaker // Signaling Roar: a
@@ -45,9 +45,9 @@ import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.ReplacementEntry as ReplacementEntry
 import qualified Parun.Types.Zone as Zone
 
--- The two names the card prints (CR 720.2). The first is the card's own name
--- under CR 720.4; the second names only the alternative characteristics, and CR
--- 720.5 is what lets a player choose it where a name is asked for -- which
+-- The two names the card prints (CR 721.2). The first is the card's own name
+-- under CR 721.4; the second names only the alternative characteristics, and CR
+-- 721.5 is what lets a player choose it where a name is asked for -- which
 -- Parun.Registry.index already answers, both face names being keys.
 dawnbreakerName, roarName :: CardName.CardName
 dawnbreakerName = CardName.MkCardName (Text.pack "Riling Dawnbreaker")
@@ -66,7 +66,7 @@ omenRaceBoard dawnbreaker plains restInPeace =
    in (gs, oid, restId)
 
 -- CR 616.1e's order: take the candidate Rest in Peace SOURCES when `restFirst`,
--- and rule 720.3d's row -- whose source is the spell's own stack incarnation, an
+-- and rule 721.3d's row -- whose source is the spell's own stack incarnation, an
 -- id no fixture holds -- when not. Pinned by source rather than by index, so
 -- neither answer can turn into the other under a change to the engine's canonical
 -- candidate order.
@@ -96,14 +96,14 @@ omenRace answer gs oid =
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Omen" $ do
-  -- CR 720.4: "In every zone except the stack, and while on the stack not as an
+  -- CR 721.4: "In every zone except the stack, and while on the stack not as an
   -- Omen, an omen card has only its normal characteristics."
   --
   -- The falsifier is CR 709.4's reading, which is what the pool's split cards
   -- take: a combined view would name this card
   -- "Riling Dawnbreaker//Signaling Roar", give it both card types, and price it
   -- at the concatenated {4}{W}{1}{W} for mana value 7.
-  Spec.it s "CR 720.4 in a hand the card is only its normal half" $ do
+  Spec.it s "CR 721.4 in a hand the card is only its normal half" $ do
     dawnbreaker <- S.printingOf s registry "Riling Dawnbreaker"
     let (gs, oid) = S.handOne dawnbreaker (Setup.emptyGame S.bothPlayers)
     case Game.faceOf oid gs of
@@ -113,7 +113,7 @@ spec s registry = Spec.describe s "Omen" $ do
         Spec.assertEqWith s "mana value 5, not the two halves' 7" (Quantity.manaValueOf face) 5
         Spec.assertBool s (Set.member CardType.Creature (Projection.cardTypesOf oid gs)) "a creature card"
         Spec.assertBool s (not (Set.member CardType.Sorcery (Projection.cardTypesOf oid gs))) "and not a sorcery"
-  -- CR 720.3: "As a player casts an omen card, the player chooses whether they
+  -- CR 721.3: "As a player casts an omen card, the player chooses whether they
   -- cast the card normally or as an Omen." Both halves offered, and the choice
   -- left to the player.
   --
@@ -121,35 +121,35 @@ spec s registry = Spec.describe s "Omen" $ do
   -- board below, because that list is what every road to a cast reads -- the
   -- priority actions here, and Parun.Engine.Resolve.Effect.offerCast, which builds its
   -- own candidates over the same call.
-  Spec.it s "CR 720.3 both halves are castable faces" $ do
+  Spec.it s "CR 721.3 both halves are castable faces" $ do
     dawnbreaker <- S.printingOf s registry "Riling Dawnbreaker"
     Spec.assertEqWith
       s
       "the creature and the Omen, in printed order"
       (fmap Face.name (Card.castableFaces (Printing.card dawnbreaker)))
       [dawnbreakerName, roarName]
-  Spec.it s "CR 720.3 both halves are offered from a hand" $ do
+  Spec.it s "CR 721.3 both halves are offered from a hand" $ do
     dawnbreaker <- S.printingOf s registry "Riling Dawnbreaker"
     plains <- S.printingOf s registry "Plains"
     let namesOffered gs = Maybe.mapMaybe (\action -> case action of A.Cast _ n _ -> Just n; _ -> Nothing) (Action.legalActions S.alice gs)
         (both, _) = S.handOne dawnbreaker (S.landsInPlay plains 5)
         (one, _) = S.handOne dawnbreaker (S.landsInPlay plains 2)
     Spec.assertEqWith s "five Plains: both halves" (namesOffered both) [dawnbreakerName, roarName]
-    -- CR 720.3a: "When casting an omen card as an Omen, only the alternative
+    -- CR 721.3a: "When casting an omen card as an Omen, only the alternative
     -- characteristics are evaluated to see if it can be cast." Two Plains pay
     -- Signaling Roar's {1}{W} and cannot pay the creature's {4}{W}, so an engine
     -- pricing either half off the other offers the wrong one -- or, if it priced
     -- both off a combined cost, neither.
     Spec.assertEqWith s "two Plains: only the Omen" (namesOffered one) [roarName]
-  -- CR 720.3d: "As an Omen spell resolves, its controller shuffles it into its
+  -- CR 721.3d: "As an Omen spell resolves, its controller shuffles it into its
   -- owner's library instead of putting it into its owner's graveyard as it
-  -- resolves." The clause this whole layout exists for -- CR 715.3d exiles an
+  -- resolves." The clause this whole layout exists for -- CR 716.3d exiles an
   -- Adventure instead, and nothing the card prints says either.
   --
   -- alice's library starts EMPTY (S.landsInPlay), so the library reading below is
   -- the omen card or nothing, and the graveyard reading distinguishes "shuffled
   -- back" from "went nowhere at all".
-  Spec.it s "CR 720.3d the resolved Omen creates the token and is shuffled into its owner's library" $ do
+  Spec.it s "CR 721.3d the resolved Omen creates the token and is shuffled into its owner's library" $ do
     dawnbreaker <- S.printingOf s registry "Riling Dawnbreaker"
     plains <- S.printingOf s registry "Plains"
     let (gs, oid) = S.handOne dawnbreaker (S.landsInPlay plains 2)
@@ -163,7 +163,7 @@ spec s registry = Spec.describe s "Omen" $ do
     -- would pass the two assertions above by being still on the stack.
     Spec.assertEqWith s "the Soldier token is on the battlefield" (length (filter (\o -> Set.member soldierName (Projection.namesOf o resolved)) (Set.toList (GameState.battlefield resolved)))) 1
     Spec.assertEqWith s "and the stack is empty" (length (GameState.stack resolved)) 0
-  -- CR 616.1e: rule 720.3d's rewrite is a replacement effect (CR 614.1a), so a row
+  -- CR 616.1e: rule 721.3d's rewrite is a replacement effect (CR 614.1a), so a row
   -- another OBJECT contributes to the same CR 608.2n move races it. Rest in Peace
   -- ({1}{W} Enchantment, "When this enchantment enters, exile all graveyards. / If
   -- a card or token would be put into a graveyard from anywhere, exile it instead"
@@ -173,9 +173,9 @@ spec s registry = Spec.describe s "Omen" $ do
   -- Nothing in CR 616.1a-d buckets either row -- both are ordinary continuous
   -- effects of static abilities (CR 604.2), so neither is CR 614.15's
   -- self-replacement -- and CR 616.1e leaves the choice to the affected object's
-  -- controller. The two orders reach DIFFERENT zones: rule 720.3d first shuffles
+  -- controller. The two orders reach DIFFERENT zones: rule 721.3d first shuffles
   -- the card into its owner's library, and Rest in Peace first exiles it, which CR
-  -- 614.6 leaves rule 720.3d no graveyard move to replace.
+  -- 614.6 leaves rule 721.3d no graveyard move to replace.
   --
   -- Parun.CastSpec's buyback pair is the shape; `omenRace` keeps the seats CR
   -- 616.1e asked, which castAndResolve's replay does not reach.
@@ -186,12 +186,12 @@ spec s registry = Spec.describe s "Omen" $ do
     let (gs, oid, restId) = omenRaceBoard dawnbreaker plains restInPeace
         (asked, after) = omenRace (racingRoar False restId) gs oid
         namesIn zone = fmap (\o -> Projection.namesOf o after) (Game.zoneMembers zone S.alice after)
-    Spec.assertEqWith s "CR 720.3d: the omen card is in its owner's library" (namesIn Zone.Library) [Set.singleton dawnbreakerName]
+    Spec.assertEqWith s "CR 721.3d: the omen card is in its owner's library" (namesIn Zone.Library) [Set.singleton dawnbreakerName]
     Spec.assertEqWith s "CR 614.6: so Rest in Peace exiled nothing" (namesIn Zone.Exile) []
     Spec.assertEqWith s "and CR 608.2n's graveyard is empty" (namesIn Zone.Graveyard) []
     Spec.assertEqWith s "CR 616.1e: the spell's controller was asked, once" asked [S.alice]
   -- The same board and the same answerer for the ONE answer: taking Rest in Peace
-  -- first exiles the card, and CR 614.6 leaves rule 720.3d nothing to replace --
+  -- first exiles the card, and CR 614.6 leaves rule 721.3d nothing to replace --
   -- the outcome parun could not reach while finishSpell named the library itself.
   Spec.it s "CR 616.1e Rest in Peace taken first exiles the Omen instead of shuffling it back" $ do
     dawnbreaker <- S.printingOf s registry "Riling Dawnbreaker"
@@ -201,10 +201,10 @@ spec s registry = Spec.describe s "Omen" $ do
         (asked, after) = omenRace (racingRoar True restId) gs oid
         namesIn zone = fmap (\o -> Projection.namesOf o after) (Game.zoneMembers zone S.alice after)
     Spec.assertEqWith s "CR 614.6: the resolved Omen is in exile" (namesIn Zone.Exile) [Set.singleton dawnbreakerName]
-    Spec.assertEqWith s "and the library rule 720.3d would have shuffled it into is empty" (namesIn Zone.Library) []
+    Spec.assertEqWith s "and the library rule 721.3d would have shuffled it into is empty" (namesIn Zone.Library) []
     Spec.assertEqWith s "the graveyard is empty on this order too" (namesIn Zone.Graveyard) []
     Spec.assertEqWith s "CR 616.1e: alice was asked here as well" asked [S.alice]
-  -- CR 701.24a is the other half of rule 720.3d's "shuffles": the move alone
+  -- CR 701.24a is the other half of rule 721.3d's "shuffles": the move alone
   -- would put the card back in a known position. Counted through the prompt,
   -- since Parun.Engine.Event.shuffleLibrary raises exactly one Prompt.Shuffle per
   -- library it randomizes and a deterministic answerer makes the ORDER

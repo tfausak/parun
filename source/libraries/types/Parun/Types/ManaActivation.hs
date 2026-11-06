@@ -4,7 +4,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.ObjectId as ObjectId
 
--- | One mana ability a payer activated in a CR 605.3a mana window, as CR 733.1
+-- | One mana ability a payer activated in a CR 605.3a mana window, as CR 734.1
 -- offers it back: its sources, and the mana it took from and gave to the
 -- payer's pool, which the rule's "unless" clause reads.
 --
@@ -18,7 +18,7 @@ data ManaActivation = MkManaActivation
     -- | The mana it, and the triggered mana abilities it caused, added to the
     -- payer's pool (CR 106.4).
     added :: [ManaUnit.ManaUnit],
-    -- | Whether CR 733.1 offers it back: False for a CR 116.2c special action
+    -- | Whether CR 734.1 offers it back: False for a CR 116.2c special action
     -- taken in the window, which is no mana ability and stands.
     reversible :: Bool
   }

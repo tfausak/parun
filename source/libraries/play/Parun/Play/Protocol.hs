@@ -183,7 +183,7 @@ offerOf gs prompt = case prompt of
           <> [("substitutes", Reply.encode (Reply.list (Reply.viaCodec Codec.Keyword.codec)) namer keywords) | let keywords = substitutingKeywords gs payer cost, not (null keywords)]
       )
   Prompt.ChooseExtraManaSource _ _ sources -> fields [("sources", manaSources gs sources)]
-  -- CR 733.1: the sources of the one activation asked about.
+  -- CR 734.1: the sources of the one activation asked about.
   Prompt.ReverseManaAbilities _ _ sources -> fields [("sources", objects (NonEmpty.toList sources))]
   -- CR 601.2b / 702.51a: each candidate's cost.
   --

@@ -86,7 +86,7 @@ import qualified Parun.Types.Zone as Zone
 --
 -- Parametric in the designation because it reaches this two ways -- as the
 -- Deck's Printings when a game is built, and as the Player's PrintingIds when one
--- is restarted (CR 727) -- and rule 903.7 turns on WHETHER a commander was
+-- is restarted (CR 728) -- and rule 903.7 turns on WHETHER a commander was
 -- designated, never on which card it is or, under CR 702.124a, how many.
 --
 -- CR 902.4's life modifier is the `modifier` addend rather than a fourth branch:
@@ -225,7 +225,7 @@ gameWith settings order =
         )
    in (blankGame settings order_ (NonEmpty.head order)) {GameState.players = Map.fromList (fmap newPlayer order_)}
 
--- CR 727.1 / 729.2 / 800.2: a game nothing has happened in yet, with no player
+-- CR 728.1 / 730.2 / 800.2: a game nothing has happened in yet, with no player
 -- records. gameWith adds its players; restartGame and subgameStateFrom name
 -- what crosses into their new game, so a field neither names resets.
 blankGame :: GameSettings.GameSettings -> [PlayerId] -> PlayerId -> GameState
@@ -245,7 +245,7 @@ blankGame settings order active =
       GameState.stack = [],
       GameState.stackedIn = Map.empty,
       GameState.players = Map.empty,
-      -- CR 729.4: nobody is nested inside another game here.
+      -- CR 730.4: nobody is nested inside another game here.
       GameState.outsideObjects = Map.empty,
       GameState.broughtIn = Seq.empty,
       GameState.departedCards = Map.empty,
@@ -341,7 +341,7 @@ blankGame settings order active =
       GameState.control = Map.empty,
       GameState.monarch = Nothing,
       GameState.initiative = Nothing,
-      -- CR 731.1: "the game starts with neither designation".
+      -- CR 732.1: "the game starts with neither designation".
       GameState.daytime = Nothing,
       GameState.spellsCastLastTurn = 0,
       GameState.eventsLastTurn = mempty,
@@ -362,7 +362,7 @@ blankGame settings order active =
       -- CR 100.6a: parun models no match around this game, so the match it
       -- belongs to has had no subgame yet.
       GameState.subgamesThisMatch = 0,
-      -- CR 727.1 / 729.1a: the match's first game; startGameFromCards
+      -- CR 728.1 / 730.1a: the match's first game; startGameFromCards
       -- numbers each later one.
       GameState.gamesThisMatch = 1,
       GameState.gameNumber = 1,
@@ -444,7 +444,7 @@ createDeck pid deck = do
           let total = startingLifeOf (GameState.settings gs) (length (GameState.turnOrder gs)) pid (Deck.commander deck) (Vanguard.lifeModifierOf pid gs + (if Map.null (Map.findWithDefault Map.empty SideDeck.Scheme (Deck.sideDecks deck)) then 0 else Archenemy.lifeBonus))
            in Map.adjust (\p -> p {Player.life = total, Player.startingLife = total, Player.dungeons = Set.fromList dungeonIds, Player.outsideTheGame = Map.fromList sideboardIds, Player.stickerSheets = Deck.stickerSheets deck}) pid (GameState.players gs)
       }
-  -- CR 717.2 / 901.4 / 904.4 and the Unstable FAQ: each supplementary deck
+  -- CR 718.2 / 901.4 / 904.4 and the Unstable FAQ: each supplementary deck
   -- begins in the command zone, and is neither in the library nor, below, in
   -- the starting deck.
   Monad.forM_ (Map.toAscList (Deck.sideDecks deck)) $ \(kind, printings) -> do
@@ -478,7 +478,7 @@ createDeck pid deck = do
   -- Commander game, this is also before you've set aside your commander". The
   -- sideboard interned above is not among them, which is rule 103.2a's first
   -- sentence; nor is the vanguard, a conspiracy, a dungeon or an Attraction, none
-  -- of which CR 902.3, CR 315.3, CR 309.2 or CR 717.2 puts in the deck to begin
+  -- of which CR 902.3, CR 315.3, CR 309.2 or CR 718.2 puts in the deck to begin
   -- with.
   let starting = foldr (\printingId -> Map.insertWith (+) printingId 1) (Map.fromListWith (+) cardIds) commanderIds
   State.modify' $ \gs ->
@@ -508,7 +508,7 @@ createInCommandZone pid printingId = do
           }
   pure oid
 
--- CR 717.2 / 901.3 / 904.3: mint one of this player's cards onto the bottom of
+-- CR 718.2 / 901.3 / 904.3: mint one of this player's cards onto the bottom of
 -- their supplementary deck of this kind, createInCommandZone's hand-written move
 -- and for its reason. CR 901.15a: a planar card under the single planar deck
 -- option joins the communal deck, whoever brought it.
@@ -547,7 +547,7 @@ newGame perform matchup = do
   Monad.forM_ (NonEmpty.toList matchup) $ \(pid, deck) -> do
     createDeck pid deck
     Event.shuffleLibrary pid
-    -- CR 717.2 / 901.3 / 904.3 / 103.3a.
+    -- CR 718.2 / 901.3 / 904.3 / 103.3a.
     Monad.forM_ ownDecks (`Game.shuffleSideDeck` pid)
   -- CR 901.15a / 103.3a: the communal planar deck, once every seat's cards are
   -- in it.
@@ -583,15 +583,15 @@ newGame perform matchup = do
   planechase <- State.gets Planechase.isPlanechase
   Monad.when planechase (Planechase.setStartingPlane starting)
 
--- CR 712.21 / CR 108.2: a melded permanent is ONE object represented by TWO
--- cards, so a funnel that carries cards over -- CR 727.2's restart and CR
--- 729.5's subgame teardown -- has to take the two and not the one. Replaces each
+-- CR 713.8 / CR 108.2: a melded permanent is ONE object represented by TWO
+-- cards, so a funnel that carries cards over -- CR 728.2's restart and CR
+-- 730.5's subgame teardown -- has to take the two and not the one. Replaces each
 -- such object with one card object per component, minting ids off `next`, and
 -- answers the advanced supply. Every other object is passed through untouched.
 --
 -- Read through Game.componentsOf, a classifier over Source and never a case on
--- Source.OfMeld, so CR 730.3's merged permanent arrives through the same
--- door -- the posture Event.changeZoneAttaching's CR 712.21 split already takes.
+-- Source.OfMeld, so CR 731.3's merged permanent arrives through the same
+-- door -- the posture Event.changeZoneAttaching's CR 713.8 split already takes.
 --
 -- No zone conjunct where that split carries one: this is not a zone change but
 -- the rebuild of a game's whole object pool, and both callers empty every zone
@@ -606,9 +606,9 @@ newGame perform matchup = do
 -- (its identity, a conjured duplicate's values) differ between the two cards
 -- (Game.representComponent), since each represents itself
 -- again and not the permanent they were. A merged permanent's TOKEN component
--- (CR 730.2d) is minted as the token it is, which the funnel below then drops
--- for CR 727.2's own reason: it is no card. CR 712.21a's arrangement is not asked:
--- both callers shuffle what they build (CR 103.3, CR 729.5), so the order the
+-- (CR 731.2d) is minted as the token it is, which the funnel below then drops
+-- for CR 728.2's own reason: it is no card. CR 713.8a's arrangement is not asked:
+-- both callers shuffle what they build (CR 103.3, CR 730.5), so the order the
 -- two cards are placed in is not observable.
 splitComponents :: ObjectId -> Map.Map ObjectId Object.Object -> (Map.Map ObjectId Object.Object, ObjectId)
 splitComponents next objects =
@@ -622,34 +622,34 @@ splitComponents next objects =
               else Foldable.foldl' (mint obj) (acc, oid) components
    in List.foldl' step (Map.empty, next) (Map.toAscList objects)
 
--- CR 727.2 / 729.2: build every player's library from the EXISTING object pool
+-- CR 728.2 / 730.2: build every player's library from the EXISTING object pool
 -- -- each player's owned cards, wherever they currently sit -- then shuffle and
 -- draw opening hands (CR 103.5). Deliberately not newGame: it reuses the real
 -- objects (ownership preserved) instead of minting fresh ones from Deck
 -- definitions. Only Magic cards survive; an ability on the stack, a token, an
--- emblem or a trigger is not a card (CR 727.2 / 111.6), and a melded permanent
+-- emblem or a trigger is not a card (CR 728.2 / 111.6), and a melded permanent
 -- is two of them, which `splitComponents` makes so before the funnel runs (CR
--- 712.21 / CR 108.2). Shared by restart (CR 727) and subgames (CR 729).
+-- 713.8 / CR 108.2). Shared by restart (CR 728) and subgames (CR 730).
 --
--- `owners` is the still-playing seats in seating order: CR 727.1 / 729.2
+-- `owners` is the still-playing seats in seating order: CR 728.1 / 730.2
 -- rebuild the game for the players who are in it, and CR 103.5's declaration
 -- round goes around the table in turn order. A departed player's cards are not
 -- here to skip -- CR 800.4a took them out of the game with them -- except their
 -- ante cards, which CR 800.4n keeps and `strandedAnte` leaves in the ante.
 --
--- `exempt` is CR 727.5's set: "effects may exempt certain cards from the
+-- `exempt` is CR 728.5's set: "effects may exempt certain cards from the
 -- procedure that restarts the game. These cards are not in their owner's deck as
 -- the new game begins." An exempted card is left exactly as it is -- same object,
 -- same incarnation, still in exile -- rather than rebuilt into a library, so it
 -- is untouched by CR 400.7 for the reason nothing moved it. Restricted to EXILE
--- because that is where every card CR 727.5 reaches sits: the rule's only
+-- because that is where every card CR 728.5 reaches sits: the rule's only
 -- producer leaves cards in exile, and an exemption naming a permanent would have
 -- to say which of the zones this function empties it survives in. A subgame
--- exempts nothing (CR 729.2 moves every library card in, and CR 729.2c each
+-- exempts nothing (CR 730.2 moves every library card in, and CR 730.2c each
 -- commander).
 startGameFromCards :: HandActionPerformer -> Set.Set ObjectId -> Game ()
 startGameFromCards perform exemptions = do
-  -- CR 727.2 / CR 712.21, BEFORE `gs` is read: the split has to be in the state
+  -- CR 728.2 / CR 713.8, BEFORE `gs` is read: the split has to be in the state
   -- rather than in the `let` below, because `commanderIds` and `vanguardIds` ask
   -- Commander.isCommander and Vanguard.isVanguard of `gs` -- so a component
   -- minted outside it could not be recognised as CR 903.6's commander. With it
@@ -659,14 +659,14 @@ startGameFromCards perform exemptions = do
   State.modify' $ \g ->
     let (split, next) = splitComponents (GameState.nextObjectId g) (GameState.objects g)
      in g {GameState.objects = split, GameState.nextObjectId = next}
-  -- CR 727.1 / 729.1a: a restart and a subgame each begin a new game of the
+  -- CR 728.1 / 730.1a: a restart and a subgame each begin a new game of the
   -- match, numbered after every game begun so far.
   State.modify' $ \g ->
     let begun = 1 + GameState.gamesThisMatch g
      in g {GameState.gamesThisMatch = begun, GameState.gameNumber = begun}
   gs <- State.get
   let owners = Game.stillPlayingInOrder gs
-      -- Cards in exile, and nothing else: CR 727.2's "all Magic cards" is what
+      -- Cards in exile, and nothing else: CR 728.2's "all Magic cards" is what
       -- survives a rebuild at all, so an exemption is filtered by the same
       -- `isCard` test the funnel below applies rather than being able to smuggle
       -- a token or an emblem through it (CR 111.6, CR 114.5).
@@ -675,7 +675,7 @@ startGameFromCards perform exemptions = do
           (Map.filter isCard (Map.restrictKeys (GameState.objects gs) (Set.intersection exemptions (GameState.exile gs))))
       -- A melded permanent never reaches this: `splitComponents` above has
       -- already replaced it with its two component cards, each of which answers
-      -- True here (CR 712.21 / CR 108.2).
+      -- True here (CR 713.8 / CR 108.2).
       isCard obj = case Object.source obj of
         Source.OfCard _ -> True
         _ -> False
@@ -685,21 +685,21 @@ startGameFromCards perform exemptions = do
       -- cannot be forgotten on one path and reset on the other.
       toLibraryCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Library}
       -- Tug of War's ruling (2022-10-07), the specific word over CR 123.5 on CR
-      -- 729.2c's move: a commander's owner "removes all stickers from it", as
-      -- newIncarnation does; proved by Parun.StickerSpec's "CR 729.2c". A
+      -- 730.2c's move: a commander's owner "removes all stickers from it", as
+      -- newIncarnation does; proved by Parun.StickerSpec's "CR 730.2c". A
       -- restart has already taken them off (restartGame).
       toCommandCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Command}
       rebuilt = Map.filter isCard (Map.withoutKeys (GameState.objects gs) exempt)
       -- CR 903.6: "each player puts their commander from their deck face up into
       -- the command zone". Both callers start a new game following rule 103 (CR
-      -- 727.1, CR 729.2), so rule 903.6 applies to each of them, and CR 103.2c
-      -- is the rule 103 step that says so. CR 729.2c is the other road in, a
+      -- 728.1, CR 730.2), so rule 903.6 applies to each of them, and CR 103.2c
+      -- is the rule 103 step that says so. CR 730.2c is the other road in, a
       -- commander from the main-game command zone; one in the main-game library
-      -- arrives in the deck CR 729.2 builds, and leaves it here. Held back BEFORE the
+      -- arrives in the deck CR 730.2 builds, and leaves it here. Held back BEFORE the
       -- libraries are built,
       -- because rule 903.6 shuffles "the remaining cards of their deck".
       --
-      -- CR 727.5a -- an exempted commander does not begin the new game in the
+      -- CR 728.5a -- an exempted commander does not begin the new game in the
       -- command zone -- is satisfied by the ordering rather than by a second test:
       -- `rebuilt` already drops `exempt`, so an exempted commander stays in exile.
       -- Parun.CommanderSpec's Restart group is what proves that, against a control
@@ -710,10 +710,10 @@ startGameFromCards perform exemptions = do
       -- puts both into the command zone.
       commanderIds = Map.keysSet (Map.filterWithKey (\oid obj -> elem (Object.owner obj) owners && Commander.isCommander oid gs) rebuilt)
       -- CR 313.2: "if a vanguard card would leave the command zone, it remains in
-      -- the command zone", which is the exception CR 727.2's "all cards" would
+      -- the command zone", which is the exception CR 728.2's "all cards" would
       -- otherwise sweep into a library, and a subgame's pool holds a vanguard too,
-      -- by CR 729.2b. So a vanguard is held back exactly as a commander is, and for
-      -- a rule of its own rather than for rule 903.6's. CR 729.2b is the same
+      -- by CR 730.2b. So a vanguard is held back exactly as a commander is, and for
+      -- a rule of its own rather than for rule 903.6's. CR 730.2b is the same
       -- holding read forwards.
       --
       -- Every one of them, as `commanderIds` takes every commander: CR 902.1's
@@ -727,19 +727,19 @@ startGameFromCards perform exemptions = do
       conspiracyIds = Map.keysSet (Map.filterWithKey (\oid _ -> Conspiracy.isConspiracy oid gs) rebuilt)
       inCommandIds = Set.unions [commanderIds, vanguardIds, conspiracyIds]
       commandZoneCards = fmap toCommandCard (Map.restrictKeys rebuilt inCommandIds)
-      -- CR 727.2 / 717.2: every Attraction card, wherever it was, begins the new
+      -- CR 728.2 / 718.2: every Attraction card, wherever it was, begins the new
       -- game in its owner's Attraction deck, and a Contraption card in its
       -- owner's Contraption deck by the same reading of the Unstable FAQ; CR
-      -- 729.2a's subgame pool holds only the decks.
+      -- 730.2a's subgame pool holds only the decks.
       backedCards = fmap toCommandCard (Map.filterWithKey (\oid _ -> Maybe.isJust (Game.sideDeckBack oid gs)) (Map.withoutKeys rebuilt inCommandIds))
       -- CR 311.2 / 312.2 / 314.2: a plane, phenomenon or scheme card never
-      -- leaves the command zone, and CR 727.2 / 103.3a start the new game with
+      -- leaves the command zone, and CR 728.2 / 103.3a start the new game with
       -- each in its owner's supplementary deck, face up or not. A subgame's pool
-      -- holds only the decks (CR 729.2a).
+      -- holds only the decks (CR 730.2a).
       planarCards = fmap toCommandCard (Map.filterWithKey (\oid _ -> Plane.isPlanarCard oid gs) (Map.withoutKeys rebuilt inCommandIds))
       schemeCards = fmap toCommandCard (Map.filterWithKey (\oid _ -> Scheme.isScheme oid gs) (Map.withoutKeys rebuilt inCommandIds))
       supplementary = Set.unions [Map.keysSet backedCards, Map.keysSet planarCards, Map.keysSet schemeCards]
-      -- CR 800.4n / 727.2: a departed player's ante card stayed in the game,
+      -- CR 800.4n / 728.2: a departed player's ante card stayed in the game,
       -- and its owner has no library in the new one, so it begins the new game
       -- in the ante.
       strandedAnte = fmap (\obj -> (Object.newIncarnation obj) {Object.zone = Zone.Ante}) (Map.filter (\obj -> Object.zone obj == Zone.Ante && notElem (Object.owner obj) owners) rebuilt)
@@ -753,9 +753,9 @@ startGameFromCards perform exemptions = do
       decksOf old pool = Map.fromList [(pid, ownedIn pool pid) | pid <- owners, Map.member pid old || not (Seq.null (ownedIn pool pid))]
       -- CR 103.2a / 702.139b: the new game's starting deck is the deck it is
       -- built from -- every card headed for the library plus the commander
-      -- held back from it. That is CR 727.2's every involved card, a wished-in
-      -- one included, less CR 727.5's exemptions, or CR 729.2's main-game
-      -- library plus CR 729.2c's commander. What stayed outside the game is
+      -- held back from it. That is CR 728.2's every involved card, a wished-in
+      -- one included, less CR 728.5's exemptions, or CR 730.2's main-game
+      -- library plus CR 730.2c's commander. What stayed outside the game is
       -- not in it, nor is a supplementary deck, a vanguard or a conspiracy.
       deckCards = Map.union cards (Map.restrictKeys commandZoneCards commanderIds)
       printingOf obj = case Object.source obj of
@@ -786,13 +786,13 @@ startGameFromCards perform exemptions = do
         GameState.phasedOut = mempty,
         GameState.exile = exempt,
         GameState.command = inCommandIds,
-        -- CR 727.2 / 729.2: every card is rebuilt above, a seated player's ante
+        -- CR 728.2 / 730.2: every card is rebuilt above, a seated player's ante
         -- card among the library cards, so no other old ante id survives.
         GameState.ante = Map.keysSet strandedAnte,
         GameState.stack = [],
         GameState.stackedIn = Map.empty
       }
-  -- CR 727.1 / 103.2e / 315.2: the new game places its conspiracies again,
+  -- CR 728.1 / 103.2e / 315.2: the new game places its conspiracies again,
   -- before decks are shuffled, so CR 702.106a turns each hidden agenda face
   -- down and asks a fresh name. Nothing done in the restarted game carries over:
   -- a conspiracy turned face up there goes back face down.
@@ -804,22 +804,22 @@ startGameFromCards perform exemptions = do
   Monad.forM_ owners Event.shuffleLibrary
   -- CR 901.15c: the rebuild regrouped the planar cards by owner.
   State.modify' Planechase.gather
-  -- CR 103.3a / 729.2a.
+  -- CR 103.3a / 730.2a.
   Monad.forM_ owners (\pid -> Monad.forM_ [minBound .. maxBound] (`Game.shuffleSideDeck` pid))
-  -- CR 103.1c after CR 727.1a's determination: a conspiracy stays in the
+  -- CR 103.1c after CR 728.1a's determination: a conspiracy stays in the
   -- command zone through a restart (CR 315.3), so it claims again.
   claimStartingPlayer
   -- CR 807.4b: from the starting player CR 103.1 settled.
   State.modify' GrandMelee.handOut
   countFirstTurn
   seated <- State.gets Game.stillPlayingInOrder
-  -- CR 103.2b, newGame's reveal round: CR 727.1 and CR 729.2 each start a new
+  -- CR 103.2b, newGame's reveal round: CR 728.1 and CR 730.2 each start a new
   -- game following rule 103, so the reveal is put to every player again.
   Monad.forM_ seated Companion.reveal
-  -- CR 103.2d again: CR 727.1 and CR 729.2 each start a new game following
+  -- CR 103.2d again: CR 728.1 and CR 730.2 each start a new game following
   -- rule 103.
   drawStickerSheets seated
-  -- CR 407.2 again: CR 727.1 and CR 729.2 each start a new game following
+  -- CR 407.2 again: CR 728.1 and CR 730.2 each start a new game following
   -- rule 103.
   anteFromLibraries seated
   Mulligan.openingHands perform seated
@@ -829,7 +829,7 @@ startGameFromCards perform exemptions = do
   planechase <- State.gets Planechase.isPlanechase
   Monad.when planechase (Planechase.setStartingPlane starting)
 
--- CR 315.2 / 905.4: in a game rebuilt from cards (CR 727.1, 729.2), this player
+-- CR 315.2 / 905.4: in a game rebuilt from cards (CR 728.1, 730.2), this player
 -- may put any number of conspiracy cards from their sideboard into the command
 -- zone, before decks are shuffled. Each is spent from the pool as Event.bringIn
 -- spends a wished-in card (CR 400.11b), and CR 702.106a's hidden agenda turns it
@@ -875,7 +875,7 @@ anteFromLibraries seated = do
 -- Not implemented: CR 123.2a's at least ten unique sheets, which is deck
 -- validation (#4886).
 --
--- A restart (CR 727.1) and a subgame (CR 729.2) each follow rule 103, so each
+-- A restart (CR 728.1) and a subgame (CR 730.2) each follow rule 103, so each
 -- draws again. A sticker that stayed on its object goes on applying off a sheet
 -- not drawn, CR 123.6-123.8 having no access condition and CR 123.2c's access
 -- being read only by CR 123.3's choice, which does not offer it again off a drawn
@@ -898,7 +898,7 @@ countFirstTurn =
 
 -- CR 103.1c: rotate the turn order to begin with the player whose command zone
 -- holds a card naming them the starting player, superseding CR 103.1's
--- (or CR 727.1a's) determination. Several such players are narrowed to one at
+-- (or CR 728.1a's) determination. Several such players are narrowed to one at
 -- random -- the card's own text, so randomness and not a choice -- drawn from
 -- exactly those players, in turn order. A rotation, not a reseat: the cyclic
 -- order is unchanged (Power Play's 2014-05-29 ruling).
@@ -982,18 +982,18 @@ teamStarters teams order =
       starters = Map.elems (Map.mapMaybeWithKey starterOf opening)
    in filter (`elem` starters) order
 
--- CR 103 / 727.1a: put `starter` at the head of the turn order, preserving the
+-- CR 103 / 728.1a: put `starter` at the head of the turn order, preserving the
 -- cyclic order. Total: a `starter` not in the order leaves it as-is.
 rotateTo :: PlayerId -> [PlayerId] -> [PlayerId]
 rotateTo starter order = case break (== starter) order of
   (before, after) -> after <> before
 
--- CR 103.4 / CR 727.1 / CR 729.2: put every player back to a new game's
+-- CR 103.4 / CR 728.1 / CR 730.2: put every player back to a new game's
 -- starting state for the two paths that rebuild a game in place (restart and
 -- subgames).
 --
--- A player who has already left is not reset: CR 727.1 restarts for the players
--- in the game when it ended, and CR 729.4 puts everyone else outside the
+-- A player who has already left is not reset: CR 728.1 restarts for the players
+-- in the game when it ended, and CR 730.4 puts everyone else outside the
 -- subgame. Their Status.Departed survives the rebuild, and they keep their
 -- entry in the map rather than being deleted, so every Map.lookup naming them
 -- stays total. Which players are in the rebuilt game is the rebuilt
@@ -1001,8 +1001,8 @@ rotateTo starter order = case break (== starter) order of
 --
 -- Takes the rebuilt game's settings and seat count rather than reading them off
 -- the state it is rebuilding, because CR 903.12f's life total turns on the
--- REBUILT seat count: CR 727.1 restarts for the players who were in the game
--- when it ended, and CR 729.4 leaves a player outside the subgame, so either
+-- REBUILT seat count: CR 728.1 restarts for the players who were in the game
+-- when it ended, and CR 730.4 leaves a player outside the subgame, so either
 -- rebuild can seat fewer players than the game it came from.
 --
 -- Takes the life modifier per player for the same reason it takes the settings:
@@ -1021,46 +1021,46 @@ resetPlayers settings seats lifeModifier players =
               -- 903.12f's number, the settings carried in having survived too.
               --
               -- CR 902.4 survives it the same way and for a sharper reason: CR
-              -- 727.2 and CR 729.2 rebuild the game from the cards, and CR 313.2
+              -- 728.2 and CR 730.2 rebuild the game from the cards, and CR 313.2
               -- forbids the vanguard card to leave the command zone, so the card
               -- the modifier is read off is still there to be read.
               Player.life = startingLifeOf settings seats pid (Player.commander player) (lifeModifier pid),
               Player.startingLife = startingLifeOf settings seats pid (Player.commander player) (lifeModifier pid),
               Player.counters = Map.empty,
-              -- CR 727.1 / 729.2: a NEW game, so the Ring has tempted nobody in
+              -- CR 728.1 / 730.2: a NEW game, so the Ring has tempted nobody in
               -- it. The command zone this line's callers empty is where the
               -- emblem the count belongs to went.
               Player.ringTemptations = 0,
-              -- CR 727.1 again: a new game starts with nobody having speed (CR
+              -- CR 728.1 again: a new game starts with nobody having speed (CR
               -- 702.179b), whatever the restarted one reached.
               Player.speed = Nothing,
-              -- CR 727.1 once more: a new game, so neither CR 702.131c's nor CR
+              -- CR 728.1 once more: a new game, so neither CR 702.131c's nor CR
               -- 702.195b's mark carries over, whatever the restarted one reached.
               Player.designations = Set.empty,
-              -- CR 903.8 counts casts "that game", and CR 727.1 makes the
+              -- CR 903.8 counts casts "that game", and CR 728.1 makes the
               -- restarted one a new game, so the tax starts over. Player.commander
               -- is deliberately NOT reset beside it: rule 903.3's designation is
               -- made from the deck before the game begins and the restart reuses
               -- the same decks, so the same card is still the commander.
               Player.commanderCasts = Map.empty,
-              -- CR 903.10a counts "over the course of the game", and CR 727.1
+              -- CR 903.10a counts "over the course of the game", and CR 728.1
               -- makes the restarted one a new game, so the tally starts over
               -- with the tax.
               Player.commanderDamage = Map.empty,
-              -- CR 727.1 / 729.2 again: a NEW game, so no dungeon has been
+              -- CR 728.1 / 730.2 again: a NEW game, so no dungeon has been
               -- completed in it. Player.dungeons is deliberately NOT reset beside
               -- it, for Player.commander's reason -- the supply outside the game
               -- comes from the deck, and the restart reuses the same decks.
               --
               -- Player.outsideTheGame is NOT reset either, and for a sharper
-              -- reason than either of those: CR 727.2 involves in the new game
+              -- reason than either of those: CR 728.2 involves in the new game
               -- every card involved in the restarted one, which is the cards a
               -- wish already brought IN -- and this field no longer holds those,
               -- having been spent as they were brought in. What is left in it is
               -- what stayed outside the game, which the restart does not reach.
               Player.completedDungeons = 0,
               Player.completedDungeonNames = Set.empty,
-              -- CR 116.2g counts "this game", and CR 727.1 / CR 729.2 make both of
+              -- CR 116.2g counts "this game", and CR 728.1 / CR 730.2 make both of
               -- this function's callers' games a new one, so the once-per-game
               -- action is available again.
               Player.companionTaken = False,
@@ -1078,29 +1078,29 @@ resetPlayers settings seats lifeModifier players =
         Status.Departed _ -> player
    in Map.mapWithKey reset players
 
--- CR 727: restart the game in place. CR 727.1a's starting player is `starter`
+-- CR 728: restart the game in place. CR 728.1a's starting player is `starter`
 -- (the controller of the restarting ability), so the turn order is rotated to
--- begin with them. CR 727.2: every card returns to its owner's new library via
+-- begin with them. CR 728.2: every card returns to its owner's new library via
 -- startGameFromCards, built from the actual object pool -- never emptyGame plus
 -- newGame, which would lose the real cards and pick the wrong starting player.
--- CR 727.4: the effect finishes resolving just before the first turn's untap
+-- CR 728.4: the effect finishes resolving just before the first turn's untap
 -- step with no player holding priority. The object and timestamp id supplies
 -- are preserved so reused cards keep unique ids.
 --
--- CR 727.5's `exempt` cards are the exception to CR 727.2's funnel: they stay in
+-- CR 728.5's `exempt` cards are the exception to CR 728.2's funnel: they stay in
 -- exile instead of going into a library. See startGameFromCards, which is where
 -- they are held back.
 restartGame :: HandActionPerformer -> Set.Set ObjectId -> PlayerId -> Game ()
 restartGame perform exempt starter = do
-  -- CR 727.1 / 104.1: the restarted game ends, so CR 708.9's end-of-game reveal
+  -- CR 728.1 / 104.1: the restarted game ends, so CR 708.9's end-of-game reveal
   -- is owed. A regression fence: the new game's log starts empty below, so no
   -- reader sees it.
   State.modify' Event.endOfGameReveals
   State.modify' $ \gs ->
-    -- CR 727.1: the rebuilt seating order is the players who were still in the
-    -- game, in their seats, rotated to begin with `starter` (CR 727.1a).
+    -- CR 728.1: the rebuilt seating order is the players who were still in the
+    -- game, in their seats, rotated to begin with `starter` (CR 728.1a).
     let order = rotateTo starter (Game.stillPlayingInOrder gs)
-        -- CR 727.1a. Read back off the rebuilt order, exactly as
+        -- CR 728.1a. Read back off the rebuilt order, exactly as
         -- subgameStateFrom does, so the two can never disagree and this
         -- always names a seat: rotateTo leaves an order alone when `starter`
         -- is not in it, and the head is then the first still-playing seat.
@@ -1108,12 +1108,12 @@ restartGame perform exempt starter = do
         -- afresh, which blankGame does.
         first = Maybe.fromMaybe starter (Maybe.listToMaybe order)
      in (blankGame (GameState.settings gs) order first)
-          { -- CR 727.1 restarts "following the procedures set forth in rule
+          { -- CR 728.1 restarts "following the procedures set forth in rule
             -- 103" for the same players with the same decks, and nothing in
-            -- rule 727 turns an option off. CR 727.7 confirms the direction by
+            -- rule 728 turns an option off. CR 728.7 confirms the direction by
             -- naming an option the restarted game is still using.
             GameState.settings = GameState.settings gs,
-            -- CR 727.2: every card, startGameFromCards funnels them into the
+            -- CR 728.2: every card, startGameFromCards funnels them into the
             -- new libraries from here.
             GameState.objects = GameState.objects gs,
             GameState.library = GameState.library gs,
@@ -1127,11 +1127,11 @@ restartGame perform exempt starter = do
             GameState.sideDecks = GameState.sideDecks gs,
             GameState.stack = GameState.stack gs,
             GameState.stackedIn = GameState.stackedIn gs,
-            -- CR 727.1 restarts the game, and a card outside it is still
+            -- CR 728.1 restarts the game, and a card outside it is still
             -- outside it.
             GameState.outsideObjects = GameState.outsideObjects gs,
             GameState.broughtIn = GameState.broughtIn gs,
-            -- CR 727.2 involves only the cards in the game as it ended, so a
+            -- CR 728.2 involves only the cards in the game as it ended, so a
             -- card that left with its owner stays out, its ownership change
             -- still on record.
             GameState.departedCards = GameState.departedCards gs,
@@ -1149,7 +1149,7 @@ restartGame perform exempt starter = do
             GameState.notedCards = GameState.notedCards gs,
             GameState.loopInvolvement = GameState.loopInvolvement gs,
             GameState.fellShort = GameState.fellShort gs,
-            -- CR 100.6a / 727.1: a restart begins a new game of the SAME
+            -- CR 100.6a / 728.1: a restart begins a new game of the SAME
             -- match, so the match's tallies carry across it, for the reason
             -- nextTimestamp is preserved: the question is not about this game.
             -- startGameFromCards numbers the new game.
@@ -1160,18 +1160,18 @@ restartGame perform exempt starter = do
             -- starts from, where CR 313.2 has kept every vanguard card since the
             -- game began -- and startGameFromCards leaves it there.
             GameState.players = resetPlayers (GameState.settings gs) (length order) (`lifeModifierOf` gs) (GameState.players gs),
-            -- CR 727.4: the game the caller was running has been replaced.
+            -- CR 728.4: the game the caller was running has been replaced.
             -- Engine.priorityLoop and Engine.runStep read this and unwind to
             -- the rebuilt turn 1 rather than granting priority.
             GameState.restartSignal = RestartSignal.Restarted,
-            -- CR 104.4b: CR 727.1 ends the game that was being played, so the
+            -- CR 104.4b: CR 728.1 ends the game that was being played, so the
             -- rebuilt one starts owing nobody a choice. The timestamp supply is
             -- preserved across the restart, so this is the supply's current
             -- value and not zero.
             GameState.lastChoice = GameState.nextTimestamp gs,
-            -- Kept for the CR 727.5 exemptions alone, and cleared for every
+            -- Kept for the CR 728.5 exemptions alone, and cleared for every
             -- other card: an exempted card never left exile, so what put it
-            -- there is still true of it, and CR 727.4's additional instructions
+            -- there is still true of it, and CR 728.4's additional instructions
             -- -- Karn's "then put THOSE CARDS onto the battlefield" -- are read
             -- after the rebuild and have nothing else left to read them off.
             -- Every other entry names a card the rebuild shuffled into a
@@ -1183,15 +1183,15 @@ restartGame perform exempt starter = do
           }
   -- Karn Liberated's ruling, "No actions taken in the game that was restarted
   -- apply to the new game": every sticker comes off, a commander's included. A
-  -- CR 727.5 card's stays: docs/decisions.md, "Whether a card a restart leaves in
+  -- CR 728.5 card's stays: docs/decisions.md, "Whether a card a restart leaves in
   -- exile keeps its stickers".
   State.modify' $ \gs ->
     let staying oid = Set.member oid exempt && Set.member oid (GameState.exile gs)
      in gs {GameState.objects = Map.mapWithKey (\oid obj -> if staying oid then obj else obj {Object.stickers = Seq.empty}) (GameState.objects gs)}
   startGameFromCards perform exempt
 
--- CR 729.2: build a fresh subgame state from the parent's LIBRARY cards, plus
--- CR 729.2a's supplementary decks, CR 729.2b's vanguards and CR 729.2c's
+-- CR 730.2: build a fresh subgame state from the parent's LIBRARY cards, plus
+-- CR 730.2a's supplementary decks, CR 730.2b's vanguards and CR 730.2c's
 -- commanders; no other main-game zone enters. The object pool is
 -- restricted to those objects; startGameFromCards (called by playSubgame) then
 -- rebuilds each subgame library from that pool, puts each of those back in the
@@ -1200,7 +1200,7 @@ restartGame perform exempt starter = do
 -- object/timestamp id supplies, which are inherited from the parent so every
 -- object the subgame mints (CR 400.7) gets an id above every parent id --
 -- funnelBack relies on that for non-collision. `starter` is what the caller's
--- CR 729.2 random roll produced. Rotating the turn order to begin with them (CR
+-- CR 730.2 random roll produced. Rotating the turn order to begin with them (CR
 -- 103.1), rather than only setting activePlayer, is load-bearing:
 -- Engine.skipsDraw (CR 103.8a) tests the HEAD of the turn order. Total: a
 -- `starter` outside the order leaves it alone, and activePlayer is read back
@@ -1210,31 +1210,31 @@ subgameStateFrom starter parent =
   let libIds =
         Set.fromList
           (concatMap (\pid -> Foldable.toList (Map.findWithDefault Seq.empty pid (GameState.library parent))) (GameState.turnOrder parent))
-      -- CR 729.2c: "as a subgame of a Commander game starts, each player moves
+      -- CR 730.2c: "as a subgame of a Commander game starts, each player moves
       -- their commander from the main-game command zone (if it's there) to the
-      -- subgame command zone", and CR 729.2b says the same of a vanguard card.
-      -- Nothing ELSE in the main-game command zone moves -- CR 729.2's "no other
+      -- subgame command zone", and CR 730.2b says the same of a vanguard card.
+      -- Nothing ELSE in the main-game command zone moves -- CR 730.2's "no other
       -- cards in a main-game zone are moved" -- and their remaining sibling has no
-      -- format here but one: CR 729.2a's supplementary decks of nontraditional
+      -- format here but one: CR 730.2a's supplementary decks of nontraditional
       -- cards are the Attraction, planar and scheme decks CR 100.2d names, and
       -- the Unstable FAQ's Contraption deck (`suppIds` below).
       --
       -- The other command-zone residents parun DOES have -- an emblem, a
       -- conspiracy, and a dungeon a player has ventured into -- stay in the
-      -- parent, which is what CR 729.2 asks rather than an elision: `movedObjects` below restricts to the
-      -- libraries, CR 729.2a's supplementary decks, CR 729.2b's vanguards and CR 729.2c's commanders, so nothing
+      -- parent, which is what CR 730.2 asks rather than an elision: `movedObjects` below restricts to the
+      -- libraries, CR 730.2a's supplementary decks, CR 730.2b's vanguards and CR 730.2c's commanders, so nothing
       -- else crosses.
       --
       -- The parent's own copy is deliberately left where it is: the parent is
-      -- untouched while the subgame runs (CR 729.1a), and funnelBack drops these
+      -- untouched while the subgame runs (CR 730.1a), and funnelBack drops these
       -- ids from it and refunds them from the subgame, exactly as it does for
       -- `libIds`.
-      -- CR 729.2b beside CR 729.2c: a vanguard card crosses into the subgame on
-      -- the same terms a commander does, and rule 729.2b states it without rule
-      -- 729.2c's "if it's there" because CR 313.2 has kept it in the command zone
+      -- CR 730.2b beside CR 730.2c: a vanguard card crosses into the subgame on
+      -- the same terms a commander does, and rule 730.2b states it without rule
+      -- 730.2c's "if it's there" because CR 313.2 has kept it in the command zone
       -- all along.
       cmdIds = Set.filter (\oid -> Commander.isCommander oid parent || Vanguard.isVanguard oid parent) (GameState.command parent)
-      -- CR 729.2a: each supplementary deck moves in, and startGameFromCards
+      -- CR 730.2a: each supplementary deck moves in, and startGameFromCards
       -- shuffles it. The face-up Attractions, Contraptions, planes and schemes
       -- stay behind.
       suppIds = Game.supplementaryDeckIds parent
@@ -1243,41 +1243,41 @@ subgameStateFrom starter parent =
       -- identical id set, and so must `cmdIds` and funnelBack's `oldCmdIds`.
       -- Both draw from the parent's FULL roster
       -- (GameState.turnOrder), never narrowed to Game.stillPlayingInOrder --
-      -- `order` below does narrow to the seated players (CR 729.4), but this
+      -- `order` below does narrow to the seated players (CR 730.4), but this
       -- pool must not. funnelBack drops every id in that set from the parent's
       -- kept objects and refunds it only from what survived the subgame, so
       -- narrowing one side and not the other would silently destroy a
       -- still-playing player's library object that this pool never captured.
       --
       -- They agree today by construction: the same expression applied to the
-      -- same `parent`, which is unchanged while the subgame runs (CR 729.1a).
+      -- same `parent`, which is unchanged while the subgame runs (CR 730.1a).
       -- That is a maintenance invariant, not a live gap. A player who departs
       -- INSIDE the subgame is a separate concern, handled by funnelBack's
       -- `recovered` pass.
       order = rotateTo starter (Game.stillPlayingInOrder parent)
       firstPlayer = Maybe.fromMaybe (GameState.activePlayer parent) (Maybe.listToMaybe order)
-      -- CR 729.4: "all objects in the main game and all cards outside the main
+      -- CR 730.4: "all objects in the main game and all cards outside the main
       -- game are considered outside the subgame (except those specifically
       -- brought into the subgame)". The exception is `movedObjects` -- CR
-      -- 729.2's libraries, CR 729.2a's supplementary decks, CR 729.2b's vanguards and CR 729.2c's commanders --
+      -- 730.2's libraries, CR 730.2a's supplementary decks, CR 730.2b's vanguards and CR 730.2c's commanders --
       -- which are IN the
       -- subgame and so are excluded here. Only objects cards represent: CR
       -- 400.11c's "spells and abilities that allow those cards to be brought
       -- into the game" is what a road into a subgame is, and a token or an
       -- emblem is not a card and cannot be brought in.
       --
-      -- The parent's OWN outsideObjects ride along, which is CR 729.6's
+      -- The parent's OWN outsideObjects ride along, which is CR 730.6's
       -- nesting: "the existing subgame becomes the main game in relation to
       -- the new subgame", so a card already outside the parent (itself
       -- possibly a subgame) is outside this one too. Neither funnelBack nor
       -- anything else touches `parent`'s own copy for the whole life of the game
-      -- it spawns (CR 729.1a), and this union is the only place the set can
+      -- it spawns (CR 730.1a), and this union is the only place the set can
       -- GROW; applyCrossings shrinks it once that game has ended, dropping the
       -- entries it hands one level further out.
       --
       -- This reach is deliberately NOT scoped away from the parent's STACK: a
-      -- wish can name the very spell that is resolving it, which CR 729.4 offers
-      -- and CR 729.5 then finishes resolving "even if it was created by a spell
+      -- wish can name the very spell that is resolving it, which CR 730.4 offers
+      -- and CR 730.5 then finishes resolving "even if it was created by a spell
       -- card that's no longer on the stack". Parun.Engine.Resolve.liveBindings is
       -- what makes that resumption read the slots the resolution had filled,
       -- proved by Parun.OutsideTheGameSpec's "a wish that takes the resolving
@@ -1288,9 +1288,9 @@ subgameStateFrom starter parent =
       -- so a main-game ante card is not offered as outside the subgame.
       --
       -- CR 702.26b: a phased-out permanent is treated as though it does not
-      -- exist, and neither CR 729.4 nor a wish mentions one, so it is not
+      -- exist, and neither CR 730.4 nor a wish mentions one, so it is not
       -- offered and stays to phase in (Living Wish's ruling of 2007-09-16).
-      -- Parun.OutsideTheGameSpec's "CR 702.26b/729.4 gameplay: a subgame's
+      -- Parun.OutsideTheGameSpec's "CR 702.26b/730.4 gameplay: a subgame's
       -- Living Wish is not offered a phased-out Breezekeeper" proves it.
       outside =
         Map.union
@@ -1298,22 +1298,22 @@ subgameStateFrom starter parent =
           (GameState.outsideObjects parent)
       -- CR 110.5's face-up/face-down status rides along with the printing, and
       -- is the one thing about the parent's object that does. It is not an
-      -- effect or a definition, so CR 729.1b does not reach it: CR 708.2 makes
+      -- effect or a definition, so CR 730.1b does not reach it: CR 708.2 makes
       -- the listed characteristics the object's own COPIABLE VALUES, which
       -- travel with the object the way CR 108.3's ownership does.
       -- Parun.Engine.Event.eligible is what reads it, and
-      -- Parun.OutsideTheGameSpec's "CR 708.2/729.4 a manifested main-game sorcery
+      -- Parun.OutsideTheGameSpec's "CR 708.2/730.4 a manifested main-game sorcery
       -- is offered to a subgame's wish as a creature and not as a sorcery" is
       -- the proof.
       --
-      -- A melded or merged permanent is ONE entry: CR 701.42a and CR 730.2 make
-      -- it a single object, which is all CR 729.4 lists, so a wish names the
+      -- A melded or merged permanent is ONE entry: CR 701.42a and CR 731.2 make
+      -- it a single object, which is all CR 730.4 lists, so a wish names the
       -- permanent and never one of its cards. It is offered by the face every
-      -- characteristic read resolves through (CR 712.8g's combined face, CR
-      -- 730.2a's topmost component), and brings every card component with it
-      -- (CR 712.21, CR 730.3) -- read through Game.componentsOf, as
+      -- characteristic read resolves through (CR 713.5c's combined face, CR
+      -- 731.2a's topmost component), and brings every card component with it
+      -- (CR 713.8, CR 731.3) -- read through Game.componentsOf, as
       -- `splitComponents` reads it. A merged permanent whose topmost component
-      -- is a token is a token (CR 730.2d), and no token is a card.
+      -- is a token is a token (CR 731.2d), and no token is a card.
       -- Parun.OutsideTheGameSpec's melded Hanweir cases prove it.
       asOutside obj =
         let source = Object.source obj
@@ -1327,13 +1327,13 @@ subgameStateFrom starter parent =
               (False, Just printingId, Just cards) -> Just (OutsideObject.MkOutsideObject (Object.owner obj) printingId (Object.facing obj) cards)
               _ -> Nothing
    in (blankGame (GameState.settings parent) order firstPlayer)
-        { -- CR 729.2's subgame "proceeds like a normal game, following all
-          -- other rules in rule 103", and CR 729.2c speaks of "a subgame of a
+        { -- CR 730.2's subgame "proceeds like a normal game, following all
+          -- other rules in rule 103", and CR 730.2c speaks of "a subgame of a
           -- Commander game" -- the subgame is played in the format the main
-          -- game is. CR 729.1b keeps EFFECTS from crossing, not the options the
+          -- game is. CR 730.1b keeps EFFECTS from crossing, not the options the
           -- game was started with.
           GameState.settings = GameState.settings parent,
-          -- CR 729.2a: startGameFromCards shuffles each supplementary deck.
+          -- CR 730.2a: startGameFromCards shuffles each supplementary deck.
           GameState.sideDecks = GameState.sideDecks parent,
           -- The id, printing and timestamp supplies, inherited so every object
           -- the subgame mints gets an id above every parent id, and what is
@@ -1349,22 +1349,22 @@ subgameStateFrom starter parent =
           GameState.namedCopyChoices = GameState.namedCopyChoices parent,
           GameState.notedCards = GameState.notedCards parent,
           GameState.fellShort = GameState.fellShort parent,
-          -- CR 100.6a: the subgame is a separate GAME (CR 729.1a) but not a
+          -- CR 100.6a: the subgame is a separate GAME (CR 730.1a) but not a
           -- separate match, so it inherits the match's tallies -- the subgame
           -- count already counting itself, Engine.playSubgame having raised it
-          -- before building this state. CR 729.6's nested subgame therefore
+          -- before building this state. CR 730.6's nested subgame therefore
           -- counts them all. startGameFromCards numbers the new game.
           GameState.subgamesThisMatch = GameState.subgamesThisMatch parent,
           GameState.gamesThisMatch = GameState.gamesThisMatch parent,
           GameState.gameNumber = GameState.gameNumber parent,
           GameState.objects = movedObjects,
-          -- CR 902.4 / CR 729.2b: read off the PARENT, whose command zone still
+          -- CR 902.4 / CR 730.2b: read off the PARENT, whose command zone still
           -- holds every vanguard card at this point -- `cmdIds` below is what
           -- moves them into the subgame, and it is computed from the same board.
           -- CR 103.4e likewise: the archenemy's scheme deck is the one moving in.
           GameState.players = resetPlayers (GameState.settings parent) (length order) (`lifeModifierOf` parent) (GameState.players parent),
           GameState.outsideObjects = outside,
-          -- CR 729.2c, above. startGameFromCards keeps them here rather than
+          -- CR 730.2c, above. startGameFromCards keeps them here rather than
           -- funnelling them into a library, which is CR 903.6 for the subgame.
           GameState.command = cmdIds,
           -- CR 104.4b: the subgame is its own game, so it starts owing nobody a
@@ -1374,15 +1374,15 @@ subgameStateFrom starter parent =
           GameState.lastChoice = GameState.nextTimestamp parent
         }
 
--- CR 729.4a: the cards the subgame brought in have left the main game, so the
+-- CR 730.4a: the cards the subgame brought in have left the main game, so the
 -- main game loses them. Applied HERE, once the subgame has ended, and that is
 -- exact rather than late: the main game was discontinued for the whole subgame
--- (CR 729.1a), so no state-based action, no priority and no continuous-effect
+-- (CR 730.1a), so no state-based action, no priority and no continuous-effect
 -- recomputation could have read the board in between, so replaying
 -- GameState.broughtIn in crossing order NOW -- as the running fold below, not as
 -- one batch -- produces the same events, the same CR 608.2h last known
 -- information and the same trigger order as applying each at the instant it
--- crossed. Rule 729.5's last sentence says the abilities that
+-- crossed. Rule 730.5's last sentence says the abilities that
 -- triggered wait for the main game to resume anyway, so nothing is owed earlier.
 --
 -- Shared with Parun.Engine.Departure.objectsLeaveWith, CR 800.4a's departure and
@@ -1409,19 +1409,19 @@ subgameStateFrom starter parent =
 --     (GameState.battlefieldWhenTriggered) stamps that group with the board as it
 --     stood then -- with every later crossing still on it. Sampling after the
 --     whole batch would hide a main-game permanent that was there when the first
---     card left, and CR 729.5's last sentence is precisely where the ability it
+--     card left, and CR 730.5's last sentence is precisely where the ability it
 --     owes would have gone on the stack.
 --
 -- So no Event.simultaneouslyPure: each crossing takes its own event group and CR
 -- 603.10a's look-back triggers read them as a sequence rather than as one event.
 --
 -- An id that is not one of this game's own objects came from further out: CR
--- 729.6 makes a subgame's own parent the main game of a subgame below it, so
+-- 730.6 makes a subgame's own parent the main game of a subgame below it, so
 -- subgameStateFrom hands a subgame its parent's outsideObjects along with the
 -- parent's objects, and a wish two levels down can reach a card two games out.
 -- Such an id is dropped from THIS game's outsideObjects and appended to THIS
 -- game's broughtIn, so the frame one level out applies it. One level per frame,
--- never a reach past a parent -- rule 729.1a keeps a game from touching the state
+-- never a reach past a parent -- rule 730.1a keeps a game from touching the state
 -- of the game holding it, and this frame is the only one that holds both.
 applyCrossings :: GameState -> GameState -> GameState
 applyCrossings finalSub parent =
@@ -1439,7 +1439,7 @@ applyCrossings finalSub parent =
       -- The events LAST, so that Event.recordEvent's CR 603.10 sample is of the
       -- board immediately after this card left and before the next one does.
       --
-      -- The event names the zone the card left, since CR 729.4a's main-game
+      -- The event names the zone the card left, since CR 730.4a's main-game
       -- abilities "trigger on objects leaving a main-game zone" -- a card a wish
       -- took out of a graveyard is Spirit Mascot's trigger event.
       --
@@ -1473,17 +1473,17 @@ applyCrossings finalSub parent =
           GameState.broughtIn = GameState.broughtIn applied <> Seq.fromList further
         }
 
--- CR 729.5: at the end of a subgame, each player takes all traditional cards
+-- CR 730.5: at the end of a subgame, each player takes all traditional cards
 -- (Source.OfCard) they own in the subgame other than those in the subgame
 -- command zone into their main-game library and reshuffles (the reshuffle is
 -- playSubgame's Prompt.Shuffle step). Every other zone is in scope, which covers
--- rule 729.5's second sentence -- "including phased-out permanents" -- for free:
+-- rule 730.5's second sentence -- "including phased-out permanents" -- for free:
 -- `returned` filters GameState.objects, and CR 702.26d leaves a phased-out
 -- permanent in that map with its zone unchanged, so nothing here has to know
--- phasing exists. The command zone is the rule's own exclusion, and CR 729.5c
+-- phasing exists. The command zone is the rule's own exclusion, and CR 730.5c
 -- moves the commanders sitting in it back to the main-game command zone; all
 -- other subgame objects and zones simply are not carried over. The parent's
--- objects are untouched except for the ones CR 729.2 / 729.2c moved into the
+-- objects are untouched except for the ones CR 730.2 / 730.2c moved into the
 -- subgame -- the main game continues from where it was discontinued -- and those
 -- are dropped and refunded from what the subgame ended with. `oldLibIds` and
 -- `oldCmdIds` span the parent's full seating roster, matching
@@ -1491,7 +1491,7 @@ applyCrossings finalSub parent =
 -- stay identical. Returned cards keep their subgame ids, all above the parent
 -- supply, so Map.union cannot collide; the supplies advance to the subgame
 -- high-water mark, and past it for each card a melded permanent's split minted
--- (CR 712.21).
+-- (CR 713.8).
 --
 -- A subgame that began with more than two players is CR 800.1 multiplayer even
 -- when its departing player has only two opponents in the PARENT, so a
@@ -1525,12 +1525,12 @@ applyCrossings finalSub parent =
 -- the subgame rather than rebuilt (`survived`).
 funnelBack :: GameState -> GameState -> GameState
 funnelBack finalSub parent =
-  let -- CR 729.5 / CR 712.21, the same split startGameFromCards performs, in a
+  let -- CR 730.5 / CR 713.8, the same split startGameFromCards performs, in a
       -- PURE function: the fresh ids are threaded off the MERGED supply by hand,
       -- so a component can collide with neither game's objects, and
       -- GameState.nextObjectId below is the advanced supply rather than that
       -- merge. Only the subgame's pool is split; the parent's own battlefield is
-      -- untouched by rule 729.5 (CR 729.1a), and `recovered` draws from the
+      -- untouched by rule 730.5 (CR 730.1a), and `recovered` draws from the
       -- parent's library and command zone, where no melded permanent can sit.
       supply = max (GameState.nextObjectId parent) (GameState.nextObjectId finalSub)
       (subObjects, nextId) = splitComponents supply (GameState.objects finalSub)
@@ -1545,20 +1545,20 @@ funnelBack finalSub parent =
       toLibraryCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Library}
       -- Tug of War's ruling (2022-10-07), as startGameFromCards' own
       -- toCommandCard: "No counters, stickers, or other effects from the
-      -- subgame move back into the main game" on CR 729.5c's move.
+      -- subgame move back into the main game" on CR 730.5c's move.
       toCommandCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Command}
-      -- CR 729.5's own exclusion: "all traditional cards they own that are in the
+      -- CR 730.5's own exclusion: "all traditional cards they own that are in the
       -- subgame OTHER THAN those in the subgame command zone". So the library
-      -- funnel skips the subgame's command zone wholesale, and CR 729.5b and CR
-      -- 729.5c take back out of it exactly the vanguards and the commanders, and
-      -- CR 729.5a each face-up plane and scheme (below). Any other CARD that
-      -- ended there is covered by rule 729.5's "except as specified in rules
-      -- 729.5a-c, all other objects in the subgame cease to exist", which is the
+      -- funnel skips the subgame's command zone wholesale, and CR 730.5b and CR
+      -- 730.5c take back out of it exactly the vanguards and the commanders, and
+      -- CR 730.5a each face-up plane and scheme (below). Any other CARD that
+      -- ended there is covered by rule 730.5's "except as specified in rules
+      -- 730.5a-c, all other objects in the subgame cease to exist", which is the
       -- literal reading; those are the only cards a subgame can put in that zone
       -- anyway (CR 903.9a, CR 313.2, CR 311.2, CR 314.2), and an emblem there is
       -- not a card and never was in scope.
       subCmdIds = GameState.command finalSub
-      -- CR 729.5a: every Attraction, Contraption, plane, phenomenon and scheme
+      -- CR 730.5a: every Attraction, Contraption, plane, phenomenon and scheme
       -- card in the subgame began it in a supplementary deck (subgameStateFrom's
       -- `suppIds`), and goes back to it -- a face-up plane or scheme included,
       -- turned face down.
@@ -1573,12 +1573,12 @@ funnelBack finalSub parent =
         Set.fromList
           (concatMap (\pid -> Foldable.toList (Map.findWithDefault Seq.empty pid (GameState.library parent))) (GameState.turnOrder parent))
       -- The same expression as subgameStateFrom's `cmdIds`; see the invariant note
-      -- there. These are the ids CR 729.2b and CR 729.2c moved out of the parent's
+      -- there. These are the ids CR 730.2b and CR 730.2c moved out of the parent's
       -- command zone, so they are dropped from the parent and refunded from the
       -- subgame -- into the command zone by `backFromSub` if the card is still
-      -- there (CR 729.5c's "if it's there"; a vanguard always is, by CR 313.2),
+      -- there (CR 730.5c's "if it's there"; a vanguard always is, by CR 313.2),
       -- and into the library by `returned` if it ended the subgame anywhere else
-      -- (CR 729.5's first sentence).
+      -- (CR 730.5's first sentence).
       oldCmdIds = Set.filter (\oid -> Commander.isCommander oid parent || Vanguard.isVanguard oid parent) (GameState.command parent)
       oldSuppIds = Game.supplementaryDeckIds parent
       movedIds = Set.unions [oldLibIds, oldCmdIds, oldSuppIds]
@@ -1588,7 +1588,7 @@ funnelBack finalSub parent =
       removedByDeparture oid = case Map.lookup oid (GameState.objects parent) of
         Nothing -> False
         Just obj -> Set.notMember (Object.owner obj) ownersPresentInSub
-      -- CR 729.5 / 407.3: a card whose owner changed in the subgame and that
+      -- CR 730.5 / 407.3: a card whose owner changed in the subgame and that
       -- left it with that owner (GameState.departedCards), whom the main game
       -- does not name as its owner. It is rebuilt from the parent like a
       -- departed owner's own cards, under the owner it left with.
@@ -1597,7 +1597,7 @@ funnelBack finalSub parent =
       leftWithNewOwner oid = Maybe.isJust (Map.lookup oid (GameState.objects parent) >>= ownerLeftWith)
       departedIds = Set.filter (\oid -> removedByDeparture oid || leftWithNewOwner oid) movedIds
       fromParent ids = fmap (\obj -> maybe obj (\owner -> obj {Object.owner = owner}) (ownerLeftWith obj)) (Map.restrictKeys (GameState.objects parent) ids)
-      -- CR 800.4n / 729.5: a departed owner's card still in the subgame -- an
+      -- CR 800.4n / 730.5: a departed owner's card still in the subgame -- an
       -- ante card, whoever owns it now (CR 407.2, 407.3) -- goes home from the
       -- subgame under its owner, and is not rebuilt from the parent as well.
       -- The subgame's copy of a parent card shares its identity. One that came
@@ -1627,7 +1627,7 @@ funnelBack finalSub parent =
       backKind oid = Game.sideDeckBack oid finalSub Applicative.<|> Game.sideDeckBack oid parent
       backedDecks kind = Map.filter (not . Seq.null) (Map.fromList [(pid, ownedIn (Map.filterWithKey (\oid _ -> backKind oid == Just kind) backedBack) pid) | pid <- GameState.turnOrder parent])
       -- A commander whose owner departed INSIDE the subgame is recovered to the
-      -- zone it left the parent from, not to a library: CR 729.1b keeps the
+      -- zone it left the parent from, not to a library: CR 730.1b keeps the
       -- subgame's departure from meaning anything in the main game, where that
       -- player is still playing and their commander is still in the command zone.
       recoveredCmd = fmap toCommandCard (fromParent (Set.intersection recoveredIds oldCmdIds))
@@ -1635,14 +1635,14 @@ funnelBack finalSub parent =
       toCommand = Map.union backFromSub recoveredCmd
       libraryOf pid = Seq.fromList (Map.keys (Map.filter (\obj -> Object.owner obj == pid) allReturned))
       keptParentObjects = Map.withoutKeys (GameState.objects parent) movedIds
-      -- CR 400.11b / 729.5: a card a wish inside the subgame took out of a
+      -- CR 400.11b / 730.5: a card a wish inside the subgame took out of a
       -- player's sideboard pool "remains in the game until the game ends", and
-      -- rule 729.5 puts it into their main-game library above. So the pool that
+      -- rule 730.5 puts it into their main-game library above. So the pool that
       -- comes back is the SUBGAME's, which Event.bringIn already spent
       -- it from; keeping the parent's would leave that card in the library and
       -- still outside the game at once.
       --
-      -- Only that field. Every other one stays the parent's, which is CR 729.1b:
+      -- Only that field. Every other one stays the parent's, which is CR 730.1b:
       -- nothing that happened in the subgame -- life lost, counters, a commander
       -- tax -- has any meaning in the main game. Nothing but bringIn and
       -- chooseConspiracies writes the pool once a game is under way (createDeck
@@ -1669,12 +1669,12 @@ funnelBack finalSub parent =
       -- comes back nowhere: applyCrossings deleted the main game's copy, and
       -- objectsLeaveWith deleted the subgame's, so nothing represents it in
       -- either game. That is the two rules read together rather than an oversight
-      -- -- CR 729.4a took it out of the main game and CR 800.4a took it out of
+      -- -- CR 730.4a took it out of the main game and CR 800.4a took it out of
       -- the subgame -- and Parun.SetupSpec pins it. CR 800.4n's ante cards are
       -- the exception: they stay in the subgame and come home in `returned`,
       -- so the pool gives up each one the subgame brought in from it
       -- (`keptInSub`).
-      -- For every other card, CR 729.5's funnel offers no
+      -- For every other card, CR 730.5's funnel offers no
       -- third answer: it takes "cards they own that are in the subgame", and
       -- CR 800.4a removed this one before the subgame ended, so the rule's
       -- Example never reaches it. Nor is the card lost -- CR 400.11 makes
@@ -1690,7 +1690,7 @@ funnelBack finalSub parent =
       -- from the parent's, departed seats included -- so that arm is the total
       -- reading of a partial map rather than a case with a rule behind it.
       carriedPools = Map.mapWithKey carryPool (GameState.players parent)
-      -- CR 400.11a / 729.5: a card this player brought in from their pool
+      -- CR 400.11a / 730.5: a card this player brought in from their pool
       -- during the subgame (minted above the parent's id supply, so with a
       -- serial no parent card has) that survived it, whoever owns it now.
       startedAt = ObjectId.unwrap (GameState.nextObjectId parent)
@@ -1714,11 +1714,11 @@ funnelBack finalSub parent =
         Just inSub -> case Player.status inSub of
           Status.Departed _ -> player {Player.outsideTheGame = Map.filter (> 0) (Map.mapWithKey (spendKept pid (Player.outsideTheGame inSub)) (Player.outsideTheGame player))}
           Status.Playing -> player {Player.outsideTheGame = Map.unionWith (+) (Player.outsideTheGame inSub) (conspiraciesBack pid)}
-      -- CR 729.5 / 400.11a: a conspiracy this player put into the subgame's
+      -- CR 730.5 / 400.11a: a conspiracy this player put into the subgame's
       -- command zone from their sideboard (chooseConspiracies) ceases to exist
       -- as an object with the subgame, and the card is back outside the main
       -- game, in the sideboard it came from. Only the sideboard can have put one
-      -- there: CR 729.2 moves no main-game conspiracy in, and CR 315.3 lets
+      -- there: CR 730.2 moves no main-game conspiracy in, and CR 315.3 lets
       -- nothing bring one. A departed player's is refunded by `spendKept`,
       -- since `returned` never holds the command zone.
       conspiraciesBack pid =
@@ -1734,7 +1734,7 @@ funnelBack finalSub parent =
         { GameState.objects = Map.unions [allReturned, toCommand, backedBack, planarBack, schemesBack, keptParentObjects],
           GameState.players = carriedPools,
           GameState.library = Map.fromList (fmap (\pid -> (pid, libraryOf pid)) (GameState.turnOrder parent)),
-          -- CR 729.5a; Engine.playSubgame shuffles them.
+          -- CR 730.5a; Engine.playSubgame shuffles them.
           GameState.sideDecks =
             Map.filter
               (not . Map.null)
@@ -1745,8 +1745,8 @@ funnelBack finalSub parent =
                     (SideDeck.Scheme, Map.mapWithKey (\pid _ -> ownedIn schemesBack pid) (Game.sideDecksOf SideDeck.Scheme parent))
                   ]
               ),
-          -- CR 729.5b / 729.5c. The parent's other command-zone residents are
-          -- untouched: CR 729.2b and CR 729.2c moved only the vanguards and the
+          -- CR 730.5b / 730.5c. The parent's other command-zone residents are
+          -- untouched: CR 730.2b and CR 730.2c moved only the vanguards and the
           -- commanders, so only they can come back.
           GameState.command = Set.union (Set.difference (GameState.command parent) oldCmdIds) (Map.keysSet toCommand),
           GameState.nextObjectId = nextId,
@@ -1770,12 +1770,12 @@ funnelBack finalSub parent =
           -- Cleared to the merged supply so the main game resumes owing nobody a
           -- choice, rather than inheriting a gap the subgame ran up.
           GameState.lastChoice = max (GameState.nextTimestamp parent) (GameState.nextTimestamp finalSub),
-          -- CR 100.6a / 729.6: a subgame the subgame itself started is still a
+          -- CR 100.6a / 730.6: a subgame the subgame itself started is still a
           -- subgame of this match, so the resumed main game takes the deeper
           -- tally -- nextTimestamp's treatment, and monotone for its reason,
           -- subgameStateFrom having inherited the parent's raised value.
           GameState.subgamesThisMatch = max (GameState.subgamesThisMatch parent) (GameState.subgamesThisMatch finalSub),
-          -- CR 729.1a: the main game resumes as itself (its gameNumber), with
+          -- CR 730.1a: the main game resumes as itself (its gameNumber), with
           -- the games the subgame began on the match's books.
           GameState.gamesThisMatch = max (GameState.gamesThisMatch parent) (GameState.gamesThisMatch finalSub)
         }

@@ -1073,14 +1073,14 @@ stampBestowed sid gs =
         Map.adjust (\o -> o {Object.bestowed = True}) sid (GameState.objects gs)
     }
 
--- CR 718.3: "as a player casts a prototype card, the player chooses whether they
+-- CR 719.3: "as a player casts a prototype card, the player chooses whether they
 -- cast the card normally or cast it as a prototyped spell". The record of that
 -- choice, stamped at the moment CR 601.2b settles on the candidate rule 702.160a
 -- offers, and read back by Parun.Engine.Projection.View.withPrototype, which
--- swaps CR 718.3b's alternative cost, box and colours in.
+-- swaps CR 719.3b's alternative cost, box and colours in.
 --
 -- stampBestowed's shape above in every respect: an idempotent write of a field no
--- layer computes, one direction only, rule 718.3's choice being available while
+-- layer computes, one direction only, rule 719.3's choice being available while
 -- casting and never after.
 stampPrototyped :: ObjectId -> GameState -> GameState
 stampPrototyped sid gs =
@@ -1155,8 +1155,8 @@ stampCastFrom sid castFrom gs =
         Map.adjust (\o -> o {Object.castFrom = castFrom}) sid (GameState.objects gs)
     }
 
--- CR 722.3d: record on the spell that it was cast as a prepare spell -- cast
--- from the copy CR 722.3c minted -- which CR 400.7 would otherwise forget, so
+-- CR 723.3d: record on the spell that it was cast as a prepare spell -- cast
+-- from the copy CR 723.3c minted -- which CR 400.7 would otherwise forget, so
 -- Filter.IsPreparedSpell can answer (docs/decisions.md, "What "a prepared
 -- spell" names"). stampCastFrom's shape above.
 stampCastPrepared :: ObjectId -> Bool -> GameState -> GameState
@@ -1212,7 +1212,7 @@ castMutating castFor = case castFor of
   Just (Keyword.Type.Mutate _) -> True
   _ -> False
 
--- CR 718.3, castBestowed's twin: was this the prototype candidate? Asked of the
+-- CR 719.3, castBestowed's twin: was this the prototype candidate? Asked of the
 -- same `castFor` tag, which is why a second payload keyword offering a cost joins
 -- this fold rather than needing a road of its own.
 castPrototyped :: Maybe Keyword -> Bool
@@ -1222,7 +1222,7 @@ castPrototyped castFor = case castFor of
 
 -- CR 702.103d: the board ONE candidate's cast is judged against -- "when casting
 -- a spell bestowed, only its characteristics as modified by the bestow ability
--- are evaluated to determine if it can be cast". CR 718.3a says the same of the
+-- are evaluated to determine if it can be cast". CR 719.3a says the same of the
 -- prototype candidate -- "while casting a prototyped spell, use only its
 -- alternative power, toughness, and mana cost when evaluating those
 -- characteristics to see if it can be cast" -- so both stamps go on here. The two
@@ -1319,7 +1319,7 @@ candidateFillable :: PlayerId -> ObjectId -> CardName.CardName -> GameState -> C
 candidateFillable pid oid name proposed candidate =
   targetable (CandidateCost.keyword candidate) pid oid name (proposedFor oid (CandidateCost.keyword candidate) proposed)
 
--- CR 601.3e / 718.3a: CR 601.3's zone permission asked of ONE candidate, on the
+-- CR 601.3e / 719.3a: CR 601.3's zone permission asked of ONE candidate, on the
 -- board its own choice produces: Serra Paragon admits a graveyard Autonomous
 -- Assembler's prototyped cast (mana value 2) and not its printed one (5).
 -- cardGatesOk's lookahead lets the cast begin; this withholds the candidates the
@@ -1355,7 +1355,7 @@ castZones = [Zone.Hand, Zone.Graveyard, Zone.Exile, Zone.Command, Zone.Library]
 -- where a permission turns into a zone. False for every other zone.
 --
 -- Takes the object and the board, where a card-carried permission would need
--- only the face: CR 715.3d's permission is state on ONE exiled incarnation and
+-- only the face: CR 716.3d's permission is state on ONE exiled incarnation and
 -- names ONE player, so no function of a Face could answer for it.
 permittedFrom :: PlayerId -> ObjectId -> Face.Face Card.Type.Card -> GameState -> Zone.Zone -> Bool
 permittedFrom pid oid face gs zone = case zone of
@@ -1414,21 +1414,21 @@ permittedFrom pid oid face gs zone = case zone of
 -- half, while the same card in a hand -- or exiled by some other effect --
 -- offers both; the second is CR 702.170d's
 -- plotted card, which permitsCastPlotted answers; the third is CR 702.143a's
--- foretold card, which permitsCastForetold answers; the fourth is CR 722.3c's
+-- foretold card, which permitsCastForetold answers; the fourth is CR 723.3c's
 -- prepare copy, which permitsCastPrepared answers; the fifth is CR 702.185a's
 -- warped card, which permitsCastWarped answers.
 --
 --   * Object.playPermission names a player -- which is what keeps a
---     permission from being an offer to the table. Written either by CR 715.3d's
+--     permission from being an offer to the table. Written either by CR 716.3d's
 --     own "for as long as that card remains exiled, that player may play it" or
 --     by an Effect.GrantPlayFromExile a card states.
---   * CR 715.3d's "it can't be cast as an Adventure THIS WAY" -- so the proposed
---     face must not be the Adventure one, and only under rule 715.3d's own
+--   * CR 716.3d's "it can't be cast as an Adventure THIS WAY" -- so the proposed
+--     face must not be the Adventure one, and only under rule 716.3d's own
 --     permission. "This way" is what scopes it, and the rule spells the scope
 --     out: "although other effects that allow a player to cast it may allow a
---     player to cast it as an Adventure". Parun.CastSpec's "CR 715.3d another
+--     player to cast it as an Adventure". Parun.CastSpec's "CR 716.3d another
 --     effect's permission allows the Adventure half" and Parun.AdventureSpec's
---     "CR 715.3d from exile the creature is castable and the Adventure is not"
+--     "CR 716.3d from exile the creature is castable and the Adventure is not"
 --     are the pair that proves both directions.
 permitsCastFromExile :: PlayerId -> ObjectId -> Face.Face Card.Type.Card -> GameState -> Bool
 permitsCastFromExile pid oid face gs =
@@ -1446,7 +1446,7 @@ exileOpen pid oid face gs =
     || permitsCastPrepared pid oid gs
     || permitsCastWarped pid oid gs
 
--- CR 722.3c's own permission, the FOURTH of permitsCastFromExile's disjuncts:
+-- CR 723.3c's own permission, the FOURTH of permitsCastFromExile's disjuncts:
 -- "for as long as the copy remains in exile, the prepared permanent's controller
 -- may cast the copy."
 --
@@ -1459,7 +1459,7 @@ exileOpen pid oid face gs =
 -- still on the battlefield and still prepared -- and the same read the CR 704.5e
 -- exception takes, so the copy is castable exactly while it is allowed to be in
 -- exile. Nothing about the FACE is asked: the copy's printing has one, and CR
--- 715.3d's Adventure exclusion is scoped to rule 715.3d's own permission.
+-- 716.3d's Adventure exclusion is scoped to rule 716.3d's own permission.
 permitsCastPrepared :: PlayerId -> ObjectId -> GameState -> Bool
 permitsCastPrepared pid oid gs = case Game.lookupObject oid gs of
   Nothing -> False
@@ -1467,8 +1467,8 @@ permitsCastPrepared pid oid gs = case Game.lookupObject oid gs of
     Nothing -> False
     Just permanentId -> Prepare.copyStands copy gs && Projection.controllerOf permanentId gs == Just pid
 
--- CR 715.3d's "this way": was this exiled object's stored permission written by
--- rule 715.3d itself, rather than by an Effect.GrantPlayFromExile a card states?
+-- CR 716.3d's "this way": was this exiled object's stored permission written by
+-- rule 716.3d itself, rather than by an Effect.GrantPlayFromExile a card states?
 --
 -- A classification of the PERMISSION, never of the effect that wrote one --
 -- ExilePlayPermission.origin has two arms and neither names a card. An object
@@ -1493,8 +1493,8 @@ grantedByAdventureRule oid gs =
 -- would still get no land play out of it.
 --
 -- The Adventure conjunct stays with the cast side for the same reason: CR
--- 715.3d's "it can't be cast as an Adventure this way" is about a cast, and CR
--- 715.3 has the player choose between playing the card normally and casting it
+-- 716.3d's "it can't be cast as an Adventure this way" is about a cast, and CR
+-- 716.3 has the player choose between playing the card normally and casting it
 -- as an Adventure -- so refusing the Adventure half says nothing about the
 -- normal one, which is the half a land play would take.
 --
@@ -1575,7 +1575,7 @@ widerSpending one other = case (one, other) of
 --   * the card is plotted, which is the Object.plotted stamp Parun.Engine.Plot
 --     wrote;
 --   * this player is its OWNER -- "a plotted card's OWNER may cast it from
---     exile" -- where CR 715.3d's permission names a player instead, which is why
+--     exile" -- where CR 716.3d's permission names a player instead, which is why
 --     the two are separate disjuncts above rather than one test;
 --   * the turn is a LATER one than the stamp, "during any turn after the turn in
 --     which it became plotted". A strict comparison on GameState.turnNumber,
@@ -1669,7 +1669,7 @@ permitsCastWarped pid oid gs = Maybe.fromMaybe False $ do
 --
 -- EXILE is the shared zone rather than Game.zoneMembers, which files it by
 -- OWNER. CR 601.3's permission names a PLAYER, and both writers of one --
--- CR 715.3d's Adventure exile and Effect.GrantPlayFromExile -- name the
+-- CR 716.3d's Adventure exile and Effect.GrantPlayFromExile -- name the
 -- controller of whatever granted it, so a player permitted to play a card
 -- somebody else owns has to be able to reach it (#668). CR 702.170d's plotted
 -- card is the third permission this zone carries and needs the width for no
@@ -1866,10 +1866,10 @@ restrictionMet pid oid gs restriction = case restriction of
     -- CR 102.1: the seats a TurnScope.PlayersTurn names, read from the spell.
     named = Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) (Projection.sourceContext gs (Just pid) oid) gs
 
--- CR 709.3a / 715.3a: the half being cast, RECORDED ON THE OBJECT, so that every
+-- CR 709.3a / 716.3a: the half being cast, RECORDED ON THE OBJECT, so that every
 -- characteristic read of it resolves through Game.resolveFace to that half alone
--- (CR 709.3b / 715.3b) rather than to the unnamed fallback -- CR 709.4's combined
--- view for a split card, CR 715.4's normal half for an adventurer card.
+-- (CR 709.3b / 716.3b) rather than to the unnamed fallback -- CR 709.4's combined
+-- view for a split card, CR 716.4's normal half for an adventurer card.
 --
 -- The GATE's writer, and only the gate's: `castable` and
 -- `castableWhileSearching` stamp a state they only READ, since the card has not
@@ -1880,11 +1880,11 @@ restrictionMet pid oid gs restriction = case restriction of
 --
 -- NOT a simulation of CR 601.2a's move, and it does not need to be: both rules
 -- say outright that castability is evaluated against the chosen half -- CR 709.3a
--- "only the chosen half is evaluated to see if it can be cast", CR 715.3a "only
+-- "only the chosen half is evaluated to see if it can be cast", CR 716.3a "only
 -- the alternative characteristics are evaluated to see if it can be cast" -- and
 -- both put that choice before the move rather than inside the announcement: CR
 -- 709.3 "a player chooses which half of a split card they are casting BEFORE
--- putting it onto the stack", CR 715.3 "as a player plays an adventurer card,
+-- putting it onto the stack", CR 716.3 "as a player plays an adventurer card,
 -- the player chooses whether they play the card normally or as an Adventure". So no
 -- object is minted (CR 400.7), no CR 616.1 replacement loop runs, and nothing
 -- prompts.
@@ -1923,7 +1923,7 @@ asProposed :: ObjectId -> CardName.CardName -> Facing.Facing -> GameState -> Gam
 asProposed oid name facing gs =
   turnedUpForPlay oid facing gs {GameState.objects = Map.adjust (\o -> o {Object.face = Just name, Object.facing = facing, Object.castFrom = Game.zoneOf oid gs}) oid (GameState.objects gs)}
 
--- CR 712.12: `asProposed` for a land play, the board a permission is judged on:
+-- CR 712.9: `asProposed` for a land play, the board a permission is judged on:
 -- the land face the player chose where the card has one to choose, and per
 -- Kazandu Mammoth's ruling only that face's characteristics.
 asPlayed :: ObjectId -> Maybe CardName.CardName -> GameState -> GameState
@@ -1960,7 +1960,7 @@ turnedUpForPlay oid facing gs = case facing of
 -- affordability are one `any` over the candidates rather than two conjuncts over
 -- the card. `proposedFor` is the board each is judged against.
 --
--- Asked of ONE HALF, named: CR 709.3a and CR 715.3a evaluate only the chosen half
+-- Asked of ONE HALF, named: CR 709.3a and CR 716.3a evaluate only the chosen half
 -- to see if it can be cast, so a multi-face card is asked this question once per
 -- half. That name reaches the conjuncts TWICE over, belt and braces rather than
 -- necessity -- once stamped, the two resolve the same face -- and each carries a
@@ -2050,7 +2050,7 @@ castableGiven shared pid oid name facing gs =
 -- half being proposed off it.
 cardGatesOk :: PlayerId -> ObjectId -> CardName.CardName -> GameState -> Bool
 cardGatesOk pid oid name proposed =
-  -- CR 601.3e / 718.3a: on the card as printed or as a prototyped spell, a
+  -- CR 601.3e / 719.3a: on the card as printed or as a prototyped spell, a
   -- lookahead; candidateInZone narrows the candidates to the reading each one
   -- makes. Asked before the timing window, which projects the card several
   -- times over, since most candidates are cards no permission names (#4698).
@@ -2314,7 +2314,7 @@ permitsCastFromGraveyard pid oid face gs =
 -- CR 702.146a's permission, which is the one rule 702 permission no keyword set
 -- of the PROPOSED half can carry: "you may cast this card TRANSFORMED from your
 -- graveyard", so the half being proposed is the back face and the ability is
--- printed on the front. CR 712.11d is the rule that lets the front face's
+-- printed on the front. CR 712.8d is the rule that lets the front face's
 -- ability be read at all while the back face is what is evaluated, and
 -- Parun.Engine.Card.convertedFace is the same read one function over -- it is what
 -- put this face in castableFaces in the first place, so the two cannot disagree
@@ -2341,7 +2341,7 @@ permitsDisturb oid face gs = case Game.cardOf oid gs of
      in fmap Face.name (Card.convertedFaceGiven front card) == Just (Face.name face)
           && not (null (Keyword.disturbCosts front))
 
--- CR 712.11d: the faces this object may be cast as (Game.castableFacesOfId), with
+-- CR 712.8d: the faces this object may be cast as (Game.castableFacesOfId), with
 -- the converted face -- the back face rule 702.146a's disturb or rule 702.162a's
 -- more than meets the eye reaches -- decided by the keywords the FRONT face HAS
 -- where the card lies (Cost.frontFaceKeywords) rather than the ones it prints.
@@ -2630,7 +2630,7 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
     Nothing -> pure ()
     Just face -> do
       let castFrom = Game.zoneOf oid before
-          -- CR 722.3c's last sentence, captured BEFORE CR 601.2a's move for
+          -- CR 723.3c's last sentence, captured BEFORE CR 601.2a's move for
           -- `castFrom`'s reason: the move mints a fresh CR 400.7 incarnation and
           -- Object.newIncarnation clears this field with the rest of the
           -- per-incarnation state, so this line is the only point where the
@@ -2771,7 +2771,7 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
       moved <- Event.changeZoneCasting (ManaAbilityPerformer.settle perform) pid oid Zone.Stack (Just name) facing
       -- ONE object on the stack, which is CR 601.2a's "the spell": the funnel
       -- answers with more than one arrival only for a melded permanent leaving
-      -- the battlefield (CR 712.21), and CR 601.2's cast moves a CARD or a copy
+      -- the battlefield (CR 713.8), and CR 601.2's cast moves a CARD or a copy
       -- of one from a zone that holds no permanent.
       case Seq.viewl moved of
         Seq.EmptyL -> State.put before
@@ -2793,7 +2793,7 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
           -- CR 702.143c's "a spell that was a foretold card before it was cast",
           -- carried across the move for `castFrom`'s reason.
           State.modify' (stampForetold sid (Game.lookupObject oid before >>= Object.foretold))
-          -- CR 722.3d's "a spell cast as a prepare spell", carried across the
+          -- CR 723.3d's "a spell cast as a prepare spell", carried across the
           -- move for `castFrom`'s reason, off `preparedFor`.
           State.modify' (stampCastPrepared sid (Maybe.isJust preparedFor))
           -- CR 601.2e's re-asking, at the announced mana value, of a prohibition
@@ -2836,8 +2836,8 @@ landDropOpen pid gs =
 -- 601.3 permission nor a one-shot flash grant, and is asked which of them it is
 -- made under by nobody.
 --
--- CR 712.12: a modal double-faced card played as a land chooses a land face
--- first and enters with it up. NOT changeZoneEntering, where CR 712.14b turns a
+-- CR 712.9: a modal double-faced card played as a land chooses a land face
+-- first and enters with it up. NOT changeZoneEntering, where CR 712.11b turns a
 -- put-onto-the-battlefield instruction away: playing a land is a special action.
 --
 -- CR 400.7i / 614.1d: a land played under an exile permission (rather than
@@ -3005,7 +3005,7 @@ candidateWays rides offered pid oid zone face gs castFor =
       ownSentence keyword = not (null (Keyword.permissionsFor cardTypes keyword)) || Keyword.familyOf keyword == Just KeywordFamily.Disturb
    in if any ownSentence castFor
         then Nothing
-        -- CR 601.3e / 718.3a: the permissions naming the spell this
+        -- CR 601.3e / 719.3a: the permissions naming the spell this
         -- candidate makes, read off the board its choice produces.
         else Just (foldMap (\from -> castWays rides offered pid oid from face (proposedFor oid castFor gs) castFor) zone)
 
@@ -3371,7 +3371,7 @@ trimModalForCandidate castFor paid modal = modal {Modal.Type.modes = fmap (trimM
 -- pre-move state by castSpellWith for the reason the two above are, and dropped
 -- beside the CR 601.2i event below -- after the last step that can reject.
 --
--- `preparedFor` is CR 722.3c's prepared permanent, asked of the pre-move state
+-- `preparedFor` is CR 723.3c's prepared permanent, asked of the pre-move state
 -- for the same reason and spent beside the CR 601.2i event for `spent`'s: that
 -- rule's own words are "at the time the spell becomes cast".
 --
@@ -3516,9 +3516,9 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
       -- Nothing narrows the mode prompt by what the extra cost is affordable at.
       -- CR 601.2b puts the mode choice ahead of the cost, so a player may choose
       -- both modes and then find the total unpayable; the filter below drops every
-      -- candidate, and the cast rewinds under CR 733.1 (CR 601.2h refusing the
+      -- candidate, and the cast rewinds under CR 734.1 (CR 601.2h refusing the
       -- payment) to the moment before it was proposed, leaving the spell
-      -- castable again for fewer modes. That is rule 733.1's own process, not a
+      -- castable again for fewer modes. That is rule 734.1's own process, not a
       -- divergence from it.
       let escalated = escalateTotal (Keyword.escalateCosts keywords) (Natural.length chosenModes)
           withEscalate candidate = maybe candidate (Cost.plus candidate) escalated
@@ -3702,12 +3702,12 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
               -- target for that spell as defined by its enchant creature ability
               -- and rule 601.2c").
               Monad.when (castBestowed castFor) (State.modify' (stampBestowed sid))
-              -- CR 718.3b: the announcement has settled on the prototype
+              -- CR 719.3b: the announcement has settled on the prototype
               -- candidate, so the spell has only its alternative mana cost,
-              -- power and toughness -- and, rule 718.3b's second sentence, the
+              -- power and toughness -- and, rule 719.3b's second sentence, the
               -- colours of that cost. Stamped beside the bestow record above and
               -- for its reason: CR 601.2c's targets and CR 601.2f's pricing below
-              -- both have to read the spell as rule 718.3b left it.
+              -- both have to read the spell as rule 719.3b left it.
               -- CR 702.140a: the announcement has settled on the mutate
               -- candidate, so the spell is a mutating creature spell and targets
               -- -- BEFORE CR 601.2c's targets below, which is the only place
@@ -4088,7 +4088,7 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
                       (payment, substitutedBindings) <- Cost.paySubstituting (const False) perform before (foldMap (pure . snd) assist) PaymentMoment.OutsideResolution (PaymentSubject.Casting sid) (Just sid) chosenSpending pid sid assisting paidCost
                       case payment of
                         -- CR 601.2h: the payment failed, so the cast is illegal
-                        -- and CR 733.1 reverses it -- which is what takes the
+                        -- and CR 734.1 reverses it -- which is what takes the
                         -- spell back off the stack. The payment did that back to
                         -- `before`, keeping what each payer chose to keep of
                         -- their mana window, so there is nothing left to undo
@@ -4188,7 +4188,7 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
                           -- CR 601.2a / 400.7h: the card was played, under the
                           -- id it had before the move and the spell's.
                           State.modify' (\g -> g {GameState.cardsPlayed = Map.insert sid pid (Map.insert oid pid (GameState.cardsPlayed g))})
-                          -- CR 722.3c's last sentence: "that permanent loses the
+                          -- CR 723.3c's last sentence: "that permanent loses the
                           -- prepared designation AT THE TIME THE SPELL BECOMES
                           -- CAST (see rule 601.2i)". So it is here, beside rule
                           -- 601.2i's own event and after the last step that can
@@ -4206,7 +4206,7 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
                           State.modify' (bindUser (spent castFor) sid)
                           -- CR 601.3: the once-each-turn permission this cast
                           -- spends, for the line above's reason -- nothing past
-                          -- here rejects, and CR 733.1's reversal restores the
+                          -- here rejects, and CR 734.1's reversal restores the
                           -- whole field (Parun.Engine.Reversal).
                           State.modify' (PlayerEffect.spendCastPermission (PlayerEffect.permissionSpent permissionUsed))
                           -- CR 601.3: and a cast made under the card's own exile

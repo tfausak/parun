@@ -774,7 +774,7 @@ prohibitsActivating stamp srcId pid gs = prohibitsActivatingGiven stamp srcId gs
 -- narrows by a quality a Filter states (City in a Bottle's "a name originally
 -- printed in the Arabian Nights expansion", Null Chamber's chosen names), and
 -- that is a question about the card in the zone rather than about the player.
--- The Filter is read against the card AS THAT ZONE SHOWS IT: CR 712.8a's front
+-- The Filter is read against the card AS THAT ZONE SHOWS IT: CR 712.6a's front
 -- face, and CR 709.4's combined view, under which Filter.HasChosenName is CR
 -- 709.4a's "one of its names".
 --
@@ -966,7 +966,7 @@ prohibitsSearching pid owner causeController gs =
         PlayerEffect.Shows _ -> False
    in any (prohibits . snd) (applying pid gs)
 
--- CR 723.2 / 723.1a: who controls `pid` while they search their own library
+-- CR 724.2 / 724.1a: who controls `pid` while they search their own library
 -- (Opposition Agent) -- CR 109.5's "you" of the latest such row, which in
 -- `applying`'s timestamp order is the last one created -- and that row's
 -- timestamp, its permanent's (CR 613.7a), which is what orders it against
@@ -1083,14 +1083,14 @@ prohibitsCounters pid kind gs =
       -- since the team shares them (Game.counterSharers).
       any (\member -> any (prohibits . snd) (applying member gs)) (Game.counterSharers kind pid gs)
 
--- CR 725 / 101.2: is `pid` forbidden from becoming the monarch? CR 725.4 asks the
+-- CR 726 / 101.2: is `pid` forbidden from becoming the monarch? CR 726.4 asks the
 -- question in the rulebook's own words -- "the next player in turn order who can
--- become the monarch" -- and CR 725.1 and CR 725.3 ask it nowhere, which is why
+-- become the monarch" -- and CR 726.1 and CR 726.3 ask it nowhere, which is why
 -- the ordinary crowning route needs CR 101.2 to read this at all: those two rules
 -- ALLOW a crowning, and a "can't" outranks them.
 --
 -- Takes no source and no route, unlike the two casting prohibitions above taking
--- a name: the restriction Jared Carthalion prints is on the PLAYER, and rule 725
+-- a name: the restriction Jared Carthalion prints is on the PLAYER, and rule 726
 -- gives the designation no parts for a narrowing to name. See
 -- Parun.Types.PlayerEffect.CantBecomeMonarch.
 --
@@ -1110,8 +1110,8 @@ prohibitsBecomingMonarch pid gs =
         PlayerEffect.CantAttackWithCreatures -> False
         -- Every other arm is about casting, playing, targeting, countering,
         -- searching, paying, keeping mana, gaining or losing life, rule 702
-        -- protection or how a coin flip came out. CR 725.1's designation is none of
-        -- those: it is handed out by a resolving effect or by rule 725.2 itself,
+        -- protection or how a coin flip came out. CR 726.1's designation is none of
+        -- those: it is handed out by a resolving effect or by rule 726.2 itself,
         -- and no prohibition on casting reaches an effect that has already
         -- resolved.
         PlayerEffect.CantCastSpells -> False
@@ -1129,7 +1129,7 @@ prohibitsBecomingMonarch pid gs =
         PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         -- CR 702.18a/702.11c stop a SPELL from choosing this player as a target.
-        -- CR 725.1's effect need not target to crown them (Palace Jailer's "you
+        -- CR 726.1's effect need not target to crown them (Palace Jailer's "you
         -- become the monarch" names nobody), so shroud is not an eligibility
         -- restriction; where a card does target (Jared's own first clause), CR
         -- 601.2c's own check turns it away before this one is asked.
@@ -2200,12 +2200,12 @@ castFlashGrant effect = case effect of
 -- Aluren lets Protean Hydra begin on the opponent's turn" is the proof;
 -- Cast.flashRefusedAt judges the X announced.
 --
--- Prototype is the third: CR 718.3a/b and 601.3e judge a prototyped spell by its
+-- Prototype is the third: CR 719.3a/b and 601.3e judge a prototyped spell by its
 -- inset cost, and so its colour and mana value. The hypothetical stamps
 -- Object.prototyped onto a state that is only read, which is how
 -- Projection.View.withPrototype is asked, and only for a card whose projected
 -- keywords offer rule 702.160a's choice (`bestowable`'s gate): Filter.IsPrototyped
--- reads the stamp itself, so ungated it would name any card. Parun.CastPermissionSpec's "CR 601.3b / 718.3b Yeva lets Rust
+-- reads the stamp itself, so ungated it would name any card. Parun.CastPermissionSpec's "CR 601.3b / 719.3b Yeva lets Rust
 -- Goliath begin prototyped on the opponent's turn" is the proof.
 --
 -- A HYPOTHETICAL here where CR 601.3a's prohibition side takes the stamp instead,
@@ -2238,7 +2238,7 @@ choiceCouldApply src criterion oid gs =
         || xCouldApply src criterion oid VariableChoice.Announced gs
         || any (matchesObjectFrom src criterion oid) (prototypedReading oid gs)
 
--- CR 601.3e / 718.3a: the board a cast of `oid` as a prototyped spell is judged
+-- CR 601.3e / 719.3a: the board a cast of `oid` as a prototyped spell is judged
 -- on, where its projection has prototype (CR 702.160a); none otherwise. A
 -- lookahead's board, for choiceCouldApply above, couldCastFrom below and
 -- Parun.Engine.Cast.cardGatesOk: Parun.Engine.Cast.proposedFor writes the same
@@ -2503,7 +2503,7 @@ unspentPermission pid source grant gs =
 -- Parun.Engine.Cast.choosePlayPermission. Asked of the PRE-MOVE state by
 -- Parun.Engine.Cast.castSpellWith, so the permissions offered are the ones the
 -- gate read, and spent only once the announcement has succeeded, so a rejected
--- or reversed cast (CR 601.2e, CR 733.1) spends nothing.
+-- or reversed cast (CR 601.2e, CR 734.1) spends nothing.
 --
 -- Open without any of them where something else is CR 601.3's "rule or effect"
 -- allowing the cast: the rules for a card in its owner's hand, and an effect
@@ -4860,7 +4860,7 @@ rollModifiers pid gs =
 -- asProposed-stamped PRE-MOVE state -- so the criterion sees the chosen half and
 -- CR 708.2a's face-down 2/2, the same view the cast's own gate read -- and hands
 -- the rows to `consume` only once CR 601.2h's payment has succeeded, so a
--- rejected or reversed announcement (CR 601.2e, CR 733.1) spends nothing.
+-- rejected or reversed announcement (CR 601.2e, CR 734.1) spends nothing.
 -- Parun.PlayerEffectSpec's "a rejected cast leaves the grant standing" and "a
 -- face-down cast spends the grant off the face the gate read" are the proofs.
 spentByCast :: PlayerId -> ObjectId -> GameState -> [ActivePlayerEffect.ActivePlayerEffect]

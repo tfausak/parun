@@ -7,7 +7,7 @@ import qualified Parun.Types.PlayPermissionOrigin as PlayPermissionOrigin
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.PlayPermissionOrigin" $ do
-  -- CR 715.3d, whose last clause is the only thing that asks which rule granted
+  -- CR 716.3d, whose last clause is the only thing that asks which rule granted
   -- the permission.
   Spec.it s "Adventure" $
     Common.assertCodec

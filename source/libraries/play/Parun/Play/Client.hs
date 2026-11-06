@@ -117,7 +117,7 @@ attempt seat view question reply = case reply of
          in State.modify' (\h -> h {Hotseat.attempted = Map.insert seat (mark, actionName view option) (Hotseat.attempted h)})
   _ -> pure ()
 
--- | CR 733.1: at the seat's priority after a cast or an activation it chose,
+-- | CR 734.1: at the seat's priority after a cast or an activation it chose,
 -- a line of news saying it was undone when its view has logged no spell cast
 -- and no ability activated since, and why where the view says
 -- (PlayerView.undone).
@@ -138,7 +138,7 @@ undone seat view = do
       GameEvent.AbilityActivated {} -> True
       _ -> False
 
--- | CR 733.1 with CR 508.1 / 509.1's preambles: at a declaration of attackers
+-- | CR 734.1 with CR 508.1 / 509.1's preambles: at a declaration of attackers
 -- or blockers, a line of news saying the seat's last one was undone when its
 -- view says why (PlayerView.undone), which the engine notes only for a
 -- declaration it asks again.
@@ -293,7 +293,7 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
     sourcePick (Text.pack "Paying " <> Render.manaCost cost <> progress <> later <> Text.pack ". Choose a source to pay with, stop to stop paying, or auto (or press Enter) to pay the rest:") (Text.pack "stop") (Text.pack ", stop, or auto")
   -- CR 601.2g: mana abilities are activated before the cost is paid.
   "ChooseExtraManaSource" -> sourcePick (Text.pack "The cost is covered. Choose another source to activate, or press Enter to pay now:") Text.empty (Text.pack ", or press Enter to pay now")
-  -- CR 733.1: whether the mana abilities of one activation are reversed too.
+  -- CR 734.1: whether the mana abilities of one activation are reversed too.
   "ReverseManaAbilities" -> do
     sources <- field "sources" offer >>= arrayOf
     pure
@@ -783,9 +783,9 @@ handOff terminal seat = do
 -- during it, and this turn's. Every request's view is read, answered
 -- automatically or not, since the view holds only those two turns' entries.
 -- A seat is sent a request every turn, even one it is controlled for: each
--- priority asks the seat itself whether it concedes (CR 104.3a, 723.6). The
+-- priority asks the seat itself whether it concedes (CR 104.3a, 724.6). The
 -- mark is kept per game, since a subgame's and a restarted game's turns are
--- numbered from 1 again (CR 727.1, 729.1a).
+-- numbered from 1 again (CR 728.1, 730.1a).
 collect :: (Monad m) => PlayerView.PlayerView -> Client m ()
 collect view = do
   let seat = PlayerView.viewer view

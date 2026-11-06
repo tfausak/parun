@@ -87,7 +87,7 @@ hasHappened duration resolving source controller gs = case duration of
         (GameState.events gs)
 
 -- | The watch a move with this duration arms, for the move's source and the
--- effect's controller. CR 725's watch is armed undischarged whoever holds the
+-- effect's controller. CR 726's watch is armed undischarged whoever holds the
 -- crown now, so an opponent who already holds it does not free the object:
 -- Palace Jailer's ruling makes the ending a crowning, not a state.
 endingOf :: MoveDuration -> ObjectId -> PlayerId -> ReturnEnding

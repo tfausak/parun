@@ -54,7 +54,7 @@ spec s = Spec.describe s "Parun.Codec.EntryRiders" $ do
       (EntryRiders.codec Common.text)
       EntryRiders.MkEntryRiders {EntryRiders.tapped = TapState.Untapped, EntryRiders.attacking = Nothing, EntryRiders.blocking = Just (EntryBlock.Specified (SlotName.MkSlotName (Text.pack "target"))), EntryRiders.transformed = False, EntryRiders.counters = Map.empty, EntryRiders.under = EntryController.Instructed (PlayerRef.Relative PlayerRelation.You), EntryRiders.exiledFaceDown = False, EntryRiders.attachedTo = Nothing, EntryRiders.faceDown = Nothing, EntryRiders.noted = False, EntryRiders.characteristics = Seq.empty}
       " {\"blocking\":{\"type\":\"Specified\",\"value\":\"target\"}} "
-  -- CR 712.14a's rider, which no other rider implies: a card returned
+  -- CR 712.11a's rider, which no other rider implies: a card returned
   -- transformed is not tapped and not attacking by that fact.
   Spec.it s "MkEntryRiders, transformed alone" $
     Common.assertCodec
@@ -153,7 +153,7 @@ spec s = Spec.describe s "Parun.Codec.EntryRiders" $ do
       Common.assertFromJson s (Codec.decode (EntryRiders.codec Common.text)) "{\"attacking\":null}" EntryRiders.defaultValue
     Spec.it s "a missing attacking key decodes as Nothing" $
       Common.assertFromJson s (Codec.decode (EntryRiders.codec Common.text)) "{\"tapped\":\"Untapped\"}" EntryRiders.defaultValue
-    -- CR 712.14: the front face is the default, so a card file that says nothing
+    -- CR 712.11: the front face is the default, so a card file that says nothing
     -- about transforming is saying the card enters showing its front face.
     Spec.it s "a missing transformed key decodes as False" $
       Common.assertFromJson s (Codec.decode (EntryRiders.codec Common.text)) "{\"tapped\":\"Untapped\",\"attacking\":null}" EntryRiders.defaultValue

@@ -212,10 +212,10 @@ spec s = Spec.describe s "Parun.Registry" $ do
       Spec.assertBool s (any (List.isInfixOf (root <> "/wax-wane.json")) problems) ("names the first claimant: " <> show problems)
       Spec.assertBool s (any (List.isInfixOf (root <> "/wane-wax.json")) problems) ("names the second claimant: " <> show problems)
 
-  -- CR 722.4: a preparation card has only its normal characteristics, so its
+  -- CR 723.4: a preparation card has only its normal characteristics, so its
   -- prepare spell's name is not one it has, and the card that does have it
   -- answers for it.
-  Spec.it s "CR 722.4 a card owning a name outranks a prepare spell holding it" $ do
+  Spec.it s "CR 723.4 a card owning a name outranks a prepare spell holding it" $ do
     aviator <- S.aviatorJson
     jump <- S.jumpJson
     withCorpus "owned-over-alternative" [("encouraging-aviator-jump.json", aviator), ("jump.json", jump)] $ \_ registry -> do
@@ -224,9 +224,9 @@ spec s = Spec.describe s "Parun.Registry" $ do
       byOwn <- Registry.named registry "Encouraging Aviator"
       Spec.assertEqWith s "and the Aviator its own name" (fmap (fmap faceNames) byOwn) (Right (Just (fmap (CardName.MkCardName . Text.pack) ["Encouraging Aviator", "Jump"])))
 
-  -- CR 722.5: a player may choose a prepare spell's name, so with no card
+  -- CR 723.5: a player may choose a prepare spell's name, so with no card
   -- owning it the name still answers for the preparation card.
-  Spec.it s "CR 722.5 a prepare spell's name no card owns answers for its card" $ do
+  Spec.it s "CR 723.5 a prepare spell's name no card owns answers for its card" $ do
     aviator <- S.aviatorJson
     withCorpus "alternative-alone" [("encouraging-aviator-jump.json", aviator)] $ \_ registry -> do
       byAlternative <- Registry.named registry "Jump"

@@ -520,7 +520,7 @@ enters context board gs bearer you t event = case Game.enteredBattlefieldChange 
 
 -- CR 603.6c: a permanent left the battlefield for a destination the trigger
 -- admits, and it is the permanent the trigger watches. An empty destination set
--- admits any zone and CR 603.6c's leaving-the-game form too (CR 800.4a, 729.4a);
+-- admits any zone and CR 603.6c's leaving-the-game form too (CR 800.4a, 730.4a);
 -- a named one admits neither, since leaving the game reaches no zone. The `/=
 -- Battlefield` guard is against recordMintedArrival's pseudo-move.
 --
@@ -585,7 +585,7 @@ leaves bindings context gs bearer you t event = case event of
 -- 400.8, Game.leftOrigin).
 --
 -- ANY of Moved.departures admits, not only ZoneChange.departed: a meld's entry
--- is one event naming every card that left exile (CR 701.42a, CR 712.14c).
+-- is one event naming every card that left exile (CR 701.42a, CR 713.6).
 --
 -- The subject, by ActingPermanent:
 --
@@ -602,7 +602,7 @@ leaves bindings context gs bearer you t event = case event of
 -- says whose turn it is, and CR 109.5 with CR 603.3a fixes "you" as the
 -- ability's controller.
 --
--- GameEvent.LeftTheGame is CR 729.4a's crossing out of the zone the trigger
+-- GameEvent.LeftTheGame is CR 730.4a's crossing out of the zone the trigger
 -- names, admitted only where it names no destination: leaving the game reaches
 -- no zone. Parun.OutsideTheGameSpec's Spirit Mascot case proves it.
 --
@@ -621,7 +621,7 @@ leavesZone board gs bearer you admitsTurn t event = case event of
     | LeftTheGame.from l == LeavesZoneTrigger.from t,
       Maybe.isNothing (LeavesZoneTrigger.to t) ->
         admitsTurn t && admitsDeparture gs bearer you t (LeftTheGame.object l)
-  -- CR 730.3's departure split, whose origin is the battlefield.
+  -- CR 731.3's departure split, whose origin is the battlefield.
   _ -> False
   where
     seen revealed = case LeavesZoneTrigger.card t of
@@ -638,7 +638,7 @@ leavesZone board gs bearer you admitsTurn t event = case event of
 -- (Event.alreadyIn), while a card exiled from exile is a new object (CR 400.8).
 --
 -- Matched on ZoneChange.object, the ARRIVING card. TWO EVENTS, which is CR
--- 712.21's own Example: the Moved event names the first card a melded
+-- 713.8's own Example: the Moved event names the first card a melded
 -- permanent's departure puts into the zone and a CardArrived event names each
 -- card after it, so such a death fires a per-card trigger twice. A CardArrived
 -- is never CR 608.2n's move, nor a move from anywhere but the battlefield.
@@ -653,8 +653,8 @@ leavesZone board gs bearer you admitsTurn t event = case event of
 --   reading: viewWithLastKnown aimed at the arriving card twice over, for the
 --   card that has left again by the CR 117.5 boundary. Not the departed object:
 --   a merged permanent is one departure and one arrival per component (CR
---   730.3), and CR 730.2d makes it a token whenever its topmost component is
---   one. Parun.LeavesTriggerSpec's "CR 730.3 a merged token put into a library"
+--   731.3), and CR 731.2d makes it a token whenever its topmost component is
+--   one. Parun.LeavesTriggerSpec's "CR 731.3 a merged token put into a library"
 --   case is the proof. The bearer frames the match: it is the Filter.Context's
 --   source, and its controller is CR 109.5's "you".
 --
@@ -942,19 +942,19 @@ armMatches bindings board gs bearer you cond event = case cond of
        in Game.damageCounts (DealtDamage.kind dealt) (DealtDamage.by dealt) ev
             && dealtToRelated board gs (PlayerRelation.holds (Game.teams gs) (DealtDamage.recipient dealt) you) (PlayerIsDealtDamage.orTheirPlaneswalkers watched) (DamageEvent.target ev)
     _ -> False
-  -- CR 725.2: a creature dealt combat damage to the monarch, who is "you" --
+  -- CR 726.2: a creature dealt combat damage to the monarch, who is "you" --
   -- the ability's controller (Event.Trigger.inherentTriggers). The damager is
   -- read off the event's sample, for combatDamagerOn's reason.
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> case event of
     GameEvent.DamageDealt _ -> Maybe.isJust (combatDamagerOn board you event)
     _ -> False
-  -- CR 726.2, the same reading one rule over, the holder being "you". Firing
+  -- CR 727.2, the same reading one rule over, the holder being "you". Firing
   -- once per damagers' controller is `batchScoped` and `batchPartition`, never
   -- this arm.
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> case event of
     GameEvent.DamageDealt _ -> Maybe.isJust (combatDamagerOn board you event)
     _ -> False
-  -- CR 726.2's third ability is controlled by the player who TOOK the
+  -- CR 727.2's third ability is controlled by the player who TOOK the
   -- initiative, so the taker is "you".
   TriggerCondition.PlayerTookInitiative -> case event of
     GameEvent.TookInitiative taker -> taker == you
@@ -1059,17 +1059,17 @@ armMatches bindings board gs bearer you cond event = case cond of
       maybe True (== ordinal) nth
         && PlayerRelation.holds (Game.teams gs) relation you drawer
     _ -> False
-  -- CR 725.1: a player BECAME the monarch. Matched against the event the
-  -- crowning records, so every route through CR 725.1's "an effect instructs a
+  -- CR 726.1: a player BECAME the monarch. Matched against the event the
+  -- crowning records, so every route through CR 726.1's "an effect instructs a
   -- player to become the monarch" fires it alike: Effect.BecomeMonarch records
   -- this event whichever MonarchTarget named the player, which covers an entry
-  -- trigger's crown, a targeted crown and CR 725.2's stolen crown.
+  -- trigger's crown, a targeted crown and CR 726.2's stolen crown.
   --
-  -- CR 725.4's departure reassignment records the same event, so the crown
-  -- moving because the monarch left is matched alike. TriggerSpec's "CR 725.4 a
+  -- CR 726.4's departure reassignment records the same event, so the crown
+  -- moving because the monarch left is matched alike. TriggerSpec's "CR 726.4 a
   -- departure crowns alice, and that crowning fires her edict" proves it.
   --
-  -- The event carries exactly one player, which is CR 725.3 ("Only one player can
+  -- The event carries exactly one player, which is CR 726.3 ("Only one player can
   -- be the monarch at a time") rather than a simplification -- so the relation is
   -- the whole comparison and there is no filter to apply. The bearer is NOT part
   -- of the match: Custodi Lich watches a designation, not itself.
@@ -1322,7 +1322,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- Parun.Engine.Event.Trigger's `batchScoped` and `counterOccurrences`, never
   -- by this matcher (CR 603.2c).
   --
-  -- A threshold crosses the way the counters moved. Going on it is CR 714.2b's
+  -- A threshold crosses the way the counters moved. Going on it is CR 715.2b's
   -- "was less than N and became at least N", `n <= after` rather than equality
   -- because one placement can cross several chapters; read ahead (CR 702.155a)
   -- narrows it to equality on the turn the Saga entered, through
@@ -1342,8 +1342,8 @@ armMatches bindings board gs bearer you cond event = case cond of
           (_, Nothing) -> True
           (CounterMotion.Put _, Just n) -> Saga.chapterTriggers (Saga.readAheadRestricted (Projection.project oid gs) gs oid) before after n
           (CounterMotion.Removed, Just n) -> after <= n && n < before
-  -- CR 716.2a: the BEARER's class level crossed N going up. "When this Class
-  -- becomes level N" is printed inside the level-N section, so CR 716.2a's static
+  -- CR 717.2a: the BEARER's class level crossed N going up. "When this Class
+  -- becomes level N" is printed inside the level-N section, so CR 717.2a's static
   -- half is what grants it, and CR 603.10 is what lets it see its own arrival:
   -- "becomes level N" is not on that rule's exhaustive look-back list, so the
   -- abilities checked are the ones existing immediately AFTER the level changed.
@@ -1354,12 +1354,12 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- `n <= after` rather than `n == after`, CountersChange's reading of the
   -- same shape: one write can cross several thresholds, so a Class set straight
   -- from level 1 to level 3 fires both sections' triggers. No level bar can do
-  -- that (CR 716.2a's "only if this Class is level N-1"), which is why the two
+  -- that (CR 717.2a's "only if this Class is level N-1"), which is why the two
   -- readings coincide for every printing in `data/cards/` -- Effect.SetClassLevel
   -- is an opcode, not a bar, and this is the reading the rule states.
   --
   -- Saga.crossed says the same sentence for lore counters and is deliberately not
-  -- reused: it is over Naturals, and its haddock ties it to CR 714.2b and to the
+  -- reused: it is over Naturals, and its haddock ties it to CR 715.2b and to the
   -- agreement CR 704.5s's state-based action needs with it. A class level is a
   -- ClassLevel and has no state-based action to agree with.
   TriggerCondition.SelfBecomesClassLevel n -> case event of
@@ -1581,7 +1581,7 @@ armMatches bindings board gs bearer you cond event = case cond of
         Nothing -> False
         Just view -> Filter.matches bearerContext view f
     _ -> False
-  -- CR 701.27e through CR 603.2: a Self subject is the permanent that
+  -- CR 701.27f through CR 603.2: a Self subject is the permanent that
   -- transformed, and the names the event carries are what it turned INTO, which
   -- `into` asks for when it names a face. TurnedFaceUp's Self subject above is
   -- the neighbouring shape, plus the name -- and CR 701.27b is why they are two
@@ -1589,7 +1589,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- different game actions.
   --
   -- Both halves are read off the EVENT, neither off the board. The board at the
-  -- CR 117.5 scan is not the board CR 701.27e asks about: a permanent that
+  -- CR 117.5 scan is not the board CR 701.27f asks about: a permanent that
   -- transformed twice before the scan shows only its last face, which would
   -- answer this arm wrong on both events. Parun.Types.Transformed carries the
   -- sample for that reason.
@@ -1598,7 +1598,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- CR 708.2a admits none; a permanent with no name matches no named face,
   -- which is the rule's own answer rather than a guard.
   --
-  -- A Matching subject is CR 701.27e's OTHER written form, read by a bystander:
+  -- A Matching subject is CR 701.27f's OTHER written form, read by a bystander:
   -- "whenever a permanent you control transforms into a non-Human creature" (Cult
   -- of the Waxing Moon).
   -- TurnedFaceUp's Matching shape against its Self one, one rule along --
@@ -1606,14 +1606,14 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- perspective and the Filter.Context's source and nothing else.
   --
   -- The CHARACTERISTICS come off the event and everything else off the board,
-  -- which is what Count.overlaySnapshot is for: CR 701.27e pins the specified
+  -- which is what Count.overlaySnapshot is for: CR 701.27f pins the specified
   -- characteristic to the instant the turn finished, and a wholly live read
   -- would answer wrong for a permanent that turned twice before the CR 117.5
   -- scan, which is the argument Parun.Types.Transformed makes for carrying the
   -- sample.
   --
   -- The CONTROLLER and the ATTACHMENTS come off the event too, and for CR
-  -- 603.10's reason rather than CR 701.27e's: that rule pins the whole appearance
+  -- 603.10's reason rather than CR 701.27f's: that rule pins the whole appearance
   -- of the objects to immediately after the event, and CR 109.3 keeps both axes
   -- out of an object's characteristics, so neither can ride the snapshot. The
   -- board this arm is handed has had state-based actions run over it (CR 117.5),
@@ -1841,13 +1841,13 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- The event carries the triggered ability's SOURCE, its CONTROLLER as it
   -- triggered (CR 603.3a) and the ABILITY, and all three are read:
   --
-  --   * the ability must be a chapter ability (CR 714.2b, through Saga.chapterOf,
+  --   * the ability must be a chapter ability (CR 715.2b, through Saga.chapterOf,
   --     so this and the CountersChange arm above cannot drift about what a
   --     chapter symbol is);
-  --   * its chapter must be the source's FINAL chapter number (CR 714.2d), which
+  --   * its chapter must be the source's FINAL chapter number (CR 715.2d), which
   --     is why the source's projection is read rather than the event alone;
   --   * the source must be a Saga with one or more chapter abilities
-  --     (Saga.tracksLore, CR 714.4 / 704.5s's own phrase). CR 714.2d gives a
+  --     (Saga.tracksLore, CR 715.4 / 704.5s's own phrase). CR 715.2d gives a
   --     permanent with no chapter abilities a final chapter number of 0, so
   --     without that conjunct a "{r0}" chapter ability on any permanent at all
   --     would match -- no card prints one, and the gate is still the one the
@@ -1870,7 +1870,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- watcher reads the dead Saga's last known information" and, for the copy, its
   -- "CR 707.2 a COPY of the Saga answers with the copy's chapters".
   TriggerCondition.SagaFinalChapterTriggers relation -> case event of
-    -- A SOURCELESS inherent ability (CR 725.2, CR 702.179d) is never a chapter
+    -- A SOURCELESS inherent ability (CR 726.2, CR 702.179d) is never a chapter
     -- ability of a Saga, there being no Saga behind it to read lore counters off.
     GameEvent.AbilityTriggered record -> case AbilityTriggered.source record of
       TriggerSource.Sourceless -> False

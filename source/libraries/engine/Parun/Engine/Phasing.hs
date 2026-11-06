@@ -134,7 +134,7 @@ import qualified Parun.Types.Zone as Zone
 -- each recorded as it acted, and a phase-out or phase-in trigger waits for the
 -- upkeep (CR 502.4).
 --
--- CR 722.3c's "or phases in prepared" is the one thing that happens after the
+-- CR 723.3c's "or phases in prepared" is the one thing that happens after the
 -- phasing itself: Parun.Engine.Prepare.mintOnPhasedIn runs over the returning
 -- list once every return has been written, which is the rule's own order -- the
 -- copy is minted for a permanent that has phased in. The two halves cannot mint

@@ -325,7 +325,7 @@ targetSlotsOf obj oid gs face =
 
 -- CR 608.2c: one clause's instructions, in written order, carrying the one thing
 -- a later instruction can ask about an earlier one -- whether it HAPPENED. CR
--- 701.28e is what makes that question observable: an instruction to convert a
+-- 701.28f is what makes that question observable: an instruction to convert a
 -- permanent that has already converted "is ignored", so a CR 603.12 reflexive
 -- ability armed after it hangs off a trigger event that never occurred, and rule
 -- 603.12 creates it only "based on whether the trigger event or events occurred".
@@ -336,7 +336,7 @@ targetSlotsOf obj oid gs face =
 -- posture applyEffectWith's CR 607.2a filing already takes, so the rules core
 -- never asks which effect it was; the two ruled shapes below read a
 -- classification of its choice and a shortfall it recorded. Ratchet, Field
--- Medic's two trigger instances are Parun.TransformSpec's "CR 701.28e / 603.12
+-- Medic's two trigger instances are Parun.TransformSpec's "CR 701.28f / 603.12
 -- an ignored convert arms no reflexive", the event-log half; Strax, Sontaran Nurse's random choice records
 -- no event and only binds a slot, and Parun.ResolveSpec's "CR 603.12 a choice
 -- that records no event still arms its when you do" is the state half.
@@ -462,7 +462,7 @@ fallShort = State.modify' (\gs -> gs {GameState.fellShort = GameState.fellShort 
 -- CR 603.10 samples (read by the first disjunct, and the samples are
 -- deliberately unforced), the allocators, interning and Oracle-reference memos
 -- an instruction advances before finding nothing to do, CR 104.4b's lastChoice
--- (an offer answered with nothing), CR 732.3's repeatPicks (a pick recorded
+-- (an offer answered with nothing), CR 733.3's repeatPicks (a pick recorded
 -- before the move it names is tried), damagePreventedBy and ambientAmounts, CR 121.4's drewFromEmpty (an attempted
 -- draw) and fellShort (an instruction finding too few cards, which only
 -- applyClauseEffects reads), CR 607.2a's exiledWith and CR 406.4's exilePiles (applyEffectWith
@@ -485,13 +485,13 @@ fallShort = State.modify' (\gs -> gs {GameState.fellShort = GameState.fellShort 
 --
 -- Copies proved: exiledWith by "CR 603.12 an empty mill after a token ceased in
 -- exile arms no reflexive", exilePiles by "CR 603.12 an empty mill after a
--- face-down card left exile arms no reflexive", nextTimestamp by "CR 701.28e /
+-- face-down card left exile arms no reflexive", nextTimestamp by "CR 701.28f /
 -- 603.12 an ignored convert arms no reflexive", nextEventGroup, controlSample and
 -- Object.controlClock by Parun.ResolveSpec's "CR 118.12 Victimize with no creature
 -- to sacrifice returns nothing", boardAtControlSample by Parun.AuraSpec's "CR
 -- 603.12 Thorin's Equipment go to its target, which then deals damage equal to its
 -- power". The rest is a regression fence: un-copying lastChoice, repeatPicks or
--- undone (a cast the instruction offered and CR 733.1 reversed) leaves the suite
+-- undone (a cast the instruction offered and CR 734.1 reversed) leaves the suite
 -- green. The state half: the scenario "CR 603.12 a choice that records no event
 -- still arms its when you do".
 happenedBetween :: GameState -> GameState -> Bool
@@ -580,7 +580,7 @@ apnapDecidersOf ref legal resolving source controller gs =
   let named = decidersOf legal resolving source controller gs ref
    in filter (\pid -> List.elem pid named) (Game.apnapOrder gs)
 
--- The ONE seat a PlayerRef names, for a designation CR 725.3 and CR 726.3 give
+-- The ONE seat a PlayerRef names, for a designation CR 726.3 and CR 727.3 give
 -- to exactly one player at a time; a reference naming nobody or several moves
 -- nothing (CR 101.3).
 oneSeat :: Map.Map SlotName (Set Recipient) -> ObjectId -> ObjectId -> PlayerId -> GameState -> PlayerRef -> Maybe PlayerId
@@ -669,7 +669,7 @@ chosenPermanents purpose legal resolving controller source choice = do
 -- remains. Parun.RangeOfInfluenceSpec's "CR 801.5a a chooser handed the choice
 -- names only permanents in their own range" proves the cut.
 --
--- CR 732.3 inside a RepeatIf (GameState.repeatPicks): the seat is settled first
+-- CR 733.3 inside a RepeatIf (GameState.repeatPicks): the seat is settled first
 -- here too, and offered nothing it is refused; what an asked seat picks is
 -- recorded for the arm (Zones.repeatIf).
 pickByChooser ::
@@ -702,7 +702,7 @@ pickByChooser resolving source controller legal chooser one_ several amount coun
         case seat of
           Nothing -> pure (Nothing, [])
           Just who -> Game.pickCounted True (pure (Just who)) one_ several amount count (filter (offered who) candidates)
-  -- CR 732.3: a pick a seat was asked for joins its RepeatIf run's record.
+  -- CR 733.3: a pick a seat was asked for joins its RepeatIf run's record.
   Monad.forM_ seat $ \who ->
     Monad.unless (null picked) $
       State.modify' (\g -> g {GameState.repeatPicks = fmap (\picks -> picks {RepeatPicks.picked = Map.insertWith Set.union who (Set.fromList picked) (RepeatPicks.picked picks)}) (GameState.repeatPicks g)})
@@ -871,7 +871,7 @@ buryDiscards settle resolving mDiscarded doomed = do
 
 -- CR 701.27a and CR 701.28a: turn each named permanent over. ONE function for
 -- both opcodes, which is CR 701.28a said as code -- "this follows rules
--- 701.27a-f, 712.9-10, and 712.18", so a convert cannot pick up a gate a
+-- 701.27a-g, 712.7, and 712.15", so a convert cannot pick up a gate a
 -- transform lacks, nor miss one it has.
 turnPermanentsOver ::
   Map.Map SlotName (Set Recipient) ->
@@ -898,8 +898,8 @@ turnPermanentsOver legal chosen resolving controller source ref = do
     -- ahead of this write so no member of the batch is judged against a board a
     -- sibling has already turned over on. WHICH face is
     -- Parun.Engine.Card.turnedOver's answer, off the card's layout, which
-    -- withholds a turn from a permanent that is not double-faced (CR 701.27c)
-    -- or whose other face is an instant or sorcery (CR 701.27d).
+    -- withholds a turn from a permanent that is not double-faced (CR 701.27d)
+    -- or whose other face is an instant or sorcery (CR 701.27e).
     --
     -- CR 701.27b: turning over is its own game action, so it records its own
     -- event -- Event.recordTransformed, over the victims that ACTUALLY turned
@@ -909,10 +909,10 @@ turnPermanentsOver legal chosen resolving controller source ref = do
     -- AFTER the fold, and the order is load-bearing: Parun.Engine.Card gives a
     -- transforming permanent only the SHOWN face's abilities, so a trigger
     -- printed on the face just turned to is among recordEvent's candidates only
-    -- because the write has already happened. Parun.TransformSpec's CR 701.27e
+    -- because the write has already happened. Parun.TransformSpec's CR 701.27f
     -- group is what proves it.
     --
-    -- ONE fresh timestamp for the whole instruction (CR 701.27f), minted even
+    -- ONE fresh timestamp for the whole instruction (CR 701.27g), minted even
     -- when nothing turns over, and ONE whole-board projection, CR 702.145b's
     -- restriction being read off the layer fold. CR 613.7g's per-permanent stamp
     -- is a second thing, minted inside Game.turnFaceOver.
@@ -931,7 +931,7 @@ turnPermanentsOver legal chosen resolving controller source ref = do
 -- Parun.Engine.Daytime's CR 702.145c/f sweep, and Game.turnsTo is the act's own
 -- half of this question. What this adds is the two gates that belong to an
 -- INSTRUCTION rather than to the act, and a static ability's turn has neither: CR
--- 701.27f's already-turned check, and CR 702.145b/e's "can't transform except due
+-- 701.27g's already-turned check, and CR 702.145b/e's "can't transform except due
 -- to its daybound/nightbound ability" (Parun.Engine.Daytime.restrictsTransform).
 --
 -- Asked of the PRE-TURN board (CR 608.2f's simultaneous processing), so no member
@@ -943,7 +943,7 @@ turnsOver pcs resolving frozen oid =
     && not (Daytime.restrictsTransform pcs oid)
     && Maybe.isJust (Game.turnsTo oid frozen)
 
--- CR 701.27f. True when this resolution must be ignored: the resolving object is
+-- CR 701.27g. True when this resolution must be ignored: the resolving object is
 -- an ability whose SOURCE is the very permanent being turned over (CR 113.7a),
 -- and that permanent's last turn is later than the moment the rule measures that
 -- ability from.
@@ -960,7 +960,7 @@ alreadyTurnedFor resolving victim gs =
   -- Both of the rule's narrowings at once, and a CLASSIFICATION of the
   -- resolving object throughout, never which card it is: Nothing unless the
   -- object is an ability OF the victim, and otherwise the moment to measure
-  -- from. CR 725.2's sourceless inherent trigger has no permanent to be an
+  -- from. CR 726.2's sourceless inherent trigger has no permanent to be an
   -- ability of, so it falls out with the spells.
   let startedAt ability = case Object.source ability of
         Source.OfAbility activated
@@ -1351,7 +1351,7 @@ entryAttack legal resolving entry gs = case EntryRiders.attacking entry of
 --
 -- Source.OfCardCopy and not OfCard, which is CR 704.5e's whole distinction: this
 -- copy ceases to exist anywhere but the stack and the battlefield, where the card
--- it copies does not. CR 722.3c's prepare copy is the other minter of that source
+-- it copies does not. CR 723.3c's prepare copy is the other minter of that source
 -- and the road the cast itself already travels.
 --
 -- The SAME PRINTING as the original rather than an interned one of its own
@@ -1843,7 +1843,7 @@ referentsOfObject obj = sourceObjectOf (Object.source obj) <> referentsOfBinding
 -- "the object whose ability was activated" and "the object whose ability
 -- triggered". The card-shaped arms ARE the object rather than naming another --
 -- a melded permanent included, CR 701.42a making it one object however many
--- cards represent it -- and CR 725.2's inherent trigger has no object source at
+-- cards represent it -- and CR 726.2's inherent trigger has no object source at
 -- all, which is the whole of what distinguishes it from OfTrigger.
 sourceObjectOf :: Source.Source -> [ObjectId]
 sourceObjectOf src = case src of
@@ -2016,11 +2016,11 @@ chooseNameAmong chooser source made names = case names of
     answer <- Game.choose (Prompt.ChooseCardName (Decide.deciderFor chooser gs) chooser source (Filter.Type.Or (fmap Filter.Type.HasName names)) made)
     pure (List.find (== answer) names)
 
--- CR 723.1a: the new control is the last one CREATED, so it goes ON TOP of any
+-- CR 724.1a: the new control is the last one CREATED, so it goes ON TOP of any
 -- control already running on that player rather than replacing it. That rule's
 -- "overwrite" is the continuous-effect sense -- both effects exist and the later
 -- one works -- so a Word of Command cast at a player Mindslaver already controls
--- layers over the CR 723.1 row, and Parun.Engine.Stack's lapse hands that row
+-- layers over the CR 724.1 row, and Parun.Engine.Stack's lapse hands that row
 -- back; see #3351.
 --
 -- The stack is kept in creation order, so appending is what "last created"
@@ -2061,11 +2061,11 @@ exileFoundFor agent exiled =
           Nothing -> GameState.objects gs
      in gs {GameState.exiledWith = foldr file (GameState.exiledWith gs) exiled, GameState.objects = granted}
 
--- CR 723.1 / 805.8: the players an effect making `controller` control `target`
+-- CR 724.1 / 805.8: the players an effect making `controller` control `target`
 -- reaches -- `target`, and under the shared team turns option each of their
 -- teammates but `controller`, who cannot be made to control themselves through
 -- their team. `target` itself stays even when it is `controller`, which is CR
--- 723.1a's way of taking one's own decisions back.
+-- 724.1a's way of taking one's own decisions back.
 controlledTeam :: PlayerId -> PlayerId -> GameState -> [PlayerId]
 controlledTeam controller target gs =
   filter (\pid -> pid == target || (pid /= controller && Turn.sharesTurn gs target pid)) (GameState.turnOrder gs)
@@ -2388,9 +2388,9 @@ recordExilePile before gs =
           let (stamp, gs1) = Game.freshTimestamp gs
            in gs1 {GameState.exilePiles = foldr (\oid -> Map.insert oid stamp) kept unstamped}
 
--- CR 724.1c / 724.2c: state-based action passes to a fixpoint (CR 704.3),
+-- CR 725.1c / 725.2c: state-based action passes to a fixpoint (CR 704.3),
 -- placing no trigger. CR 603.8 has a state trigger armed on the board before
--- a pass that performed something triggered, and 724.1f / 724.2f put it on the
+-- a pass that performed something triggered, and 725.1f / 725.2f put it on the
 -- stack at the next settle, so that board is kept for it
 -- (GameState.heldBoards). data/scenarios/turn's Synthetic Final Raising and
 -- Synthetic Raising Truce scenarios prove it.
@@ -2409,22 +2409,22 @@ checkWithoutPriority runDamageRewriteEffect runReplacementEffects runSubgame = g
       ended <- State.gets (Maybe.isJust . GameState.result)
       Monad.when (performed && not ended) (go passed)
 
--- CR 724.1b: how one object leaves the stack when an effect ends the turn. A card
+-- CR 725.1b: how one object leaves the stack when an effect ends the turn. A card
 -- or a token is EXILED, which is a zone change like any other; an ability is not
 -- represented by a card, so it ceases to exist instead (Game.cease, CR 608.2n's
 -- own mechanism) rather than being filed into exile as a phantom that rule
--- 724.1b's second sentence expects the next check to remove and that
+-- 725.1b's second sentence expects the next check to remove and that
 -- Parun.Engine.Sba's cease pass would not.
 --
--- A COPY OF A SPELL is exiled with the cards, and rule 724.1b's second sentence
+-- A COPY OF A SPELL is exiled with the cards, and rule 725.1b's second sentence
 -- is why it may be: CR 704.5e removes it at the next check, which is the same
 -- pass CR 704.5d makes for a token. Ceasing it here instead would be the same end
 -- state reached without the zone change the rule asks for. CR 707.10a's other
--- copy -- CR 722.3c's cast copy of a card -- takes the same arm for the same two
+-- copy -- CR 723.3c's cast copy of a card -- takes the same arm for the same two
 -- sentences.
 --
 -- TOTAL over every Source arm rather than three and a wildcard, because rule
--- 724.1b's first sentence is about EVERY object on the stack: a new kind of
+-- 725.1b's first sentence is about EVERY object on the stack: a new kind of
 -- stack object owes this list a line, and `_` swallowed one once already
 -- (Source.OfCardCopy, added by #3377 and answered wrongly until #3379).
 exileOrCease :: ObjectId -> Game ()
@@ -2437,23 +2437,23 @@ exileOrCease oid = do
     Just (Source.OfToken _) -> Event.changeZone (pure ()) oid Zone.Exile
     Just (Source.OfSpellCopy _) -> Event.changeZone (pure ()) oid Zone.Exile
     -- A REGRESSION FENCE rather than a proven behaviour: ceasing the copy in
-    -- place reaches the same end state, since CR 724.1c's check would remove it
+    -- place reaches the same end state, since CR 725.1c's check would remove it
     -- from exile anyway (CR 704.5e), and no card in data/cards/ watches an object
     -- entering exile in a way that could tell the two apart -- mutating this arm
     -- to `cease` leaves the suite green. It is written the rule's way because CR
-    -- 724.1b says "exile every object on the stack", not because a test pays for
+    -- 725.1b says "exile every object on the stack", not because a test pays for
     -- it.
     Just (Source.OfCardCopy _) -> Event.changeZone (pure ()) oid Zone.Exile
-    -- Not represented by a card, so rule 724.1b's second sentence would remove
-    -- them at CR 724.1c's check anyway; Game.cease is CR 608.2n's own mechanism
+    -- Not represented by a card, so rule 725.1b's second sentence would remove
+    -- them at CR 725.1c's check anyway; Game.cease is CR 608.2n's own mechanism
     -- for the three ability kinds and reaches the same end state one step
     -- earlier.
     Just (Source.OfAbility _) -> cease
     Just (Source.OfTrigger _) -> cease
     Just (Source.OfInherentTrigger _) -> cease
-    -- CR 701.42a puts a melded permanent onto the battlefield, CR 730.2 leaves a
+    -- CR 701.42a puts a melded permanent onto the battlefield, CR 731.2 leaves a
     -- merged one there, and CR 114.1 keeps an emblem in the command zone, so none
-    -- of the three is ever on the stack for rule 724.1b to reach.
+    -- of the three is ever on the stack for rule 725.1b to reach.
     Just (Source.OfMeld _) -> cease
     Just (Source.OfMerge _) -> cease
     Just (Source.OfEmblem _) -> cease
@@ -2484,16 +2484,16 @@ copyOnStackOf :: Source.Source -> Maybe (Source.Source, StackObjectKind.StackObj
 copyOnStackOf source = case source of
   Source.OfCard pid -> Just (Source.OfSpellCopy pid, StackObjectKind.Spell)
   Source.OfSpellCopy pid -> Just (Source.OfSpellCopy pid, StackObjectKind.Spell)
-  -- CR 722.3c's copy is a spell once cast, so copying it is CR 707.10's ordinary
+  -- CR 723.3c's copy is a spell once cast, so copying it is CR 707.10's ordinary
   -- case and the result is a copy of a SPELL -- the arm above's answer, off this
-  -- copy's own printing (CR 707.2's copiable values). That is also CR 722.3d's
+  -- copy's own printing (CR 707.2's copiable values). That is also CR 723.3d's
   -- "if a prepare spell is copied, the copy is also a prepare spell", in the only
-  -- reading parun can observe; Parun.PreparationSpec's "CR 722.3d Twincast copies
+  -- reading parun can observe; Parun.PreparationSpec's "CR 723.3d Twincast copies
   -- the cast Jump and the copy is a Jump of its own" is what proves it.
   Source.OfCardCopy pid -> Just (Source.OfSpellCopy pid, StackObjectKind.Spell)
   Source.OfAbility a -> Just (Source.OfAbility a, StackObjectKind.ActivatedAbility)
   Source.OfTrigger t -> Just (Source.OfTrigger t, StackObjectKind.TriggeredAbility)
-  -- CR 725.2's sourceless triggered ability is a triggered ability all the same,
+  -- CR 726.2's sourceless triggered ability is a triggered ability all the same,
   -- and Parun.Engine.Target.abilityRecipients offers it, so it copies like one.
   Source.OfInherentTrigger t -> Just (Source.OfInherentTrigger t, StackObjectKind.TriggeredAbility)
   -- CR 707.10 copies what is ON THE STACK, and none of these three ever is: a
@@ -2769,12 +2769,12 @@ copyForEachTargets controller copier resolving source legal original candidateRe
 -- re-derivation reads is the card CR 406.4 picked out of a pile -- the order
 -- Parun.Engine.Cast.castProposed takes, chooseTargets drawing before it asks.
 --
--- CR 733.1 is what a rejection falls to, and it is a REVERSAL rather than a
+-- CR 734.1 is what a rejection falls to, and it is a REVERSAL rather than a
 -- remedy of its own: the choice is undone, and the copy is left holding the
 -- targets CR 707.10 already gave it. Not rule 707.10c's "may leave any number of
 -- the targets unchanged", which is the player's option and not the rules'
 -- handling of an illegal one -- the two coincide here only because undoing this
--- particular choice restores exactly that state. CR 733.2's redo has no analogue
+-- particular choice restores exactly that state. CR 734.2's redo has no analogue
 -- inside a resolution: nobody holds priority, and a pure prompt-to-answer
 -- decider re-asked would loop on a stubborn answer.
 chooseNewTargetsFor :: Bool -> ObjectId -> PlayerId -> PlayerId -> ObjectId -> Game ()
@@ -3116,7 +3116,7 @@ thisAbilitySource resolving gs = fmap Object.source (Game.lookupObject resolving
 
 -- The name a conjure's candidate answers to, which is what Prompt.RandomCard
 -- and Prompt.ChooseConjuredCard offer and what their answer is matched back
--- against. The FRONT face's (CR 712.8a): no printed spellbook holds a card with
+-- against. The FRONT face's (CR 712.6a): no printed spellbook holds a card with
 -- a second face, and a conjure that named one outright would still be picked out
 -- of a one-candidate list, which raises no prompt.
 conjuredName :: Card.Type.Card -> CardName.CardName
@@ -3359,7 +3359,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.DoesNotUntapNext {} -> False
   -- CR 701.27a/c-f and CR 701.28a/c-f: turnPermanentsOver's own membership
   -- test, so "you may transform" is not offered where nothing named turns over
-  -- -- a Clone of a double-faced permanent (CR 701.27c) above all. Parun.TransformSpec's
+  -- -- a Clone of a double-faced permanent (CR 701.27d) above all. Parun.TransformSpec's
   -- "CR 608.2d a Clone of Aang, Master of Elements is not offered the
   -- transform" proves it.
   Effect.Transform ref -> nothingTurnsOver ref
@@ -3664,7 +3664,7 @@ kindsCanCross gs from to kinds =
 
 -- | Log one ballot, shown to every player still in the game in an open vote
 -- (CR 101.4b) and, in a secret one, to the voter and the player making their
--- decisions (CR 723.4).
+-- decisions (CR 724.4).
 logBallot :: Bool -> Ballot.Ballot -> Game ()
 logBallot secret ballot = do
   gs <- State.get
@@ -3930,12 +3930,12 @@ isInAGraveyard oid gs = case Game.lookupObject oid gs of
 
 -- The default runner for the resolutions the live loop does not drive: a
 -- PlaySubgame effect reports a draw and binds nothing. Parun.Engine.Engine passes
--- the real runner to BOTH halves of CR 729.1a's "spell or ability"
+-- the real runner to BOTH halves of CR 730.1a's "spell or ability"
 -- (resolveSpellWith, resolveModesWith), and to the instructions that never reach
 -- the stack: CR 614.1c's as-enters effects, CR 615.5's prevention riders, CR
 -- 614.1a's damage-replacement effects, CR 103.5b/103.6's hand actions and CR
 -- 605.4a's triggered mana abilities (performManaAbility). Parun.GameSpec's "CR
--- 614.1c / 729.1b gameplay: an as-enters subgame's winner draws a card" proves
+-- 614.1c / 730.1b gameplay: an as-enters subgame's winner draws a card" proves
 -- the as-enters road.
 noSubgame :: Game Result
 noSubgame = pure Result.Drawn
@@ -3945,7 +3945,7 @@ noSubgame = pure Result.Drawn
 -- rather than objects.
 --
 -- Every caller passes `resolving` -- the object on the stack, whose bindings both
--- resolution loops re-read before each effect: CR 729.1b's subgame winner and CR
+-- resolution loops re-read before each effect: CR 730.1b's subgame winner and CR
 -- 608.2d's chosen opponent are each read by the effect after the one that bound
 -- it, through that re-read (`legalNow`).
 --
@@ -3953,7 +3953,7 @@ noSubgame = pure Result.Drawn
 -- which `liveBindings` reads back. Map.adjust is silent on a missing key, so
 -- without that branch the binding is simply dropped.
 --
--- CR 729.5 is the branch's reason: a wish cast inside a subgame can take the
+-- CR 730.5 is the branch's reason: a wish cast inside a subgame can take the
 -- resolving spell's own card, and "the spell or ability that created the subgame
 -- finishes resolving, even if it was created by a spell card that's no longer on
 -- the stack" is what keeps the resolution going anyway. It is not the only way an
@@ -4027,7 +4027,7 @@ rescopeRun resolving bodyDefined gs0 =
 -- the X it just chose. The scenario
 -- flameblast-dragon-keeps-its-x-when-sacrificed-to-pay-for-it proves it.
 --
--- Where neither exists -- CR 729.5's resumed resolution, a wish inside the
+-- Where neither exists -- CR 730.5's resumed resolution, a wish inside the
 -- subgame having taken the spell's own card -- the amount goes to
 -- GameState.detachedBindings under `resolving`, bindPlayerSlot's fallback, which
 -- Quantity.InSlot reads back. Parun.OutsideTheGameSpec's Synthetic Subgame Tithe
@@ -4608,7 +4608,7 @@ exploreOne settle resolving oid = do
 -- "Nonland" is asked of each card the discard funnel MINTED, through its CR 613
 -- projection, exploreOne's reading: the hand incarnation is gone by then, and a
 -- double-faced card in a graveyard has only its front face's characteristics
--- (CR 712.8a).
+-- (CR 712.6a).
 conniveOne :: Game () -> Natural -> ObjectId -> Game ()
 conniveOne settle n oid = Monad.when (n > 0) $ do
   gs <- State.get
@@ -4741,7 +4741,7 @@ payerAnswerOf gs (attempts, paid) = case (Seq.viewr attempts, paid) of
      in PayerAnswer.Paid cost (Set.fromList (filter public named))
   _ -> PayerAnswer.Declined
 
--- CR 733.1 / 118.12a: what follows a payment `agreed` to and answered as it
+-- CR 734.1 / 118.12a: what follows a payment `agreed` to and answered as it
 -- was (payGateCost's record). A paid one stands, as `stands` reports it. A failed
 -- one is reversed, which returns the payer to the choice, so `again` asks it once
 -- more. The same option paid the same way failing a second time stands, read as

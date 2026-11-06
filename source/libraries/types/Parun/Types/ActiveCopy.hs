@@ -64,9 +64,9 @@ data ActiveCopy = MkActiveCopy
     -- attachment of it.
     covers :: CopyCoverage.CopyCoverage,
     -- | CR 707.2: the copiable values they took on, with any later merge
-    -- applied over them (CR 730.2a).
+    -- applied over them (CR 731.2a).
     snapshot :: ProjectedCharacteristics.ProjectedCharacteristics,
-    -- | CR 730.2i: `snapshot` with that merge's double-faced components turned
+    -- | CR 731.2i: `snapshot` with that merge's double-faced components turned
     -- over, which Parun.Engine.Game.turnFaceOver swaps in; Nothing where turning
     -- changes nothing.
     turned :: Maybe ProjectedCharacteristics.ProjectedCharacteristics

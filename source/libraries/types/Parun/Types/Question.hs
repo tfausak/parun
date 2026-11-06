@@ -4,7 +4,7 @@ import qualified Data.Text as Text
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Reply as Reply
 
--- | CR 723.5: a prompt as the seat answering it is shown it.
+-- | CR 724.5: a prompt as the seat answering it is shown it.
 data Question = MkQuestion
   { seat :: PlayerId.PlayerId,
     -- | The prompt's constructor name, or PlayOrDraw for CR 103.1's choice

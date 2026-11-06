@@ -39,7 +39,7 @@ spec s = Spec.describe s "Parun.Codec.CounterKind" $ do
       (CounterKind.codec Keyword.codec)
       CounterKind.Loyalty
       " {\"type\":\"Loyalty\"} "
-  -- CR 714.3, the kind rule 122.1 never lists.
+  -- CR 715.3, the kind rule 122.1 never lists.
   Spec.it s "Lore" $
     Common.assertCodec
       s

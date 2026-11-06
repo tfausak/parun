@@ -1767,13 +1767,13 @@ variableActivationCostSpec s registry = Spec.describe s "VariableActivationCost"
   -- Hub ("{T}, Pay {E}: Add one mana of any color"). The lands alone pay
   -- {W}{U}{U}, so the activation is rightly offered; CR 605.3a then lets alice
   -- pay a {U} through the Hub, spending one of the two counters the "Pay X {E}"
-  -- half still needs. CR 118.3 makes that order unpayable and CR 733.1
+  -- half still needs. CR 118.3 makes that order unpayable and CR 734.1
   -- reverses the activation. A PAIR differing in the source named: the same
   -- answerer naming the lands pays both counters and draws two.
   Spec.it s "CR 601.2h energy an Aether Hub spends mid-payment is not there for Pay X {E}" $ do
     spent <- hubAtTwo True
     Spec.assertEqWith s "nothing was drawn" (S.handSize S.alice spent) 0
-    Spec.assertEqWith s "CR 733.1 both counters are back" (S.playerCounterOf PlayerCounterKind.Energy S.alice spent) 2
+    Spec.assertEqWith s "CR 734.1 both counters are back" (S.playerCounterOf PlayerCounterKind.Energy S.alice spent) 2
     Spec.assertEqWith s "and nothing was left on the stack" (GameState.stack spent) []
   Spec.it s "CR 605.3a naming the lands instead pays X = 2 and draws two" $ do
     paid <- hubAtTwo False
@@ -1795,7 +1795,7 @@ variableActivationCostSpec s registry = Spec.describe s "VariableActivationCost"
   Spec.it s "CR 601.2h an X the two energy components cannot both cover is a no-op" $ do
     (capacitor, srcId, g1) <- capacitorBoard 3
     let after = snd (Engine.runGamePure (answerXAt 3 S.bob) g1 (Activate.activateAbility S.alice srcId (theAbility capacitor)))
-    Spec.assertEqWith s "CR 733.1 no counter spent" (S.playerCounterOf PlayerCounterKind.Energy S.alice after) 3
+    Spec.assertEqWith s "CR 734.1 no counter spent" (S.playerCounterOf PlayerCounterKind.Energy S.alice after) 3
     Spec.assertEqWith s "the Capacitor is untapped" (S.tappedCount S.alice after) 0
     Spec.assertEqWith s "and nothing was left on the stack" (GameState.stack after) []
   where

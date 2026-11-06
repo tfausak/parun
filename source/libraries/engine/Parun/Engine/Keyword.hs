@@ -2253,7 +2253,7 @@ saddle n =
 -- reaches CR 702.122b's relation under a slot of its own
 -- (Binding.tappedForTotalPower) and never that one. `Not IsSource` is rule
 -- 702.184a's own "another", and load-bearing for
--- crew's reason one rule over: a Spacecraft past CR 721.2b's threshold is a
+-- crew's reason one rule over: a Spacecraft past CR 722.2b's threshold is a
 -- creature and could otherwise station itself.
 --
 -- The tap symbol is not in the cost, so CR 302.6 does not reach this ability: a
@@ -2269,12 +2269,12 @@ saddle n =
 -- Binding.triggerSource and never TARGETED (CR 115.10a), crew's posture.
 --
 -- CounterKind.Named, because CR 122.1 letters charge counters nowhere: no rule
--- reads the tally, only CR 721.2's own striations do, through
+-- reads the tally, only CR 722.2's own striations do, through
 -- Quantity.ObjectCounters. The spelling has to agree with what a station card
 -- writes, which is why chargeCounter below is shared rather than inlined.
 --
 -- CR 602.5d is the timing clause and the ONLY restriction. The condition is
--- Nothing because CR 721.4 says so outright: the ability is present at all times
+-- Nothing because CR 722.4 says so outright: the ability is present at all times
 -- and may be activated at any number of charge counters.
 --
 station :: ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
@@ -2835,7 +2835,7 @@ permissionsFor cardTypes keyword = case keyword of
   -- Granting it here would make the FRONT face castable from a graveyard for its
   -- printed cost, which rule 702.146a does not say.
   -- Parun.Engine.Cast.permitsCastFromGraveyard reads it off the front face
-  -- instead, CR 712.11d's own scope, and Parun.Engine.Cost.candidateCostsGiven
+  -- instead, CR 712.8d's own scope, and Parun.Engine.Cost.candidateCostsGiven
   -- prices it there.
   Keyword.Disturb _ -> []
   -- CR 702.180a's FIRST static ability, escape's arm above word for word --
@@ -3143,7 +3143,7 @@ escapeCosts keywords =
 -- them a choice.
 --
 -- Handed the FRONT face's keywords by both its callers rather than the half
--- being cast, which is CR 712.11d's own scope: the ability is "an ability of a
+-- being cast, which is CR 712.8d's own scope: the ability is "an ability of a
 -- double-faced card's front face" and the spell it permits is the back face.
 -- Both read that face where the card lies, through
 -- Parun.Engine.Cost.frontFaceKeywords, so a granted disturb is priced and offered.
@@ -3472,14 +3472,14 @@ oneLessPerEach count =
       CostReduction.direction = CostDirection.Less
     }
 
--- CR 702.160a / CR 718.1: the PROTOTYPE inset frames -- the second mana cost,
+-- CR 702.160a / CR 719.1: the PROTOTYPE inset frames -- the second mana cost,
 -- power and toughness a prototype card prints -- offered as an alternative cost
 -- by Parun.Engine.Cost.candidateCostsFor and read back as characteristics by
 -- Parun.Engine.Projection.View.baseCharacteristics once CR 601.2b has settled on
 -- one.
 --
 -- A LIST because a keyword set could hold two of these, not because a card does:
--- CR 718.1 gives a prototype card "a second set of power, toughness, and mana
+-- CR 719.1 gives a prototype card "a second set of power, toughness, and mana
 -- cost characteristics", singular, and
 -- Parun.Engine.Projection.View.withPrototype reads the first for that reason.
 -- Offered from EVERY zone the card can be cast from, which is CR 113.6e's
@@ -3498,7 +3498,7 @@ prototypes keywords =
 -- CR 702.162a: the MORE THAN MEETS THE EYE costs -- "you may cast this card
 -- converted by paying [cost] rather than its mana cost" -- offered by
 -- Parun.Engine.Cost.candidateCostsFor for the back face
--- Parun.Engine.Card.castableFaces put on the table (CR 712.11d).
+-- Parun.Engine.Card.castableFaces put on the table (CR 712.8d).
 --
 -- A LIST for flashbackCosts' reason: rule 702.162a states no limit, and CR 601.2b
 -- makes two of them a choice rather than a sum. Read from EVERY zone the card can
@@ -4766,8 +4766,8 @@ mintedReplacementsFor keyword count = case keyword of
   -- the same projection this list is minted from.
   Keyword.Compleated -> []
   Keyword.Reconfigure _ -> []
-  -- CR 702.155b's two intrinsic abilities are NOT minted here, and CR 714.3b is
-  -- why: rule 714.3b REPLACES rule 714.3a's "enters with a lore counter"
+  -- CR 702.155b's two intrinsic abilities are NOT minted here, and CR 715.3b is
+  -- why: rule 715.3b REPLACES rule 715.3a's "enters with a lore counter"
   -- ability rather than adding to it, and that one is minted from the finished
   -- projection by Parun.Engine.Saga.entryReplacementsOf. A row minted here would
   -- sit beside it and the Saga would enter with one lore counter too many.
@@ -5114,7 +5114,7 @@ mintedCombatRestrictionsFor keyword = case keyword of
   Keyword.Changeling -> []
   Keyword.Hideaway _ -> []
   Keyword.Reinforce {} -> []
-  -- CR 702.184a restricts no attack or block; CR 721.2b's threshold is what
+  -- CR 702.184a restricts no attack or block; CR 722.2b's threshold is what
   -- decides whether the permanent is a creature at all.
   Keyword.Station -> []
   Keyword.UmbraArmor -> []
@@ -5518,7 +5518,7 @@ addsRulesToPrintedAbility keyword = case keyword of
 -- power-up's is CR 702.177a's and CR 702.193a's "activate only once"; boast's
 -- are CR 702.142a's two. Power-up's cost reduction is no rider, and
 -- reducesByManaCostOnEntry below answers for it. A class level bar's are CR
--- 716.2a's "only if this Class is level N-1 and only as a sorcery"; its effect,
+-- 717.2a's "only if this Class is level N-1 and only as a sorcery"; its effect,
 -- "this Class's level becomes N", is the card's (Effect.SetClassLevel).
 printedRiders :: Keyword -> [ActivationRestriction.ActivationRestriction]
 printedRiders keyword = case keyword of
@@ -8855,7 +8855,7 @@ suspendedNow = Condition.Compares (Compares.MkCompares (Quantity.ObjectCounters 
 --
 -- PLAY, rule 702.62a's own verb: a land face is played as CR 305.2a's land play
 -- during a resolution. A granted suspend reaches a modal double-faced card
--- whose back is a land (CR 712.12) -- Parun.SpecialActionSpec's "Delay on Sea
+-- whose back is a land (CR 712.9) -- Parun.SpecialActionSpec's "Delay on Sea
 -- Gate Restoration" case proves it.
 --
 -- THE INTERVENING "IF" is rule 702.62a's "if it's exiled", which immediately

@@ -10,7 +10,7 @@ import qualified Parun.Types.ObjectId as ObjectId
 -- LOCKED when it begins (TheseObjects -- a bounced-and-returned creature is a new
 -- id the effect no longer names, unless the effect is Alchemy's "perpetually",
 -- which Parun.Engine.Event.perpetuate re-anchors to every incarnation that
--- arrives -- CR 712.21c's two, where a melded permanent left the battlefield).
+-- arrives -- CR 713.8c's two, where a melded permanent left the battlefield).
 -- A static ability's set is DYNAMIC: Matching,
 -- MatchingAnywhere and MatchingOffBattlefield (any object currently matching a
 -- Filter, respectively on the battlefield, in any zone, and in any zone but the

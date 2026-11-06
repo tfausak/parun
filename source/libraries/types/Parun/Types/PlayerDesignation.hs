@@ -14,7 +14,7 @@ module Parun.Types.PlayerDesignation where
 -- here say "for the rest of the game" instead, which no permanent outlives.
 --
 -- NOT GameState.monarch's shape either, though the monarch is also a player's
--- designation: CR 725.3 makes it unique, so it is one seat on the game. These two
+-- designation: CR 726.3 makes it unique, so it is one seat on the game. These two
 -- are held by any number of players at once, so each player carries their own set
 -- -- Player.designations, where CR 702.179b's speed rides for the same reason.
 data PlayerDesignation

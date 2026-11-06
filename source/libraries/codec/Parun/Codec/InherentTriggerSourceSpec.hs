@@ -9,7 +9,7 @@ import qualified Parun.Types.PlayerId as PlayerId
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.InherentTriggerSource" $ do
-  -- CR 725.2 / CR 702.179d: no source object, so the first key is the
+  -- CR 726.2 / CR 702.179d: no source object, so the first key is the
   -- controller baked in at trigger time. The ability is the one
   -- Parun.Codec.TriggeredAbilitySourceSpec writes under `source`, so the two
   -- cases differ in exactly the key that separates the records.

@@ -2,8 +2,8 @@
 {-# LANGUAGE RankNTypes #-}
 
 -- Covers Parun.Engine.Setup and Parun.Types.Deck: setup, deck composition, opening
--- hands, and the two funnels that rebuild a game's object pool -- CR 727's
--- restart and CR 729's subgame teardown.
+-- hands, and the two funnels that rebuild a game's object pool -- CR 728's
+-- restart and CR 730's subgame teardown.
 module Parun.SetupSpec where
 
 import qualified Control.Monad.Trans.State.Strict as State
@@ -265,7 +265,7 @@ setupSpec s registry = Spec.describe s "Setup" $ do
     let gs = Setup.emptyGame S.bothPlayers
     Spec.assertEqWith s "empty command" (GameState.command gs) mempty
 
-  Spec.it s "CR 725.1 a new game has no monarch" $
+  Spec.it s "CR 726.1 a new game has no monarch" $
     Spec.assertEqWith s "no monarch" (GameState.monarch (Setup.emptyGame S.bothPlayers)) Nothing
 
   Spec.it s "CR 800.5/806.3/103.1 emptyGame seats every player in the order given, starting player first" $ do
@@ -315,13 +315,13 @@ setupSpec s registry = Spec.describe s "Setup" $ do
     Spec.assertEqWith s "CR 810.11 three heads: 45" (S.lifeOf S.alice (build [[S.alice, S.bob, S.carol], [S.dave]] True)) (Just 45)
     Spec.assertEqWith s "the same teams without the option: CR 103.4's twenty" (S.lifeOf S.alice (build [[S.alice, S.bob], [S.carol, S.dave]] False)) (Just 20)
 
-  -- CR 727.1 restarts "following the procedures set forth in rule 103" for the
-  -- same players, and CR 729.2's subgame "proceeds like a normal game": neither
+  -- CR 728.1 restarts "following the procedures set forth in rule 103" for the
+  -- same players, and CR 730.2's subgame "proceeds like a normal game": neither
   -- turns an option off, which is why Setup.restartGame and
   -- Setup.subgameStateFrom name GameState.settings as kept. Read
   -- at gameplay level -- CR 903.12f's twenty-five, which only the carried
   -- setting can produce -- rather than off the field.
-  Spec.it s "CR 727.1 / 729.2 a rebuilt Brawl game is still a Brawl game" $ do
+  Spec.it s "CR 728.1 / 730.2 a rebuilt Brawl game is still a Brawl game" $ do
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
     mountain <- S.printingOf s registry "Mountain"
     let deck = Deck.MkDeck {Deck.cards = Map.singleton mountain 10, Deck.commander = Set.singleton shimatsu, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
@@ -336,7 +336,7 @@ setupSpec s registry = Spec.describe s "Setup" $ do
     Spec.assertEqWith s "and the subgame of an ordinary Commander game still gives forty" (S.lifeOf S.alice (subgame False)) (Just 40)
 
   -- CR 103.4 / 119.1: setup records the starting life total per player, and CR
-  -- 727.1's restart and CR 729.2's subgame record it afresh. The rebuilds start
+  -- 728.1's restart and CR 730.2's subgame record it afresh. The rebuilds start
   -- from a board whose record was knocked to 99, so each write is load-bearing.
   Spec.it s "CR 103.4 the starting life total is recorded by setup, a restart and a subgame" $ do
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
@@ -350,7 +350,7 @@ setupSpec s registry = Spec.describe s "Setup" $ do
     Spec.assertEqWith s "CR 103.4d two-player Brawl's 25, each time" (startingOf built, startingOf restarted, startingOf subgame) (Just 25, Just 25, Just 25)
 
   -- CR 500.7: each player's turns of the game, which Serra Avenger reads; its
-  -- ruling has a restart start them again, and CR 729.2's subgame is a new game
+  -- ruling has a restart start them again, and CR 730.2's subgame is a new game
   -- too. The rebuilds start from a board whose counts were raised, and each
   -- names a starting player the board's first turn did not.
   Spec.it s "CR 500.7 setup, a restart and a subgame each count only the new game's first turn" $ do
@@ -362,23 +362,23 @@ setupSpec s registry = Spec.describe s "Setup" $ do
     Spec.assertEqWith s "a restart counts its controller's first turn and nothing before it" (GameState.turnsBegun restarted) (Map.singleton S.bob 1)
     Spec.assertEqWith s "a subgame counts its starting player's first turn and nothing of the main game's" (GameState.turnsBegun subgame) (Map.singleton S.bob 1)
 
-  -- CR 727.1 / 729.1b: a restart and a subgame are new games, so no stored
+  -- CR 728.1 / 730.1b: a restart and a subgame are new games, so no stored
   -- result of the old one survives into them. The board carries a row in every
   -- carrier, and only Setup.blankGame clears them: neither rebuild names one.
-  Spec.it s "CR 727.1 / 729.1b a restart and a subgame keep no stored row of the game before" $ do
+  Spec.it s "CR 728.1 / 730.1b a restart and a subgame keep no stored row of the game before" $ do
     mountain <- S.printingOf s registry "Mountain"
     let (land, built) = S.addPermanent mountain S.alice (Setup.gameWith GameSettings.plain S.bothPlayers)
         stored = everyCarrier land built
         restarted = S.runPure S.identityAnswer stored (Setup.restartGame S.performer Set.empty S.alice)
         subgame = Setup.subgameStateFrom S.alice stored
     Spec.assertEqWith s "the board carries a row in every carrier" (carrierRows stored) (replicate (length (carrierRows stored)) 1)
-    Spec.assertEqWith s "CR 727.1 a restart clears every carrier" (carrierRows restarted) (replicate (length (carrierRows restarted)) 0)
-    Spec.assertEqWith s "CR 729.1b a subgame clears every carrier" (carrierRows subgame) (replicate (length (carrierRows subgame)) 0)
+    Spec.assertEqWith s "CR 728.1 a restart clears every carrier" (carrierRows restarted) (replicate (length (carrierRows restarted)) 0)
+    Spec.assertEqWith s "CR 730.1b a subgame clears every carrier" (carrierRows subgame) (replicate (length (carrierRows subgame)) 0)
     Spec.assertBool s (GameState.nextObjectId restarted >= GameState.nextObjectId stored && GameState.nextTimestamp restarted >= GameState.nextTimestamp stored) "a restart's supplies do not move back"
     Spec.assertEqWith s "a subgame inherits the supplies" (GameState.nextObjectId subgame, GameState.nextTimestamp subgame) (GameState.nextObjectId stored, GameState.nextTimestamp stored)
 
 -- One row in every stored carrier, each from `source`: the fixture the CR
--- 727.1 / 729.1b case above clears.
+-- 728.1 / 730.1b case above clears.
 everyCarrier :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 everyCarrier source gs0 =
   let (ts, gs1) = Game.freshTimestamp (S.withEffect source (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Literal 0) (Quantity.Literal 0))) gs0)
@@ -513,11 +513,11 @@ beastToken :: CardName.CardName
 beastToken = CardName.MkCardName (Text.pack "Beast Token")
 
 restartSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
-restartSpec s registry = Spec.describe s "restart (CR 727)" $ do
+restartSpec s registry = Spec.describe s "restart (CR 728)" $ do
   Spec.it s "startGameFromCards: libraries are rebuilt from the existing owned cards, hands drawn" $ do
     -- alice and bob each own 8 cards, all currently on the battlefield. After
     -- startGameFromCards each has a 7-card hand and a 1-card library, the
-    -- battlefield is empty, and ownership is unchanged (CR 727.2 / 103.5).
+    -- battlefield is empty, and ownership is unchanged (CR 728.2 / 103.5).
     mountain <- S.printingOf s registry "Mountain"
     let g0 = Setup.emptyGame S.bothPlayers
         g1 = addMany mountain 8 S.alice g0
@@ -586,19 +586,19 @@ restartSpec s registry = Spec.describe s "restart (CR 727)" $ do
         Spec.assertEqWith s "and both cards are in her deck" (filter (\c -> elem (Source.OfCard c) (sourcesOf (deckOf control) control)) components) components
       _ -> Spec.assertFailure s "the Hanweir pair should meld into a permanent representing two cards"
 
-  -- CR 100.6a against CR 727.1: a restart begins a new GAME of the same MATCH,
+  -- CR 100.6a against CR 728.1: a restart begins a new GAME of the same MATCH,
   -- so the match's subgame tally is the one record that crosses it. Asserted
   -- beside a per-game record that does not, on the same board and the same
   -- restart, so "nothing was cleared at all" cannot pass for it.
-  Spec.it s "CR 100.6a/727.1: a restart keeps the match's subgame tally and still resets the game's own turn count" $ do
+  Spec.it s "CR 100.6a/728.1: a restart keeps the match's subgame tally and still resets the game's own turn count" $ do
     mountain <- S.printingOf s registry "Mountain"
     let g0 = addMany mountain 8 S.bob (addMany mountain 8 S.alice (Setup.emptyGame S.bothPlayers))
         played = g0 {GameState.subgamesThisMatch = 2, GameState.turnNumber = 5}
         after = snd (Engine.runGamePure S.identityAnswer played (Setup.restartGame S.performer Set.empty S.alice))
     Spec.assertEqWith s "CR 100.6a: the two subgames are still this match's" (GameState.subgamesThisMatch after) 2
-    Spec.assertEqWith s "CR 727.1: while the restarted game is back on turn 1" (GameState.turnNumber after) 1
+    Spec.assertEqWith s "CR 728.1: while the restarted game is back on turn 1" (GameState.turnNumber after) 1
 
-  Spec.it s "CR 727.1a: the starting player is the restart's controller, at the head of the turn order" $ do
+  Spec.it s "CR 728.1a: the starting player is the restart's controller, at the head of the turn order" $ do
     -- Two restarts of the same board, controlled by different players: the
     -- active player and the head of the turn order follow the controller.
     mountain <- S.printingOf s registry "Mountain"
@@ -610,11 +610,11 @@ restartSpec s registry = Spec.describe s "restart (CR 727)" $ do
     Spec.assertEqWith s "alice restarted: alice is the new active player" (GameState.activePlayer byAlice) S.alice
     Spec.assertEqWith s "alice restarted: alice heads the turn order" (Maybe.listToMaybe (GameState.turnOrder byAlice)) (Just S.alice)
 
-  Spec.it s "CR 727.2: every owned card returns to its owner (library or hand), regardless of prior zone" $ do
+  Spec.it s "CR 728.2: every owned card returns to its owner (library or hand), regardless of prior zone" $ do
     -- alice owns 8 cards, one on the battlefield; bob owns 8, one moved to his
     -- graveyard. CR 400.7 gives drawn cards FRESH ids (Event.changeZone mints a
     -- new object on a zone change), so a specific pre-restart ObjectId need not
-    -- survive an opening draw -- CR 727.2 preserves OWNERSHIP, not object ids.
+    -- survive an opening draw -- CR 728.2 preserves OWNERSHIP, not object ids.
     -- Assert on per-owner counts: after the restart every owned card is in that
     -- owner's library or hand, none on the battlefield or in a graveyard, and
     -- bob's graveyard card is proven to return by his count staying 8.
@@ -635,7 +635,7 @@ restartSpec s registry = Spec.describe s "restart (CR 727)" $ do
     Spec.assertEqWith s "no card is left on the battlefield" (Set.null (GameState.battlefield after)) True
     Spec.assertEqWith s "no graveyard survives the restart" (all null (Map.elems (GameState.graveyard after))) True
 
-  Spec.it s "CR 727.4: the restart settles just before the first untap step, no priority, turn 1, life reset" $ do
+  Spec.it s "CR 728.4: the restart settles just before the first untap step, no priority, turn 1, life reset" $ do
     -- Knock bob down to 5 life and give him 3 poison counters before the
     -- restart, so the "back to 20 life / no counters" assertions below are
     -- load-bearing -- Setup.emptyGame already starts players at 20 life with
@@ -652,25 +652,25 @@ restartSpec s registry = Spec.describe s "restart (CR 727)" $ do
     Spec.assertEqWith s "the stack is empty" (GameState.stack after) []
     Spec.assertEqWith s "alice is back to 20 life" (S.lifeOf S.alice after) (Just 20)
     Spec.assertEqWith s "bob is back to 20 life" (S.lifeOf S.bob after) (Just 20)
-    Spec.assertEqWith s "CR 103.4/727.1: bob's life reset to 20" (S.lifeOf S.bob after) (Just 20)
+    Spec.assertEqWith s "CR 103.4/728.1: bob's life reset to 20" (S.lifeOf S.bob after) (Just 20)
     Spec.assertEqWith s "bob's poison counters cleared on restart" (S.playerCounterOf PlayerCounterKind.Poison S.bob after) 0
 
-  Spec.it s "CR 727.3: a player owning fewer than seven cards loses at the next SBA check" $ do
+  Spec.it s "CR 728.3: a player owning fewer than seven cards loses at the next SBA check" $ do
     -- bob owns only 3 cards; drawing an opening hand of 7 draws from an empty
     -- library, flagging drewFromEmpty, so the existing SBA path makes bob lose
-    -- and alice win. (In live play this fires at the first upkeep, CR 727.3;
+    -- and alice win. (In live play this fires at the first upkeep, CR 728.3;
     -- here it is asserted at the next explicit SBA check.)
     mountain <- S.printingOf s registry "Mountain"
     let g0 = addMany mountain 3 S.bob (addMany mountain 8 S.alice (Setup.emptyGame S.bothPlayers))
         afterRestart = snd (Engine.runGamePure S.identityAnswer g0 (Setup.restartGame S.performer Set.empty S.alice))
         afterSba = snd (Engine.runGamePure S.identityAnswer afterRestart Engine.settleForPriority)
     Spec.assertEqWith s "bob drew from an empty library during the opening draw" (Set.member S.bob (GameState.drewFromEmpty afterRestart)) True
-    Spec.assertEqWith s "CR 727.3: bob loses, alice wins at the SBA check" (GameState.result afterSba) (Just (Result.Won S.alice))
+    Spec.assertEqWith s "CR 728.3: bob loses, alice wins at the SBA check" (GameState.result afterSba) (Just (Result.Won S.alice))
 
-  Spec.it s "CR 727.1/729.4 #147: a rebuild does not revive a player who had already left" $ do
-    -- CR 727.1: "All players in that game when it ended then start a new game
+  Spec.it s "CR 728.1/730.4 #147: a rebuild does not revive a player who had already left" $ do
+    -- CR 728.1: "All players in that game when it ended then start a new game
     -- following the procedures set forth in rule 103" -- bob left BEFORE it
-    -- ended, so he is not one of them. CR 729.4 says the same for a subgame:
+    -- ended, so he is not one of them. CR 730.4 says the same for a subgame:
     -- "All players not currently in the subgame are considered outside the
     -- subgame." Today both rebuild paths set every player's status to Playing
     -- unconditionally, so bob comes back at 20 life.
@@ -694,8 +694,8 @@ restartSpec s registry = Spec.describe s "restart (CR 727)" $ do
     Spec.assertEqWith s "subgame: and nothing of his is reset" (S.lifeOf S.bob sub) (Just 3)
     Spec.assertEqWith s "subgame: alice is playing at 20 life" (S.lifeOf S.alice sub) (Just 20)
 
-  Spec.it s "CR 727.1 #147: a restart rebuilds only the players who were in the game when it ended" $ do
-    -- CR 727.1: "All players in that game when it ended then start a new
+  Spec.it s "CR 728.1 #147: a restart rebuilds only the players who were in the game when it ended" $ do
+    -- CR 728.1: "All players in that game when it ended then start a new
     -- game." Bob left first, so the new game has two seats. Today he keeps
     -- his seat in the rebuilt turn order, and startGameFromCards therefore
     -- gives him a library, a shuffle and a 7-card opening hand.
@@ -705,7 +705,7 @@ restartSpec s registry = Spec.describe s "restart (CR 727)" $ do
         after = snd (Engine.runGamePure S.identityAnswer g1 (Setup.restartGame S.performer Set.empty S.alice))
         libSizeOf pid = length (Game.zoneMembers Zone.Library pid after)
     Spec.assertEqWith s "two seats in the rebuilt order, in their seating order" (GameState.turnOrder after) [S.alice, S.carol]
-    Spec.assertEqWith s "alice starts it (CR 727.1a)" (GameState.activePlayer after) S.alice
+    Spec.assertEqWith s "alice starts it (CR 728.1a)" (GameState.activePlayer after) S.alice
     Spec.assertBool s (List.elem (GameState.activePlayer after) (GameState.turnOrder after)) "the active player is one of the rebuilt seats (totality)"
     Spec.assertEqWith s "bob has no library" (libSizeOf S.bob) 0
     Spec.assertEqWith s "bob drew no opening hand" (S.handSize S.bob after) 0
@@ -734,7 +734,7 @@ poolToLibrary pid gs =
         }
 
 -- The name printed on Hanweir Battlements' combined back face, which is what the
--- permanent that pair melds into answers to (CR 712.8g).
+-- permanent that pair melds into answers to (CR 713.5c).
 townshipName :: CardName.CardName
 townshipName = CardName.MkCardName (Text.pack "Hanweir, the Writhing Township")
 
@@ -790,11 +790,11 @@ sourcesOf :: [ObjectId.ObjectId] -> GameState.GameState -> [Source.Source]
 sourcesOf oids gs = Maybe.mapMaybe (fmap Object.source . (`Game.lookupObject` gs)) oids
 
 subgameSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
-subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
-  Spec.it s "CR 729.2: subgameStateFrom takes ONLY library cards; battlefield/hand do not enter" $ do
+subgameSpec s registry = Spec.describe s "subgames (CR 730)" $ do
+  Spec.it s "CR 730.2: subgameStateFrom takes ONLY library cards; battlefield/hand do not enter" $ do
     -- alice owns 5 cards: 2 relocated to her library, 3 left on the battlefield.
     -- The subgame state's object pool must be exactly the 2 library cards. The
-    -- one other thing CR 729.2 lets in is a commander (CR 729.2c), and no player
+    -- one other thing CR 730.2 lets in is a commander (CR 730.2c), and no player
     -- here has one designated; Parun.CommanderSpec's Subgame group covers that.
     mountain <- S.printingOf s registry "Mountain"
     let g0 = Setup.emptyGame S.bothPlayers
@@ -818,7 +818,7 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
     Spec.assertEqWith s "the subgame nextObjectId is inherited from the parent" (GameState.nextObjectId sub) (GameState.nextObjectId g2)
     Spec.assertEqWith s "the subgame is a fresh game at turn 1" (GameState.turnNumber sub) 1
 
-  Spec.it s "CR 729.5: funnelBack returns every owned subgame card to its owner's library, ids do not collide" $ do
+  Spec.it s "CR 730.5: funnelBack returns every owned subgame card to its owner's library, ids do not collide" $ do
     -- Parent: alice and bob each own 3 cards on the battlefield plus 2 in their
     -- library (so the parent has non-library objects that must SURVIVE, and
     -- library objects that get REPLACED). finalSub is a GENUINELY PLAYED
@@ -845,7 +845,7 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
         -- startGameFromCards draws an opening hand (CR 103.5), so both draw
         -- all 2 and record drewFromEmpty for the other 5 draw attempts --
         -- irrelevant here, this test only checks funnelBack's bookkeeping,
-        -- not the CR 727.3/729.3 short-deck loss.
+        -- not the CR 728.3/730.3 short-deck loss.
         sub0 = Setup.subgameStateFrom S.alice parent
         (_, finalSub) = Engine.runGamePure S.identityAnswer sub0 (Setup.startGameFromCards S.performer Set.empty)
         after = Setup.funnelBack finalSub parent
@@ -859,12 +859,12 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
     Spec.assertEqWith s "the subgame genuinely minted fresh ids (drawCard's changeZone, CR 400.7)" (GameState.nextObjectId finalSub > GameState.nextObjectId sub0) True
     Spec.assertEqWith s "the id supply advanced to exactly the subgame high-water mark" (GameState.nextObjectId after) (GameState.nextObjectId finalSub)
 
-  -- CR 729.5's funnel is the second place a melded permanent has to be read as
+  -- CR 730.5's funnel is the second place a melded permanent has to be read as
   -- CR 108.2's two cards: "each player takes all traditional cards they own that
   -- are in the subgame ... puts them into their main-game library". The subgame
-  -- ends with the permanent on its battlefield, so CR 729.5c's command-zone
+  -- ends with the permanent on its battlefield, so CR 730.5c's command-zone
   -- exception cannot reach it and both cards go to the library.
-  Spec.it s "CR 729.5/712.21 a subgame ending with a melded permanent returns both of its cards to the main-game library" $ do
+  Spec.it s "CR 730.5/713.8 a subgame ending with a melded permanent returns both of its cards to the main-game library" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
     mountain <- S.printingOf s registry "Mountain"
@@ -876,7 +876,7 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
         hers = Game.zoneMembers Zone.Library S.alice after
         sources = sourcesOf hers after
     Spec.assertEqWith s "setup: the subgame really ended with one permanent representing two cards" (length components) 2
-    Spec.assertEqWith s "CR 729.5/712.21 both cards representing the melded permanent are in alice's main-game library" (filter (\p -> elem (Source.OfCard p) sources) components) components
+    Spec.assertEqWith s "CR 730.5/713.8 both cards representing the melded permanent are in alice's main-game library" (filter (\p -> elem (Source.OfCard p) sources) components) components
     Spec.assertEqWith s "and no object left in either game is represented by two cards: the permanent is no card at all (CR 108.2)" (all (null . Game.componentsOf . Object.source) (Map.elems (GameState.objects after))) True
     Spec.assertEqWith s "alice's five Mountains came back beside them" (length hers) 7
     Spec.assertEqWith s "no returned object collides with either game's ids" (Map.size (GameState.objects after)) (length hers)
@@ -887,11 +887,11 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
   -- before it can be observed, but a subgame seated with three or more still-
   -- playing parent players is itself CR 800.1 multiplayer, so a departure
   -- INSIDE it is real and CR 800.4a's object removal reaches the departing
-  -- player's subgame objects outright. CR 729.5 still requires every card they
-  -- owned coming back to their MAIN-game library regardless -- CR 729.4's
+  -- player's subgame objects outright. CR 730.5 still requires every card they
+  -- owned coming back to their MAIN-game library regardless -- CR 730.4's
   -- second sentence keeps the two games separate populations, and nothing in
   -- the CR removes a card from a player's deck for losing a subgame.
-  Spec.it s "CR 729.5/800.4a a player who departs inside a MULTIPLAYER subgame still gets their library back" $ do
+  Spec.it s "CR 730.5/800.4a a player who departs inside a MULTIPLAYER subgame still gets their library back" $ do
     mountain <- S.printingOf s registry "Mountain"
     let g0 = Setup.emptyGame S.threePlayers
         g1 = poolToLibrary S.carol (poolToLibrary S.bob (poolToLibrary S.alice (addMany mountain 3 S.carol (addMany mountain 3 S.bob (addMany mountain 3 S.alice g0)))))
@@ -945,7 +945,7 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
   -- continuesAfterDeparture would read False even though bob's objects were
   -- genuinely destroyed earlier. funnelBack's guard must not depend on
   -- `finalSub`'s turnOrder at all for this reason.
-  Spec.it s "CR 729.5/800.4a a restart INSIDE the subgame, after the departure, does not un-recover the departed player's library" $ do
+  Spec.it s "CR 730.5/800.4a a restart INSIDE the subgame, after the departure, does not un-recover the departed player's library" $ do
     mountain <- S.printingOf s registry "Mountain"
     let g0 = Setup.emptyGame S.threePlayers
         g1 = poolToLibrary S.carol (poolToLibrary S.bob (poolToLibrary S.alice (addMany mountain 3 S.carol (addMany mountain 3 S.bob (addMany mountain 3 S.alice g0)))))
@@ -961,13 +961,13 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
     Spec.assertEqWith s "alice's library is unaffected" (length (Game.zoneMembers Zone.Library S.alice after)) 3
     Spec.assertEqWith s "carol's library is unaffected" (length (Game.zoneMembers Zone.Library S.carol after)) 3
 
-  -- The other half of CR 729.4a, and the reason applyCrossings exists: the wish
+  -- The other half of CR 730.4a, and the reason applyCrossings exists: the wish
   -- inside the subgame took a MAIN-GAME card, and the main game has to lose it.
   -- Driven through Parun.Engine.Event.bringInFrom, the one writer of
   -- GameState.broughtIn, rather than through a hand-set field -- a hand-set one
   -- would prove applyCrossings reads a Seq and nothing about the road that
   -- fills it.
-  Spec.it s "CR 729.4a: a card the subgame brought in leaves the main game when the subgame ends" $ do
+  Spec.it s "CR 730.4a: a card the subgame brought in leaves the main game when the subgame ends" $ do
     elf <- S.printingOf s registry "Arbor Elf"
     let g0 = Setup.emptyGame S.bothPlayers
         (elfId, g1) = S.addPermanent elf S.alice g0
@@ -983,13 +983,13 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
     Spec.assertEqWith s "the subgame's wish minted an object of its own for it (CR 400.7)" (Maybe.isJust broughtInId) True
     Spec.assertEqWith s "the subgame recorded the crossing under the OUTER id" (Foldable.toList (GameState.broughtIn crossedSub)) [elfId]
     -- The gameplay-level claim, first: the main game no longer has the card.
-    Spec.assertEqWith s "CR 729.4a: the crossed creature is off the main game's battlefield" (Set.member elfId (GameState.battlefield after)) False
-    Spec.assertEqWith s "CR 729.4a: and out of the main game's objects entirely" (Map.member elfId (GameState.objects after)) False
+    Spec.assertEqWith s "CR 730.4a: the crossed creature is off the main game's battlefield" (Set.member elfId (GameState.battlefield after)) False
+    Spec.assertEqWith s "CR 730.4a: and out of the main game's objects entirely" (Map.member elfId (GameState.objects after)) False
     Spec.assertEqWith s "bob's creature, which nothing took, is untouched" (Set.member bystanderId (GameState.battlefield after)) True
-    Spec.assertEqWith s "CR 729.4a: a GameEvent.LeftTheGame names it in the main game's log" leftEvents [elfId]
+    Spec.assertEqWith s "CR 730.4a: a GameEvent.LeftTheGame names it in the main game's log" leftEvents [elfId]
     Spec.assertEqWith s "CR 608.2h: its last known information is filed under the id it had" (Map.member elfId (GameState.lastKnown after)) True
 
-  -- CR 729.4a: "abilities in the main game that trigger on objects leaving a
+  -- CR 730.4a: "abilities in the main game that trigger on objects leaving a
   -- main-game zone will trigger, but they won't be put onto the stack until the
   -- main game resumes." A leaves-the-battlefield ability (CR 603.6c) is such an
   -- ability, and the crossing is the OTHER road out of the game -- rule 603.6c's
@@ -1003,7 +1003,7 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
   -- crossed permanent is not merely off the battlefield by the CR 117.5 scan, it
   -- is out of the main game, so neither the live board nor the per-group sample
   -- has anything to find.
-  Spec.it s "CR 729.4a a phased-in permanent a subgame takes triggers its leaves-the-battlefield ability" $ do
+  Spec.it s "CR 730.4a a phased-in permanent a subgame takes triggers its leaves-the-battlefield ability" $ do
     thragtusk <- S.printingOf s registry "Thragtusk"
     let (tusk, g1) = S.addPermanent thragtusk S.alice S.threePlayerGame
         parent = S.giveControl tusk S.carol g1
@@ -1013,12 +1013,12 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
     Spec.assertEqWith s "carol controls the creature alice owns" (Projection.controllerOf tusk parent) (Just S.carol)
     Spec.assertEqWith s "it is phased in, so the pair's one difference is genuinely absent here" (Map.member tusk (GameState.phasedOut parent)) False
     Spec.assertEqWith s "the subgame's wish took it out of the main game" (Game.lookupObject tusk after) Nothing
-    Spec.assertEqWith s "CR 729.4a: carol got the Beast the leaves-the-battlefield ability makes" (S.countOnBattlefieldByName beastToken S.carol after) 1
+    Spec.assertEqWith s "CR 730.4a: carol got the Beast the leaves-the-battlefield ability makes" (S.countOnBattlefieldByName beastToken S.carol after) 1
     Spec.assertEqWith s "and nobody else did" (fmap (\pid -> S.countOnBattlefieldByName beastToken pid after) [S.alice, S.bob]) [0, 0]
 
   -- CR 702.26b: "except for rules and effects that specifically mention
   -- phased-out permanents, a phased-out permanent is treated as though it does
-  -- not exist", with no limit to one game. CR 729.4 mentions none, so a
+  -- not exist", with no limit to one game. CR 730.4 mentions none, so a
   -- phased-out main-game permanent is not outside the subgame at all.
   --
   -- The paired negative for the case above: the same board, the same seats, the
@@ -1042,7 +1042,7 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
     Spec.assertEqWith s "so the subgame's wish cannot reach it" (Maybe.isJust broughtInId) False
     Spec.assertEqWith s "it stays in the main game, still phased out" (Phasing.isPhasedOut tusk after) True
     Spec.assertEqWith s "and no zone-change ability triggered" (fmap (\pid -> S.countOnBattlefieldByName beastToken pid after) [S.alice, S.bob, S.carol]) [0, 0, 0]
-  -- CR 729.4a's wider half: "abilities in the main game that trigger on objects
+  -- CR 730.4a's wider half: "abilities in the main game that trigger on objects
   -- leaving a main-game ZONE will trigger". A card the subgame takes out of a
   -- main-game graveyard has left that graveyard, and it has NOT left the
   -- battlefield (CR 603.6c), so only the first kind of ability may see it.
@@ -1057,7 +1057,7 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
   -- graveyard for no zone at all. Parun.OutsideTheGameSpec's Spirit Mascot case is the same
   -- reading at gameplay level; the battlefield legs above are the pairs for the
   -- two negatives.
-  Spec.it s "CR 729.4a a card a subgame takes from a main-game graveyard triggers leaves-your-graveyard and not leaves-the-battlefield" $ do
+  Spec.it s "CR 730.4a a card a subgame takes from a main-game graveyard triggers leaves-your-graveyard and not leaves-the-battlefield" $ do
     skimmer <- S.printingOf s registry "Kishla Skimmer"
     shredder <- S.printingOf s registry "Super Shredder"
     thragtusk <- S.printingOf s registry "Thragtusk"
@@ -1074,16 +1074,16 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
         after = resolveTriggers (Setup.applyCrossings crossedSub parent)
         plusOnes oid = maybe 0 (Map.findWithDefault 0 CounterKind.PlusOnePlusOne . Object.counters) (Game.lookupObject oid after)
     -- The gameplay-level claims, ahead of the proxies.
-    Spec.assertEqWith s "CR 729.4a: Kishla Skimmer saw the card leave alice's graveyard, and she drew" (S.handSize S.alice after) 1
+    Spec.assertEqWith s "CR 730.4a: Kishla Skimmer saw the card leave alice's graveyard, and she drew" (S.handSize S.alice after) 1
     Spec.assertEqWith s "CR 603.6c: the Thragtusk left no battlefield, so it made no Beast" (fmap (\pid -> S.countOnBattlefieldByName beastToken pid after) [S.alice, S.bob, S.carol]) [0, 0, 0]
     Spec.assertEqWith s "CR 603.6c: and Super Shredder saw no permanent leave" (plusOnes shredderId) 0
-    Spec.assertEqWith s "CR 729.4a: Rakshasa Vizier saw no card put into exile" (plusOnes vizierId) 0
+    Spec.assertEqWith s "CR 730.4a: Rakshasa Vizier saw no card put into exile" (plusOnes vizierId) 0
     -- The fixture's preconditions.
     Spec.assertEqWith s "it is alice's turn, which the Skimmer's scope asks" (GameState.activePlayer parent) S.alice
     Spec.assertEqWith s "the Thragtusk started in alice's main-game graveyard" (Game.zoneMembers Zone.Graveyard S.alice parent) [tusk]
     Spec.assertEqWith s "and her hand started empty" (S.handSize S.alice parent) 0
-    Spec.assertEqWith s "the subgame's wish reached it (CR 729.4)" (Maybe.isJust broughtInId) True
-    Spec.assertEqWith s "CR 729.4a: it left the main game" (Game.lookupObject tusk after) Nothing
+    Spec.assertEqWith s "the subgame's wish reached it (CR 730.4)" (Maybe.isJust broughtInId) True
+    Spec.assertEqWith s "CR 730.4a: it left the main game" (Game.lookupObject tusk after) Nothing
 
   -- Why applyCrossings does NOT wrap its batch in Event.simultaneouslyPure, the
   -- one place it parts company with Departure.objectsLeaveWith: CR 800.4a's
@@ -1142,12 +1142,12 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
     Spec.assertEqWith s "CR 608.2h: the elf left a board the anthem had already left, so its last known power is 1" (lastPower elfId) (Just (Just 1))
     Spec.assertEqWith s "the anthem, which crossed first, left the untouched board" (fmap (const True) (lastPower anthemId)) (Just True)
 
-  -- CR 729.6's nesting, the case a middle frame cannot settle: a wish two levels
+  -- CR 730.6's nesting, the case a middle frame cannot settle: a wish two levels
   -- down reached a card belonging to the game ABOVE this one, which
   -- subgameStateFrom handed down along with this game's own cards. This frame
   -- holds no such object, so it hands the crossing one level further out instead
   -- of dropping it.
-  Spec.it s "CR 729.6: a crossing from further out is passed outward one level, not applied here" $ do
+  Spec.it s "CR 730.6: a crossing from further out is passed outward one level, not applied here" $ do
     elf <- S.printingOf s registry "Arbor Elf"
     let g0 = Setup.emptyGame S.bothPlayers
         (elfId, g1) = S.addPermanent elf S.alice g0
@@ -1163,9 +1163,9 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
         (_, crossedSub) = Event.bringInFrom OutsideDestination.Hand S.alice outerId sub0
         after = Setup.applyCrossings crossedSub parent
         leftEvents = Maybe.mapMaybe (\logged -> case LoggedEvent.event logged of GameEvent.LeftTheGame l -> Just (LeftTheGame.object l); _ -> Nothing) (Foldable.toList (GameState.events after))
-    Spec.assertEqWith s "the subgame really did inherit the outer entry (CR 729.6)" (Map.member outerId (GameState.outsideObjects sub0)) True
-    Spec.assertEqWith s "CR 729.6: this game hands the crossing to the frame above it" (Foldable.toList (GameState.broughtIn after)) [outerId]
-    Spec.assertEqWith s "CR 729.4a: and stops offering the card it can no longer supply" (Map.member outerId (GameState.outsideObjects after)) False
+    Spec.assertEqWith s "the subgame really did inherit the outer entry (CR 730.6)" (Map.member outerId (GameState.outsideObjects sub0)) True
+    Spec.assertEqWith s "CR 730.6: this game hands the crossing to the frame above it" (Foldable.toList (GameState.broughtIn after)) [outerId]
+    Spec.assertEqWith s "CR 730.4a: and stops offering the card it can no longer supply" (Map.member outerId (GameState.outsideObjects after)) False
     Spec.assertEqWith s "nothing left THIS game, which never held the card" leftEvents []
     Spec.assertEqWith s "so its own objects are untouched" (Map.keysSet (GameState.objects after)) (Map.keysSet (GameState.objects parent))
     Spec.assertEqWith s "and its battlefield still holds alice's creature" (Set.member elfId (GameState.battlefield after)) True
@@ -1173,7 +1173,7 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
   -- CR 400.11b: a sideboard card the subgame's wish spent has left the pool for
   -- good -- funnelBack puts it into the main-game library, so a pool that came
   -- back refilled would have the same card in two places at once.
-  Spec.it s "CR 400.11b/729.5: the pool a subgame's wish spent comes back spent, and nothing else does" $ do
+  Spec.it s "CR 400.11b/730.5: the pool a subgame's wish spent comes back spent, and nothing else does" $ do
     mountain <- S.printingOf s registry "Mountain"
     let g0 = Setup.emptyGame S.bothPlayers
         (printingId, g1) = Game.intern mountain g0
@@ -1181,7 +1181,7 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
         parent = g1 {GameState.players = Map.adjust stocked S.alice (GameState.players g1)}
         sub0 = Setup.subgameStateFrom S.alice parent
         -- Inside the subgame: alice's wish brings one copy in, and she loses
-        -- life doing it. Only the first of those may follow her out (CR 729.1b).
+        -- life doing it. Only the first of those may follow her out (CR 730.1b).
         (_, spentSub) = Event.bringIn OutsideDestination.Hand S.alice printingId sub0
         finalSub = spentSub {GameState.players = Map.adjust (\p -> p {Player.life = 5}) S.alice (GameState.players spentSub)}
         after = Setup.funnelBack finalSub parent
@@ -1189,7 +1189,7 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
     Spec.assertEqWith s "the parent's pool going in genuinely held both copies" (poolOf S.alice parent) (Just (Map.singleton printingId 2))
     Spec.assertEqWith s "the subgame genuinely spent one (CR 400.11b)" (poolOf S.alice spentSub) (Just (Map.singleton printingId 1))
     Spec.assertEqWith s "CR 400.11b: the main game gets the spent pool back, not the full one" (poolOf S.alice after) (Just (Map.singleton printingId 1))
-    Spec.assertEqWith s "CR 729.1b: her life total is the main game's, which the subgame never touched" (S.lifeOf S.alice after) (Just 13)
+    Spec.assertEqWith s "CR 730.1b: her life total is the main game's, which the subgame never touched" (S.lifeOf S.alice after) (Just 13)
     Spec.assertEqWith s "bob's pool, which no wish reached, is unchanged" (poolOf S.bob after) (Just Map.empty)
 
   -- The other arm of CR 400.11b, whose second clause takes the card back out of
@@ -1217,11 +1217,11 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
 
   -- The road the pool arm above does NOT restore, pinned so that nobody reads its
   -- silence as an oversight: bob wished a MAIN-GAME card of his own into the
-  -- subgame and then departed there. CR 729.4a took the card out of the main game
+  -- subgame and then departed there. CR 730.4a took the card out of the main game
   -- and CR 800.4a took the subgame's copy out with him, so nothing in either game
   -- represents it afterwards. Nothing was spent from his pool, so the pool arm has
   -- nothing to give back.
-  Spec.it s "CR 729.4a/800.4a a main-game card a departed player wished in is in neither game after" $ do
+  Spec.it s "CR 730.4a/800.4a a main-game card a departed player wished in is in neither game after" $ do
     elf <- S.printingOf s registry "Arbor Elf"
     let g0 = Setup.emptyGame S.threePlayers
         (bobsId, parent) = S.addPermanent elf S.bob g0
@@ -1232,14 +1232,14 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
     Spec.assertEqWith s "the subgame really did mint him a copy" (Maybe.isJust minted) True
     Spec.assertEqWith s "the subgame really was multiplayer, so CR 800.4a's removal fired" (Departure.continuesAfterDeparture departedSub) True
     Spec.assertEqWith s "CR 800.4a: the subgame's copy left with him" (fmap (any (`Map.member` GameState.objects departedSub)) minted) (Just False)
-    Spec.assertEqWith s "CR 729.4a: the main game's copy left when the subgame took it" (Map.member bobsId (GameState.objects after)) False
+    Spec.assertEqWith s "CR 730.4a: the main game's copy left when the subgame took it" (Map.member bobsId (GameState.objects after)) False
     Spec.assertEqWith s "so bob owns nothing in the main game afterwards" (Map.keys (Map.filter (\o -> Object.owner o == S.bob) (GameState.objects after))) []
     Spec.assertEqWith s "and his pool, which no wish reached, is still empty" (fmap Player.outsideTheGame (Map.lookup S.bob (GameState.players after))) (Just Map.empty)
 
-  Spec.it s "CR 729.2/729.4 #147: a subgame seats only the players still in the main game" $ do
-    -- CR 729.2: "Each player takes all the cards in their main-game library,
+  Spec.it s "CR 730.2/730.4 #147: a subgame seats only the players still in the main game" $ do
+    -- CR 730.2: "Each player takes all the cards in their main-game library,
     -- moves them to their subgame library, and shuffles them." Each player IN
-    -- the game -- CR 729.4: "All players not currently in the subgame are
+    -- the game -- CR 730.4: "All players not currently in the subgame are
     -- considered outside the subgame." Today the rebuilt order is
     -- rotateTo carol [alice, bob, carol] = [carol, alice, bob], with bob in it.
     let g0 = S.departs Departure.Type.Conceded S.bob (Setup.emptyGame S.threePlayers)
@@ -1249,13 +1249,13 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
     Spec.assertEqWith s "CR 800.1: a two-seat subgame is not a multiplayer game, so no free mulligan" (Mulligan.freeMulligans sub) 0
 
 -- CR 100.2d's supplementary decks of nontraditional cards across the two
--- funnels: CR 727's restart (Karn Liberated) and CR 729's subgame (Shahrazad).
+-- funnels: CR 728's restart (Karn Liberated) and CR 730's subgame (Shahrazad).
 supplementaryDeckSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
-  -- CR 727.1a / 103.7: bob restarts, so bob is the new game's starting player
+  -- CR 728.1a / 103.7: bob restarts, so bob is the new game's starting player
   -- and turns up the top of HIS planar deck; alice's face-up Academy goes back
   -- into hers (CR 311.2 / 103.3a).
-  Spec.it s "CR 727.1 / 103.7 a restarted Planechase game sets a new starting plane" $ do
+  Spec.it s "CR 728.1 / 103.7 a restarted Planechase game sets a new starting plane" $ do
     academy <- S.printingOf s registry "Academy at Tolaria West"
     tazeem <- S.printingOf s registry "Tazeem"
     karn <- S.printingOf s registry "Karn Liberated"
@@ -1283,7 +1283,7 @@ supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
     Spec.assertEqWith s "one plane is face up and the other in the communal deck" (length (Planechase.faceUp started), length (Planechase.deckOf S.bob started)) (1, 1)
     Spec.assertBool s (elem planar (fmap Set.fromList shuffles)) "CR 103.3a the communal deck was shuffled whole"
 
-  -- CR 901.15c / 727.2: a restart regroups the planar cards by owner, and under
+  -- CR 901.15c / 728.2: a restart regroups the planar cards by owner, and under
   -- the single planar deck option they are one deck again: bob, restarting,
   -- turns up its top and leaves the other plane in it.
   Spec.it s "CR 901.15c a restarted Planechase game keeps one communal planar deck" $ do
@@ -1298,9 +1298,9 @@ supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
     Spec.assertEqWith s "the old game turned up alice's Academy" (cardNames (Planechase.faceUp before) before) ["Academy at Tolaria West"]
     Spec.assertEqWith s "CR 103.7 one plane is face up and the other in the communal deck" (length (Planechase.faceUp after), length (Planechase.deckOf S.bob after)) (1, 1)
 
-  -- CR 727.2 / 103.3a: a restart starts the archenemy's scheme deck over, so
+  -- CR 728.2 / 103.3a: a restart starts the archenemy's scheme deck over, so
   -- the ongoing Very Soil she had face up is back in it, shuffled.
-  Spec.it s "CR 727.2 / 103.3a a restart puts a face-up scheme back into the shuffled scheme deck" $ do
+  Spec.it s "CR 728.2 / 103.3a a restart puts a face-up scheme back into the shuffled scheme deck" $ do
     look <- S.printingOf s registry "Look Skyward and Despair"
     soil <- S.printingOf s registry "The Very Soil Shall Shake"
     karn <- S.printingOf s registry "Karn Liberated"
@@ -1311,16 +1311,16 @@ supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
         schemeIds = Set.fromList (Archenemy.faceUp before <> Archenemy.deckOf S.alice before)
         ((_, after), shuffles) = State.runState (Engine.runGame (recordShuffles karnAnswer) before Engine.priorityLoop) []
     Spec.assertEqWith s "the old game had Very Soil face up" (cardNames (Archenemy.faceUp before) before) ["The Very Soil Shall Shake"]
-    Spec.assertEqWith s "CR 727.2 the new game has no scheme face up" (Archenemy.faceUp after) []
+    Spec.assertEqWith s "CR 728.2 the new game has no scheme face up" (Archenemy.faceUp after) []
     Spec.assertEqWith s "and both are in alice's scheme deck" (List.sort (cardNames (Archenemy.deckOf S.alice after) after)) ["Look Skyward and Despair", "The Very Soil Shall Shake"]
     Spec.assertBool s (elem schemeIds (fmap Set.fromList shuffles)) "CR 103.3a which alice shuffled"
     Spec.assertEqWith s "CR 103.4e she is still the archenemy, at 40 life" (S.lifeOf S.alice after, S.lifeOf S.bob after) (Just 40, Just 20)
 
-  -- CR 729.2a / 103.7 / 729.5a: the planar decks move into the Shahrazad
+  -- CR 730.2a / 103.7 / 730.5a: the planar decks move into the Shahrazad
   -- subgame, where alice's top card becomes the starting plane; her face-up
   -- plane stays in the main game; and every plane in the subgame comes back to
   -- its owner's deck -- bob's two from his deck, not his library.
-  Spec.it s "CR 729.2a the planar deck plays the subgame and comes back" $ do
+  Spec.it s "CR 730.2a the planar deck plays the subgame and comes back" $ do
     academy <- S.printingOf s registry "Academy at Tolaria West"
     tazeem <- S.printingOf s registry "Tazeem"
     let planes d = d {Deck.sideDecks = Map.singleton SideDeck.Planar (Map.fromSet (const 1) (Set.fromList [academy, tazeem]))}
@@ -1331,15 +1331,15 @@ supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
         up = cardNames (Planechase.faceUp before) before
         down = cardNames (Planechase.deckOf S.alice before) before
     Spec.assertEqWith s "the main game has one plane face up and one in the deck" (length up, length down) (1, 1)
-    Spec.assertEqWith s "CR 729.2a / 103.7 the subgame's starting plane is the one from alice's deck" (fmap (\g -> cardNames (Planechase.faceUp g) g) (Maybe.listToMaybe (reverse subStates))) (Just down)
-    Spec.assertEqWith s "CR 729.5a it is back in alice's planar deck" (cardNames (Planechase.deckOf S.alice after) after) down
+    Spec.assertEqWith s "CR 730.2a / 103.7 the subgame's starting plane is the one from alice's deck" (fmap (\g -> cardNames (Planechase.faceUp g) g) (Maybe.listToMaybe (reverse subStates))) (Just down)
+    Spec.assertEqWith s "CR 730.5a it is back in alice's planar deck" (cardNames (Planechase.deckOf S.alice after) after) down
     Spec.assertEqWith s "and the main game's plane never left" (cardNames (Planechase.faceUp after) after) up
     Spec.assertEqWith s "and bob's planar deck is back whole" (List.sort (cardNames (Planechase.deckOf S.bob after) after)) ["Academy at Tolaria West", "Tazeem"]
-    Spec.assertBool s (elem (Set.fromList (Planechase.deckOf S.bob before)) [Set.fromList ids | (1, _, ids) <- asks]) "CR 729.2a bob shuffled it in the subgame"
-    Spec.assertBool s (elem (Set.fromList (Planechase.deckOf S.bob after)) [Set.fromList ids | (0, _, ids) <- asks]) "CR 729.5a and again in the main game"
-    Spec.assertEqWith s "CR 729.5 no plane went into a library" (length (Game.zoneMembers Zone.Library S.alice after), length (Game.zoneMembers Zone.Library S.bob after)) (10, 10)
+    Spec.assertBool s (elem (Set.fromList (Planechase.deckOf S.bob before)) [Set.fromList ids | (1, _, ids) <- asks]) "CR 730.2a bob shuffled it in the subgame"
+    Spec.assertBool s (elem (Set.fromList (Planechase.deckOf S.bob after)) [Set.fromList ids | (0, _, ids) <- asks]) "CR 730.5a and again in the main game"
+    Spec.assertEqWith s "CR 730.5 no plane went into a library" (length (Game.zoneMembers Zone.Library S.alice after), length (Game.zoneMembers Zone.Library S.bob after)) (10, 10)
 
-  -- CR 901.15c / 729.5a: under the single planar deck option alice turned up
+  -- CR 901.15c / 730.5a: under the single planar deck option alice turned up
   -- her Academy, and bob's Tazeem and Caldaia play the Shahrazad subgame from
   -- the communal deck. Both come back into it, whoever turned one up there.
   Spec.it s "CR 901.15c the communal planar deck plays the subgame and comes back whole" $ do
@@ -1351,13 +1351,13 @@ supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
     let ((_, after), asks) = State.runState (Engine.runGameAsked recordAsked before Engine.priorityLoop) []
         subStates = [g | (depth, g, _) <- asks, depth == 1]
     Spec.assertEqWith s "the main game turned up alice's Academy" (cardNames (Planechase.faceUp before) before) ["Academy at Tolaria West"]
-    Spec.assertEqWith s "CR 729.2a the subgame turned up a plane from the communal deck" (fmap (length . Planechase.faceUp) (Maybe.listToMaybe (reverse subStates))) (Just 1)
-    Spec.assertEqWith s "CR 729.5a both are back in the communal deck" (List.sort (cardNames (Planechase.deckOf S.alice after) after)) ["Tazeem", "The Caldaia"]
+    Spec.assertEqWith s "CR 730.2a the subgame turned up a plane from the communal deck" (fmap (length . Planechase.faceUp) (Maybe.listToMaybe (reverse subStates))) (Just 1)
+    Spec.assertEqWith s "CR 730.5a both are back in the communal deck" (List.sort (cardNames (Planechase.deckOf S.alice after) after)) ["Tazeem", "The Caldaia"]
 
-  -- CR 729.2a / 103.4e / 904.9 / 729.5a: the scheme deck moves into the
+  -- CR 730.2a / 103.4e / 904.9 / 730.5a: the scheme deck moves into the
   -- subgame, so alice is its archenemy -- at 40 life, setting a scheme in
   -- motion -- while the ongoing scheme she had face up stays in the main game.
-  Spec.it s "CR 729.2a the scheme deck plays the subgame and comes back" $ do
+  Spec.it s "CR 730.2a the scheme deck plays the subgame and comes back" $ do
     look <- S.printingOf s registry "Look Skyward and Despair"
     soil <- S.printingOf s registry "The Very Soil Shall Shake"
     board <- supplementaryBoard s registry (\d -> d {Deck.sideDecks = Map.singleton SideDeck.Scheme (Map.fromList [(look, 2), (soil, 1)])}) id
@@ -1367,11 +1367,11 @@ supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
         faceUpNames g = cardNames (Archenemy.faceUp g) g
     Spec.assertEqWith s "CR 103.4e the subgame starts alice at 40 and bob at 20" (fmap (\g -> (S.lifeOf S.alice g, S.lifeOf S.bob g)) (Maybe.listToMaybe subStates)) (Just (Just 40, Just 20))
     Spec.assertBool s (any (\g -> faceUpNames g == ["Look Skyward and Despair"]) subStates) "CR 904.9 alice sets a Look Skyward and Despair in motion in the subgame"
-    Spec.assertBool s (all (notElem "The Very Soil Shall Shake" . faceUpNames) subStates) "CR 729.2a the main game's face-up Very Soil is not in the subgame"
-    Spec.assertEqWith s "CR 729.5a both Look Skywards are back in alice's scheme deck" (cardNames (Archenemy.deckOf S.alice after) after) ["Look Skyward and Despair", "Look Skyward and Despair"]
+    Spec.assertBool s (all (notElem "The Very Soil Shall Shake" . faceUpNames) subStates) "CR 730.2a the main game's face-up Very Soil is not in the subgame"
+    Spec.assertEqWith s "CR 730.5a both Look Skywards are back in alice's scheme deck" (cardNames (Archenemy.deckOf S.alice after) after) ["Look Skyward and Despair", "Look Skyward and Despair"]
     Spec.assertBool s (elem (Set.fromList (Archenemy.deckOf S.alice after)) [Set.fromList ids | (0, _, ids) <- asks]) "and alice shuffled it in the main game"
     Spec.assertEqWith s "and Very Soil is still face up in the main game" (cardNames (Archenemy.faceUp after) after) ["The Very Soil Shall Shake"]
-    Spec.assertEqWith s "CR 729.5 no scheme went into a library" (length (Game.zoneMembers Zone.Library S.alice after)) 10
+    Spec.assertEqWith s "CR 730.5 no scheme went into a library" (length (Game.zoneMembers Zone.Library S.alice after)) 10
 
 -- CR 315.2 / 905.4 across the two funnels: bob held Power Play (CR 103.1c's
 -- card) back in his sideboard at the start, beside a Mountain, and a game built
@@ -1379,9 +1379,9 @@ supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
 -- in whether he takes the offer.
 sideboardConspiracySpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 sideboardConspiracySpec s registry = Spec.describe s "conspiracies from the sideboard" $ do
-  -- CR 727.1 / 727.1a then CR 103.1c: alice restarts with Karn Liberated, so
+  -- CR 728.1 / 728.1a then CR 103.1c: alice restarts with Karn Liberated, so
   -- she starts the new game unless bob puts Power Play in.
-  Spec.it s "CR 727.1 / 315.2 a restart offers a conspiracy left in the sideboard" $ do
+  Spec.it s "CR 728.1 / 315.2 a restart offers a conspiracy left in the sideboard" $ do
     karn <- S.printingOf s registry "Karn Liberated"
     board <- conspiracyBoard s registry
     let (karnId, withKarn) = S.addPermanent karn S.alice board
@@ -1394,13 +1394,13 @@ sideboardConspiracySpec s registry = Spec.describe s "conspiracies from the side
     Spec.assertEqWith s "taken, it is in his command zone" (cardNames (Game.zoneMembers Zone.Command S.bob taken) taken) ["Power Play"]
     Spec.assertEqWith s "CR 103.1c so bob starts the new game" (GameState.turnOrder taken) [S.bob, S.alice]
     Spec.assertEqWith s "CR 400.11b and his sideboard holds only the Mountain" (poolNames S.bob taken) [("Mountain", 1)]
-    Spec.assertEqWith s "declined, CR 727.1a alice starts it" (GameState.turnOrder declined) [S.alice, S.bob]
+    Spec.assertEqWith s "declined, CR 728.1a alice starts it" (GameState.turnOrder declined) [S.alice, S.bob]
     Spec.assertEqWith s "and Power Play stays in his sideboard" (poolNames S.bob declined) [("Mountain", 1), ("Power Play", 1)]
 
-  -- CR 729.2 / 315.2: the Shahrazad subgame offers it too, and CR 103.1c makes
-  -- bob the subgame's starting player. CR 729.5: the subgame's command zone
+  -- CR 730.2 / 315.2: the Shahrazad subgame offers it too, and CR 103.1c makes
+  -- bob the subgame's starting player. CR 730.5: the subgame's command zone
   -- does not come back, so the card is in his sideboard again afterwards.
-  Spec.it s "CR 729.2 / 315.2 a subgame offers a conspiracy left in the sideboard, which goes back to it" $ do
+  Spec.it s "CR 730.2 / 315.2 a subgame offers a conspiracy left in the sideboard, which goes back to it" $ do
     board <- conspiracyBoard s registry
     before <- withShahrazad s registry board
     let run taking = State.runState (Engine.runGameAsked (conspiring taking castAnswer) before Engine.priorityLoop) []
@@ -1410,7 +1410,7 @@ sideboardConspiracySpec s registry = Spec.describe s "conspiracies from the side
     Spec.assertEqWith s "CR 315.2 bob is offered Power Play as the subgame starts" [o | o@Offered {} <- asked] [Offered 1 S.bob ["Power Play"] 0 1]
     Spec.assertEqWith s "CR 103.1c / 103.5 taken, bob starts the subgame and declares first" (firstInSubgame asked) (Just S.bob)
     Spec.assertEqWith s "declined, alice does" (firstInSubgame declinedAsked) (Just S.alice)
-    Spec.assertEqWith s "CR 729.5 / 400.11a after the subgame, his sideboard holds it again" (poolNames S.bob after) [("Mountain", 1), ("Power Play", 1)]
+    Spec.assertEqWith s "CR 730.5 / 400.11a after the subgame, his sideboard holds it again" (poolNames S.bob after) [("Mountain", 1), ("Power Play", 1)]
     Spec.assertEqWith s "and the main game's command zone does not" (Game.zoneMembers Zone.Command S.bob after) []
 
 -- Ten Forests in each library, bob's sideboard Power Play and a Mountain.

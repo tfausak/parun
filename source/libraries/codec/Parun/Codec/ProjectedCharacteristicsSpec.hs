@@ -127,12 +127,12 @@ testCharacteristics =
       PC.mergedDonors = [minimalCharacteristics],
       -- Synthetic for halves' reason: a Mountain has no inset frame, and what
       -- the case is about is that the field carries a whole FACE through the
-      -- wire (CR 722.2b).
+      -- wire (CR 723.2b).
       PC.prepare = Just (NonEmpty.head (Card.Type.faces CardSpec.mountainCard)),
-      -- Synthetic for prepare's reason (CR 715.2b).
+      -- Synthetic for prepare's reason (CR 716.2b).
       PC.alternativeSpell = Just (NonEmpty.head (Card.Type.faces CardSpec.mountainCard)),
       -- Synthetic for prepare's reason: a Mountain is no prototype card (CR
-      -- 718.2a).
+      -- 719.2a).
       PC.prototyped = True,
       -- Two empty modes, off the default of one (CR 707.2).
       PC.spell = Face.Type.defaultSpell {Modal.modes = Modal.modes (Face.Type.defaultSpell :: Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) <> Modal.modes Face.Type.defaultSpell},

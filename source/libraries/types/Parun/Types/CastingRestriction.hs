@@ -39,7 +39,7 @@ data CastingRestriction
     -- by turn independently of which window it is.
     --
     -- The PhaseSelector.CombatPhase window's producer is Mandate of Peace, whose
-    -- CR 724.2 clause is Parun.Types.Effect's EndCombatPhase; Parun.TurnSpec's
+    -- CR 725.2 clause is Parun.Types.Effect's EndCombatPhase; Parun.TurnSpec's
     -- "EndTheCombatPhase" group asserts both directions of the rider on one
     -- board, and Parun.Engine.Activate's Jade Statue cases keep the same
     -- Parun.Engine.Turn.inWindow containment honest on the activation side. The

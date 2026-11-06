@@ -6,10 +6,10 @@ import qualified Parun.Types.Prompt as Prompt
 -- what the engine actually suspends on, so every question reaches its answerer
 -- knowing which game it came from (#153).
 --
--- CR 729.1a: a subgame is "a completely separate Magic game", and the main game
+-- CR 730.1a: a subgame is "a completely separate Magic game", and the main game
 -- "is temporarily discontinued while the subgame is in progress". Both games run
 -- through this one channel, so without the tag a subgame's question is
--- indistinguishable from a main-game one -- and CR 723.4 makes that distinction
+-- indistinguishable from a main-game one -- and CR 724.4 makes that distinction
 -- load-bearing for an interface, since information about cards OUTSIDE the game
 -- is visible only to the player being controlled and not to their controller.
 --
@@ -23,7 +23,7 @@ import qualified Parun.Types.Prompt as Prompt
 -- (the scenario driver, chance, Parun.Play.Protocol) read. A seat is handed
 -- only its view, a Parun.Types.PlayerView in each game's place: in process
 -- through Parun.Engine.Driver.seated, over the line through
--- Parun.Play.Protocol (CR 400.2, 723.4).
+-- Parun.Play.Protocol (CR 400.2, 724.4).
 --
 -- 'Prompt' is deliberately untouched: it stays the vocabulary of questions, the
 -- Parun.Engine.Replay transcript stays keyed on it, and an answerer that does not
@@ -43,7 +43,7 @@ data Asked g r = MkAsked
     prompt :: Prompt.Prompt r
   }
 
--- Record that this question was raised inside a subgame of `parent` (CR 729.1a).
+-- Record that this question was raised inside a subgame of `parent` (CR 730.1a).
 --
 -- Applied by Engine.playSubgame to every instruction of the subgame's program at
 -- once, so a question from N levels down is wrapped N times, innermost parent
@@ -51,7 +51,7 @@ data Asked g r = MkAsked
 under :: g -> Asked g r -> Asked g r
 under parent asked = asked {enclosing = parent : enclosing asked}
 
--- CR 729.1a: the main game, the one every other level is nested inside. The
+-- CR 730.1a: the main game, the one every other level is nested inside. The
 -- asking game itself when nothing encloses it.
 mainGame :: Asked g r -> g
 mainGame asked = case enclosing asked of

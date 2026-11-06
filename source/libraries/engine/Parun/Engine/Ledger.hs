@@ -44,8 +44,8 @@ discrepancies before after = case logBetween before after of
 -- | The entries logged between two states: the later log past the earlier one,
 -- across at most one turn handoff (Parun.Engine.Engine.handoffTurn moves the
 -- log to GameState.eventsLastTurn). Nothing where the earlier log is not a
--- prefix -- a reversal cut it (CR 733.1), or Parun.Engine.Cost rewrote it --
--- or the two are different games (CR 727.1, 729.1a) or turns further apart.
+-- prefix -- a reversal cut it (CR 734.1), or Parun.Engine.Cost rewrote it --
+-- or the two are different games (CR 728.1, 730.1a) or turns further apart.
 logBetween :: GameState.GameState -> GameState.GameState -> Maybe (Seq.Seq LoggedEvent.LoggedEvent)
 logBetween before after
   | GameState.gameNumber before /= GameState.gameNumber after = Nothing

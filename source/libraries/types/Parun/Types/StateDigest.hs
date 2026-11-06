@@ -7,7 +7,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.PastActivation as PastActivation
 
--- | CR 732.3: a game state as Parun.Engine.Fragmented.digest leaves it for
+-- | CR 733.3: a game state as Parun.Engine.Fragmented.digest leaves it for
 -- comparison, its object ids and timestamps renumbered by rank (CR 400.7).
 -- Ordered by a few cheap, id-free fields before the canonical text, so two
 -- states that differ in who holds priority, how much is on the stack or the

@@ -168,14 +168,14 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PermanentsDealCombatDamageToPlayer (PermanentsDealCombatDamageToPlayer.MkPermanentsDealCombatDamageToPlayer (Filter.And [Filter.HasCardType CardType.Artifact, Filter.HeldBy Holder.Controller PlayerRelation.You]) PlayerRelation.AnyPlayer False))
       " {\"type\":\"PermanentsDealCombatDamageToPlayer\",\"value\":{\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Artifact\"},{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}]},\"recipient\":\"AnyPlayer\"}} "
-  -- CR 725.2: a creature dealt combat damage to the monarch.
+  -- CR 726.2: a creature dealt combat damage to the monarch.
   Spec.it s "CreatureDealtCombatDamageToMonarch" $
     Common.assertCodec
       s
       TriggerCondition.codec
       TriggerCondition.CreatureDealtCombatDamageToMonarch
       " {\"type\":\"CreatureDealtCombatDamageToMonarch\"} "
-  -- CR 726.2: one or more creatures dealt combat damage to the player who has the
+  -- CR 727.2: one or more creatures dealt combat damage to the player who has the
   -- initiative, and a player took the initiative.
   Spec.it s "CreaturesDealtCombatDamageToInitiative" $
     Common.assertCodec
@@ -365,7 +365,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.Opponent (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)) Batching.OneOrMore TriggerFrequency.EveryTime))
       " {\"type\":\"LifeChanges\",\"value\":{\"direction\":\"Lost\",\"player\":\"Opponent\",\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}},\"batching\":\"OneOrMore\"}} "
-  -- CR 714.2b's chapter III; Parun.Codec.CounterTriggerSpec covers the
+  -- CR 715.2b's chapter III; Parun.Codec.CounterTriggerSpec covers the
   -- payload's other keys.
   Spec.it s "CountersChange round-trips its payload" $
     Common.assertCodec
@@ -373,7 +373,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Lore (CounterMotion.Put PlayerRelation.AnyPlayer) CounterHolder.Self (Just 3) CounterGrouping.EachPermanent))
       " {\"type\":\"CountersChange\",\"value\":{\"kind\":{\"type\":\"Lore\"},\"motion\":{\"type\":\"Put\",\"value\":\"AnyPlayer\"},\"threshold\":3}} "
-  -- CR 716.2a. The payload is the bar's printed level number and nothing else:
+  -- CR 717.2a. The payload is the bar's printed level number and nothing else:
   -- the ability is printed on the Class whose level changes, so there is nothing
   -- to select among.
   Spec.it s "SelfBecomesClassLevel round-trips its level" $
@@ -460,7 +460,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.SelfHalfUnlocked (CardName.MkCardName (Text.pack "Steaming Sauna")))
       " {\"type\":\"SelfHalfUnlocked\",\"value\":\"Steaming Sauna\"} "
-  -- CR 701.27e: Blightreaper Thallid's Self subject and the face it names.
+  -- CR 701.27f: Blightreaper Thallid's Self subject and the face it names.
   -- Parun.Codec.TransformTriggerSpec has the fields.
   Spec.it s "Transforms round-trips the face a Self subject names" $
     Common.assertCodec
@@ -621,7 +621,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.SagaFinalChapterTriggers PlayerRelation.Opponent)
       " {\"type\":\"SagaFinalChapterTriggers\",\"value\":\"Opponent\"} "
-  -- CR 725.1's crowning. Both relations, since the PlayerRelation is the whole
+  -- CR 726.1's crowning. Both relations, since the PlayerRelation is the whole
   -- payload and the whole difference between "whenever you become the monarch"
   -- and "whenever an opponent becomes the monarch", so a codec that dropped it
   -- would silently turn one printing into the other.

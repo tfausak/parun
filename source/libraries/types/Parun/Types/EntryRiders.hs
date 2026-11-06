@@ -28,7 +28,7 @@ import qualified Parun.Types.TapState as TapState
 -- Each rider is meaningful only in the zone its own rule scopes it to, and every
 -- other destination carries the default: `tapped`, `attacking`, `counters`,
 -- `transformed` and `under` are battlefield-only (CR 110.5d, CR 508.4, CR
--- 122.6, CR 712.14a, CR 110.2a), `exiledFaceDown` is exile-only (CR 406.3),
+-- 122.6, CR 712.11a, CR 110.2a), `exiledFaceDown` is exile-only (CR 406.3),
 -- and `faceDown` is battlefield-only (CR 708.3).
 -- A card stating one on the wrong zone states something nothing reads, which
 -- Parun.CardSpec lints.
@@ -38,8 +38,8 @@ import qualified Parun.Types.TapState as TapState
 -- Attacking is not a status at all but combat state (CR 506.3, CR 508.4), and a
 -- creature put onto the battlefield attacking is NOT tapped by that fact -- CR
 -- 508.1f taps only creatures declared as attackers, and CR 508.4c exempts these
--- from declaration. Transformed is neither: CR 712.14a makes it a question of
--- WHICH FACE the card enters showing, which CR 712.14 otherwise answers with the
+-- from declaration. Transformed is neither: CR 712.11a makes it a question of
+-- WHICH FACE the card enters showing, which CR 712.11 otherwise answers with the
 -- front one.
 --
 -- `attacking` is an EntryAttack rather than an AttackTarget because the effect
@@ -69,17 +69,17 @@ import qualified Parun.Types.TapState as TapState
 -- token. Parun.CardSpec's corpus lint fences the DESTINATION instead: on any zone
 -- but the battlefield the rider says something nothing reads.
 --
--- `transformed` is a Bool rather than a face name for the reason CR 712.14a
+-- `transformed` is a Bool rather than a face name for the reason CR 712.11a
 -- states: "If a spell or ability puts a double-faced card onto the battlefield
 -- 'transformed' or 'converted', it enters the battlefield with its BACK face
 -- up." The effect names no face -- which face that is falls out of the card's
 -- layout (Parun.Engine.Card.backFace), and Parun.Engine.Event.changeZoneEntering
 -- is where the rule is applied. That is also what keeps this rider clear of CR
--- 712.11b's choice of face when casting a modal double-faced card: a choice is
+-- 712.8b's choice of face when casting a modal double-faced card: a choice is
 -- offered to the player as a list of castable faces, while this is an
 -- instruction the effect carries and the player is never asked about.
 --
--- Meaningful only for a MoveToZone of a CARD, which is CR 712.14a's own scope --
+-- Meaningful only for a MoveToZone of a CARD, which is CR 712.11a's own scope --
 -- a token is not a card (CR 111.1), and no rule puts a double-faced token onto
 -- the battlefield transformed (CR 707.8a decides a copy token's face by copy
 -- rules instead). So Parun.Engine.Resolve's Create arm does not read this rider,
@@ -250,7 +250,7 @@ data EntryRiders count ability = MkEntryRiders
 -- effect really does say otherwise (CR 110.5b for tapped, CR 508.4 for a
 -- creature put onto the battlefield attacking, CR 509.4 for one put onto the
 -- battlefield blocking, CR 303.4i for the object it arrives attached to, CR
--- 712.14 for the front face a
+-- 712.11 for the front face a
 -- double-faced card enters showing by default, CR 122.6 for the counters an
 -- object enters with, CR 110.2a for who it enters under, CR 406.3 for an exiled
 -- card being kept face up, CR 110.5b for a permanent entering face up, CR

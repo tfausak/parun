@@ -4,9 +4,9 @@ import qualified Parun.Types.CardIdentity as CardIdentity
 import qualified Parun.Types.PrintingId as PrintingId
 import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristics
 
--- | CR 108.2 / 730.2 / 701.42a: one card representing a merged or melded
+-- | CR 108.2 / 731.2 / 701.42a: one card representing a merged or melded
 -- permanent -- the card-level facts Parun.Types.Object keeps across CR 400.7,
--- which CR 712.21's and CR 730.3's split hands back to that card alone.
+-- which CR 713.8's and CR 731.3's split hands back to that card alone.
 data ComponentCard = MkComponentCard
   { printing :: PrintingId.PrintingId,
     -- | CR 108.3: Object.identity of the card, Nothing where the object had none.

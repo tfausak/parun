@@ -539,15 +539,15 @@ data Filter keyword
     -- a player offered their own foretold card by that rule is still refused it
     -- by Riftsweeper's own words.
     IsExiledFaceDown
-  | -- | CR 701.27g: the candidate is a "transformed permanent" -- a double-faced
+  | -- | CR 701.27h: the candidate is a "transformed permanent" -- a double-faced
     -- permanent on the battlefield with its back face up. Both of the rule's
     -- exclusions are in the answer: a permanent showing its front face is never
     -- transformed however it turned before, and neither is one represented by
     -- more than one card.
     --
-    -- The second exclusion's other half, CR 730.2's merged permanent, is the
+    -- The second exclusion's other half, CR 731.2's merged permanent, is the
     -- same read: Parun.Engine.Game.componentsOf answers for both. Parun.MeldSpec's
-    -- "CR 701.27g a melded permanent is not a transformed permanent" is what
+    -- "CR 701.27h a melded permanent is not a transformed permanent" is what
     -- proves the melded half; no board in the suite puts a double-faced
     -- component under a merged permanent, so the merged half is a regression
     -- fence rather than a proof.
@@ -633,12 +633,12 @@ data Filter keyword
     -- -- Hallar's "if that spell was kicked", Henzie "Toolbox" Torre's "blitz
     -- costs you pay".
     Paid (KeywordDesignator.KeywordDesignator keyword)
-  | -- | CR 718.3c / 718.3d: the candidate is a prototyped spell or a permanent
+  | -- | CR 719.3c / 719.3d: the candidate is a prototyped spell or a permanent
     -- that was one, a copy of either included. Not Paid above: a Clone of a
-    -- kicked permanent was not kicked (CR 707.2), where CR 718.3d makes a copy
+    -- kicked permanent was not kicked (CR 707.2), where CR 719.3d makes a copy
     -- of a prototyped permanent answer as one.
     IsPrototyped
-  | -- | CR 722.3c / 722.3d: the candidate is a spell cast as a prepare spell, a
+  | -- | CR 723.3c / 723.3d: the candidate is a spell cast as a prepare spell, a
     -- copy of one included -- Codie, Ravenous Codex's "a prepared spell".
     IsPreparedSpell
   | And [Filter keyword]

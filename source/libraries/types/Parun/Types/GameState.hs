@@ -95,9 +95,9 @@ data GameState = MkGameState
     command :: Set.Set ObjectId.ObjectId,
     -- | CR 400.1 / 407: the ante zone, shared rather than per-player.
     ante :: Set.Set ObjectId.ObjectId,
-    -- | CR 717.2 / 901.3 / 904.3 and the Unstable FAQ: each player's
+    -- | CR 718.2 / 901.3 / 904.3 and the Unstable FAQ: each player's
     -- supplementary decks, keyed by which deck (Parun.Types.SideDeck), head on
-    -- top. Their cards are in the command zone (Object.zone, CR 717.2 / 901.4 /
+    -- top. Their cards are in the command zone (Object.zone, CR 718.2 / 901.4 /
     -- 904.4) but not in `command`, which holds what is face up there. A player
     -- keyed with an empty deck is one who brought that deck
     -- (Parun.Engine.Archenemy.isArchenemy). Parun.Engine.Game.overSideDecks drops
@@ -110,10 +110,10 @@ data GameState = MkGameState
     -- triggered. Written by Parun.Engine.Game.putOnStack, cleared with `events`.
     stackedIn :: Map.Map ObjectId.ObjectId EventGroup.EventGroup,
     players :: Map.Map PlayerId.PlayerId Player.Player,
-    -- | CR 729.4: the cards outside this game that sit in a game on hold; empty
+    -- | CR 730.4: the cards outside this game that sit in a game on hold; empty
     -- for a game nobody is nested inside.
     outsideObjects :: Map.Map ObjectId.ObjectId OutsideObject.OutsideObject,
-    -- | CR 729.4a: the outer ids this game has brought in, in crossing order,
+    -- | CR 730.4a: the outer ids this game has brought in, in crossing order,
     -- read by Parun.Engine.Setup.applyCrossings.
     broughtIn :: Seq.Seq ObjectId.ObjectId,
     -- | CR 800.4a / 407.3: each card that left the game with a departed owner
@@ -128,7 +128,7 @@ data GameState = MkGameState
     -- its EventGroup (CR 608.2f's single event). Cleared at turn handoff
     -- (Engine.handoffTurn), never by a reader. A new reader of it as history
     -- owes its construct's arm in Parun.Engine.Interchangeable.Mentions a
-    -- Parun.Types.HistoryRead (CR 732.3).
+    -- Parun.Types.HistoryRead (CR 733.3).
     events :: Seq.Seq LoggedEvent.LoggedEvent,
     -- | The group Event.recordEvent stamps on the next event; advanced per
     -- record except inside an Event.simultaneously bracket. Not reset at turn
@@ -209,7 +209,7 @@ data GameState = MkGameState
     -- (`boardBeforeEvent`). Its own copy of this field and of the filed boards is
     -- empty.
     boardAtControlSample :: Maybe GameState,
-    -- | CR 603.8 across CR 724.1c's or 724.2c's check: the board before each
+    -- | CR 603.8 across CR 725.1c's or 725.2c's check: the board before each
     -- pass of it that performed a state-based action, oldest first, which the
     -- next settle opens with (Parun.Engine.Engine.performSettle). Each entry's
     -- own copy of this field is empty.
@@ -268,7 +268,7 @@ data GameState = MkGameState
     -- read outside any object's environment, its recipient possibly being a
     -- player. Empty at every priority window.
     ambientAmounts :: Map.Map SlotName.SlotName Natural.Natural,
-    -- | CR 729.5: the slots a resolution filled after its own object ceased to
+    -- | CR 730.5: the slots a resolution filled after its own object ceased to
     -- exist, keyed by that object's id; the fallback Parun.Engine.Resolve reads
     -- for an object it can no longer find. Never pruned.
     detachedBindings :: Map.Map ObjectId.ObjectId (Map.Map SlotName.SlotName Binding.Binding),
@@ -355,8 +355,8 @@ data GameState = MkGameState
     turnNumber :: Natural.Natural,
     -- | CR 500.7 / 805.4: how many turns each player has begun this game, extra
     -- turns included; under the shared team turns option a team's turn is each
-    -- member's. Kept across turns; a restart (CR 727.1) and a subgame (CR
-    -- 729.2) begin it again. Turn.turnsBegun reads it.
+    -- member's. Kept across turns; a restart (CR 728.1) and a subgame (CR
+    -- 730.2) begin it again. Turn.turnsBegun reads it.
     turnsBegun :: Map.Map PlayerId.PlayerId Natural.Natural,
     -- | CR 500.12 / 502.1: every permanent as this turn began, phased-out ones
     -- being none (CR 702.26b); Nothing until Parun.Engine.Engine.runStep files
@@ -366,12 +366,12 @@ data GameState = MkGameState
     -- comparison among them.
     permanentsAsTurnBegan :: Maybe (Map.Map ObjectId.ObjectId LastKnown.LastKnown),
     result :: Maybe Result.Result,
-    -- | CR 727.4: raised while a restart has replaced this game underneath the
+    -- | CR 728.4: raised while a restart has replaced this game underneath the
     -- frames still running it; Engine.runStep lowers it as turn 1's untap step
     -- begins.
     restartSignal :: RestartSignal.RestartSignal,
-    -- | CR 724.1: raised while an effect that ends the turn unwinds through the
-    -- frames running the ended step; Engine.runStep lowers it as CR 724.1d's
+    -- | CR 725.1: raised while an effect that ends the turn unwinds through the
+    -- frames running the ended step; Engine.runStep lowers it as CR 725.1d's
     -- cleanup step begins.
     endTurnSignal :: EndTurnSignal.EndTurnSignal,
     nextObjectId :: ObjectId.ObjectId,
@@ -456,7 +456,7 @@ data GameState = MkGameState
     -- picked them, which a later pick's prompt carries
     -- (Parun.Engine.Resolve.Arms.Zones.forEach).
     loopPicks :: Maybe (Seq.Seq (PlayerId.PlayerId, Set.Set ObjectId.ObjectId)),
-    -- | CR 732.3: Nothing outside a Parun.Types.RepeatIf; inside one, its run's
+    -- | CR 733.3: Nothing outside a Parun.Types.RepeatIf; inside one, its run's
     -- picks and refusals (Parun.Engine.Resolve.Arms.Zones.repeatIf).
     repeatPicks :: Maybe RepeatPicks.RepeatPicks,
     -- | CR 401.6: each library's top card as the last settle found it revealed
@@ -515,34 +515,34 @@ data GameState = MkGameState
     -- than a set, because Parun.Engine.Event.withinTriggerLimit COUNTS these
     -- records exactly as it counts the log's (CR 113.2c).
     triggeredThisGame :: Seq.Seq AbilityTriggered.AbilityTriggered,
-    -- | CR 723.1: pending player-controlling effects, keyed by the player to be
-    -- controlled; last created wins (CR 723.1a), promoted into `control` at
-    -- that player's turn (CR 723.1b) with the timestamp of its creation.
+    -- | CR 724.1: pending player-controlling effects, keyed by the player to be
+    -- controlled; last created wins (CR 724.1a), promoted into `control` at
+    -- that player's turn (CR 724.1b) with the timestamp of its creation.
     pendingControl :: Map.Map PlayerId.PlayerId PlayerControl.PlayerControl,
-    -- | CR 723: who is being controlled right now, keyed by the controlled
+    -- | CR 724: who is being controlled right now, keyed by the controlled
     -- player. Keyed rather than a single slot for the active player because CR
-    -- 723.2's control is not the active player's and does not last a turn
-    -- (see #881); each row carries its own lifetime, and CR 723.3 is why a row
+    -- 724.2's control is not the active player's and does not last a turn
+    -- (see #881); each row carries its own lifetime, and CR 724.3 is why a row
     -- says nothing about who the active player is.
     --
-    -- A STACK per player, oldest first, because CR 723.1a's "overwrite" is the
+    -- A STACK per player, oldest first, because CR 724.1a's "overwrite" is the
     -- continuous-effect sense: both effects exist and the last one CREATED is
-    -- the one that works, so a rule 723.2 control laid over a live rule 723.1
+    -- the one that works, so a rule 724.2 control laid over a live rule 724.1
     -- one must give that one back when it lapses; see #3351. Never empty -- a
     -- player with no control has no key.
     control :: Map.Map PlayerId.PlayerId (NonEmpty.NonEmpty PlayerControl.PlayerControl),
-    -- | CR 725.1 / 725.3: the monarch, a single game-wide designation.
+    -- | CR 726.1 / 726.3: the monarch, a single game-wide designation.
     monarch :: Maybe PlayerId.PlayerId,
-    -- | CR 726.1 / 726.3: the initiative, the monarch's sibling designation.
+    -- | CR 727.1 / 727.3: the initiative, the monarch's sibling designation.
     initiative :: Maybe PlayerId.PlayerId,
-    -- | CR 731.1: the game's day\/night designation; Nothing is the rule's "neither",
+    -- | CR 732.1: the game's day\/night designation; Nothing is the rule's "neither",
     -- unreachable once either has been gained. Written only by
     -- Parun.Engine.Daytime.
     daytime :: Maybe Daytime.Daytime,
-    -- | CR 502.2 / 731.2: how many spells the previous turn's active player cast
+    -- | CR 502.2 / 732.2: how many spells the previous turn's active player cast
     -- that turn, snapshotted at handoff from the outgoing log, which is cleared
     -- there. Under the shared team turns option, the most any one player on the
-    -- previous active team cast (CR 731.2a).
+    -- previous active team cast (CR 732.2a).
     spellsCastLastTurn :: Natural.Natural,
     -- | CR 608.2i: the turn just ended's `events`, kept at the handoff. The
     -- per-seat view reads it, and so does every "last turn" tally
@@ -618,18 +618,18 @@ data GameState = MkGameState
     -- | CR 807.4: a Grand Melee game's turn markers in number order, written
     -- by Parun.Engine.GrandMelee; empty in every other game.
     turnMarkers :: [TurnMarker.TurnMarker],
-    -- | CR 100.6a / 729.1a: how many subgames have begun this match, counting
-    -- one in progress. The only match-scoped field: CR 729.1b keeps a subgame's
+    -- | CR 100.6a / 730.1a: how many subgames have begun this match, counting
+    -- one in progress. The only match-scoped field: CR 730.1b keeps a subgame's
     -- effects out of the main game, but a match is a series of games, so this
     -- is inherited by the subgame (Setup.subgameStateFrom) and kept across CR
-    -- 727.1's restart, which begins a new game of the SAME match. Parun models
+    -- 728.1's restart, which begins a new game of the SAME match. Parun models
     -- no match beyond it, so a game built by Setup.emptyGame starts at 0.
     subgamesThisMatch :: Natural.Natural,
-    -- | CR 727.1 / 729.1a: how many games have begun this match, counting this
+    -- | CR 728.1 / 730.1a: how many games have begun this match, counting this
     -- one, every subgame and every restarted game; match-scoped as
     -- `subgamesThisMatch` is, and carried as it is.
     gamesThisMatch :: Natural.Natural,
-    -- | CR 727.1 / 729.1a: which of `gamesThisMatch` this game is, so a
+    -- | CR 728.1 / 730.1a: which of `gamesThisMatch` this game is, so a
     -- subgame's or a restarted game's turn numbers, which begin again at 1,
     -- are not taken for this game's. Parun.Engine.PlayerView shows it.
     gameNumber :: Natural.Natural,
@@ -645,7 +645,7 @@ data GameState = MkGameState
     -- | CR 706.2b: whether an ability activated inside that step asked for the
     -- die to be rerolled (Goblin Bookie).
     rerollRequested :: Bool,
-    -- | CR 733.1: why each player's cast, activation or combat declaration
+    -- | CR 734.1: why each player's cast, activation or combat declaration
     -- was last reversed, since that player last chose an action at priority
     -- (Parun.Engine.Engine.priorityLoop) or made a declaration
     -- (Parun.Engine.Combat). Parun.Engine.PlayerView shows a seat its own.

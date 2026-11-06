@@ -3,7 +3,7 @@ module Parun.Types.Completion where
 import qualified Parun.Types.Announcement as Announcement
 import qualified Parun.Types.StateDigest as StateDigest
 
--- | CR 732.1: what an activation or a cast was completed with, the part of
+-- | CR 733.1: what an activation or a cast was completed with, the part of
 -- its game choice Action.Activate, Action.ActivateManaAbility and Action.Cast
 -- do not carry.
 -- Loop-local (Parun.Types.LoopTrail), so no codec.

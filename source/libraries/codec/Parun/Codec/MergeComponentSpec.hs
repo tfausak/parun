@@ -29,15 +29,15 @@ spec s = Spec.describe s "Parun.Codec.MergeComponent" $ do
       MergeComponent.codec
       (MergeComponent.OfCard (ComponentCard.MkComponentCard (PrintingId.MkPrintingId 18) (Just (CardIdentity.MkCardIdentity 4 (PlayerId.MkPlayerId 1))) (Just ProjectedCharacteristicsSpec.minimalCharacteristics)))
       " {\"type\":\"OfCard\",\"value\":{\"printing\":18,\"identity\":{\"serial\":4,\"startingOwner\":1},\"duplicate\":{\"names\":[\"Mountain\"],\"cardTypes\":[\"Land\"]}}} "
-  -- CR 111.3 / 730.2d: a DIFFERENT tag on the same payload shape, which is the
-  -- whole of what rule 730.2d asks of a component.
+  -- CR 111.3 / 731.2d: a DIFFERENT tag on the same payload shape, which is the
+  -- whole of what rule 731.2d asks of a component.
   Spec.it s "OfToken" $
     Common.assertCodec
       s
       MergeComponent.codec
       (MergeComponent.OfToken (PrintingId.MkPrintingId 12))
       " {\"type\":\"OfToken\",\"value\":12} "
-  -- CR 701.42a / 712.8g: the arm whose payload is not a printing at all -- the
+  -- CR 701.42a / 713.5c: the arm whose payload is not a printing at all -- the
   -- combined back face beside the two cards representing the component.
   Spec.it s "OfMeld" $
     Common.assertCodec

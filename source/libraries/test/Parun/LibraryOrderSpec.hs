@@ -1477,7 +1477,7 @@ createEmblemSpec s registry = Spec.describe s "CreateEmblem" $ do
 
 becomeMonarchSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 becomeMonarchSpec s registry = Spec.describe s "BecomeMonarch" $ do
-  Spec.it s "CR 725 BecomeMonarch TheController makes the resolver the monarch" $ do
+  Spec.it s "CR 726 BecomeMonarch TheController makes the resolver the monarch" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (src, gs0) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
         after = S.runPure S.identityAnswer gs0 (Resolve.applyEffect src src S.alice Map.empty Map.empty (Effect.BecomeMonarch MonarchTarget.TheController))
@@ -1546,10 +1546,10 @@ denethorBoard s registry = do
         [] -> ActivatedAbility.MkActivatedAbility (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []) [] 0 Nothing (Mint.oneModeOf Map.empty Seq.empty) [] (Activator.Related PlayerRelation.You) Nothing Nothing Nothing
   pure (ability, srcId, S.withMonarch S.alice (gs1 {GameState.priority = Just S.alice}))
 
--- CR 725.1: "The monarch is a designation a player can have. There is no monarch
+-- CR 726.1: "The monarch is a designation a player can have. There is no monarch
 -- in a game until an effect instructs a player to become the monarch." Every
 -- BecomeMonarch before this one derived the player it crowned -- the resolving
--- controller, or CR 725.2's controller of the damaging creature. Denethor is the
+-- controller, or CR 726.2's controller of the damaging creature. Denethor is the
 -- first card in the pool whose crown reads a TARGET slot, so the player it names
 -- is the activator's CHOICE, announced under CR 601.2c and re-checked under CR
 -- 608.2b like any other target.
@@ -1560,14 +1560,14 @@ denethorBoard s registry = do
 -- and the damage are independent choices that may or may not land on one player.
 targetedMonarchSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 targetedMonarchSpec s registry = Spec.describe s "TargetedMonarch" $ do
-  Spec.it s "CR 725.1/725.3 the crown goes to the TARGETED player, not the controller and not the damage's target" $ do
+  Spec.it s "CR 726.1/726.3 the crown goes to the TARGETED player, not the controller and not the damage's target" $ do
     (ability, srcId, gs0) <- denethorBoard s registry
     let answers = Map.fromList [(denethorCrownSlot, Set.singleton (Recipient.ToPlayer S.bob)), (denethorDamageSlot, Set.singleton (Recipient.ToPlayer S.carol))]
         act = do Activate.activateAbility S.alice srcId ability; Stack.resolveTop
         ((_, after), asked) = State.runState (Engine.runGame (answerSlots answers) gs0 act) []
     Spec.assertEqWith s "alice held the crown going in" (GameState.monarch gs0) (Just S.alice)
     Spec.assertEqWith s "CR 601.2c asked once, for both slots, and got the map fed in" asked [answers]
-    Spec.assertEqWith s "CR 725.3 the crown moved to bob, the targeted player" (GameState.monarch after) (Just S.bob)
+    Spec.assertEqWith s "CR 726.3 the crown moved to bob, the targeted player" (GameState.monarch after) (Just S.bob)
     Spec.assertBool s (elem (GameEvent.BecameMonarch S.bob) (S.eventsOf after)) "and the crowning event names bob"
     Spec.assertEqWith s "CR 115.4 carol, the any-target, took the 3" (S.lifeOf S.carol after) (Just 17)
     Spec.assertEqWith s "bob took none of it" (S.lifeOf S.bob after) (Just 20)
@@ -1586,16 +1586,16 @@ targetedMonarchSpec s registry = Spec.describe s "TargetedMonarch" $ do
   -- TheController line is swept the same way, six cards writing that arm (Palace
   -- Jailer, Queen Marchesa, Custodi Lich, Dawnglade Regent, Entourage of Trest,
   -- Marchesa's Decree). Kept rather than deleted for the one line the lint cannot
-  -- reach: CR 725.2's crown steal is a rules-minted ability, so
+  -- reach: CR 726.2's crown steal is a rules-minted ability, so
   -- ControllerOfSource comes from Parun.Engine.Monarch.crownSteal rather than from
   -- any card file, and an arm wrongly REPORTING a slot for it would be swept by
   -- nothing. That is the arm-level pin; the first two lines are a locality
   -- convenience, keeping all three answers in one place.
-  Spec.it s "CR 725.1 slotsOf reads the targeted monarch's slot, and only that arm's" $ do
+  Spec.it s "CR 726.1 slotsOf reads the targeted monarch's slot, and only that arm's" $ do
     let slot = SlotName.MkSlotName (Text.pack "player")
     Spec.assertEqWith s "the targeted arm names its slot" (Resolve.slotsOf (Effect.BecomeMonarch (MonarchTarget.InSlot slot))) (Map.singleton slot SlotArity.One)
     Spec.assertEqWith s "the resolving controller names none" (Resolve.slotsOf (Effect.BecomeMonarch MonarchTarget.TheController)) Map.empty
-    Spec.assertEqWith s "and neither does CR 725.2's crown steal" (Resolve.slotsOf (Effect.BecomeMonarch MonarchTarget.ControllerOfSource)) Map.empty
+    Spec.assertEqWith s "and neither does CR 726.2's crown steal" (Resolve.slotsOf (Effect.BecomeMonarch MonarchTarget.ControllerOfSource)) Map.empty
 
 -- Palace Jailer's ruling (Scryfall, 2021-03-19): "If you're not the monarch as
 -- Palace Jailer's second ability resolves, the creature will be exiled until
@@ -1612,7 +1612,7 @@ exileUntilMonarchSpec s registry = Spec.describe s "ExileUntilMonarch" $ do
   -- Reachable at two seats: CR 603.3b lets alice order Palace Jailer's two
   -- entry triggers, so the exile can resolve BEFORE she becomes the monarch,
   -- while bob still holds the crown.
-  Spec.it s "CR 725 an exile that resolves while an opponent is already the monarch does not return at once" $ do
+  Spec.it s "CR 726 an exile that resolves while an opponent is already the monarch does not return at once" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (oid, base0) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
         base = base0 {GameState.monarch = Just S.bob}
@@ -1634,7 +1634,7 @@ exileUntilMonarchSpec s registry = Spec.describe s "ExileUntilMonarch" $ do
   -- The whole arc, still two seats. The crown must actually CHANGE HANDS to an
   -- opponent before the creature comes back, and alice taking it herself in
   -- between must not discharge the watch.
-  Spec.it s "CR 725 the exile returns when a NEW monarch is crowned who is an opponent" $ do
+  Spec.it s "CR 726 the exile returns when a NEW monarch is crowned who is an opponent" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (oid, base0) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
         base = base0 {GameState.monarch = Just S.bob}
@@ -1654,17 +1654,17 @@ exileUntilMonarchSpec s registry = Spec.describe s "ExileUntilMonarch" $ do
         -- where a crowning marks the watches now -- a bare field write is not a
         -- crowning at all.
         alicesCrown = snd (Engine.runGamePure S.identityAnswer (Monarch.crown S.alice exiled) (MoveDuration.returnDue (pure ())))
-        -- bob deals combat damage to the monarch (CR 725.3) and takes it back.
+        -- bob deals combat damage to the monarch (CR 726.3) and takes it back.
         bobsCrown = snd (Engine.runGamePure S.identityAnswer (Monarch.crown S.bob alicesCrown) (MoveDuration.returnDue (pure ())))
     Spec.assertEqWith s "alice holding the crown does not discharge the watch" (Map.size (GameState.movedUntil alicesCrown)) 1
     Spec.assertEqWith s "nor return the creature" (Set.size (GameState.battlefield alicesCrown)) 0
     Spec.assertEqWith s "bob retaking it does return the creature" (Set.size (GameState.battlefield bobsCrown)) 1
     Spec.assertEqWith s "and discharges the watch" (Map.size (GameState.movedUntil bobsCrown)) 0
-  -- The crown VANISHING is not an opponent becoming the monarch. CR 725.1's
+  -- The crown VANISHING is not an opponent becoming the monarch. CR 726.1's
   -- ruling says the game keeps exactly one monarch once it has one, and the
-  -- single way back to none is CR 725.4's last player standing leaving -- but
+  -- single way back to none is CR 726.4's last player standing leaving -- but
   -- the watch must not read "no monarch" as "not the controller" and fire.
-  Spec.it s "CR 725.1 the crown vanishing is not an opponent becoming the monarch" $ do
+  Spec.it s "CR 726.1 the crown vanishing is not an opponent becoming the monarch" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (oid, base0) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
         base = base0 {GameState.monarch = Just S.bob}
@@ -1678,7 +1678,7 @@ exileUntilMonarchSpec s registry = Spec.describe s "ExileUntilMonarch" $ do
             (Map.singleton slot (Set.singleton (Recipient.ToCreature oid)))
             (jailerExile slot)
         exiled = snd (Engine.runGamePure S.identityAnswer base exile)
-        -- CR 725.4's third sentence is the only way back to no monarch, and it
+        -- CR 726.4's third sentence is the only way back to no monarch, and it
         -- crowns nobody, so this is a bare field write by construction.
         noMonarch = snd (Engine.runGamePure S.identityAnswer exiled {GameState.monarch = Nothing} (MoveDuration.returnDue (pure ())))
     Spec.assertEqWith s "the watch is still armed" (Map.size (GameState.movedUntil noMonarch)) 1
@@ -1728,13 +1728,13 @@ exileUntilMonarchSpec s registry = Spec.describe s "ExileUntilMonarch" $ do
   -- Seer, Eomer, King of Rohan, Garland, Royal Kidnapper, Jared Carthalion, True
   -- Heir and M'Baku, Jabari Chieftain -- each crown exactly one player per
   -- resolution, so every printed sequence of two crownings has a settle between
-  -- them. Nothing in rule 725 forbids a card that crowns twice; a printing that
+  -- them. Nothing in rule 726 forbids a card that crowns twice; a printing that
   -- does replaces this one.
   --
   -- The crown ends the resolution where it began, so NO reading of the current
   -- monarch, at this settle or any later one, can see that bob held it. Only the
   -- crowning itself can.
-  Spec.it s "CR 725 a crown that goes to an opponent and back inside one resolution still frees the prisoner" $ do
+  Spec.it s "CR 726 a crown that goes to an opponent and back inside one resolution still frees the prisoner" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     plains <- S.printingOf s registry "Plains"
     palaceJailer <- S.printingOf s registry "Palace Jailer"
@@ -1783,7 +1783,7 @@ exileUntilMonarchSpec s registry = Spec.describe s "ExileUntilMonarch" $ do
     Spec.assertEqWith s "both runs resolved the spell" (length (GameState.stack toBob), length (GameState.stack toAlice)) (0, 0)
 
 -- Palace Jailer's exile as its card file spells it: CR 610.3's move with CR
--- 725's ending, out of the slot's target and into exile.
+-- 726's ending, out of the slot's target and into exile.
 jailerExile :: SlotName.SlotName -> Effect.Effect card ability
 jailerExile slot =
   Effect.MoveToZone

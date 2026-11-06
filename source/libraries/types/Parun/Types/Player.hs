@@ -19,8 +19,8 @@ data Player = MkPlayer
   { life :: Integer,
     -- | CR 103.4 / 119.1: the life total this player began the game with, fixed
     -- at setup. A shared team total's member holds the team's (CR 119.1a, 810.4,
-    -- CR 810.9a's reading of an individual's total); a restart (CR 727.1) and a
-    -- subgame (CR 729.2) set it afresh under rule 103.
+    -- CR 810.9a's reading of an individual's total); a restart (CR 728.1) and a
+    -- subgame (CR 730.2) set it afresh under rule 103.
     startingLife :: Integer,
     status :: Status.Status,
     -- | CR 122.1: player counters, counted per kind. Unlike object counters (CR
@@ -76,7 +76,7 @@ data Player = MkPlayer
     --
     -- A SET per player rather than a seat per mark on GameState, which is where
     -- the monarch lives: CR 702.131c and CR 702.195b both say "any number of
-    -- players may have [it] at the same time", where CR 725.3 makes the monarch
+    -- players may have [it] at the same time", where CR 726.3 makes the monarch
     -- unique. An absent member means the player does not have that mark, and
     -- nothing in either rule takes one back.
     designations :: Set.Set PlayerDesignation.PlayerDesignation,
@@ -177,7 +177,7 @@ data Player = MkPlayer
     -- CR 707.13's copy created outside the game did NOT land here:
     -- CR 109.1 makes it no card, so no wish may reach it, and it is an object for
     -- the one resolution that offers its cast (GameState.outsideCopies). CR
-    -- 729.4's other half -- the main game's cards, which a subgame sees as
+    -- 730.4's other half -- the main game's cards, which a subgame sees as
     -- outside it -- deliberately did NOT land here: those are objects in a game
     -- that is on hold rather than a count of printings a player set aside, so
     -- they ride Parun.Types.GameState's outsideObjects and only for as long as
@@ -185,7 +185,7 @@ data Player = MkPlayer
     -- cards (CR 123.2); they ride `stickerSheets` below.
     outsideTheGame :: Map.Map PrintingId.PrintingId Natural.Natural,
     -- | CR 123.2 / 123.2c: the sticker sheets this player brought, revealed.
-    -- Kept on the player for `dungeons`' reason: CR 727.1 and CR 729.2 rerun
+    -- Kept on the player for `dungeons`' reason: CR 728.1 and CR 730.2 rerun
     -- CR 103.2d's draw with no Deck in hand.
     stickerSheets :: Seq.Seq StickerSheet.StickerSheet,
     -- | CR 103.2d: the positions in `stickerSheets` drawn for this game. Only
@@ -233,7 +233,7 @@ data Player = MkPlayer
     -- and by the time a companion's condition could be asked again the opening hands
     -- have been drawn and the library no longer holds the deck. Written once per
     -- game -- by Parun.Engine.Setup.createDeck, and again by
-    -- Parun.Engine.Setup.startGameFromCards for CR 727.1's restart and CR 729.2's
+    -- Parun.Engine.Setup.startGameFromCards for CR 728.1's restart and CR 730.2's
     -- subgame, each a new game -- and never in between: CR 103.2a names a moment,
     -- not a state that tracks.
     --
@@ -265,7 +265,7 @@ data Player = MkPlayer
     -- An OutsideCard and not an ObjectId of this game: CR 103.2b leaves the
     -- revealed card OUTSIDE the game, where CR 400.11 gives it no object until
     -- CR 116.2g brings it in. That is a sideboard printing, or in a subgame a
-    -- main-game object (CR 729.4).
+    -- main-game object (CR 730.4).
     --
     -- ONE, which is CR 103.2b's own cap: "a player may reveal no more than one card
     -- this way".

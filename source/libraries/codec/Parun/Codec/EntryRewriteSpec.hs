@@ -98,8 +98,8 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (EntryRewrite.ChooseQuality (ChosenQuality.Colors (ChooseBetween.MkChooseBetween 2 2)))
       " {\"type\":\"ChooseQuality\",\"value\":{\"type\":\"Colors\",\"value\":{\"least\":2,\"most\":2}}} "
-  -- CR 702.155b / 714.3b: read ahead's pair of intrinsic abilities as one
-  -- rewrite, payload-free because rule 714.2d reads the bound off the Saga.
+  -- CR 702.155b / 715.3b: read ahead's pair of intrinsic abilities as one
+  -- rewrite, payload-free because rule 715.2d reads the bound off the Saga.
   Spec.it s "ReadAhead (Love Song of Night and Day)" $
     Common.assertCodec
       s
@@ -244,8 +244,8 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       EntryRewrite.Tapped
       " {\"type\":\"Tapped\"} "
-  -- CR 722.3a: the enters-prepared rewrite, payload-free because the rule fixes
-  -- the designation and CR 722.3c the copy it mints.
+  -- CR 723.3a: the enters-prepared rewrite, payload-free because the rule fixes
+  -- the designation and CR 723.3c the copy it mints.
   Spec.it s "Prepared (Pompous Battlemage)" $
     Common.assertCodec
       s

@@ -456,7 +456,7 @@ placementsOf :: Board.Board -> [Placement.Placement]
 placementsOf board = concatMap (concatMap (\(_, _, placements) -> Foldable.toList placements) . zonesOf) (NonEmpty.toList (Board.seats board))
 
 -- | A seat's zones in the order they are placed, which is creation order, each
--- supplementary deck last and in the command zone (CR 717.2 / 904.3).
+-- supplementary deck last and in the command zone (CR 718.2 / 904.3).
 zonesOf :: Seat.Seat -> [(Zone.Zone, Maybe SideDeck.SideDeck, Seq.Seq Placement.Placement)]
 zonesOf seat =
   [ (Zone.Battlefield, Nothing, Seat.battlefield seat),
@@ -556,7 +556,7 @@ placeAll registry zone deck owner placements board = case placements of
                   -- every placed counter as old as its permanent.
                   Object.counters = Placement.counters placement,
                   Object.source = if Placement.token placement then Source.OfToken printingId else Object.source obj,
-                  -- CR 712.8e: showing a named face, as an entry transformed
+                  -- CR 712.6d: showing a named face, as an entry transformed
                   -- leaves it; Object.turnedOverAt stays Nothing, nothing
                   -- having turned it over.
                   Object.face = Placement.face placement,
@@ -585,7 +585,7 @@ facingFor reason = case reason of
 
 -- | The timeline, answering every prompt the engine asks. Its checks run here
 -- rather than in an observer: they share the moment's queue with its moves, so
--- a check behind a refused move (CR 733.1) runs only once that move is taken.
+-- a check behind a refused move (CR 734.1) runs only once that move is taken.
 scripted :: Answerer.Answerer (Asked.Asked GameState.GameState) Run
 scripted = Answerer.MkAnswerer answerPrompt
 
@@ -617,15 +617,15 @@ answerScheduled asked = do
       gs = Asked.game asked
       kind = Prompt.kindOf prompt
   decider <- traverse labelOf (Driver.deciderOf prompt)
-  -- Hoisted above every arm: a nested game (CR 729.1) is out of scope for every
+  -- Hoisted above every arm: a nested game (CR 730.1) is out of scope for every
   -- prompt alike, a pending action's sub-choices included.
   if not (null (Asked.enclosing asked))
     then failWith (Failure.MkNestedGamePrompt (GameState.turnNumber gs) (GameState.phase gs) decider kind)
     else do
-      -- CR 733.1: a refused move is reversed, so the engine's next prompt is
+      -- CR 734.1: a refused move is reversed, so the engine's next prompt is
       -- the one it answered, asked again. A prompt the move raises on its way
       -- there -- a payment's own choices, an Answer the timeline schedules,
-      -- CR 733.1's ReverseManaAbilities -- leaves the refusal waiting.
+      -- CR 734.1's ReverseManaAbilities -- leaves the refusal waiting.
       refusal <- State.gets refusing
       underway <- State.gets pending
       queued <- takeAnswer gs decider kind
@@ -642,7 +642,7 @@ answerScheduled asked = do
       case waiting of
         Just (key, verb, choices)
           | subChoiceFor key prompt decider choices -> answerActionChoice key verb choices asked
-          -- CR 733.1: a refused action ends either reversed, the state back
+          -- CR 734.1: a refused action ends either reversed, the state back
           -- where it was taken, or standing, which fails the scenario.
           | Just (_, _, actor, before) <- undoing ->
               if reversed actor before gs
@@ -651,7 +651,7 @@ answerScheduled asked = do
                   answerTopPrompt decider asked
                 else do
                   -- A prompt the refused action raises on its way to being
-                  -- reversed (a kicker, CR 733.1's ReverseManaAbilities) is
+                  -- reversed (a kicker, CR 734.1's ReverseManaAbilities) is
                   -- answered by an Answer and leaves the refusal pending.
                   found <- takeAnswer gs decider kind
                   case found of
@@ -716,7 +716,7 @@ answerDedicated decider asked =
         Prompt.Type.ChooseAction who _ actions -> answerActionPrompt gs (Decider.unwrap who) actions prompt
         -- CR 108.1: the interpreter's question, answered from the reference.
         Prompt.Type.LookUpCard name -> lookUp name
-        -- CR 723.6: keyed on the conceding player, whom no one decides for.
+        -- CR 724.6: keyed on the conceding player, whom no one decides for.
         Prompt.Type.Concede pid -> do
           key <- whenOf gs pid
           found <- takeMove key
@@ -824,7 +824,7 @@ answerDedicated decider asked =
           onEntry unscheduled key kind [] (takeForSource gs key named) $ \verb -> case verb of
             Move.ChooseOptional decision -> Just (pure decision)
             _ -> Nothing
-        -- CR 733.1's "may also reverse", answered by a ChooseOptional naming no
+        -- CR 734.1's "may also reverse", answered by a ChooseOptional naming no
         -- source: Exercises reverses the mana abilities, Declines keeps them.
         Prompt.Type.ReverseManaAbilities who _ _ -> do
           key <- whenOf gs (Decider.unwrap who)
@@ -927,7 +927,7 @@ answerGeneric gs key kind index timed prompt = case Timed.entry timed of
     chosen <- decodeAnswer verb answer
     allowed <- legalAnswer gs prompt chosen
     -- One the runner cannot judge goes to the engine, which must ask the same
-    -- prompt again (CR 733.1), as a refused action must: answerPrompt checks
+    -- prompt again (CR 734.1), as a refused action must: answerPrompt checks
     -- the next prompt, and settle the end of the run.
     if allowed && withinOffer prompt chosen
       then chosen <$ State.modify' (\rehearsal -> rehearsal {refusing = Just (key, verb, kind)})
@@ -1203,7 +1203,7 @@ answerActionPrompt gs pid actions prompt = do
         State.modify' (\rehearsal -> rehearsal {pending = Just (key, verb, choicesOf verb), awaiting = Just (key, verb, gs)})
         pure chosen
       -- A refused move the engine does not offer is refused already; one it
-      -- does offer is taken, and must be reversed (CR 733.1).
+      -- does offer is taken, and must be reversed (CR 734.1).
       (Nothing, Entry.Refuse verb) -> do
         offered <- mapM (describeAction gs) actions
         matching <- actionsMatching gs verb actions
@@ -1217,10 +1217,10 @@ answerActionPrompt gs pid actions prompt = do
       (Nothing, Entry.Expect _) -> pure Action.Pass
 
 -- | A move taken at priority must have happened by the next priority prompt: an
--- action the engine reverses (CR 733.1) leaves the state as the move found it,
--- and its player is asked again (CR 733.2). A cast is asked whether it became
+-- action the engine reverses (CR 734.1) leaves the state as the move found it,
+-- and its player is asked again (CR 734.2). A cast is asked whether it became
 -- cast (CR 601.2i) instead: a reversed cast can still leave its card turned up
--- (CR 406.3a) and the mana abilities its payer chose to keep (CR 733.1).
+-- (CR 406.3a) and the mana abilities its payer chose to keep (CR 734.1).
 --
 -- The log between the two prompts must also account for the board they leave
 -- (Parun.Engine.Ledger), whatever was taken.
@@ -1251,7 +1251,7 @@ happened verb before after = case verb of
 -- 117.3c), CR 104.4b's last optional action, the counters that allocate
 -- event groups, timestamps and object ids, which a reversal need not rewind,
 -- the board the last control sample read, retaken at every check, and CR
--- 733.1's note of why a reversal happened (GameState.undone).
+-- 734.1's note of why a reversal happened (GameState.undone).
 untouched :: GameState.GameState -> GameState.GameState -> Bool
 untouched before after =
   let quiet gs =

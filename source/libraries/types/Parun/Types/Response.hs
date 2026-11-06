@@ -71,7 +71,7 @@ data Response
   | -- | CR 104.3a: whether a player conceded when asked.
     Conceded Concession.Concession
   | Shuffled [ObjectId.ObjectId]
-  | -- | CR 729.2: the player randomness picked to go first in a subgame.
+  | -- | CR 730.2: the player randomness picked to go first in a subgame.
     DeterminedFirstPlayer PlayerId.PlayerId
   | -- | The object randomness named for a
     -- Parun.Types.ObjectRef.RandomCard -- Merfolk Spy's "a card at random from
@@ -277,7 +277,7 @@ data Response
   | -- | CR 107.1c / 608.2d: the number a player chose for an Effect.ChooseNumber.
     -- Its own constructor for ChosePaidEnergy's reason.
     ChoseNumber Natural.Natural
-  | -- | CR 702.155b / 714.3b: the chapter a player chose for an entering Saga
+  | -- | CR 702.155b / 715.3b: the chapter a player chose for an entering Saga
     -- with read ahead.
     --
     -- Its own constructor and not ChosePaidEnergy or ChoseX, though all three
@@ -414,9 +414,9 @@ data Response
     ChoseCompanion (Maybe OutsideCard.OutsideCard)
   | -- | CR 103.2d: the sheet position randomness drew.
     SelectedStickerSheetAtRandom Natural.Natural
-  | -- | CR 400.11c \/ 729.4: the cards a player chose to bring in from outside the
+  | -- | CR 400.11c \/ 730.4: the cards a player chose to bring in from outside the
     -- game -- either CR 103.2a's sideboard pool or, from inside a subgame, CR
-    -- 729.4's main game. Parun.Types.OutsideCard's header comment gives the full
+    -- 730.4's main game. Parun.Types.OutsideCard's header comment gives the full
     -- reason it names one or the other rather than carrying a bare PrintingId.
     --
     -- Its own constructor rather than ChoseDungeon reused, for the reason that one
@@ -522,7 +522,7 @@ data Response
   | -- | CR 614.1a: whether an optional substitution applied (Exercises) or the
     -- flip or roll stood (Declines). Distinct from ChoseDredge for its reason.
     ChoseSubstitute OptionalDecision.OptionalDecision
-  | -- | CR 733.1: whether the payer of an action that could not be legally
+  | -- | CR 734.1: whether the payer of an action that could not be legally
     -- completed also reversed the mana abilities they activated while making it
     -- (Exercises) or kept them and the mana they made (Declines). Distinct from
     -- the as-enters answers above for their reason: a transcript that answered
@@ -591,7 +591,7 @@ data Response
     -- ChoseOpponent and ChoseProtector above for the reason Prompt.ChoosePlayer
     -- gives: "a player" offers every seat, the chooser included.
     ChosePlayer PlayerId.PlayerId
-  | -- | CR 725.4 / 726.4 with CR 805.2: the active player the active team's
+  | -- | CR 726.4 / 727.4 with CR 805.2: the active player the active team's
     -- primary player chose to take a departing holder's monarch or initiative.
     ChoseActivePlayer PlayerId.PlayerId
   | -- | CR 603.3b: the order a player chose for their simultaneous triggers, as
@@ -619,7 +619,7 @@ data Response
     -- against the wrong one would reorder one cost's parts instead of the
     -- taxing permanents.
     OrderedCombatTolls [Natural.Natural]
-  | -- | CR 712.21a: the order a melded permanent's owner chose to put its two
+  | -- | CR 713.8a: the order a melded permanent's owner chose to put its two
     -- cards into their graveyard or library in, as a permutation of the offered
     -- indices. A separate constructor from the ones above for their reason:
     -- replaying a transcript against the wrong one would reorder a payment
@@ -757,7 +757,7 @@ data Response
     -- CLAUSE, and from CastWhileSearched, which records the same rule's
     -- library-search producer and names which card was cast.
     ChoseOfferedCast OptionalDecision.OptionalDecision
-  | -- | CR 601.3 / 709.3 / 712.11b / 715.3: which cast a player chose to make
+  | -- | CR 601.3 / 709.3 / 712.8b / 716.3: which cast a player chose to make
     -- when a resolving effect offered them several -- the object and the half.
     -- Distinct from ChoseOfferedCast, which records whether that cast was taken
     -- at all: the two are asked one after the other about the same object, so

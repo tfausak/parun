@@ -31,7 +31,7 @@ spec s = Spec.describe s "Parun.Codec.ActiveCopy" $ do
           ActiveCopy.turned = Nothing
         }
       " {\"source\":1,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"covers\":{\"type\":\"These\",\"value\":[3,4]},\"snapshot\":{\"names\":[\"Mountain\"],\"cardTypes\":[\"Land\"]}} "
-  -- CR 730.2i: a merge applied over the row, with its turned-over reading.
+  -- CR 731.2i: a merge applied over the row, with its turned-over reading.
   Spec.it s "a merged permanent's row with its turned reading" $
     Common.assertCodec
       s

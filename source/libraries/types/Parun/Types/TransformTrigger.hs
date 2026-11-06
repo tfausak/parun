@@ -3,7 +3,7 @@ module Parun.Types.TransformTrigger where
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.CardName as CardName
 
--- | CR 701.27e: which permanent turned over, and the face it turned into.
+-- | CR 701.27f: which permanent turned over, and the face it turned into.
 data TransformTrigger = MkTransformTrigger
   { -- | The bearer (Howlpack Piper) or a permanent the Filter admits (Cult of
     -- the Waxing Moon), the Filter read against the characteristics the event

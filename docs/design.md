@@ -77,7 +77,7 @@ Bake a shuffled library into `GameState` on day one and you will fight this fore
 
 ### 2.3 Decider ≠ player
 
-Note the `Decider` field, separate from `PlayerId`. Rule **723 (Controlling Another Player)** is a rules section, not a card hack. Mindslaver, Word of Command, and Sen Triplets all fall out of getting this type right on day one and are a rewrite if you don't.
+Note the `Decider` field, separate from `PlayerId`. Rule **724 (Controlling Another Player)** is a rules section, not a card hack. Mindslaver, Word of Command, and Sen Triplets all fall out of getting this type right on day one and are a rewrite if you don't.
 
 ### 2.4 Multiplayer from the start
 
@@ -151,7 +151,7 @@ Snapshots become a derived optimization rather than the source of truth.
 
 `faces :: NonEmpty Face` plus a `Layout` tag. Not `left`/`right`.
 
-The comprehensive rules contain a numbered enumeration of card layouts, all closed half, all specced: **709** Split, **710** Flip, **711** Leveler, **712** Double-Faced, **714** Saga, **715** Adventurer, **716** Class, **717** Attraction, **718** Prototype, **719** Case, **720** Omen, **721** Station.
+The comprehensive rules contain a numbered enumeration of card layouts, all closed half, all specced: **709** Split, **710** Flip, **711** Leveler, **712** Double-Faced, **713** Meld, **715** Saga, **716** Adventurer, **717** Class, **718** Attraction, **719** Prototype, **720** Case, **721** Omen, **722** Station.
 
 Get the shape right once and that whole block becomes tractable together. Who // What // When // Where // Why — XMage's only *"Miscellaneous"* entry, a five-part split card — is then a test case, not a feature. It is rule 709 with N=5.
 
@@ -298,7 +298,7 @@ The five gate cards are the right five — each attacks a different load-bearing
 | **M3d** | Layer 3: the rewritable AST | Magical Hack — on a permanent *and* on a spell on the stack | A hacked basic Mountain taps for the new color with zero special cases, purely because CR 305.6 reads the projected type line (CR 612.1: text-changing covers type-line text) |
 | **M3e** | Abilities on the stack: activation (CR 602), non-mana costs, the CR 605 classification | Prodigal Sorcerer (reuses DealDamage); Evolving Wilds (sacrifice cost, Search) | Mana abilities must *not* go on the stack — CR 605.1a is literally an ABI predicate, the classification bit Shandalar, Duels, and Arena all independently grew (§8.2) |
 | **M3f** | The event pipeline: triggers (603) + replacements (614) | Rest in Peace, whole card | RiP must catch a *token* dying and a *spell* going to the graveyard from the stack (a resolved Bolt gets exiled) — replacement at the `changeZone` funnel, not a battlefield-only hook; plus the three-pass trigger scan (§4-M0) |
-| **M3g** | The payoff pair: Decider (CR 723) + re-entrancy | Mindslaver; Panglacial Wurm | Mindslaver: prompts aimed at the controlled player route to the controller while resource ownership stays put (Argentum's `actorFor`). Panglacial: cast mid-search *while Evolving Wilds' ability is still resolving*, then the search continues (CR 605.3a permits mana activation mid-resolution) |
+| **M3g** | The payoff pair: Decider (CR 724) + re-entrancy | Mindslaver; Panglacial Wurm | Mindslaver: prompts aimed at the controlled player route to the controller while resource ownership stays put (Argentum's `actorFor`). Panglacial: cast mid-search *while Evolving Wilds' ability is still resolving*, then the search continues (CR 605.3a permits mana activation mid-resolution) |
 
 Notes the letters' specs must not lose:
 
@@ -309,7 +309,7 @@ Notes the letters' specs must not lose:
 - **M3b discharges M2c's debts.** The synthetic both-keywords fixture's expiry waits on a layer-6 grant; the grant is also what makes the M2c live-projection reads and CR 702.2e's last-known information load-bearing, per the current-work note in `CLAUDE.md`.
 - **613.8 precision.** Humility+Opalescence's famous behavior is cross-layer (4 vs 6) plus 7b timestamp ordering; the pair that genuinely exercises 613.8 dependency — applying one changes the *existence* of the other's effect — is Blood Moon+Urborg. The M3c spec must derive which pair witnesses what from `rules.txt`, not folklore, and the test set must exist **before** the resolver (risk register).
 - **`abilitiesOf` is a projection from day one** (M3e), the same move as `keywordsOf` — so a Humility'd Prodigal Sorcerer can't tap.
-- **Mindslaver details.** It's *Legendary*: tests keep it singleton or note the CR 704.5j elision. CR 723.1: control applies to the next turn the player *actually takes*; 723.1a: multiple player-controlling effects overwrite — the duration model is turn-scheduled, not time-scheduled.
+- **Mindslaver details.** It's *Legendary*: tests keep it singleton or note the CR 704.5j elision. CR 724.1: control applies to the next turn the player *actually takes*; 724.1a: multiple player-controlling effects overwrite — the duration model is turn-scheduled, not time-scheduled.
 - **`#24** (Setup: `emptyGame`/matchup player agreement by construction) lands at the **front of M3a** — the first letter to touch the setup seam (new printings and matchups for instant coverage; Magical Hack's `{U}` and the white gates need Island/Plains printings, cheap under M2d's per-player mono-color decks). The bug's own "revisit at Mindslaver" note predates this split; under it, every letter after M3a inherits whatever Setup does, so the unenforced invariant must not survive six letters of new fixtures.
 - **Random-game coverage will trail again.** Like M2c→M2d, most gates land as deterministic fixtures; an M2d-style coverage tail (a white or blue matchup for random games) should follow M3 rather than be discovered later.
 
@@ -439,21 +439,21 @@ teaches where the next wall is.
 
 These are **not** exotic opcodes. They're numbered sections of the closed half:
 
-- **723** Controlling Another Player → Mindslaver, Word of Command
-- **727** Restarting the Game → Karn Liberated
-- **729** Subgames → Shahrazad, Enter the Dungeon
-- **732** Taking Shortcuts
-- **733** Handling Illegal Actions
+- **724** Controlling Another Player → Mindslaver, Word of Command
+- **728** Restarting the Game → Karn Liberated
+- **730** Subgames → Shahrazad, Enter the Dungeon
+- **733** Taking Shortcuts
+- **734** Handling Illegal Actions
 
 *(Numbers per the vendored `rules.txt`; the CR renumbers this block as sections are inserted, so cite it, not memory — the 2026-07-17 audit found the previous numbering here had already drifted by one.)*
 
-XMage lists Shahrazad as unimplementable not because 729 is unclear but because their architecture can't nest a game inside a game. Yours nests a `Program Prompt` inside a `Program Prompt` — which is a function call.
+XMage lists Shahrazad as unimplementable not because 730 is unclear but because their architecture can't nest a game inside a game. Yours nests a `Program Prompt` inside a `Program Prompt` — which is a function call.
 
-mtg-pure corroborates this from inside Haskell: its prompts are IO callbacks (`promptPick :: … -> m a`), so a game in flight cannot be snapshotted or resumed — subgames are absent and Mindslaver is a `-- TODO` comment. The suspension model is what makes 729 a function call; the language is not.
+mtg-pure corroborates this from inside Haskell: its prompts are IO callbacks (`promptPick :: … -> m a`), so a game in flight cannot be snapshotted or resumed — subgames are absent and Mindslaver is a `-- TODO` comment. The suspension model is what makes 730 a function call; the language is not.
 
-Keep this claim scoped to true subgames (729). Restarting (727) is *not* the same problem: XMage does implement Karn Liberated by mutating the single `Game` instance in place (`KarnLiberated.java:95`, code comment: "dirty hack… can cause bugs"). Restart-in-place is tractable even in a mutable engine; nesting a subgame to completion and *resuming the parent* is the part that isn't.
+Keep this claim scoped to true subgames (730). Restarting (728) is *not* the same problem: XMage does implement Karn Liberated by mutating the single `Game` instance in place (`KarnLiberated.java:95`, code comment: "dirty hack… can cause bugs"). Restart-in-place is tractable even in a mutable engine; nesting a subgame to completion and *resuming the parent* is the part that isn't.
 
-Do 732 and 733 eventually. Nobody plans for them; everybody needs them.
+Do 733 and 734 eventually. Nobody plans for them; everybody needs them.
 
 ### M5.5 — Count/compare (the interstitial before the transpiler)
 
@@ -614,13 +614,13 @@ Instead: allow a small set of hand-written, compiled-in cards alongside the load
 Finish one ring before broadening to the next. Within a ring, rank work by **downstream leverage** (see silver border below): a capability that forces a decision paying off elsewhere comes before a leaf.
 
 1. **Basic Magic** — the rules and features regular paper cards need.
-2. **Paper extras** — multiplayer and variants (Commander, Planechase, Archenemy, Two-Headed Giant), shortcuts (CR 732), ante, and un-set mechanics (stickers, Contraptions).
+2. **Paper extras** — multiplayer and variants (Commander, Planechase, Archenemy, Two-Headed Giant), shortcuts (CR 733), ante, and un-set mechanics (stickers, Contraptions).
 3. **Digital-only** — Alchemy: perpetual, seek, conjure, boons, covercast, intensity. The CR defines none of these, so there is no rules ground truth: derive behaviour from the cards' own text, their official rulings (Tenacious Pup's defines a one-time boon), and Arena's published descriptions, and say so where it lands.
 4. **Non-engine** — deck building and format legality, clients, tooling.
 
 Ring-2 notes that still hold:
 
-- **Contraptions** — two extra zones (Contraption deck, scrapyard), a battlefield subzone (three sprockets), a wrapping CRANK! counter, one turn-based action at upkeep. They share a substrate with **Attractions (rule 717)** — separate deck, junkyard, scheduled triggers, "roll to visit" — so Attractions bring Contraptions nearly free. Rule 701.45a notes Unstable cards and mechanics aren't in the rules; derive them from the cards, as for Alchemy. Steamflogger Boss's Contraption clause is a replacement effect that can never fire without them.
+- **Contraptions** — two extra zones (Contraption deck, scrapyard), a battlefield subzone (three sprockets), a wrapping CRANK! counter, one turn-based action at upkeep. They share a substrate with **Attractions (rule 718)** — separate deck, junkyard, scheduled triggers, "roll to visit" — so Attractions bring Contraptions nearly free. Rule 701.45a notes Unstable cards and mechanics aren't in the rules; derive them from the cards, as for Alchemy. Steamflogger Boss's Contraption clause is a replacement effect that can never fire without them.
 
 **Out of scope — no data, or no ground truth:**
 
@@ -645,7 +645,7 @@ Sorting rule: **do the un-cards whose difficulty is shared with black border.**
 |---|---|---|
 | Little Girl (`½`), Mox Lotus (`{∞}`) | Tarmogoyf (`*/1+*`), X | §2.12 numeric tower |
 | Magical Hacker | Magical Hack | Layer 3 (§5) |
-| Enter the Dungeon, The Countdown Is at One | Shahrazad | 729 subgames |
+| Enter the Dungeon, The Countdown Is at One | Shahrazad | 730 subgames |
 | Who // What // When // Where // Why | Every modal / split / DFC card | §2.11 layout arity |
 
 These aren't flexes — they're canaries wearing funny hats, and they're *sharper* than their black-border twins because un-sets are deliberately designed to attack the rules. A free adversarial test suite written by the people who wrote the rules.

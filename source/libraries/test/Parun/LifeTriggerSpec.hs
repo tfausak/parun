@@ -823,7 +823,7 @@ lifelinkGainEventsSpec s registry =
 -- attack bob and connect in one combat damage step -- one Parun.Types.EventGroup,
 -- Parun.Engine.Damage.dealWave bracketing the step (CR 510.2), which the group
 -- count pins as the precondition. The monarch is a designation a player has or
--- lacks (CR 725.1), so crowning alice twice looks exactly like crowning her
+-- lacks (CR 726.1), so crowning alice twice looks exactly like crowning her
 -- once -- Monarch.crown records nothing for a player already crowned -- and the
 -- COUNT of firings is read off the stack as the step's turn-based action
 -- settles, the reading Megrim's group takes above: one trigger for the batch,

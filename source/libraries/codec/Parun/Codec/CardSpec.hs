@@ -108,7 +108,7 @@ mountainCard =
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.Card" $ do
-  -- "faces" is the only required key: CR 709-722's Normal is the absence of a
+  -- "faces" is the only required key: CR 709-723's Normal is the absence of a
   -- card saying otherwise, so every single-face file says nothing about layout.
   Spec.it s "a single-face card carries only faces, and no layout key" $
     Common.assertCodec

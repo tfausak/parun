@@ -1,5 +1,5 @@
 {
-  "description": "CR 725.2/802.3 the crown follows whichever defending player was attacked (attacking bob)",
+  "description": "CR 726.2/802.3 the crown follows whichever defending player was attacked (attacking bob)",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",

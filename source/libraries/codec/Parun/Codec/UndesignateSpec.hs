@@ -11,7 +11,7 @@ import qualified Parun.Types.Undesignate as Undesignate
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.Undesignate" $ do
-  -- CR 722.3b: the named permanents lose this designation.
+  -- CR 723.3b: the named permanents lose this designation.
   Spec.it s "MkUndesignate, the two required keys" $
     Common.assertCodec
       s

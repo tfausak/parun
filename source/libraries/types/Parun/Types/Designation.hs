@@ -1,10 +1,10 @@
 module Parun.Types.Designation where
 
 -- | A designation A PERMANENT can have and nothing else about it: CR 702.112b's
--- renowned, CR 701.37b's monstrous, CR 701.60b's suspected, CR 719.3b's solved,
--- CR 722.3a's prepared, CR 702.171b's saddled and CR 701.64b's harnessed. Those
+-- renowned, CR 701.37b's monstrous, CR 701.60b's suspected, CR 720.3b's solved,
+-- CR 723.3a's prepared, CR 702.171b's saddled and CR 701.64b's harnessed. Those
 -- rules word the mark alike -- only a permanent can have it, and it is "neither
--- an ability nor part of the permanent's copiable values", where CR 722.3a
+-- an ability nor part of the permanent's copiable values", where CR 723.3a
 -- leaves that half to CR 707.2's definition -- so they are one
 -- payload rather than a field, an opcode and a read atom apiece
 -- (Parun.Types.Object's `designations`, Effect.Designate,
@@ -38,25 +38,25 @@ module Parun.Types.Designation where
 --   `Maybe PlayerId`, and CR 701.54a ends it on a change of control, which none
 --   of the marks here has.
 --
--- * CR 725.1's monarch designates a PLAYER, so it lives on GameState.
+-- * CR 726.1's monarch designates a PLAYER, so it lives on GameState.
 --
 -- * CR 702.131c's city's blessing and CR 702.195b's enduring story designate a
 --   PLAYER too, and are each other's twin rather than the monarch's: both rules
---   let any number of players hold the mark at once, where CR 725.3 makes the
+--   let any number of players hold the mark at once, where CR 726.3 makes the
 --   monarch unique, so they ride Player.designations as a set per seat
 --   (Parun.Types.PlayerDesignation).
 --
--- * CR 731.1's day and night designate the GAME (Parun.Types.Daytime).
+-- * CR 732.1's day and night designate the GAME (Parun.Types.Daytime).
 --
 -- * CR 701.15b's goaded is per-player AND expiring, the Ring-bearer's two
 --   objections at once: Object.goadedBy is a set of seats, since CR 701.15c lets
 --   several players goad one creature, and CR 701.15a ends each entry at that
 --   player's next turn rather than when the permanent leaves the battlefield.
 --
--- * CR 716.2b's level is a NUMBER -- "a level is a designation that any permanent
+-- * CR 717.2b's level is a NUMBER -- "a level is a designation that any permanent
 --   can have" -- so it is Object.classLevel, a Maybe Parun.Types.ClassLevel, read
 --   by Quantity.ClassLevel. A constructor here plus a designationValues entry
---   could not answer CR 716.2a's "level N or greater" either: CR 716.2d gives a
+--   could not answer CR 717.2a's "level N or greater" either: CR 717.2d gives a
 --   permanent that was never levelled a level of 1, where a mark nobody set has
 --   no value at all.
 --
@@ -64,14 +64,14 @@ module Parun.Types.Designation where
 -- marks are interchangeable, and two places deliberately keep them apart. What
 -- SETS one differs: CR 702.112a mints renown's trigger, CR 701.37a's monstrosity
 -- is an activated ability's clause, CR 701.60a's suspect is an instruction
--- another card gives, and CR 719.3a's "to solve" is an end-step trigger the Case
+-- another card gives, and CR 720.3a's "to solve" is an end-step trigger the Case
 -- itself carries. What READS one differs more: CR 701.60c hangs menace and
 -- "this creature can't block" off `Suspected` alone (Parun.Engine.Projection and
 -- Parun.Engine.CombatRestriction case on this constructor for it), and CR 701.60a
--- lets a SPELL OR ABILITY end `Suspected`, as CR 722.3b does `Prepared`, which
+-- lets a SPELL OR ABILITY end `Suspected`, as CR 723.3b does `Prepared`, which
 -- Effect.Undesignate writes -- no rule takes renowned, monstrous, solved,
 -- harnessed or saddled away, the last of those ending on the clock instead.
--- `Prepared` also ends by rule: CR 722.3c's last sentence, which
+-- `Prepared` also ends by rule: CR 723.3c's last sentence, which
 -- Parun.Engine.Cast writes at CR 601.2i. What it adds that no other mark has is a
 -- precondition on GAINING it and an object minted as it is gained, both
 -- Parun.Engine.Prepare's.
@@ -83,23 +83,23 @@ data Designation
   | -- | CR 701.60b: suspected, which CR 701.60a's suspect instruction sets and
     -- which a spell or ability can take away again, as `Prepared`.
     Suspected
-  | -- | CR 719.3b: solved, the marker CR 719.3a's "to solve" trigger sets and
-    -- CR 719.3c's "Solved --" ability is gated on. Renowned's shape: set by a
+  | -- | CR 720.3b: solved, the marker CR 720.3a's "to solve" trigger sets and
+    -- CR 720.3c's "Solved --" ability is gated on. Renowned's shape: set by a
     -- trigger of the permanent's own, and with no remover.
     Solved
   | -- | CR 702.171b: saddled, the marker CR 702.171a's saddle ability sets on
     -- resolution. Renowned's shape in what sets it and the only mark here that
     -- also ends at end of turn -- see the note above.
     Saddled
-  | -- | CR 722.3b: prepared, which CR 722.3a's "becomes prepared" instruction
-    -- sets and which CR 722.3b lets a rule or effect take away again --
+  | -- | CR 723.3b: prepared, which CR 723.3a's "becomes prepared" instruction
+    -- sets and which CR 723.3b lets a rule or effect take away again --
     -- Suspected's shape rather than Renowned's.
     --
-    -- Two clauses of CR 722.3a are gates the other marks have no counterpart for,
+    -- Two clauses of CR 723.3a are gates the other marks have no counterpart for,
     -- and Parun.Engine.Prepare holds both: "a permanent can't gain this
     -- designation unless it has a prepare spell", and it may not gain one it
     -- already has -- which is Effect.Designate's standing transition guard.
-    -- Gaining it is not only a write, either: CR 722.3c mints a copy of the
+    -- Gaining it is not only a write, either: CR 723.3c mints a copy of the
     -- permanent in exile at the same moment, which is
     -- Parun.Engine.Prepare.mintOnDesignated, run in the same breath as the
     -- set-insert the others take alone.

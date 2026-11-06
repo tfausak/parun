@@ -994,8 +994,8 @@ spiderPunkSpec s registry =
 --
 -- The card is in the pool for the second sentence, and it is the ONLY printing
 -- that restricts who may be crowned -- which makes it the sole producer of CR
--- 725.4's "the next player in turn order who can become the monarch". CR 725.1
--- and CR 725.3 gate nobody, so on the ordinary route it is CR 101.2 that makes
+-- 726.4's "the next player in turn order who can become the monarch". CR 726.1
+-- and CR 726.3 gate nobody, so on the ordinary route it is CR 101.2 that makes
 -- the "can't" win.
 --
 -- Its third sentence -- "If damage would be dealt to Jared Carthalion while
@@ -1014,7 +1014,7 @@ spiderPunkSpec s registry =
 --
 -- Palace Jailer ("When Palace Jailer enters, you become the monarch") is the
 -- second route on purpose: MonarchTarget.TheController, where Jared's own first
--- clause is MonarchTarget.InSlot and CR 725.2's steal is ControllerOfSource. All
+-- clause is MonarchTarget.InSlot and CR 726.2's steal is ControllerOfSource. All
 -- three read one gate, so no case here passes through an ungated route.
 jaredBoard ::
   Printing.Printing ->
@@ -1036,7 +1036,7 @@ etbResolved oid gs =
       withEvent = S.withEvents [GameEvent.Moved (Moved.moved entered (Projection.project oid gs))] gs
    in S.runPure S.identityAnswer (S.runPure S.identityAnswer withEvent Engine.settleForPriority) Engine.priorityLoop
 
--- CR 725.2's crown steal, as the event it triggers off: `attacker` deals combat
+-- CR 726.2's crown steal, as the event it triggers off: `attacker` deals combat
 -- damage to bob, who must be the monarch for the inherent ability to match.
 damageToTheMonarch :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 damageToTheMonarch attacker gs =
@@ -1055,7 +1055,7 @@ jaredSpec s registry =
         -- The card's own first clause, which is also what puts a monarch on the
         -- board for everything below: CR 601.2c's target slot, re-read at
         -- resolution, crowning the ONLY opponent two seats offer.
-        Spec.it s "CR 725.1 his enters trigger crowns the targeted opponent, and stores the restriction on his controller" $ do
+        Spec.it s "CR 726.1 his enters trigger crowns the targeted opponent, and stores the restriction on his controller" $ do
           (jaredId, _, _, gs) <- board
           let after = etbResolved jaredId gs
           Spec.assertEqWith s "bob is the monarch" (GameState.monarch after) (Just S.bob)
@@ -1068,15 +1068,15 @@ jaredSpec s registry =
         -- THE CONTROL for the case below, on the same board: with Jared's trigger
         -- never fed, the Jailer's "you become the monarch" crowns alice. Without
         -- this, the refusal below could be a Jailer whose ETB never resolved.
-        Spec.it s "CR 725.1 with no restriction standing, Palace Jailer's enters trigger crowns alice" $ do
+        Spec.it s "CR 726.1 with no restriction standing, Palace Jailer's enters trigger crowns alice" $ do
           (_, jailerId, _, gs) <- board
           Spec.assertEqWith s "alice takes the crown" (GameState.monarch (etbResolved jailerId gs)) (Just S.alice)
 
         -- THE PRIMARY OBSERVABLE. Two seats, no departure: an
         -- Effect.BecomeMonarch aimed at a restricted player does nothing, and CR
-        -- 725.3's "the current monarch ceases to be the monarch" never fires
+        -- 726.3's "the current monarch ceases to be the monarch" never fires
         -- either -- bob keeps the crown rather than the game losing it.
-        Spec.it s "CR 101.2 / 725.1 the restriction stops Palace Jailer's TheController crowning outright" $ do
+        Spec.it s "CR 101.2 / 726.1 the restriction stops Palace Jailer's TheController crowning outright" $ do
           (jaredId, jailerId, _, gs) <- board
           let restricted = etbResolved jaredId gs
               after = etbResolved jailerId restricted
@@ -1095,13 +1095,13 @@ jaredSpec s registry =
           Spec.assertBool s (not (PlayerEffect.prohibitsBecomingMonarch S.alice ended)) "alice may be crowned again"
           Spec.assertEqWith s "so the Jailer's ETB now crowns her" (GameState.monarch (etbResolved jailerId ended)) (Just S.alice)
 
-        -- The vacuity trap this issue was filed with: CR 725.2's inherent ability
+        -- The vacuity trap this issue was filed with: CR 726.2's inherent ability
         -- is SOURCELESS and reaches the crown through MonarchTarget
         -- .ControllerOfSource, a different arm from the case above. The gate is
         -- read at the one place all three arms meet, so the steal is stopped too
         -- -- and the ability still triggers and still resolves, it just crowns
         -- nobody.
-        Spec.it s "CR 101.2 / 725.2 the restriction stops the sourceless crown steal as well" $ do
+        Spec.it s "CR 101.2 / 726.2 the restriction stops the sourceless crown steal as well" $ do
           (jaredId, _, pikerId, gs) <- board
           let restricted = etbResolved jaredId gs
           Spec.assertEqWith s "bob was crowned by Jared's own trigger" (GameState.monarch restricted) (Just S.bob)
@@ -1205,12 +1205,12 @@ voidWinnowerSpec s registry =
       Spec.assertBool s (PlayerEffect.choiceCouldEscape S.bob (PlayerEffect.liveSource Nothing) cheap bobsDisaster VariableChoice.Announced board) "and a large enough X takes it out"
       Spec.assertBool s (not (PlayerEffect.choiceCouldEscape S.bob (PlayerEffect.liveSource Nothing) cheap bobsPiker VariableChoice.Announced board)) "while the fixed spell beside it has no choice to make"
 
-    -- CR 601.3b / 718.3: the prototype half of choiceCouldApply's search
+    -- CR 601.3b / 719.3: the prototype half of choiceCouldApply's search
     -- stamps Object.prototyped on a hypothetical board, and Filter.IsPrototyped
     -- reads that stamp. Only a card that offers rule 702.160a's choice may be
     -- stamped, or a permission keyed on the atom would name Hill Giant. The
     -- criterion is written by the test; no permission in the pool names it.
-    Spec.it s "CR 601.3b / 718.3 only a card with prototype could become a prototyped spell" $ do
+    Spec.it s "CR 601.3b / 719.3 only a card with prototype could become a prototyped spell" $ do
       plains <- S.printingOf s registry "Plains"
       assembler <- S.printingOf s registry "Autonomous Assembler"
       giant <- S.printingOf s registry "Hill Giant"
@@ -1432,7 +1432,7 @@ scoutsWarningSpec s registry =
       Spec.assertEqWith s "one stored before" (length (GameState.playerEffects resolved)) 1
       Spec.assertEqWith s "none after cleanup" (GameState.playerEffects (Expiry.dropAtCleanup resolved)) []
 
-    -- CR 601.2e / 733.1: a cast that is rejected -- here at CR 601.2h, the mana
+    -- CR 601.2e / 734.1: a cast that is rejected -- here at CR 601.2h, the mana
     -- refused -- is returned to the moment before it was proposed, and the
     -- grant it would have spent is part of that moment. Driven through
     -- Parun.Engine.Engine's own Cast arm, where a spend ahead of
@@ -1850,7 +1850,7 @@ uriangerSpec s registry =
       Spec.assertBool s (not (offered handGiant)) "and the one in her hand, which no permission reduces, is not castable off them"
       Spec.assertBool s (offered exiledGiant) "the exiled Hill Giant is offered"
 
-    -- CR 406.3a / 712.11d: a card exiled FACE DOWN is turned face up just before
+    -- CR 406.3a / 712.8d: a card exiled FACE DOWN is turned face up just before
     -- it is played, so its front face's more than meets the eye (CR 702.162a)
     -- still offers the converted cast. Ratchet, Field Medic // Ratchet, Rescue
     -- Racer, exiled with Draw Arcanum and played with Play Arcanum; one Plains

@@ -16,11 +16,11 @@ import qualified Parun.Types.TapState as TapState
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.ExilePlayPermission" $ do
-  -- CR 715.3d: the Adventure permission, whose duration CR 400.7 ends, stored as
-  -- Never, and no CR 118.14 rider. `origin` is what CR 715.3d's closing clause
+  -- CR 716.3d: the Adventure permission, whose duration CR 400.7 ends, stored as
+  -- Never, and no CR 118.14 rider. `origin` is what CR 716.3d's closing clause
   -- reads, so the two arms are written out separately below rather than left to
   -- one case.
-  Spec.it s "CR 715.3d's Adventure permission" $
+  Spec.it s "CR 716.3d's Adventure permission" $
     Common.assertCodec
       s
       ExilePlayPermission.codec

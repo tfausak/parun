@@ -41,7 +41,7 @@ import qualified Parun.Types.SpecialAction as SpecialAction
 -- Every ignore this permanent's copiable rules text grants: which ability each
 -- names (CR 116.2d's "that ability") and what it charges.
 --
--- Read off Projection.specialActionsOf and never Card.combined: CR 712.8d-f
+-- Read off Projection.specialActionsOf and never Card.combined: CR 712.6c-e
 -- give a double-faced permanent only the characteristics of the face it shows,
 -- and CR 707.2a has a copy derive its abilities from the rules text it
 -- copied -- which is the same accessor, and so the same answer, as

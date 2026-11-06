@@ -42,7 +42,7 @@
 -- The third carries that duplicate through three zone changes (CR 400.7), and
 -- the fourth prices it off its copiable mana cost. Three read its abilities off
 -- the battlefield, in a graveyard and a hand (CR 113.6). The last three merge it
--- with a printed Cubwarden and split it back out (CR 730.3, CR 727.2).
+-- with a printed Cubwarden and split it back out (CR 731.3, CR 728.2).
 module Parun.ConjureSpec where
 
 import qualified Control.Monad as Monad
@@ -583,10 +583,10 @@ spec s registry = Spec.describe s "Parun.Conjure" $ do
           (False, True)
         Spec.assertEqWith s "setup: the merged permanent held the Cubwarden and the Skaab" (fmap (Seq.length . Game.componentsOf . Object.source) (Game.lookupObject skaabId merged)) (Just 2)
       other -> Spec.assertFailure s ("expected one duplicate in hand, got " <> show (length other))
-  -- CR 715.3a: an Adventure is cast with its own characteristics alone, so a
+  -- CR 716.3a: an Adventure is cast with its own characteristics alone, so a
   -- duplicate of Flaxen Intruder ({G}) cast as Welcome Home still costs
   -- {5}{G}{G}. One Forest pays the creature half and not the Adventure.
-  Spec.it s "CR 715.3a a duplicate of Flaxen Intruder cast as Welcome Home costs Welcome Home's cost" $ do
+  Spec.it s "CR 716.3a a duplicate of Flaxen Intruder cast as Welcome Home costs Welcome Home's cost" $ do
     island <- S.printingOf s registry "Island"
     forest <- S.printingOf s registry "Forest"
     reflections <- S.printingOf s registry "Sinister Reflections"
@@ -601,16 +601,16 @@ spec s registry = Spec.describe s "Parun.Conjure" $ do
       [duplicate] ->
         Spec.assertEqWith
           s
-          "CR 715.3a off one Forest: (as Flaxen Intruder, as Welcome Home)"
+          "CR 716.3a off one Forest: (as Flaxen Intruder, as Welcome Home)"
           (castableAs "Flaxen Intruder" duplicate, castableAs "Welcome Home" duplicate)
           (True, False)
       other -> Spec.assertFailure s ("expected one duplicate in hand, got " <> show (length other))
-  -- CR 715.2b / 707.2: the Adventure half is a copiable value, so a duplicate of
+  -- CR 716.2b / 707.2: the Adventure half is a copiable value, so a duplicate of
   -- a Clone copying Flaxen Intruder -- printed Clone beneath -- is castable as
   -- Welcome Home ({5}{G}{G}), and resolves as it: three Bears, and the card
-  -- exiled by CR 715.3d. Seven Forests pay the Adventure; the printed Clone
+  -- exiled by CR 716.3d. Seven Forests pay the Adventure; the printed Clone
   -- offers no Welcome Home at all.
-  Spec.it s "CR 707.2/715.2b a duplicate of a Clone of Flaxen Intruder is cast as Welcome Home" $ do
+  Spec.it s "CR 707.2/716.2b a duplicate of a Clone of Flaxen Intruder is cast as Welcome Home" $ do
     island <- S.printingOf s registry "Island"
     forest <- S.printingOf s registry "Forest"
     clone <- S.printingOf s registry "Clone"
@@ -625,7 +625,7 @@ spec s registry = Spec.describe s "Parun.Conjure" $ do
             bears = filter (\oid -> Projection.namesOf oid played == Set.singleton bearToken) (Game.zoneMembers Zone.Battlefield S.alice played)
         Spec.assertEqWith
           s
-          "CR 715.3a/715.3b/715.3d (Welcome Home offered as a cast, lands it taps, the spell's names, Bears, cards in exile)"
+          "CR 716.3a/716.3b/716.3d (Welcome Home offered as a cast, lands it taps, the spell's names, Bears, cards in exile)"
           (castOffered duplicate welcomeHome paid, S.tappedCount S.alice cast - S.tappedCount S.alice paid, fmap (\oid -> Projection.namesOf oid cast) (GameState.stack cast), length bears, length (Game.zoneMembers Zone.Exile S.alice played))
           (True, 7, [Set.singleton welcomeHome], 3, 1)
       Nothing -> Spec.assertFailure s "expected one Clone and one duplicate"
@@ -690,13 +690,13 @@ spec s registry = Spec.describe s "Parun.Conjure" $ do
               (True, [Set.singleton spikedCorridor])
           Nothing -> Spec.assertFailure s "expected one duplicate in hand"
       other -> Spec.assertFailure s ("expected one Copy Enchantment, got " <> show (length other))
-  -- CR 730.3 / 400.7: the duplicate, cast and resolved as the Piker, is the
+  -- CR 731.3 / 400.7: the duplicate, cast and resolved as the Piker, is the
   -- permanent Cubwarden ({3}{W} 3/5 Cat, "Mutate {2}{W}{W}", lifelink) mutates
   -- OVER, and the merged permanent is then destroyed. Its two components are put
   -- into the graveyard as two new objects, and the duplicate's copiable values
   -- are its own card's (CR 707.2), so the one printed Clone is the Piker again
   -- there. Read beside the original Clone, which is a Clone in the graveyard.
-  Spec.it s "CR 730.3/707.2 a duplicate of a Clone split out of a merge is the Piker again" $ do
+  Spec.it s "CR 731.3/707.2 a duplicate of a Clone split out of a merge is the Piker again" $ do
     fixture <- duplicateFixture s registry
     case mergedOntoDuplicate fixture of
       Nothing -> Spec.assertFailure s "the duplicate did not resolve onto the battlefield"
@@ -704,24 +704,24 @@ spec s registry = Spec.describe s "Parun.Conjure" $ do
         let died = S.settleSba (S.runPure S.identityAnswer merged (Event.destroy (pure ()) Regenerability.Regenerable [host]))
         Spec.assertEqWith
           s
-          "CR 730.3 the duplicate component is a Goblin Piker in the graveyard, beside the original Clone"
+          "CR 731.3 the duplicate component is a Goblin Piker in the graveyard, beside the original Clone"
           (List.sort (fmap (\oid -> Set.toList (Projection.namesOf oid died)) (namedIn cloneName Zone.Graveyard died)))
           (List.sort [[cloneName], [goblinPiker]])
         -- The values are the duplicate's alone: the Cubwarden, the merged
         -- permanent's other component, is its printed self.
         Spec.assertEqWith
           s
-          "CR 730.3 and the Cubwarden component is a Cubwarden there"
+          "CR 731.3 and the Cubwarden component is a Cubwarden there"
           (fmap (\oid -> Set.toList (Projection.namesOf oid died)) (namedIn cubwardenName Zone.Graveyard died))
           [[cubwardenName]]
         Spec.assertEqWith s "setup: the merged permanent held the Cubwarden and the duplicate" (fmap (Seq.length . Game.componentsOf . Object.source) (Game.lookupObject host merged)) (Just 2)
-  -- The other side of CR 730.2: the duplicate is the mutating SPELL. A Clone
+  -- The other side of CR 731.2: the duplicate is the mutating SPELL. A Clone
   -- copies a Cubwarden, Sinister Reflections duplicates it, so the card in hand
   -- is a Cubwarden printed Clone, and it is cast for its mutate cost over a
-  -- Goblin Piker. CR 730.2b takes the spell's object away, so what carries its
+  -- Goblin Piker. CR 731.2b takes the spell's object away, so what carries its
   -- values through the merge is the component alone; destroyed, it is a
   -- Cubwarden in the graveyard.
-  Spec.it s "CR 730.2/730.3 a duplicate of a Clone that merged as the spell is the Cubwarden again" $ do
+  Spec.it s "CR 731.2/731.3 a duplicate of a Clone that merged as the spell is the Cubwarden again" $ do
     (island, mountain, plains, piker, clone, reflections, cubwarden) <- duplicatePrintings s registry
     let board0 = S.landsFor plains S.alice 8 (S.landsFor mountain S.alice 4 (S.landsInPlay island 4))
         (cubwardenId, board1) = S.addPermanent cubwarden S.alice board0
@@ -733,10 +733,10 @@ spec s registry = Spec.describe s "Parun.Conjure" $ do
             died = S.settleSba (S.runPure S.identityAnswer merged (Event.destroy (pure ()) Regenerability.Regenerable [pikerId]))
         Spec.assertEqWith
           s
-          "CR 730.3 the duplicate component is a Cubwarden in the graveyard, beside the original Clone"
+          "CR 731.3 the duplicate component is a Cubwarden in the graveyard, beside the original Clone"
           (List.sort (fmap (\oid -> Set.toList (Projection.namesOf oid died)) (namedIn cloneName Zone.Graveyard died)))
           (List.sort [[cloneName], [cubwardenName]])
-        Spec.assertEqWith s "setup: CR 730.2a the merged permanent was the Cubwarden on top" (Set.toList (Projection.namesOf pikerId merged)) [cubwardenName]
+        Spec.assertEqWith s "setup: CR 731.2a the merged permanent was the Cubwarden on top" (Set.toList (Projection.namesOf pikerId merged)) [cubwardenName]
         Spec.assertEqWith s "setup: and the Piker under it" (fmap (Seq.length . Game.componentsOf . Object.source) (Game.lookupObject pikerId merged)) (Just 2)
   -- Pearl Collector ({2}{B} Creature -- Human Warlock 3/3, "Deathtouch,
   -- Lifelink. At the beginning of your second main phase, if you gained 4 or

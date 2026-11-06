@@ -24,7 +24,7 @@ data View
     Colors
   | -- | CR 106.4: the mana in a player's pool.
     ManaPool
-  | -- | CR 730.1: whether it is day or night, if either.
+  | -- | CR 731.1: whether it is day or night, if either.
     Daytime
   | -- | CR 310.9: a battle's protector.
     Protector
@@ -39,7 +39,7 @@ data View
     CommanderDamage
   | -- | CR 108.3 / 407.3: each card whose owner changed, as `[card, starting owner, owner]`.
     OwnershipChanges
-  | -- | CR 400.2 / 723.4: the seats that may see an object's face, in turn order.
+  | -- | CR 400.2 / 724.4: the seats that may see an object's face, in turn order.
     Seers
   | -- | CR 701.20a / 701.20e: this turn's cards a player was shown, by name, in order.
     Witnessed

@@ -19,7 +19,7 @@ import qualified Parun.Types.Printing as Printing
 -- | The whole record, which is what a card FILE holds and what
 -- Parun.CodecIntegrationSpec's honesty round trip over the corpus reads.
 --
--- The card's own keys plus CR 717.1's `lights`, which a card file never writes:
+-- The card's own keys plus CR 718.1's `lights`, which a card file never writes:
 -- Parun.Registry reads files as cards, and the lights belong to a printing.
 codec :: Codec.Codec Printing.Printing
 codec = Fields.object $ do
@@ -50,7 +50,7 @@ codec = Fields.object $ do
 -- The equality check is what makes @Named@ safe: a resolver answering with a
 -- DIFFERENT card under this name would decode to that other card, so the name is
 -- not written. A printing with lights is inlined for the same reason: a name
--- resolves to a card, never to which printing of it (CR 717.1). Parun.Codec.PrintingSpec's "a name the resolver answers
+-- resolves to a card, never to which printing of it (CR 718.1). Parun.Codec.PrintingSpec's "a name the resolver answers
 -- differently for is written out in full" is that case.
 reference :: (CardName.Type.CardName -> Maybe Card.Type.Card) -> Codec.Codec Printing.Printing
 reference resolve =

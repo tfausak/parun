@@ -105,7 +105,7 @@ manaLeakHand island manaLeak piker bobLands =
 -- to the wrong player falls through to Declines and fails, rather than paying and
 -- passing: for Mana Leak the payer is the TARGETED spell's controller and not the
 -- resolving spell's, and for Whipstitched Zombie it is the ability's own (CR
--- 603.3a). The Decider is checked alongside the player for CR 723.1: nobody is
+-- 603.3a). The Decider is checked alongside the player for CR 724.1: nobody is
 -- controlling anybody in these fixtures, so the two must agree.
 --
 -- Rank-1, like Parun.Support.attackTo: the implicit forall is outermost, so

@@ -21,10 +21,10 @@ import qualified Parun.Types.Quantity as Quantity
 -- A record carrying a Maybe for exactly one of its users has quietly become the
 -- untagged union #1304 removed: the field's absence would once again be how a
 -- reader tells which arm it is looking at. Parun.Types.Mill is what spinning out
--- looks like -- a mill is "these players, this many" plus CR 728.1's tally, so
+-- looks like -- a mill is "these players, this many" plus CR 729.1's tally, so
 -- it has its own record rather than a nullable field here. Parun.Types.Draw left
 -- the same way, over CR 121.6c's additional action, "and reveal it" (#1899),
--- Parun.Types.LifeLoss over CR 728.1a's cause, and Parun.Types.Blight over CR
+-- Parun.Types.LifeLoss over CR 729.1a's cause, and Parun.Types.Blight over CR
 -- 701.68c's blighted creature, and Parun.Types.Surveil over CR 608.2c's bound
 -- cards.
 data PlayerQuantity = MkPlayerQuantity

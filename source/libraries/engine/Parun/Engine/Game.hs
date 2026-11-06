@@ -134,7 +134,7 @@ import qualified Parun.Types.ZonePosition as ZonePosition
 -- came from (#153). StateT sits outside the Program, so the interpreter cannot
 -- see the state at a suspension; reading it here, on the inside, is what lets
 -- Asked carry it. `enclosing` starts empty and Engine.playSubgame pushes onto it
--- from the frame above (CR 729.1a) -- this function cannot know it is inside a
+-- from the frame above (CR 730.1a) -- this function cannot know it is inside a
 -- subgame, and does not have to.
 --
 -- Here in the lowest engine layer because every prompting module imports it,
@@ -180,8 +180,8 @@ linkedPile reader acquisition pile src gs =
 
 -- | CR 607.2a / 613.7d: the LAST of these cards to have been exiled, the one
 -- with the latest timestamp -- Duplicant's "the last creature card exiled with
--- it", Ice Cauldron's "the last card exiled with this artifact". CR 712.21b and
--- 730.3b let the exiler order two cards exiled at once, and
+-- it", Ice Cauldron's "the last card exiled with this artifact". CR 713.8b and
+-- 731.3b let the exiler order two cards exiled at once, and
 -- Parun.Engine.Event.changeZoneAttaching asks for that order and stamps the
 -- cards by it, so the latest stamp is "last" there too. Nothing for none.
 lastExiled :: [ObjectId] -> GameState -> Maybe ObjectId
@@ -383,10 +383,10 @@ printingOfObject :: ObjectId -> GameState -> Maybe Printing.Printing
 printingOfObject oid gs = case fmap Object.source (lookupObject oid gs) of
   Nothing -> Nothing
   Just (Source.OfCard pid) -> printingOf pid gs
-  -- CR 712.8g: the combined back face, which is the printing every
+  -- CR 713.5c: the combined back face, which is the printing every
   -- characteristic read of a melded permanent resolves through.
   Just (Source.OfMeld meld) -> printingOf (MeldSource.result meld) gs
-  -- CR 730.2a: "a merged permanent has only the characteristics of its topmost
+  -- CR 731.2a: "a merged permanent has only the characteristics of its topmost
   -- component", so the head of the component list is the printing every
   -- characteristic read of a merged permanent resolves through.
   Just (Source.OfMerge components) -> printingOf (printingOfComponent (ShownComponent.component (NonEmpty.head components))) gs
@@ -395,16 +395,16 @@ printingOfObject oid gs = case fmap Object.source (lookupObject oid gs) of
   Just (Source.OfTrigger _) -> Nothing
   Just (Source.OfEmblem pid) -> printingOf pid gs
   Just (Source.OfSpellCopy pid) -> printingOf pid gs
-  -- The printing this copy's whole card comes off: CR 722.3c's interned prepare
+  -- The printing this copy's whole card comes off: CR 723.3c's interned prepare
   -- spell, or CR 707.12's copied card's own.
   Just (Source.OfCardCopy pid) -> printingOf pid gs
   Just (Source.OfInherentTrigger _) -> Nothing
 
--- | CR 717.2 / 901.3 / 904.3: every player's supplementary deck of this kind.
+-- | CR 718.2 / 901.3 / 904.3: every player's supplementary deck of this kind.
 sideDecksOf :: SideDeck.SideDeck -> GameState -> Map.Map PlayerId (Seq.Seq ObjectId)
 sideDecksOf kind gs = Map.findWithDefault Map.empty kind (GameState.sideDecks gs)
 
--- | CR 100.2d / 729.2a: every card in every player's Attraction (CR 717.2),
+-- | CR 100.2d / 730.2a: every card in every player's Attraction (CR 718.2),
 -- Contraption (the Unstable FAQ), planar (CR 901.3) and scheme (CR 904.3) deck.
 supplementaryDeckIds :: GameState -> Set.Set ObjectId
 supplementaryDeckIds gs =
@@ -432,7 +432,7 @@ shuffleSideDeck kind pid = do
     let shuffled = honourShuffle ids answer
     State.modify' (overSideDecks kind (Map.insert pid (Seq.fromList shuffled)))
 
--- | CR 717.1: the numbers lit up on this object's card, empty for anything that
+-- | CR 718.1: the numbers lit up on this object's card, empty for anything that
 -- is not a card. The PHYSICAL card's printing, never the projection: CR 109.3
 -- makes the lights no characteristic, so a copy of an Attraction lights nothing.
 lightsOf :: ObjectId -> GameState -> Set.Set Natural
@@ -440,7 +440,7 @@ lightsOf oid gs = case fmap Object.source (lookupObject oid gs) of
   Just (Source.OfCard pid) -> foldMap Printing.lights (printingOf pid gs)
   _ -> Set.empty
 
--- | CR 717.1 / 717.6 and the Unstable FAQ: the supplementary deck this
+-- | CR 718.1 / 718.6 and the Unstable FAQ: the supplementary deck this
 -- object's card back belongs to, Nothing for a traditional back or for no card.
 -- Every Attraction card has an Astrotorium back and every Contraption card a
 -- Contraption back, so the printed type line is the answer; the projection is
@@ -458,7 +458,7 @@ sideDeckBackOf card =
 
 -- | CR 108.2a: is this a nontraditional card? A card type CR 309.1, 311.1,
 -- 312.1, 313.1 and 314.1 see only on one, or a supplementary deck's back
--- (`sideDeckBackOf`: CR 717.1, the Unstable FAQ). A classification of the printing, never a case
+-- (`sideDeckBackOf`: CR 718.1, the Unstable FAQ). A classification of the printing, never a case
 -- on which card it is.
 isNontraditional :: Card.Type.Card -> Bool
 isNontraditional card =
@@ -511,7 +511,7 @@ permute xs order =
 --   * Prompt.Shuffle, Prompt.RandomFirstPlayer, Prompt.RandomObject,
 --     Prompt.RandomStickerSheet, Prompt.RandomPlayer, Prompt.RandomCard,
 --     Prompt.RandomDepth, Prompt.RollDie and Prompt.FlipCoin, which ask for
---     RANDOMNESS rather than for a choice (CR 701.24, CR 729.2, CR 103.2d, CR
+--     RANDOMNESS rather than for a choice (CR 701.24, CR 730.2, CR 103.2d, CR
 --     706.1a, CR 705.1, and CR 701.9b's acknowledgment
 --     that "at random" is not "the player chooses"). A loop that reshuffles a
 --     library every cycle is still a loop of mandatory actions. Prompt.CallCoin is NOT among them: CR 705.2's call is a
@@ -524,13 +524,13 @@ choose p = do
   State.modify' (\gs -> gs {GameState.lastChoice = GameState.nextTimestamp gs})
   ask p
 
--- | CR 733.1: notes why `pid`'s cast, activation or combat declaration was
+-- | CR 734.1: notes why `pid`'s cast, activation or combat declaration was
 -- reversed, once the reversal has put back the state the action began in
 -- (GameState.undone).
 noteUndoing :: PlayerId -> Undoing.Undoing -> Game ()
 noteUndoing pid why = State.modify' (\gs -> gs {GameState.undone = Map.insert pid why (GameState.undone gs)})
 
--- | CR 733.1: `noteUndoing`'s note is news only until `pid` answers the next
+-- | CR 734.1: `noteUndoing`'s note is news only until `pid` answers the next
 -- choice it explains.
 clearUndoing :: PlayerId -> Game ()
 clearUndoing pid = State.modify' (\gs -> gs {GameState.undone = Map.delete pid (GameState.undone gs)})
@@ -1206,12 +1206,12 @@ cardOfSource gs mSource = case mSource of
   Nothing -> Nothing
   Just source -> case source of
     Source.OfCard pid -> cardOfPrinting pid gs
-    -- CR 712.8g: "the object represented by those cards has only the
+    -- CR 713.5c: "the object represented by those cards has only the
     -- characteristics of the combined back face", so the result printing answers
     -- and every reader past this point needs to know nothing about melding. The
     -- components are read by `componentsOf` below and by nothing else.
     Source.OfMeld meld -> cardOfPrinting (MeldSource.result meld) gs
-    -- CR 730.2a: the topmost component, which is the head of the list, and every
+    -- CR 731.2a: the topmost component, which is the head of the list, and every
     -- reader past this point needs to know nothing about merging. The rest are
     -- read by `componentsOf` below and -- for CR 702.140e's added abilities --
     -- by Parun.Engine.Projection.View.withMergedAbilities.
@@ -1227,7 +1227,7 @@ cardOfSource gs mSource = case mSource of
     -- takes the same posture, and its comment says why the pair must move
     -- together.
     Source.OfSpellCopy pid -> cardOfPrinting pid gs
-    -- CR 722.3c's "those characteristics become the copy's normal
+    -- CR 723.3c's "those characteristics become the copy's normal
     -- characteristics": the interned one-faced printing IS that copy's card. CR
     -- 707.12's copy names the copied card's printing instead, and carries a
     -- snapshot only where the card it copied had one.
@@ -1245,7 +1245,7 @@ cardOfPrinting pid gs = fmap Printing.card (printingOf pid gs)
 --
 -- The same arms and the same answers as `cardOfSource`, so a source with no card
 -- and no interned characteristics behind it -- an activated ability, a triggered
--- ability, CR 725.2's inherent trigger (CR 405.1) -- answers Nothing and there
+-- ability, CR 726.2's inherent trigger (CR 405.1) -- answers Nothing and there
 -- is nothing to copy.
 printingIdOfSource :: Source.Source -> Maybe PrintingId.PrintingId
 printingIdOfSource source = case source of
@@ -1266,36 +1266,36 @@ printingIdOfSource source = case source of
 -- lists in the order the meld or the merge recorded them.
 --
 -- A CLASSIFIER over Source rather than a case on OfMeld at each reader, because
--- the readers are shared: CR 730.3 through 730.3d restate CR 712.21 through
--- 712.21d almost word for word -- one permanent leaves and each component is put
+-- the readers are shared: CR 731.3 through 731.3d restate CR 713.8 through
+-- 713.8d almost word for word -- one permanent leaves and each component is put
 -- into the appropriate zone, the owner arranges them, the exiler fixes their
 -- relative timestamp order, an effect that finds the new object finds all of
 -- them, and one replacement effect applies to all of them -- so mutate extends
 -- this one function rather than the rules that read it. Each series then
--- ends on a sentence the other has no counterpart for: CR 712.21e counts a
--- melded permanent as one object but two cards, and CR 730.3e is about a merged
--- permanent's token components. CR 202.3c and CR 701.27g read this too.
+-- ends on a sentence the other has no counterpart for: CR 713.8e counts a
+-- melded permanent as one object but two cards, and CR 731.3e is about a merged
+-- permanent's token components. CR 202.3c and CR 701.27h read this too.
 --
 -- EMPTY rather than a singleton for OfCard: the question is which components
 -- represent an object that several may, and a one-card object has nothing for CR
--- 712.21's split to do. A reader wanting the ordinary card asks `cardOfSource`.
+-- 713.8's split to do. A reader wanting the ordinary card asks `cardOfSource`.
 --
--- COMPONENTS rather than bare printings, since CR 730.2d asks which of them is a
--- token and CR 730.3 puts a token one somewhere else than a card one
+-- COMPONENTS rather than bare printings, since CR 731.2d asks which of them is a
+-- token and CR 731.3 puts a token one somewhere else than a card one
 -- (`sourceOfComponent`). A reader that wants only the printings maps
 -- `printingOfComponent` over these.
 --
--- FLATTENED past a melded component (CR 730.2's mutate onto a melded permanent):
--- CR 730.3 puts "each of the individual components" into the appropriate zone
--- and CR 712.21 says a melded permanent is two cards there, so the answer stays
+-- FLATTENED past a melded component (CR 731.2's mutate onto a melded permanent):
+-- CR 731.3 puts "each of the individual components" into the appropriate zone
+-- and CR 713.8 says a melded permanent is two cards there, so the answer stays
 -- a list of cards and tokens and no reader of it has to compose the two
--- rules itself. The unflattened list, which CR 730.2a's topmost read wants, is
+-- rules itself. The unflattened list, which CR 731.2a's topmost read wants, is
 -- `mergeComponentsOf` below.
 componentsOf :: Source.Source -> Seq.Seq MergeComponent.MergeComponent
 componentsOf source = case source of
   -- CR 701.42b keeps a token out of a meld pair, so both components are cards.
   Source.OfMeld meld -> meldCardComponents meld
-  -- CR 730.2, in top-to-bottom order, which is the order CR 730.3a's arrangement
+  -- CR 731.2, in top-to-bottom order, which is the order CR 731.3a's arrangement
   -- prompt offers and CR 702.140e's ability fold reads.
   Source.OfMerge components -> foldMap (cardComponentsOf . ShownComponent.component) (Seq.fromList (NonEmpty.toList components))
   Source.OfCard _ -> Seq.empty
@@ -1308,7 +1308,7 @@ componentsOf source = case source of
   Source.OfInherentTrigger _ -> Seq.empty
 
 -- One component's cards, which is `componentsOf`'s flattening one component at a
--- time: a melded component is CR 712.21's two cards, and every other component
+-- time: a melded component is CR 713.8's two cards, and every other component
 -- is itself.
 cardComponentsOf :: MergeComponent.MergeComponent -> Seq.Seq MergeComponent.MergeComponent
 cardComponentsOf component = case component of
@@ -1323,16 +1323,16 @@ meldCardComponents :: MeldSource.MeldSource -> Seq.Seq MergeComponent.MergeCompo
 meldCardComponents meld = fmap MergeComponent.OfCard (Seq.fromList (NonEmpty.toList (MeldSource.components meld)))
 
 -- The printing one component's characteristics are read off: the card or token
--- itself, and for a melded component CR 712.8g's combined back face, which is no
+-- itself, and for a melded component CR 713.5c's combined back face, which is no
 -- card of it. The total read Parun.Types.MergeComponent's record field used to
 -- be, in this module for `componentIsToken`'s and `sourceOfComponent`'s reason.
 --
 -- The MELD arm is a regression fence rather than a proved answer: every
--- characteristic of a merged permanent is read off the copiable record CR 730.2a
+-- characteristic of a merged permanent is read off the copiable record CR 731.2a
 -- stamps at the merge (Parun.Engine.Binding.setMergeCopy), and `componentsOf`
--- has already expanded a melded component before CR 730.3's departure sees it,
+-- has already expanded a melded component before CR 731.3's departure sees it,
 -- so no case in the suite reddens when this arm answers a component card
--- instead. It is CR 712.8g's own sentence, which is why it stands.
+-- instead. It is CR 713.5c's own sentence, which is why it stands.
 printingOfComponent :: MergeComponent.MergeComponent -> PrintingId.PrintingId
 printingOfComponent component = case component of
   -- The printed card; a conjured duplicate's copiable values are read off
@@ -1363,7 +1363,7 @@ cardOfHandMember oid gs = do
 -- both reach through, so the two cannot drift on what the fallback is.
 --
 -- Nothing (no face singled out) answers with the layout's own view (CR 709.4 /
--- 712.8a): a split card's characteristics are its two halves combined in every
+-- 712.6a): a split card's characteristics are its two halves combined in every
 -- zone but the stack. Just n (CR 709.3b) answers with only that named half's
 -- characteristics -- looked up against the object's own STORED card, never a
 -- projected one.
@@ -1375,7 +1375,7 @@ resolveFace mName card = case mName of
   -- lint holds that of every loadable card, which is what makes faceNamed's
   -- answer unique whenever the name IS one of the card's own faces, and all
   -- three writers of this field (Event.changeZoneAttaching's mkObj, which CR
-  -- 709.3a's chosen half and CR 712.13's carried face both ride in on;
+  -- 709.3a's chosen half and CR 712.10's carried face both ride in on;
   -- Cast.asProposed, the gate's speculative
   -- stamp; and Resolve's CR 701.27a Transform arm) store a name they read from
   -- that same card's faces -- or, since fuse landed, the name of the card's
@@ -1440,7 +1440,7 @@ resolveFaceFor mObj card = case mObj of
     | Object.flipped obj,
       Just flipped <- Card.flippedFace card ->
         flipped
-  -- CR 707.2 / 709.3b / 715.3b: a half its copiable values have and its printed
+  -- CR 707.2 / 709.3b / 716.3b: a half its copiable values have and its printed
   -- card lacks, which is the only place the chosen name then resolves.
   Just obj
     | Just half <- copiedHalfOf obj ->
@@ -1478,7 +1478,7 @@ namesFor mObj card = case mObj of
     | Just half <- copiedHalfOf obj ->
         Set.singleton (Face.name half)
   _ -> case mObj >>= shownFace of
-    -- CR 709.4 / 712.8a / 715.4: the layout's own view, whose names are its
+    -- CR 709.4 / 712.6a / 716.4: the layout's own view, whose names are its
     -- contributing halves'.
     Nothing -> Card.combinedNames card
     -- CR 709.3b: a spell on the stack has only the named half's
@@ -1543,9 +1543,9 @@ copyStampOf obj = Binding.copyOf (Object.bindings obj) Applicative.<|> Object.du
 -- field but the cost choices.
 --
 -- The stamp describes the card's NORMAL characteristics alone, so it is laid
--- over the front face and nothing else: CR 715.3a casts an Adventure with only
+-- over the front face and nothing else: CR 716.3a casts an Adventure with only
 -- its alternative characteristics, and CR 708.4 a face-down spell with only
--- those. Parun.ConjureSpec's "CR 715.3a a duplicate of Flaxen Intruder" proves
+-- those. Parun.ConjureSpec's "CR 716.3a a duplicate of Flaxen Intruder" proves
 -- the first.
 --
 -- A stamp's halves and Adventure or Omen half are the copied card's own faces,
@@ -1564,12 +1564,12 @@ castingFaceOf obj card face = case copyStampOf obj of
           }
   _ -> face
 
--- CR 707.2 / 709.3 / 715.3 / 720.3: the faces this object may be cast as. Off
+-- CR 707.2 / 709.3 / 716.3 / 721.3: the faces this object may be cast as. Off
 -- its copy stamp when it has one, since the halves (CR 709.5b) and the Adventure
--- or Omen half (CR 715.2b, 720.2b) are copiable values: the stamp's halves, or
+-- or Omen half (CR 716.2b, 721.2b) are copiable values: the stamp's halves, or
 -- the front face under the stamp beside the stamp's alternative spell. The
 -- printed card's otherwise. Parun.ConjureSpec's "CR 707.2/709.5b a duplicate of
--- a copied Room is cast as a door" and "CR 707.2/715.2b a duplicate of a Clone
+-- a copied Room is cast as a door" and "CR 707.2/716.2b a duplicate of a Clone
 -- of Flaxen Intruder is cast as Welcome Home" prove the two stamped arms.
 castableFacesOf :: Object.Object -> Card -> [Face Card]
 castableFacesOf obj card = case copyStampOf obj of
@@ -1617,7 +1617,7 @@ stampHalfNamed name stamp =
   (PC.halves stamp >>= Card.faceNamed name)
     Applicative.<|> List.find ((== name) . Face.name) (Maybe.maybeToList (PC.alternativeSpell stamp))
 
--- CR 709.3b / 715.3b / 720.3b: the stamp's half this object's chosen name
+-- CR 709.3b / 716.3b / 721.3b: the stamp's half this object's chosen name
 -- (Object.face) singles out, the one a spell cast off castableFacesOf above has.
 copiedHalfOf :: Object.Object -> Maybe (Face Card)
 copiedHalfOf obj = do
@@ -1625,13 +1625,13 @@ copiedHalfOf obj = do
   stamp <- copyStampOf obj
   stampHalfNamed name stamp
 
--- CR 715.2b / 720.2b: the Adventure or Omen half this object has, a copiable
+-- CR 716.2b / 721.2b: the Adventure or Omen half this object has, a copiable
 -- value -- and the value Parun.Engine.Projection.View.baseCharacteristics seeds
 -- ProjectedCharacteristics.alternativeSpell from.
 alternativeSpellOf :: ObjectId -> GameState -> Maybe (Face Card)
 alternativeSpellOf = faceUpCopiable (copiableOf PC.alternativeSpell Card.alternativeSpellFace)
 
--- CR 722.2a / 722.2b: the PREPARE SPELL this object has -- the copy snapshot's
+-- CR 723.2a / 723.2b: the PREPARE SPELL this object has -- the copy snapshot's
 -- when the object is copying something, and its own printed card's otherwise
 -- (copiableOf). The rule states the same thing rule 709.5b
 -- does: "the existence and values of these alternative characteristics are part
@@ -1639,17 +1639,17 @@ alternativeSpellOf = faceUpCopiable (copiableOf PC.alternativeSpell Card.alterna
 -- an object's COPIABLE values and not about the card printed underneath it, and a
 -- Clone that entered as a copy of a preparation card has one.
 --
--- CR 722.3c's "ignoring other exceptions to the copying process that apply to
+-- CR 723.3c's "ignoring other exceptions to the copying process that apply to
 -- that permanent" does NOT license reading the printed card instead. That clause
 -- is about CR 707.9's riders -- a copy effect that says "except it's a 1/1" --
--- being disregarded when the prepare copy is minted; rule 722.2b's own sentence
--- is untouched by it, and Parun.PreparationSpec's "CR 722.2b a Clone of the
+-- being disregarded when the prepare copy is minted; rule 723.2b's own sentence
+-- is untouched by it, and Parun.PreparationSpec's "CR 723.2b a Clone of the
 -- Aviator becomes prepared and mints a Jump copy" is what proves the difference.
 --
 -- The value Parun.Engine.Projection.View.baseCharacteristics seeds
 -- ProjectedCharacteristics.prepare from -- so a copy of a copy of a preparation
--- card goes on carrying the inset frame. Every zone, halvesOf's scope: CR 722.2a
--- says "a card, spell, or permanent that has a prepare spell", and CR 722.2b
+-- card goes on carrying the inset frame. Every zone, halvesOf's scope: CR 723.2a
+-- says "a card, spell, or permanent that has a prepare spell", and CR 723.2b
 -- copies the alternative characteristics' existence without naming a zone.
 prepareSpellOf :: ObjectId -> GameState -> Maybe (Face Card)
 prepareSpellOf = faceUpCopiable (copiableOf PC.prepare Card.prepareFace)
@@ -1732,27 +1732,27 @@ faceUpFaceOf oid gs = do
   Just (resolveFaceFor (lookupObject oid gs) (Printing.card printing))
 
 -- `faceOf`, narrowed to the one characteristic that is not always read off the
--- live face: CR 712.8e calculates a nonmodal double-faced permanent's mana value
+-- live face: CR 712.6d calculates a nonmodal double-faced permanent's mana value
 -- from its FRONT face's mana cost even while its back face is up. Every mana
 -- value read goes through here rather than through faceOf, and
 -- Parun.Engine.Card.manaCostFace is where the layout decides.
 --
 -- Its own function rather than a flag on faceOf, because the two answers differ
 -- for exactly one object -- a transformed permanent -- and every OTHER
--- characteristic of that permanent is its back face's (CR 712.8e's first
+-- characteristic of that permanent is its back face's (CR 712.6d's first
 -- sentence). Collapsing them either way is a silent wrong answer.
 --
 -- SEVERAL faces rather than one, because CR 202.3c reads more than one card:
 -- "the mana value of a melded permanent is calculated as though it had the
 -- combined mana cost of the front faces of each card that represents it" (CR
--- 712.8g says the same as a sum of the front faces' mana values). So the answer
+-- 713.5c says the same as a sum of the front faces' mana values). So the answer
 -- is the faces a mana cost is read off and the caller adds them up; every other
 -- object answers with exactly one, and an object with no card behind it answers
 -- with none. That emptiness is not CR 202.3a's 0: the rule's answer for an
 -- ability on the stack is settled by Parun.Engine.Projection.View's own no-face
 -- arm, which this function is never asked for.
 --
--- CR 708.2a's "no mana cost" wins over CR 712.8e, and the rules leave no room
+-- CR 708.2a's "no mana cost" wins over CR 712.6d, and the rules leave no room
 -- for it not to: a face-down permanent's characteristics are the listed ones and
 -- nothing else, so there is no front face for that rule to reach back to. The
 -- mana value that falls out is CR 202.3a's 0. It is asked FIRST, ahead of the
@@ -1763,7 +1763,7 @@ manaCostFacesOf oid gs = case fmap Object.facing (lookupObject oid gs) of
   Just (Facing.FaceDown state) -> Seq.singleton (Card.faceDownFace (FaceDownState.listed state))
   _ -> case fmap (meldComponentsOf . Object.source) (lookupObject oid gs) of
     -- CR 202.3c: each COMPONENT's front face, and never the combined face the
-    -- rest of the object's characteristics come off (CR 712.8g) -- that face
+    -- rest of the object's characteristics come off (CR 713.5c) -- that face
     -- prints no mana cost of its own, and CR 202.3a's exception for a melded
     -- permanent is what keeps the 0 it would otherwise have off the answer.
     Just components | not (Seq.null components) -> foldMap (frontFaceOfPrinting gs) components
@@ -1772,26 +1772,26 @@ manaCostFacesOf oid gs = case fmap Object.facing (lookupObject oid gs) of
       let card = Printing.card printing
       Just (Card.manaCostFace card (resolveFaceFor (lookupLayerOne oid gs) card))
 
--- `componentsOf` NARROWED to CR 730.2's own subject, which is a merged permanent
+-- `componentsOf` NARROWED to CR 731.2's own subject, which is a merged permanent
 -- and nothing else, TOP TO BOTTOM. meldComponentsOf below is the same narrowing
--- on the other side of that classifier, and for the same reason: CR 712.8g gives
+-- on the other side of that classifier, and for the same reason: CR 713.5c gives
 -- a melded permanent only its combined back face, so a reader that must see past
 -- the topmost component of a MERGE must not see past a meld's result face.
 --
 -- Its two readers are `facesOfWithLastKnown` and `cardsOfWithLastKnown` below,
 -- for CR 702.140e's abilities. Every other rule that looks past the topmost
--- component takes `componentsOf`, which CR 712.21 and CR 730.3 share.
+-- component takes `componentsOf`, which CR 713.8 and CR 731.3 share.
 --
 -- UNFLATTENED where `componentsOf` expands a melded component into its two
 -- cards: rule 702.140e reads the abilities each component contributes, and CR
--- 712.8g gives a melded one only its combined back face's -- which is what
+-- 713.5c gives a melded one only its combined back face's -- which is what
 -- `printingOfComponent` answers with.
 mergeComponentsOf :: Source.Source -> Seq.Seq PrintingId.PrintingId
 mergeComponentsOf source = case source of
   Source.OfMerge components -> fmap (printingOfComponent . ShownComponent.component) (Seq.fromList (NonEmpty.toList components))
   Source.OfMeld _ -> Seq.empty
   -- No copy of a card parun mints is on the battlefield to be merged INTO: CR
-  -- 722.3c's stays in exile, and CR 707.12's producers in data/cards/ copy
+  -- 723.3c's stays in exile, and CR 707.12's producers in data/cards/ copy
   -- instant and sorcery cards alone. A card offering a copy of a PERMANENT card
   -- would refute that. Parun.Engine.Event.mergeComponents' own arm for it.
   Source.OfCardCopy _ -> Seq.empty
@@ -1805,10 +1805,10 @@ mergeComponentsOf source = case source of
 
 -- `componentsOf` NARROWED to CR 202.3c's own subject, which is a melded
 -- permanent and nothing else: rule 202.3c is an exception to CR 202.3, and CR
--- 730.2a states no such exception -- a merged permanent's mana value is its
+-- 731.2a states no such exception -- a merged permanent's mana value is its
 -- topmost component's like its every other characteristic. So the two readers of
 -- rule 202.3c -- `manaCostFacesOf` above and Parun.Engine.Event.copiedSnapshot's
--- zeroing -- take this one, where CR 712.21's and CR 730.3's shared departure
+-- zeroing -- take this one, where CR 713.8's and CR 731.3's shared departure
 -- takes `componentsOf`.
 --
 -- A SECOND classifier over Source rather than a Bool beside the first, so that
@@ -1817,7 +1817,7 @@ meldComponentsOf :: Source.Source -> Seq.Seq PrintingId.PrintingId
 meldComponentsOf source = case source of
   Source.OfMeld meld -> Seq.fromList (fmap ComponentCard.printing (NonEmpty.toList (MeldSource.components meld)))
   -- A merged permanent answers nothing here even when its topmost component is
-  -- a MELDED one: CR 730.2a's copiable effect carries that component's mana
+  -- a MELDED one: CR 731.2a's copiable effect carries that component's mana
   -- value onto the permanent at the merge (Parun.Engine.Binding.setMergeCopy), so
   -- rule 202.3c is read where the meld itself was and not again here.
   Source.OfMerge _ -> Seq.empty
@@ -1831,14 +1831,14 @@ meldComponentsOf source = case source of
   Source.OfInherentTrigger _ -> Seq.empty
 
 -- CR 108.1's Oracle card reference, as far as this game knows it: every face of
--- every card an object is or is represented by (CR 108.2, 712.21, 730.2), every
+-- every card an object is or is represented by (CR 108.2, 713.8, 731.2), every
 -- card a player holds outside the game (CR 400.11a), and every card
 -- Prompt.LookUpCard answered with (GameState.lookedUp). Keyed by name, each
 -- paired with the view it is judged by (Card.referenceViews).
 --
 -- A token, an emblem and a copy are no card (CR 108.2), so their printings are
 -- left out. A melded permanent brings its combined back face too: it is an
--- object represented by Magic cards (CR 108.2, 712.4a).
+-- object represented by Magic cards (CR 108.2, 713.1a).
 referenceFaces :: GameState -> Map.Map CardName.CardName (Face Card)
 referenceFaces gs =
   let ofSource source = case source of
@@ -1929,7 +1929,7 @@ faceOfWithLastKnown oid gs = case fmap Object.facing (lookupObject oid gs) of
 -- Over EVERY card representing the object (CR 702.140e), which is what lets a
 -- delayed ability an under-component declared be found at all. Left-biased, so a
 -- name two components both declare resolves to the topmost one's text -- CR
--- 730.2a's tie-break, and unreachable while Parun.CardSpec's D4 dataflow lint
+-- 731.2a's tie-break, and unreachable while Parun.CardSpec's D4 dataflow lint
 -- keeps a name local to the face that arms it.
 delayedAbilitiesOf :: ObjectId -> GameState -> Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))
 delayedAbilitiesOf oid gs = Map.unions (fmap Face.delayedAbilities (facesOfWithLastKnown oid gs))
@@ -1984,7 +1984,7 @@ carriedDelayedAbility arm = case ArmDelayedTrigger.ability arm of
 
 -- CR 702.140e: the faces of every card representing `oid`, topmost first -- one
 -- face for an ordinary object, and a merged permanent's whole stack. The one
--- read that looks past CR 730.2a's topmost component WITHOUT going through the
+-- read that looks past CR 731.2a's topmost component WITHOUT going through the
 -- copy snapshot, and CR 603.7 is why: a delayed ability's declaration is card
 -- data rather than a characteristic, so no projection carries it and there is
 -- nothing but the printings to walk; see #3373.
@@ -1999,7 +1999,7 @@ facesOfWithLastKnown oid gs =
       (drop 1 (Foldable.toList (foldMap mergeComponentsOf (sourceOfWithLastKnown oid gs))))
 
 -- CR 702.140e: every card representing `oid`, topmost first -- what
--- `cardOfWithLastKnown` answers with, widened past CR 730.2a's topmost
+-- `cardOfWithLastKnown` answers with, widened past CR 731.2a's topmost
 -- component for facesOfWithLastKnown's reason. Its reader is
 -- declaredDelayedAbility's fallback, which asks the
 -- card rather than the face that is up.
@@ -2061,7 +2061,7 @@ announcedXOf oid gs = Maybe.fromMaybe 0 (Monad.join (liveOrLastKnown Object.anno
 --
 -- ONE object per call and one stamp per call, unlike turnFaceOver above: rule
 -- 613.7f gives the timestamp to the permanent that turned over rather than to the
--- turning-over, and nothing compares two of these stamps the way CR 701.27f
+-- turning-over, and nothing compares two of these stamps the way CR 701.27g
 -- compares turnFaceOver's.
 --
 -- The STAMP is written on the battlefield (CR 110.1) and, for CR 613.7j, on a
@@ -2083,10 +2083,10 @@ turnFacing facing oid gs =
       turned = next {GameState.objects = Map.adjust adjust oid (GameState.objects next)}
    in if restamps then restampStickers oid turned else turned
 
--- CR 730.2f: `object` showing `facing`, and for a merged permanent
+-- CR 731.2f: `object` showing `facing`, and for a merged permanent
 -- every component with it -- "if a merged permanent is turned face down, each
 -- face-up component that represents it is turned face down", and face up the
--- same way. Parun.MutateSpec's "CR 730.2i a merged permanent that was face down
+-- same way. Parun.MutateSpec's "CR 731.2i a merged permanent that was face down
 -- transforms once turned face up" proves the face-up half.
 withFacing :: Facing.Facing -> Object -> Object
 withFacing facing object =
@@ -2095,10 +2095,10 @@ withFacing facing object =
         other -> other
    in object {Object.facing = facing, Object.source = source}
 
--- CR 712.16 / 730.2j: the permanent is represented by a double-faced card or
--- token, or is melded or merged with a double-faced component, so it can't be
--- turned face down. Read off the cards (cardOf, componentsOf), never the
--- projection -- turnsTo's footing, and CR 712.9's Example is why: a Clone
+-- CR 712.13 / 713.7 / 731.2j: the permanent is represented by a double-faced
+-- card or token or by meld cards, or is merged with such a component, so it
+-- can't be turned face down. Read off the cards (cardOf, componentsOf), never the
+-- projection -- turnsTo's footing, and CR 701.27d's Example is why: a Clone
 -- copying a double-faced permanent is one-faced.
 isDoubleFacedPermanent :: ObjectId -> GameState -> Bool
 isDoubleFacedPermanent oid gs = case lookupObject oid gs of
@@ -2109,17 +2109,17 @@ isDoubleFacedPermanent oid gs = case lookupObject oid gs of
           if Seq.null components
             then Foldable.toList (cardOf oid gs)
             else Maybe.mapMaybe (cardOfSource gs . Just . sourceOfComponent) (Foldable.toList components)
-     in any Card.isDoubleFaced cards
+     in any Card.refusesFaceDown cards
 
 -- CR 701.27a over ONE object: "turn it over so that its other face is up", or
 -- leave the map exactly as it was. The primitive BOTH transform paths share --
--- Parun.Engine.Resolve's CR 701.27a opcode, which adds CR 701.27f's already-turned
+-- Parun.Engine.Resolve's CR 701.27a opcode, which adds CR 701.27g's already-turned
 -- gate on top, and Parun.Engine.Daytime's CR 702.145c/f sweep, which has no such
 -- gate because that rule turns a permanent over from a STATIC ability rather than
 -- from an ability on the stack.
 --
 -- ONE FIELD, in place (for a merged permanent its components' faces and its
--- merge stamps, `turnedObject` below), because CR 712.18 says the permanent is
+-- merge stamps, `turnedObject` below), because CR 712.15 says the permanent is
 -- not a new object:
 -- "when a double-faced permanent transforms or converts, it doesn't become a new
 -- object. Any effects that applied to that permanent will continue to apply to
@@ -2129,13 +2129,13 @@ isDoubleFacedPermanent oid gs = case lookupObject oid gs of
 --
 -- The TIMESTAMP is the one thing that does not ride through: CR 613.7g gives a
 -- double-faced permanent a new one each time it transforms or converts. Rule
--- 712.18 does not deny it -- turnFacing above restamps without minting an object
+-- 712.15 does not deny it -- turnFacing above restamps without minting an object
 -- either, which is CR 613.7f.
 --
 -- TWO stamps, and they answer different questions. Object.turnedOverAt takes
 -- `now`, supplied by the caller so that a caller turning SEVERAL permanents over
 -- at once -- CR 608.2f for one Moonmist, CR 702.145c for one nightfall -- gives
--- them all the same one, CR 701.27f's comparison against a resolving ability
+-- them all the same one, CR 701.27g's comparison against a resolving ability
 -- being unable to tell simultaneous victims apart. Object.timestamp takes a fresh
 -- one PER PERMANENT, because CR 613.7g stamps the permanent rather than the
 -- turning-over and Parun.Engine.Projection's abilityRemovalAfter rests on two
@@ -2146,14 +2146,14 @@ isDoubleFacedPermanent oid gs = case lookupObject oid gs of
 -- this fold takes them in that order.
 --
 -- Reads the object's OWN card (cardOf), never a projected one, which is the
--- footing Object.face is stored on: CR 712.9's first Example turns on a Clone
+-- footing Object.face is stored on: CR 701.27d's first Example turns on a Clone
 -- being a one-faced card whatever it copied, and that is the same read.
 --
 -- CR 613.7k: the stickers on it take new timestamps right after its own. A
 -- regression fence: no test transforms a stickered permanent.
 --
 -- A MERGED permanent takes neither: CR 613.7g stamps a double-faced permanent,
--- and CR 730.2i says a merged permanent is not one (`takesTurnStamp`).
+-- and CR 731.2i says a merged permanent is not one (`takesTurnStamp`).
 turnFaceOver :: Timestamp.Timestamp -> ObjectId -> GameState -> GameState
 turnFaceOver now oid gs = case turnsTo oid gs of
   Just turned
@@ -2164,8 +2164,8 @@ turnFaceOver now oid gs = case turnsTo oid gs of
   Nothing -> gs
 
 -- CR 613.7g: does turning this permanent over give it a new timestamp? Every
--- double-faced permanent's does, and a merged permanent's does not, CR 730.2i
--- saying it is not one. Parun.MutateSpec's "CR 730.2i each double-faced
+-- double-faced permanent's does, and a merged permanent's does not, CR 731.2i
+-- saying it is not one. Parun.MutateSpec's "CR 731.2i each double-faced
 -- component of a merged permanent turns over on its own" proves it.
 takesTurnStamp :: ObjectId -> GameState -> Bool
 takesTurnStamp oid gs = case fmap Object.source (lookupObject oid gs) of
@@ -2174,13 +2174,13 @@ takesTurnStamp oid gs = case fmap Object.source (lookupObject oid gs) of
 
 -- `turnFaceOver`'s write as a counterfactual board, with no battlefield gate and
 -- no stamp: this object with its double-faced card turned over, or the board
--- unchanged. Parun.Engine.Event.merge's CR 730.2i reading asks it of both sides.
+-- unchanged. Parun.Engine.Event.merge's CR 731.2i reading asks it of both sides.
 --
 -- Asked of the object FACE UP, the posture of the layer-1a read it feeds
 -- (Parun.Engine.Projection.View.copiableCharacteristicsFaceUp): a face-down
 -- merge target turns face up, every component with it, before it can transform
--- (CR 730.2f), so CR 712.15a's refusal in `turnedObject` is not this reading's.
--- Parun.MutateSpec's "CR 730.2i a merged permanent that was face down transforms
+-- (CR 731.2f), so CR 712.12a's refusal in `turnedObject` is not this reading's.
+-- Parun.MutateSpec's "CR 731.2i a merged permanent that was face down transforms
 -- once turned face up" proves it. A face-up pile's face-down component stays
 -- face down here and does not turn (`componentTurnsTo`); a target merged UNDER
 -- a face-up card stays face down too, which Parun.Engine.Event.merge asks
@@ -2192,7 +2192,7 @@ withFaceTurned oid gs =
         Just turned -> (turnStoredCopies oid up) {GameState.objects = Map.insert oid turned (GameState.objects up)}
         Nothing -> up
 
--- CR 730.2i under a stored copy row: a merge applied over the row turns with
+-- CR 731.2i under a stored copy row: a merge applied over the row turns with
 -- the permanent, so each row covering `oid` that carries a turned reading
 -- swaps it in, `Binding.turnMergeCopy`'s swap one carrier over. Only a merge
 -- writes that reading (Parun.Engine.Event.merge), on a row carved out for its
@@ -2242,8 +2242,8 @@ flipPermanent oid gs
 -- Apprentice. Parun.FlipSpec's "CR 707.3 a Clone of Akki Lavarunner flips into
 -- Tok-Tok, and a Clone of that is Akki" proves it. A merged permanent answers off
 -- the flipped reading its merge stamped, which folds every component's (CR
--- 730.2h), so a flip card merged UNDER another component counts too -- proved by
--- Parun.MutateSpec's "CR 730.2h a merged permanent flips for a flip component that
+-- 731.2h), so a flip card merged UNDER another component counts too -- proved by
+-- Parun.MutateSpec's "CR 731.2h a merged permanent flips for a flip component that
 -- is not its topmost one".
 flipsOver :: ObjectId -> GameState -> Bool
 flipsOver oid gs = Set.member oid (GameState.battlefield gs) && hasFlipHalf oid gs
@@ -2392,7 +2392,7 @@ supersedeStoredCopies oids gs =
 
 -- | CR 710.1b / 707.3: do this object's COPIABLE values include a flip card's
 -- alternative half? Its copy snapshot's answer when it has one -- the flipped
--- reading it nests as PC.flipped, a merge's (CR 730.2h) or a copy's -- and its
+-- reading it nests as PC.flipped, a merge's (CR 731.2h) or a copy's -- and its
 -- printed card's otherwise (faceUpCopiable). A copy of anything else has none
 -- whatever card is printed underneath it, and a stored copy effect's row
 -- replaces the merge's stamp, flipped reading and all (Binding.setCopy):
@@ -2421,12 +2421,12 @@ withFlipped status oid gs = gs {GameState.objects = Map.adjust (\o -> o {Object.
 --   * the id names nothing on the BATTLEFIELD. CR 701.27a transforms a
 --     PERMANENT, which CR 110.1 makes an object on the battlefield.
 --   * the id names nothing at all, or nothing with a card behind it (CR 405.1).
---   * Card.turnedOver declines -- CR 701.27c's card that is not double-faced,
---     CR 701.27d's instant or sorcery face -- for the card, or for every
---     component of a merged permanent (CR 730.2i).
---   * CR 712.4c / 712.9: the permanent is melded, and so neither transformable
+--   * Card.turnedOver declines -- CR 701.27d's card that is not double-faced,
+--     CR 701.27e's instant or sorcery face -- for the card, or for every
+--     component of a merged permanent (CR 731.2i).
+--   * CR 713.1c / 712.7: the permanent is melded, and so neither transformable
 --     nor convertible.
---   * CR 712.15a: the permanent is face down.
+--   * CR 712.12a: the permanent is face down.
 --
 -- Read ahead of the act by every road that restamps a batch, which must know
 -- which of the ids it swept will actually take a CR 613.7m stamp before it asks
@@ -2440,20 +2440,20 @@ turnsTo oid gs
 -- `turnsTo` without its battlefield gate: this object with its double-faced card
 -- turned over, its Object.face naming the face it would show.
 --
--- CR 730.2i for a merged permanent: "transforming or converting that permanent
+-- CR 731.2i for a merged permanent: "transforming or converting that permanent
 -- causes each of those double-faced components to turn so that its other face
 -- is up", so each component turns from the face IT shows, the pile turns if any
 -- component does, and the merge's turned reading becomes the current one
 -- (Binding.turnMergeCopy), since its characteristics come off that stamp.
--- Parun.MutateSpec's "CR 730.2i each double-faced component of a merged
+-- Parun.MutateSpec's "CR 731.2i each double-faced component of a merged
 -- permanent turns over on its own" proves it.
 turnedObject :: Object -> GameState -> Maybe Object
 turnedObject object gs
-  -- CR 712.4c: "Unlike other double-faced cards, meld cards cannot be
-  -- transformed or converted. Any instructions to do so are ignored", and CR
-  -- 712.9 says it from the permanent's side. Asked of the OBJECT here, where
+  -- CR 713.1c: "Meld cards cannot be transformed or converted. Any
+  -- instructions to do so are ignored", and CR 712.7 says it from the
+  -- permanent's side. Asked of the OBJECT here, where
   -- Parun.Engine.Card.turnedOver asks it of a meld CARD: a melded permanent's
-  -- own card is the interned combined face (CR 712.8g), whose layout says
+  -- own card is the interned combined face (CR 713.5c), whose layout says
   -- nothing about the pair it came from, so the cards representing it are the
   -- only thing left that does.
   --
@@ -2463,18 +2463,18 @@ turnedObject object gs
   -- combined face printed nightbound would otherwise turn over that way. CR
   -- 701.28a's convert is a third road and needs nothing of its own -- it
   -- shares Parun.Engine.Resolve's turnPermanentsOver with Transform, so CR
-  -- 701.28f's "can't transform" also can't convert is this same guard.
+  -- 701.28g's "can't transform" also can't convert is this same guard.
   --
   -- OVER-DETERMINED on every board Magic can reach: no printed meld pair
   -- combines into a double-faced card, so Card.turnedOver would decline the
   -- one-faced combined face anyway. What separates the two readings is
-  -- Parun.MeldSpec's "CR 712.4c a melded permanent refuses the turn its own
+  -- Parun.MeldSpec's "CR 713.1c a melded permanent refuses the turn its own
   -- card would allow", which melds into a double-faced card -- card data the
   -- opcode carries -- so that this guard is the only thing refusing.
   | not (Seq.null (meldComponentsOf (Object.source object))) = Nothing
-  -- CR 712.15a: "while face down, a double-faced permanent can't transform or
+  -- CR 712.12a: "while face down, a double-faced permanent can't transform or
   -- convert", and a face-down merged permanent's components are face down with
-  -- it (CR 730.2f). Parun.TransformSpec's "CR 712.15a Moonmist does not
+  -- it (CR 731.2f). Parun.TransformSpec's "CR 712.12a Moonmist does not
   -- transform a face-down Thallid that Maskwood Nexus made a Human" proves it.
   | Facing.isFaceDown (Object.facing object) = Nothing
   | otherwise = case Object.source object of
@@ -2486,13 +2486,13 @@ turnedObject object gs
               else Just object {Object.source = Source.OfMerge (fmap turnOne turns), Object.bindings = Binding.turnMergeCopy (Object.bindings object)}
       source -> cardOfSource gs (Just source) >>= Card.turnedOver (Object.face object) >>= \name -> Just object {Object.face = Just name}
 
--- The face one component of a merged permanent would turn to (CR 730.2i), off
+-- The face one component of a merged permanent would turn to (CR 731.2i), off
 -- its printed card, `turnsTo`'s footing. Nothing for a melded component, which
--- CR 712.4c keeps from turning -- a regression fence, since no printed combined
+-- CR 713.1c keeps from turning -- a regression fence, since no printed combined
 -- face is double-faced.
 --
--- Nothing for a face-down component, which CR 712.15a keeps from turning under
--- a face-up topmost one (CR 730.2e). Parun.MutateSpec's "CR 712.15a Moonmist
+-- Nothing for a face-down component, which CR 712.12a keeps from turning under
+-- a face-up topmost one (CR 731.2e). Parun.MutateSpec's "CR 712.12a Moonmist
 -- does not turn a face-down component of a face-up pile" proves it.
 componentTurnsTo :: ShownComponent.ShownComponent -> GameState -> Maybe CardName.CardName
 componentTurnsTo shown gs = case ShownComponent.component shown of
@@ -2501,8 +2501,8 @@ componentTurnsTo shown gs = case ShownComponent.component shown of
   component -> cardOfSource gs (Just (sourceOfComponent component)) >>= Card.turnedOver (ShownComponent.face shown)
 
 -- The face this object shows, by name: Object.face, and for a merged permanent
--- its topmost component's (CR 730.2a), each component keeping its own (CR
--- 730.2i).
+-- its topmost component's (CR 731.2a), each component keeping its own (CR
+-- 731.2i).
 shownFace :: Object -> Maybe CardName.CardName
 shownFace object = case Object.source object of
   Source.OfMerge components -> ShownComponent.face (NonEmpty.head components)
@@ -2529,10 +2529,10 @@ frontFaceQuestion object gs = case Object.source object of
 
 -- CR 701.27a over a swept set, from the other side: which of these ids ACTUALLY
 -- turned over. `turnFaceOver` above declines six ways -- an id naming nothing on
--- the battlefield, no card behind it, CR 701.27c's card that is not double-faced,
--- CR 701.27d's instant or sorcery face, CR 712.4c's melded permanent, CR
--- 712.15a's face-down one -- and
--- Parun.Engine.Resolve's `turnOver` adds CR 701.27f and CR 702.145b on top. A
+-- the battlefield, no card behind it, CR 701.27d's card that is not double-faced,
+-- CR 701.27e's instant or sorcery face, CR 713.1c's melded permanent, CR
+-- 712.12a's face-down one -- and
+-- Parun.Engine.Resolve's `turnOver` adds CR 701.27g and CR 702.145b on top. A
 -- turn that did not happen is not an event, so both roads read the answer here
 -- rather than each keeping its own list, and neither can come to disagree with
 -- the write about what turned.
@@ -2545,12 +2545,12 @@ facesTurned before after =
   let faceIn objects oid = fmap shownFaces (Map.lookup oid objects)
    in filter (\oid -> faceIn before oid /= faceIn after oid)
 
--- CR 712.11: is this object showing the FRONT face of its card? The question CR
+-- CR 712.8: is this object showing the FRONT face of its card? The question CR
 -- 702.145c asks of a daybound permanent, CR 702.145f asks (inverted) of a
--- nightbound one, and CR 701.27g asks (inverted, beside a battlefield conjunct)
+-- nightbound one, and CR 701.27h asks (inverted, beside a battlefield conjunct)
 -- of a "transformed permanent".
 --
--- Nothing in Object.face IS the front face, not an unknown one: CR 712.11 casts a
+-- Nothing in Object.face IS the front face, not an unknown one: CR 712.8 casts a
 -- double-faced spell with its front face up by default, so a permanent nothing
 -- has singled a face out for is showing its front, and resolveFace above answers
 -- with the layout's own view for the same reason. Card.faces is a NonEmpty, so
@@ -2562,13 +2562,13 @@ facesTurned before after =
 -- permanents, where CR 110.1 leaves no such object, and reads it beside a
 -- keyword test that such an object fails anyway;
 -- Parun.Engine.Projection.View.viewOfCharacteristics reads it beside a battlefield
--- conjunct of its own, so CR 701.27g answers False for such an object either
+-- conjunct of its own, so CR 701.27h answers False for such an object either
 -- way.
 --
 -- The face is `frontFaceQuestion`'s, so a merged permanent answers for its
--- topmost double-faced component and not its topmost one (CR 730.2i). Proved by
+-- topmost double-faced component and not its topmost one (CR 731.2i). Proved by
 -- Parun.MutateSpec's
--- "CR 730.2i/702.145c a Cubwarden over a nightbound Werewolf turns with the day
+-- "CR 731.2i/702.145c a Cubwarden over a nightbound Werewolf turns with the day
 -- and back with the night".
 --
 -- Where a pile's double-faced components show different faces the CR defines
@@ -2592,7 +2592,7 @@ isSpell oid gs = case lookupObject oid gs of
       -- CR 701.42a puts a melded permanent onto the BATTLEFIELD, so it is never a
       -- card on the stack; the zone conjunct above already answers False for it.
       Source.OfMeld _ -> False
-      -- CR 730.2 merges an object INTO a permanent, so a merged permanent is
+      -- CR 731.2 merges an object INTO a permanent, so a merged permanent is
       -- never on the stack either; the zone conjunct answers False for it too.
       Source.OfMerge _ -> False
       Source.OfToken _ -> False
@@ -2604,7 +2604,7 @@ isSpell oid gs = case lookupObject oid gs of
       -- definition would otherwise exclude. What makes a Counterspell able to
       -- counter one, and a Twincast able to copy it again.
       Source.OfSpellCopy _ -> True
-      -- CR 722.3c calls it one: "that permanent loses the prepared designation at
+      -- CR 723.3c calls it one: "that permanent loses the prepared designation at
       -- the time the SPELL becomes cast". So a cast prepare copy is a spell for
       -- the same reason CR 112.1a's copy of a spell is -- rule 112.1's
       -- card-on-the-stack definition would exclude both -- and a Counterspell
@@ -2622,7 +2622,7 @@ isSpell oid gs = case lookupObject oid gs of
 -- CR 701.6a's graveyard for a spell and its bare removal from the stack for an
 -- ability.
 --
--- CR 725.2's sourceless inherent monarch triggers are triggered abilities all
+-- CR 726.2's sourceless inherent monarch triggers are triggered abilities all
 -- the same, so a Stifle may counter one. An emblem stays in the command zone
 -- (CR 114.1 / 114.4) and a token is never on the stack, so both answer False
 -- whatever zone they are found in; CR 112.1a's copy of a spell is a SPELL, and
@@ -2667,7 +2667,7 @@ activatedAbilityKind oid gs = case lookupObject oid gs of
     | otherwise -> case Object.source obj of
         Source.OfAbility activated -> Just (Loyalty.loyaltyKindOf (ActivatedAbility.cost (ActivatedAbilitySource.ability activated)))
         -- CR 113.3c's kind, which isAbility above keeps and this one does not. The
-        -- inherent one is a triggered ability all the same (CR 725.2), sourceless or
+        -- inherent one is a triggered ability all the same (CR 726.2), sourceless or
         -- not.
         Source.OfTrigger _ -> Nothing
         Source.OfInherentTrigger _ -> Nothing
@@ -2720,7 +2720,7 @@ isEmblem oid gs = case lookupObject oid gs of
 
 -- CR 113.7: the object an ability on the stack came from -- the one whose
 -- ability was activated or triggered. Nothing for anything that is not an
--- ability on the stack, and for CR 725.2's inherent trigger, which has no
+-- ability on the stack, and for CR 726.2's inherent trigger, which has no
 -- source. The id alone: once the source has left, CR 113.7a's last known
 -- information is filed under it (Parun.Engine.Count.lastKnownView).
 abilitySourceOf :: ObjectId -> GameState -> Maybe ObjectId
@@ -2758,7 +2758,7 @@ isToken oid gs = maybe False (sourceIsToken . Object.source) (lookupObject oid g
 -- CR 108.2: is this object a card? A token (CR 108.2b), a copy of a spell or of
 -- a card and an ability on the stack are not; both cards a melded permanent is
 -- represented by are, and a merged permanent is one whose topmost component is
--- not a token (CR 730.2d). A classification of the object's KIND, isToken's
+-- not a token (CR 731.2d). A classification of the object's KIND, isToken's
 -- standing.
 isCardObject :: ObjectId -> GameState -> Bool
 isCardObject oid gs = maybe False (sourceIsCard . Object.source) (lookupObject oid gs)
@@ -2784,7 +2784,7 @@ sourceIsCard source = case source of
 -- is a card's, so it survives only where the new source is still a card: a token
 -- (CR 111.6) and a copy (CR 707.10, 707.12) carry none. Each card of a merged
 -- or melded permanent keeps its own in Parun.Types.ComponentCard, which
--- representComponent hands back at CR 712.21's and CR 730.3's split.
+-- representComponent hands back at CR 713.8's and CR 731.3's split.
 setSource :: Source.Source -> Object -> Object
 setSource source object =
   object
@@ -2802,9 +2802,9 @@ sourceIsToken source = case source of
   -- CR 108.2 / 108.2b: both cards representing a melded permanent are Magic
   -- cards, and CR 701.42b keeps a token out of a meld pair in the first place.
   Source.OfMeld _ -> False
-  -- CR 730.2d: "if a merged permanent contains a token, the resulting permanent
+  -- CR 731.2d: "if a merged permanent contains a token, the resulting permanent
   -- is a token only if the topmost component is a token". The head of the list,
-  -- which is CR 730.2a's topmost component, and never any other component.
+  -- which is CR 731.2a's topmost component, and never any other component.
   --
   -- Object.source and not the copiable record Parun.Engine.Binding.setMergeCopy
   -- stamps, which is where every CHARACTERISTIC of a merged permanent is read:
@@ -2818,15 +2818,15 @@ sourceIsToken source = case source of
   -- Parun.Engine.Event's zone-change funnel rewrites its Source as it arrives on
   -- the battlefield -- and until then it is a spell.
   Source.OfSpellCopy _ -> False
-  -- CR 111.3 is about an effect that CREATES a token; CR 722.3c creates a copy
+  -- CR 111.3 is about an effect that CREATES a token; CR 723.3c creates a copy
   -- of a card instead, and says so. Nothing rewrites it into a token either --
   -- CR 707.10f is written about a copy of a permanent SPELL.
   Source.OfCardCopy _ -> False
   Source.OfInherentTrigger _ -> False
 
--- CR 730.2d / 111.1: is this component of a merged permanent a token rather than
+-- CR 731.2d / 111.1: is this component of a merged permanent a token rather than
 -- a card? The same classification as `sourceIsToken` one type over, and the read
--- CR 730.3's departure takes to put each component into the zone its own kind
+-- CR 731.3's departure takes to put each component into the zone its own kind
 -- calls for. Every component is one or the other, so its negation is CR 108.2's
 -- card, which CR 903.9c's split reads.
 componentIsToken :: MergeComponent.MergeComponent -> Bool
@@ -2846,28 +2846,28 @@ cardOfComponent component = case component of
   MergeComponent.OfMeld _ -> Nothing
   MergeComponent.OfToken _ -> Nothing
 
--- CR 730.2/730.3: what a component of a merged permanent represents once it is
+-- CR 731.2/731.3: what a component of a merged permanent represents once it is
 -- an object of its own again -- the card representing itself (CR 108.2), or the
 -- token it always was (CR 111.3). `representComponent` below writes it for
--- Parun.Engine.Event's CR 712.21/730.3 split and Parun.Engine.Setup's rebuild.
+-- Parun.Engine.Event's CR 713.8/731.3 split and Parun.Engine.Setup's rebuild.
 sourceOfComponent :: MergeComponent.MergeComponent -> Source.Source
 sourceOfComponent component = case component of
   MergeComponent.OfCard card -> Source.OfCard (ComponentCard.printing card)
   MergeComponent.OfToken pid -> Source.OfToken pid
-  -- The melded permanent it still is (CR 730.2c). Neither reader can be handed
+  -- The melded permanent it still is (CR 731.2c). Neither reader can be handed
   -- one: both take `componentsOf`, which has already expanded a melded component
-  -- into CR 712.21's two cards, so this arm is the type's answer rather than a
+  -- into CR 713.8's two cards, so this arm is the type's answer rather than a
   -- road the engine drives.
   MergeComponent.OfMeld meld -> Source.OfMeld meld
 
--- CR 730.3 / 400.7: `object` made to represent this component alone -- its
+-- CR 731.3 / 400.7: `object` made to represent this component alone -- its
 -- Source (`sourceOfComponent`), and for a card the card-level facts the
 -- component kept (Parun.Types.ComponentCard): its own identity (CR 108.3) and a
 -- conjured duplicate's copiable values, which no other component shares. The
--- one write Parun.Engine.Event's CR 712.21 / 730.3 split, its CR 729.4a bring-in
--- and Parun.Engine.Setup's CR 727.2 rebuild all take. The identity is proved by
+-- one write Parun.Engine.Event's CR 713.8 / 731.3 split, its CR 730.4a bring-in
+-- and Parun.Engine.Setup's CR 728.2 rebuild all take. The identity is proved by
 -- data/scenarios/ante/ante-a-merged-permanents-cards-come-apart-each-with-its-own-identity.json
--- and Parun.MeldSpec's "CR 108.3/712.21 each card a melded permanent becomes keeps
+-- and Parun.MeldSpec's "CR 108.3/713.8 each card a melded permanent becomes keeps
 -- its own identity".
 representComponent :: MergeComponent.MergeComponent -> Object -> Object
 representComponent component object =
@@ -2877,11 +2877,11 @@ representComponent component object =
         MergeComponent.OfToken _ -> represented {Object.duplicate = Nothing}
         MergeComponent.OfMeld _ -> represented {Object.duplicate = Nothing}
 
--- CR 730.2 / 701.42a: the card a CARD object is as it becomes one of a merged
+-- CR 731.2 / 701.42a: the card a CARD object is as it becomes one of a merged
 -- or melded permanent's components -- its printing with the card-level facts
 -- Object.newIncarnation keeps (CR 108.3's identity, a conjured duplicate's
 -- values). Read by Parun.Engine.Event's `mergeComponents`, `mergingComponent`
--- and `meld`, and by Parun.Engine.Setup's CR 729.4 outside entries.
+-- and `meld`, and by Parun.Engine.Setup's CR 730.4 outside entries.
 componentCardOf :: Object -> PrintingId.PrintingId -> ComponentCard.ComponentCard
 componentCardOf object pid =
   ComponentCard.MkComponentCard
@@ -2918,7 +2918,7 @@ stillPlaying gs =
 -- map, so it comes back in PlayerId order; GameState.turnOrder is the permanent
 -- seating roster (CR 800.5, CR 806.3). The order is load-bearing: CR 103.5 has
 -- the starting player declare their mulligan first, then each other player in
--- turn order, and CR 727.1a / CR 729.2 rotate the rebuilt order to begin with
+-- turn order, and CR 728.1a / CR 730.2 rotate the rebuilt order to begin with
 -- them.
 stillPlayingInOrder :: GameState -> [PlayerId]
 stillPlayingInOrder gs =
@@ -3074,7 +3074,7 @@ primaryOf gs pid =
         primary : _ -> primary
         [] -> pid
 
--- CR 725.4 / 726.4: who a departing holder's monarch or initiative passes to --
+-- CR 726.4 / 727.4: who a departing holder's monarch or initiative passes to --
 -- the active player, else the next player in turn order, `eligible` answering
 -- who may take it. Called with the holder ALREADY marked departed.
 --
@@ -3082,7 +3082,7 @@ primaryOf gs pid =
 -- does, so the active team decides, and CR 805.2 gives its unsettled choice to
 -- its primary player, asked through chooseAmong among the eligible active
 -- players. Without the shared team turns option Turn.activePlayers is the
--- active seat alone, so nothing is asked. The team scenario "CR 725.4 the
+-- active seat alone, so nothing is asked. The team scenario "CR 726.4 the
 -- active team's primary player names the new monarch" proves it.
 -- docs/decisions.md, "Which active player takes the monarch or initiative
 -- under shared team turns".
@@ -3494,7 +3494,7 @@ enteredThisTurn oid gs = fmap MovedBetween.to (arrivalThisTurn oid gs) == Just Z
 -- CR 400.7 / 608.2i: the zone change this turn that made this object the object
 -- it is now, keyed on the ARRIVAL's id. Every arrival counts: a move's leading
 -- one, and each further card a melded permanent's departure put into a zone (CR
--- 712.21), which GameEvent.CardArrived names. Filter.EnteredThisTurn's view
+-- 713.8), which GameEvent.CardArrived names. Filter.EnteredThisTurn's view
 -- field reads it.
 arrivalThisTurn :: ObjectId -> GameState -> Maybe MovedBetween.MovedBetween
 arrivalThisTurn oid gs =
@@ -3525,7 +3525,7 @@ entryGroup oid gs =
 -- gravestorm counts these, through Parun.Engine.Quantity's PermanentsDiedThisTurn
 -- arm.
 --
--- ONE per departure even where CR 712.21 put two cards into the graveyard: the
+-- ONE per departure even where CR 713.8 put two cards into the graveyard: the
 -- rule counts PERMANENTS put there, and a melded permanent leaving is one
 -- departure -- which is exactly what GameEvent.Moved carries and
 -- GameEvent.CardArrived does not, so reading this event and not that one is the
@@ -3539,7 +3539,7 @@ diedChange event = do
 -- Efreet, Timmerian Fiends): the objects this id is now, following each logged
 -- zone change from the id that left to every id that arrived -- several where a
 -- merged or melded permanent came apart, all of which the effect finds (CR
--- 730.3c, 712.21c). None once every trail reaches an id that is gone with no
+-- 731.3c, 713.8c). None once every trail reaches an id that is gone with no
 -- successor: the card left the game. The log is this turn's
 -- (GameState.events), which is enough, since the stack empties before any turn
 -- ends.

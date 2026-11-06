@@ -56,7 +56,7 @@ modeChooser = SlotName.MkSlotName (Text.pack "modeChooser")
 copySource :: SlotName
 copySource = SlotName.MkSlotName (Text.pack "copySource")
 
--- CR 111.3 / 730.2a: the reserved slot under which an object's OWN copiable
+-- CR 111.3 / 731.2a: the reserved slot under which an object's OWN copiable
 -- values are stored where a stamp rather than a card holds them -- a token's or
 -- a copy's as it was created, a merged permanent's merge -- so a later copy
 -- effect stamped under `copySource` above covers them without erasing them. No
@@ -64,15 +64,15 @@ copySource = SlotName.MkSlotName (Text.pack "copySource")
 ownCopySource :: SlotName
 ownCopySource = SlotName.MkSlotName (Text.pack "ownCopySource")
 
--- CR 730.2i: the reserved slot under which a MERGED permanent's reading of its
+-- CR 731.2i: the reserved slot under which a MERGED permanent's reading of its
 -- merge with each double-faced component turned over is stored, beside
--- `ownCopySource` above, its CR 730.2h flipped reading nested as PC.flipped as
+-- `ownCopySource` above, its CR 731.2h flipped reading nested as PC.flipped as
 -- the current one's is. No card's targetSlots may name it: a merge is not a
 -- target.
 turnedMergeSource :: SlotName
 turnedMergeSource = SlotName.MkSlotName (Text.pack "turnedMergeSource")
 
--- CR 701.20a / 730.2a: the reserved slot under which a MERGED permanent's
+-- CR 701.20a / 731.2a: the reserved slot under which a MERGED permanent's
 -- reading of its merge with each side's copy effects left out is stored, where
 -- it differs from `ownCopySource`'s -- what a reveal of the face-down pile
 -- shows. No card's targetSlots may name it: a merge is not a target.
@@ -130,9 +130,9 @@ triggerSource = SlotName.MkSlotName (Text.pack "self")
 -- ability, this is the player who activated the ability. For a triggered
 -- ability, this is the controller of the object when the ability triggered"
 -- covers the other two: Parun.Engine.Activate.activateAbility answers the first,
--- Parun.Engine.Engine.placeBorne the second. CR 725.2's monarch pair is the fourth
+-- Parun.Engine.Engine.placeBorne the second. CR 726.2's monarch pair is the fourth
 -- stamp site (Parun.Engine.Engine.placeSourceless): those abilities have no object
--- for CR 109.5's triggered-ability sentence to name a controller of, and CR 725.2
+-- for CR 109.5's triggered-ability sentence to name a controller of, and CR 726.2
 -- supplies one itself -- "controlled by the player who was the monarch at the
 -- time the abilities triggered".
 --
@@ -332,7 +332,7 @@ facingPlayers = SlotName.MkSlotName (Text.pack "thoseFacing")
 -- there is that the ability finds nothing.
 --
 -- ONE object usually, SEVERAL for a melded permanent leaving the battlefield:
--- CR 712.21c makes an effect that finds what it became find both cards. The
+-- CR 713.8c makes an effect that finds what it became find both cards. The
 -- shape follows -- a recipient for one (setBecame), a group for several
 -- (setBecameGroup) -- and Parun.Engine.Event.Binding.setBecameArrivals is where the
 -- choice is made and justified. CR 701.62a's "a card you put into your
@@ -1383,7 +1383,7 @@ toRecipients rs = Binding.empty {Binding.targets = if Set.null rs then Nothing e
 toObjects :: Seq ObjectId -> Binding
 toObjects oids = Binding.empty {Binding.objects = Just oids}
 
--- A binding that names one player and nothing else -- CR 729.1b's subgame winner
+-- A binding that names one player and nothing else -- CR 730.1b's subgame winner
 -- and CR 608.2d's chosen opponent, both bound by Parun.Engine.Resolve's
 -- bindPlayerSlot. Mirrors toObject, but the recipient is a player (ToPlayer),
 -- not an object.
@@ -1446,7 +1446,7 @@ setPreventedDamageSources :: Set ObjectId -> Map SlotName Binding -> Map SlotNam
 setPreventedDamageSources oids = Map.insert preventedDamageSource (toRecipients (Set.map Recipient.ToObject oids))
 
 -- setBecame for a plural: the SEVERAL cards a melded permanent became as it left
--- the battlefield (CR 712.21c), or that a manifest dread put into a graveyard (CR
+-- the battlefield (CR 713.8c), or that a manifest dread put into a graveyard (CR
 -- 701.62a), bound as a group so an ObjectRef.InSlot reader acts on each of them.
 -- Parun.Engine.Event.Binding.setBecameArrivals says why the shape differs from
 -- setBecame's.
@@ -1751,14 +1751,14 @@ setCopy :: ProjectedCharacteristics -> Map SlotName Binding -> Map SlotName Bind
 setCopy pc = Map.insert copySource (Binding.empty {Binding.copy = Just pc})
 
 -- CR 111.3 / 707.2: stamp an object's own copiable values as it is created --
--- a token's or a copy's -- or as it merges (CR 730.2a), under `ownCopySource`.
+-- a token's or a copy's -- or as it merges (CR 731.2a), under `ownCopySource`.
 -- Later than any copy effect stamped before it (CR 613.7), so that stamp goes.
 setOwnCopy :: ProjectedCharacteristics -> Map SlotName Binding -> Map SlotName Binding
 setOwnCopy pc = Map.insert ownCopySource (Binding.empty {Binding.copy = Just pc}) . Map.delete copySource
 
--- CR 730.2a with CR 730.2i: readings of one merge, the current one as the
+-- CR 731.2a with CR 731.2i: readings of one merge, the current one as the
 -- object's own values, the turned-over one beside it, and CR 701.20a's shown
--- one where it differs, each carrying its CR 730.2h flipped reading as
+-- one where it differs, each carrying its CR 731.2h flipped reading as
 -- PC.flipped, as a stored copy row does. The turned reading is stamped even
 -- where it equals the current one, so its slot is also the record that the own
 -- values are a merge's (`mergeStampHolds`).
@@ -1768,19 +1768,19 @@ setMergeCopy pc turnedPc shownPc =
     . Map.insert turnedMergeSource (Binding.empty {Binding.copy = Just turnedPc})
     . setOwnCopy pc
 
--- CR 730.2i: a merged permanent transforms, so each double-faced component turns
+-- CR 731.2i: a merged permanent transforms, so each double-faced component turns
 -- over and the turned reading of its merge becomes the current one, its flipped
--- reading with it, since CR 730.2h's flip component stays flipped (CR 710.4). A
+-- reading with it, since CR 731.2h's flip component stays flipped (CR 710.4). A
 -- SWAP, so turning it back restores the reading it had. The components turn
 -- under a later copy effect too, which keeps covering them. The shown reading
--- (`shownMergeSource`) stays: it is read face down alone, and CR 730.2j keeps a
+-- (`shownMergeSource`) stays: it is read face down alone, and CR 731.2j keeps a
 -- pile holding a face-up double-faced component from ever being turned so.
 turnMergeCopy :: Map SlotName Binding -> Map SlotName Binding
 turnMergeCopy m = case (Map.lookup ownCopySource m, Map.lookup turnedMergeSource m) of
   (Just current, Just turned) -> Map.insert ownCopySource turned (Map.insert turnedMergeSource current m)
   _ -> m
 
--- CR 613.7 / 730.2a: is this merged permanent's copy stamp still its merge's,
+-- CR 613.7 / 731.2a: is this merged permanent's copy stamp still its merge's,
 -- rather than a later copy effect's that covers it?
 mergeStampHolds :: Map SlotName Binding -> Bool
 mergeStampHolds m = Map.member turnedMergeSource m && not (Map.member copySource m)
@@ -1788,7 +1788,7 @@ mergeStampHolds m = Map.member turnedMergeSource m && not (Map.member copySource
 -- CR 708.10: these bindings without a copy effect's stamp -- the card beneath
 -- a face-down permanent that is a copy. The object's own values stay
 -- (`ownCopySource`): a token's or a copy's (CR 111.3), and a merge's (CR
--- 730.2a), read with the copy effects its sides had left out
+-- 731.2a), read with the copy effects its sides had left out
 -- (`shownMergeSource`).
 withoutCopyEffect :: Map SlotName Binding -> Map SlotName Binding
 withoutCopyEffect m = maybe id (Map.insert ownCopySource) (Map.lookup shownMergeSource m) (Map.delete copySource m)

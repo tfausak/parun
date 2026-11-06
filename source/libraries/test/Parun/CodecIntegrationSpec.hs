@@ -404,7 +404,7 @@ gameStateRoundTripSpec s registry corpus = do
     let board = S.oneMountainState mountain Phase.PrecombatMain
     roundTrips "a board at a control sample" board {GameState.boardAtControlSample = Just board}
 
-  -- GameState.heldBoards, CR 603.8's boards across CR 724.1c's check, likewise.
+  -- GameState.heldBoards, CR 603.8's boards across CR 725.1c's check, likewise.
   Spec.it s "a held board round trips" $ do
     mountain <- S.printingOf s registry "Mountain"
     let board = S.oneMountainState mountain Phase.PrecombatMain
@@ -434,8 +434,8 @@ gameStateRoundTripSpec s registry corpus = do
     mountain <- S.printingOf s registry "Mountain"
     roundTrips "a state with a monarch" (S.withMonarch S.bob (S.oneMountainState mountain Phase.PrecombatMain))
 
-  -- CR 723.2's row, which is the shape GameState.control grew to hold, see #881:
-  -- a Decider, a lifetime and rule 723.7's restriction, keyed by the controlled
+  -- CR 724.2's row, which is the shape GameState.control grew to hold, see #881:
+  -- a Decider, a lifetime and rule 724.7's restriction, keyed by the controlled
   -- player. Its own case because the field is Fields.defaulted -- an empty map
   -- round-trips whatever the codec says about the value type, so a board with a
   -- row in it is what reads that half of the codec at all.
@@ -556,7 +556,7 @@ gameStateRoundTripSpec s registry corpus = do
             }
     roundTrips "a pending +1/+1 counter, by putter" gs
 
-  -- CR 729.4: a non-empty outsideObjects, not only the empty default every
+  -- CR 730.4: a non-empty outsideObjects, not only the empty default every
   -- other case here carries. Setup.subgameStateFrom is the one producer, so
   -- driving it is more honest than hand-building a Map literal.
   Spec.it s "a non-empty outsideObjects snapshot round trips" $ do

@@ -30,7 +30,7 @@ noNamesJson =
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.Transformed" $ do
-  -- CR 701.27a, with CR 701.27e's characteristics: the whole projection of the
+  -- CR 701.27a, with CR 701.27f's characteristics: the whole projection of the
   -- permanent as it stood the instant the turn finished, Parun.Codec.Moved's
   -- shape over the same sample.
   --

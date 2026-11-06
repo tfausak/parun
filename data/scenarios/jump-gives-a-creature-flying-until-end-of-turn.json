@@ -54,7 +54,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 611.2a whole card: Jump gives target creature flying until end of turn",
-  "note": "A placement naming Jump is the instant, not Encouraging Aviator, whose prepare spell is also named Jump (CR 722.4). The bears fly; the Hill Giant does not; the bears stop flying on bob's turn.",
+  "note": "A placement naming Jump is the instant, not Encouraging Aviator, whose prepare spell is also named Jump (CR 723.4). The bears fly; the Hill Giant does not; the bears stop flying on bob's turn.",
   "timeline": [
     {
       "do": {

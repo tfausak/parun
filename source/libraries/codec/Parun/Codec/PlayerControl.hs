@@ -10,8 +10,8 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.PlayerControl as PlayerControl
 
--- | An object keyed by the record's field names, with rule 723.7's restriction
--- elided when it is absent -- which is every rule 723.1 control.
+-- | An object keyed by the record's field names, with rule 724.7's restriction
+-- elided when it is absent -- which is every rule 724.1 control.
 codec :: Codec.Codec PlayerControl.PlayerControl
 codec = Fields.object $ do
   decider <- Fields.required "decider" Decider.codec PlayerControl.decider

@@ -151,9 +151,9 @@ slugFor = Slug.fromText . CardName.unwrap
 -- Two tiers. A card's OWN names are the ones it has off the stack
 -- (Parun.Engine.Card.combinedNames): both halves of a split card (CR 709.4a),
 -- the one name of anything else. Its other faces' names are ALTERNATIVE: an
--- Adventure's, an omen's or a prepare spell's (CR 715.4, 720.4, 722.4), a back
--- face's (CR 712.8a). A card does not have those, but a player may choose one
--- as a card name (CR 715.5, 720.5, 722.5, 201.4d), which a name-keyed lookup has
+-- Adventure's, an omen's or a prepare spell's (CR 716.4, 721.4, 723.4), a back
+-- face's (CR 712.6a). A card does not have those, but a player may choose one
+-- as a card name (CR 716.5, 721.5, 723.5, 201.4d), which a name-keyed lookup has
 -- to answer all the same (Parun.Interpreter.chosenFace). So an own name wins: a
 -- prepare spell reprinting a real card (Encouraging Aviator's Jump) leaves the
 -- name to that card, and only a name no card owns answers by its alternative.
@@ -242,7 +242,7 @@ parseCard bytes = do
 -- card two names and no combined one (#649) -- so this decides where a file
 -- LIVES and never what a lookup may ask for. Also not Parun.Engine.Card.combined's
 -- name, which is a different question and only coincidentally the same string:
--- CR 715.4 gives an adventurer card its normal face's name alone, so the
+-- CR 716.4 gives an adventurer card its normal face's name alone, so the
 -- combined view would name embereth-shieldbreaker while the file is
 -- embereth-shieldbreaker-battle-display.
 filedAs :: Card.Card -> Slug.Slug

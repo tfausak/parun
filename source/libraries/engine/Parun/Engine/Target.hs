@@ -2287,7 +2287,7 @@ zoneHolding gs recipient = do
 -- a pair of victims must share one count, past the cap too"). Any other shape
 -- is searched, CAPPED at subsetBudget assignments, past which the mode is judged
 -- fillable: a false offer the caster takes back with nothing changed (CR
--- 601.2c, 601.2e, 733.1). selectionLegal judges every announcement exactly.
+-- 601.2c, 601.2e, 734.1). selectionLegal judges every announcement exactly.
 -- Parun.TargetSpec's "CR 601.2c past the cap a non-Members sibling-count mode
 -- is offered, and the attempt is reversed" proves it.
 --

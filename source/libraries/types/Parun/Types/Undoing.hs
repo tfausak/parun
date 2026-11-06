@@ -1,6 +1,6 @@
 module Parun.Types.Undoing where
 
--- | Why CR 733.1 reversed a cast, an activation or a combat declaration.
+-- | Why CR 734.1 reversed a cast, an activation or a combat declaration.
 data Undoing
   = -- | A choice announced for it made the proposal illegal (CR 601.2e, 601.6).
     IllegalProposal
@@ -8,6 +8,6 @@ data Undoing
     UnpaidCost
   | -- | It broke a combat restriction or requirement (CR 508.1c, 508.1d, 509.1b, 509.1c).
     IllegalDeclaration
-  | -- | It repeated a game choice a fragmented loop had already made (CR 732.3).
+  | -- | It repeated a game choice a fragmented loop had already made (CR 733.3).
     RepeatedLoop
   deriving (Bounded, Enum, Eq, Ord, Show)

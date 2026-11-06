@@ -21,7 +21,7 @@ import qualified Parun.Types.Teams as Teams
 -- Settled before the game begins and never written afterwards: nothing in the
 -- CR turns an option on mid-game. It is on GameState rather than beside it
 -- because every rule that reads it is reading the game it is in -- a subgame
--- (CR 729) and a restarted game (CR 727) each carry their own copy.
+-- (CR 730) and a restarted game (CR 728) each carry their own copy.
 data GameSettings = MkGameSettings
   { -- | CR 903.12a: whether this is a Brawl game. Four rules read it -- CR
     -- 903.12c's designation (Parun.Engine.Commander.soleCommander), CR 903.12f's

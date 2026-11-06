@@ -17,15 +17,15 @@ data Source
   = -- | CR 108: a card, named by its entry in GameState.printings.
     OfCard PrintingId.PrintingId
   | -- | CR 701.42a: a melded permanent -- "a single object represented by two
-    -- cards", which Parun.Types.MeldSource carries and documents. CR 712.8g gives
+    -- cards", which Parun.Types.MeldSource carries and documents. CR 713.5c gives
     -- it "only the characteristics of the combined back face", so the payload's
     -- result printing is what every characteristic read resolves through, and CR
     -- 202.3c reads its components' front faces for the mana value instead.
     --
     -- ITS OWN CONSTRUCTOR rather than OfCard, for the reason OfSpellCopy is not
     -- OfCard either: the arm has to be able to answer a question the payload of a
-    -- bare printing cannot. CR 712.21 splits this object back into the cards
-    -- representing it as it leaves the battlefield, and CR 701.27g excludes an
+    -- bare printing cannot. CR 713.8 splits this object back into the cards
+    -- representing it as it leaves the battlefield, and CR 701.27h excludes an
     -- object represented by more than one card from being a transformed
     -- permanent -- both of which ask WHICH cards, and OfCard names one printing
     -- that is not even a card in a deck.
@@ -35,35 +35,35 @@ data Source
     -- OfCard: CR 108.2b excludes tokens and nothing excludes a melded permanent,
     -- whose components are both Magic cards.
     OfMeld MeldSource.MeldSource
-  | -- | CR 730.2: a merged permanent -- "represented by the card or copy that
+  | -- | CR 731.2: a merged permanent -- "represented by the card or copy that
     -- represented that object in addition to any other components that were
     -- representing it". The components in TOP-TO-BOTTOM order, so the head is
-    -- what CR 730.2a's "only the characteristics of its topmost component"
+    -- what CR 731.2a's "only the characteristics of its topmost component"
     -- names and every characteristic read resolves through.
     --
     -- ITS OWN CONSTRUCTOR rather than OfMeld, whose payload answers a different
     -- question: a melded permanent reads an interned combined face that is no
-    -- component of it (CR 712.8g) and sums its components' front faces for the
+    -- component of it (CR 713.5c) and sums its components' front faces for the
     -- mana value (CR 202.3c), where a merged permanent reads one component and
-    -- CR 730.2a gives it that component's mana value like every other
+    -- CR 731.2a gives it that component's mana value like every other
     -- characteristic. The two share only what Parun.Engine.Game.componentsOf
-    -- answers -- CR 730.3 restates CR 712.21 -- which is exactly what that
+    -- answers -- CR 731.3 restates CR 713.8 -- which is exactly what that
     -- classifier is for.
     --
     -- Still a card for CR 108.2's purposes when its topmost component is one,
-    -- OfMeld's reason, and a token when that component is one: rule 730.2d says
+    -- OfMeld's reason, and a token when that component is one: rule 731.2d says
     -- which, and Parun.Engine.Game.sourceIsToken reads the head for it.
     --
-    -- CR 730.2e gives the permanent its topmost component's STATUS, which is
+    -- CR 731.2e gives the permanent its topmost component's STATUS, which is
     -- Object.facing, and each component keeps its own beside it
-    -- (Parun.Types.ShownComponent), which CR 730.2f turns with the permanent
+    -- (Parun.Types.ShownComponent), which CR 731.2f turns with the permanent
     -- (Parun.Engine.Game.withFacing).
     --
-    -- CR 730.2h's flip components are Object.flipped and not a field here
+    -- CR 731.2h's flip components are Object.flipped and not a field here
     -- either: what the flip reaches is decided at the merge, which nests a
     -- flipped reading in its stamp (Parun.Engine.Binding.setMergeCopy).
     --
-    -- CR 730.2i's double-faced components each show a face of their own, which
+    -- CR 731.2i's double-faced components each show a face of their own, which
     -- is why a component carries one here, and the merge stamps a turned reading
     -- for turning them over (Parun.Engine.Binding.turnMergeCopy).
     OfMerge (NonEmpty.NonEmpty ShownComponent.ShownComponent)
@@ -96,7 +96,7 @@ data Source
     -- spell acquires only as CR 707.10f's permanent is put onto the battlefield
     -- (Parun.Engine.Event's zone-change funnel rewrites it there).
     OfSpellCopy PrintingId.PrintingId
-  | -- | CR 707.10a's other copy: a copy of a CARD. Three rules mint one. CR 722.3c
+  | -- | CR 707.10a's other copy: a copy of a CARD. Three rules mint one. CR 723.3c
     -- -- "its controller creates a copy of that object in exile, except that copy
     -- has only the characteristics of that permanent's prepare spell" -- names an
     -- interned printing holding those characteristics as its one face, that
@@ -116,11 +116,11 @@ data Source
     -- copy of a spell does. Not OfCard either, which would make the cast copy a
     -- card in a graveyard for ever.
     --
-    -- CR 722.3c's exception to rule 704.5e is what keeps one in EXILE, and
+    -- CR 723.3c's exception to rule 704.5e is what keeps one in EXILE, and
     -- Parun.Engine.Sba reads Object.preparedCopyOf for it. A CR 707.12 copy has
     -- no such exception, so one nobody casts is swept on that same pass.
     OfCardCopy PrintingId.PrintingId
-  | -- | CR 725.2 / CR 702.179d: a triggered ability with no object source, which
+  | -- | CR 726.2 / CR 702.179d: a triggered ability with no object source, which
     -- Parun.Types.InherentTriggerSource carries and documents.
     OfInherentTrigger InherentTriggerSource.InherentTriggerSource
   deriving (Eq, Ord, Show)

@@ -100,7 +100,7 @@ data Object = MkObject
     -- layer.
     --
     -- A MERGED or COPYING permanent's characteristics come off a stamped
-    -- copiable record that goes around that seam, so CR 730.2h and CR 707.3 are
+    -- copiable record that goes around that seam, so CR 731.2h and CR 707.3 are
     -- read one place further out: the stamp carries both readings and
     -- Parun.Engine.Projection.stampedSnapshotOf picks between them off this field.
     --
@@ -201,7 +201,7 @@ data Object = MkObject
     -- | CR 601.2: the choices bound while casting, by slot name. Empty for
     -- everything but a spell or ability on the stack. Per-incarnation: reset by
     -- newIncarnation, so CR 400.7 forgets them when the object moves. A
-    -- resolution can outlive the object holding them (CR 729.5's subgame case),
+    -- resolution can outlive the object holding them (CR 730.5's subgame case),
     -- which is what GameState.detachedBindings is for.
     bindings :: Map.Map SlotName.SlotName Binding.Binding,
     -- | CR 122.1: counters placed on this permanent, counted per kind.
@@ -295,7 +295,7 @@ data Object = MkObject
     -- zone change (CR 400.7 makes each a new object). Read by the projection when
     -- ordering layer 6/7.
     timestamp :: Timestamp.Timestamp,
-    -- | CR 709.3b / 712.8e / 712.8f: which face this object is showing, where the
+    -- | CR 709.3b / 712.6d / 712.6e: which face this object is showing, where the
     -- rules single one out. Nothing everywhere else, and the layout decides --
     -- see Parun.Engine.Game.faceOf. Nothing for a ROOM permanent in particular,
     -- CR 709.5 giving a permanent with a shared type line both halves at once;
@@ -307,20 +307,20 @@ data Object = MkObject
     -- dangle it, and a name that names no face falls back to the combined view.
     --
     -- Per-incarnation: cleared by newIncarnation and set again only by a move
-    -- that says which face the object arrives showing (CR 709.3a, CR 712.13).
-    -- That clear is also CR 712.8a rather than only a forgetting.
+    -- that says which face the object arrives showing (CR 709.3a, CR 712.10).
+    -- That clear is also CR 712.6a rather than only a forgetting.
     --
     -- Nothing for a MERGED permanent, whose components each show a face of
-    -- their own (CR 730.2i, Parun.Types.ShownComponent).
+    -- their own (CR 731.2i, Parun.Types.ShownComponent).
     face :: Maybe CardName.CardName,
-    -- | CR 701.27f: WHEN this permanent last turned over, so that "it hasn't
+    -- | CR 701.27g: WHEN this permanent last turned over, so that "it hasn't
     -- transformed or converted since the ability was put onto the stack" is a
     -- comparison rather than a guess. Nothing for a permanent that never has.
     --
     -- A second field and not CR 613.7d's `timestamp` above, which a transform
     -- refreshes too (CR 613.7g): every permanent has that one and only a
     -- transformed permanent has this, and this one is shared across a batch so
-    -- that CR 701.27f cannot tell two simultaneous victims apart.
+    -- that CR 701.27g cannot tell two simultaneous victims apart.
     --
     -- Per-incarnation: cleared by newIncarnation (CR 400.7).
     turnedOverAt :: Maybe Timestamp.Timestamp,
@@ -335,14 +335,14 @@ data Object = MkObject
     worldSince :: Maybe Timestamp.Timestamp,
     -- | CR 601.3: the standing permission to play this card, as the player who
     -- holds it, the duration it lasts and how they may spend mana for it (CR
-    -- 118.14). TWO producers: Parun.Engine.Resolve.finishSpell writes CR 715.3d's,
+    -- 118.14). TWO producers: Parun.Engine.Resolve.finishSpell writes CR 716.3d's,
     -- taking Expiry.Never since its duration is the card staying exiled, which CR
     -- 400.7 ends, and Effect.GrantPlayFromExile writes the one a card states.
     --
     -- STATE, where every other casting permission parun has is a fact about a
     -- CARD: this one is true of one incarnation and names one player, so a
     -- CastingPermission arm could not carry it. Per-incarnation: cleared by
-    -- newIncarnation, which IS CR 715.3d's "for as long as that card remains
+    -- newIncarnation, which IS CR 716.3d's "for as long as that card remains
     -- exiled"; a STATED duration is what Parun.Engine.Expiry sweeps.
     --
     -- Read where the card lies, exile or a graveyard (Jace, Telepath
@@ -357,7 +357,7 @@ data Object = MkObject
     -- scopes the permission by it, and GameState.turnNumber counts extra turns
     -- too (CR 500.7), so a strict comparison is that clause exactly.
     --
-    -- Beside playPermission above rather than inside it: CR 715.3d's
+    -- Beside playPermission above rather than inside it: CR 716.3d's
     -- permission names a PLAYER and states no cost, where CR 702.170d's names the
     -- owner, makes the cast free and fixes the timing. Per-incarnation: cleared
     -- by newIncarnation (CR 400.7), the permission being about a card in exile.
@@ -388,7 +388,7 @@ data Object = MkObject
     -- which is rule 702.143d's "any foretell cost it has".
     --
     -- THE REDUCTION and not the cost it yields, because the cost is PER FACE: CR
-    -- 712.11b lets a modal double-faced card be cast as either face, and the
+    -- 712.8b lets a modal double-faced card be cast as either face, and the
     -- Valkyrie's own ruling says the foretell cost is based on the mana cost of
     -- the face cast from exile. A single settled cost is face-agnostic where
     -- Parun.Engine.Cost prices per face, so it is settled there instead, against
@@ -415,11 +415,11 @@ data Object = MkObject
     -- delayed ability (Parun.Engine.Keyword.warpExile) uses it for; read by
     -- Parun.Engine.Cast.permitsCastWarped.
     warped :: Maybe Natural.Natural,
-    -- | CR 722.3c: this exiled object is the copy that rule minted, naming the
+    -- | CR 723.3c: this exiled object is the copy that rule minted, naming the
     -- PREPARED PERMANENT it was minted for. Nothing for everything else, which is
     -- every object in the game but one per prepared permanent.
     --
-    -- One field answering the four questions rule 722.3c asks, which is why it is
+    -- One field answering the four questions rule 723.3c asks, which is why it is
     -- an ObjectId rather than a Bool. "This copy remains in exile for as long as
     -- the prepared permanent remains on the battlefield and has the prepared
     -- designation" needs the permanent to look at, and Parun.Engine.Sba looks
@@ -479,20 +479,20 @@ data Object = MkObject
     -- Per-incarnation, cleared by newIncarnation like every neighbour here,
     -- though CR 309.2c means no dungeon ever gets a second incarnation.
     ventureRoom :: Maybe RoomIndex.RoomIndex,
-    -- | CR 716.2b: the LEVEL designation this permanent has -- "a designation
+    -- | CR 717.2b: the LEVEL designation this permanent has -- "a designation
     -- that any permanent can have", which is why it is on every Object rather
     -- than keyed off the Class subtype it usually arrives with.
     --
-    -- A Maybe rather than a Natural initialised to 1: CR 716.2d treats a
+    -- A Maybe rather than a Natural initialised to 1: CR 717.2d treats a
     -- permanent with no level as level 1 when something asks, which
     -- Parun.Types.ClassLevel.defaulted does at the read, leaving "has no level" its
-    -- own representation. NOT a counter, which is the whole of CR 716.4's
+    -- own representation. NOT a counter, which is the whole of CR 717.4's
     -- separation from rule 711's levelers.
     --
-    -- NOT a copiable value (CR 716.2b), for ringBearerFor's reason.
+    -- NOT a copiable value (CR 717.2b), for ringBearerFor's reason.
     -- Parun.ClassSpec's "levels are not a copiable characteristic" is what proves
     -- it at gameplay level. Per-incarnation: cleared by newIncarnation, rule
-    -- 716.2b's retention clause being about a permanent that stops being a CLASS
+    -- 717.2b's retention clause being about a permanent that stops being a CLASS
     -- rather than one that changes zones.
     classLevel :: Maybe ClassLevel.ClassLevel,
     -- | CR 709.5c: the UNLOCKED DESIGNATIONS this permanent has. By POSITION, as
@@ -512,7 +512,7 @@ data Object = MkObject
     -- from the half that was cast every time the permanent enters.
     unlockedHalves :: Set.Set RoomHalf.RoomHalf,
     -- | Every designation this permanent has: CR 702.112b's renowned, CR 701.37b's
-    -- monstrous, CR 701.60b's suspected, CR 719.3b's solved, CR 722.3a's
+    -- monstrous, CR 701.60b's suspected, CR 720.3b's solved, CR 723.3a's
     -- prepared and CR 701.64b's harnessed, which
     -- Parun.Types.Designation holds as one type because they behave alike. A Set where ringBearerFor above is a Maybe PlayerId, none of
     -- those rules naming a player.
@@ -527,10 +527,10 @@ data Object = MkObject
     -- suspected, both read off this set live rather than stamped, so nothing has
     -- to be unwound when Effect.Undesignate deletes the member (CR 701.60a).
     --
-    -- Prepared is the second such member: CR 722.3c keeps a copy of the permanent
+    -- Prepared is the second such member: CR 723.3c keeps a copy of the permanent
     -- in exile "for as long as the prepared permanent remains on the battlefield
     -- and has the prepared designation", which Parun.Engine.Sba reads off this set
-    -- live for the same reason, so Effect.Undesignate's CR 722.3b write needs
+    -- live for the same reason, so Effect.Undesignate's CR 723.3b write needs
     -- nothing more.
     designations :: Set.Set Designation.Designation,
     -- | CR 701.37c: the value of X this permanent became monstrous with, so that
@@ -654,33 +654,33 @@ data Object = MkObject
     -- spell" happens (Parun.Engine.Stack.resolveCardBacked), which is
     -- `bestowed`'s CR 702.103e clear line for line.
     mutating :: Bool,
-    -- | CR 718.3: was this object cast as a PROTOTYPED spell? Stamped by
+    -- | CR 719.3: was this object cast as a PROTOTYPED spell? Stamped by
     -- Parun.Engine.Cast at CR 601.2b once the announcement settles on the
     -- candidate CR 702.160a offers, and read by
-    -- Parun.Engine.Projection.View.withPrototype, which swaps CR 718.3b's
+    -- Parun.Engine.Projection.View.withPrototype, which swaps CR 719.3b's
     -- alternative mana cost, power, toughness and colours in for the printed
     -- ones.
     --
     -- A Bool, `bestowed` above's shape: the values themselves live on the card,
     -- in Parun.Types.Keyword's Prototype arm, so nothing about them has to be
-    -- copied onto the object. That also settles CR 718.2a -- the alternative set
+    -- copied onto the object. That also settles CR 719.2a -- the alternative set
     -- is a copiable value because the swap happens in the base characteristics,
     -- which is what Parun.Engine.Event.copiedSnapshot freezes.
     --
-    -- CR 718.4 is the clearing rule: "in every zone except the stack or the
+    -- CR 719.4 is the clearing rule: "in every zone except the stack or the
     -- battlefield ... a prototype card has only its normal characteristics". So
     -- this survives exactly the stack-to-battlefield move
     -- (Parun.Engine.Event.changeZoneAttaching, `bestowed`'s line) and no other,
     -- CR 400.7's new incarnation taking it everywhere else.
     --
     -- Filter.IsPrototyped reads it, beside the copiable PC.prototyped that
-    -- answers for a copy (CR 718.3c / 718.3d).
+    -- answers for a copy (CR 719.3c / 719.3d).
     prototyped :: Bool,
-    -- | CR 722.3d: was this SPELL cast as a prepare spell -- cast from the copy
-    -- CR 722.3c mints -- or is it a copy of one? Stamped by Parun.Engine.Cast
+    -- | CR 723.3d: was this SPELL cast as a prepare spell -- cast from the copy
+    -- CR 723.3c mints -- or is it a copy of one? Stamped by Parun.Engine.Cast
     -- onto the stack incarnation, off the `preparedCopyOf` the cast copy carried
     -- before CR 601.2a's move. A spell copy carries it (CR 707.10), which is
-    -- rule 722.3d's "the copy is also a prepare spell". Filter.IsPreparedSpell
+    -- rule 723.3d's "the copy is also a prepare spell". Filter.IsPreparedSpell
     -- reads it. Per-incarnation (CR 400.7).
     castPrepared :: Bool,
     -- | CR 702.27a: was this SPELL's buyback cost paid? Stamped by
@@ -742,7 +742,7 @@ data Object = MkObject
     -- Written by Parun.Engine.Cost.recordPayment, for the caster's payment and
     -- CR 702.132a's assisting player's alike, and only once the payment has
     -- settled: an unpaid cost is unwound to a state older than this write, even
-    -- where CR 733.1 lets the payer keep what the mana window did, so a rejected
+    -- where CR 734.1 lets the payer keep what the mana window did, so a rejected
     -- cast records nothing. An ACTIVATION's units land on the ability object and
     -- never on its source -- Parun.ManaSpec's "CR 400.7d an activation's record
     -- goes on the ability object, not on its source" is the proof. Carried
@@ -809,7 +809,7 @@ data Object = MkObject
     --
     -- One field for every such keyword rather than a Bool per keyword, beside
     -- `bestowed` and `prototyped` above, which stay: each has its own clearing
-    -- rule (CR 702.103e/f, CR 718.4) that this record has not.
+    -- rule (CR 702.103e/f, CR 719.4) that this record has not.
     --
     -- Per-incarnation, save for CR 400.7d's exception -- the permanent a spell
     -- became may reference "what costs were paid" -- so
@@ -1038,8 +1038,8 @@ new o s z t =
       -- functions only while the spell is on the stack, and CR 702.140c leaves
       -- no permanent for it to be true of.
       mutating = False,
-      -- CR 718.3's record is written back by
-      -- Parun.Engine.Event.changeZoneAttaching's mkObj for the one move CR 718.4
+      -- CR 719.3's record is written back by
+      -- Parun.Engine.Event.changeZoneAttaching's mkObj for the one move CR 719.4
       -- keeps it across, `bestowed` above's route.
       prototyped = False,
       castPrepared = False,

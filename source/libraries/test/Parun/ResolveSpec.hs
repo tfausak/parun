@@ -1345,7 +1345,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     Spec.assertEqWith s "the hand is refilled to the size it had" (S.handSize S.alice after) 2
     Spec.assertEqWith s "both old cards went to exile" (length (Game.zoneMembers Zone.Exile S.alice after)) 2
     Spec.assertEqWith s "and the library is two shorter" (length (Game.zoneMembers Zone.Library S.alice after)) 3
-  Spec.it s "CR 723.1: Mindslaver's ability installs pending control, promoted next turn" $ do
+  Spec.it s "CR 724.1: Mindslaver's ability installs pending control, promoted next turn" $ do
     mindslaver <- S.printingOf s registry "Mindslaver"
     let g0 = Setup.emptyGame S.bothPlayers
         (srcId, g1) = S.addPermanent mindslaver S.alice g0
@@ -1394,26 +1394,26 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     Spec.assertEqWith s "promoted on bob's turn" (S.unstamped (GameState.control bobsTurn)) (S.turnControl S.alice S.bob)
     Spec.assertEqWith s "bob's decisions route to alice" (Decide.deciderFor S.bob bobsTurn) (Decider.MkDecider S.alice)
     Spec.assertEqWith s "control expired after bob's turn" (Decide.deciderFor S.bob afterBob) (Decider.MkDecider S.bob)
-  Spec.it s "CR 723.1a: a second player-controlling effect overwrites the first (last created wins)" $ do
+  Spec.it s "CR 724.1a: a second player-controlling effect overwrites the first (last created wins)" $ do
     mindslaver <- S.printingOf s registry "Mindslaver"
     let base = Setup.emptyGame S.bothPlayers
         -- First: alice controls bob.
         afterAlice = installControlBy mindslaver S.alice S.bob base
-        -- Then: bob controls bob (CR 723.9 self-control), created LATER.
+        -- Then: bob controls bob (CR 724.9 self-control), created LATER.
         afterBob = installControlBy mindslaver S.bob S.bob afterAlice
     Spec.assertEqWith s "the first effect installed alice as bob's decider" (fmap PlayerControl.decider (Map.lookup S.bob (GameState.pendingControl afterAlice))) (Just (Decider.MkDecider S.alice))
-    Spec.assertEqWith s "CR 723.1a: the later effect overwrites — bob's own control wins" (fmap PlayerControl.decider (Map.lookup S.bob (GameState.pendingControl afterBob))) (Just (Decider.MkDecider S.bob))
-  Spec.it s "CR 727.1a: resolving a RestartGame ability restarts with its controller as starting player" $ do
+    Spec.assertEqWith s "CR 724.1a: the later effect overwrites — bob's own control wins" (fmap PlayerControl.decider (Map.lookup S.bob (GameState.pendingControl afterBob))) (Just (Decider.MkDecider S.bob))
+  Spec.it s "CR 728.1a: resolving a RestartGame ability restarts with its controller as starting player" $ do
     mountain <- S.printingOf s registry "Mountain"
     let g0 = Setup.emptyGame S.bothPlayers
         -- alice owns a card on the battlefield; it must survive the restart.
         -- aliceId only threads into the ability's Source.OfAbility below --
         -- CR 400.7 mints a fresh id for this card on the opening draw's zone
         -- change (Event.changeZone), so the post-restart check is ownership-
-        -- based (SetupSpec's CR 727.2 test uses the same idiom), not a
+        -- based (SetupSpec's CR 728.2 test uses the same idiom), not a
         -- lookup by this specific pre-restart id.
         (aliceId, g1) = S.addPermanent mountain S.alice g0
-        -- bob owns 8 cards (enough for a full opening hand, no CR 727.3 loss).
+        -- bob owns 8 cards (enough for a full opening hand, no CR 728.3 loss).
         g2 = addMany mountain 8 S.bob g1
         g3 = addMany mountain 7 S.alice g2
         -- Hand-build bob's ability object on the stack: one mode, effect
@@ -1457,10 +1457,10 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
             }
         g6 = g5 {GameState.objects = Map.insert abilId abilObj (GameState.objects g5), GameState.stack = abilId : GameState.stack g5}
         after = snd (Engine.runGamePure S.identityAnswer g6 Stack.resolveTop)
-    Spec.assertEqWith s "the game restarted with bob as the starting player (CR 727.1a)" (GameState.activePlayer after) S.bob
-    Spec.assertEqWith s "alice's 8 cards all survived the restart, still hers (CR 727.2)" (length (filter (\o -> Object.owner o == S.alice) (Map.elems (GameState.objects after)))) 8
+    Spec.assertEqWith s "the game restarted with bob as the starting player (CR 728.1a)" (GameState.activePlayer after) S.bob
+    Spec.assertEqWith s "alice's 8 cards all survived the restart, still hers (CR 728.2)" (length (filter (\o -> Object.owner o == S.alice) (Map.elems (GameState.objects after)))) 8
     Spec.assertEqWith s "the resolving ability object ceased to exist (not a card)" (Game.lookupObject abilId after) Nothing
-  Spec.it s "CR 729.1b: PlaySubgame binds the winner, a later LoseLife reads it (mid-resolution binding visible)" $ do
+  Spec.it s "CR 730.1b: PlaySubgame binds the winner, a later LoseLife reads it (mid-resolution binding visible)" $ do
     lightningBolt <- S.printingOf s registry "Lightning Bolt"
     let g0 = Setup.emptyGame S.bothPlayers
         -- a stub runner: no real subgame, just report alice won.
@@ -1470,7 +1470,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
         after = snd (Engine.runGamePure S.identityAnswer g1 (Resolve.resolveSpellWith stubRunner spellId))
     Spec.assertEqWith s "bob, the one player who did not win, lost 3 to the follow-on" (S.lifeOf S.bob after) (Just 17)
     Spec.assertEqWith s "alice won, so the exclusion kept her out of the set" (S.lifeOf S.alice after) (Just 20)
-  Spec.it s "CR 729.1b: a DRAWN subgame binds no winner, so the whole table is in the non-winner set" $ do
+  Spec.it s "CR 730.1b: a DRAWN subgame binds no winner, so the whole table is in the non-winner set" $ do
     -- The won board one line over with EXACTLY ONE thing changed -- the stub's
     -- Result -- so what the two cases differ by is who won and nothing else.
     lightningBolt <- S.printingOf s registry "Lightning Bolt"
@@ -1481,7 +1481,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
         after = snd (Engine.runGamePure S.identityAnswer g1 (Resolve.resolveSpellWith stubRunner spellId))
     Spec.assertEqWith s "bob did not win a drawn subgame, so he pays" (S.lifeOf S.bob after) (Just 17)
     Spec.assertEqWith s "and neither did alice -- a draw punishes everybody, not nobody" (S.lifeOf S.alice after) (Just 17)
-  Spec.it s "CR 729.1b: the non-winner set is the players still in the game, so a departed seat is not in it" $ do
+  Spec.it s "CR 730.1b: the non-winner set is the players still in the game, so a departed seat is not in it" $ do
     lightningBolt <- S.printingOf s registry "Lightning Bolt"
     -- bob departed the MAIN game before this effect resolves, so bob was never
     -- seated for the subgame (Setup.subgameStateFrom seats only
@@ -2299,7 +2299,7 @@ atCreature oid p = case p of
   Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToCreature oid))) sets
   _ -> S.identityAnswer p
 
--- CR 729.1b's plumbing, as a card face would write it: run the subgame, then make
+-- CR 730.1b's plumbing, as a card face would write it: run the subgame, then make
 -- every player who did not win lose 3. A flat 3 rather than Shahrazad's half-life
 -- rider because what these three cases pin is WHO is in the set, and a per-player
 -- amount would let a wrong set and a wrong amount cancel out.

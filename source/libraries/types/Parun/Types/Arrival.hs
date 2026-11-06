@@ -14,7 +14,7 @@ data Arrival = MkArrival
     -- | Where in the pile it arrived.
     end :: ArrivalEnd.ArrivalEnd,
     -- | The cards the move placed: one, or a melded permanent's components
-    -- (CR 712.21a).
+    -- (CR 713.8a).
     cards :: Seq.Seq ObjectId.ObjectId
   }
   deriving (Eq, Ord, Show)

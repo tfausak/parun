@@ -444,7 +444,7 @@ firstLifeChange direction pid earlier =
   let spent logged = fmap fst (Game.lifeChangeOf direction (LoggedEvent.event logged)) == Just pid
    in not (any spent earlier)
 
--- CR 733.1: `lifeChanged`'s stamps over a log with an undone stretch cut out of it,
+-- CR 734.1: `lifeChanged`'s stamps over a log with an undone stretch cut out of it,
 -- which can leave a later change the first (Parun.Engine.Reversal.withoutAnnouncement).
 restampLifeChanges :: Seq.Seq LoggedEvent.LoggedEvent -> Seq.Seq LoggedEvent.LoggedEvent
 restampLifeChanges logged =
@@ -556,7 +556,7 @@ arrivingTogether body = do
 -- of its owner -- Prompt.ArrangeLibraryArrivals or
 -- Prompt.ArrangeGraveyardArrivals -- and the cards are rewritten into the slots
 -- they already hold. A lone move is one order -- a melded permanent's two cards
--- were arranged by CR 712.21a as they moved. Only CARDS are arranged (CR
+-- were arranged by CR 713.8a as they moved. Only CARDS are arranged (CR
 -- 404.3's "two or more cards"): a token in the group keeps its slot.
 --
 -- A graveyard batch is asked only of an owner whose Player.graveyardOrder is
@@ -691,10 +691,10 @@ simultaneouslyPure body = closeEventGroup . body . openEventGroup
 -- argument because this module already imports that one.
 --
 -- Called with the ids that ACTUALLY turned (Parun.Engine.Game.facesTurned), never
--- with the instruction's victims: CR 701.27c/d/f and CR 702.145b each leave an
+-- with the instruction's victims: CR 701.27d/d/f and CR 702.145b each leave an
 -- instruction doing nothing, and CR 603.2 has no event to fire on then.
 --
--- AFTER the write, which is what makes CR 701.27e's "immediately after it does
+-- AFTER the write, which is what makes CR 701.27f's "immediately after it does
 -- so" fall out twice over: the characteristics sampled here are the turned
 -- permanent's, and recordEvent's own sample of the battlefield sees the back
 -- face's abilities, so a trigger printed on the face just turned to is among the
@@ -884,7 +884,7 @@ representingCardOf oid gs = do
 -- Grave Gardener's EnteredFaceDown returns whatever card died, so a manifested
 -- Divination it brings back stays face down by the same reading.
 --
--- CR 730.2g is the same replacement for a face-down MERGED permanent, asked of
+-- CR 731.2g is the same replacement for a face-down MERGED permanent, asked of
 -- every card component (Game.componentsOf) with no reason at all, and read off
 -- each card's own characteristics (Card.combined) rather than the permanent's.
 revealsInsteadOfTurningUp :: ObjectId -> GameState -> Bool
@@ -940,7 +940,7 @@ performTurnFaceUp road announcedX oid = do
   gs <- State.get
   if revealsInsteadOfTurningUp oid gs
     then
-      -- CR 701.40g / 730.2g: its controller reveals it, it stays face down,
+      -- CR 701.40g / 731.2g: its controller reveals it, it stays face down,
       -- and NOTHING below runs. The rule's second sentence -- "abilities that
       -- trigger whenever a permanent is turned face up won't trigger" -- is
       -- exactly the GameEvent.TurnedFaceUp that is never recorded, and CR
@@ -1675,9 +1675,9 @@ createEmblem pid card = do
 -- see what the resolution bound" proves the atom answers nothing here.
 --
 -- Two sources feed this: CR 103.2a's sideboard pool (OutsideCard.InPool) and,
--- when this game is a subgame, CR 729.4's main-game objects held in
+-- when this game is a subgame, CR 730.4's main-game objects held in
 -- GameState.outsideObjects (OutsideCard.InAnotherGame). A face-up entry of
--- either kind is read through the PRINTED FACE, since CR 729.1b gives a
+-- either kind is read through the PRINTED FACE, since CR 730.1b gives a
 -- main-game effect no meaning inside the subgame -- a main-game object is read
 -- as its card, not as its (subgame-invisible) projected characteristics, which
 -- is why OutsideObject carries no characteristics of its own.
@@ -1686,7 +1686,7 @@ createEmblem pid card = do
 -- down spells and face-down permanents have no characteristics other than those
 -- listed by the ability or rules that allowed the spell or permanent to be face
 -- down", and those listed values are the object's own COPIABLE values. CR
--- 701.40a's defining effect has no meaning here (CR 729.1b), but CR 708.2a itself
+-- 701.40a's defining effect has no meaning here (CR 730.1b), but CR 708.2a itself
 -- gives a face-down permanent these values, and face down is a status (CR 110.5)
 -- -- the same reason the entry's owner survives the
 -- crossing -- and the object is offered as CR 708.2a's 2/2 creature with no
@@ -1694,7 +1694,7 @@ createEmblem pid card = do
 --
 -- The alternative rejected: reading every entry through the printed face, on the
 -- ground that a face-down permanent's characteristics come from a main-game
--- ability. That collapses CR 729.1b's bar on EFFECTS into a bar on what the
+-- ability. That collapses CR 730.1b's bar on EFFECTS into a bar on what the
 -- object IS -- an object's copiable values would then have to be recomputed from
 -- its printing at every frame boundary, which no rule asks for -- and it makes
 -- the wish able to name a card by a face the rules say the object does not have.
@@ -2038,7 +2038,7 @@ spendFromPool pid printingId gs =
       spent p = p {Player.outsideTheGame = Map.update spend printingId (Player.outsideTheGame p)}
    in gs {GameState.players = Map.adjust spent pid (GameState.players gs)}
 
--- CR 712.21a / 730.3a: the owner arranges the cards of a melded or merged
+-- CR 713.8a / 731.3a: the owner arranges the cards of a melded or merged
 -- permanent a library destination receives, written back onto the entry
 -- `bringInFrom` then spends, since that half is pure. `arrangeComponents` asks
 -- only where there are two cards and the zone is one the rule names. The
@@ -2055,10 +2055,10 @@ arrangeOutside arrival pid outerId = do
         Nothing -> pure ()
         Just cards -> State.modify' (\g -> g {GameState.outsideObjects = Map.insert outerId entry {OutsideObject.cards = cards} (GameState.outsideObjects g)})
 
--- CR 729.4a: bring in an object from a game that is on hold. The entry is dropped
+-- CR 730.4a: bring in an object from a game that is on hold. The entry is dropped
 -- and the OUTER id is appended to GameState.broughtIn, which is the whole record
 -- the outer frame needs: this game cannot reach that game's state, and must
--- not (CR 729.1a keeps the two apart while the subgame runs). `Nothing` when
+-- not (CR 730.1a keeps the two apart while the subgame runs). `Nothing` when
 -- the id no longer names an outside entry -- a second wish reaching for a card
 -- something already brought in -- mirrors `bringIn`'s own belt-on-braces guard
 -- for a spent InPool entry.
@@ -2069,8 +2069,8 @@ arrangeOutside arrival pid outerId = do
 -- new object; a wish that reaches a manifested card gets the card, not the 2/2
 -- `eligible` offered it as.
 --
--- Every card the entry lists arrives, in its order (CR 712.21, CR 730.3): a
--- melded permanent is two cards in the zone the wish names, and CR 712.21c's
+-- Every card the entry lists arrives, in its order (CR 713.8, CR 731.3): a
+-- melded permanent is two cards in the zone the wish names, and CR 713.8c's
 -- "finds both cards" is the answer naming both new ids.
 bringInFrom :: OutsideDestination.OutsideDestination -> PlayerId -> ObjectId -> GameState.GameState -> (Maybe (NonEmpty.NonEmpty ObjectId), GameState.GameState)
 bringInFrom destination pid outerId gs = case Map.lookup outerId (GameState.outsideObjects gs) of
@@ -2126,7 +2126,7 @@ resolveZoneChange asOf discarded requestedPosition resolving zc = do
       gs <- State.get
       if not (Map.null splitEarly)
         -- A split already taken inside the loop: CR 903.9c's has spoken for the
-        -- commander card, and CR 730.3e's for every card, so neither leaves a
+        -- commander card, and CR 731.3e's for every card, so neither leaves a
         -- commander in the rest to offer.
         then pure (Just (toJunkyard gs settled), exiledBy, shuffling, splitEarly, position)
         else do
@@ -2135,16 +2135,16 @@ resolveZoneChange asOf discarded requestedPosition resolving zc = do
 
 -- Where a departing merged or melded permanent's split-off card components go,
 -- by printing, the rest following the move: CR 903.9c's commander card and CR
--- 730.3e's cards under a token. Empty on every other move.
+-- 731.3e's cards under a token. Empty on every other move.
 type ComponentSplit = Map PrintingId.PrintingId (Zone, LibraryPosition.LibraryPosition)
 
 -- CR 903.9c: the commander card offerCommandZone split off, to the command zone.
 commandSplit :: Maybe PrintingId.PrintingId -> ComponentSplit
 commandSplit = foldMap (\component -> Map.singleton component (Zone.Command, LibraryPosition.defaultValue))
 
--- CR 717.6: a card with an Astrotorium back bound anywhere but the battlefield,
+-- CR 718.6: a card with an Astrotorium back bound anywhere but the battlefield,
 -- exile or the command zone goes to the command zone instead, where it is face
--- up in its owner's junkyard (CR 717.6a). The Unstable FAQ's scrapyard is the
+-- up in its owner's junkyard (CR 718.6a). The Unstable FAQ's scrapyard is the
 -- same step for a card with a Contraption back, narrower in where it reaches:
 -- only one leaving the battlefield for anywhere but exile, and the scrapyard is
 -- held as the junkyard is. A rules step on the settled destination,
@@ -2206,7 +2206,7 @@ offerCommandZone zc = do
           -- that represents it and is a commander is put into the command zone"
           -- -- so the event's destination is left as it was and only the named
           -- component splits off, which changeZoneAttaching performs where CR
-          -- 712.21's own split already places one object per component.
+          -- 713.8's own split already places one object per component.
           --
           -- Reported rather than performed here for that reason: no component
           -- exists yet at this point in the funnel, so the card the rule names
@@ -2313,7 +2313,8 @@ applyReplacements = applyReplacementsIn (pure ()) Nothing Set.empty Set.empty
 --   * THE AS-ENTERS SACRIFICE (EntryRewrite.SacrificeAnyNumber). Here CR 614.13a
 --     is exactly the rule, because a sacrificed permanent does change zones:
 --     "You can't choose the object that will become that permanent or any other
---     object entering the battlefield at the same time as that object."
+--     object entering or leaving any zone at the same time that object is
+--     entering."
 --
 -- Both arms exclude the loop's own subject themselves -- legalCopyTargets'
 -- `self`, and the sacrifice arm's `entering` -- rather than leaning on this set
@@ -2444,7 +2445,7 @@ applyReplacementsFully settle asOf batch allowances spent = loop settle asOf bat
 
 -- The last accumulator is the component split: CR 903.9c's, taken when the
 -- owner accepted CR 903.9b's offer for a melded or merged commander inside the
--- loop (`offerCommandZoneFirst`), and CR 730.3e's (`chooseAndApply`).
+-- loop (`offerCommandZoneFirst`), and CR 731.3e's (`chooseAndApply`).
 loop :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> ComponentSplit -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, ComponentSplit)
 loop settle asOf batch diverting allowances applied prevented exiledBy shuffling split event = do
   gs <- State.get
@@ -2523,7 +2524,7 @@ freshCandidates asOf gs batch allowances applied prevented split event =
       -- once, in this loop. Parun.ReplacementSpec's "a Corpsejack Menace reanimated
       -- beside a modular creature doubles nothing" is the proof.
       notSibling candidate = not (Set.member (ReplacementCandidate.source candidate) batch)
-      -- CR 730.3e: once every card component is split off, a row reaching only
+      -- CR 731.3e: once every card component is split off, a row reaching only
       -- them has nothing left to move.
       cardsLeft candidate = Map.null split || not (all (`Map.member` split) (cardPrintings gs event) && Replacement.cardComponentsOnly asOf gs event candidate)
    in filter (\candidate -> unused candidate && notSibling candidate && cardsLeft candidate && not (Replacement.allocatedOut allowances candidate) && Replacement.ceilingLeft gs prevented candidate event /= Just 0) (Replacement.applicable asOf gs event)
@@ -2597,7 +2598,7 @@ applyPicked settle asOf batch diverting allowances applied prevented exiledBy sh
       Replacement.consume (ReplacementCandidate.identity candidate)
       let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
       pure (Nothing, [Left (de, applied1), Left (also, applied1)], prevented, exiledBy, shuffling, split)
-  -- CR 730.3e: a row reaching a merged permanent that is a token only through
+  -- CR 731.3e: a row reaching a merged permanent that is a token only through
   -- its card components moves those, and the rest of the event -- the
   -- permanent and its token components, which is how it still dies (CR 700.4)
   -- -- keeps its destination and goes on through the loop. The row's own
@@ -2615,7 +2616,7 @@ applyPicked settle asOf batch diverting allowances applied prevented exiledBy sh
         Right (applied1, prevented1, exiledBy1, shuffling1, rewritten) -> loop settle asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 split rewritten
   | otherwise = applyChosen settle asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event
 
--- CR 730.3e: the printings of the card components of the merged permanent a zone
+-- CR 731.3e: the printings of the card components of the merged permanent a zone
 -- change moves, which a row reaching only cards splits off. Empty for any other
 -- event or object.
 cardPrintings :: GameState -> ProposedEvent -> [PrintingId.PrintingId]
@@ -3060,7 +3061,7 @@ apply settle batch applied batchPrevented candidate event =
       --
       -- `flipOneCoin` below, never Game.ask directly, and NO Prompt.CallCoin: "no
       -- player wins or loses a coin flip for this kind of effect", so there is no
-      -- call to make and nothing for a CR 723 controller to usurp. Proved by
+      -- call to make and nothing for a CR 724 controller to usurp. Proved by
       -- Parun.ReplacementSpec's "CR 705.2 nobody wins Molten Sentry's flip, so its
       -- heads face mints no Treasure", on a board holding a Tavern Scoundrel that
       -- would mint two Treasures off a won one.
@@ -3358,7 +3359,8 @@ apply settle batch applied batchPrevented candidate event =
       -- is paid for here, inside the entry loop, before the next member of the
       -- batch runs its own (createTokens' mapM_ over runEntry); the offer above
       -- is re-derived from the live board; so what an earlier choice spent is
-      -- not there for a later one to choose again, which is CR 614.13b. No joint
+      -- not there for a later one to choose again, which is CR 614.13a's object
+      -- "leaving any zone at the same time". No joint
       -- answer the rule allows is lost either -- the player answers each prompt
       -- as it comes, so any partition of the supply among the batch is reachable
       -- in this fixed order, and the rule only ever FORBIDS choices.
@@ -3584,9 +3586,9 @@ apply settle batch applied batchPrevented candidate event =
       -- a card in a graveyard rather than a permanent on the battlefield -- and
       -- CR 614.12b's combined budget across a batch falls out here for the same
       -- reason, the choice being made and paid inside the entry loop before the
-      -- next member of the batch runs its own (CR 614.13b). Rule 614.13a's
-      -- exclusion of a card entering beside this one does not fall out with it;
-      -- Replacement.graveyardCandidates writes it.
+      -- next member of the batch runs its own (CR 614.13a's object "leaving any
+      -- zone at the same time"). Its exclusion of a card entering beside this one
+      -- does not fall out with it; Replacement.graveyardCandidates writes it.
       --
       -- MANDATORY at a fixed count, and so unlike the two "or tapped" arms there
       -- is no declining half: Living Lore prints no "may". An empty offer exiles
@@ -3743,15 +3745,15 @@ apply settle batch applied batchPrevented candidate event =
                 let seat obj = obj {Object.attachedTo = Just recipient}
                  in gs2 {GameState.objects = Map.adjust seat oid (GameState.objects gs2)}
             pure (Just event)
-      -- CR 702.155b / 714.3b: read ahead's two intrinsic abilities, applied as
+      -- CR 702.155b / 715.3b: read ahead's two intrinsic abilities, applied as
       -- one rewrite -- choose a number between one and this Saga's final chapter
       -- number, then enter with that many lore counters.
       --
-      -- THE BOUND is CR 714.2d's final chapter number, read off the entering
+      -- THE BOUND is CR 715.2d's final chapter number, read off the entering
       -- permanent's own projection rather than off the row: the row is minted
       -- from the projection by Parun.Engine.Saga.entryReplacementsOf, but a layer
       -- effect could have changed which chapter abilities the Saga has since, and
-      -- rule 714.2d asks about the abilities it HAS.
+      -- rule 715.2d asks about the abilities it HAS.
       --
       -- The counters go through addEnteringCounters, so CR 614.16 reaches them in
       -- the entry's own CR 616.1 pool, exactly as it does riot's counter below.
@@ -3760,10 +3762,10 @@ apply settle batch applied batchPrevented candidate event =
         gs <- State.get
         let bound = Saga.finalChapterOf (Projection.project oid gs)
         picked <- case (Projection.controllerOf oid gs, bound) of
-          -- CR 714.2d's abilityless Saga: "between one and 0" names an EMPTY
+          -- CR 715.2d's abilityless Saga: "between one and 0" names an EMPTY
           -- range, so there is nothing to ask and no counter to place. No
           -- printing reaches it -- it needs a read-ahead Saga an effect has
-          -- stripped of its chapter abilities -- and this is rule 714.2d read
+          -- stripped of its chapter abilities -- and this is rule 715.2d read
           -- honestly rather than a question withheld.
           (_, 0) -> pure 0
           -- Unreachable, and defensive for the arms above's reason: the object is
@@ -4065,12 +4067,12 @@ apply settle batch applied batchPrevented candidate event =
         Replacement.consume (ReplacementCandidate.identity candidate)
         enterTapped oid
         pure (Just event)
-      -- CR 722.3a: "This creature enters prepared" (Pompous Battlemage), the
+      -- CR 723.3a: "This creature enters prepared" (Pompous Battlemage), the
       -- arm above's posture for a designation: stamped on the entering
       -- incarnation, so no CR 603.2e "becomes" event is recorded. The first gate
       -- (a prepare spell) is Replacement.admitsEntry's; the second (not already
       -- prepared) is asked here, so a second row mints no second copy. CR
-      -- 722.3c's copy is minted as the designation is gained, through the one
+      -- 723.3c's copy is minted as the designation is gained, through the one
       -- road Parun.Engine.Prepare offers.
       EntryRewrite.Prepared -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
@@ -4151,15 +4153,15 @@ apply settle batch applied batchPrevented candidate event =
       -- CR 702.145b's first static ability: "if it is night and this permanent
       -- is represented by a double-faced card, it enters transformed." The one
       -- producer CR 616.1d's bucket has, and CR 616.1d names no origin zone, so
-      -- this arm runs on an entry from any zone -- not CR 712.13a's, which is the
+      -- this arm runs on an entry from any zone -- not CR 701.27j's, which is the
       -- resolving-spell road alone.
       --
-      -- WHICH face is Card.backFace, the same answer CR 712.14a's rider gets in
+      -- WHICH face is Card.backFace, the same answer CR 712.11a's rider gets in
       -- changeZoneEntering: the card is read, never cased on.
       --
       -- Object.face and NOT Game.turnFaceOver, which is the write for CR 701.27a's
       -- transform: nothing turned over here. So Object.turnedOverAt stays Nothing,
-      -- and CR 701.27f's "has already transformed since" (Parun.Engine.Resolve's
+      -- and CR 701.27g's "has already transformed since" (Parun.Engine.Resolve's
       -- alreadyTurnedFor) still reads the permanent as one that has not.
       --
       -- Stamped on the ALREADY-MATERIALIZED incarnation, Tapped's footing above:
@@ -4167,7 +4169,7 @@ apply settle batch applied batchPrevented candidate event =
       -- and no state-based action can see the interim front face.
       --
       -- Unguarded against an instant or sorcery back face: changeZoneAttaching
-      -- reads the face this writes and unmakes the entry (CR 712.13a, 304.4,
+      -- reads the face this writes and unmakes the entry (CR 701.27j, 304.4,
       -- 307.4; showsInstantBackFace).
       EntryRewrite.EntersTransformed -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
@@ -4630,7 +4632,7 @@ apply settle batch applied batchPrevented candidate event =
           Just you -> do
             Monad.mapM_ (\oid -> changeZone settle oid Zone.Exile) (take (Natural.toIntSaturating n) (Game.cardsIn Zone.Library you gs))
             pure Nothing
-      -- CR 614.6 with CR 728.1a: Strong, the Brutish Thespian's "you gain life
+      -- CR 614.6 with CR 729.1a: Strong, the Brutish Thespian's "you gain life
       -- rather than lose life from radiation". THE SECOND ARM THAT CANCELS, the
       -- one above for its reason: the loss never happens, so no life total goes
       -- down and no GameEvent.LifeLost is recorded.
@@ -5294,7 +5296,7 @@ apply settle batch applied batchPrevented candidate event =
     -- for the next step to actually begin (GameState.pendingSkipEffects), where
     -- pendingReplacementEffects' drains would run them at once.
     --
-    -- CR 732.3: a skip whose source has one queued already, at the same turns to
+    -- CR 733.3: a skip whose source has one queued already, at the same turns to
     -- come and floating replacement rows, is a repeated state, every seat
     -- between having skipped too; a lap that spent a row (Meditate) is not. The
     -- active player, or the first involved player in turn order from them, must
@@ -5741,7 +5743,7 @@ copiedReading src gs =
       -- copy effect over the object -- a stored row, or a stamp on an unmerged
       -- one, whose own mana value was settled when it was stamped -- leaves its
       -- shown face out of it. A merge's stamp is the exception, since its
-      -- topmost component's face is what it copies (CR 730.2a), until a later
+      -- topmost component's face is what it copies (CR 731.2a), until a later
       -- copy effect replaces it. Parun.CopySpec's "CR 202.3b a Clone of a
       -- transformed Thallid that Mirrorweave made a Hill Giant has mana value 4"
       -- and Parun.MutateSpec's "CR 202.3b a Clone of a transformed pile that
@@ -5755,18 +5757,18 @@ copiedReading src gs =
       -- CR 202.3c's second sentence, the melded twin of CR 202.3b's: "if a
       -- permanent is a copy of a melded permanent (even if that copy is
       -- represented by two other meld cards), the mana value of the copy is 0"
-      -- (CR 712.8g again). Same shape as backFace above and for the same reason
+      -- (CR 713.5c again). Same shape as backFace above and for the same reason
       -- -- the copied object's own mana value is the sum CR 202.3c gives it
       -- (Game.manaCostFacesOf), and nothing left in the snapshot says the number
       -- came off two front faces -- so the override is made here, where the
       -- COPIED object is still in hand, rather than in the projection.
       --
       -- Game.meldComponentsOf and not componentsOf: rule 202.3c's exception is
-      -- about a melded permanent, and CR 730.2a gives a merged permanent its
+      -- about a melded permanent, and CR 731.2a gives a merged permanent its
       -- topmost component's mana value like its every other characteristic, so
       -- a copy of one has that number rather than 0.
       melded = maybe False (not . Seq.null . Game.meldComponentsOf . Object.source) (Game.lookupObject src gs)
-      -- CR 718.3d's last sentence, read whole: a copy of a permanent that was a
+      -- CR 719.3d's last sentence, read whole: a copy of a permanent that was a
       -- prototyped spell answers as one whatever values it copied, so a Clone
       -- of one that is face down (CR 708.2) or a copy of something else (CR
       -- 707.2) is one too. The copied object's own record rides the snapshot
@@ -5817,7 +5819,7 @@ copiedSnapshotWithLastKnown oid gs = case Game.lastKnownOf oid gs of
 -- `settle` is drawSeries', for the draws a life payment on entry can become
 -- (CR 614.11a), handed down by every door that moves an object. A door passes
 -- `pure ()` only where its move cannot become an entry: a state-based action's,
--- a departure's, a mulligan's, ante's and CR 724.1b's exile. The one redirect
+-- a departure's, a mulligan's, ante's and CR 725.1b's exile. The one redirect
 -- onto the battlefield in data/cards/ watches a discard (Obstinate Baloth).
 --
 -- Always the LIVE board (`Nothing`), even when the zone change containing this
@@ -5964,7 +5966,7 @@ pendingSacrifices chooser gs =
     (count, criterion) <- Maybe.maybeToList (Replacement.entryCostOf rewrite)
   ]
 
--- CR 712.13a / 304.4 / 307.4: is this entered object showing its back face, and is that
+-- CR 701.27j / 304.4 / 307.4: is this entered object showing its back face, and is that
 -- face an instant or sorcery? Reads Game.cardOf, the card the EntersTransformed
 -- arm read to write the face: the rule asks about "the card that represents that
 -- spell", and for a copy (CR 707.10g) the copied card, whose back face a copy
@@ -6403,7 +6405,7 @@ settleCounters putter target settledKind settledCount
           -- CR 122.6's placement, recorded AFTER the write and from the SETTLED
           -- count, so a Doubling Season that turned one counter into two records
           -- the crossing the board actually saw. The before/after pair is what
-          -- CR 714.2b's chapter ability reads.
+          -- CR 715.2b's chapter ability reads.
           --
           -- Guarded by the same `settledCount > 0` the write is: an event
           -- recorded for a placement that did not happen would fire a chapter
@@ -6959,12 +6961,12 @@ proposeDiceRoll pid sides named = do
 -- flip and an effect's flip alike.
 --
 -- TWO questions, in rule 705.2's own order. The CALL comes first and through
--- Game.choose, because it is a choice CR 723 lets a controller usurp; the FACE
+-- Game.choose, because it is a choice CR 724 lets a controller usurp; the FACE
 -- comes second and through Game.ask inside `flipOneCoin`, because nobody decides
 -- how a coin lands. Asking in the other order would let the call be made with the
 -- face already known.
 --
--- The decider is read HERE rather than by the caller, so CR 723.1's control is
+-- The decider is read HERE rather than by the caller, so CR 724.1's control is
 -- read at the moment of the call -- one instruction's second coin can be called
 -- by a different seat than its first.
 --
@@ -7016,18 +7018,18 @@ beginsPhase selector pid = do
 -- The Game () wrapper the ~30 existing callers use; changeZoneReturning below
 -- carries the same body but hands back the freshly-minted incarnation ids.
 --
--- IDS and not one id: CR 712.21 puts a melded permanent's two cards into the
+-- IDS and not one id: CR 713.8 puts a melded permanent's two cards into the
 -- destination as one departure and two arrivals, so every returning door below
 -- answers with a SEQUENCE -- empty for a move that did not happen, one element
 -- for every object but a melded permanent leaving the battlefield, one per
 -- component for that. Widening rather than special-casing is what makes CR
--- 712.21c reachable: an effect that finds what the permanent became finds both
+-- 713.8c reachable: an effect that finds what the permanent became finds both
 -- cards, where a single-id answer would silently drop the second.
 changeZone :: Game () -> ObjectId -> Zone -> Game ()
 changeZone settle oid requestedDest = Monad.void (changeZoneReturning settle oid requestedDest)
 
 -- changeZoneReturning for a move whose effect says how the object ENTERS -- CR
--- 110.5b's tap state, CR 712.14a's transformed face, CR 708.3's face-down entry
+-- 110.5b's tap state, CR 712.11a's transformed face, CR 708.3's face-down entry
 -- and CR 110.2a's controller -- rather than taking the rules' defaults.
 --
 -- A separate door rather than a fifth parameter on changeZone, as changeZoneInBatch
@@ -7037,37 +7039,35 @@ changeZone settle oid requestedDest = Monad.void (changeZoneReturning settle oid
 -- enters under someone's control never belongs to its owner for an instant --
 -- CR 614.1c's entry replacements run inside this call and read both.
 --
--- CR 712.14a is the other rule this door is the only one for: "If a spell or
+-- CR 712.11a is the other rule this door is the only one for: "If a spell or
 -- ability puts a double-faced card onto the battlefield 'transformed' or
 -- 'converted', it enters the battlefield with its back face up." Which face that
 -- is comes from the card's layout (Card.backFace), so the rider stays a Bool and
 -- the engine never learns which card is entering. The rule's SECOND sentence is
--- the same refusal CR 712.14b gets below -- "if a player is instructed to put a
+-- the same refusal CR 712.11b gets below -- "if a player is instructed to put a
 -- card that isn't a double-faced card onto the battlefield transformed or
 -- converted, that card stays in its current zone" -- read here as a card that
--- isn't double-faced (Card.isDoubleFaced). A meld card is double-faced (CR
--- 712.1) with no back face to turn to, so CR 712.4c ignores the instruction and
--- it enters front face up (CR 712.14).
+-- isn't double-faced (Card.isDoubleFaced), a meld card among them (CR 713.1).
 --
--- CR 712.14a and NOT CR 702.145b's entering-transformed ability, which is a
+-- CR 712.11a and NOT CR 702.145b's entering-transformed ability, which is a
 -- different mechanism: an ability causing a permanent to enter transformed is a
 -- replacement effect, CR 616.1d's own bucket, and no rider on a move can express
 -- it -- EntryRewrite.EntersTransformed is that one, applied by `apply` above.
--- (CR 712.13a is neither: it is the resolving double-faced spell's own rule.)
+-- (CR 701.27j is neither: it is the resolving double-faced spell's own rule.)
 --
--- The one door CR 712.14b applies to, and that is what the rule's own wording
--- picks out: "If a player is INSTRUCTED to put a modal double-faced card onto
--- the battlefield and its front face isn't a permanent card, the card stays in
--- its current zone." An instruction to put an object onto the battlefield is
+-- The one door CR 712.11b applies to, and that is what the rule's own wording
+-- picks out: "If a player is INSTRUCTED to put a double-faced card onto the
+-- battlefield with an instant or sorcery face up, that card stays in its current
+-- zone." An instruction to put an object onto the battlefield is
 -- exactly the move that names how it enters, so the other doors are out of the
 -- rule's scope rather than exempted from it -- a permanent spell RESOLVING (CR
--- 712.13, Parun.Engine.Stack) and a land PLAYED (CR 712.12, Parun.Engine.Engine)
+-- 712.10, Parun.Engine.Stack) and a land PLAYED (CR 712.9, Parun.Engine.Engine)
 -- both reach the battlefield without any instruction to put them there.
 --
 -- The empty answer, the same one a CR 616.1 replacement that cancelled the move
 -- gives, so every caller already handles it: "the card stays in its current
 -- zone" and "nothing entered" are the same fact. Asked BEFORE the funnel, because CR
--- 712.14b is not a replacement effect -- there is no event for CR 616.1 to
+-- 712.11b is not a replacement effect -- there is no event for CR 616.1 to
 -- choose among, and running the entry loop first would fire CR 614.1c's
 -- as-enters abilities for a card that never enters.
 changeZoneEntering :: Game () -> ObjectId -> Zone -> LibraryPosition.LibraryPosition -> EntryRiders.EntryRiders Natural (GrantedAbility.Type.GrantedAbility Card.Type.Card) -> Maybe PlayerId -> Game (Seq.Seq ObjectId)
@@ -7090,14 +7090,14 @@ changeZoneEnteringIn settle asOf batch seed source oid requestedDest position ri
   gs <- State.get
   let mCard = Game.cardOf oid gs
       onto = requestedDest == Zone.Battlefield
-      -- CR 712.14a's back face, asked only of a move the effect says is
+      -- CR 712.11a's back face, asked only of a move the effect says is
       -- transformed. Nothing means one of three things, which is why the rider
       -- and the layout are read alongside it below: a card that isn't
-      -- double-faced, a meld card (CR 712.4c ignores the instruction, so it
+      -- double-faced, a meld card (CR 713.1c ignores the instruction, so it
       -- enters front face up), or no instruction to turn at all.
       mBack = if EntryRiders.transformed riders then mCard >>= Card.backFace else Nothing
       -- CR 708.3 turns a face-down entry over BEFORE it enters, so neither the
-      -- front face (CR 712.14b, 712.15) nor the card type (CR 400.4a) is asked
+      -- front face (CR 712.11b, 712.12) nor the card type (CR 400.4a) is asked
       -- of it: a face-down instant enters with only its listed characteristics
       -- -- manifest's 2/2 (CR 701.40a), cloak's 2/2 with ward {2} (CR 701.58a),
       -- Magar's 3/3.
@@ -7108,13 +7108,13 @@ changeZoneEnteringIn settle asOf batch seed source oid requestedDest position ri
       instantOrSorcery face = any (`Set.member` TypeLine.types (Face.typeLine face)) [CardType.Instant, CardType.Sorcery]
       refused =
         onto
-          && ( (faceUpEntry && maybe False Card.staysWhenPutOntoBattlefield mCard) -- CR 712.14b
+          && ( (faceUpEntry && maybe False Card.staysWhenPutOntoBattlefield mCard) -- CR 712.11b
                  || (faceUpEntry && maybe False (instantOrSorcery . Card.combined) mCard && Maybe.isNothing mBack) -- CR 400.4a
-                 || (EntryRiders.transformed riders && Maybe.isNothing mBack && not (maybe False Card.isDoubleFaced mCard)) -- CR 712.14a, 712.4c
+                 || (EntryRiders.transformed riders && Maybe.isNothing mBack && not (maybe False Card.isDoubleFaced mCard)) -- CR 712.11a, 713.1
              )
-      -- CR 712.14: "A double-faced card put onto the battlefield from a zone
+      -- CR 712.11: "A double-faced card put onto the battlefield from a zone
       -- other than the stack enters the battlefield with its front face up by
-      -- default", which Object.face records as Nothing (CR 712.8d).
+      -- default", which Object.face records as Nothing (CR 712.6c).
       shown = if onto then fmap Face.name mBack else Nothing
       -- CR 110.2a: the effect states otherwise, so the player it instructed stops
       -- being the answer and the owner it names -- which is what `Nothing` means
@@ -7161,8 +7161,8 @@ changeZoneEnteringIn settle asOf batch seed source oid requestedDest position ri
 -- changeZoneReturning for a move that carries ONE NAMED HALF of the card into
 -- its destination: CR 709.3's choice of which half of a split card is being
 -- cast, which the rule makes "before putting it onto the stack", so the move is
--- what carries it. CR 712.11b words the modal double-faced card's version of the
--- same choice identically, and CR 712.11c its version of CR 709.3a, so both
+-- what carries it. CR 712.8b words the modal double-faced card's version of the
+-- same choice identically, and CR 712.8c its version of CR 709.3a, so both
 -- layouts come through this door.
 --
 -- A HALF and not always a face that is up, which is CR 709.5d's use of the same
@@ -7172,7 +7172,7 @@ changeZoneEnteringIn settle asOf batch seed source oid requestedDest position ri
 -- other caller's half IS the face the object arrives showing.
 --
 -- The name is a MAYBE, because the third rule asking for this door does not
--- always have one to give: CR 712.13 carries a resolving double-faced spell's
+-- always have one to give: CR 712.10 carries a resolving double-faced spell's
 -- face onto the battlefield, and Parun.Engine.Stack asks that of every permanent
 -- spell it resolves, most of which show nothing (Parun.Engine.Card.enteringFace).
 -- Nothing here is exactly changeZoneReturning.
@@ -7347,7 +7347,7 @@ changeZonesTogether settle batch = simultaneously . together $ do
 -- changeZoneReturning's body, returning the destination incarnations' ids: one
 -- fresh id per arrival on a completed move (CR 400.7), which is one for every
 -- object but a melded permanent leaving the battlefield and one per component for
--- that (CR 712.21); empty when the id is unknown or the CR 616.1 replacement loop
+-- that (CR 713.8); empty when the id is unknown or the CR 616.1 replacement loop
 -- cancelled the move (`resolved == Nothing`). changeZoneReturning itself is the
 -- `seed = Nothing` case below.
 -- CR 701.17a: move the top `n` cards of a player's own library (CR 400.3) to
@@ -7358,7 +7358,7 @@ changeZonesTogether settle batch = simultaneously . together $ do
 -- makes all three a mill and the printed clause names none of them.
 --
 -- `millFromReturningTaken` answers the LIBRARY ids taken as well, for the tally
--- CR 728.1 asks about -- those cards have moved by the time it is read, so the
+-- CR 729.1 asks about -- those cards have moved by the time it is read, so the
 -- pre-move ids are the only handle on what they were.
 millFrom :: Game () -> PlayerId -> Natural -> Game [ObjectId]
 millFrom settle pid n = fmap snd (millFromReturningTaken settle pid n)
@@ -7436,7 +7436,7 @@ changeZoneResolvingReturning settle oid requestedDest = changeZoneAttaching sett
 -- every door but changeZoneEntering and changeZoneCasting, and Nothing on the
 -- first of those too for a move whose effect names no player, where
 -- Projection.defaultControllerOf answers the owner. `shown` is CR 709.3's chosen
--- half or CR 712.13's carried face, Nothing for every door but
+-- half or CR 712.10's carried face, Nothing for every door but
 -- changeZoneShowing. `facing` is CR 110.5's face-up/face-down status, FaceUp for
 -- every door but changeZoneFaceDown (CR 708.4) and a changeZoneEntering whose
 -- riders say otherwise (CR 708.3), which is CR 110.5b's default standing
@@ -7918,7 +7918,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- The SETTLED destination against the REQUESTED one rather than
               -- against Zone.Stack: the rule is that the face describes the move
               -- the caller asked for, not that a face is only ever a stack half.
-              -- CR 712.13's face carried OUT of the stack is that same shape with
+              -- CR 712.10's face carried OUT of the stack is that same shape with
               -- Battlefield in both slots -- "a resolving double-faced spell that
               -- becomes a permanent is put onto the battlefield with the same face
               -- up that was face up on the stack" -- and Parun.Engine.Stack's
@@ -7933,7 +7933,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- unlocked' designation as it enters the battlefield if its right
               -- half was a cast as a spell." `shown` is that half --
               -- Parun.Engine.Card.enteringFace carried it off the stack, exactly
-              -- as CR 712.13's face is carried -- so a Room spends it on a
+              -- as CR 712.10's face is carried -- so a Room spends it on a
               -- DESIGNATION where a double-faced card spends it on `face`, and
               -- the two are mutually exclusive below.
               --
@@ -8134,18 +8134,18 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                     -- states rather than implies: what a bestowed spell becomes
                     -- anywhere else is a card, and a card is no bestowed Aura.
                     Object.bestowed = Object.bestowed obj && resolvedOnto,
-                    -- CR 718.4: "in every zone except the stack or the
+                    -- CR 719.4: "in every zone except the stack or the
                     -- battlefield ... a prototype card has only its normal
                     -- characteristics". This move is the stack-to-battlefield
                     -- half of that sentence, so the record crosses it and
                     -- nothing else; every other departure ends the incarnation
-                    -- (CR 400.7) and CR 718.4 wants the normal characteristics
+                    -- (CR 400.7) and CR 719.4 wants the normal characteristics
                     -- back.
                     --
                     -- BATTLEFIELD ONLY, `bestowed`'s gate above and for the same
                     -- kind of reason the rule states outright: a prototyped spell
                     -- countered on its way to a graveyard becomes a card, and a
-                    -- card is in neither zone rule 718.4 excepts.
+                    -- card is in neither zone rule 719.4 excepts.
                     Object.prototyped = Object.prototyped obj && resolvedOnto,
                     -- CR 702.27a's record crosses NO move: the ability is spent
                     -- on the one destination it replaces, and only an instant or a
@@ -8351,7 +8351,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                     GameEvent.Revealed r -> Revealed.card r == oid
                     _ -> False
               revealedLeaving <- pure $! any revealedHere loggedByLeaving || all (\seat -> (Visibility.revealedNow oid gs <> Visibility.sees seat oid lki) == Visibility.Type.Visible) (Game.stillPlaying gs)
-              -- CR 712.13a's rollback point; see the branch after the entry loop.
+              -- CR 701.27j's rollback point; see the branch after the entry loop.
               unentered <- State.get
               State.modify' $ \g ->
                 let g1 = Game.removeFromZones oid g
@@ -8415,14 +8415,14 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- this moment, before anything the same resolution does next --
               -- returning the sculptor included. See SpaceSculptor.lapse.
               Monad.when (fromZone == Zone.Battlefield) (State.modify' SpaceSculptor.lapse)
-              -- CR 712.21: "If a melded permanent leaves the battlefield, one
+              -- CR 713.8: "If a melded permanent leaves the battlefield, one
               -- permanent leaves the battlefield and two cards are put into the
               -- appropriate zone." So the leave is one event and the arrival is
               -- one CR 400.7 incarnation PER COMPONENT, each an ordinary card
               -- object naming its own printing.
               --
               -- Read through Game.componentsOf, a classifier over Source and
-              -- never a case on Source.OfMeld: CR 730.3 restates this rule for a
+              -- never a case on Source.OfMeld: CR 731.3 restates this rule for a
               -- merged permanent, so mutate extends that one function
               -- rather than this branch.
               --
@@ -8446,13 +8446,13 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- with; only Object.source and what each card kept as a component
               -- (its identity, a conjured duplicate's values) differ
               -- (Game.representComponent), since each component
-              -- represents itself again and not the permanent it was. CR 730.3's
+              -- represents itself again and not the permanent it was. CR 731.3's
               -- merged permanent can have a TOKEN component, which arrives as a
               -- token (Game.sourceOfComponent) and is then removed by CR 111.7's
               -- state-based action, rather than as a card that would sit in the
               -- graveyard for ever.
               --
-              -- CR 712.21d needs nothing here: the CR 616.1 replacement loop
+              -- CR 713.8d needs nothing here: the CR 616.1 replacement loop
               -- ran ONCE above, against the melded permanent, so a replacement
               -- one player chose settles the destination for both cards --
               -- "applying one of those replacement effects to one of the two
@@ -8465,10 +8465,10 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                   -- permanent and each component representing it that isn't a
                   -- commander are put into the appropriate zone, and the card
                   -- that represents it and is a commander is put into the command
-                  -- zone". CR 730.3e's is the same shape: the cards under a token
+                  -- zone". CR 731.3e's is the same shape: the cards under a token
                   -- go where the row reaching only them sent them. `splitOff` is
                   -- empty on every other move, and the partition then leaves
-                  -- every component headed for `dest` exactly as CR 712.21 alone
+                  -- every component headed for `dest` exactly as CR 713.8 alone
                   -- does.
                   --
                   -- The event's own `to` still names the zone the move was
@@ -8482,7 +8482,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                   -- (CR 111.6) is none. Game.componentIsToken is that read, and
                   -- Commander.commanderCardOf takes it on the way in, so the two
                   -- agree about which component the designation can sit on. CR
-                  -- 730.3e's split moves cards only, by the same read.
+                  -- 731.3e's split moves cards only, by the same read.
                   (splitComponents, destComponents) = Seq.partition (\component -> not (Game.componentIsToken component) && Map.member (Game.printingOfComponent component) splitOff) components
                   splitGroups = Map.fromListWith (flip (<>)) [(target, Seq.singleton component) | component <- Foldable.toList splitComponents, Just target <- [Map.lookup (Game.printingOfComponent component) splitOff]]
                   -- CR 123.5c: only the component `keeps` names takes the
@@ -8494,7 +8494,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                     )
                       { Object.zone = zone
                       }
-              -- CR 712.21a, asked BEFORE the first placeObject: the arrangement is
+              -- CR 713.8a, asked BEFORE the first placeObject: the arrangement is
               -- the order the cards are put down in, so nothing can be placed
               -- until it is settled.
               --
@@ -8503,7 +8503,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- CR 903.9b's offer puts ONE card into the library, and one card
               -- has one arrangement.
               arranged <- arrangeComponents pid dest destComponents
-              -- CR 730.3a again, for each zone the split sends cards to.
+              -- CR 731.3a again, for each zone the split sends cards to.
               splitArranged <-
                 fmap (Seq.fromList . concat) . Monad.forM (Map.toList splitGroups) $ \((zone, at), group) ->
                   fmap (fmap (\component -> (zone, at, component)) . Foldable.toList) (arrangeComponents pid zone group)
@@ -8540,7 +8540,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                       State.modify' (Game.restampStickers trailingId)
                       pure trailingId
                   )
-              -- CR 712.21b / 730.3b: "if a player exiles a melded permanent, that
+              -- CR 713.8b / 731.3b: "if a player exiles a melded permanent, that
               -- player determines the relative timestamp order of the two cards",
               -- an exception to CR 613.7m. Asked AFTER the placements, which minted
               -- the stamps Restamp.reassign permutes, and before anything reads them.
@@ -8552,7 +8552,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- permanent. Parun.MeldSpec's Duplicant boards prove the second; the
               -- first and third are regression fences.
               --
-              -- CARDS only, which is the rule's word: a token component (CR 730.2d)
+              -- CARDS only, which is the rule's word: a token component (CR 731.2d)
               -- ceases by CR 111.7 and holds no timestamp anyone reads.
               Monad.when (dest == Zone.Exile) $ do
                 placed <- State.get
@@ -8572,7 +8572,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                       State.modify' (Game.restampStickers splitId)
                       pure (zone, at, splitId)
                   )
-              -- CR 730.3b for the cards a CR 730.3e row exiled: the exiler is that
+              -- CR 731.3b for the cards a CR 731.3e row exiled: the exiler is that
               -- row's controller.
               Monad.when (any (\(zone, _, _) -> zone == Zone.Exile) splitIds) $ do
                 placed <- State.get
@@ -8614,7 +8614,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- anything else over for.
               --
               -- `arrivals` and not `newId`, which is the other half of the same
-              -- contrast: CR 712.21c gives an effect that finds what a melded
+              -- contrast: CR 713.8c gives an effect that finds what a melded
               -- permanent became BOTH cards, so a perpetual effect follows the
               -- arrangement's trailing card too.
               perpetuate oid arrivals
@@ -8699,7 +8699,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                       -- CR 614.1a: EntryRewrite.SacrificeToEnter's "if you don't, put
                       -- it into its owner's graveyard", and
                       -- EntryRewrite.ExileFromGraveyard's "if you can't", the
-                      -- entry unmade as CR 712.13a's is below. A card that was already in the graveyard
+                      -- entry unmade as CR 701.27j's is below. A card that was already in the graveyard
                       -- stays there.
                       Just EntryRefusal.Unpaid -> do
                         State.put unentered
@@ -8736,7 +8736,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- object: the graveyard move above re-mints from the rolled-back
               -- counter, so the card arriving there can carry that same id.
               let refused = Maybe.isJust refusal
-              -- CR 712.13a: a resolving double-faced spell that entered
+              -- CR 701.27j: a resolving double-faced spell that entered
               -- transformed onto an instant or sorcery back face "doesn't enter
               -- the battlefield, and is instead put into its owner's graveyard";
               -- from any other zone, CR 304.4 / 307.4 leave it where it was.
@@ -8832,26 +8832,26 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                   -- running; its insertWith keeps the entry already present, which is
                   -- what makes this write the one that stands.
                   --
-                  -- Every arrival is linked, not just the first: CR 712.21c gives an
+                  -- Every arrival is linked, not just the first: CR 713.8c gives an
                   -- effect that finds what a melded permanent becomes both cards, and
                   -- CR 607.2b's link is exactly such a finding.
                   Monad.forM_ (if dest == Zone.Exile then exiledBy else Nothing) $ \linked ->
                     Monad.forM_ arrivals $ \arrival ->
                       State.modify' (\g -> g {GameState.exiledWith = Map.insert arrival ExileLink.MkExileLink {ExileLink.source = linked, ExileLink.ability = Nothing, ExileLink.acquisition = Game.acquisitionOf linked g} (GameState.exiledWith g)})
-                  -- ONE Moved event for the whole move, which is CR 712.21's first
+                  -- ONE Moved event for the whole move, which is CR 713.8's first
                   -- clause: one permanent leaves the battlefield. `newId` is the
                   -- first arrival, so a trigger reading the destination end of this
                   -- event finds one of the two cards, and the rest are announced by
                   -- the CardArrived events below.
                   --
-                  -- CR 712.21e's two halves come out of that split: an effect that
+                  -- CR 713.8e's two halves come out of that split: an effect that
                   -- needs the number of OBJECTS that changed zones folds the Moved
                   -- events one at a time and sees one, and one that needs the number
                   -- of CARDS folds this event and every CardArrived below and sees
                   -- two (Parun.Engine.Count.snapshotView, Parun.MeldSpec).
                   --
                   -- The OTHER arrivals ride along in Moved.otherArrivals as well as in the
-                  -- CardArrived events below, which is CR 712.21c: "if an effect can
+                  -- CardArrived events below, which is CR 713.8c: "if an effect can
                   -- find the new object that a melded permanent becomes as it leaves
                   -- the battlefield, it finds both cards." eventBindings reads them
                   -- through Moved.arrivals and binds CR 400.7e's `became` slot as a
@@ -8890,9 +8890,9 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                         Moved.seenArriving = seenArriving,
                         Moved.causedBy = causer
                       }
-                  -- CR 712.21's second clause: "two cards are put into the
+                  -- CR 713.8's second clause: "two cards are put into the
                   -- appropriate zone". One event per card AFTER the leading one,
-                  -- which the Moved event above already announces -- so CR 712.21's
+                  -- which the Moved event above already announces -- so CR 713.8's
                   -- Example comes out as written, a "whenever a creature dies"
                   -- ability seeing one event and a "whenever a card is put into a
                   -- graveyard from anywhere" ability seeing two.
@@ -8914,7 +8914,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                       $ ZoneChange.MkZoneChange oid arrival fromZone zone
                   pure arrivals
 
--- CR 712.21a: "if a melded permanent is put into its owner's graveyard or
+-- CR 713.8a: "if a melded permanent is put into its owner's graveyard or
 -- library, that player may arrange the two cards in any order." Answers the
 -- components in the order they are to be PUT INTO the zone;
 -- Prompt.OrderComponentCards says how that maps onto which card ends up on top.
@@ -8925,10 +8925,10 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
 -- Game.insertIntoZone keys those two zones by it (CR 400.3).
 --
 -- Read off `dest` and never off the source's identity: the two named zones are
--- the rule's own condition, and CR 730.3a restates the whole sentence for a
+-- the rule's own condition, and CR 731.3a restates the whole sentence for a
 -- merged permanent, which reaches this through the same Seq.
 --
--- Exile is NOT here. CR 712.21b gives that case to the EXILING player and asks
+-- Exile is NOT here. CR 713.8b gives that case to the EXILING player and asks
 -- about relative timestamps rather than an arrangement, so it is a different
 -- question of a different player, asked after the placements in
 -- changeZoneAttaching (Restamp.orderFor).
@@ -9008,7 +9008,7 @@ carryOver carrying oldId newId = case carrying of
 
 -- CR 702.140f: an effect referring to or modifying a mutating creature spell
 -- refers to or modifies the permanent it merged with. carryOver's re-keying
--- without `reenter`, which `merge` runs: CR 730.2b's merge is no entry, so no
+-- without `reenter`, which `merge` runs: CR 731.2b's merge is no entry, so no
 -- EntryR row watches it.
 referTo :: ObjectId -> ObjectId -> GameState -> GameState
 referTo oldId newId gs =
@@ -9125,11 +9125,11 @@ rewatch oldId newId row = case ActiveReplacement.effect row of
 -- Parun.Engine.Expiry.follows is asked rather than a case on the arm, since that
 -- module is the only one that may case on Parun.Types.Expiry.
 --
--- EVERY arrival and not just the leading one, which is CR 712.21c: "if an effect
+-- EVERY arrival and not just the leading one, which is CR 713.8c: "if an effect
 -- can find the new object that a melded permanent becomes as it leaves the
 -- battlefield, it finds both cards ... if that effect causes actions to be taken
 -- upon those cards, the same actions are taken upon each of them". Following an
--- object across the zone change is finding what it became, so a CR 712.21a
+-- object across the zone change is finding what it became, so a CR 713.8a
 -- arrangement's trailing card is named as well as its leading one. That is a
 -- THIRD difference from carryOver beside it, which names the head alone because
 -- CR 400.7a's exception is about the permanent a SPELL becomes and a spell melds
@@ -9153,9 +9153,9 @@ perpetuated oldId arrivals gs =
 
 -- carryOver's and perpetuate's per-effect half: swap oldId for the arriving ids
 -- in a locked affected set that names it, and leave every other effect alone. A
--- SET of new ids rather than one, because CR 712.21's split makes a single
+-- SET of new ids rather than one, because CR 713.8's split makes a single
 -- departure into two arrivals; carryOver passes a singleton, since the road it
--- gates is the one a melded permanent cannot take -- CR 712.21's own condition is
+-- gates is the one a melded permanent cannot take -- CR 713.8's own condition is
 -- a departure FROM the battlefield, and carryOver runs only for an arrival ONTO
 -- it.
 reanchor :: ObjectId -> Set ObjectId -> ContinuousEffect.ContinuousEffect Card -> ContinuousEffect.ContinuousEffect Card
@@ -9199,7 +9199,7 @@ reanchor oldId newIds eff = case ContinuousEffect.affected eff of
 -- THREE roads reach this, because a permanent leaves the battlefield three ways:
 -- changeZoneAttaching above for a zone change, and two that take it out of the
 -- GAME without one -- Parun.Engine.Departure.objectsLeaveWith for CR 800.4a's
--- first clause, and Parun.Engine.Setup.applyCrossings for CR 729.4a's card a
+-- first clause, and Parun.Engine.Setup.applyCrossings for CR 730.4a's card a
 -- subgame brought in. No gate is written here: this function is asked about a
 -- permanent that has already been decided to be leaving, and each caller decides
 -- that its own way -- the funnel off Object.zone, and both roads out of the game
@@ -9812,7 +9812,7 @@ sacrificeAll settle = sacrificeIn settle Nothing
 
 -- sacrificeAll for a batch that is one PART of a larger simultaneous event, whose
 -- board is `asOf`. destroyInBatch's door one funnel over, and CR 704.3's
--- state-based-action check is the same event: Parun.Engine.Sba's CR 704.5s / 714.4
+-- state-based-action check is the same event: Parun.Engine.Sba's CR 704.5s / 715.4
 -- Saga sacrifices stand on the board the pass began in, so a replacement effect
 -- belonging to a Saga the same pass is sacrificing still applies to the rest.
 sacrificeInBatch :: Game () -> GameState -> [(PlayerId, ObjectId)] -> Game ()
@@ -9966,7 +9966,7 @@ sacrificeIn settle asOf victims = simultaneously $ do
 -- battlefield with -- CR 701.53a's incubate -- and it is passed beside `tapped`
 -- rather than as a whole EntryRiders for the reason changeZoneAttaching keeps them
 -- apart too: the record's other riders are answered elsewhere or are inert here
--- (CR 111.2 for `under`, CR 508.4 for `attacking`, CR 712.14a's card-only
+-- (CR 111.2 for `under`, CR 508.4 for `attacking`, CR 712.11a's card-only
 -- scope for `transformed`), and handing this funnel the record would read as
 -- though it applied them.
 --
@@ -10279,7 +10279,7 @@ recordMintedArrival zone newId = do
 -- and are reached from nowhere else. createTokens is the model throughout -- a
 -- permanent that no single prior incarnation maps onto -- and the differences are
 -- the two rules meld has and CR 111.2 does not: the result is interned from the
--- COMBINED BACK FACE the ability carried (CR 712.8g), and the cards that were
+-- COMBINED BACK FACE the ability carried (CR 713.5c), and the cards that were
 -- melded stop being objects.
 --
 -- The EXILE is not here and is not the caller's either: rule 701.42a is only the
@@ -10288,10 +10288,10 @@ recordMintedArrival zone newId = do
 -- 701.42c's Graf Rats example come out right with no rollback -- a refusal below
 -- does nothing at all, so the cards stay wherever that instruction left them.
 --
--- CR 712.14c ("those cards enter the battlefield as a single permanent with their
+-- CR 713.6 ("those cards enter the battlefield as a single permanent with their
 -- back faces up") is why runEntry runs: the entry replacement loop of rule 616.1
 -- and the enters-the-battlefield trigger scan must both see one permanent enter.
--- The back faces are up by construction -- CR 712.4b leaves a meld card's own half
+-- The back faces are up by construction -- CR 713.1b leaves a meld card's own half
 -- of the oversized face meaningless alone, so parun prints neither half's back and
 -- the interned result IS the combined face, face up on its only face.
 meld :: Game () -> PlayerId -> [ObjectId] -> Card -> Game (Maybe ObjectId)
@@ -10301,7 +10301,7 @@ meld settle controller victims resultCard = do
     -- CR 701.42b/701.42c. Nothing is written, so nothing moves.
     Nothing -> pure Nothing
     Just (owner, origin, melding) -> do
-      -- CR 712.8g: the melded permanent "has only the characteristics of the
+      -- CR 713.5c: the melded permanent "has only the characteristics of the
       -- combined back face", which Game.cardOfSource answers by resolving
       -- MeldSource.result -- so the face is interned exactly as createTokens
       -- interns a token's card, and every characteristic read past here is the
@@ -10317,14 +10317,14 @@ meld settle controller victims resultCard = do
       -- source is one of these cards, so without the record a clause of the very
       -- resolution that melded them could no longer say what its source was.
       -- What answers for them AS A GROUP afterwards is Game.componentsOf over the
-      -- new permanent's source, the reader CR 202.3c, CR 712.21 and CR 701.27g
+      -- new permanent's source, the reader CR 202.3c, CR 713.8 and CR 701.27h
       -- share.
       --
       -- The fold is SEQUENTIAL, so each card's CR 608.2h snapshot is taken
       -- against a board the cards before it have already left. That is
       -- unobservable for the objects rule 701.42a can reach: CR 701.42b admits
       -- only cards, meldable requires them off the battlefield, and neither half
-      -- of CR 712.5's pairs prints an ability that functions from another zone
+      -- of CR 713.2's pairs prints an ability that functions from another zone
       -- (CR 113.6), so no component's projection reads another. One that did
       -- would want a single pre-removal board for all of them.
       State.modify' (\g -> Foldable.foldl' forgetObject g (fmap fst melding))
@@ -10349,7 +10349,7 @@ meld settle controller victims resultCard = do
                 Object.enteredUnder = Just controller,
                 -- CR 110.5b: nothing in rule 701.42 says otherwise.
                 Object.tapped = TapState.Untapped,
-                -- CR 712.14c's "back faces up", which for the interned combined
+                -- CR 713.6's "back faces up", which for the interned combined
                 -- face is its only face; Object.face = Nothing is that face.
                 Object.facing = Facing.FaceUp,
                 -- CR 302.6 through CR 400.7: a permanent that has just entered is
@@ -10372,19 +10372,19 @@ meld settle controller victims resultCard = do
       -- Parun.Types.Duration's Perpetual arm already says such an effect follows
       -- across. Reading CR 400.7's default as ending the effect HERE would be
       -- selective, the arm overriding that default at every other zone change. CR
-      -- 712.21c is the same identity read the other way: one card becoming two,
+      -- 713.8c is the same identity read the other way: one card becoming two,
       -- where this is two becoming one.
       --
       -- EVERY component rather than the first, for perpetuate's own reason one
       -- direction over: CR 701.42a's permanent is represented by both cards, and
-      -- CR 712.21e counts a melded permanent as two cards that moved.
+      -- CR 713.8e counts a melded permanent as two cards that moved.
       -- Parun.MeldSpec's arrival case grants on each half in turn to prove it.
       --
       -- Before runEntry, which is changeZoneAttaching's ordering: CR 614.12 reads
       -- an entry replacement against the continuous effects that already apply to
       -- the permanent.
       Foldable.traverse_ (\component -> perpetuate (fst component) (Seq.singleton newId)) melding
-      -- CR 712.14c / CR 616.1: ONE permanent enters, so ONE entry loop, with no
+      -- CR 713.6 / CR 616.1: ONE permanent enters, so ONE entry loop, with no
       -- simultaneously-entering sibling to exclude. createTokens' order exactly:
       -- the object is materialized first, because CR 614.12 asks for the
       -- characteristics it would have on the battlefield. The answer is dropped:
@@ -10399,7 +10399,7 @@ meld settle controller victims resultCard = do
       --
       -- EVERY card that left is named, the first in the ZoneChange and the rest
       -- in Moved.otherDepartures, since CR 400.7 gives each its own departure
-      -- while CR 712.14c makes the entry one. Parun.MeldSpec's "CR 701.42a a
+      -- while CR 713.6 makes the entry one. Parun.MeldSpec's "CR 701.42a a
       -- one-or-more-cards-leave-exile trigger counts both melded cards" proves
       -- the count.
       placed <- State.get
@@ -10415,9 +10415,9 @@ meld settle controller victims resultCard = do
 -- Tokens, cards that aren't meld cards, or meld cards that don't form a meld pair
 -- can't be melded." What can be read off the board is: every named object is a
 -- CARD (CR 108.2, so Source.OfCard and not a token, a copy or an ability), each
--- such card's layout is Meld (CR 712.4), each is somewhere a card can be PUT ONTO
+-- such card's layout is Meld (CR 713.1), each is somewhere a card can be PUT ONTO
 -- the battlefield from, they share an owner, and each card's counterpart is
--- another of them (CR 712.5's pairs). Answers that owner, the zone the
+-- another of them (CR 713.2's pairs). Answers that owner, the zone the
 -- cards are in, and each card's id paired with its printing, in the order the
 -- objects were named -- the ids so that the caller's CR 608.2h records and its
 -- CR 400.7 event name real departing incarnations rather than re-deriving them,
@@ -10428,7 +10428,7 @@ meld settle controller victims resultCard = do
 -- filter dressed up -- a permanent admitted here would be deleted by the caller
 -- with no CR 400.7 zone change and so none of CR 603.6c's leave-the-battlefield
 -- triggers, which is a worse answer than rule 701.42c's "they stay in their
--- current zone". CR 712.4a's ability exiles both halves first, so no card in the
+-- current zone". CR 713.1a's ability exiles both halves first, so no card in the
 -- pool reaches this arm.
 --
 -- The PAIR is read off each card's printing rather than off the ability: its
@@ -10448,7 +10448,7 @@ meldable victims gs = do
     _ -> Nothing
   firstObj <- Game.lookupObject first gs
   let owner = Object.owner firstObj
-      -- One origin, read off the first card: CR 712.4a's ability exiles both
+      -- One origin, read off the first card: CR 713.1a's ability exiles both
       -- halves before melding them, so they always share a zone.
       origin = Object.zone firstObj
       printingOf oid = do
@@ -10465,7 +10465,7 @@ meldable victims gs = do
   Monad.guard (all ((`elem` names) . snd . snd) cards)
   Just (owner, origin, fmap fst cards)
 
--- CR 730.2 / 702.140c: merge this spell with this permanent -- "place that
+-- CR 731.2 / 702.140c: merge this spell with this permanent -- "place that
 -- object on top of or under that permanent. That permanent becomes a merged
 -- permanent represented by the card or copy that represented that object in
 -- addition to any other components that were representing it." Answers whether
@@ -10476,30 +10476,30 @@ meldable victims gs = do
 -- reason one rule over: the spell must stop being an object, which files its CR
 -- 608.2h record, and that write is this module's.
 --
--- WHAT IS NOT DONE HERE is the whole of CR 730.2b: no object is minted, no zone
+-- WHAT IS NOT DONE HERE is the whole of CR 731.2b: no object is minted, no zone
 -- index is written for the battlefield, and runEntry is not called -- "the
 -- resulting permanent isn't considered to have just entered the battlefield". So
 -- the CR 616.1 entry loop does not run, CR 603.6a's enters-the-battlefield scan
--- sees nothing, and CR 730.2c falls out with no work at all: the permanent's
+-- sees nothing, and CR 731.2c falls out with no work at all: the permanent's
 -- Object row is the SAME row, so its timestamp, its summoning sickness, its
 -- damage, its counters, its attachments and every continuous effect keyed on its
 -- id are untouched. `meld`, which mints a permanent, is the shape this one is
 -- deliberately not.
 --
 -- The SPELL leaves the stack by ceasing to be an object rather than by a zone
--- change: CR 730.2b says "that object leaves its previous zone and becomes part
+-- change: CR 731.2b says "that object leaves its previous zone and becomes part
 -- of an object on the battlefield", which is no move to a zone that CR 400.7
 -- could mint an incarnation in. forgetObject files the CR 608.2h record, so a
 -- clause of the very resolution that merged them can still say what its source
 -- was.
 --
 -- The ORDER is CR 702.140c's choice, already made by the caller: Over puts the
--- spell's printing at the head, which CR 730.2a then reads every characteristic
+-- spell's printing at the head, which CR 731.2a then reads every characteristic
 -- off, and Under puts it at the tail.
 --
 -- The CHARACTERISTICS the merge leaves are stamped here, into the same
 -- Binding.copyOf a copy effect writes: CR 613.2a puts copy effects and merges in
--- one sublayer, CR 613.7 orders them by timestamp and CR 730.2a fixes this one's
+-- one sublayer, CR 613.7 orders them by timestamp and CR 731.2a fixes this one's
 -- at the merge, so the two sides are folded against what layer 1a had left each
 -- of them at this moment (Projection.copiableCharacteristics of the spell and of
 -- the permanent, both read BEFORE anything is rewritten) and the result replaces
@@ -10512,36 +10512,36 @@ meldable victims gs = do
 -- already projects rule 702.140e's added abilities -- which is what lets a
 -- Cubwarden merged UNDER trigger at all.
 --
--- The STATUS the merge leaves is CR 730.2e's: "if a merged permanent contains
+-- The STATUS the merge leaves is CR 731.2e's: "if a merged permanent contains
 -- face-up and face-down components, the permanent's status is determined by its
 -- topmost component", so the topmost side's own facing is written onto the
 -- permanent. A bare field write and nothing else, which is the rest of that
--- rule: no CR 613.7f timestamp, because rule 730.2e's second sentence says
+-- rule: no CR 613.7f timestamp, because rule 731.2e's second sentence says
 -- "other effects don't count it as being turned face up" and CR 613.7f's new
 -- timestamp is for a permanent that turns over; and no GameEvent.TurnedFaceUp,
 -- so the turned-face-up abilities (CR 603.2) performTurnFaceUp records that
 -- event for do not trigger. Each component keeps its own status
 -- (Parun.Types.ShownComponent), so a face-down card under a face-up topmost one
--- stays face down (CR 730.2e) until CR 730.2f's Game.withFacing turns
+-- stays face down (CR 731.2e) until CR 731.2f's Game.withFacing turns
 -- them all.
 --
 -- Each side's record is read at LAYER 1a, before layer 1b's face-down
 -- substitution (Projection.copiableCharacteristicsFaceUp), which is CR 613.2a's
--- own placement of the merge: CR 730.2e gives a component a status and CR 109.3
+-- own placement of the merge: CR 731.2e gives a component a status and CR 109.3
 -- keeps status out of the characteristics, so what a face-down component
 -- contributes is its card's characteristics and CR 708.2's substitution then
 -- applies to the resulting PERMANENT rather than to any component of it.
 --
--- CR 730.2h's flip components are stamped as a SECOND reading of the same merge,
+-- CR 731.2h's flip components are stamped as a SECOND reading of the same merge,
 -- both sides read again through Projection.copiableCharacteristicsFlipped and
 -- nested in the stamp as PC.flipped, and Projection.stampedSnapshotOf spends it
 -- once the merged permanent is flipped -- off a rewoven stored copy row's
 -- PC.flipped while one covers the permanent. Two readings rather than one because CR 110.5a keeps status out of the
--- characteristics: flipping is no CR 613 layer to fold in later, and CR 730.2a
+-- characteristics: flipping is no CR 613 layer to fold in later, and CR 731.2a
 -- fixes this stamp's timestamp at the merge, so what the flip may reach is
 -- decided here or nowhere.
 --
--- CR 730.2i's double-faced components are stamped as a TURNED reading beside
+-- CR 731.2i's double-faced components are stamped as a TURNED reading beside
 -- it, both sides read again with Game.withFaceTurned's double-faced card
 -- turned over and its own flipped reading nested the same way, which Game.turnFaceOver
 -- swaps in when the merged permanent transforms -- for the flipped reading's
@@ -10550,8 +10550,8 @@ meldable victims gs = do
 -- Each component keeps the face it showed (Parun.Types.ShownComponent), and
 -- Object.face is left to an unmerged permanent: Game.shownFace reads the pile's.
 --
--- CR 123.5b / 613.7k / 730.2b: the spell's stickers take new timestamps at the
--- merge, in their order, after the host's, which keep theirs (CR 730.2c).
+-- CR 123.5b / 613.7k / 731.2b: the spell's stickers take new timestamps at the
+-- merge, in their order, after the host's, which keep theirs (CR 731.2c).
 --
 -- CR 702.140f: what named the spell names the permanent (referTo).
 -- Parun.MutateSpec's Generator Servant case proves it.
@@ -10561,20 +10561,20 @@ merge sid target side = do
   case (Game.lookupObject sid gs, Game.lookupObject target gs) of
     (Just spell, Just permanent) -> case (mergingComponent spell, mergeComponents permanent) of
       (Just merging, Just existing) -> do
-        let -- CR 712.13's face, the one the spell would have entered showing.
+        let -- CR 712.10's face, the one the spell would have entered showing.
             component = ShownComponent.MkShownComponent merging (Game.cardOf sid gs >>= \card -> Card.enteringFace card (Object.face spell)) (Object.facing spell)
             merged = case side of
               MutateSide.Over -> component NonEmpty.:| existing
               MutateSide.Under -> case existing of
                 first : rest -> first NonEmpty.:| (rest <> [component])
                 [] -> component NonEmpty.:| []
-            -- CR 730.2e: the topmost component's status becomes the
+            -- CR 731.2e: the topmost component's status becomes the
             -- permanent's, so Over takes the spell's facing and Under leaves the
             -- permanent showing whichever way it already was.
             facing = case side of
               MutateSide.Over -> Object.facing spell
               MutateSide.Under -> Object.facing permanent
-            -- CR 730.2a's base is the TOPMOST side and CR 702.140e's union comes
+            -- CR 731.2a's base is the TOPMOST side and CR 702.140e's union comes
             -- from the other, which is the whole of what the side decides.
             fold ofSpell ofHost = case side of
               MutateSide.Over -> Projection.withMergedAbilities ofHost ofSpell
@@ -10586,21 +10586,21 @@ merge sid target side = do
             unrowed = Game.supersedeStoredCopies (Set.singleton target) gs
             reading (askSpell, askHost) board = fold (askSpell sid board) (askHost target board)
             both ask = (ask, ask)
-            -- CR 730.2i: a side asked with its double-faced card turned over.
+            -- CR 731.2i: a side asked with its double-faced card turned over.
             -- A side with nothing to transform reads as it did, and a merged
             -- side swaps in the turned reading its own merge stamped.
             turnedAsk ask oid = ask oid . Game.withFaceTurned oid
-            -- CR 712.15a: a face-down target the spell goes OVER stays face
-            -- down under a face-up topmost component (CR 730.2e), so it does
+            -- CR 712.12a: a face-down target the spell goes OVER stays face
+            -- down under a face-up topmost component (CR 731.2e), so it does
             -- not turn with the pile and its turned reading is its own.
-            -- Parun.MutateSpec's "CR 712.15a a face-down component stays
+            -- Parun.MutateSpec's "CR 712.12a a face-down component stays
             -- unturned when the pile transforms" proves it.
             hostStaysDown = side == MutateSide.Over && Facing.isFaceDown (Object.facing permanent)
             turning ask = (turnedAsk ask, if hostStaysDown then ask else turnedAsk ask)
-            -- CR 730.2h's reading of the same two sides, nested as PC.flipped:
+            -- CR 731.2h's reading of the same two sides, nested as PC.flipped:
             -- each flip component's alternative characteristics in place of its
             -- normal ones, and every other component's record unchanged. CR
-            -- 730.2i's reading beside it, each double-faced component turned
+            -- 731.2i's reading beside it, each double-faced component turned
             -- over, with its own flipped reading nested the same way.
             readings board =
               ( readingOf (both Projection.copiableCharacteristicsFaceUp) (both Projection.copiableCharacteristicsFlipped) board,
@@ -10627,15 +10627,15 @@ merge sid target side = do
             -- earlier than the merge, so while it lasts the merge applies OVER
             -- it, and once it ends over the stamp above. Each row keeps its own
             -- expiry and timestamp and carries the merge read over it.
-            -- Parun.MutateSpec's "CR 730.2a/613.7 a merge outranks Mirrorweave's
+            -- Parun.MutateSpec's "CR 731.2a/613.7 a merge outranks Mirrorweave's
             -- copy at once and is recomputed when it ends" proves both.
             --
-            -- The row carries CR 730.2h's flipped reading of the merge as its
-            -- PC.flipped, as the binding does. Parun.MutateSpec's "CR 730.2h a
+            -- The row carries CR 731.2h's flipped reading of the merge as its
+            -- PC.flipped, as the binding does. Parun.MutateSpec's "CR 731.2h a
             -- merge over Mirrorweave's copy of a flip card flips with the
-            -- abilities from under" proves it. CR 730.2i's turned reading rides
+            -- abilities from under" proves it. CR 731.2i's turned reading rides
             -- as ActiveCopy.turned, flipped reading and all: Parun.MutateSpec's
-            -- "CR 730.2i/613.7 a merged permanent transforms while
+            -- "CR 731.2i/613.7 a merged permanent transforms while
             -- Mirrorweave's copy stands" proves it.
             --
             -- A row following its source's host is carved as that one
@@ -10683,17 +10683,17 @@ merge sid target side = do
       _ -> pure False
     _ -> pure False
 
--- CR 730.2's "any other components that were representing it", in top-to-bottom
+-- CR 731.2's "any other components that were representing it", in top-to-bottom
 -- order: one card for an ordinary card (CR 108.2, Game.componentCardOf), and the
 -- existing stack for a permanent already merged.
 --
--- The TOKEN arm is CR 730.2d's own subject: a token is a component like any
+-- The TOKEN arm is CR 731.2d's own subject: a token is a component like any
 -- other, and what its being on top decides is only whether the merged permanent
 -- is a token, which Parun.Engine.Game.sourceIsToken reads off the head.
 --
--- The MELD arm is one component and not two, which is the reading CR 730.2a can
+-- The MELD arm is one component and not two, which is the reading CR 731.2a can
 -- answer -- Parun.Types.MergeComponent's OfMeld arm derives it -- so a melded
--- permanent that is mutated under keeps CR 712.8g's combined back face and one
+-- permanent that is mutated under keeps CR 713.5c's combined back face and one
 -- that is mutated over contributes that face's abilities (CR 702.140e).
 mergeComponents :: Object.Object -> Maybe [ShownComponent.ShownComponent]
 mergeComponents permanent = case Object.source permanent of
@@ -10706,7 +10706,7 @@ mergeComponents permanent = case Object.source permanent of
   Source.OfEmblem _ -> Nothing
   Source.OfSpellCopy _ -> Nothing
   -- No copy of a card parun mints is on the battlefield to be merged INTO -- CR
-  -- 722.3c's stays in exile, and CR 707.12's producers in data/cards/ copy
+  -- 723.3c's stays in exile, and CR 707.12's producers in data/cards/ copy
   -- instant and sorcery cards alone -- and CR 702.140c's mutating spell is a
   -- creature spell rather than a copy of a card, so no road reaches this arm. A
   -- card offering a copy of a PERMANENT card would refute the first half.
@@ -10717,15 +10717,15 @@ mergeComponents permanent = case Object.source permanent of
     -- its own status.
     alone component = Just [ShownComponent.MkShownComponent component (Object.face permanent) (Object.facing permanent)]
 
--- CR 730.2's OTHER side: "the card or copy that represented that object", which
+-- CR 731.2's OTHER side: "the card or copy that represented that object", which
 -- is what the merging spell contributes to the component list. Only a card or a
 -- copy of one can be a spell on the stack -- a token is never one (CR 111.1) and
 -- a melded permanent is put onto the battlefield (CR 701.42a).
 --
 -- The COPY arm is a token: a copy of a permanent spell becomes one as it
--- resolves (CR 111.13, 707.10f), merging included, so CR 730.2d makes the
+-- resolves (CR 111.13, 707.10f), merging included, so CR 731.2d makes the
 -- merged permanent a token while the copy is topmost. Parun.MutateSpec's "CR
--- 730.2d/111.13 a merged permanent whose topmost component is a spell copy is a
+-- 731.2d/111.13 a merged permanent whose topmost component is a spell copy is a
 -- token" proves it.
 --
 -- Nothing where the object is no spell at all, which `merge` and `mergeable`
@@ -10735,9 +10735,9 @@ mergingComponent spell = case Object.source spell of
   Source.OfCard pid -> Just (MergeComponent.OfCard (Game.componentCardOf spell pid))
   Source.OfSpellCopy pid -> Just (MergeComponent.OfToken pid)
   -- A copy of a card is a spell once cast, and no such spell parun mints is a
-  -- mutating creature spell: CR 722.3c's "has only the characteristics of that
+  -- mutating creature spell: CR 723.3c's "has only the characteristics of that
   -- permanent's prepare spell" leaves rule 702.140a's mutate out, and CR 707.12's
-  -- producers in data/cards/ copy instant and sorcery cards alone. CR 730.2's
+  -- producers in data/cards/ copy instant and sorcery cards alone. CR 731.2's
   -- list names a card and a copy and no third thing.
   Source.OfCardCopy _ -> Nothing
   Source.OfMeld _ -> Nothing
@@ -10754,7 +10754,7 @@ mergingComponent spell = case Object.source spell of
 -- this first and takes the ordinary entry when it answers False, so the prompt
 -- is raised only where the merge will actually happen.
 --
--- The same two reads `merge` makes, and no other: a spell rule 730.2's "card or
+-- The same two reads `merge` makes, and no other: a spell rule 731.2's "card or
 -- copy" can name (`mergingComponent`), and a target whose components can be
 -- named.
 mergeable :: ObjectId -> ObjectId -> GameState -> Bool
@@ -10833,7 +10833,7 @@ lastKnownFrom gs oid obj =
     (Object.protector obj)
     -- CR 400.7d's cost record.
     (Object.paidCosts obj)
-    -- CR 718.3d's record, for the same reason.
+    -- CR 719.3d's record, for the same reason.
     (Object.prototyped obj)
     -- CR 107.3m's, for the same reason.
     (Object.announcedX obj)
@@ -10855,7 +10855,7 @@ lastKnownFrom gs oid obj =
     characteristics = Projection.project oid gs
 
 -- | An object leaves the GAME rather than a zone -- CR 800.4a's first clause,
--- or CR 729.4a's crossing into a subgame -- at the instant `asOf` describes,
+-- or CR 730.4a's crossing into a subgame -- at the instant `asOf` describes,
 -- applied to the running state `g`. The one step both roads share: CR 608.2h's
 -- record and CR 604.2's handover are read off `asOf`, then the object is deleted
 -- from `g` with everything keyed on it.
@@ -10939,7 +10939,7 @@ leavingReveals asOf oid = Maybe.maybeToList whole <> componentReveals asOf oid
 -- face-down component is revealed as its owner leaves the game" prove it.
 --
 -- The snapshot is the component card itself (CR 701.20a): the object made to
--- represent that component alone, face up, as CR 730.3's split would make it
+-- represent that component alone, face up, as CR 731.3's split would make it
 -- (Game.representComponent), and out of any stored copy effect on the pile,
 -- which made the permanent a copy and never the card.
 componentReveals :: GameState -> ObjectId -> [GameEvent.GameEvent]
@@ -11079,7 +11079,7 @@ performDraw settle pid = do
       moved <- changeZoneReturning settle top Zone.Hand
       -- ONE card, which is what a draw is (CR 121.1) -- the funnel answers with
       -- more than one arrival only for a melded permanent leaving the
-      -- battlefield (CR 712.21), and this move starts in a library. CR 712.21a
+      -- battlefield (CR 713.8), and this move starts in a library. CR 713.8a
       -- puts a melded permanent into a library as TWO CARDS, each of which is
       -- drawn on its own.
       case Seq.viewl moved of
@@ -11106,7 +11106,7 @@ performDraw settle pid = do
 -- an ability (Parun.Engine.Cast.castSpellWith, Parun.Engine.Activate), so a card
 -- drawn during it is kept face down. `turnUpKeptDraws` ends the window when the
 -- spell becomes cast or the ability activated; one still open when `body`
--- returns was reversed (CR 733.1), and its cards are simply turned up -- the
+-- returns was reversed (CR 734.1), and its cards are simply turned up -- the
 -- rule defers a reveal to "after the spell becomes cast", which never came.
 --
 -- A window already open is left to its owner: a card drawn in a nested one is
@@ -11441,7 +11441,7 @@ shuffleLibraryExcept leftOut pid = do
 -- deliberately not its printed card, since a reveal has to show what a player at
 -- the table would see, on every axis a continuous effect reaches off the
 -- battlefield. The readers that judge a card off the battlefield take that same
--- projection -- the explore that follows this very reveal, and rule 728.1's mill
+-- projection -- the explore that follows this very reveal, and rule 729.1's mill
 -- tally (see #1911) -- so what is shown and what is judged cannot part
 -- company.
 --
@@ -11491,7 +11491,7 @@ arrangeTopTwo source pid = do
       State.modify' (Game.overSideDecks SideDeck.Planar (Map.insert holder (Seq.fromList (top : rest <> [bottom]))))
     _ -> pure ()
 
--- | CR 701.20e: a player looks at a card, shown to them and, per CR 723.4, to
+-- | CR 701.20e: a player looks at a card, shown to them and, per CR 724.4, to
 -- the player making their decisions. Records nothing when the object is gone.
 -- A look follows a reveal's rules, so it shows what `reveal` shows
 -- (Projection.projectShown): a face-down permanent's card, not CR 708.2's
@@ -11524,7 +11524,7 @@ revealedOn cause pid oid gs =
 
 -- | CR 701.20a: the objects a lasting window on this reveal covers. CR 708.9's
 -- reveal is made "as they move it", so it covers what that move made of the
--- card too (CR 400.7), every card of a split merged permanent (CR 730.3).
+-- card too (CR 400.7), every card of a split merged permanent (CR 731.3).
 -- Every other reveal ends with its incarnation. Proven by
 -- data/scenarios/visibility's CR 701.20a / 708.9 Unsummon and Griptide cases.
 revealedObjects :: Revealed.Revealed -> GameState -> [ObjectId]
@@ -11706,9 +11706,9 @@ controllerTurnScoped cond = case cond of
   -- @Relative You@, and no other scope is the controller's turn as such.
   TriggerCondition.LifeChanges lifeTrigger -> Turn.isControllersTurn (LifeTrigger.scope lifeTrigger)
   -- CR 122.6 puts counters on at any time, and a Saga can receive one on an
-  -- opponent's turn: CR 714.3a's entry replacement fires whenever the Saga enters,
+  -- opponent's turn: CR 715.3a's entry replacement fires whenever the Saga enters,
   -- which a flash effect or an opponent's Sneak Attack could make happen. Only CR
-  -- 714.3c's turn-based action is the controller's own turn, and that is the
+  -- 715.3c's turn-based action is the controller's own turn, and that is the
   -- action's restriction rather than this condition's.
   TriggerCondition.CountersChange _ -> False
   TriggerCondition.SelfBecomesClassLevel _ -> False
@@ -11725,14 +11725,14 @@ controllerTurnScoped cond = case cond of
   -- an activated ability name a creature, or a spell name its controller, on
   -- anybody's turn.
   TriggerCondition.BecomesTargeted {} -> False
-  -- CR 714.3c's turn-based action falls on the Saga controller's own turn, but
-  -- nothing restricts this CONDITION to it: CR 714.3a's entry replacement can put
+  -- CR 715.3c's turn-based action falls on the Saga controller's own turn, but
+  -- nothing restricts this CONDITION to it: CR 715.3a's entry replacement can put
   -- a Saga's last lore counter on during anybody's turn, and the watcher is not
   -- even the Saga's controller under the Opponent relation.
   TriggerCondition.SagaFinalChapterTriggers _ -> False
-  -- The condition carries no TurnScope, and CR 725 restricts a crowning to no
-  -- turn at all: CR 725.1's "an effect instructs a player to become the monarch"
-  -- can resolve on anybody's turn, and CR 725.2's crown steal happens in the
+  -- The condition carries no TurnScope, and CR 726 restricts a crowning to no
+  -- turn at all: CR 726.1's "an effect instructs a player to become the monarch"
+  -- can resolve on anybody's turn, and CR 726.2's crown steal happens in the
   -- combat damage step of whoever is attacking. The watcher may or may not be
   -- that player, which is exactly what makes this not controller-scoped.
   TriggerCondition.PlayerBecomesMonarch _ -> False
@@ -11762,7 +11762,7 @@ armDelayed ability source controller captured armed expiry gs = case armed of
   Nothing -> gs
   Just window ->
     let -- CR 603.7a's creation moment, from the same counter every other moment
-        -- comes from, so CR 701.27f can compare it against Object.turnedOverAt.
+        -- comes from, so CR 701.27g can compare it against Object.turnedOverAt.
         -- Minted here rather than reusing the resolving object's stamp: one
         -- resolution can arm several entries, and each is created as its own
         -- opcode runs.
@@ -11956,7 +11956,7 @@ withinTriggerLimit gs =
 -- What ONE INSTANCE of a triggered ability is, for the rider's purposes: what it
 -- hangs on and which ability it is -- the discriminator Parun.Types.TriggerEntry
 -- carries, and its haddock argues for the ability VALUE over an ordinal -- plus
--- the controller for a SOURCELESS ability and only for one. Rule 725.2 and rule
+-- the controller for a SOURCELESS ability and only for one. Rule 726.2 and rule
 -- 702.179d give each player their own instance of one inherent ability with no
 -- object to tell them apart, where an object-borne ability is CR 113.7's one
 -- instance whoever controls it.

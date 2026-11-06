@@ -1,12 +1,12 @@
 -- Covers CR 712.3's modal double-faced cards end to end: Parun.Types.Layout's
 -- ModalDoubleFaced arm and the seven Parun.Engine.Card functions that read it (CR
--- 712.8a's combined view, CR 712.11b's castable faces, CR 712.12's land faces,
--- CR 712.13's entering face, CR 712.14b's stays-in-its-zone test, CR 712.8f's
--- mana-value face, CR 712.9's turned-over face). Three other modules read those
+-- 712.6a's combined view, CR 712.8b's castable faces, CR 712.9's land faces,
+-- CR 712.10's entering face, CR 712.11b's stays-in-its-zone test, CR 712.6e's
+-- mana-value face, CR 712.7's turned-over face). Three other modules read those
 -- classifications and are covered here through them: Parun.Engine.Stack puts CR
--- 712.13's face onto a resolving permanent, Parun.Engine.Action and
--- Parun.Engine.Engine offer and carry out CR 712.12's land play, and
--- Parun.Engine.Event.changeZoneEntering is where CR 712.14b turns a card away.
+-- 712.10's face onto a resolving permanent, Parun.Engine.Action and
+-- Parun.Engine.Engine offer and carry out CR 712.9's land play, and
+-- Parun.Engine.Event.changeZoneEntering is where CR 712.11b turns a card away.
 --
 -- TWO printed cards, because one card cannot reach both halves of the rule.
 --
@@ -18,10 +18,10 @@
 -- wrong face is visible in every assertion here rather than in one narrow one.
 --
 -- Zof Consumption // Zof Bloodbog -- a {4}{B}{B} Sorcery over a Land -- carries
--- the PLAY-side ones, and is the shape CR 712.12 and CR 712.14b are both about:
+-- the PLAY-side ones, and is the shape CR 712.9 and CR 712.11b are both about:
 -- a face that is a land where the front face is not a permanent card at all.
 -- The land face's printed "This land enters tapped" is CR 614.1d's replacement
--- rather than CR 712.12's business, so the permanent these cases watch enter is
+-- rather than CR 712.9's business, so the permanent these cases watch enter is
 -- tapped and none of them asserts on that; Parun.ReplacementSpec is where it is.
 module Parun.ModalDoubleFacedSpec where
 
@@ -64,7 +64,7 @@ import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.Zone as Zone
 
 -- The two names the card prints, plus the basic land every case pays with. CR
--- 712.8a gives the card only its front face's characteristics in a hand, so
+-- 712.6a gives the card only its front face's characteristics in a hand, so
 -- harnfelName names a face rather than the card -- and CR 201.4d is what lets a
 -- player name it all the same.
 birgiName, harnfelName, mountainName :: CardName.CardName
@@ -92,7 +92,7 @@ bloodbogReadings = (Set.singleton bloodbogName, Set.singleton CardType.Land, Not
 
 -- The play-side card's LAND face, the only one of its two names any case here
 -- asserts. Its other face is a SORCERY, which is what makes the card the
--- producer for CR 712.14b as well as for CR 712.12.
+-- producer for CR 712.11b as well as for CR 712.9.
 bloodbogName :: CardName.CardName
 bloodbogName = CardName.MkCardName (Text.pack "Zof Bloodbog")
 
@@ -123,7 +123,7 @@ handBoardOne printing =
   let (oid, gs) = S.addHandCard printing S.alice (Setup.emptyGame S.bothPlayers)
    in (oid, readyForMain gs)
 
--- Every land play on offer, as the pair CR 712.12 makes of one: the card, and
+-- Every land play on offer, as the pair CR 712.9 makes of one: the card, and
 -- the face chosen to be played as a land.
 landPlays :: [A.Action] -> [(ObjectId.ObjectId, Maybe CardName.CardName)]
 landPlays actions =
@@ -157,7 +157,7 @@ nonLand gs = filter (\o -> not (Projection.hasName mountainName o gs)) (Set.toLi
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "ModalDoubleFaced" $ do
-  -- CR 712.8a: "While a double-faced card is outside the game or in a zone other
+  -- CR 712.6a: "While a double-faced card is outside the game or in a zone other
   -- than the battlefield or stack, it has only the characteristics of its front
   -- face."
   --
@@ -165,7 +165,7 @@ spec s registry = Spec.describe s "ModalDoubleFaced" $ do
   -- takes: a combined view would name this card
   -- "Birgi, God of Storytelling//Harnfel, Horn of Bounty", give it both card
   -- types, and price it at the concatenated {2}{R}{4}{R} for mana value 8.
-  Spec.it s "CR 712.8a in a hand a modal double-faced card is only its front face" $ do
+  Spec.it s "CR 712.6a in a hand a modal double-faced card is only its front face" $ do
     birgi <- S.printingOf s registry "Birgi, God of Storytelling"
     let (gs, oid) = S.handOne birgi (Setup.emptyGame S.bothPlayers)
     case Game.faceOf oid gs of
@@ -173,18 +173,18 @@ spec s registry = Spec.describe s "ModalDoubleFaced" $ do
       Just face -> do
         Spec.assertEqWith s "every reader sees Birgi" (faceReadings oid gs) birgiReadings
         Spec.assertEqWith s "mana value 3, not the two faces' 8" (Quantity.manaValueOf face) 3
-  -- CR 712.11b: "A player casting a modal double-faced card or a copy of a modal
+  -- CR 712.8b: "A player casting a modal double-faced card or a copy of a modal
   -- double-faced card as a spell chooses which face they are casting before
   -- putting it onto the stack."
   --
-  -- Asserted TWICE, because the offer list alone cannot tell CR 712.11b from an
+  -- Asserted TWICE, because the offer list alone cannot tell CR 712.8b from an
   -- accident of pricing: with only three Mountains the {4}{R} face is unpayable
   -- and would be dropped at the cost gate whatever castableFaces answered. So
   -- the three-Mountain board is the discriminator in the other direction --
   -- exactly one face is offered when only one is affordable -- and asking
-  -- Parun.Engine.Card.castableFaces directly is what catches the CR 712.11
+  -- Parun.Engine.Card.castableFaces directly is what catches the CR 712.8
   -- reading (front face only) that the pool's Transforming layout takes.
-  Spec.it s "CR 712.11b both faces are offered from a hand" $ do
+  Spec.it s "CR 712.8b both faces are offered from a hand" $ do
     birgi <- S.printingOf s registry "Birgi, God of Storytelling"
     mountain <- S.printingOf s registry "Mountain"
     let namesOffered n =
@@ -198,34 +198,34 @@ spec s registry = Spec.describe s "ModalDoubleFaced" $ do
       [birgiName, harnfelName]
     Spec.assertEqWith s "five Mountains: both faces" (namesOffered 5) [birgiName, harnfelName]
     Spec.assertEqWith s "three Mountains: only the {2}{R} face" (namesOffered 3) [birgiName]
-  -- THE proving case, and the half of it CR 712.13 is about: "By default, a
+  -- THE proving case, and the half of it CR 712.10 is about: "By default, a
   -- resolving double-faced spell that becomes a permanent is put onto the
   -- battlefield with the same face up that was face up on the stack."
   --
   -- Cast the BACK face and the artifact is what enters. The falsifier is a
-  -- permanent whose face was dropped on the way out of the stack: CR 712.8a's
+  -- permanent whose face was dropped on the way out of the stack: CR 712.6a's
   -- front face is what every reader would then answer with, so the board would
   -- hold a 3/3 legendary creature named Birgi -- an object that shares no
   -- characteristic at all with the spell that was cast.
-  Spec.it s "CR 712.11b/712.13 casting the back face puts the artifact onto the battlefield" $ do
+  Spec.it s "CR 712.8b/712.10 casting the back face puts the artifact onto the battlefield" $ do
     birgi <- S.printingOf s registry "Birgi, God of Storytelling"
     mountain <- S.printingOf s registry "Mountain"
     let (gs, oid) = S.handOne birgi (S.landsInPlay mountain 5)
         cast = snd (Engine.runGamePure S.identityAnswer gs (Cast.castSpell S.manaPerformer S.alice oid harnfelName Facing.FaceUp))
         resolved = snd (Engine.runGamePure S.identityAnswer cast Stack.resolveTop)
-    -- CR 712.8f's first half: the SPELL on the stack has only the
+    -- CR 712.6e's first half: the SPELL on the stack has only the
     -- characteristics of the face that's up, which is already how a chosen half
-    -- reaches the stack (CR 712.11c).
+    -- reaches the stack (CR 712.8c).
     case GameState.stack cast of
       [top] -> Spec.assertEqWith s "the spell on the stack is Harnfel" (faceReadings top cast) harnfelReadings
       other -> Spec.assertFailure s ("expected one spell on the stack, got " <> show (length other))
     Spec.assertEqWith s "all five Mountains paid {4}{R}" (S.tappedCount S.alice cast) 5
     case nonLand resolved of
       [permId] -> do
-        -- CR 712.8f's second half: "or a modal double-faced permanent is on the
+        -- CR 712.6e's second half: "or a modal double-faced permanent is on the
         -- battlefield, it has only the characteristics of the face that's up".
         Spec.assertEqWith s "and the permanent is Harnfel" (faceReadings permId resolved) harnfelReadings
-        -- The stored half, which is what CR 712.13 actually writes; the readings
+        -- The stored half, which is what CR 712.10 actually writes; the readings
         -- above are what it buys.
         Spec.assertEqWith
           s
@@ -236,7 +236,7 @@ spec s registry = Spec.describe s "ModalDoubleFaced" $ do
   -- The same claim from the other side, and not a restatement: an engine that
   -- carried the LAST face rather than the cast one, or that always answered with
   -- the back face, passes the case above and fails here.
-  Spec.it s "CR 712.13 casting the front face puts the creature onto the battlefield" $ do
+  Spec.it s "CR 712.10 casting the front face puts the creature onto the battlefield" $ do
     birgi <- S.printingOf s registry "Birgi, God of Storytelling"
     mountain <- S.printingOf s registry "Mountain"
     let (gs, oid) = S.handOne birgi (S.landsInPlay mountain 5)
@@ -246,18 +246,18 @@ spec s registry = Spec.describe s "ModalDoubleFaced" $ do
     case nonLand resolved of
       [permId] -> Spec.assertEqWith s "the permanent is Birgi" (faceReadings permId resolved) birgiReadings
       other -> Spec.assertFailure s ("expected one nonland permanent, got " <> show (length other))
-  -- CR 712.8f, on the one characteristic CR 712.8e reads off another face for the
+  -- CR 712.6e, on the one characteristic CR 712.6d reads off another face for the
   -- NONMODAL kind: "While a modal double-faced spell is on the stack or a modal
   -- double-faced permanent is on the battlefield, it has only the
   -- characteristics of the face that's up." Mana value is a characteristic (CR
-  -- 109.3) and 712.8f states no exception, where 712.8e states one -- so the
+  -- 109.3) and 712.6e states no exception, where 712.6d states one -- so the
   -- back face's own {4}{R} is what a Harnfel on the battlefield is worth.
   --
   -- The falsifier is Transforming's arm applied here: the front face's {2}{R}
   -- would read 3. Both readers parun has are asserted, for the reason
-  -- Parun.TransformSpec's CR 712.8e case gives -- they are two call sites and only
+  -- Parun.TransformSpec's CR 712.6d case gives -- they are two call sites and only
   -- one of them feeds a card's Quantity.
-  Spec.it s "CR 712.8f the mana value is read off the face that's up" $ do
+  Spec.it s "CR 712.6e the mana value is read off the face that's up" $ do
     birgi <- S.printingOf s registry "Birgi, God of Storytelling"
     mountain <- S.printingOf s registry "Mountain"
     let (gs, oid) = S.handOne birgi (S.landsInPlay mountain 5)
@@ -268,18 +268,18 @@ spec s registry = Spec.describe s "ModalDoubleFaced" $ do
         Spec.assertEqWith s "Harnfel's own {4}{R}, not Birgi's {2}{R}" (sum (fmap Quantity.manaValueOf (Game.manaCostFacesOf permId resolved))) 5
         Spec.assertEqWith s "and a filter reading a mana value agrees" (Filter.manaValue (Projection.viewOfObject permId resolved)) (Just 5)
       other -> Spec.assertFailure s ("expected one nonland permanent, got " <> show (length other))
-  -- CR 712.9: "Only permanents represented by double-faced tokens and
-  -- double-faced cards that are not meld cards can transform or convert", which
+  -- CR 712.7: "Only permanents represented by double-faced tokens and
+  -- double-faced cards can transform or convert", which
   -- puts the modal kind on the permitted side alongside the nonmodal one -- and
   -- CR 712.3 says the same from the card's side, "they may have an ability that
   -- allows them to 'transform' or 'convert' on either face."
   --
   -- Birgi prints no such ability, so the instruction is a spell's -- Moonmist's
   -- "transform all Humans" with a wider filter, the same shape
-  -- Parun.TransformSpec applies. What is being asserted is that CR 701.27c does
+  -- Parun.TransformSpec applies. What is being asserted is that CR 701.27d does
   -- NOT swallow the instruction here, which is the whole of what the layout
   -- decides.
-  Spec.it s "CR 712.9 a modal double-faced permanent turns over like any other" $ do
+  Spec.it s "CR 712.7 a modal double-faced permanent turns over like any other" $ do
     birgi <- S.printingOf s registry "Birgi, God of Storytelling"
     mountain <- S.printingOf s registry "Mountain"
     let (gs, oid) = S.handOne birgi (S.landsInPlay mountain 5)
@@ -292,11 +292,11 @@ spec s registry = Spec.describe s "ModalDoubleFaced" $ do
         Spec.assertEqWith s "before: the creature face" (faceReadings permId resolved) birgiReadings
         Spec.assertEqWith s "after: the artifact face" (faceReadings permId turned) harnfelReadings
       other -> Spec.assertFailure s ("expected one nonland permanent, got " <> show (length other))
-  -- CR 712.12: "A player playing a modal double-faced card or a copy of a modal
+  -- CR 712.9: "A player playing a modal double-faced card or a copy of a modal
   -- double-faced card as a land chooses one of its faces that's a land before
   -- putting it onto the battlefield."
   --
-  -- The OFFER half. Zof Consumption's front face is a sorcery, so CR 712.8a's
+  -- The OFFER half. Zof Consumption's front face is a sorcery, so CR 712.6a's
   -- combined view of the card in hand is not a land at all -- which is exactly
   -- the reading this falsifies: under it the card would be missing from the list
   -- entirely.
@@ -305,7 +305,7 @@ spec s registry = Spec.describe s "ModalDoubleFaced" $ do
   -- what a land play looks like for a card with one face (no chosen face at all),
   -- and it makes an empty list a failure rather than the expected answer -- the
   -- shape a negative assertion here would have had.
-  Spec.it s "CR 712.12 the land face is offered as a land play" $ do
+  Spec.it s "CR 712.9 the land face is offered as a land play" $ do
     mountain <- S.printingOf s registry "Mountain"
     zof <- S.printingOf s registry "Zof Consumption"
     let (oids, board) = handBoard [mountain, zof]
@@ -319,14 +319,14 @@ spec s registry = Spec.describe s "ModalDoubleFaced" $ do
           (List.sort (landPlays (Action.legalActions S.alice board)))
           [(mountainId, Nothing), (zofId, Just bloodbogName)]
       other -> Spec.assertFailure s ("expected two hand cards, got " <> show (length other))
-  -- CR 712.12's second sentence -- "It enters the battlefield with that face up.
+  -- CR 712.9's second sentence -- "It enters the battlefield with that face up.
   -- See rule 305, 'Lands.'" -- and CR 305.2a's tally, through the real priority
   -- loop rather than a direct call to the funnel.
   --
   -- THE proving case for the play side. Three separate wrong answers fail it: a
   -- play that never reached the battlefield leaves the hand full; a play that
   -- dropped the chosen face puts a SORCERY named Zof Consumption onto the
-  -- battlefield (CR 712.8a's front face, which every reader would then answer
+  -- battlefield (CR 712.6a's front face, which every reader would then answer
   -- with); and a play the engine did not tally leaves CR 305.2's allowance
   -- unspent.
   --
@@ -334,7 +334,7 @@ spec s registry = Spec.describe s "ModalDoubleFaced" $ do
   -- permanent has that the front face does not: the sorcery face prints no
   -- activated ability, and "{T}: Add {B}" is the whole of the land face's text
   -- parun can express.
-  Spec.it s "CR 712.12 playing the land face puts THAT face onto the battlefield" $ do
+  Spec.it s "CR 712.9 playing the land face puts THAT face onto the battlefield" $ do
     zof <- S.printingOf s registry "Zof Consumption"
     let (_, board) = handBoardOne zof
         after = S.runPure S.playLandAnswer board Engine.priorityLoop
@@ -345,14 +345,14 @@ spec s registry = Spec.describe s "ModalDoubleFaced" $ do
         Spec.assertEqWith s "the permanent is the LAND face" (faceReadings permId after) bloodbogReadings
         Spec.assertEqWith
           s
-          "which is the face it records (CR 712.12)"
+          "which is the face it records (CR 712.9)"
           (fmap Object.face (Game.lookupObject permId after))
           (Just (Just bloodbogName))
         Spec.assertEqWith s "and it has the land face's mana ability" (length (Projection.abilitiesOf permId after)) 1
       other -> Spec.assertFailure s ("expected one permanent, got " <> show (length other))
-  -- CR 712.14b: "If a player is instructed to put a modal double-faced card onto
-  -- the battlefield and its front face isn't a permanent card, the card stays in
-  -- its current zone."
+  -- CR 712.11b: "If a player is instructed to put a double-faced card onto the
+  -- battlefield with an instant or sorcery face up, that card stays in its
+  -- current zone."
   --
   -- Zof Consumption's front face is a sorcery, so the instruction does nothing.
   -- Birgi's is a creature, so the same instruction moves it -- which is what
@@ -363,7 +363,7 @@ spec s registry = Spec.describe s "ModalDoubleFaced" $ do
   -- The surviving object is looked up by its ORIGINAL id, which is the sharper
   -- half of "stays in its current zone": CR 400.7 would have minted a new
   -- incarnation, so an id that still resolves is a card that never moved.
-  Spec.it s "CR 712.14b a card whose front face is not a permanent stays in its zone" $ do
+  Spec.it s "CR 712.11b a card whose front face is not a permanent stays in its zone" $ do
     zof <- S.printingOf s registry "Zof Consumption"
     birgi <- S.printingOf s registry "Birgi, God of Storytelling"
     let moveTo zone printing =
@@ -376,7 +376,7 @@ spec s registry = Spec.describe s "ModalDoubleFaced" $ do
     Spec.assertEqWith s "so nothing entered the battlefield" (Set.toList (GameState.battlefield zofAfter)) []
     Spec.assertEqWith s "the creature-fronted card DOES enter" (length (Set.toList (GameState.battlefield birgiAfter))) 1
     Spec.assertEqWith s "and leaves the hand behind it" (S.handSize S.alice birgiAfter) 0
-    -- CR 712.14b names ONE destination, so the very same card moved anywhere
+    -- CR 712.11b names ONE destination, so the very same card moved anywhere
     -- else is untouched by it. Without this the battlefield conjunct could be
     -- dropped and every assertion above would still hold, leaving a rule that
     -- pinned a modal double-faced card in its zone forever.

@@ -1,6 +1,6 @@
 {
   "description": "CR 602.2 the gate offers an equip only a target-aware reduction can pay for",
-  "note": "The Mammoth refusal answers CR 733.1's ReverseManaAbilities Exercises, as the Haskell answerer does, so the Mountain ends untapped; the controls drop the Mauler, with one Mountain (no offer) and three (offered, so the Aegis has an equip to withhold).",
+  "note": "The Mammoth refusal answers CR 734.1's ReverseManaAbilities Exercises, as the Haskell answerer does, so the Mountain ends untapped; the controls drop the Mauler, with one Mountain (no offer) and three (offered, so the Aegis has an equip to withhold).",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",

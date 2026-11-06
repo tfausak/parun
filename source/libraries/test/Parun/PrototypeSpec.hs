@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- Covers CR 718 and CR 702.160 end to end: Parun.Types.Keyword's Prototype arm and
+-- Covers CR 719 and CR 702.160 end to end: Parun.Types.Keyword's Prototype arm and
 -- the Parun.Types.Prototype frame it carries, the candidate cost
 -- Parun.Engine.Cost.candidateCostsFor offers beside the printed one, the stamp
 -- Parun.Engine.Cast.stampPrototyped writes when CR 601.2b settles on it, the move
@@ -13,7 +13,7 @@
 -- {1}{W} -- 2/2", plus vigilance and "{1}, {T}: Put a +1\/+1 counter on target
 -- Assembly-Worker you control".
 --
--- The card is chosen for CR 718.3b's colour clause: it is the only prototype
+-- The card is chosen for CR 719.3b's colour clause: it is the only prototype
 -- printing whose inset cost is a single colour over a colourless printed cost, so
 -- one assertion tells "the cost was swapped" from "the characteristics were". Its
 -- numbers are non-degenerate too -- 4\/5 against 2\/2, mana value 5 against 2 --
@@ -52,7 +52,7 @@ import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.Sickness as Sickness
 import qualified Parun.Types.Zone as Zone
 
--- The two costs the card offers (CR 718.3), written out so every board names the
+-- The two costs the card offers (CR 719.3), written out so every board names the
 -- same symbols the card file does.
 printedCost, insetCost :: [ManaSymbol.ManaSymbol]
 printedCost = [ManaSymbol.Generic 5]
@@ -90,7 +90,7 @@ assemblerOn printing gs =
 -- CR 302.6: the permanent a resolved spell became is summoning sick, and the
 -- Assembler's ability costs {T}. Named here rather than hidden in a fixture,
 -- because the ability case below rests on it: the behaviour under test is CR
--- 718.5's "keeps its abilities", not rule 302.6.
+-- 719.5's "keeps its abilities", not rule 302.6.
 settleUnderAlice :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 settleUnderAlice oid gs =
   gs
@@ -103,7 +103,7 @@ plusOnePlusOne = CounterKind.PlusOnePlusOne
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Prototype" $ do
-  -- CR 718.3b, the case this unit exists for: "both a prototyped spell and the
+  -- CR 719.3b, the case this unit exists for: "both a prototyped spell and the
   -- permanent it becomes have only its alternative set of power, toughness, and
   -- mana cost characteristics. If that mana cost includes one or more colored
   -- mana symbols, the spell and the permanent it becomes are also that color or
@@ -114,7 +114,7 @@ spec s registry = Spec.describe s "Prototype" $ do
   -- the same 4/5 and -- if it read the announced cost back -- even the same mana
   -- value; it cannot reach white. So the colour assertion comes first, ahead of
   -- every number.
-  Spec.it s "CR 718.3b cast prototyped the Assembler is a white 2/2 with mana value 2; cast normally a colourless 4/5 with mana value 5" $ do
+  Spec.it s "CR 719.3b cast prototyped the Assembler is a white 2/2 with mana value 2; cast normally a colourless 4/5 with mana value 5" $ do
     assembler <- S.printingOf s registry "Autonomous Assembler"
     plains <- S.printingOf s registry "Plains"
     let (board, spellId) = S.handOne assembler (S.landsInPlay plains 5)
@@ -127,10 +127,10 @@ spec s registry = Spec.describe s "Prototype" $ do
       "CR 702.160a: the printed cost and the inset cost are both offered from the hand"
       (fmap Cost.Type.mana (Cost.costsFor S.alice (S.printingName assembler) spellId board))
       [Just (ManaCost.MkManaCost printedCost), Just (ManaCost.MkManaCost insetCost)]
-    -- CR 718.3b's colour clause, read off the SPELL on the stack.
+    -- CR 719.3b's colour clause, read off the SPELL on the stack.
     Spec.assertEqWith
       s
-      "CR 718.3b: the prototyped spell is white"
+      "CR 719.3b: the prototyped spell is white"
       (fmap (\oid -> Projection.colorsOf oid prototyped) (topOfStack prototyped))
       (Just (Set.singleton Color.White))
     Spec.assertEqWith
@@ -138,40 +138,40 @@ spec s registry = Spec.describe s "Prototype" $ do
       "CR 202.2b: cast for its printed {5} the same spell is colourless"
       (fmap (\oid -> Projection.colorsOf oid printed) (topOfStack printed))
       (Just Set.empty)
-    -- CR 718.3b's box and cost, on the stack.
+    -- CR 719.3b's box and cost, on the stack.
     Spec.assertEqWith
       s
-      "CR 718.3b: the prototyped spell is a 2/2"
+      "CR 719.3b: the prototyped spell is a 2/2"
       (topOfStack prototyped >>= \oid -> S.powerToughnessOf oid prototyped)
       (Just (2, 2))
     Spec.assertEqWith
       s
-      "CR 718.3b: and its mana value is 2, not the printed 5"
+      "CR 719.3b: and its mana value is 2, not the printed 5"
       (fmap (\oid -> PC.manaValue (Projection.project oid prototyped)) (topOfStack prototyped))
       (Just (Just 2))
     Spec.assertEqWith
       s
-      "CR 718.3b: its mana cost is the inset {1}{W}"
+      "CR 719.3b: its mana cost is the inset {1}{W}"
       (fmap (\oid -> PC.manaCost (Projection.project oid prototyped)) (topOfStack prototyped))
       (Just (Just (ManaCost.MkManaCost insetCost)))
     Spec.assertEqWith
       s
-      "CR 718.4: cast normally it is the printed 4/5"
+      "CR 719.4: cast normally it is the printed 4/5"
       (topOfStack printed >>= \oid -> S.powerToughnessOf oid printed)
       (Just (4, 5))
     Spec.assertEqWith
       s
-      "CR 718.4: with mana value 5"
+      "CR 719.4: with mana value 5"
       (fmap (\oid -> PC.manaValue (Projection.project oid printed)) (topOfStack printed))
       (Just (Just 5))
-    -- CR 718.3b's "and the permanent it becomes": the same four readings once the
-    -- spell has resolved, which is the half CR 718.2's "while it is a permanent on
+    -- CR 719.3b's "and the permanent it becomes": the same four readings once the
+    -- spell has resolved, which is the half CR 719.2's "while it is a permanent on
     -- the battlefield" adds over every other alternative-cost keyword.
     let resolvedPrototyped = S.settleSba (S.runPure prototyping prototyped Stack.resolveTop)
         resolvedPrinted = S.settleSba (S.runPure payingPrinted printed Stack.resolveTop)
     Spec.assertEqWith
       s
-      "CR 718.3b: the permanent it becomes is white too"
+      "CR 719.3b: the permanent it becomes is white too"
       (fmap (\oid -> Projection.colorsOf oid resolvedPrototyped) (assemblerOn assembler resolvedPrototyped))
       (Just (Set.singleton Color.White))
     Spec.assertEqWith
@@ -181,19 +181,19 @@ spec s registry = Spec.describe s "Prototype" $ do
       (Just (2, 2))
     Spec.assertEqWith
       s
-      "CR 718.4: the permanent the printed cast became is a colourless 4/5"
+      "CR 719.4: the permanent the printed cast became is a colourless 4/5"
       ( (,)
           <$> fmap (\oid -> Projection.colorsOf oid resolvedPrinted) (assemblerOn assembler resolvedPrinted)
           <*> (assemblerOn assembler resolvedPrinted >>= \oid -> S.powerToughnessOf oid resolvedPrinted)
       )
       (Just (Set.empty, (4, 5)))
-  -- CR 718.5: "a prototype card's characteristics other than its power,
+  -- CR 719.5: "a prototype card's characteristics other than its power,
   -- toughness, and mana cost (and other than color) remain the same whether it
   -- was cast as a prototyped spell or cast normally." Vigilance and the printed
   -- activated ability are what the card has to show for it, and the ability is
   -- driven to RESOLUTION rather than merely offered -- a permanent that lost its
   -- ability and a permanent whose ability did nothing are two different bugs.
-  Spec.it s "CR 718.5 the prototyped permanent keeps vigilance and its activated ability" $ do
+  Spec.it s "CR 719.5 the prototyped permanent keeps vigilance and its activated ability" $ do
     assembler <- S.printingOf s registry "Autonomous Assembler"
     plains <- S.printingOf s registry "Plains"
     let (board, spellId) = S.handOne assembler (S.landsInPlay plains 5)
@@ -205,10 +205,10 @@ spec s registry = Spec.describe s "Prototype" $ do
         Spec.assertBool
           s
           (Map.member Keyword.Vigilance (Projection.keywordsOf oid resolved))
-          "CR 718.5: the prototyped permanent still has vigilance"
+          "CR 719.5: the prototyped permanent still has vigilance"
         -- CR 302.6 is the fixture's, not the rule's: the ability costs {T}, so the
         -- permanent has to have been under its controller since the turn began
-        -- before rule 718.5's question can be asked at all.
+        -- before rule 719.5's question can be asked at all.
         let settled = settleUnderAlice oid resolved
         case Projection.abilitiesOf oid settled of
           [] -> Spec.assertFailure s "the prototyped permanent offers no activated ability"
@@ -216,7 +216,7 @@ spec s registry = Spec.describe s "Prototype" $ do
             Spec.assertBool
               s
               (Activatable.activatable S.alice oid ability settled)
-              "CR 718.5: its printed activated ability is activatable"
+              "CR 719.5: its printed activated ability is activatable"
             let activated = S.runPure prototyping settled (Activate.activateAbility S.alice oid ability)
                 counted = S.settleSba (S.runPure prototyping activated Stack.resolveTop)
             -- The gameplay reading: 2/2 plus one +1/+1 counter is 3/3, which is
@@ -224,7 +224,7 @@ spec s registry = Spec.describe s "Prototype" $ do
             -- plus a counter (5/6).
             Spec.assertEqWith
               s
-              "CR 718.5 with CR 122.1a: the resolved ability makes the prototyped 2/2 a 3/3"
+              "CR 719.5 with CR 122.1a: the resolved ability makes the prototyped 2/2 a 3/3"
               (S.powerToughnessOf oid counted)
               (Just (3, 3))
             Spec.assertEqWith
@@ -232,22 +232,22 @@ spec s registry = Spec.describe s "Prototype" $ do
               "and the counter is on it"
               (fmap (Map.lookup plusOnePlusOne . Object.counters) (Game.lookupObject oid counted))
               (Just (Just 1))
-  -- CR 718.4: "in every zone except the stack or the battlefield, and while on the
+  -- CR 719.4: "in every zone except the stack or the battlefield, and while on the
   -- stack or the battlefield when not cast as a prototyped spell, a prototype card
   -- has only its normal characteristics."
   --
-  -- The HAND is the zone that separates rule 718.4 from an implementation that
+  -- The HAND is the zone that separates rule 719.4 from an implementation that
   -- read the inset frame off the card wherever it lay; the GRAVEYARD is the half
   -- that separates it from one that stamped the choice and never cleared it. Both
   -- readings are of the same card in the same game, one having been cast
   -- prototyped and died.
-  Spec.it s "CR 718.4 in hand and in a graveyard the Assembler has only its printed characteristics" $ do
+  Spec.it s "CR 719.4 in hand and in a graveyard the Assembler has only its printed characteristics" $ do
     assembler <- S.printingOf s registry "Autonomous Assembler"
     plains <- S.printingOf s registry "Plains"
     let (board, spellId) = S.handOne assembler (S.landsInPlay plains 5)
     Spec.assertEqWith
       s
-      "CR 718.4: in hand it is a colourless 4/5"
+      "CR 719.4: in hand it is a colourless 4/5"
       ((,) (Projection.colorsOf spellId board) (S.powerToughnessOf spellId board))
       (Set.empty, Just (4, 5))
     let cast = S.runPure prototyping board (S.cast S.alice spellId)
@@ -259,6 +259,6 @@ spec s registry = Spec.describe s "Prototype" $ do
             inGraveyard = Game.zoneMembers Zone.Graveyard S.alice dead
         Spec.assertEqWith
           s
-          "CR 718.4: the card in its owner's graveyard is a colourless 4/5 again"
+          "CR 719.4: the card in its owner's graveyard is a colourless 4/5 again"
           (fmap (\card -> (Projection.colorsOf card dead, S.powerToughnessOf card dead)) inGraveyard)
           [(Set.empty, Just (4, 5))]

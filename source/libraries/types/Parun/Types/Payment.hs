@@ -12,7 +12,7 @@ import Parun.Types.SlotName (SlotName)
 -- Unpaid unwinds the whole ACTION: Parun.Engine.Cost.pay puts back the state the
 -- caller says the action began in before returning it, so a caller never has to
 -- unwind a partial payment (mana spent, one component paid, the next one
--- rejected) or its own announcement. It is not a complete no-op, CR 733.1
+-- rejected) or its own announcement. It is not a complete no-op, CR 734.1
 -- leaving the mana abilities the payer activated in the CR 605.3a window to that
 -- player -- one who keeps them keeps the mana, the taps and CR 405.6c's other
 -- effects (Cost.reverseIllegal).

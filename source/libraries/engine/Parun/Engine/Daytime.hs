@@ -1,7 +1,7 @@
--- | CR 731, "Day and Night": the game's day/night designation, and the daybound
+-- | CR 732, "Day and Night": the game's day/night designation, and the daybound
 -- and nightbound keyword abilities (CR 702.145) that both read it and change it.
 --
--- Parun.Engine.Monarch's sibling, and for the same reason: rule 731 gives the GAME
+-- Parun.Engine.Monarch's sibling, and for the same reason: rule 732 gives the GAME
 -- a designation that rides no card's text, so the rules core holds it. Casing on
 -- Keyword.Daybound here is casing on the RULEBOOK, which Parun.Types.Keyword's own
 -- comment licenses -- rule 702 is as much a part of the comprehensive rules as
@@ -9,16 +9,16 @@
 -- invariant that matters: Parun.Engine.Resolve's Effect.ItBecomes arm calls
 -- `becomes` and this module never learns what asked.
 --
--- WHERE the designation lives follows CR 731.1's own words, "designations that
--- THE GAME ITSELF can have", so it is a GameState field exactly as CR 725.1's
+-- WHERE the designation lives follows CR 732.1's own words, "designations that
+-- THE GAME ITSELF can have", so it is a GameState field exactly as CR 726.1's
 -- monarch is -- and not a permanent's, which is what CR 701.54b makes the
 -- Ring-bearer and why that one rides Object.ringBearerFor. Parun.Engine.Ring's
 -- haddock is the worked precedent for choosing between the two.
 --
 -- Three separate moments can change it, and all three are here:
 --
---   * an effect saying so (CR 731.1), through `becomes`
---   * the untap step's turn-based action (CR 502.2 / 731.2), through `untapCheck`
+--   * an effect saying so (CR 732.1), through `becomes`
+--   * the untap step's turn-based action (CR 502.2 / 732.2), through `untapCheck`
 --   * a player merely CONTROLLING a daybound or nightbound permanent while it is
 --     neither day nor night (CR 702.145d / 702.145g), through `settle`
 --
@@ -84,7 +84,7 @@ hasKeyword kw pcs oid = case Map.lookup oid pcs of
 -- has no restriction either -- the restriction IS part of the ability. A GRANTED
 -- daybound brings its restriction with it by the same read.
 --
--- Read by CR 701.28's convert too, and CR 701.28f is why it must be: "if a spell
+-- Read by CR 701.28's convert too, and CR 701.28g is why it must be: "if a spell
 -- or ability states that a permanent can't transform, that permanent also can't
 -- convert". The two opcodes share one Parun.Engine.Resolve.Common.turnPermanentsOver, so
 -- that holds by construction rather than by a second check.
@@ -132,10 +132,10 @@ dueToTurn gs = case GameState.daytime gs of
 -- itself rather than leaving it to the settle.
 --
 -- ONE Object.turnedOverAt stamp for the whole sweep: a single nightfall turns
--- every daybound permanent over at the same moment, so a later CR 701.27f
+-- every daybound permanent over at the same moment, so a later CR 701.27g
 -- comparison must not be able to tell them apart. CR 613.7g's per-permanent
 -- stamp is a second thing, minted inside Game.turnFaceOver, exactly as
--- Resolve.turnPermanentsOver's fold says. CR 701.27f is not otherwise consulted
+-- Resolve.turnPermanentsOver's fold says. CR 701.27g is not otherwise consulted
 -- -- it gates an instruction from an ability on the STACK, and this turn comes
 -- from a static ability.
 --
@@ -196,13 +196,13 @@ turnDue record = do
         )
       pure True
 
--- | CR 731.1: "it becomes day" / "it becomes night" -- the game gains that
--- designation. CR 731.1a's "day becomes night" is the same act stated from the
+-- | CR 732.1: "it becomes day" / "it becomes night" -- the game gains that
+-- designation. CR 732.1a's "day becomes night" is the same act stated from the
 -- other side, the game losing the first designation and gaining the second, which
--- is one assignment because CR 731.1 allows exactly one designation at a time.
+-- is one assignment because CR 732.1 allows exactly one designation at a time.
 --
--- Gaining a designation the game ALREADY has is not a change: rule 731.1a
--- describes becoming the other one, and nothing in rule 731 says a game that is
+-- Gaining a designation the game ALREADY has is not a change: rule 732.1a
+-- describes becoming the other one, and nothing in rule 732 says a game that is
 -- already night becomes night again. So this is idempotent, which is what lets
 -- CR 702.145d's "any time" check below call it on every settle without the CR
 -- 702.145c sweep firing on every settle too.
@@ -238,7 +238,7 @@ becomes record designation = do
 -- clause's own wording.
 --
 -- Both rules are dead once the game HAS a designation: each names "neither day
--- nor night", and CR 731.1's last sentence makes that state unreachable
+-- nor night", and CR 732.1's last sentence makes that state unreachable
 -- afterwards. So the pair fires at most once per game.
 --
 -- CR 702.145g's own arm has no test yet. CR 702.145a puts daybound and nightbound
@@ -280,7 +280,7 @@ settle record = do
                 then becomes record Daytime.Night
                 else pure False
 
--- | CR 502.2 (stated again as CR 731.2): as the second part of the untap step,
+-- | CR 502.2 (stated again as CR 732.2): as the second part of the untap step,
 -- the game checks the turn just ended and may change the designation.
 --
 --   * CR 502.2's first sentence -- day, and the previous turn's active player
@@ -291,7 +291,7 @@ settle record = do
 -- The count is GameState.spellsCastLastTurn, snapshotted at the handoff, because
 -- the event log this would otherwise be folded from is cleared there and this
 -- runs afterwards. That scalar and not the per-seat fold of
--- GameState.eventsLastTurn a CARD reads: rule 731.2 names exactly one player
+-- GameState.eventsLastTurn a CARD reads: rule 732.2 names exactly one player
 -- where a card asks about every player, and Engine.beginTurnOf folds the scalar
 -- out of the same log with the same Game.castsPerPlayer, so the two agree about
 -- the one seat this rule is about.

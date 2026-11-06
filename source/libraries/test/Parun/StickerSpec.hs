@@ -562,7 +562,7 @@ spec s registry = Spec.describe s "Sticker" $ do
       other -> Spec.assertFailure s ("expected one graveyard card and one placement, got " <> show other)
     Spec.assertEqWith s "CR 123.5 the card bounced to hand has none" (fmap fst (stickersIn Zone.Hand bounced)) [Seq.empty]
   -- Review Focus 2. Twenty cards a deck so nobody is decked.
-  Spec.it s "CR 727.2/103.2d a restart draws the sheets again and every sticker comes off" $ do
+  Spec.it s "CR 728.2/103.2d a restart draws the sheets again and every sticker comes off" $ do
     sheets <- committedSheets
     mountain <- S.printingOf s registry "Mountain"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -573,16 +573,16 @@ spec s registry = Spec.describe s "Sticker" $ do
         ((_, restarted), asked) = State.runState (Engine.runGame sheetDraws stickered (Setup.restartGame S.performer Set.empty S.alice)) []
         stickeredObjects g = Map.keys (Map.filter (not . Seq.null . Object.stickers) (GameState.objects g))
     Spec.assertEqWith s "the Piker was stickered before the restart" (stickeredObjects stickered) [pikerId]
-    Spec.assertEqWith s "CR 727.2 no object is stickered after it" (stickeredObjects restarted) []
+    Spec.assertEqWith s "CR 728.2 no object is stickered after it" (stickeredObjects restarted) []
     Spec.assertEqWith s "CR 103.2d the restart drew three sheets again" (reverse asked) [[0, 1, 2, 3], [0, 1, 2], [0, 1]]
-  Spec.it s "CR 729.2/103.2d a subgame draws the sheets again" $ do
+  Spec.it s "CR 730.2/103.2d a subgame draws the sheets again" $ do
     sheets <- committedSheets
     mountain <- S.printingOf s registry "Mountain"
     let plain = Deck.fromCards (Map.singleton mountain 20)
         (started, _) = startedWith ((S.alice, withSheetsDeck sheets plain) NonEmpty.:| [(S.bob, plain)])
         (_, asked) = State.runState (Engine.runGame sheetDraws (Setup.subgameStateFrom S.alice started) (Setup.startGameFromCards S.performer Set.empty)) []
     Spec.assertEqWith s "CR 103.2d the subgame drew three sheets" (reverse asked) [[0, 1, 2, 3], [0, 1, 2], [0, 1]]
-  Spec.it s "CR 729.4 a sticker on a main-game object is free in the subgame" $ do
+  Spec.it s "CR 730.4 a sticker on a main-game object is free in the subgame" $ do
     sheets <- committedSheets
     mountain <- S.printingOf s registry "Mountain"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -592,7 +592,7 @@ spec s registry = Spec.describe s "Sticker" $ do
         placed = foldMap (Foldable.toList . fmap StickerPlacement.sticker . Object.stickers) (Game.lookupObject pikerId stickered)
         sub = S.runPure S.identityAnswer (Setup.subgameStateFrom S.alice stickered) (Setup.startGameFromCards S.performer Set.empty)
     Spec.assertEqWith s "the main game has one sticker on the Piker, used up" (fmap (`List.elem` Sticker.available S.alice art stickered) placed) [False]
-    Spec.assertEqWith s "CR 729.4 the subgame offers it again" (fmap (`List.elem` Sticker.available S.alice art sub) placed) [True]
+    Spec.assertEqWith s "CR 730.4 the subgame offers it again" (fmap (`List.elem` Sticker.available S.alice art sub) placed) [True]
   Spec.it s "CR 123.3 a stickered card changing owners frees its sticker for its first owner" $ do
     sheets <- committedSheets
     piker <- S.printingOf s registry "Goblin Piker"
@@ -607,7 +607,7 @@ spec s registry = Spec.describe s "Sticker" $ do
   -- Tug of War's rulings (2022-10-07) over CR 123.5: its owner "removes all
   -- stickers from it" going in, and "No counters, stickers, or other effects
   -- from the subgame move back into the main game".
-  Spec.it s "CR 729.2c/729.5c a commander loses its stickers into a subgame and brings none back, nor through a restart" $ do
+  Spec.it s "CR 730.2c/730.5c a commander loses its stickers into a subgame and brings none back, nor through a restart" $ do
     sheets <- committedSheets
     mountain <- S.printingOf s registry "Mountain"
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
@@ -623,11 +623,11 @@ spec s registry = Spec.describe s "Sticker" $ do
             back = Setup.funnelBack stickeredInSub stickered
             restarted = S.runPure S.identityAnswer stickered (Setup.restartGame S.performer Set.empty S.alice)
         Spec.assertEqWith s "the commander took a sticker in the main game" (stickerKindsOn commander stickered) [StickerKind.Art]
-        Spec.assertEqWith s "CR 729.2c it is in the subgame's command zone" (Set.toList (GameState.command sub)) [commander]
+        Spec.assertEqWith s "CR 730.2c it is in the subgame's command zone" (Set.toList (GameState.command sub)) [commander]
         Spec.assertEqWith s "with no sticker" (stickerKindsOn commander sub) []
         Spec.assertEqWith s "CR 123.3 which is free to use again there" (fmap (`List.elem` Sticker.available S.alice art sub) placed) [True]
         Spec.assertEqWith s "it took a sticker in the subgame" (stickerKindsOn commander stickeredInSub) [StickerKind.Art]
-        Spec.assertEqWith s "CR 729.5c it is back in the main game's command zone" (Set.toList (GameState.command back)) [commander]
+        Spec.assertEqWith s "CR 730.5c it is back in the main game's command zone" (Set.toList (GameState.command back)) [commander]
         Spec.assertEqWith s "with neither game's sticker" (stickerKindsOn commander back) []
         Spec.assertEqWith s "a restart puts it back in the command zone" (Set.toList (GameState.command restarted)) [commander]
         Spec.assertEqWith s "Karn Liberated's ruling: with no sticker" (stickerKindsOn commander restarted) []
@@ -635,8 +635,8 @@ spec s registry = Spec.describe s "Sticker" $ do
   -- The same rulings at gameplay level: alice's 0/0 Shimatsu carries Night
   -- Brushwagg Ringmaster's 2/3 sticker (CR 123.8) in the command zone, and she
   -- casts Shahrazad. bob's library is empty, so he loses the subgame at its first
-  -- upkeep (CR 729.3).
-  Spec.it s "CR 729.5c gameplay: after a Shahrazad subgame, a commander has its printed power and toughness, its sticker free" $ do
+  -- upkeep (CR 730.3).
+  Spec.it s "CR 730.5c gameplay: after a Shahrazad subgame, a commander has its printed power and toughness, its sticker free" $ do
     sheets <- committedSheets
     mountain <- S.printingOf s registry "Mountain"
     plains <- S.printingOf s registry "Plains"
@@ -654,13 +654,13 @@ spec s registry = Spec.describe s "Sticker" $ do
             after = S.runPure S.identityAnswer stickered (S.cast S.alice shahrazadId >> Stack.resolveTopWith Engine.playSubgame)
         Spec.assertEqWith s "CR 123.8 the stickered commander is a 2/3 in the command zone" (pt commander stickered) (Just 2, Just 3)
         Spec.assertEqWith s "Shahrazad resolved: bob lost the subgame and half his life" (GameState.stack after, S.lifeOf S.bob after) ([], Just 10)
-        Spec.assertEqWith s "CR 729.5c the commander is back in the command zone" (Set.toList (GameState.command after)) [commander]
+        Spec.assertEqWith s "CR 730.5c the commander is back in the command zone" (Set.toList (GameState.command after)) [commander]
         Spec.assertEqWith s "a 0/0, with no sticker" (pt commander after, stickerKindsOn commander after) ((Just 0, Just 0), [])
         Spec.assertEqWith s "CR 123.3 and its sticker is free to use" (List.elem nightTwoThree (Sticker.available S.alice ptKind after)) True
       other -> Spec.assertEqWith s "one commander in the command zone" other []
   -- Sheet 0 is drawn out by sheetDraws' answers and sheet 2 drawn back in, so one
   -- board shows both halves of the decision.
-  Spec.it s "CR 727.5/123.2c a card left in exile keeps its stickers, one off an undrawn sheet still applying and one off a drawn sheet still used" $ do
+  Spec.it s "CR 728.5/123.2c a card left in exile keeps its stickers, one off an undrawn sheet still applying and one off a drawn sheet still used" $ do
     sheets <- committedSheets
     mountain <- S.printingOf s registry "Mountain"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -671,7 +671,7 @@ spec s registry = Spec.describe s "Sticker" $ do
         ((_, restarted), _) = State.runState (Engine.runGame sheetDraws stickered (Setup.restartGame S.performer (Set.singleton pikerId) S.alice)) []
         words' = Sticker.available S.alice (Set.singleton StickerKind.Name) restarted
     Spec.assertEqWith s "the draw left out sheet 0 and took sheet 2" (chosenOf S.alice restarted) (Set.fromList [1, 2, 3])
-    Spec.assertEqWith s "CR 727.5 it stayed in exile" (Set.member pikerId (GameState.exile restarted)) True
+    Spec.assertEqWith s "CR 728.5 it stayed in exile" (Set.member pikerId (GameState.exile restarted)) True
     Spec.assertEqWith s "with both stickers" (stickerKindsOn pikerId restarted) [StickerKind.Name, StickerKind.Name]
     Spec.assertEqWith s "the undrawn sheet's word still shows" (nameTexts pikerId restarted) [Text.pack "Otter Night Goblin Piker"]
     Spec.assertEqWith s "and the drawn sheet's sticker is still used" (List.elem otter words') False
@@ -823,7 +823,7 @@ spec s registry = Spec.describe s "Sticker" $ do
     let base = mainPhaseForAlice (S.landsFor island S.alice 4 (withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers)))
         (faeId, exiled) = S.addExiledCard fae S.alice base
         -- CR 601.3: an effect's permission to play it, under which the
-        -- Adventure half may be cast from exile (CR 715.3d's own may not).
+        -- Adventure half may be cast from exile (CR 716.3d's own may not).
         grant = ExilePlayPermission.MkExilePlayPermission S.alice S.noSource Expiry.Never ManaSpending.AnyType Nothing Nothing PlayPermissionOrigin.Granted PermissionVerb.Play 0 TapState.Untapped Nothing
         permitted = exiled {GameState.objects = Map.adjust (\o -> o {Object.playPermission = Just grant}) faeId (GameState.objects exiled)}
         stickered = Sticker.put S.alice faeId otter (Just 2) permitted
@@ -833,7 +833,7 @@ spec s registry = Spec.describe s "Sticker" $ do
         shown g = concatMap (\oid -> nameTexts oid g)
     Spec.assertEqWith s "CR 123.6c in exile it is Fae of Otter Wishes" (nameTexts faeId stickered) [Text.pack "Fae of Otter Wishes"]
     Spec.assertEqWith s "CR 123.6c on the stack it is Granted Otter" (shown casting (GameState.stack casting)) [Text.pack "Granted Otter"]
-    Spec.assertEqWith s "CR 123.6c/715.3d exiled again it is Fae of Otter Wishes" (shown resolved (Game.zoneMembers Zone.Exile S.alice resolved)) [Text.pack "Fae of Otter Wishes"]
+    Spec.assertEqWith s "CR 123.6c/716.3d exiled again it is Fae of Otter Wishes" (shown resolved (Game.zoneMembers Zone.Exile S.alice resolved)) [Text.pack "Fae of Otter Wishes"]
   -- Review Focus 2.
   Spec.it s "CR 123.1/707.2 a Clone of Grizzly Otter Bears is named Grizzly Bears" $ do
     sheets <- committedSheets
@@ -1775,7 +1775,7 @@ spec s registry = Spec.describe s "Sticker" $ do
     Spec.assertEqWith s "CR 613.7k the spell's sticker, restamped, wins" (Projection.powerOf bearsId merged, Projection.toughnessOf bearsId merged) (Just 5, Just 1)
   -- The Bears takes Otter's 5/1; Turn to Frog makes it 1/1 later; then
   -- Cubwarden mutates onto it.
-  Spec.it s "CR 613.7k/730.2c a host's P/T sticker keeps its timestamp at the merge under Turn to Frog" $ do
+  Spec.it s "CR 613.7k/731.2c a host's P/T sticker keeps its timestamp at the merge under Turn to Frog" $ do
     sheets <- committedSheets
     cubwarden <- S.printingOf s registry "Cubwarden"
     frog <- S.printingOf s registry "Turn to Frog"
@@ -1790,7 +1790,7 @@ spec s registry = Spec.describe s "Sticker" $ do
         merged = S.runPure (MutateSpec.mutatingAt MutateSide.Over bearsId) frogged (S.cast S.alice cubId >> drain)
         pt g = (Projection.powerOf bearsId g, Projection.toughnessOf bearsId g)
     Spec.assertEqWith s "before the merge, Turn to Frog's 1/1 wins" (pt frogged) (Just 1, Just 1)
-    Spec.assertEqWith s "CR 730.2c after it, Turn to Frog's 1/1 still wins" (pt merged) (Just 1, Just 1)
+    Spec.assertEqWith s "CR 731.2c after it, Turn to Frog's 1/1 still wins" (pt merged) (Just 1, Just 1)
     Spec.assertEqWith s "the Bears is merged" (fmap (Seq.length . Game.componentsOf . Object.source) (Game.lookupObject bearsId merged)) (Just 2)
   -- Chittering Host takes an art sticker and is destroyed; two boards differing
   -- in the owner's answer alone.

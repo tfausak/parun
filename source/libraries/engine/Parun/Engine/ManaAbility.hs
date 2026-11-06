@@ -756,10 +756,10 @@ movesLibraryCard effect = case effect of
   -- The draw half.
   Effect.ExileHandThenDraw -> True
   Effect.NoteManaSpent -> False
-  -- CR 727.2 / 103.3: every card involved in the restarted game is in the new
+  -- CR 728.2 / 103.3: every card involved in the restarted game is in the new
   -- game, which starts by shuffling each player's deck into their library.
   Effect.RestartGame _ -> True
-  -- CR 729.2: as a subgame starts, "each player takes all the cards in their
+  -- CR 730.2: as a subgame starts, "each player takes all the cards in their
   -- main-game library, moves them to their subgame library, and shuffles them".
   Effect.PlaySubgame _ -> True
   -- Reads its payload, as the Meld and Conjure arms below do: the opcode is the
@@ -937,7 +937,7 @@ movesLibraryCard effect = case effect of
   Effect.ExchangeControl _ -> False
   -- The armed ability is a SEPARATE ability (CR 603.7a), so what it later does
   -- is not this effect's doing. The monarch's draw below is a separate triggered
-  -- ability for the same reason (CR 725.2).
+  -- ability for the same reason (CR 726.2).
   Effect.ArmDelayedTrigger {} -> False
   Effect.BecomeMonarch {} -> False
   Effect.TakeTheInitiative {} -> False

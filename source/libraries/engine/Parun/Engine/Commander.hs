@@ -169,9 +169,9 @@ soleCommander settings printing =
 -- excludes.
 --
 -- Reads a station symbol's base-setting modification beside Face.power, because
--- CR 721.1 puts the box inside a striation and CR 721.2b makes it a static
+-- CR 722.1 puts the box inside a striation and CR 722.2b makes it a static
 -- ability: Lumen-Class Frigate's 3\/5 is transcribed as the {12+} ability's
--- Modification.SetBasePowerToughness, and Face.power is empty for CR 721.2c.
+-- Modification.SetBasePowerToughness, and Face.power is empty for CR 722.2c.
 hasPowerToughnessBox :: Printing.Printing -> Bool
 hasPowerToughnessBox printing =
   let face = Card.frontFace (Printing.card printing)
@@ -374,7 +374,7 @@ isCommander oid gs = Maybe.isJust (commanderCardOf oid gs)
 -- or a merged permanent" -- so the rules do call such a permanent a commander,
 -- and the designation sits on one of the cards representing it rather than on
 -- the permanent. Game.componentsOf is the plural read, a classifier over Source
--- and never a case on Source.OfMeld, so CR 730.3's merged permanent arrives
+-- and never a case on Source.OfMeld, so CR 731.3's merged permanent arrives
 -- through the same door.
 --
 -- What this answers FOR a melded permanent is the component card, which is
@@ -391,7 +391,7 @@ commanderCardOf oid gs = do
         Source.OfCard printingId -> [(printingId, Object.identity obj)]
         -- CR 903.9c names "the card that represents it and is a commander", so a
         -- merged permanent's component that is no card -- a token (CR 111.6) or
-        -- CR 730.2's copy of a spell (CR 707.10) -- is never one.
+        -- CR 731.2's copy of a spell (CR 707.10) -- is never one.
         source -> fmap (\card -> (ComponentCard.printing card, ComponentCard.identity card)) (Maybe.mapMaybe Game.cardOfComponent (Foldable.toList (Game.componentsOf source)))
       designated identity = maybe False (Set.member identity . Player.commander) (Map.lookup (CardIdentity.startingOwner identity) (GameState.players gs))
   -- CR 702.124e: with two designations this answers WHICH of them this object
@@ -520,7 +520,7 @@ taxCandidates pid oid gs cost =
 -- and no longer exists.
 --
 -- Moved.arrivals and not ZoneChange.object alone, which is CR 903.9a read over
--- CR 712.21's split rather than CR 903.9c: rule 903.9c governs only the CR 903.9b
+-- CR 713.8's split rather than CR 903.9c: rule 903.9c governs only the CR 903.9b
 -- replacement, while this is the state-based action, and a melded
 -- permanent's departure puts TWO cards into the graveyard or exile. Rule 903.9a
 -- asks its question of each object in that zone, so each arrival is asked, and the

@@ -260,13 +260,13 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
     let damager = DamageEvent.source ev
         damaged = if PermanentsDealCombatDamageToPlayer.oneOrMorePlayers p then Nothing else Recipient.playerOf (DamageEvent.target ev)
      in maybe id Binding.setTriggerPlayer damaged (maybe id Binding.setDamagersController (Filter.controller =<< postEventView board gs damager) Map.empty)
-  -- CR 725.2's "its controller becomes the monarch": the damaging creature,
+  -- CR 726.2's "its controller becomes the monarch": the damaging creature,
   -- under the reserved trigger-source slot Effect.BecomeMonarch's
-  -- ControllerOfSource reads. The abilities have no source (CR 725.2), and no
+  -- ControllerOfSource reads. The abilities have no source (CR 726.2), and no
   -- card bears this condition, so Engine.placeBorne's restamp of that slot never
   -- meets it.
   (TriggerCondition.CreatureDealtCombatDamageToMonarch, GameEvent.DamageDealt ev) -> Binding.setTriggerSource (DamageEvent.source ev) Map.empty
-  -- CR 726.2's "the controller of those creatures": the damager under the slot
+  -- CR 727.2's "the controller of those creatures": the damager under the slot
   -- Effect.TakeTheInitiative's ControllerOfSource reads, the monarch arm's
   -- reason, and its controller off the event's sample, which `batchPartition`
   -- splits the batch by. batchBindings keeps the FIRST member's trigger source,
@@ -631,7 +631,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- whose permanent IS the bearer, and the amount is on the event outright.
   (TriggerCondition.SelfManaAbilityResolves, GameEvent.ManaAbilityResolved resolved) ->
     Binding.setEventAmount (ManaAbilityResolved.amount resolved) Map.empty
-  -- CR 725.1's newly crowned player: Garland, Royal Kidnapper's "that player",
+  -- CR 726.1's newly crowned player: Garland, Royal Kidnapper's "that player",
   -- whose creature the trigger then targets and whose crown its duration watches.
   -- Bound whichever relation matched, for the reason the LifeChanges arm
   -- gives: eventBindingSlots answers per CONDITION with no relation in hand, so
@@ -640,7 +640,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- wrong answer.
   --
   -- Unconditional given a match: GameEvent.BecameMonarch carries a PlayerId
-  -- outright, and CR 725.3 makes it exactly one.
+  -- outright, and CR 726.3 makes it exactly one.
   (TriggerCondition.PlayerBecomesMonarch _, GameEvent.BecameMonarch crowned) ->
     Binding.setTriggerPlayer crowned Map.empty
   -- CR 701.21a's sacrificing player: Vengeful Tracker's "this creature deals 2
@@ -706,7 +706,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   --
   -- Both unconditional given a match, which is what eventBindingSlots'
   -- per-condition promise needs: matchesTrigger's arm rejects
-  -- TriggerSource.Sourceless outright -- CR 725.2's and CR 702.179d's abilities
+  -- TriggerSource.Sourceless outright -- CR 726.2's and CR 702.179d's abilities
   -- hang on no Saga -- so every record it accepts carries an ObjectId, and every
   -- record carries a controller.
   (TriggerCondition.SagaFinalChapterTriggers _, GameEvent.AbilityTriggered record) ->
@@ -765,7 +765,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   (TriggerCondition.LeavesZone t, GameEvent.Moved m)
     | LeavesZoneTrigger.batching t == Batching.OneOrMore ->
         Binding.setEventAmount (Natural.length (admittedDepartures gs bearer you t m)) Map.empty
-  -- CR 729.4a's crossing moves one card, which the match arm has admitted.
+  -- CR 730.4a's crossing moves one card, which the match arm has admitted.
   (TriggerCondition.LeavesZone t, GameEvent.LeftTheGame _)
     | LeavesZoneTrigger.batching t == Batching.OneOrMore ->
         Binding.setEventAmount 1 Map.empty
@@ -821,7 +821,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
 -- damaged player. The controller because each printing in data/cards/ names
 -- it -- "you control", "an opponent controls" -- and Norn's Decree's "one or
 -- more creatures AN OPPONENT controls" is one occurrence per opponent whose
--- creatures connected, CR 726.2's "a player controls" grouped the same way
+-- creatures connected, CR 727.2's "a player controls" grouped the same way
 -- below. The damaged player because CR
 -- 506.2a and CR 508.1b let one CR 510.2 step damage several players, and "to
 -- a player" is one occurrence per player hit: Feline Sovereign's "that player
@@ -843,7 +843,7 @@ batchPartition cond bindings = case cond of
   -- trigger naming a recipient is not batch-scoped at all.
   TriggerCondition.DealsDamage _ -> object Binding.combatDamager
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> seat Binding.damagersController <> seat Binding.triggerPlayer
-  -- CR 726.2's "one or more creatures A PLAYER controls": one occurrence per
+  -- CR 727.2's "one or more creatures A PLAYER controls": one occurrence per
   -- damagers' controller. The damaged player is the holder, one seat already.
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> seat Binding.damagersController
   -- CR 603.2c: one occurrence per damaged player, and per damaged planeswalker
@@ -921,7 +921,7 @@ postEventView board gs oid = case Map.lookup oid board of
   Just candidate -> Just (Projection.sampledView board oid candidate gs)
   Nothing -> Projection.viewWithLastKnown oid gs oid
 
--- CR 725.2 / CR 726.2: the creature that dealt this event's COMBAT damage to
+-- CR 726.2 / CR 727.2: the creature that dealt this event's COMBAT damage to
 -- `victim`, paired with who controlled it. Nothing for any other event, and
 -- Nothing for a source that was not a creature then.
 --
@@ -929,7 +929,7 @@ postEventView board gs oid = case Map.lookup oid board of
 -- and never last known information: the damager is judged as it stood
 -- immediately after the damage, and the CR 704.5g destruction that kills a
 -- trampler its blocker traded with is a LATER event, which changeZone answers
--- with a fresh id. Proved by Parun.InitiativeSpec's "CR 726.2 a trampler that
+-- with a fresh id. Proved by Parun.InitiativeSpec's "CR 727.2 a trampler that
 -- trades with its blocker still hands the initiative over".
 --
 -- Both halves come from the ONE sample, so "was it a creature?" and "whose was
@@ -1286,7 +1286,7 @@ attackBindings gs bearer you trigger event = case (trigger, event) of
     Binding.setTriggerPlayer (AttackerUnblocked.defender u) (Binding.setAttackingCreature (AttackerUnblocked.attacker u) Map.empty)
   _ -> Map.empty
 
--- CR 400.7e's `became` slot, in the plural CR 712.21c asks for: "if an effect
+-- CR 400.7e's `became` slot, in the plural CR 713.8c asks for: "if an effect
 -- can find the new object that a melded permanent becomes as it leaves the
 -- battlefield, it finds both cards... If that effect causes actions to be taken
 -- upon those cards, the same actions are taken upon each of them."
@@ -1303,7 +1303,7 @@ attackBindings gs bearer you trigger event = case (trigger, event) of
 -- either, while a bare SlotName read through Parun.Engine.Resolve's legalOne
 -- (Unstable Shapeshifter) reads only the recipient. That reader hangs on a
 -- Matching Enters, which cannot split. Every condition that can carry a split
--- is a battlefield DEPARTURE -- CR 712.21's own scope -- and its readers reach the
+-- is a battlefield DEPARTURE -- CR 713.8's own scope -- and its readers reach the
 -- whole group: Promise of Tomorrow, Yedora Grave Gardener and Endless
 -- Cockroaches spend the slot as an ObjectRef, and rule 702.55a's haunt
 -- (Effect.ExileHaunting under a self death) reads it group first. Screams from
@@ -1314,8 +1314,8 @@ attackBindings gs bearer you trigger event = case (trigger, event) of
 -- No arrival here is a CR 903.9c command-zone component: that split happens
 -- only under CR 903.9b's replacement, for a move to a hand or a library, and
 -- every arm above that can see such a move binds nothing for a hidden
--- destination (CR 400.7e). A CR 730.3e split's cards ARE here, in whatever zone
--- the row sent them: CR 730.3c's effect finds all of the new objects.
+-- destination (CR 400.7e). A CR 731.3e split's cards ARE here, in whatever zone
+-- the row sent them: CR 731.3c's effect finds all of the new objects.
 setBecameArrivals :: Moved.Moved -> Map.Map SlotName.SlotName Binding -> Map.Map SlotName.SlotName Binding
 setBecameArrivals m = case Moved.arrivals m of
   only Seq.:<| Seq.Empty -> Binding.setBecame only
@@ -1452,12 +1452,12 @@ eventBindingSlots cond = case cond of
   TriggerCondition.PermanentsDealCombatDamageToPlayer p
     | PermanentsDealCombatDamageToPlayer.oneOrMorePlayers p -> Set.singleton Binding.damagersController
     | otherwise -> Set.fromList [Binding.damagersController, Binding.triggerPlayer]
-  -- CR 725.2's damaging creature, and CR 726.2's with its controller beside it:
+  -- CR 726.2's damaging creature, and CR 727.2's with its controller beside it:
   -- both unconditional given a match, which admits only a creature in the
   -- event's sample, whose view always carries its controller.
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> Set.singleton Binding.triggerSource
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> Set.fromList [Binding.triggerSource, Binding.damagersController]
-  -- CR 726.2's taker is the ability's controller, whom Binding.setYou already
+  -- CR 727.2's taker is the ability's controller, whom Binding.setYou already
   -- names.
   TriggerCondition.PlayerTookInitiative -> Set.empty
   -- CR 702.94a's revealed card is the bearer itself, already bound as CR 113.7's
@@ -1561,7 +1561,7 @@ eventBindingSlots cond = case cond of
   TriggerCondition.CausedBy narrowed -> eventBindingSlots (CausedBy.condition narrowed)
   TriggerCondition.TurnedFaceUp subject -> fst (turnedFaceUpSlots subject)
   -- A deliberate empty under either subject. A Self one for a Self
-  -- TurnedFaceUp's reason one step further on: CR 701.27e's event names the
+  -- TurnedFaceUp's reason one step further on: CR 701.27f's event names the
   -- permanent that transformed, which CR 113.7a's source slot already names,
   -- and the face it turned into is a NAME rather than an object for a slot to
   -- hold. A Matching one because a Matching TurnedFaceUp (turnedFaceUpSlots) is
@@ -1668,7 +1668,7 @@ eventBindingSlots cond = case cond of
   -- ObjectId, and every record carries a controller. Claimed for the CONDITION
   -- rather than for the printing, which is what a per-condition set means.
   TriggerCondition.SagaFinalChapterTriggers _ -> Set.fromList [Binding.became, Binding.triggerPlayer]
-  -- CR 725.1's newly crowned player -- Garland, Royal Kidnapper watches an
+  -- CR 726.1's newly crowned player -- Garland, Royal Kidnapper watches an
   -- OPPONENT take the crown, so the seat is one nothing else on the ability
   -- names. Under the You relation it is also CR 109.5's "you", a second name for
   -- one player and no wrong answer; a per-CONDITION set cannot depend on the

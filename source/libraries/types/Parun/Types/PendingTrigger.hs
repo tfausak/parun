@@ -20,12 +20,12 @@ import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 --
 -- `source` is what the ability hangs on -- the object it belongs to (CR 113.7),
 -- or nothing at all for an inherent ability the rulebook rather than a card
--- states (CR 725.2, CR 702.179d). Both kinds
+-- states (CR 726.2, CR 702.179d). Both kinds
 -- share this type so that CR 603.3b can order them as one batch;
--- `controller` is who controls the ability (CR 603.3a / CR 725.2). `bindings` is
+-- `controller` is who controls the ability (CR 603.3a / CR 726.2). `bindings` is
 -- the environment the trigger arrives with: what CR 603.7 captured when a
 -- delayed ability was armed -- how "it" and "that card" (CR 603.7c) are
--- remembered, and how CR 725.2's crown steal remembers the damaging creature --
+-- remembered, and how CR 726.2's crown steal remembers the damaging creature --
 -- together with what Event.eventBindings read off the event itself (CR 603.6a's
 -- entrant, under Binding.became). A delayed entry gets both, its captured
 -- environment under the firing event's slots; an object's trigger has only the

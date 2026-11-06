@@ -79,7 +79,7 @@ data Expiry
     -- GameState.objectProhibitions (Exhaustion). A row on any
     -- other would apply from the moment it is stored, so Parun.EffectLintSpec's
     -- windowOffends refuses a card writing one (Scryfall o:/during [^.]*next
-    -- turn/, 2026-10-11: every hit is one of the first four or CR 723's player
+    -- turn/, 2026-10-11: every hit is one of the first four or CR 724's player
     -- control).
     DuringTurnOf AfterTurn.AfterTurn
   | -- | CR 611.2a: Duration.DuringNextUntapStepOf, stored -- a WINDOW, open while

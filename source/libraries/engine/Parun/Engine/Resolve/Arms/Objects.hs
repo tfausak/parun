@@ -1647,7 +1647,7 @@ becomeMonarch resolving source controller legal target = do
   gs <- State.get
   let newMonarch = Common.oneSeat legal resolving source controller gs $ case target of
         MonarchTarget.TheController -> PlayerRef.Relative PlayerRelation.You
-        -- CR 725.2: the controller of the ability's bound source, read from the
+        -- CR 726.2: the controller of the ability's bound source, read from the
         -- reserved trigger-source slot through CR 608.2h's last known
         -- information: the creature that stole the crown by connecting is
         -- routinely dead by the time this resolves -- it traded with its
@@ -1664,24 +1664,24 @@ becomeMonarch resolving source controller legal target = do
     -- and the crown does not move. Read here rather than at the three
     -- MonarchTarget arms, so every route this opcode has is stopped at once.
     Just p | PlayerEffect.prohibitsBecomingMonarch p gs -> pure ()
-    -- CR 725.3's handoff, the CR 603.2 event and CR 725's exile watches are all
+    -- CR 726.3's handoff, the CR 603.2 event and CR 726's exile watches are all
     -- Monarch.crown's, so no caller can move the crown without them.
     Just p -> State.modify' (Monarch.crown p)
 
--- CR 726.1: the initiative moves, whichever InitiativeTarget named the taker.
+-- CR 727.1: the initiative moves, whichever InitiativeTarget named the taker.
 takeTheInitiative :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> InitiativeTarget.InitiativeTarget -> Game ()
 takeTheInitiative resolving source controller legal target = do
   gs <- State.get
   let taker = Common.oneSeat legal resolving source controller gs $ case target of
         InitiativeTarget.TheController -> PlayerRef.Relative PlayerRelation.You
-        -- CR 726.2: the controller of the ability's bound source, for
+        -- CR 727.2: the controller of the ability's bound source, for
         -- Effect.BecomeMonarch ControllerOfSource's reason one rule over.
         InitiativeTarget.ControllerOfSource -> PlayerRef.HolderOfBound Holder.Controller Hop.Itself Binding.triggerSource
   case taker of
     Nothing -> pure ()
-    -- CR 726.3's hand-off, CR 726.5's re-take and the CR 603.2 event are all
+    -- CR 727.3's hand-off, CR 727.5's re-take and the CR 603.2 event are all
     -- Initiative.takeInitiative's, so no caller can move the designation
-    -- without them. No eligibility gate, where the crown has one: rule 726
+    -- without them. No eligibility gate, where the crown has one: rule 727
     -- states no "can't take the initiative" effect.
     Just p -> State.modify' (Initiative.takeInitiative p)
 
@@ -1693,9 +1693,9 @@ takeTheInitiative resolving source controller legal target = do
 -- write nothing. CR 701.60c's menace and can't-block are read off
 -- Object.designations live.
 --
--- Parun.Engine.Prepare.mayGain is CR 722.3a's own precondition beside the
+-- Parun.Engine.Prepare.mayGain is CR 723.3a's own precondition beside the
 -- transition guard -- "a permanent can't gain this designation unless it has a
--- prepare spell" -- and mintOnDesignated is CR 722.3c's copy, run in the same
+-- prepare spell" -- and mintOnDesignated is CR 723.3c's copy, run in the same
 -- breath as the write because the rule says "AS a permanent ... gains the
 -- prepared designation". Both are keyed on WHICH designation and neither asks
 -- which card; see that module.
@@ -1723,14 +1723,14 @@ designate resolving source controller legal (Designate.MkDesignate designation s
           Prepare.mintOnDesignated designation target
     _ -> pure ()
 
--- CR 716.2a: "This Class's level becomes N." A state write on the slot's
--- permanent, not a CR 613 modification -- CR 716.2b makes a level a designation,
+-- CR 717.2a: "This Class's level becomes N." A state write on the slot's
+-- permanent, not a CR 613 modification -- CR 717.2b makes a level a designation,
 -- which is what Object.classLevel holds and what the Designate arm above writes
 -- the boolean marks into.
 --
 -- BECOMES rather than increments, and the level bar's own
 -- ActivationRestriction.OnlyIf is the only thing that keeps the ladder in order
--- (CR 716.2a's "activate only if this Class is level N-1"). Nothing is re-checked
+-- (CR 717.2a's "activate only if this Class is level N-1"). Nothing is re-checked
 -- here, which is CR 113.7a: once activated, an ability exists on the stack
 -- independently of its source, so a level that moved in between changes nothing.
 --
@@ -1739,15 +1739,15 @@ designate resolving source controller legal (Designate.MkDesignate designation s
 --
 -- GameEvent.ClassLevelSet is what TriggerCondition.SelfBecomesClassLevel watches,
 -- and it is emitted only on a TRANSITION -- the Designate arm above's posture.
--- CR 716.2a's ladder cannot set a level a Class already has, but this opcode is
+-- CR 717.2a's ladder cannot set a level a Class already has, but this opcode is
 -- not the ladder, and a CR 603.2 event for a change that did not happen would
 -- fire "when this Class becomes level N" for a level it never became. The level
--- BEFORE is read through CR 716.2d's default, so a Class that has never been
+-- BEFORE is read through CR 717.2d's default, so a Class that has never been
 -- levelled crosses from 1.
 --
 -- The WRITE is unguarded, unlike Designate's: writing the designation is not
--- idempotent where the level was absent, and CR 716.2b makes having one
--- observable (a copy reads CR 716.2d's default instead). So only the event turns
+-- idempotent where the level was absent, and CR 717.2b makes having one
+-- observable (a copy reads CR 717.2d's default instead). So only the event turns
 -- on the transition.
 --
 -- That guard is a REGRESSION FENCE rather than a proven behaviour: no card in
@@ -1773,10 +1773,10 @@ setClassLevel legal (SetClassLevel.MkSetClassLevel level slot) =
           _ -> pure ()
     _ -> pure ()
 
--- CR 701.60a's and CR 722.3b's endings: undoes Designate's write for the one
+-- CR 701.60a's and CR 723.3b's endings: undoes Designate's write for the one
 -- designation named. Everything that reads a mark reads the set live -- CR
 -- 701.60c's menace and can't-block, and Parun.Engine.Prepare.copyStands, whose
--- CR 722.3c sweep then removes the prepare copy -- so nothing else has to be
+-- CR 723.3c sweep then removes the prepare copy -- so nothing else has to be
 -- undone. An illegal slot (CR 608.2b), a player recipient and a set that matched
 -- nothing all arrive as the empty list.
 undesignate :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Undesignate.Undesignate -> Game ()
@@ -1909,7 +1909,7 @@ exploit settle resolving source controller legal = do
 giveGift :: PlayerId -> Game ()
 giveGift controller = State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.GiveGift controller)))
 
--- CR 731.1: the GAME gains the designation; what that entails is
+-- CR 732.1: the GAME gains the designation; what that entails is
 -- Parun.Engine.Daytime's. Nobody is named and nothing is prompted.
 itBecomes :: Daytime.Daytime -> Game ()
 itBecomes designation = do
@@ -2001,7 +2001,7 @@ attachTargetToEach resolving source controller legal (AttachTarget.MkAttachTarge
 -- `legal` if it went illegal, leaving this a no-op.
 --
 -- The mover is read through objectRefObjects rather than legalOne so that a
--- GROUP binding names every member (CR 712.21c's two cards, say); each is
+-- GROUP binding names every member (CR 713.8c's two cards, say); each is
 -- attached to the one destination, which CR 301.5c permits since the limit it
 -- states is on the Equipment and not on the creature.
 attachBound :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> AttachBound.AttachBound -> Game ()
@@ -2060,9 +2060,9 @@ exileHaunting settle resolving legal (ExileHaunting.MkExileHaunting card slot) =
         -- minted (CR 400.7e), and CR 115.10a makes it no target.
         --
         -- EVERY card the slot holds, group first: a merged or melded creature
-        -- dies as several cards, and CR 730.3c / 712.21c take "the same
+        -- dies as several cards, and CR 731.3c / 713.8c take "the same
         -- actions ... upon each of them", so each is exiled haunting the one
-        -- target (CR 702.55b's "cards"). Parun.MutateSpec's "CR 730.3c/702.55b
+        -- target (CR 702.55b's "cards"). Parun.MutateSpec's "CR 731.3c/702.55b
         -- a mutated creature with haunt exiles both cards haunting its target"
         -- proves it.
         cards <- Common.slotBoundObjects resolving Map.empty card

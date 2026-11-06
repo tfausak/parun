@@ -34,7 +34,7 @@ import qualified Parun.Types.Voted as Voted
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChange as ZoneChange
 
--- | Whether a player may see an object's face now. CR 723.4: for an object in
+-- | Whether a player may see an object's face now. CR 724.4: for an object in
 -- the game, a player also sees what each player they control sees; a card
 -- outside the game (CR 400.11) is seen by its owner alone, never through
 -- control.
@@ -59,7 +59,7 @@ revealedNow oid gs =
    in visibleIf (any (any live . Object.revealed) (Game.lookupObject oid gs))
 
 -- | Whether a player saw what a logged event showed: everyone sees a reveal
--- (CR 701.20a), only its audience a look (CR 701.20e, 723.4) or a ballot (CR
+-- (CR 701.20a), only its audience a look (CR 701.20e, 724.4) or a ballot (CR
 -- 701.38a), and everyone a secret vote's ballots once revealed. An event in
 -- the open (CR 400.2) is seen by everyone: a draw as the act alone (CR 121.1),
 -- and a move only when everyone saw the card leave (CR 603.10a) or arrive.
@@ -143,9 +143,9 @@ witnessed pid logged = case LoggedEvent.event logged of
 seenByEveryone :: ObjectId -> GameState.GameState -> Bool
 seenByEveryone oid gs = all (\seat -> sees seat oid gs == Visibility.Visible) (Game.stillPlaying gs)
 
--- | CR 723.5: the players whose decisions this player makes, by the reading
+-- | CR 724.5: the players whose decisions this player makes, by the reading
 -- Parun.Engine.Decide.deciderFor makes, so a dormant row waiting for its spell
--- (CR 723.2) or one overwritten by a later control (CR 723.1a) lends no sight.
+-- (CR 724.2) or one overwritten by a later control (CR 724.1a) lends no sight.
 controlledBy :: PlayerId -> GameState.GameState -> [PlayerId]
 controlledBy pid gs =
   [ seat
@@ -154,7 +154,7 @@ controlledBy pid gs =
     Decider.unwrap (Decide.deciderFor seat gs) == pid
   ]
 
--- One player's own sight, before CR 723.4.
+-- One player's own sight, before CR 724.4.
 base :: PlayerId -> ObjectId -> GameState.GameState -> Visibility.Visibility
 base pid oid gs = case Game.lookupObject oid gs of
   Nothing -> Visibility.Obscured
@@ -167,7 +167,7 @@ base pid oid gs = case Game.lookupObject oid gs of
         else visibleIf (reviewsHandOf pid (Object.owner obj) gs) <> shownTo pid oid gs -- CR 400.2
     Just Zone.Exile -> visibleIf (Exile.mayLookAt pid oid gs) -- CR 406.3
     -- A supplementary deck's cards are face down (CR 314.6, 701.31b, 701.51b,
-    -- 729.5a; the Unstable FAQ's Contraption back), owner included (CR 708.5).
+    -- 730.5a; the Unstable FAQ's Contraption back), owner included (CR 708.5).
     Just Zone.Command | Set.member oid (Game.supplementaryDeckIds gs) -> Visibility.Obscured
     Just zone -> case Object.facing obj of
       Facing.FaceUp -> Visibility.Visible

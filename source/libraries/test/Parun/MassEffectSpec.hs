@@ -846,7 +846,7 @@ communeWithTheGodsSpec s registry =
 -- Fall of the Thran {5}{W} Enchantment - Saga, "I -- Destroy all lands. II, III
 -- -- Each player returns two land cards from their graveyard to the
 -- battlefield." (name, cost, type line and Oracle text checked against
--- api.scryfall.com, 2026-09-14). The whole card is transcribed; CR 714.2c's "II,
+-- api.scryfall.com, 2026-09-14). The whole card is transcribed; CR 715.2c's "II,
 -- III --" shorthand is written as the two abilities that rule says it means, and
 -- "to the battlefield" with no controller named goes to the player the effect
 -- instructed (CR 110.2a) -- here each player over their own graveyard, which is
@@ -859,7 +859,7 @@ communeWithTheGodsSpec s registry =
 --
 -- Driven through the turn-based action rather than a cast, which is what
 -- advanceSpec in Parun.SagaSpec does: the Saga enters with one lore counter
--- already on it, CR 714.3c adds the second, and the chapter II trigger that
+-- already on it, CR 715.3c adds the second, and the chapter II trigger that
 -- crossing fires is what resolves. The asks are pinned by INDEX through a
 -- State-threaded answerer, since a pure one cannot tell a seat's second ask from
 -- its first.
@@ -867,7 +867,7 @@ fallOfTheThranSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m
 fallOfTheThranSpec s registry =
   let -- Fall of the Thran on alice's battlefield with chapter I already behind
       -- it, and `buried` into the named graveyards in the order given. The
-      -- precombat main phase is alice's, so CR 714.3c's action is hers to take.
+      -- precombat main phase is alice's, so CR 715.3c's action is hers to take.
       board thran buried =
         let (oid, base) = S.addPermanent thran S.alice S.threePlayerGame
             withGraves = List.foldl' (\g (printing, pid) -> snd (S.addGraveyardCard printing pid g)) base buried
@@ -890,7 +890,7 @@ fallOfTheThranSpec s registry =
           State.put (drop 1 indices, sizes <> [length (NonEmpty.toList offered)])
           pure (nth (Maybe.fromMaybe 0 (Maybe.listToMaybe indices)) offered)
         _ -> pure (S.identityAnswer p)
-      -- CR 714.3c's counter, then the priority round that resolves the chapter
+      -- CR 715.3c's counter, then the priority round that resolves the chapter
       -- ability it fired.
       advance :: [Int] -> (ObjectId.ObjectId, GameState.GameState) -> (GameState.GameState, [Int])
       advance script (_, gs) =

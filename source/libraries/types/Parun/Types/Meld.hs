@@ -33,9 +33,9 @@ data Meld card = MkMeld
     -- to resolve the name against. Every card an effect brings into being in parun
     -- is either already an object in the game or is carried inline.
     --
-    -- CR 712.4b leaves a meld card's own half of the oversized face meaningless
+    -- CR 713.1b leaves a meld card's own half of the oversized face meaningless
     -- on its own, so neither component prints this face and nothing is lost by it
-    -- never being a card in a deck. CR 712.8g is what then reads it: the melded
+    -- never being a card in a deck. CR 713.5c is what then reads it: the melded
     -- permanent "has only the characteristics of the combined back face", which
     -- is 'Parun.Engine.Game.cardOfSource'\'s answer for the
     -- 'Parun.Types.Source.OfMeld' this opcode builds.

@@ -263,7 +263,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.StartingLifeTotal (PlayerRef.Relative PlayerRelation.You))
       " {\"type\":\"StartingLifeTotal\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
-  -- CR 725.1, with a PlayerRef and nothing else on the wire: the arm answers a
+  -- CR 726.1, with a PlayerRef and nothing else on the wire: the arm answers a
   -- 0/1 rather than carrying a number. Dawnglade Regent's "you're the monarch"
   -- is the Relative arm; the InSlot arm beside it is the one a recursive decoder
   -- could lose a payload through, so both are round-tripped, as LifeTotal's are.
@@ -355,8 +355,8 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.codec
       Quantity.StoredResultsOfSameValue
       " {\"type\":\"StoredResultsOfSameValue\"} "
-  -- CR 716.2b: the object's LEVEL, also with nothing on the wire, and also not a
-  -- member of Parun.Types.Designation -- rule 716.2b's designation is a number.
+  -- CR 717.2b: the object's LEVEL, also with nothing on the wire, and also not a
+  -- member of Parun.Types.Designation -- rule 717.2b's designation is a number.
   Spec.it s "ClassLevel" $
     Common.assertCodec
       s
@@ -516,7 +516,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.WasBlockedThisTurn
       " {\"type\":\"WasBlockedThisTurn\"} "
   -- CR 122.1, with BOTH halves on the wire: a PlayerRef saying whose and a
-  -- PlayerCounterKind saying which. Rule 728.1's reading is the Relative one.
+  -- PlayerCounterKind saying which. Rule 729.1's reading is the Relative one.
   Spec.it s "PlayerCounters, relative and from a slot" $ do
     Common.assertCodec
       s

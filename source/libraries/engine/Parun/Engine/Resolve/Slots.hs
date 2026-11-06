@@ -750,7 +750,7 @@ effectObjectRefs effect = case effect of
   Effect.MoveMana {} -> []
   Effect.Search {} -> []
   Effect.ExileAllGraveyards -> []
-  -- CR 727.5's exemption, absent when nothing is exempt.
+  -- CR 728.5's exemption, absent when nothing is exempt.
   Effect.RestartGame exempt -> Maybe.maybeToList exempt
   Effect.ControlPlayerNextTurn {} -> []
   Effect.ControlPlayerThisResolution {} -> []
@@ -1571,9 +1571,9 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.RequireAttack (RequireAttack.MkRequireAttack duration attacker _) ->
     joinTwo (durationSlots duration) (matchingSlots attacker)
   Effect.CreateEmblem {} -> Map.empty
-  -- CR 725.1's crown names a target slot only in the InSlot arm.
+  -- CR 726.1's crown names a target slot only in the InSlot arm.
   Effect.BecomeMonarch target -> monarchTargetSlots target
-  -- CR 726.1 names no target slot at all: neither InitiativeTarget arm reads one.
+  -- CR 727.1 names no target slot at all: neither InitiativeTarget arm reads one.
   Effect.TakeTheInitiative _ -> Map.empty
   -- A READ: the slot names the permanent gaining the designation. CR 701.37c's
   -- X is an AMOUNT the same resolution may have bound, Effect.Create's count
@@ -1603,7 +1603,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- The movers are effectObjectRefs' half; the destination FILTER is a read like
   -- Search's (Glamer Spinners' "with the same controller" as its target).
   Effect.AttachAll (AttachAll.MkAttachAll _ destination) -> filterSlotsOf destination
-  -- CR 729.1/729.1b: the slot is a DEFINITION (the subgame's winner), not a read.
+  -- CR 730.1/730.1b: the slot is a DEFINITION (the subgame's winner), not a read.
   Effect.PlaySubgame _ -> Map.empty
   -- A DEFINITION too: chosen as this effect is applied (CR 608.2d), never read.
   Effect.ChoosePlayer _ -> Map.empty
@@ -2161,7 +2161,7 @@ riderSlotsOf rider =
 -- Four ways this and slotsOf come apart, one per False or guard below:
 -- ArmDelayedTrigger captures the whole environment (CR 603.7c); a Duration
 -- slotsOf's arm drops can still name a slot (CR 611.2b); a PlayerRef nested in a
--- Quantity is Quantity.slotsAreExhaustive's half; CR 725.2's ControllerOfSource
+-- Quantity is Quantity.slotsAreExhaustive's half; CR 726.2's ControllerOfSource
 -- reads the trigger-source slot, which is not a target.
 --
 -- The Quantities nested in this effect's ObjectRefs are taken from
@@ -2365,11 +2365,11 @@ ownSlotsAreExhaustive effect = case effect of
   -- CR 114.2's emblem is minted with EMPTY bindings, so its card is literal text.
   Effect.CreateEmblem _ -> True
   Effect.BecomeMonarch MonarchTarget.TheController -> True
-  -- The one arm answering NO: CR 725.2 reads Binding.triggerSource.
+  -- The one arm answering NO: CR 726.2 reads Binding.triggerSource.
   Effect.BecomeMonarch MonarchTarget.ControllerOfSource -> False
   Effect.BecomeMonarch (MonarchTarget.InSlot _) -> True
   Effect.TakeTheInitiative InitiativeTarget.TheController -> True
-  -- CR 726.2 reads Binding.triggerSource, Effect.BecomeMonarch ControllerOfSource's answer.
+  -- CR 727.2 reads Binding.triggerSource, Effect.BecomeMonarch ControllerOfSource's answer.
   Effect.TakeTheInitiative InitiativeTarget.ControllerOfSource -> False
   Effect.Designate (Designate.MkDesignate _ _ value) -> all Quantity.slotsAreExhaustive value
   Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> True
@@ -2388,7 +2388,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.AttachTargetToEach (AttachTarget.MkAttachTarget _ _) -> True
   Effect.AttachBound (AttachBound.MkAttachBound _ _) -> True
   Effect.AttachAll (AttachAll.MkAttachAll _ _) -> True
-  -- CR 729.1b: a DEFINITION, and the subgame reads no binding of the outer game.
+  -- CR 730.1b: a DEFINITION, and the subgame reads no binding of the outer game.
   Effect.PlaySubgame _ -> True
   -- PlaySubgame's answer: a definition reads no slot.
   Effect.ChoosePlayer _ -> True
@@ -2718,7 +2718,7 @@ boundSlots effect = case effect of
   -- Binds nothing: no new object comes into existence.
   Effect.BecomeCopy {} -> Set.empty
   Effect.CopyStackObject {} -> Set.empty
-  -- CR 729.1b: the subgame's winner, reported rather than chosen.
+  -- CR 730.1b: the subgame's winner, reported rather than chosen.
   Effect.PlaySubgame slot -> Set.singleton slot
   -- CR 608.2d: the player this effect chose.
   Effect.ChoosePlayer choice -> Set.singleton (ChoosePlayer.slot choice)
@@ -2745,7 +2745,7 @@ boundSlots effect = case effect of
   Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect _ _ mSacrificed) -> foldMap Set.singleton mSacrificed
   -- The PERMANENTS an edict sacrificed, Destroy's `permanents`.
   Effect.PlayerSacrifices playerSacrifices -> foldMap Set.singleton (PlayerSacrifices.permanents playerSacrifices)
-  -- How many milled cards matched the tally's filter (CR 728.1), and WHICH cards
+  -- How many milled cards matched the tally's filter (CR 729.1), and WHICH cards
   -- the mill put in the graveyard, for a later clause that names them (CR
   -- 701.17c). Two slots and not one: a card may write either without the other.
   Effect.Mill (Mill.MkMill _ _ mTally mSlot) -> foldMap (Set.singleton . MillTally.slot) mTally <> foldMap Set.singleton mSlot

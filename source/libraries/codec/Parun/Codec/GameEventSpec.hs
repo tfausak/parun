@@ -125,7 +125,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
           <> ",\"otherArrivals\":[]}}"
       )
-  -- CR 712.21's second card, whose destination differs from the departure's
+  -- CR 713.8's second card, whose destination differs from the departure's
   -- origin the same way a Moved event's does -- and which carries no snapshot.
   Spec.it s "CardArrived" $
     Common.assertCodec
@@ -325,7 +325,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       (GameEvent.LifeGained (LifeChange.MkLifeChange (PlayerId.MkPlayerId 1) 2 True))
       " {\"type\":\"LifeGained\",\"value\":{\"player\":1,\"amount\":2,\"first\":true}} "
   -- CR 122.6. The two counts are BEFORE then AFTER, in that order, which CR
-  -- 714.2b's threshold crossing needs to be able to tell apart.
+  -- 715.2b's threshold crossing needs to be able to tell apart.
   Spec.it s "CountersPut" $
     Common.assertCodec
       s
@@ -380,7 +380,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       (Codec.encode GameEvent.codec (GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.Connive (ObjectId.MkObjectId 6))) /= Codec.encode GameEvent.codec (GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.Explore (ObjectId.MkObjectId 6))))
       "a connive and an explore of the same object encode differently"
   -- CR 701.27a, the different game action CR 701.27b holds it apart from. More
-  -- than one field: CR 701.27e reads what the permanent turned INTO, and CR
+  -- than one field: CR 701.27f reads what the permanent turned INTO, and CR
   -- 603.10 adds the two axes CR 109.3 keeps out of that. The two CR 603.10 axes
   -- are at their defaults here and covered by Parun.Codec.TransformedSpec, which
   -- is where the payload's own round trip lives.
@@ -529,7 +529,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       GameEvent.codec
       (GameEvent.BecameTarget (BecameTarget.MkBecameTarget (Recipient.ToPlayer (PlayerId.MkPlayerId 3)) (ObjectId.MkObjectId 11) StackObjectKind.Spell (PlayerId.MkPlayerId 2)))
       " {\"type\":\"BecameTarget\",\"value\":{\"targeted\":{\"type\":\"ToPlayer\",\"value\":3},\"source\":11,\"kind\":\"Spell\",\"controller\":2}} "
-  -- CR 800.4a / 729.4a. The id and the zone it left: the object left the game,
+  -- CR 800.4a / 730.4a. The id and the zone it left: the object left the game,
   -- so there is no destination zone to carry and no new incarnation to name.
   Spec.it s "LeftTheGame" $
     Common.assertCodec
@@ -629,7 +629,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       GameEvent.codec
       (GameEvent.PlanarDieRolled (PlanarDieRolled.MkPlanarDieRolled (PlayerId.MkPlayerId 2) PlanarDieFace.Chaos))
       " {\"type\":\"PlanarDieRolled\",\"value\":{\"roller\":2,\"face\":\"Chaos\"}} "
-  -- CR 716.2a. The object then the level BEFORE then the level AFTER, and the two
+  -- CR 717.2a. The object then the level BEFORE then the level AFTER, and the two
   -- levels deliberately differ by more than one: a level bar can only step N-1 to
   -- N, so a fixture crossing one threshold would round-trip a codec that dropped
   -- `before` entirely.

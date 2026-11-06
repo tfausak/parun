@@ -263,7 +263,7 @@ viewOfCardLapsed lapsed face =
           -- printed FACE with no object behind it -- the line above's reason,
           -- one rule over.
           Filter.exiledFaceDown = False,
-          -- CR 701.27g asks about a permanent on the battlefield; this is a
+          -- CR 701.27h asks about a permanent on the battlefield; this is a
           -- printed FACE with no object behind it, so the rule's own answer is
           -- False rather than an unknown.
           Filter.transformed = False,
@@ -283,7 +283,7 @@ viewOfCardLapsed lapsed face =
           -- sentence.
           Filter.designationValues = Map.empty,
           Filter.storedResults = Map.empty,
-          -- CR 716.2b gives a level to a PERMANENT, and this builder describes a
+          -- CR 717.2b gives a level to a PERMANENT, and this builder describes a
           -- printed face.
           Filter.classLevel = Nothing,
           Filter.paidCosts = Map.empty,
@@ -295,10 +295,10 @@ viewOfCardLapsed lapsed face =
           -- CR 702.143c asks about a card in exile or a spell, and this builder
           -- describes a printed face.
           Filter.foretold = False,
-          -- CR 718.3: a prototyped SPELL is cast, and this builder describes a
+          -- CR 719.3: a prototyped SPELL is cast, and this builder describes a
           -- printed face.
           Filter.prototyped = False,
-          -- CR 722.3c casts a SPELL, and this builder describes a printed face.
+          -- CR 723.3c casts a SPELL, and this builder describes a printed face.
           Filter.preparedSpell = False,
           -- CR 601.2h pays the cost of a SPELL, and this builder describes a
           -- printed face.
@@ -702,7 +702,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- its filter names the atom.
       Filter.canAttachToSubject = False,
       Filter.hasEntryHost = False,
-      -- CR 111.6 / 730.2d: read live off Object.source, since a merge can change
+      -- CR 111.6 / 731.2d: read live off Object.source, since a merge can change
       -- the answer. False for an id
       -- naming nothing, which CR 608.2b wants of a gone TARGET;
       -- Count.lastKnownView gives CR 608.2h's answer over it for the
@@ -763,7 +763,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- mints a fresh incarnation on the way out, so the object it is True of is
       -- in exile by construction.
       Filter.exiledFaceDown = maybe False Object.exiledFaceDown (Game.lookupObject oid gs),
-      -- CR 701.27g's three conjuncts, and the only site that fills the field. The
+      -- CR 701.27h's three conjuncts, and the only site that fills the field. The
       -- face is read CURRENT -- Game.isFrontFaceUp reads Object.face, never the
       -- Object.turnedOverAt beside it -- which is the rule's first exclusion, a
       -- permanent front face up being untransformed however it got there. The
@@ -775,24 +775,24 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- That conjunct is LOAD-BEARING, and the first exclusion does not stand in
       -- for it. A melded permanent is stamped Object.face = Nothing
       -- (Parun.Engine.Event.meld) and Game.turnFaceOver refuses to turn it over (CR
-      -- 712.4c), but neither is the only writer of that field: CR 616.1's entry
+      -- 713.1c), but neither is the only writer of that field: CR 616.1's entry
       -- loop runs over a melded permanent like any other entry, and
       -- Parun.Engine.Event's EntryRewrite.EntersTransformed arm writes Object.face
       -- outright -- so a combined face printing daybound enters back face up at
-      -- night (CR 702.145b, ranked by CR 616.1d; not CR 712.13a, which is the
+      -- night (CR 702.145b, ranked by CR 616.1d; not CR 701.27j, which is the
       -- stack road alone) and this conjunct is the only thing answering.
-      -- Parun.MeldSpec's "CR 701.27g a melded permanent that entered with its back
+      -- Parun.MeldSpec's "CR 701.27h a melded permanent that entered with its back
       -- face up is still not one" is that board, and dropping the conjunct
       -- reddens it. That board melds into a daybound double-faced card, which no
       -- printed meld pair combines into -- the combined face is card data the
-      -- opcode carries, the same stand-in Game.turnFaceOver's CR 712.4c arm is
+      -- opcode carries, the same stand-in Game.turnFaceOver's CR 713.1c arm is
       -- proved by -- so the rule is read where the printings cannot reach it.
       --
       -- The battlefield conjunct is a REGRESSION FENCE rather than a proved
       -- behaviour: every Count that reaches the atom is already scoped to a
-      -- zone, so dropping it leaves the suite green. It is CR 701.27g's own
+      -- zone, so dropping it leaves the suite green. It is CR 701.27h's own
       -- wording, and the object it excludes -- a double-faced spell on the stack
-      -- with its back face up (CR 712.11a) -- is reachable, so the conjunct
+      -- with its back face up (CR 712.8a) -- is reachable, so the conjunct
       -- stays.
       Filter.transformed =
         Set.member oid (GameState.battlefield gs)
@@ -814,7 +814,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- CR 607.5: the results stored for the abilities layer 1a leaves it, so a
       -- copy's reading ability sees none its printed pair stored.
       Filter.storedResults = foldMap (Game.storedResultsUnder (Game.acquisitionOf oid gs)) (Game.lookupObject oid gs),
-      -- CR 716.2b: a designation too, so `designations`' posture again. Nothing for an
+      -- CR 717.2b: a designation too, so `designations`' posture again. Nothing for an
       -- id naming no object reads as level 1 at the read. LastKnown files no level, so
       -- a CR 608.2h asker would get 1 and not the level it left with; no printed card
       -- reads a departed permanent's level.
@@ -831,11 +831,11 @@ viewOfCharacteristics peers oid pc controller counters gs =
       Filter.castUsing = Object.castUsing =<< Game.lookupObject oid gs,
       -- CR 702.143c: read live off the object, `castUsing`'s posture.
       Filter.foretold = any (Maybe.isJust . Object.foretold) (Game.lookupObject oid gs),
-      -- CR 718.3c / 718.3d: a copy's answer rides its copiable values (CR
-      -- 718.2a); the object's own flag answers for an original whose copiable
+      -- CR 719.3c / 719.3d: a copy's answer rides its copiable values (CR
+      -- 719.2a); the object's own flag answers for an original whose copiable
       -- values are something else's, face down (CR 708.2) or a copy (CR 707.2).
       Filter.prototyped = PC.prototyped pc || any Object.prototyped (Game.lookupObject oid gs),
-      -- CR 722.3c / 722.3d: read live off the object, `castUsing`'s posture.
+      -- CR 723.3c / 723.3d: read live off the object, `castUsing`'s posture.
       Filter.preparedSpell = any Object.castPrepared (Game.lookupObject oid gs),
       -- CR 400.7d / CR 107.4h: read live off the object like `castUsing`, and
       -- keyed by tag with CR 106.1a's colours beside it, which is the whole of what
@@ -914,7 +914,7 @@ countersOf oid gs = maybe Map.empty Object.counters (Game.lookupObject oid gs)
 -- counters, pumps, control and ability grants are never part of a copiable value.
 -- Not a recursion: a copy of a copy stored resolved values when it was stamped.
 --
--- CR 730.2a's merge arrives on the SAME arm as a copy, and deliberately: the two
+-- CR 731.2a's merge arrives on the SAME arm as a copy, and deliberately: the two
 -- share layer 1a (CR 613.2a), Parun.Engine.Event.merge stamps the record
 -- withMergedAbilities below builds, and whichever of them stamped LAST is what
 -- CR 613.7's timestamp order leaves. So no reader has to know that a merged
@@ -1116,7 +1116,7 @@ applyCopyException this own snapshot exception = case exception of
   -- about which ability it is, so the closed half stays closed: a triggered
   -- carrier (Unstable Shapeshifter) joins triggeredAbilities and an activated one
   -- (Dimir Doppelganger) activatedAbilities. Every other arm appends nothing --
-  -- a spell, an emblem and CR 725.2's sourceless trigger have no ability to point
+  -- a spell, an emblem and CR 726.2's sourceless trigger have no ability to point
   -- at, and neither does the CR 707.5 entry road's Nothing.
   --
   -- The ability written here still CONTAINS this exception, which is what makes
@@ -1313,7 +1313,7 @@ applyCopyException this own snapshot exception = case exception of
 -- the same value from the other side: it is what a permanent's copiable values
 -- revert to when it turns face up.
 --
--- ONE caller and one rule. CR 730.2a makes a merge a copiable effect that CR
+-- ONE caller and one rule. CR 731.2a makes a merge a copiable effect that CR
 -- 613.2a puts in layer 1a, so what Parun.Engine.Event.merge folds is what layer
 -- 1a had left each side -- never what layer 1b afterwards did to the permanent.
 -- Read through `copiableCharacteristics` instead and a merge onto a face-down
@@ -1336,7 +1336,7 @@ copiableCharacteristicsFaceUp oid gs =
     oid
     gs {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.FaceUp}) oid (GameState.objects gs)}
 
--- CR 730.2h: `copiableCharacteristicsFaceUp` above asked of a side that is
+-- CR 731.2h: `copiableCharacteristicsFaceUp` above asked of a side that is
 -- FLIPPED -- "that component's alternative characteristics are used instead of
 -- its normal characteristics if the merged permanent is flipped". Equal to the
 -- face-up read for a side that is not a flip card, Game.resolveFaceFor's flipped
@@ -1407,7 +1407,7 @@ copiableSnapshotOf oid gs
 -- frozen snapshot, which is CR 709.4's combined view of the copied card.
 --
 -- The second disjunct is a spell cast as one of its stamp's halves, or as its
--- Adventure or Omen half (CR 709.3b, 715.3b, 720.3b): it has only that half's
+-- Adventure or Omen half (CR 709.3b, 716.3b, 721.3b): it has only that half's
 -- characteristics, which Game.resolveFaceFor hands the seed.
 derivesFromCopiedHalves :: ObjectId -> GameState -> Bool
 derivesFromCopiedHalves oid gs = case stampedSnapshotOf oid gs of
@@ -1431,13 +1431,13 @@ derivesFromCopiedHalves oid gs = case stampedSnapshotOf oid gs of
 -- reason copiableSnapshotOf above gives: a per-reader fork is what that accessor
 -- exists to prevent.
 --
--- CR 730.2h is the one fork: a FLIPPED merged permanent reads the flipped
+-- CR 731.2h is the one fork: a FLIPPED merged permanent reads the flipped
 -- reading its merge nested in the stamp (PC.flipped), so each flip component
 -- contributes its alternative characteristics. CR 110.5a keeps status out of the
 -- characteristics, which is why this is a choice between two stamped readings
 -- rather than a CR 613 layer -- Parun.Types.Object.flipped says the same of the
 -- unmerged road, where Game.resolveFaceFor makes the substitution at the face
--- seam a merged permanent's stamp goes around. CR 730.2i needs no fork here:
+-- seam a merged permanent's stamp goes around. CR 731.2i needs no fork here:
 -- Game.turnFaceOver swaps the turned reading into Binding.copyOf itself.
 --
 -- CR 707.3 is the same fork for a COPY of a flip card: a flipped permanent reads
@@ -1455,7 +1455,7 @@ stampedSnapshotOf oid gs = do
 -- CR 707.2 / 608.2: the face a spell on the stack announces against and
 -- resolves, its spell abilities and type line read off its COPIABLE values
 -- rather than the printed card -- so a spell that became a copy of another
--- resolves the copied text, and CR 715.3d's and 720.3d's riders ask whether the
+-- resolves the copied text, and CR 716.3d's and 721.3d's riders ask whether the
 -- COPY is an Adventure or an Omen (Parun.Engine.Resolve.finishSpell). Equal to
 -- Game.faceOf for an object copying nothing, whose copiable values are seeded
 -- from that same face. Parun.CopySpec's "CR 707.2 a spell that becomes a copy of
@@ -1670,11 +1670,11 @@ copiableSpecialActionsOf carrier gs =
 -- its fourteen siblings), through Parun.Engine.Projection.ruleAbilitiesOf, which
 -- is what makes the two rules it settles settle once:
 -- CR 707.2a, so a permanent that became a copy of Silent Arbiter limits attackers
--- and its own printed face is never consulted, and CR 702.140e with CR 730.2a, so
+-- and its own printed face is never consulted, and CR 702.140e with CR 731.2a, so
 -- a merged permanent answers with every component's -- Parun.Engine.Event.merge
 -- having folded them into the snapshot at the merge's timestamp, which is why the
 -- components' printed faces are not walked here. A component that was itself a
--- copy therefore contributes what it was a copy OF, which is what rule 730.2a's
+-- copy therefore contributes what it was a copy OF, which is what rule 731.2a's
 -- "copiable" asks for and what a per-component face walk would have got wrong.
 --
 -- Parun.MutateSpec's "CR 702.140e a Silent Arbiter under a Cubwarden still holds
@@ -1799,10 +1799,10 @@ noCharacteristics =
       PC.exceptions = [],
       -- CR 702.140e: no merge, so no graft either.
       PC.mergedDonors = [],
-      -- CR 722.2b, for the same reason one line up.
+      -- CR 723.2b, for the same reason one line up.
       PC.prepare = Nothing,
       PC.alternativeSpell = Nothing,
-      -- CR 718.2a: no card, so no inset frame either.
+      -- CR 719.2a: no card, so no inset frame either.
       PC.prototyped = False,
       -- CR 113.3a: no card, so no spell ability either.
       PC.spell = Face.defaultSpell,
@@ -1848,10 +1848,10 @@ baseCharacteristics oid gs = case Game.faceOf oid gs of
   -- characteristics", and a "discard a card" it still pays.
   Just _ | Game.keptFaceDown oid gs -> noCharacteristics
   Just face ->
-    -- CR 718.3b's swap sits OUTSIDE the record rather than in four of its fields,
-    -- so that CR 718.5's "remain the same" is visible as the default: everything
+    -- CR 719.3b's swap sits OUTSIDE the record rather than in four of its fields,
+    -- so that CR 719.5's "remain the same" is visible as the default: everything
     -- the seed builds is the printed value, and withPrototype below rewrites exactly
-    -- the four characteristics rule 718.3b names.
+    -- the four characteristics rule 719.3b names.
     withPrototype oid gs face $
       -- The seed predates every layer, so it can describe no object: every view is
       -- Nothing. That silences the printed box's board-reading shapes only where
@@ -1879,12 +1879,12 @@ baseCharacteristics oid gs = case Game.faceOf oid gs of
               PC.colors = printedColorsOf face,
               -- CR 202.1: the printed cost of the face the object is showing, so CR
               -- 708.2a's face-down substitution leaves a face-down object with none.
-              -- `face` rather than Game.manaCostFacesOf below: CR 712.8e lends a
+              -- `face` rather than Game.manaCostFacesOf below: CR 712.6d lends a
               -- transformed permanent its front face's mana VALUE and not its cost,
               -- and CR 202.3c's melded sum is a number no single cost states.
               PC.manaCost = Face.manaCost face,
               -- CR 202.3, derived here so the rest of the fold reads a number.
-              -- Game.manaCostFacesOf rather than `face`: CR 712.8e reads a transformed
+              -- Game.manaCostFacesOf rather than `face`: CR 712.6d reads a transformed
               -- permanent's mana value off its FRONT face's cost, and CR 708.2a's
               -- face-down face has no mana cost (so CR 202.3a's 0). SUMMED because CR
               -- 202.3c gives a melded permanent "the combined mana cost of the front
@@ -1991,14 +1991,14 @@ baseCharacteristics oid gs = case Game.faceOf oid gs of
               PC.exceptions = [],
               -- The same starting point, for a merge's grafts.
               PC.mergedDonors = [],
-              -- CR 722.2b: the prepare spell this object has, which `face` cannot
-              -- carry either -- CR 722.4 leaves the normal half alone in every
+              -- CR 723.2b: the prepare spell this object has, which `face` cannot
+              -- carry either -- CR 723.4 leaves the normal half alone in every
               -- zone, so the inset frame is nowhere in it. Game.prepareSpellOf
               -- decides, and it reads the copy snapshot first for halves' reason.
               PC.prepare = Game.prepareSpellOf oid gs,
-              -- CR 715.2b / 720.2b: the Adventure or Omen half, prepare's reason.
+              -- CR 716.2b / 721.2b: the Adventure or Omen half, prepare's reason.
               PC.alternativeSpell = Game.alternativeSpellOf oid gs,
-              -- CR 718.4: the printed values, which withPrototype overrides.
+              -- CR 719.4: the printed values, which withPrototype overrides.
               PC.prototyped = False,
               -- CR 707.2: rules text, so copiable, for enchant's reason.
               PC.spell = Face.spell face,
@@ -2008,38 +2008,38 @@ baseCharacteristics oid gs = case Game.faceOf oid gs of
               PC.flipped = Nothing
             }
 
--- CR 718.3b: "both a prototyped spell and the permanent it becomes have only its
+-- CR 719.3b: "both a prototyped spell and the permanent it becomes have only its
 -- alternative set of power, toughness, and mana cost characteristics. If that
 -- mana cost includes one or more colored mana symbols, the spell and the
 -- permanent it becomes are also that color or colors." The four characteristics
--- rule 718.3b names, swapped into the seed and nothing else swapped, which is CR
--- 718.5.
+-- rule 719.3b names, swapped into the seed and nothing else swapped, which is CR
+-- 719.5.
 --
--- IN THE SEED, which is what makes CR 718.2a fall out with no work of its own:
+-- IN THE SEED, which is what makes CR 719.2a fall out with no work of its own:
 -- "the existence and values of these alternative characteristics are part of the
 -- object's copiable values", and a copy freezes exactly this record
--- (Parun.Engine.Event.copiedSnapshot over copiableCharacteristics). CR 718.3d's
+-- (Parun.Engine.Event.copiedSnapshot over copiableCharacteristics). CR 719.3d's
 -- copy of a prototyped PERMANENT -- a Clone, whose own Object.prototyped is
--- False -- reads the frozen values for that reason. CR 718.3c's copy of the
+-- False -- reads the frozen values for that reason. CR 719.3c's copy of the
 -- SPELL needs neither: Parun.Engine.Resolve.Effect builds it from the original
 -- object, Object.prototyped included (CR 707.10's copied decisions), which is
--- how data/scenarios/prototype's "CR 718.2a / 718.3c a copy of the prototyped
+-- how data/scenarios/prototype's "CR 719.2a / 719.3c a copy of the prototyped
 -- spell is a white 2/2 too" passes.
 --
 -- PC.prototyped is set here too, so a record taken of this object's values
 -- (an event snapshot, Count.viewOfSnapshot) says so. A copy's answer, the last
--- sentence of CR 718.3d, comes from Parun.Engine.Event.copiedReading, which also
+-- sentence of CR 719.3d, comes from Parun.Engine.Event.copiedReading, which also
 -- sets it from the copied object's own record. That is why a Clone already
 -- answers without this line, and why this line is a regression fence for
 -- snapshots alone.
 --
--- CR 718.4 is not re-asked here. Object.prototyped is stamped only as the card
+-- CR 719.4 is not re-asked here. Object.prototyped is stamped only as the card
 -- is cast (Parun.Engine.Cast.stampPrototyped) and survives only the
 -- stack-to-battlefield move (Parun.Engine.Event.changeZoneAttaching), so a
 -- prototype card in every other zone answers False and keeps its printed
--- characteristics, which is rule 718.4's sentence exactly.
+-- characteristics, which is rule 719.4's sentence exactly.
 --
--- The FIRST inset frame, and CR 718.1 is why one is enough: it gives a prototype
+-- The FIRST inset frame, and CR 719.1 is why one is enough: it gives a prototype
 -- card "a second set of power, toughness, and mana cost characteristics",
 -- singular, so no printing offers two for Object.prototyped's Bool to have to
 -- choose between.
@@ -2053,16 +2053,16 @@ withPrototype oid gs face pc = case (maybe False Object.prototyped (Game.lookupO
         PC.manaValue = Just (Quantity.manaCostValue (Prototype.cost frame)),
         PC.power = Just (Prototype.power frame),
         PC.toughness = Just (Prototype.toughness frame),
-        -- CR 202.2 with rule 718.3b's second sentence. printedColorsOf's own
+        -- CR 202.2 with rule 719.3b's second sentence. printedColorsOf's own
         -- shape, with the inset cost in place of the printed one: a colour
-        -- indicator is a separate characteristic (CR 204.2) that rule 718.3b does
+        -- indicator is a separate characteristic (CR 204.2) that rule 719.3b does
         -- not name, so it survives.
         PC.colors = Set.union (Face.colorIndicator face) (manaCostColors (Just (Prototype.cost frame))),
         PC.prototyped = True
       }
   _ -> pc
 
--- CR 702.140e / 730.2a: the copiable values a MERGE leaves -- rule 730.2a's
+-- CR 702.140e / 731.2a: the copiable values a MERGE leaves -- rule 731.2a's
 -- "only the characteristics of its topmost component" as the base, plus rule
 -- 702.140e's "all abilities of each card and token that represents it" folded in
 -- from the other side. `base` is the topmost side's record and `donor` the
@@ -2078,20 +2078,20 @@ withPrototype oid gs face pc = case (maybe False Object.prototyped (Game.lookupO
 --
 -- CR 613.2a is why the result is STAMPED at the merge rather than derived on
 -- every projection: layer 1a holds copy effects and merges together, CR 613.7
--- orders them by timestamp, and CR 730.2a fixes this one's timestamp at "the
+-- orders them by timestamp, and CR 731.2a fixes this one's timestamp at "the
 -- time the objects merged". Freezing what layer 1a said at that moment is CR
 -- 707.2c's own posture for the copy effects it shares the sublayer with
 -- ("determined only at the time that effect first starts to apply"), and it is
 -- what makes an EARLIER copy effect on the target lose to the merge instead of
 -- silently replacing it. A LATER copy effect still wins, by re-stamping.
 --
--- The permanent's TIMESTAMP is untouched: CR 730.2c keeps it the same object and
+-- The permanent's TIMESTAMP is untouched: CR 731.2c keeps it the same object and
 -- keeps every continuous effect that applied to it applying, so a
 -- merge that minted a new one would reorder every layer already on it.
 --
 -- The ability fields and no other, beside the record of the graft (PC.mergedDonors).
 -- PC.characteristicPT is one: CR 604.3 makes a power-and-toughness CDA an
--- ability, and rule 730.2a's topmost box is only the copiable value layer 7a
+-- ability, and rule 731.2a's topmost box is only the copiable value layer 7a
 -- then overrides (CR 613.4a). It stays characteristic-defining rather than a
 -- layer-7b static ability: docs/decisions.md, "Whether an ability a merge
 -- grafts is still characteristic-defining". Parun.MutateSpec's "CR 702.140e a
@@ -2100,11 +2100,11 @@ withPrototype oid gs face pc = case (maybe False Object.prototyped (Game.lookupO
 --
 -- Each side arrives at LAYER 1a, through `copiableCharacteristicsFaceUp` above,
 -- so a FACE-DOWN component contributes its card's abilities rather than CR
--- 708.2a's none: CR 730.2e gives a component a status, CR 109.3 keeps status out
+-- 708.2a's none: CR 731.2e gives a component a status, CR 109.3 keeps status out
 -- of the characteristics, and CR 613.2b applies rule 708.2's substitution to the
 -- resulting permanent one sublayer later.
 --
--- CR 730.2h's flip component arrives here already read the way that rule asks
+-- CR 731.2h's flip component arrives here already read the way that rule asks
 -- for, Parun.Engine.Event.merge folding a SECOND result out of both sides'
 -- flipped records; this function is the same fold either way.
 withMergedAbilities :: ProjectedCharacteristics -> ProjectedCharacteristics -> ProjectedCharacteristics
@@ -2124,7 +2124,7 @@ withMergedAbilities donor base =
       PC.activatedAbilities = PC.activatedAbilities base <> PC.activatedAbilities donor,
       PC.replacementEffects = PC.replacementEffects base <> PC.replacementEffects donor,
       PC.triggeredAbilities = PC.triggeredAbilities base <> PC.triggeredAbilities donor,
-      -- Left-biased: CR 730.2a's tie-break between two components naming one.
+      -- Left-biased: CR 731.2a's tie-break between two components naming one.
       PC.delayedAbilities = Map.union (PC.delayedAbilities base) (PC.delayedAbilities donor),
       PC.enchant = PC.enchant base <> PC.enchant donor,
       PC.castingPermissions = PC.castingPermissions base <> PC.castingPermissions donor,
@@ -2312,7 +2312,7 @@ targetSlotsOfStackObject gs oid = maybe Map.empty targetsOf (Game.lookupObject o
                 Source.OfCard _ -> maybe Set.empty ofFace (spellFaceOf oid gs)
                 Source.OfSpellCopy _ -> maybe Set.empty ofFace (spellFaceOf oid gs)
                 -- A cast copy of a card is card-backed the way the two arms above
-                -- are, so its printing's face answers: CR 722.3c's interned one-faced
+                -- are, so its printing's face answers: CR 723.3c's interned one-faced
                 -- prepare spell, or the card CR 707.12 copied.
                 Source.OfCardCopy _ -> maybe Set.empty ofFace (spellFaceOf oid gs)
                 Source.OfAbility src -> ofModal (ActivatedAbility.modal (ActivatedAbilitySource.ability src))

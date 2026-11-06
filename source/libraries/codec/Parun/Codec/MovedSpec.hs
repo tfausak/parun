@@ -34,7 +34,7 @@ spec s = Spec.describe s "Parun.Codec.Moved" $ do
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
           <> ",\"otherArrivals\":[]}"
       )
-  -- CR 712.21's departure: one permanent left and TWO cards arrived, so the
+  -- CR 713.8's departure: one permanent left and TWO cards arrived, so the
   -- second one rides in `otherArrivals` while `change` names the first.
   Spec.it s "MkMoved, a melded permanent's second arriving card" $
     Common.assertCodec

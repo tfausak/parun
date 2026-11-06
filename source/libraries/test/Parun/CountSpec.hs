@@ -356,7 +356,7 @@ spec s registry = Spec.describe s "Parun.Engine.Count" $ do
     -- 0 instead" is scoped to a characteristic-defining ability, and it is
     -- applied THERE (Parun.Engine.Quantity.determine) rather than in this fold;
     -- where the CR does want an empty maximum to be 0 it otherwise legislates
-    -- it card-shape by card-shape (CR 714.2d, a Saga with no chapter
+    -- it card-shape by card-shape (CR 715.2d, a Saga with no chapter
     -- abilities). So the honest answer here is the one this codebase
     -- propagates everywhere else, and Parun.PowerToughnessSpec's Monstrous
     -- War-Leech is where it becomes a 0. THE FALSIFIER for reaching for
@@ -1156,10 +1156,10 @@ leftBattlefieldSpec s registry =
             "CR 603.6c bob's Hill Giant under alice's control gets her an experience counter as it leaves; under bob's it does not"
             (experience (bounce theirGiant stolen), experience (bounce theirGiant ready))
             (1, 0)
-        -- CR 729.4a's crossing records the zone the card left, and only a
+        -- CR 730.4a's crossing records the zone the card left, and only a
         -- battlefield one is a permanent leaving the battlefield. The pair differs
         -- in where bob's Hill Giant sits as a subgame bob plays takes it.
-        Spec.it s "CR 603.6c/729.4a Insatiable Skittermaw counts a Hill Giant a subgame takes from the battlefield, and not one it takes from a graveyard" $ do
+        Spec.it s "CR 603.6c/730.4a Insatiable Skittermaw counts a Hill Giant a subgame takes from the battlefield, and not one it takes from a graveyard" $ do
           (skittermawId, theirGiant, _, ready) <- board "Insatiable Skittermaw"
           hillGiant <- S.printingOf s registry "Hill Giant"
           let (buriedGiant, withBuried) = S.addGraveyardCard hillGiant S.bob ready

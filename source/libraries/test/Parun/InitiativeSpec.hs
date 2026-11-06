@@ -1,12 +1,12 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- Covers: Parun.Engine.Initiative (CR 726, the initiative), the GameState field it
--- writes, Parun.Engine.Resolve's Effect.TakeTheInitiative arm and the CR 726.4
+-- Covers: Parun.Engine.Initiative (CR 727, the initiative), the GameState field it
+-- writes, Parun.Engine.Resolve's Effect.TakeTheInitiative arm and the CR 727.4
 -- clause Parun.Engine.Departure runs.
 --
 -- Gameplay-level throughout: the designation is taken by resolving Aarakocra
--- Sneak's entry trigger, and every venture CR 726.2 causes is read off the
+-- Sneak's entry trigger, and every venture CR 727.2 causes is read off the
 -- dungeon card in the command zone and its venture marker (CR 309.4a) rather than
 -- by calling Parun.Engine.Dungeon directly.
 module Parun.InitiativeSpec where
@@ -64,8 +64,8 @@ dungeonNamesOf pid gs =
 markerOf :: PlayerId -> GameState.GameState -> Maybe RoomIndex.RoomIndex
 markerOf pid gs = Dungeon.inDungeon pid gs >>= \oid -> Game.lookupObject oid gs >>= Object.ventureRoom
 
--- The players CR 726.1's event says took the initiative, in order -- so a case
--- can assert both who took it and that nothing else was recorded. CR 726.5's
+-- The players CR 727.1's event says took the initiative, in order -- so a case
+-- can assert both who took it and that nothing else was recorded. CR 727.5's
 -- re-take is exactly a second entry here with one designation on the board.
 takings :: GameState.GameState -> [PlayerId]
 takings gs =
@@ -87,7 +87,7 @@ answering p = case p of
 
 -- Settle, then resolve the whole stack, settling between each resolution so an
 -- ability that triggered on the resolution before it is placed and resolved too
--- -- which is the whole of CR 726.2's chain: the take, then the venture it
+-- -- which is the whole of CR 727.2's chain: the take, then the venture it
 -- causes. Bounded, so a bug that kept the stack full fails the case rather than
 -- hanging it.
 resolveAll :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> GameState.GameState
@@ -117,7 +117,7 @@ board island piker undercity =
       (carols, g2) = S.addPermanent piker S.carol g1
    in (bobs, carols, owningUndercity undercity [S.alice, S.bob, S.carol] g2)
 
--- CR 726.2: one creature's combat damage to the player who has the initiative.
+-- CR 727.2: one creature's combat damage to the player who has the initiative.
 -- Driven by the damage EVENT rather than by a full combat, Parun.EventTriggerSpec's
 -- monarch group's posture one rule over.
 combatDamageTo :: PlayerId -> ObjectId -> GameEvent.GameEvent
@@ -159,10 +159,10 @@ tramplingAtBob p = case p of
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Initiative" $ do
-  -- CR 726.1: "there is no initiative in a game until an effect instructs a
-  -- player to take the initiative", and CR 726.2's third ability: "whenever a
+  -- CR 727.1: "there is no initiative in a game until an effect instructs a
+  -- player to take the initiative", and CR 727.2's third ability: "whenever a
   -- player takes the initiative, that player ventures into Undercity".
-  Spec.it s "CR 726.1/726.2 Aarakocra Sneak's entry gives its controller the initiative, and taking it ventures her into Undercity" $ do
+  Spec.it s "CR 727.1/727.2 Aarakocra Sneak's entry gives its controller the initiative, and taking it ventures her into Undercity" $ do
     island <- S.printingOf s registry "Island"
     piker <- S.printingOf s registry "Goblin Piker"
     undercity <- S.printingOf s registry "Undercity"
@@ -175,21 +175,21 @@ spec s registry = Spec.describe s "Initiative" $ do
     -- into alice's hand. The room ability is what the venture is READ through: a
     -- take that ventured nobody leaves the hand where it was.
     Spec.assertEqWith s "Secret Entrance put a basic land into alice's hand" (S.handSize S.alice after) (S.handSize S.alice gs + 1)
-    Spec.assertEqWith s "CR 726.1 alice has the initiative" (GameState.initiative after) (Just S.alice)
+    Spec.assertEqWith s "CR 727.1 alice has the initiative" (GameState.initiative after) (Just S.alice)
     Spec.assertEqWith s "CR 701.49d she entered Undercity and no other dungeon" (dungeonNamesOf S.alice after) ["\"Undercity\""]
     Spec.assertEqWith s "CR 309.4a with her marker on the topmost room" (markerOf S.alice after) (Just RoomIndex.topmost)
-    Spec.assertEqWith s "CR 726.1 exactly one take was recorded, naming her" (takings after) [S.alice]
+    Spec.assertEqWith s "CR 727.1 exactly one take was recorded, naming her" (takings after) [S.alice]
     Spec.assertEqWith s "and neither opponent ventured" (dungeonNamesOf S.bob after, dungeonNamesOf S.carol after) ([], [])
     Spec.assertEqWith s "the stack is empty, so nothing is still pending" (GameState.stack after) []
 
-  -- CR 726.2, first ability: "at the beginning of the upkeep of the player who
+  -- CR 727.2, first ability: "at the beginning of the upkeep of the player who
   -- has the initiative, that player ventures into Undercity."
   --
   -- ONE board, two readings: the upkeep of alice's turn against the upkeep of
   -- bob's. alice holds the initiative and is already in Undercity on both, so the
   -- only difference is whose upkeep began -- an implementation reading "the
   -- beginning of every upkeep" would advance her marker on both.
-  Spec.it s "CR 726.2 the holder's own upkeep ventures her again, and an opponent's upkeep does not" $ do
+  Spec.it s "CR 727.2 the holder's own upkeep ventures her again, and an opponent's upkeep does not" $ do
     island <- S.printingOf s registry "Island"
     piker <- S.printingOf s registry "Goblin Piker"
     undercity <- S.printingOf s registry "Undercity"
@@ -210,14 +210,14 @@ spec s registry = Spec.describe s "Initiative" $ do
     Spec.assertEqWith s "no second dungeon was entered on either" (dungeonNamesOf S.alice hers, dungeonNamesOf S.alice his) (["\"Undercity\""], ["\"Undercity\""])
     Spec.assertEqWith s "and bob, whose upkeep it was, ventured into nothing" (dungeonNamesOf S.bob his) []
 
-  -- CR 726.2, second ability: "whenever one or more creatures a player controls
+  -- CR 727.2, second ability: "whenever one or more creatures a player controls
   -- deal combat damage to the player who has the initiative, the controller of
-  -- those creatures takes the initiative" -- which CR 726.2's third ability then
+  -- those creatures takes the initiative" -- which CR 727.2's third ability then
   -- ventures.
   --
   -- Three seats, so "that player" and "an opponent" cannot collapse: carol's Piker
   -- deals no damage and carol must be untouched throughout.
-  Spec.it s "CR 726.2 an opponent's creature connecting with the holder takes the initiative and ventures him" $ do
+  Spec.it s "CR 727.2 an opponent's creature connecting with the holder takes the initiative and ventures him" $ do
     island <- S.printingOf s registry "Island"
     piker <- S.printingOf s registry "Goblin Piker"
     undercity <- S.printingOf s registry "Undercity"
@@ -230,25 +230,25 @@ spec s registry = Spec.describe s "Initiative" $ do
     -- CR 701.49a: bob owned no dungeon in the command zone, so his venture ENTERED
     -- Undercity -- the gameplay-level reading of "that player ventures".
     Spec.assertEqWith s "CR 701.49d bob entered Undercity" (dungeonNamesOf S.bob after) ["\"Undercity\""]
-    Spec.assertEqWith s "CR 726.3 bob has the initiative, and alice no longer does" (GameState.initiative after) (Just S.bob)
+    Spec.assertEqWith s "CR 727.3 bob has the initiative, and alice no longer does" (GameState.initiative after) (Just S.bob)
     -- S.withEvents rewrites the log, so alice's own take is not in it: what this
     -- reads is the takes since the damage, which is bob's and nothing else.
-    Spec.assertEqWith s "CR 726.2 one take was recorded since the damage, naming bob" (takings after) [S.bob]
+    Spec.assertEqWith s "CR 727.2 one take was recorded since the damage, naming bob" (takings after) [S.bob]
     Spec.assertEqWith s "alice's own marker did not move" (markerOf S.alice after) (Just RoomIndex.topmost)
     Spec.assertEqWith s "and carol, whose Piker dealt nothing, ventured into no dungeon" (dungeonNamesOf S.carol after) []
     Spec.assertEqWith s "the stack is empty, so nothing is still pending" (GameState.stack after) []
 
-  -- CR 726.2's "one or more creatures a player controls": TWO of bob's creatures
+  -- CR 727.2's "one or more creatures a player controls": TWO of bob's creatures
   -- connecting in one combat damage step is ONE trigger, so bob takes the
   -- initiative once and ventures once.
   --
   -- The paired control is the case above, whose board differs in exactly one
   -- thing: how many of bob's creatures dealt the damage. A per-damager reading
-  -- gives bob two takes, and CR 726.5 makes the second one venture him again --
+  -- gives bob two takes, and CR 727.5 makes the second one venture him again --
   -- so the marker, not just the count, tells the two apart. The same two
   -- damage events in two groups -- two damage steps -- are two trigger events
   -- (CR 603.2c), which is the batch's other edge.
-  Spec.it s "CR 726.2 two of one player's creatures connecting is one take and one venture" $ do
+  Spec.it s "CR 727.2 two of one player's creatures connecting is one take and one venture" $ do
     island <- S.printingOf s registry "Island"
     piker <- S.printingOf s registry "Goblin Piker"
     undercity <- S.printingOf s registry "Undercity"
@@ -261,14 +261,14 @@ spec s registry = Spec.describe s "Initiative" $ do
     Spec.assertEqWith s "bob's marker is on the topmost room, so he ventured exactly once" (markerOf S.bob after) (Just RoomIndex.topmost)
     -- ONE, where a per-damager reading records two: the fixture rewrote the log
     -- before the damage, so every entry here is the damage's doing.
-    Spec.assertEqWith s "CR 726.2 exactly one take was recorded for bob's two creatures" (takings after) [S.bob]
+    Spec.assertEqWith s "CR 727.2 exactly one take was recorded for bob's two creatures" (takings after) [S.bob]
     Spec.assertEqWith s "and he holds the initiative" (GameState.initiative after) (Just S.bob)
     let apart = resolveAll answering (S.withEvents [combatDamageTo S.alice bobs, combatDamageTo S.alice second] hers)
     Spec.assertEqWith s "CR 603.2c the same damage in two groups is two takes" (takings apart) [S.bob, S.bob]
 
-  -- CR 726.2 makes the hand-off "controlled by the player who had the initiative
+  -- CR 727.2 makes the hand-off "controlled by the player who had the initiative
   -- at the time the abilities triggered", so when the damage that triggers it
-  -- also kills the holder, CR 800.4d keeps it off the stack and CR 726.4 alone
+  -- also kills the holder, CR 800.4d keeps it off the stack and CR 727.4 alone
   -- moves the initiative -- to the ACTIVE player, not the damager's controller.
   -- The Court of Grace ruling says the same of the monarch's twin; #3148 claimed
   -- the opposite.
@@ -279,7 +279,7 @@ spec s registry = Spec.describe s "Initiative" $ do
   -- change removes a creature from combat), so the damage is `combatDamageTo`'s
   -- hand-written event and bob's life total is written down by hand at what the
   -- 2 it records would have left him with.
-  Spec.it s "CR 726.4/800.4d lethal combat damage to the holder hands the initiative to the active player, not the damager's controller" $ do
+  Spec.it s "CR 727.4/800.4d lethal combat damage to the holder hands the initiative to the active player, not the damager's controller" $ do
     island <- S.printingOf s registry "Island"
     piker <- S.printingOf s registry "Goblin Piker"
     undercity <- S.printingOf s registry "Undercity"
@@ -289,12 +289,12 @@ spec s registry = Spec.describe s "Initiative" $ do
         after = resolveAll answering (S.withEvents [combatDamageTo S.bob carols] dying)
     Spec.assertEqWith s "bob held the initiative going in" (GameState.initiative held) (Just S.bob)
     Spec.assertEqWith s "alice is the active player, and carol's Piker dealt the damage" (GameState.activePlayer held, Projection.controllerOf carols held) (S.alice, Just S.carol)
-    -- The rule: CR 726.4's hand-off is the only take.
-    Spec.assertEqWith s "CR 726.4 alice, the active player, has the initiative" (GameState.initiative after) (Just S.alice)
+    -- The rule: CR 727.4's hand-off is the only take.
+    Spec.assertEqWith s "CR 727.4 alice, the active player, has the initiative" (GameState.initiative after) (Just S.alice)
     Spec.assertEqWith s "CR 800.4d exactly one take was recorded, the hand-off's, naming her" (takings after) [S.alice]
-    -- CR 726.4 says alice TAKES the initiative, so CR 726.2's third ability
+    -- CR 727.4 says alice TAKES the initiative, so CR 727.2's third ability
     -- ventures her; the departed bob and the untouched carol venture nowhere.
-    Spec.assertEqWith s "CR 726.2/701.49d and, having taken it, she entered Undercity" (dungeonNamesOf S.alice after) ["\"Undercity\""]
+    Spec.assertEqWith s "CR 727.2/701.49d and, having taken it, she entered Undercity" (dungeonNamesOf S.alice after) ["\"Undercity\""]
     Spec.assertEqWith s "carol, whose Piker dealt the damage, ventured into nothing" (dungeonNamesOf S.carol after) []
     Spec.assertEqWith s "CR 704.5a bob lost the game" (Game.stillPlaying after) [S.alice, S.carol]
     Spec.assertEqWith s "the stack is empty, so nothing is still pending" (GameState.stack after) []
@@ -311,7 +311,7 @@ spec s registry = Spec.describe s "Initiative" $ do
   -- attacks bob with War Mammoth (3/3 trample) and bob blocks with Boggart Brute
   -- (3/2), so the Mammoth assigns the Brute its lethal 2 and tramples 1 through,
   -- and the Brute's 3 kills the Mammoth in the same step. Both die together.
-  Spec.it s "CR 726.2 a trampler that trades with its blocker still hands the initiative over" $ do
+  Spec.it s "CR 727.2 a trampler that trades with its blocker still hands the initiative over" $ do
     undercity <- S.printingOf s registry "Undercity"
     mammoth <- S.printingOf s registry "War Mammoth"
     brute <- S.printingOf s registry "Boggart Brute"
@@ -327,22 +327,22 @@ spec s registry = Spec.describe s "Initiative" $ do
     Spec.assertEqWith s "CR 704.5g the Mammoth traded with the Brute, so both are off the battlefield" (fmap (\oid -> S.onBattlefield oid after) (mine <> theirs)) [False, False]
     Spec.assertEqWith s "CR 702.19b and 1 point trampled through to bob" (S.lifeOf S.bob after) (Just 19)
     -- The rule: alice's dead Mammoth still took the initiative for her, and CR
-    -- 726.2's third ability then ventured her.
-    Spec.assertEqWith s "CR 726.2/726.3 alice has the initiative" (GameState.initiative after) (Just S.alice)
+    -- 727.2's third ability then ventured her.
+    Spec.assertEqWith s "CR 727.2/727.3 alice has the initiative" (GameState.initiative after) (Just S.alice)
     Spec.assertEqWith s "CR 701.49d and, having taken it, she entered Undercity" (dungeonNamesOf S.alice after) ["\"Undercity\""]
-    Spec.assertEqWith s "CR 726.2 exactly one take was recorded, naming her" (takings after) [S.alice]
+    Spec.assertEqWith s "CR 727.2 exactly one take was recorded, naming her" (takings after) [S.alice]
     Spec.assertEqWith s "and carol, who never joined the combat, ventured into nothing" (dungeonNamesOf S.carol after) []
     Spec.assertEqWith s "the stack is empty, so nothing is still pending" (GameState.stack after) []
 
-  -- CR 726.2's grouping is by CONTROLLER, so two players' creatures connecting in
-  -- ONE damage step are TWO triggers, both controlled by the holder (CR 726.2's
+  -- CR 727.2's grouping is by CONTROLLER, so two players' creatures connecting in
+  -- ONE damage step are TWO triggers, both controlled by the holder (CR 727.2's
   -- "the player who had the initiative at the time the abilities triggered"). CR
   -- 603.3b lets her order her own two, and the stack resolves them last-first, so
   -- the take recorded LAST is the one that stands.
   --
   -- The case above the previous one -- two of ONE player's creatures -- is the
   -- paired control: same shape, one controller, one trigger.
-  Spec.it s "CR 726.2 two players' creatures connecting in one step are two takes, and the last one stands" $ do
+  Spec.it s "CR 727.2 two players' creatures connecting in one step are two takes, and the last one stands" $ do
     island <- S.printingOf s registry "Island"
     piker <- S.printingOf s registry "Goblin Piker"
     undercity <- S.printingOf s registry "Undercity"
@@ -355,13 +355,13 @@ spec s registry = Spec.describe s "Initiative" $ do
     -- resolved. A grouping that collapsed the two controllers into one leaves
     -- whichever of them lost the race in no dungeon at all.
     Spec.assertEqWith s "CR 701.49d bob and carol each entered Undercity" (dungeonNamesOf S.bob after, dungeonNamesOf S.carol after) (["\"Undercity\""], ["\"Undercity\""])
-    Spec.assertEqWith s "CR 726.2 two takes were recorded, one per controller" (List.sort (takings after)) [S.bob, S.carol]
-    -- CR 726.3: one designation, and it is the LAST take's -- the two abilities
+    Spec.assertEqWith s "CR 727.2 two takes were recorded, one per controller" (List.sort (takings after)) [S.bob, S.carol]
+    -- CR 727.3: one designation, and it is the LAST take's -- the two abilities
     -- resolve one after the other and the second hand-off moves it again.
-    Spec.assertEqWith s "CR 726.3 the designation is the last take's" (GameState.initiative after) (Maybe.listToMaybe (reverse (takings after)))
+    Spec.assertEqWith s "CR 727.3 the designation is the last take's" (GameState.initiative after) (Maybe.listToMaybe (reverse (takings after)))
     Spec.assertEqWith s "alice's own marker did not move" (markerOf S.alice after) (Just RoomIndex.topmost)
 
-  -- CR 510.4 / CR 726.2: a first-strike damage step and the regular one are TWO
+  -- CR 510.4 / CR 727.2: a first-strike damage step and the regular one are TWO
   -- batches, and each ends in a settle -- so the hand-off from the first has
   -- already resolved when the second is scanned, and the second is asked about the
   -- NEW holder. Two batches, two takes.
@@ -369,7 +369,7 @@ spec s registry = Spec.describe s "Initiative" $ do
   -- The paired control is the same two damage events delivered in ONE batch, where
   -- carol's creature hits a bob who does not yet have the initiative and triggers
   -- nothing. The boards differ in nothing but the batching.
-  Spec.it s "CR 726.2 two damage batches are two takes, where the same two hits in one batch are one" $ do
+  Spec.it s "CR 727.2 two damage batches are two takes, where the same two hits in one batch are one" $ do
     island <- S.printingOf s registry "Island"
     piker <- S.printingOf s registry "Goblin Piker"
     undercity <- S.printingOf s registry "Undercity"
@@ -381,18 +381,18 @@ spec s registry = Spec.describe s "Initiative" $ do
         regular = resolveAll answering (S.withEvents [combatDamageTo S.bob carols] firstStrike)
         fused = resolveAll answering (S.withGroupedEvents [[combatDamageTo S.alice bobs, combatDamageTo S.bob carols]] hers)
     Spec.assertEqWith s "the first batch handed it to bob" (GameState.initiative firstStrike) (Just S.bob)
-    Spec.assertEqWith s "CR 726.2 the second batch, asked about the new holder, handed it to carol" (GameState.initiative regular) (Just S.carol)
+    Spec.assertEqWith s "CR 727.2 the second batch, asked about the new holder, handed it to carol" (GameState.initiative regular) (Just S.carol)
     Spec.assertEqWith s "CR 701.49d so carol ventured too" (dungeonNamesOf S.carol regular) ["\"Undercity\""]
     Spec.assertEqWith s "and the second batch recorded her take" (takings regular) [S.carol]
     -- The control: in ONE batch carol's hit lands on a bob who is still not the
     -- holder, so only bob's take is recorded and carol ventures into nothing.
-    Spec.assertEqWith s "CR 726.2 fused into one batch it is bob's take alone" (takings fused) [S.bob]
+    Spec.assertEqWith s "CR 727.2 fused into one batch it is bob's take alone" (takings fused) [S.bob]
     Spec.assertEqWith s "and carol, who hit a bob without the initiative, ventured into nothing" (dungeonNamesOf S.carol fused) []
 
-  -- CR 726.5: "if the player who currently has the initiative is instructed to
-  -- take the initiative, this causes the last triggered ability in 726.2 to
+  -- CR 727.5: "if the player who currently has the initiative is instructed to
+  -- take the initiative, this causes the last triggered ability in 727.2 to
   -- trigger but does not create a second initiative designation."
-  Spec.it s "CR 726.5 the holder taking it again ventures her again and creates no second designation" $ do
+  Spec.it s "CR 727.5 the holder taking it again ventures her again and creates no second designation" $ do
     island <- S.printingOf s registry "Island"
     piker <- S.printingOf s registry "Goblin Piker"
     undercity <- S.printingOf s registry "Undercity"
@@ -403,11 +403,11 @@ spec s registry = Spec.describe s "Initiative" $ do
         (_, again) = S.entersWithTrigger sneak S.alice hers
         after = resolveAll answering again
     Spec.assertEqWith s "she was in Undercity on the topmost room before the second Sneak" (markerOf S.alice hers) (Just RoomIndex.topmost)
-    -- CR 726.5's first half, read at gameplay level: the re-take ventured her, so
+    -- CR 727.5's first half, read at gameplay level: the re-take ventured her, so
     -- the marker followed an arrow. An implementation reading Monarch.crown's
     -- "already the monarch does not become the monarch" here would leave it.
     Spec.assertEqWith s "the re-take ventured her one room on" (markerOf S.alice after) (Just (RoomIndex.MkRoomIndex 1))
-    -- CR 726.5's second half: ONE designation. A list rather than a Bool, because
+    -- CR 727.5's second half: ONE designation. A list rather than a Bool, because
     -- "is there a second dungeon?" is the question a second designation's venture
     -- would answer differently.
     Spec.assertEqWith s "and one dungeon card, so no second designation ventured separately" (dungeonNamesOf S.alice after) ["\"Undercity\""]
@@ -416,9 +416,9 @@ spec s registry = Spec.describe s "Initiative" $ do
     -- alone -- the first is proved by `hers` above having put her in Undercity.
     Spec.assertEqWith s "and the re-take was recorded, naming her" (takings after) [S.alice]
 
-  -- CR 726.4: "if the player who has the initiative leaves the game, the active
+  -- CR 727.4: "if the player who has the initiative leaves the game, the active
   -- player takes the initiative at the same time that player leaves the game."
-  Spec.it s "CR 726.4 the holder departs on someone else's turn: the active player takes it" $ do
+  Spec.it s "CR 727.4 the holder departs on someone else's turn: the active player takes it" $ do
     island <- S.printingOf s registry "Island"
     piker <- S.printingOf s registry "Goblin Piker"
     undercity <- S.printingOf s registry "Undercity"
@@ -427,16 +427,16 @@ spec s registry = Spec.describe s "Initiative" $ do
         gone = S.departs Departure.Type.Conceded S.bob held
         settled = resolveAll answering gone
     Spec.assertEqWith s "alice is the active player on this board" (GameState.activePlayer held) S.alice
-    -- CR 726.2's third ability fires off the reassignment's own take, which is
+    -- CR 727.2's third ability fires off the reassignment's own take, which is
     -- what makes the hand-off a TAKE rather than a field write: alice ventures.
     Spec.assertEqWith s "CR 701.49d so alice, having taken it, entered Undercity" (dungeonNamesOf S.alice settled) ["\"Undercity\""]
-    Spec.assertEqWith s "CR 726.4 alice has the initiative" (GameState.initiative gone) (Just S.alice)
+    Spec.assertEqWith s "CR 727.4 alice has the initiative" (GameState.initiative gone) (Just S.alice)
     Spec.assertEqWith s "and exactly one take was recorded, naming her" (takings gone) [S.alice]
 
-  -- CR 726.4's second sentence: "if the active player is leaving the game or if
+  -- CR 727.4's second sentence: "if the active player is leaving the game or if
   -- there is no active player, the next player in turn order takes the
   -- initiative."
-  Spec.it s "CR 726.4 the holder departs on their own turn: the next seat in turn order takes it" $ do
+  Spec.it s "CR 727.4 the holder departs on their own turn: the next seat in turn order takes it" $ do
     island <- S.printingOf s registry "Island"
     piker <- S.printingOf s registry "Goblin Piker"
     undercity <- S.printingOf s registry "Undercity"

@@ -1,12 +1,12 @@
 {-# LANGUAGE GADTs #-}
 
 -- Covers Parun.Engine.Fragmented and its call in Parun.Engine.Engine.priorityLoop:
--- CR 732.3's fragmented loop, out of two synthetic printings -- Synthetic Self
+-- CR 733.3's fragmented loop, out of two synthetic printings -- Synthetic Self
 -- Tapper ("{0}: Tap this creature") under alice and Synthetic Rouser ("{0}:
 -- Untap target creature") under bob. No printing reaches the rule: Scryfall
 -- `o:"{0}: untap"` and `o:"{0}: tap"`, 2026-10-03, answer only untaps limited
 -- to one activation a turn or a game (Instill Energy, Nature's Chosen, Touch
--- of Vitae) and Chimeric Idol, which taps lands. CR 732.3's own example,
+-- of Vitae) and Chimeric Idol, which taps lands. CR 733.3's own example,
 -- which undoes a continuous effect, is Mist Dragon's, a loop through a
 -- targeted activation is two Grim Poppets', or two Fatestitchers', one
 -- through a payment or a mana ability is Freed from the Real's on Birds of
@@ -82,13 +82,13 @@ import qualified Parun.Types.Undoing as Undoing
 import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
-spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
+spec s registry = Spec.describe s "a fragmented loop (CR 733.3)" $ do
   Spec.it s "the active player may not repeat the action that returned the game to a state" $ do
     tapper <- S.printingOf s registry "Synthetic Self Tapper"
     rouser <- S.printingOf s registry "Synthetic Rouser"
     -- Alice taps her creature, bob untaps it, and the game is back where it
     -- began: her second offer there lacks the activation, and Pass remains.
-    Spec.assertEqWith s "CR 732.3 alice's activation is withheld where the state recurs" (offers (loopBoard tapper rouser Nothing False)) [True, False]
+    Spec.assertEqWith s "CR 733.3 alice's activation is withheld where the state recurs" (offers (loopBoard tapper rouser Nothing False)) [True, False]
 
   Spec.it s "a state that does not recur leaves the activation offered" $ do
     tapper <- S.printingOf s registry "Synthetic Self Tapper"
@@ -96,21 +96,21 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- The control: bob untaps alice's OTHER creature, tapped at setup, so the
     -- lap ends in a state not seen before and alice may activate again. Only
     -- the lap after that one, whose untap is a no-op, recurs.
-    Spec.assertEqWith s "CR 732.3 a new state is no loop" (offers (loopBoard tapper rouser Nothing True)) [True, True, False]
+    Spec.assertEqWith s "CR 733.3 a new state is no loop" (offers (loopBoard tapper rouser Nothing True)) [True, True, False]
 
   Spec.it s "a card reading history the loop does not write leaves the loop detected" $ do
     tapper <- S.printingOf s registry "Synthetic Self Tapper"
     rouser <- S.printingOf s registry "Synthetic Rouser"
     ghoul <- S.printingOf s registry "Khabál Ghoul"
     harvest <- S.printingOf s registry "Ominous Harvest"
-    -- CR 732.3's example: "nothing in the game cares how many times an ability
+    -- CR 733.3's example: "nothing in the game cares how many times an ability
     -- has been activated". Khabál Ghoul, in alice's library, counts the
     -- turn's deaths off the log, and the lap kills nothing, so the state
     -- still recurs. Ominous Harvest reads the same deaths through the
     -- gravestorm trigger Parun.Engine.Keyword mints -- the card itself spells
     -- only the keyword.
-    Spec.assertEqWith s "CR 732.3 Khabál Ghoul leaves alice's activation withheld" (offers (loopBoard tapper rouser (Just ghoul) False)) [True, False]
-    Spec.assertEqWith s "CR 732.3 Ominous Harvest leaves alice's activation withheld" (offers (loopBoard tapper rouser (Just harvest) False)) [True, False]
+    Spec.assertEqWith s "CR 733.3 Khabál Ghoul leaves alice's activation withheld" (offers (loopBoard tapper rouser (Just ghoul) False)) [True, False]
+    Spec.assertEqWith s "CR 733.3 Ominous Harvest leaves alice's activation withheld" (offers (loopBoard tapper rouser (Just harvest) False)) [True, False]
 
   Spec.it s "a card reading history the loop writes keeps the loop's states distinct" $ do
     tapper <- S.printingOf s registry "Synthetic Self Tapper"
@@ -120,7 +120,7 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- resolutions this turn off the log, and every lap resolves two. So a card
     -- can tell the recurring state from the first, and the answerer's budget
     -- is what stops her.
-    Spec.assertEqWith s "CR 732.3 Ashling keeps every offer" (offers (loopBoard tapper rouser (Just ashling) False)) (replicate (budget + 1) True)
+    Spec.assertEqWith s "CR 733.3 Ashling keeps every offer" (offers (loopBoard tapper rouser (Just ashling) False)) (replicate (budget + 1) True)
 
   Spec.it s "an activation is refused as announced, not as a whole" $ do
     poppet <- S.printingOf s registry "Grim Poppet"
@@ -130,8 +130,8 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- began but for the stamps: the counter's is new (CR 613.7c), and bob's
     -- Poppet keeps an inert one. Canonical, they recur, and alice aiming at
     -- bob's Poppet again is refused; aiming at her Grizzly Bears is a
-    -- different game choice (CR 732.1, 601.2c) and goes ahead.
-    Spec.assertEqWith s "CR 732.3 only alice's repeated aim is refused" (poppetAttempts poppet bears Nothing) [(False, True), (False, False), (True, True)]
+    -- different game choice (CR 733.1, 601.2c) and goes ahead.
+    Spec.assertEqWith s "CR 733.3 only alice's repeated aim is refused" (poppetAttempts poppet bears Nothing) [(False, True), (False, False), (True, True)]
 
   Spec.it s "a card reading only its own counter links leaves a counter loop detected" $ do
     poppet <- S.printingOf s registry "Grim Poppet"
@@ -140,7 +140,7 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- The Poppet loop above, beside alice's Cyclopean Tomb: each lap files
     -- counter links against the Poppets, and a Tomb reads only its own (CR
     -- 607.1), so the state still recurs.
-    Spec.assertEqWith s "CR 732.3 Cyclopean Tomb leaves alice's repeated aim refused" (poppetAttempts poppet bears (Just tomb)) [(False, True), (False, False), (True, True)]
+    Spec.assertEqWith s "CR 733.3 Cyclopean Tomb leaves alice's repeated aim refused" (poppetAttempts poppet bears (Just tomb)) [(False, True), (False, False), (True, True)]
 
   Spec.it s "a counter link is compared only where its source reads its own" $ do
     poppet <- S.printingOf s registry "Grim Poppet"
@@ -155,9 +155,9 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
         dead = S.runPure S.identityAnswer gs3 (Event.changeZone (pure ()) tombId Zone.Graveyard)
         link source = CounterLink.MkCounterLink {CounterLink.source = source, CounterLink.acquisition = Acquisition.Own, CounterLink.moved = CounterLinked.PutWith CounterKind.PlusOnePlusOne}
         recurs source gs = Fragmented.digest gs {GameState.counteredWith = Map.singleton islandId (Set.singleton (link source))} == Fragmented.digest gs
-    Spec.assertEqWith s "CR 732.3 a Grim Poppet's link is no new state" (recurs poppetId gs3) True
-    Spec.assertEqWith s "CR 732.3 a Cyclopean Tomb's link is a new state" (recurs tombId gs3) False
-    Spec.assertEqWith s "CR 732.3 a dead Cyclopean Tomb's link is a new state" (recurs tombId dead) False
+    Spec.assertEqWith s "CR 733.3 a Grim Poppet's link is no new state" (recurs poppetId gs3) True
+    Spec.assertEqWith s "CR 733.3 a Cyclopean Tomb's link is a new state" (recurs tombId gs3) False
+    Spec.assertEqWith s "CR 733.3 a dead Cyclopean Tomb's link is a new state" (recurs tombId dead) False
 
   Spec.it s "an activation is refused as paid, not as announced" $ do
     birds <- S.printingOf s registry "Birds of Paradise"
@@ -169,8 +169,8 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- her Island is a different game choice (CR 601.2h via 602.2b) and goes
     -- ahead.
     let paid = freedPayments birds freed island
-    Spec.assertEqWith s "CR 732.3 only alice's repeated payment is refused" (fmap fst paid) [(False, True), (False, False), (True, True)]
-    Spec.assertEqWith s "CR 733.1 and her next priority says why" (fmap snd paid) [Nothing, Just Undoing.RepeatedLoop, Nothing]
+    Spec.assertEqWith s "CR 733.3 only alice's repeated payment is refused" (fmap fst paid) [(False, True), (False, False), (True, True)]
+    Spec.assertEqWith s "CR 734.1 and her next priority says why" (fmap snd paid) [Nothing, Just Undoing.RepeatedLoop, Nothing]
 
   Spec.it s "a mana ability is refused as the state it leaves" $ do
     birds <- S.printingOf s registry "Birds of Paradise"
@@ -179,28 +179,28 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- the {U} spent from the pool. Tapping them for {U} again is refused; for
     -- {G}, which leaves another state, is not.
     let taps = freedTaps birds freed
-    Spec.assertEqWith s "CR 732.3 only alice's repeated mana ability is refused" (fmap fst taps) [True, False, True]
-    Spec.assertEqWith s "CR 733.1 and her next priority says why" (fmap snd taps) [Nothing, Just Undoing.RepeatedLoop, Nothing]
+    Spec.assertEqWith s "CR 733.3 only alice's repeated mana ability is refused" (fmap fst taps) [True, False, True]
+    Spec.assertEqWith s "CR 734.1 and her next priority says why" (fmap snd taps) [Nothing, Just Undoing.RepeatedLoop, Nothing]
 
   Spec.it s "a choice the resolution offers does not make a repeated activation a new one" $ do
     stitcher <- S.printingOf s registry "Fatestitcher"
     -- alice taps her Fatestitcher to untap bob's, and bob taps his to untap
     -- hers: the lap ends where it began. Her activation asked her whether to
     -- untap as it resolved (CR 608.2d), a later game choice of its own; the
-    -- one CR 732.3 refuses is activating it again as she did.
-    Spec.assertEqWith s "CR 732.3 alice's repeated aim is refused" (stitcherAttempts stitcher) [(False, True), (False, False)]
+    -- one CR 733.3 refuses is activating it again as she did.
+    Spec.assertEqWith s "CR 733.3 alice's repeated aim is refused" (stitcherAttempts stitcher) [(False, True), (False, False)]
 
   Spec.it s "a loop whose undo leaves a superseded continuous effect behind is detected" $ do
     dragon <- S.printingOf s registry "Mist Dragon"
-    -- CR 732.3's own example, on one card: alice has her Mist Dragon gain
+    -- CR 733.3's own example, on one card: alice has her Mist Dragon gain
     -- flying, then lose it, and so on. Every resolution stores an indefinite
     -- effect (CR 611.2a), so no two states are equal as stored; a gain a later
     -- loss erases is unobservable, as is a loss a later loss repeats. The
     -- fourth resolution returns to the state the second left, where she had it
     -- gain flying, so that activation is withheld and the loss is not.
     let (gains, loses) = unzip (dragonOffers (S.addPermanent dragon S.alice (Setup.emptyGame S.bothPlayers)))
-    Spec.assertEqWith s "CR 732.3 alice's gain is withheld where the state recurs" gains [True, True, True, True, False]
-    Spec.assertEqWith s "CR 732.3 alice's loss stays offered" loses (replicate 5 True)
+    Spec.assertEqWith s "CR 733.3 alice's gain is withheld where the state recurs" gains [True, True, True, True, False]
+    Spec.assertEqWith s "CR 733.3 alice's loss stays offered" loses (replicate 5 True)
 
   Spec.it s "a superseded effect stamped before a permanent is not one stamped after it" $ do
     dragon <- S.printingOf s registry "Mist Dragon"
@@ -212,7 +212,7 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- the first one, and only the fourth resolution recurs.
     let board = flownUnder dragon wings
     Spec.assertBool s (uncurry (Projection.hasKeyword Keyword.Flying) board) "CR 613.7 the Dragon flies under the later Aura"
-    Spec.assertEqWith s "CR 732.3 alice's gain is withheld only where the state recurs" (fmap fst (dragonOffers board)) [True, True, True, True, False]
+    Spec.assertEqWith s "CR 733.3 alice's gain is withheld only where the state recurs" (fmap fst (dragonOffers board)) [True, True, True, True, False]
 
   Spec.it s "a loop whose undo leaves a superseded keyword-family removal behind is detected" $ do
     spear <- S.printingOf s registry "Shadowspear"
@@ -223,7 +223,7 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- permanents (CR 702.11e, 611.2c), which the next one erases (CR 613.7);
     -- the second lap returns to the state the first left, so the third
     -- activation, paid the same way, is refused.
-    Spec.assertEqWith s "CR 732.3 alice's third activation is refused" (spearAttempts spear birds rouser) [True, True, False]
+    Spec.assertEqWith s "CR 733.3 alice's third activation is refused" (spearAttempts spear birds rouser) [True, True, False]
 
   Spec.it s "a loop whose undo leaves a superseded all-abilities removal behind is detected" $ do
     adept <- S.printingOf s registry "Synthetic Hushing Adept"
@@ -233,7 +233,7 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- untaps it. Each resolution stores a loss of all abilities (CR 613.1f),
     -- which the next one erases (CR 613.7); the second lap returns to the state
     -- the first left, so the third activation is refused.
-    Spec.assertEqWith s "CR 732.3 alice's third activation is refused" (hushAttempts adept rouser bears) [True, True, False]
+    Spec.assertEqWith s "CR 733.3 alice's third activation is refused" (hushAttempts adept rouser bears) [True, True, False]
 
   Spec.it s "a card reading no history leaves the loop detected, whatever its name spells" $ do
     sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
@@ -245,7 +245,7 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- the damage. Prowling Serpopard, in bob's library, reads no history,
     -- though its name spells a reader's keyword, prowl's: the state recurs,
     -- and alice's second activation is refused.
-    Spec.assertEqWith s "CR 732.3 Prowling Serpopard leaves alice's repeated aim refused" (pingAttempts sorcerer collar rouser serpopard) [True, False]
+    Spec.assertEqWith s "CR 733.3 Prowling Serpopard leaves alice's repeated aim refused" (pingAttempts sorcerer collar rouser serpopard) [True, False]
 
   Spec.it s "a keyword the engine expands into a history reader keeps the loop's states distinct" $ do
     sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
@@ -256,7 +256,7 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- asks whether an opponent was dealt damage this turn (CR 702.54a), off
     -- the log the loop writes, though the card spells only the keyword. So
     -- the answerer's budget is what stops alice.
-    Spec.assertEqWith s "CR 732.3 Bloodrage Vampire keeps every attempt" (pingAttempts sorcerer collar rouser vampire) (replicate budget True)
+    Spec.assertEqWith s "CR 733.3 Bloodrage Vampire keeps every attempt" (pingAttempts sorcerer collar rouser vampire) (replicate budget True)
 
   Spec.it s "a loop that moves a card recurs under the card's new identity" $ do
     spirit <- S.printingOf s registry "Blinking Spirit"
@@ -267,11 +267,11 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- second lap returns to the state the first began in, and casting it so
     -- again is refused.
     let casts = blinkCasts spirit omniscience
-    Spec.assertEqWith s "CR 732.3 alice's repeated cast is refused" (fmap fst casts) [True, False]
-    Spec.assertEqWith s "CR 733.1 and her next priority says why" (fmap snd casts) [Nothing, Just Undoing.RepeatedLoop]
+    Spec.assertEqWith s "CR 733.3 alice's repeated cast is refused" (fmap fst casts) [True, False]
+    Spec.assertEqWith s "CR 734.1 and her next priority says why" (fmap snd casts) [Nothing, Just Undoing.RepeatedLoop]
 
 -- How many times the answerer has the tapper activate before it passes
--- instead, since without CR 732.3 the loop never ends.
+-- instead, since without CR 733.3 the loop never ends.
 budget :: Int
 budget = 3
 
@@ -633,7 +633,7 @@ spearing spearId birdsId rouserId asked = case Asked.prompt asked of
                 State.put (left, False, False, made <> [True])
                 pure Action.Pass
               else do
-                -- Refused (CR 733.1): the loop is over.
+                -- Refused (CR 734.1): the loop is over.
                 State.put (0, False, alicesLap, made <> [False])
                 pure Action.Pass
           else
@@ -705,7 +705,7 @@ lapping tapperId rouserId aim asked = case Asked.prompt asked of
                 State.put (left, False, False, made <> [True])
                 pure Action.Pass
               else do
-                -- Refused (CR 733.1): the loop is over.
+                -- Refused (CR 734.1): the loop is over.
                 State.put (0, False, alicesLap, made <> [False])
                 pure Action.Pass
           else

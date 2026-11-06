@@ -1,0 +1,40 @@
+{
+  "description": "CR 723.3a Codie prepares each creature its controller controls",
+  "note": "Codie's ability prepares both of alice's Aviators, minting a Jump copy for each into her exile; bob's Aviator is not hers and mints nothing, and the Piker, which has no prepare spell, cannot become prepared. alice then casts one copy, so it is castable, and Codie copies that cast too.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Codie, Ravenous Codex", "label": "codie", "ready": true },
+          { "card": "Encouraging Aviator", "label": "aviator-1", "ready": true },
+          { "card": "Encouraging Aviator", "label": "aviator-2", "ready": true },
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Plains", "label": "plains" },
+          { "card": "Island", "label": "island" },
+          { "card": "Swamp", "label": "swamp" },
+          { "card": "Mountain", "label": "mountain" },
+          { "card": "Forest", "label": "forest" },
+          { "card": "Island", "label": "island-2" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Encouraging Aviator", "label": "bob-aviator", "ready": true }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$codie", "mana": ["$plains", "$island", "$swamp", "$mountain", "$forest", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OrderForEach", "with": [0, 1, 2, 3] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Jump", "count": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Jump", "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "Jump#4", "targets": ["$piker"], "mana": ["$island-2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Jump", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTargets": { "target": ["$piker"] } } }
+  ]
+}

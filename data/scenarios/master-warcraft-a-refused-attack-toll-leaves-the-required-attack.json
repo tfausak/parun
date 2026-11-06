@@ -1,6 +1,6 @@
 {
   "description": "CR 508.1d/508.1j Under Master Warcraft the attacker's controller may refuse an attack toll, and a repeated refused declaration still makes the required attack",
-  "note": "Bob chooses that alice's Juggernaut attacks and alice aims it at bob, behind his Ghostly Prison. Alice can pay the {2} and is asked; she refuses, the declaration is reversed (CR 733.1), and bob repeats it. Refused again, it degrades to the declaration CR 508.1d requires without a cost: Juggernaut attacks carol, whom nothing taxes.",
+  "note": "Bob chooses that alice's Juggernaut attacks and alice aims it at bob, behind his Ghostly Prison. Alice can pay the {2} and is asked; she refuses, the declaration is reversed (CR 734.1), and bob repeats it. Refused again, it degrades to the declaration CR 508.1d requires without a cost: Juggernaut attacks carol, whom nothing taxes.",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",

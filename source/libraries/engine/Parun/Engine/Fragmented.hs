@@ -1,11 +1,11 @@
--- | CR 732.3: a fragmented loop, where each player involved takes an
+-- | CR 733.3: a fragmented loop, where each player involved takes an
 -- independent action and the game returns to a state it was in before. The
 -- active player, or the first involved player in turn order from them, must
--- then make a different game choice -- at the priority grain CR 732.1 names,
+-- then make a different game choice -- at the priority grain CR 733.1 names,
 -- a different action -- so the loop does not continue.
 --
 -- Not a choice made for anyone: the rule narrows the named player's menu, and
--- CR 732.5 keeps Pass on it.
+-- CR 733.5 keeps Pass on it.
 --
 -- UNDER-DETECTION is the safe direction throughout. A state this module fails
 -- to recognise as a repeat leaves the menu as it was, so every approximation
@@ -75,7 +75,7 @@ import qualified Parun.Types.StickerPlacement as StickerPlacement
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Text.Read as Read
 
--- | The game state as CR 732.3 compares it: the whole record, by its derived
+-- | The game state as CR 733.3 compares it: the whole record, by its derived
 -- Show, less the fields below, with every object id and timestamp renumbered
 -- by rank. A RECORD UPDATE rather than a field list, so a field added later is
 -- compared by default and can only ever prevent a detection --
@@ -92,9 +92,9 @@ import qualified Text.Read as Read
 -- object is the same game state".
 --
 -- Dropped as bookkeeping no card reads: the id, timestamp, printing and event
--- group supplies; CR 104.4b's `lastChoice` and `loopInvolvement`; CR 732.3's
+-- group supplies; CR 104.4b's `lastChoice` and `loopInvolvement`; CR 733.3's
 -- own `repeatPicks`, which a RepeatIf's runs compare digests to fill; CR
--- 733.1's `undone`, which only a client reads; the grow-only printing
+-- 734.1's `undone`, which only a client reads; the grow-only printing
 -- interning; and the scan state keyed off the log
 -- (`scannedThrough`, `damageScannedThrough`, `battlefieldWhenTriggered`,
 -- `controlSample`, `stackedIn`). `lastKnown` and `stackArchive` are keyed by
@@ -144,7 +144,7 @@ digest gs =
             GameState.stackedIn = Map.empty,
             -- One value for a whole turn, and the digest keeps turnNumber.
             GameState.permanentsAsTurnBegan = Nothing,
-            -- Canonical rather than dropped, so CR 732.3's own example recurs,
+            -- Canonical rather than dropped, so CR 733.3's own example recurs,
             -- and a loop that moves a counter back.
             GameState.continuousEffects = effects,
             GameState.objects = objects,
@@ -222,13 +222,13 @@ renumber ids stamps rendered = case rendered of
             Nothing -> '?' : digits
        in written <> renumber ids stamps more
 
--- | A game choice made in the state `here` digests, as CR 732.3 compares it:
+-- | A game choice made in the state `here` digests, as CR 733.3 compares it:
 -- its object ids renumbered as `here`'s are (`digest`). So the same choice of a
 -- re-created object, made in a recurrence of `here`, is the same choice.
 choiceKey :: (Show choice) => StateDigest -> choice -> String
 choiceKey here = renumber (StateDigest.objectRanks here) Map.empty . show
 
--- | CR 732.3 over the stamps an action leaves behind -- the stored continuous
+-- | CR 733.3 over the stamps an action leaves behind -- the stored continuous
 -- effects (CR 611.2a) and the counters' (CR 613.7c) -- as the game can tell
 -- them apart. A row is dropped where a later one from the same source, over
 -- the same fixed set (CR 611.2c) and ending with it, `erases` it, which leaves
@@ -346,7 +346,7 @@ layeredStamps gs =
     (Map.elems (GameState.objects gs))
     <> fmap ActiveCopy.timestamp (GameState.copyEffects gs)
 
--- | CR 732.3's example makes "nothing in the game cares how many times an
+-- | CR 733.3's example makes "nothing in the game cares how many times an
 -- ability has been activated" the precondition: does anything in the game
 -- read the history appended between `there`, a state the loop passed through,
 -- and `gs`, the same state again? Asked of what was appended rather than of
@@ -382,14 +382,14 @@ lapIsRead there gs =
 -- that mints a new one (Parun.Engine.Event.forgetShown); and
 -- Parun.Engine.PlayerView's witnessed log, which no rule reads.
 -- Parun.Engine.Engine.beginTurnOf's fold of the casts, damage and attacks
--- feeds readers classified here, and CR 731.2a's day and night, the rules'
+-- feeds readers classified here, and CR 732.2a's day and night, the rules'
 -- own reader of the casts.
 readers :: GameState -> Set.Set HistoryRead.HistoryRead
 readers gs =
   -- The rules' own readers: Parun.Engine.Planechase.rollCost (CR 901.9),
   -- Parun.Engine.Speed's once-each-turn trigger (CR 702.179d), minted for any
   -- player with a speed and limited off the AbilityTriggered log, and
-  -- Parun.Engine.Daytime's untap-step check of the casts (CR 731.2a), once it
+  -- Parun.Engine.Daytime's untap-step check of the casts (CR 732.2a), once it
   -- is day or night.
   Set.fromList ([HistoryRead.PlanarRolls | Planechase.isPlanechase gs] <> [HistoryRead.Triggers | any (Maybe.isJust . Player.speed) (GameState.players gs)] <> [HistoryRead.Casts | Maybe.isJust (GameState.daytime gs)])
     <> foldMap (Mentions.cardNames historyReads . Printing.card) (GameState.printings gs)
@@ -519,7 +519,7 @@ planarDieRolled event = case event of
   GameEvent.PlanarDieRolled {} -> True
   _ -> False
 
--- | CR 732.3: the game choices `pid`, asked at `gs` (digested as `here`), may
+-- | CR 733.3: the game choices `pid`, asked at `gs` (digested as `here`), may
 -- not make, so a fragmented loop does not continue: the actions refused
 -- outright, and the activations and casts refused as completed with, each
 -- as `choiceKey` and `completionKey` write it. Both empty unless
@@ -527,19 +527,19 @@ planarDieRolled event = case event of
 -- history the loop appended since (`lapIsRead`), and `pid` is the player the
 -- rule names.
 --
--- "Involved in the loop" is the players who took a non-Pass action (CR 732.1,
--- 732.5) since the state FIRST occurred: a shorter loop nested inside a longer
+-- "Involved in the loop" is the players who took a non-Pass action (CR 733.1,
+-- 733.5) since the state FIRST occurred: a shorter loop nested inside a longer
 -- one through the same state (a no-op lap by one player) must not hide the
 -- longer one's players. Forbidden is every choice `pid` made at ANY prior
--- occurrence, not only the last, each having led back here: CR 732.3's "so the
+-- occurrence, not only the last, each having led back here: CR 733.3's "so the
 -- loop does not continue" refuses A, B, A, B too. A `choiceless` action is
--- refused as a whole, by CR 732.3's example ("anything other than activating
+-- refused as a whole, by CR 733.3's example ("anything other than activating
 -- that creature's ability again"), and an activation, a mana ability's among
 -- them (CR 605.3a), or a cast, as it was completed -- announced and paid -- so
 -- aiming it elsewhere (CR 601.2c) or paying it another way (CR 601.2g/h) is
 -- still a choice to make. A choice made later in the lap -- as the object
 -- resolves (CR 608.2d), or for a trigger it causes -- is a game choice of its
--- own, and leaves this one as it was. Pass never is (CR 732.5). Parun.FragmentedSpec's
+-- own, and leaves this one as it was. Pass never is (CR 733.5). Parun.FragmentedSpec's
 -- control case is the board where the nesting happens, its Grim Poppet case
 -- the announcement, its Freed from the Real cases the payment and the mana
 -- ability, its Fatestitcher case a choice at resolution, and its Blinking
@@ -564,15 +564,15 @@ forbidden here gs pid loopTrail =
        in if named == Just pid && unread then (taken, completedWith) else (Set.empty, Set.empty)
 
 -- | What an activation or a cast made in the state `here` digests was
--- completed with, as CR 732.3 compares it: the announcement renumbered as
+-- completed with, as CR 733.3 compares it: the announcement renumbered as
 -- `here`'s ids are (`choiceKey`), and the payment, digested already.
 completionKey :: StateDigest -> Completion.Completion -> (Maybe String, StateDigest)
 completionKey here completion = (fmap (choiceKey here) (Completion.announcement completion), Completion.paid completion)
 
--- | Is `action` the whole of the game choice (CR 732.1), so refusing it
+-- | Is `action` the whole of the game choice (CR 733.1), so refusing it
 -- refuses only the choice that continued the loop? An activation with no
 -- target, a single mode, no X and no cost but nothing to pay; never Pass (CR
--- 732.5). Refused from the menu, where an activation with more to announce or
+-- 733.5). Refused from the menu, where an activation with more to announce or
 -- pay is refused by how it was completed instead (`forbidden`).
 choiceless :: Action -> Bool
 choiceless action = case action of
@@ -604,7 +604,7 @@ paid paidFor gs = case paidFor of
         }
 
 -- | Note that `pid`, asked at `here`, chose `action`. Held as pending until
--- the next prompt, since an action CR 733.1 reversed -- a refused
+-- the next prompt, since an action CR 734.1 reversed -- a refused
 -- activation among them -- leaves the game in the state it was taken in and
 -- never happened. A REGRESSION FENCE: the Grim Poppet case reverses one, but
 -- counting it changes nothing that case refuses, so no test observes the

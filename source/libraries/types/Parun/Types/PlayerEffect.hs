@@ -155,7 +155,7 @@ data PlayerEffect
     DamageCantBeRedirected DamagePattern.DamagePattern
   | -- | CR 701.23 / 613.11 / Leonin Arbiter: this player can't search libraries.
     CantSearchLibraries CantSearchLibraries.CantSearchLibraries
-  | -- | CR 725.1 / 101.2 / Jared Carthalion, True Heir: this player can't become
+  | -- | CR 726.1 / 101.2 / Jared Carthalion, True Heir: this player can't become
     -- the monarch.
     CantBecomeMonarch
   | -- | CR 704.5j / Hall of Echoes: the legend rule doesn't apply to permanents
@@ -171,7 +171,7 @@ data PlayerEffect
     -- permanent matching the filter, whatever its event, triggers an additional
     -- time.
     AdditionalTriggers (Filter.Filter Keyword.Keyword)
-  | -- | CR 723.2 / Opposition Agent: while this player searches their library,
+  | -- | CR 724.2 / Opposition Agent: while this player searches their library,
     -- CR 109.5's "you" of the row controls them.
     ControlledWhileSearching
   | -- | CR 508.1a / 509.1a / 613.11 / Master Warcraft, Odric, Master Tactician:

@@ -9,7 +9,7 @@ import qualified Parun.Types.PlayerId as PlayerId
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.MonarchWatch" $ do
-  -- CR 725: the watch is armed and nothing has happened yet.
+  -- CR 726: the watch is armed and nothing has happened yet.
   Spec.it s "a watch nothing has satisfied" $
     Common.assertCodec
       s

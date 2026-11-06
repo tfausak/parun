@@ -1418,7 +1418,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       Keyword.Decayed
       " {\"type\":\"Decayed\"} "
   -- CR 702.160a's inset frame rides the constructor: cost, power and toughness
-  -- together, since CR 718.3 chooses all three at once.
+  -- together, since CR 719.3 chooses all three at once.
   Spec.it s "Prototype carries its inset frame" $ do
     Common.assertCodec
       s
@@ -1541,7 +1541,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
       Keyword.codec
       Keyword.PowerUp
       " {\"type\":\"PowerUp\"} "
-  -- CR 716.2. The payload is the level the bar makes the Class.
+  -- CR 717.2. The payload is the level the bar makes the Class.
   Spec.it s "ClassLevel" $
     Common.assertCodec
       s
@@ -1808,7 +1808,7 @@ spec s = Spec.describe s "Parun.Codec.Keyword" $ do
   Spec.it s "has a schema" $
     Common.assertHasSchema s Keyword.codec
 
--- CR 718.1: Autonomous Assembler's inset frame, "Prototype {1}{W} -- 2/2".
+-- CR 719.1: Autonomous Assembler's inset frame, "Prototype {1}{W} -- 2/2".
 assemblerFrame :: Prototype.Prototype
 assemblerFrame =
   Prototype.MkPrototype

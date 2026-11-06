@@ -67,9 +67,9 @@ data Section
 -- alongside a deck rather than written on its list, so a caller in one of those
 -- formats designates them itself.
 --
--- Not implemented: CR 717.2's Attraction deck and the Unstable FAQ's Contraption
+-- Not implemented: CR 718.2's Attraction deck and the Unstable FAQ's Contraption
 -- deck, and naming which printing of an Attraction a line means, whose lights
--- CR 717.1 lets differ (#4118).
+-- CR 718.1 lets differ (#4118).
 parse :: (Monad m) => Registry.Registry m -> Text.Text -> m (Either InvalidCorpus.InvalidCorpus (Either [Problem] Deck.Deck))
 parse registry text = do
   looked <- mapM (lineOf registry) (List.zip [1 ..] (Text.lines text))

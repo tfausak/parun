@@ -1,15 +1,15 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- Covers: Parun.Engine.Rad (CR 728, "Rad Counters"), PlayerCounterKind.Rad on
+-- Covers: Parun.Engine.Rad (CR 729, "Rad Counters"), PlayerCounterKind.Rad on
 -- Player.counters (CR 122.1i), Parun.Engine.Quantity's PlayerCounters arm, the
 -- MillTally that Parun.Engine.Resolve's Mill arm binds,
--- Effect.RemovePlayerCounters, and CR 728.1a's LifeLossCause.ByRadiation with the
+-- Effect.RemovePlayerCounters, and CR 729.1a's LifeLossCause.ByRadiation with the
 -- LifeLossRewrite.GainInstead that reads it.
 --
 -- Gameplay-level. The Master, Transcendent is the producer -- {1}{B}{G}{U}
 -- Legendary Artifact Creature, "When The Master enters, target player gets two
--- rad counters" -- cast off four lands, so the counters that rule 728.1's ability
+-- rad counters" -- cast off four lands, so the counters that rule 729.1's ability
 -- then eats were put there by a card rather than written into the state. It is
 -- also the pool's first card to give a TARGET player counters, which is why it
 -- aims at bob: a recipient plumbed to the resolving controller would put them on
@@ -18,7 +18,7 @@
 -- The Master's OTHER ability -- "{T}: Put target creature card in a graveyard
 -- that was milled this turn onto the battlefield under your control. It's a
 -- green Mutant with base power and toughness 3/3." -- has the last group, since
--- rule 728.1's own mill is what stocks the graveyard it reads (CR 701.17a,
+-- rule 729.1's own mill is what stocks the graveyard it reads (CR 701.17a,
 -- Filter.LeftLibraryThisTurn).
 --
 -- The groups after the first arrange the counters directly (S.addPlayerCounter),
@@ -71,11 +71,11 @@ producerSpec s registry = Spec.describe s "The Master, Transcendent" $ do
     -- alice cast it, and alice gets nothing.
     Spec.assertEqWith s "and alice, who cast it, has none" (radOf S.alice after) 0
 
--- CR 728.1's ability on its own, over the boards that vary what the mill finds.
+-- CR 729.1's ability on its own, over the boards that vary what the mill finds.
 abilitySpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
-abilitySpec s registry = Spec.describe s "CR 728.1's inherent ability" $ do
+abilitySpec s registry = Spec.describe s "CR 729.1's inherent ability" $ do
   -- CR 603.4's intervening "if". A player with none does not trigger at all.
-  Spec.it s "CR 728.1 a player with no rad counters mills nothing" $ do
+  Spec.it s "CR 729.1 a player with no rad counters mills nothing" $ do
     bolt <- S.printingOf s registry "Lightning Bolt"
     let stocked = libraryTopped [bolt, bolt] S.alice (Setup.emptyGame S.bothPlayers)
         after = S.runPure S.identityAnswer (precombatMainOf S.alice stocked) (Engine.runStep >> Engine.priorityLoop)
@@ -127,7 +127,7 @@ libraryTopped :: [Printing.Printing] -> PlayerId.PlayerId -> GameState.GameState
 libraryTopped printings pid gs = List.foldl' (\g p -> snd (S.addLibraryCard p pid g)) gs (reverse printings)
 
 -- The board just after pid's precombat main phase began, settled for priority:
--- the moment CR 603.4 has decided whether rule 728.1's ability is on the stack,
+-- the moment CR 603.4 has decided whether rule 729.1's ability is on the stack,
 -- and before any priority round could resolve it away. The StepBegan record is
 -- staged directly, as Parun.TriggerSpec's StepBegins cases stage theirs, because
 -- Engine.runStep writes it and then runs that very priority round.
@@ -136,7 +136,7 @@ settledAtPrecombatMain pid gs =
   let staged = S.withEvents [GameEvent.StepBegan (StepBegan.MkStepBegan Phase.PrecombatMain pid)] (precombatMainOf pid gs)
    in S.runPure S.identityAnswer staged Engine.settleForPriority
 
--- A board sitting in pid's precombat main phase, the moment CR 728.1 names.
+-- A board sitting in pid's precombat main phase, the moment CR 729.1 names.
 precombatMainOf :: PlayerId.PlayerId -> GameState.GameState -> GameState.GameState
 precombatMainOf pid gs =
   gs

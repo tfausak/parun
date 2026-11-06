@@ -10,7 +10,7 @@ module Parun.Types.ReplacementBucket where
 -- Gather Specimens and Captive Audience. CopyOnEntry (616.1c) is EntryR
 -- AsCopy, from Clone, split from EntryR ChoiceOf, which stays in Other with
 -- every other arm. BackFaceOnEntry (616.1d) is EntryR EntersTransformed, from
--- daybound's "if it is night ... it enters transformed" (CR 702.145b). Not CR 712.14a's "put onto the
+-- daybound's "if it is night ... it enters transformed" (CR 702.145b). Not CR 712.11a's "put onto the
 -- battlefield transformed", which is an instruction the effect carries
 -- (Parun.Types.EntryRiders) rather than a replacement effect, and so takes no
 -- bucket at all.

@@ -13,7 +13,7 @@ spec s = Spec.describe s "Parun.Codec.EndTurnSignal" $ do
       EndTurnSignal.codec
       EndTurnSignal.Running
       " \"Running\" "
-  -- CR 724.1f: raised means no player gets priority for the rest of the process,
+  -- CR 725.1f: raised means no player gets priority for the rest of the process,
   -- so a state written out mid-process has to say which of the two it is in.
   Spec.it s "Ended" $
     Common.assertCodec

@@ -17,11 +17,11 @@ import qualified Parun.Types.TapState as TapState
 -- object it is about (Object.playPermission) rather than in a list on the
 -- game.
 --
--- OBJECT-BORNE, and the rules put it there. CR 715.3d says "for as long as THAT
+-- OBJECT-BORNE, and the rules put it there. CR 716.3d says "for as long as THAT
 -- CARD remains exiled, THAT PLAYER may play it" -- one card, one player -- and
 -- CR 400.7 then ends it for free, since the incarnation that carries it stops
 -- existing the moment the card leaves exile. Object's own haddock argues the
--- rest of that case; this type is what the field holds, whether rule 715.3d
+-- rest of that case; this type is what the field holds, whether rule 716.3d
 -- wrote it or an Effect did -- and `origin` below is which, because one clause
 -- of the rules turns on the difference.
 --
@@ -45,7 +45,7 @@ import qualified Parun.Types.TapState as TapState
 --
 -- `expiry` is CR 611.2a's stated duration, armed by Parun.Engine.Expiry.arm.
 -- Expiry.Never is that rule's default for a permission that states none -- CR
--- 715.3d's Adventure permission takes it, and CR 400.7 rather than a sweep is
+-- 716.3d's Adventure permission takes it, and CR 400.7 rather than a sweep is
 -- what ends that one.
 --
 -- `spending` is CR 118.14's "mana of any type can be spent to cast that spell",
@@ -72,15 +72,15 @@ import qualified Parun.Types.TapState as TapState
 -- REPLACES the printed cost there rather than joining it, since this permission
 -- is the only thing making the cast legal at all.
 --
--- `origin` is which rule granted this permission, and CR 715.3d's closing clause
+-- `origin` is which rule granted this permission, and CR 716.3d's closing clause
 -- is the one place it is read: "it can't be cast as an Adventure this way,
 -- ALTHOUGH OTHER EFFECTS that allow a player to cast it may allow a player to
 -- cast it as an Adventure". Without it the Adventure exclusion narrows every
--- permission this field can hold, where the rule scopes it to 715.3d's own --
+-- permission this field can hold, where the rule scopes it to 716.3d's own --
 -- Parun.Engine.Cast.grantedByAdventureRule -- the helper permitsCastFromExile
 -- calls in its Adventure conjunct -- is the only reader, and Parun.CastSpec's
--- "CR 715.3d another effect's permission allows the Adventure half" against
--- Parun.AdventureSpec's "CR 715.3d from exile the creature is castable and the
+-- "CR 716.3d another effect's permission allows the Adventure half" against
+-- Parun.AdventureSpec's "CR 716.3d from exile the creature is castable and the
 -- Adventure is not" is the pair that proves it.
 --
 -- Runtime-only: a permission is written by a resolution and never printed on a

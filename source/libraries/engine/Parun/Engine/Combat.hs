@@ -114,10 +114,10 @@ emptyCombat =
 -- next combat phase asks CR 506.8b's question afresh).
 --
 -- Engine.runStep calls this as the step ENDS, not from runTurnBasedActions: CR
--- 511.1 gives this step no turn-based action. CR 724.1d and CR 724.2d ask for
+-- 511.1 gives this step no turn-based action. CR 725.1d and CR 725.2d ask for
 -- the same removal at a different moment, so Resolve's Effect.EndTurn arm calls
 -- it too, guarded on the turn having been ended during a combat phase, and its
--- Effect.EndCombatPhase arm inside CR 724.2g's guard.
+-- Effect.EndCombatPhase arm inside CR 725.2g's guard.
 clearCombat :: GameState -> GameState
 clearCombat gs = gs {GameState.combat = emptyCombat}
 
@@ -2245,7 +2245,7 @@ designateDefenders = do
             then -- CR 802.2: the action is taken and asks nothing. The whole
             -- candidate list is the answer, already in CR 802.4's APNAP order.
               pure (NonEmpty.toList candidates)
-            else -- CR 723.1 on top of CR 800.4h: the reassigned seat is who the
+            else -- CR 724.1 on top of CR 800.4h: the reassigned seat is who the
             -- rule asks, and a player controlling THEM answers for them.
               Maybe.maybeToList <$> Game.chooseAmong Prompt.ChooseDefender chooser (NonEmpty.toList candidates)
         State.modify' $ \g ->
@@ -2407,9 +2407,9 @@ couldAttack pid gs =
 -- make the attempt fail: CR 508.1c/508.1d judge the declaration illegal, and CR
 -- 508.1j's payment cannot be made. The preamble treats them the same way -- both
 -- clauses end "the declaration ... is illegal" -- so one loop covers both, and the
--- rewind that CR 733.1 spells out is followed by a fresh declaration.
+-- rewind that CR 734.1 spells out is followed by a fresh declaration.
 --
--- NOT CR 733.2, which is written for spells and abilities: it hands the redo to
+-- NOT CR 734.2, which is written for spells and abilities: it hands the redo to
 -- the player who had priority, and a turn-based action has no priority holder. The
 -- authority for asking again is CR 508.1's own preamble.
 --
@@ -2468,7 +2468,7 @@ attemptAttackDeclaration perform pid asked forced rejected = do
         else do
           now <- State.get
           chosen <- Game.choose (Prompt.DeclareAttackers (Decide.deciderFor chooser now) pid offerable)
-          -- CR 733.1: why the last declaration was reversed is news only
+          -- CR 734.1: why the last declaration was reversed is news only
           -- until the next is made.
           Game.clearUndoing chooser
           -- Filtered, not trusted: an interpreter cannot attack with a creature
@@ -2734,7 +2734,7 @@ attemptAttackDeclaration perform pid asked forced rejected = do
         paid <- payTolls perform (handedTo chooser pid) before (exerted <> enlisted) owed
         if not paid
           then do
-            -- CR 508.1's preamble: the declaration is illegal and CR 733.1
+            -- CR 508.1's preamble: the declaration is illegal and CR 734.1
             -- reverses it, which Cost.payToll has done -- back to `before`, less
             -- whatever the payers kept of their mana windows and any card a toll
             -- milled. Reachable by an ordinary player who declares more attackers
@@ -2893,7 +2893,7 @@ stillChosen who oid gs = Set.member oid (GameState.battlefield gs) && Projection
 
 -- CR 508.1j / 509.1f: pay each player's locked-in toll, in `owed`'s order,
 -- all or nothing -- a failed payment rewinds to `before` (Cost.payToll), which
--- also undoes the payments ahead of it, less what CR 733.1 lets each player keep
+-- also undoes the payments ahead of it, less what CR 734.1 lets each player keep
 -- or forbids reversing: those payments' mana windows and library moves ride
 -- along to it. Each player pays for the creatures they control, which only a
 -- shared team's declaration can split (CR 805.10b / 805.10d). A player owing
@@ -3456,7 +3456,7 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
     chosen <- case pileDeclaration pid now of
       Just full | legalBlockDeclaration pid full now && all (null . snd) (blockTolls pid full now) -> pure full
       _ -> Game.choose (Prompt.DeclareBlockers (Decide.deciderFor chooser now) pid candidates attacking)
-    -- CR 733.1: why the last declaration was reversed is news only until the
+    -- CR 734.1: why the last declaration was reversed is news only until the
     -- next is made.
     Game.clearUndoing chooser
     -- CR 509.1b: an illegal declaration is illegal AS A WHOLE. NOT filtered
@@ -3518,8 +3518,8 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
         -- why it may be.
         paid <- payTolls perform (handedTo chooser pid) before [] owed
         -- CR 509.1's preamble: a declaration the defending player cannot pay for
-        -- is illegal and CR 733.1 reverses it, which Cost.payToll has done back
-        -- to `before`, less what CR 733.1 keeps. The blocks themselves are recorded below, so the only
+        -- is illegal and CR 734.1 reverses it, which Cost.payToll has done back
+        -- to `before`, less what CR 734.1 keeps. The blocks themselves are recorded below, so the only
         -- thing of this function's that undoes is the declaredBlockers write
         -- above -- which has to go, since the retry and the CR 509.1c
         -- degradation both ask the same toll again and would otherwise see stale

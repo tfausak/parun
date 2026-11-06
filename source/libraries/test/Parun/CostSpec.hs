@@ -3530,7 +3530,7 @@ tappingNothing p = case p of
 
 -- How many mana this source put in alice's pool. The observable that says the
 -- cost was PAID: an unpaid one is reversed at CR 601.2h's moment, and
--- S.identityAnswer reverses the mana abilities with it (CR 733.1), so a refused
+-- S.identityAnswer reverses the mana abilities with it (CR 734.1), so a refused
 -- payment adds nothing and taps nothing. announcedReversalSpec below is the
 -- payer who keeps them.
 pooledFrom :: (forall r. Prompt.Prompt r -> r) -> ObjectId.ObjectId -> GameState.GameState -> Int
@@ -4847,7 +4847,7 @@ hasteAbility p = case Face.activatedAbilities (S.combinedFace p) of
 -- CR 605.3a's window offers the Bloom, and the Bloom's own cost offers every card
 -- in that hand -- the Carnosaur included, since it is still there (CR 602.2a
 -- moves no card). Exiling it for {B}{B} leaves CR 601.2h nothing to discard, so
--- the order is unpayable and CR 733.1 reverses the activation.
+-- the order is unpayable and CR 734.1 reverses the activation.
 --
 -- A PAIR differing in one thing, the card the Bloom exiles: a Mountain card
 -- also in hand is the other answer, which pays in full. bob's Goblin Piker is
@@ -4887,7 +4887,7 @@ trumpetingCarnosaurSpec s registry = Spec.describe s "Trumpeting Carnosaur" $ do
   Spec.it s "CR 601.2h exiling the Carnosaur for mana leaves nothing to discard, and the activation reverses" $ do
     (carnosaurId, _, pikerId, after) <- run True
     Spec.assertEqWith s "the Piker took no damage" (fmap Object.damage (Game.lookupObject pikerId after)) (Just 0)
-    Spec.assertEqWith s "CR 733.1 and the Carnosaur is back in alice's hand" (fmap Object.zone (Game.lookupObject carnosaurId after)) (Just Zone.Hand)
+    Spec.assertEqWith s "CR 734.1 and the Carnosaur is back in alice's hand" (fmap Object.zone (Game.lookupObject carnosaurId after)) (Just Zone.Hand)
     Spec.assertEqWith s "with nothing on the stack" (length (GameState.stack after)) 0
   Spec.it s "CR 605.3a exiling another card pays the same cost and resolves" $ do
     (carnosaurId, fuelId, pikerId, after) <- run False
@@ -5002,7 +5002,7 @@ poolSize pid gs = case Game.poolOf pid gs of
 
 -- CR 605.3a's window answered with `wanted` in order: each is tapped when the
 -- engine offers it, and the window closes once none of them is left on offer.
--- CR 733.1's question is answered with `decision` and counted. Everything else
+-- CR 734.1's question is answered with `decision` and counted. Everything else
 -- goes to `rest`.
 keepingOrNot :: OptionalDecision.OptionalDecision -> [ObjectId.ObjectId] -> (forall a. Prompt.Prompt a -> a) -> Prompt.Prompt r -> State.State Int r
 keepingOrNot decision wanted rest p = case p of
@@ -5020,7 +5020,7 @@ gateRoute p = case p of
   Prompt.AnnounceHybridHalf _ _ _ _ offers -> Maybe.fromMaybe (NonEmpty.head offers) (List.find (== ManaType.Colored Color.Blue) (NonEmpty.toList offers))
   _ -> S.identityAnswer p
 
--- CR 733.1 where the payment is NOT the whole of the action: a cast has put its
+-- CR 734.1 where the payment is NOT the whole of the action: a cast has put its
 -- spell on the stack (CR 601.2a) and an activation its ability (CR 602.2a)
 -- before the window opens, and a mana ability's own cost opens a window nested
 -- inside another activation. The announcement goes back unasked; the mana
@@ -5032,7 +5032,7 @@ announcedReversalSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registr
 announcedReversalSpec s registry = Spec.describe s "Reversal after an announcement" $ do
   -- Hanweir Battlements' "{R}, {T}", paid by tapping the Battlements itself
   -- and then the Mountain, so CR 107.5 refuses the {T}.
-  Spec.it s "CR 733.1 an activator who keeps the mana abilities keeps both lands tapped and both mana floating" $ do
+  Spec.it s "CR 734.1 an activator who keeps the mana abilities keeps both lands tapped and both mana floating" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     mountain <- S.printingOf s registry "Mountain"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -5075,7 +5075,7 @@ announcedReversalSpec s registry = Spec.describe s "Reversal after an announceme
   -- Mystic Gate's "{W/U}, {T}" activated from nothing: its own window taps the
   -- Gate for its "{T}: Add {C}" and then the Island for {U}, so the {W/U} is
   -- paid and the Gate's {T} is not (CR 107.5).
-  Spec.it s "CR 733.1 a nested window's mana abilities are the payer's to keep" $ do
+  Spec.it s "CR 734.1 a nested window's mana abilities are the payer's to keep" $ do
     gate <- S.printingOf s registry "Mystic Gate"
     island <- S.printingOf s registry "Island"
     let (gateId, g1) = S.addPermanent gate S.alice (Setup.emptyGame S.bothPlayers)
@@ -5884,11 +5884,11 @@ assistSpec s registry = Spec.describe s "Charging Binox" $ do
     let (spell, _, _, gs) = assistBoard 0 6 forest mountain plains binox
     Spec.assertEqWith s "the cast is not offered" (S.castable S.alice spell gs) False
 
-  -- CR 733.1's "each player may also reverse", with two players who activated
+  -- CR 734.1's "each player may also reverse", with two players who activated
   -- something: alice taps her Forest, bob taps three of his seven Plains and
   -- pays three of the generic, and {G} plus three leaves four unpaid, so CR
   -- 601.2h refuses the cast. One board, the four combinations of answers.
-  Spec.it s "CR 733.1 a refused assisted cast asks the helper too, and each keeps only their own" $ do
+  Spec.it s "CR 734.1 a refused assisted cast asks the helper too, and each keeps only their own" $ do
     binox <- S.printingOf s registry "Charging Binox"
     forest <- S.printingOf s registry "Forest"
     mountain <- S.printingOf s registry "Mountain"
@@ -5899,7 +5899,7 @@ assistSpec s registry = Spec.describe s "Charging Binox" $ do
         ((_, aliceKeeps), _) = run OptionalDecision.Declines OptionalDecision.Exercises
         ((_, bothKeep), _) = run OptionalDecision.Declines OptionalDecision.Declines
         ((_, neither), _) = run OptionalDecision.Exercises OptionalDecision.Exercises
-    -- THE BEHAVIOUR: bob kept his three Plains' mana, and CR 733.1 cancelled
+    -- THE BEHAVIOUR: bob kept his three Plains' mana, and CR 734.1 cancelled
     -- the three he had paid, so it is back in his pool.
     Spec.assertEqWith s "the helper who keeps has his three Plains' mana floating" (poolSize S.bob bobKeeps) 3
     Spec.assertEqWith s "and his three Plains tapped" (S.tappedCount S.bob bobKeeps) 3
@@ -5979,7 +5979,7 @@ assisting helper amount forestId plainsIds p =
         _ -> S.identityAnswer p
 
 -- `assisting` with bob chosen to pay as much as his tapped Plains made, and CR
--- 733.1's question answered `alice` or `bob` by whoever is asked, the askers
+-- 734.1's question answered `alice` or `bob` by whoever is asked, the askers
 -- recorded in order.
 -- `reversingAssist` over the whole question, recording the game bob is asked
 -- in.
@@ -5999,7 +5999,7 @@ reversingAssist alice bob forestId plainsIds p = case p of
     pure (if player == S.bob then bob else alice)
   _ -> pure (assisting (Just S.bob) (Natural.Extra.length plainsIds) forestId plainsIds p)
 
--- CR 733.1's "each player may also reverse ANY legal mana abilities that
+-- CR 734.1's "each player may also reverse ANY legal mana abilities that
 -- player activated", one question per activation, newest first. Oracle text
 -- checked against Scryfall 2026-10-09:
 --
@@ -6015,7 +6015,7 @@ partialReversalSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry 
 partialReversalSpec s registry = Spec.describe s "Reversing some mana abilities" $ do
   -- The Elves' {G} kept while the Tomb's {C}{C} and 2 damage go back, a state
   -- neither whole answer leaves.
-  Spec.it s "CR 733.1 alice keeps the Elves' {G} and reverses the Tomb's damage" $ do
+  Spec.it s "CR 734.1 alice keeps the Elves' {G} and reverses the Tomb's damage" $ do
     elves <- S.printingOf s registry "Llanowar Elves"
     tomb <- S.printingOf s registry "Ancient Tomb"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -6034,7 +6034,7 @@ partialReversalSpec s registry = Spec.describe s "Reversing some mana abilities"
     Spec.assertEqWith s "the Tomb is asked first, then the Elves" asked [[tombId], [elvesId]]
 
   -- Two Tombs each dealt 2: reversing the older one undoes its 2 alone.
-  Spec.it s "CR 733.1 reversing the older of two Tombs undoes only its damage" $ do
+  Spec.it s "CR 734.1 reversing the older of two Tombs undoes only its damage" $ do
     tomb <- S.printingOf s registry "Ancient Tomb"
     piker <- S.printingOf s registry "Goblin Piker"
     mountain <- S.printingOf s registry "Mountain"
@@ -6046,9 +6046,9 @@ partialReversalSpec s registry = Spec.describe s "Reversing some mana abilities"
     Spec.assertEqWith s "both Tombs are asked, newest first" asked [[newerId], [olderId]]
 
   -- The Elves' {G} pays Skyshroud Elf's {1}. Keeping the Skyshroud's {R}
-  -- leaves the Elves nothing to ask: CR 733.1's "unless mana from those
+  -- leaves the Elves nothing to ask: CR 734.1's "unless mana from those
   -- abilities ... was spent on another mana ability that wasn't reversed".
-  Spec.it s "CR 733.1 the Elves whose {G} paid a kept Skyshroud Elf are not offered back" $ do
+  Spec.it s "CR 734.1 the Elves whose {G} paid a kept Skyshroud Elf are not offered back" $ do
     elves <- S.printingOf s registry "Llanowar Elves"
     skyshroud <- S.printingOf s registry "Skyshroud Elf"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -6066,7 +6066,7 @@ partialReversalSpec s registry = Spec.describe s "Reversing some mana abilities"
 
   -- Workhorse's ability activated twice, each removing a +1/+1 counter:
   -- reversing the older puts back its counter alone.
-  Spec.it s "CR 733.1 reversing the older of two Workhorse activations puts back one counter" $ do
+  Spec.it s "CR 734.1 reversing the older of two Workhorse activations puts back one counter" $ do
     horse <- S.printingOf s registry "Workhorse"
     piker <- S.printingOf s registry "Goblin Piker"
     mountain <- S.printingOf s registry "Mountain"
@@ -6080,7 +6080,7 @@ partialReversalSpec s registry = Spec.describe s "Reversing some mana abilities"
 
   -- Two Aether Hubs each paid {E}: reversing the older gives back its {E}
   -- alone.
-  Spec.it s "CR 733.1 reversing the older of two Aether Hubs gives back one energy" $ do
+  Spec.it s "CR 734.1 reversing the older of two Aether Hubs gives back one energy" $ do
     hub <- S.printingOf s registry "Aether Hub"
     piker <- S.printingOf s registry "Goblin Piker"
     mountain <- S.printingOf s registry "Mountain"
@@ -6095,7 +6095,7 @@ partialReversalSpec s registry = Spec.describe s "Reversing some mana abilities"
 
   -- Mystic Gate's {W/U} paid with the Plains' {W}, and the Gate adds {W}{W}:
   -- the pool still holds a {W} after it, but not the Plains'.
-  Spec.it s "CR 733.1 the Plains whose {W} paid a kept Mystic Gate is not offered back" $ do
+  Spec.it s "CR 734.1 the Plains whose {W} paid a kept Mystic Gate is not offered back" $ do
     plains <- S.printingOf s registry "Plains"
     gate <- S.printingOf s registry "Mystic Gate"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -6113,7 +6113,7 @@ partialReversalSpec s registry = Spec.describe s "Reversing some mana abilities"
 
   -- The Island tapped inside Mystic Gate's own window is an activation of its
   -- own: the Gate reversed, the Island's {U} kept.
-  Spec.it s "CR 733.1 the Island that paid a reversed Mystic Gate can be kept" $ do
+  Spec.it s "CR 734.1 the Island that paid a reversed Mystic Gate can be kept" $ do
     island <- S.printingOf s registry "Island"
     gate <- S.printingOf s registry "Mystic Gate"
     piker <- S.printingOf s registry "Goblin Piker"
@@ -6140,7 +6140,7 @@ partialReversalBoard mountain first second card =
 -- when it is offered and every window closed once its head is not; a route
 -- yielding exactly `wanted` taken where one is offered, and a hybrid symbol
 -- announced as the first of `wanted`'s types offered, pinned rather than
--- searched for. CR 733.1's questions answered by `decide`, from how many were
+-- searched for. CR 734.1's questions answered by `decide`, from how many were
 -- asked before and the first source named, and recorded in order.
 reversingSome :: [ManaType.ManaType] -> (Int -> ObjectId.ObjectId -> OptionalDecision.OptionalDecision) -> Prompt.Prompt r -> State.State ([ObjectId.ObjectId], [[ObjectId.ObjectId]]) r
 reversingSome wanted decide p = case p of

@@ -1,6 +1,6 @@
 {
   "description": "Vengeful Warchief grows on a kept mana ability's life loss when the older one before it is reversed.",
-  "note": "CR 733.1: alice taps two Ancient Tombs, CR 601.2h refuses the Goblin Piker, and she reverses the older (asked newest first). The undone loss never happened, so the kept one is her first of the turn.",
+  "note": "CR 734.1: alice taps two Ancient Tombs, CR 601.2h refuses the Goblin Piker, and she reverses the older (asked newest first). The undone loss never happened, so the kept one is her first of the turn.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",

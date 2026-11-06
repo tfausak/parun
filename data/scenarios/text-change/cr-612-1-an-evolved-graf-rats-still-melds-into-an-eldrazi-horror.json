@@ -1,5 +1,5 @@
 {
-  "description": "CR 612.1, 712.8g: Artificial Evolution on Graf Rats leaves the melded Chittering Host an Eldrazi Horror",
+  "description": "CR 612.1, 713.5c: Artificial Evolution on Graf Rats leaves the melded Chittering Host an Eldrazi Horror",
   "note": "alice swaps Horror -> Zombie in Graf Rats' text. The Rats print only \"meld them into Chittering Host\", not the Host's type line, so the melded permanent keeps its printed subtypes (Artificial Evolution's 2004-10-04 ruling).",
   "board": {
     "seats": [

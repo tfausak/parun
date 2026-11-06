@@ -1,7 +1,7 @@
--- | CR 714, Saga cards: the chapter ability (CR 714.2), the lore counter a Saga
--- enters with (CR 714.3a), the turn-based action that advances it (CR 505.4 /
--- 703.4f / 714.3c) and the state-based action that sacrifices it once its story
--- is told (CR 704.5s / 714.4).
+-- | CR 715, Saga cards: the chapter ability (CR 715.2), the lore counter a Saga
+-- enters with (CR 715.3a), the turn-based action that advances it (CR 505.4 /
+-- 703.4f / 715.3c) and the state-based action that sacrifices it once its story
+-- is told (CR 704.5s / 715.4).
 --
 -- Parun.Engine.Speed's sibling, and kept apart from Parun.Engine.Sba and
 -- Parun.Engine.Engine for the same reason those two give: they own WHEN a
@@ -9,20 +9,20 @@
 -- one of them means.
 --
 -- Casing on Subtype.Saga here is casing on the RULEBOOK, exactly as
--- Parun.Engine.Speed cases on Keyword.StartYourEngines: rule 714 is as much a part
+-- Parun.Engine.Speed cases on Keyword.StartYourEngines: rule 715 is as much a part
 -- of the comprehensive rules as rule 704. Nothing here asks which EFFECT a chapter
 -- ability carries -- only which NUMBER its chapter symbol prints -- which is the
 -- invariant that matters.
 --
--- Imports no Parun.Engine.Projection, deliberately: CR 714.3a's intrinsic ability
+-- Imports no Parun.Engine.Projection, deliberately: CR 715.3a's intrinsic ability
 -- is minted by Projection.intrinsicReplacementsOf from `entryReplacementsOf`
 -- below, so a dependency the other way would be a cycle. The two callers that need
 -- a controller (Parun.Engine.Sba's CR 704.5s pass and Parun.Engine.Engine's CR 505.4
 -- action) look one up themselves.
 --
--- READ AHEAD (CR 702.155 / 714.3b) is here in two halves that must be read
--- together: `entryReplacementsOf` splits on the keyword to mint rule 714.3b's
--- rewrite instead of rule 714.3a's, and `chapterTriggers` narrows rule 714.2b's
+-- READ AHEAD (CR 702.155 / 715.3b) is here in two halves that must be read
+-- together: `entryReplacementsOf` splits on the keyword to mint rule 715.3b's
+-- rewrite instead of rule 715.3a's, and `chapterTriggers` narrows rule 715.2b's
 -- "at least N" to rule 702.155a's equality for the turn the Saga entered.
 module Parun.Engine.Saga where
 
@@ -63,7 +63,7 @@ import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Parun.Types.WithCounters as WithCounters
 
--- | CR 714.2b's threshold crossing: did a count going from `before` to `after`
+-- | CR 715.2b's threshold crossing: did a count going from `before` to `after`
 -- pass chapter `n`? "Was less than N and became at least N", verbatim.
 --
 -- Shared with Parun.Engine.Event.matchesTrigger's CountersChange arm rather
@@ -76,7 +76,7 @@ import qualified Parun.Types.WithCounters as WithCounters
 -- so a Saga handed two lore counters from nothing fires I and II together. Read
 -- ahead (CR 702.155a) narrows this to an equality, and only on the turn the Saga
 -- entered the battlefield -- that narrowing is `chapterTriggers` below, and this
--- function stays rule 714.2b's own sentence.
+-- function stays rule 715.2b's own sentence.
 crossed :: Natural -> Natural -> Natural -> Bool
 crossed before after n = before < n && n <= after
 
@@ -104,11 +104,11 @@ readAheadRestricted pc gs oid =
   Map.member Keyword.ReadAhead (PC.keywords pc)
     && Game.enteredThisTurn oid gs
 
--- | CR 714.2b narrowed by CR 702.155a: does a chapter ability numbered `n` trigger
+-- | CR 715.2b narrowed by CR 702.155a: does a chapter ability numbered `n` trigger
 -- off a placement taking its Saga's lore counters from `before` to `after`?
 --
 -- `restricted` is `readAheadRestricted`'s answer for that Saga. Under it the "at
--- least N" of rule 714.2b becomes rule 702.155a's "exactly N", which is what makes
+-- least N" of rule 715.2b becomes rule 702.155a's "exactly N", which is what makes
 -- a Saga entering on chapter II skip chapter I rather than firing both.
 --
 -- ONE function for BOTH readers -- Parun.Engine.Event.matchesTrigger and
@@ -122,13 +122,13 @@ readAheadRestricted pc gs oid =
 chapterTriggers :: Bool -> Natural -> Natural -> Natural -> Bool
 chapterTriggers restricted before after n = crossed before after n && (after == n || not restricted)
 
--- | CR 714.2 / 714.2a: is this a chapter ability, and if so which chapter?
+-- | CR 715.2 / 715.2a: is this a chapter ability, and if so which chapter?
 --
--- The whole of what the rules core knows about one. CR 714.2 calls a chapter
--- symbol a keyword ability representing a triggered ability, and CR 714.2b spells
+-- The whole of what the rules core knows about one. CR 715.2 calls a chapter
+-- symbol a keyword ability representing a triggered ability, and CR 715.2b spells
 -- that triggered ability out -- so a chapter ability is not a separate kind of
 -- card data here, it is an ordinary entry in `triggeredAbilities` whose condition
--- is the one rule 714.2b writes. CR 714.2c's "{rN1}, {rN2}--[Effect]" needs no
+-- is the one rule 715.2b writes. CR 715.2c's "{rN1}, {rN2}--[Effect]" needs no
 -- representation at all: that rule says the shorthand MEANS two abilities, so a
 -- card prints two entries sharing one modal.
 chapterOf :: TriggeredAbility card ability -> Maybe Natural
@@ -136,7 +136,7 @@ chapterOf ability = case TriggeredAbility.condition ability of
   TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Lore (CounterMotion.Put _) CounterHolder.Self (Just n) _) -> Just n
   _ -> Nothing
 
--- | CR 714.2a: the chapter numbers a permanent's abilities print, read off the
+-- | CR 715.2a: the chapter numbers a permanent's abilities print, read off the
 -- Roman numeral each chapter symbol carries.
 --
 -- Reads the PROJECTED abilities, never the printed ones, for the reason
@@ -147,13 +147,13 @@ chapterOf ability = case TriggeredAbility.condition ability of
 -- abilities, so this is the layer being read honestly rather than a case a card
 -- reaches.
 --
--- Not gated on the Saga subtype. CR 714.1 puts chapter symbols on Saga cards, and each
--- caller below applies that gate where its own rule states it -- CR 714.3c and CR
+-- Not gated on the Saga subtype. CR 715.1 puts chapter symbols on Saga cards, and each
+-- caller below applies that gate where its own rule states it -- CR 715.3c and CR
 -- 704.5s both say "Saga" in so many words.
 chaptersOf :: PC.ProjectedCharacteristics -> [Natural]
 chaptersOf = Maybe.mapMaybe chapterOf . PC.triggeredAbilities
 
--- | CR 714.2d: "A Saga's final chapter number is the greatest value among chapter
+-- | CR 715.2d: "A Saga's final chapter number is the greatest value among chapter
 -- abilities it has. If a Saga somehow has no chapter abilities, its final chapter
 -- number is 0."
 --
@@ -166,11 +166,11 @@ finalChapterOf pc = case chaptersOf pc of
   [] -> 0
   ns -> maximum ns
 
--- | CR 205.3h / 714.1: is this permanent a Saga?
+-- | CR 205.3h / 715.1: is this permanent a Saga?
 isSaga :: PC.ProjectedCharacteristics -> Bool
 isSaga = Set.member Subtype.Saga . PC.subtypes
 
--- | CR 714.3c / 505.4 / 704.5s: "a Saga ... with one or more chapter abilities".
+-- | CR 715.3c / 505.4 / 704.5s: "a Saga ... with one or more chapter abilities".
 -- One predicate, because all three rules name the same permanents and a second
 -- copy is what the CR-citation discipline exists to prevent.
 --
@@ -185,18 +185,18 @@ isSaga = Set.member Subtype.Saga . PC.subtypes
 tracksLore :: PC.ProjectedCharacteristics -> Bool
 tracksLore pc = isSaga pc && not (null (chaptersOf pc))
 
--- | CR 714.3a: "Each Saga without read ahead has the intrinsic ability 'This Saga
+-- | CR 715.3a: "Each Saga without read ahead has the intrinsic ability 'This Saga
 -- enters with a lore counter on it.' This ability creates a replacement effect
 -- (see rule 614.1c)."
 --
 -- The shape CR 306.5b's starting loyalty already uses, and minted the same way --
 -- from the finished projection, by Parun.Engine.Projection.intrinsicReplacementsOf
 -- -- so the counters join the ones the Saga is entering with and CR 614.16 holds:
--- Doubling Season gives a Saga two lore counters as it enters, and CR 714.2b's
+-- Doubling Season gives a Saga two lore counters as it enters, and CR 715.2b's
 -- chapters I and II both fire off that one placement.
 --
--- Keyed on the SUBTYPE and NOT on `tracksLore`, which is rule 714.3a's own
--- wording: it says "each Saga", where CR 714.3c and CR 704.5s both add "with one
+-- Keyed on the SUBTYPE and NOT on `tracksLore`, which is rule 715.3a's own
+-- wording: it says "each Saga", where CR 715.3c and CR 704.5s both add "with one
 -- or more chapter abilities". But both rows are intrinsic ABILITIES, so a CR
 -- 613.1f wipe takes them (PC.lostAllAbilities, the flag
 -- Parun.Engine.Subtype.intrinsicManaAbilityOf reads): a Saga stripped as it
@@ -204,10 +204,10 @@ tracksLore pc = isSaga pc && not (null (chaptersOf pc))
 -- saga/cr-613-1f-history-of-benalia-under-opalescence-and-humility-enters-with-no-lore
 -- proves it.
 --
--- CR 714.3b's arm is the OTHER branch, never a second row: rule 714.3a says
--- "each Saga WITHOUT read ahead" and rule 714.3b "each Saga WITH read ahead", so
+-- CR 715.3b's arm is the OTHER branch, never a second row: rule 715.3a says
+-- "each Saga WITHOUT read ahead" and rule 715.3b "each Saga WITH read ahead", so
 -- the two are exclusive and a Saga with the keyword gets rule 702.155b's pair of
--- intrinsic abilities in place of rule 714.3a's one. Minting both would enter the
+-- intrinsic abilities in place of rule 715.3a's one. Minting both would enter the
 -- Saga with `1 + chosen` lore counters.
 --
 -- Rule 702.155b's TWO sentences are ONE EntryRewrite.ReadAhead row and not two,
@@ -222,7 +222,7 @@ entryReplacementsOf pc
   | Map.member Keyword.ReadAhead (PC.keywords pc) = [ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.ReadAhead)]
   | otherwise = [ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.WithCounters (WithCounters.one CounterKind.Lore (Quantity.Literal 1))))]
 
--- | The lore counters on a permanent (CR 714.3). Zero for an object the game does
+-- | The lore counters on a permanent (CR 715.3). Zero for an object the game does
 -- not hold, which is the same answer Parun.Engine.Cost.loyaltyCountersOn gives for
 -- rule 306.5c's reading.
 loreOn :: ObjectId -> GameState -> Natural
@@ -230,7 +230,7 @@ loreOn oid gs = case Game.lookupObject oid gs of
   Nothing -> 0
   Just obj -> Map.findWithDefault 0 CounterKind.Lore (Object.counters obj)
 
--- | CR 505.4 / 703.4f / 714.3c: the Sagas a player puts a lore counter on as their
+-- | CR 505.4 / 703.4f / 715.3c: the Sagas a player puts a lore counter on as their
 -- precombat main phase begins. The turn-based action's CLASSIFIER half, kept pure
 -- so Parun.Engine.Engine only has to perform it.
 --
@@ -256,7 +256,7 @@ advancing controllerOf pid pcs gs =
 -- ability that has fired but has not yet been put onto the stack is squarely
 -- inside that phrase, and the engine has a window where exactly that is true:
 -- Parun.Engine.Engine.performSettle runs the CR 704.5 pass BEFORE
--- placePendingTriggers, so a Saga reaching its final chapter through CR 714.3c's
+-- placePendingTriggers, so a Saga reaching its final chapter through CR 715.3c's
 -- turn-based action meets this check with its last chapter ability still in the
 -- unscanned event log. Without the second half the Saga would be sacrificed first
 -- and the ability would resolve without it under CR 113.7a -- observable, and the
@@ -280,7 +280,7 @@ awaitingChapter pcs events gs oid =
       -- The `chapterOf` conjunct is CR 704.5s's own word -- it exempts a Saga
       -- owed a CHAPTER ability, not one owed any ability at all -- and has NO
       -- falsifier in the pool: History of Benalia's only triggered abilities are
-      -- its chapters, so dropping the conjunct changes no game. CR 714.1a's Saga
+      -- its chapters, so dropping the conjunct changes no game. CR 715.1a's Saga
       -- creature, whose second text box holds abilities independent of its chapter
       -- symbols, is the shape that would tell them apart.
       onStack sid = case fmap Object.source (Game.lookupObject sid gs) of
@@ -305,7 +305,7 @@ awaitingChapter pcs events gs oid =
         _ -> False
    in any onStack (GameState.stack gs) || any pending events
 
--- | CR 704.5s / 714.4: the Sagas whose controllers sacrifice them, paired with the
+-- | CR 704.5s / 715.4: the Sagas whose controllers sacrifice them, paired with the
 -- sacrificing player. The state-based action's CLASSIFIER half, taking the
 -- pre-pass projection so Parun.Engine.Sba can judge it against the same board as
 -- every other CR 704.5 clause (CR 704.3's simultaneity).

@@ -1921,7 +1921,7 @@ greatestSpec s registry = Spec.describe s "Greatest" $ do
   -- The NUMBER is the whole of what this adds to
   -- cr-707-2-a-clone-copying-darksteel-myr-counts-as-mana-value.json.
   -- CR 707.2 already makes the Clone read the copied object's mana value rather
-  -- than its own printed {3}{U}, and CR 712.8e already makes the copied object
+  -- than its own printed {3}{U}, and CR 712.6d already makes the copied object
   -- -- a transformed Thraben Gargoyle // Stonewing Antagonizer -- read its FRONT
   -- face's {1}. Without this rule the copy inherits that 1; with it the source
   -- and the copy report DIFFERENT mana values off the same copiable snapshot,
@@ -1951,7 +1951,7 @@ greatestSpec s registry = Spec.describe s "Greatest" $ do
         Spec.assertEqWith s "the copy is Stonewing Antagonizer" (Projection.namesOf copy after) (Set.singleton antagonizerName)
         Spec.assertEqWith s "an artifact creature alice controls" (Projection.cardTypesOf copy after, Projection.controllerOf copy after) (Set.fromList [CardType.Artifact, CardType.Creature], Just S.alice)
         Spec.assertEqWith s "with the back face's 4/2 body" (S.powerToughnessOf copy after) (Just (4, 2))
-        Spec.assertEqWith s "CR 712.8e: bob's transformed permanent still reads its front face's 1" (Filter.manaValue (Projection.viewOfObject source after)) (Just 1)
+        Spec.assertEqWith s "CR 712.6d: bob's transformed permanent still reads its front face's 1" (Filter.manaValue (Projection.viewOfObject source after)) (Just 1)
         Spec.assertEqWith s "CR 202.3b: the copy of that back face reads 0" (Filter.manaValue (Projection.viewOfObject copy after)) (Just 0)
         Spec.assertEqWith s "so alice drew nothing" (S.handSize S.alice after) 0
         Spec.assertEqWith s "and her library is untouched" (length (Game.zoneMembers Zone.Library S.alice after)) 10
@@ -2150,10 +2150,10 @@ castTheCardSpec s registry =
             cast = S.runPure atBobAnswer gs {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice} (S.cast S.alice theftId)
          in S.runPure atBobAnswer cast Stack.resolveTop
    in Spec.describe s "CastTheCard" $ do
-        -- CR 724.1e: Time Stop skips alice's end step, so the delayed trigger
+        -- CR 725.1e: Time Stop skips alice's end step, so the delayed trigger
         -- waits for bob's. "Haven't cast" has no "this turn", so the play alice
         -- made on the turn before still answers it.
-        Spec.it s "CR 724.1e Psychic Theft's card cast before a Time Stop triggers nothing at the next turn's end step" $ do
+        Spec.it s "CR 725.1e Psychic Theft's card cast before a Time Stop triggers nothing at the next turn's end step" $ do
           ps <- traverse (S.printingOf s registry) ["Psychic Theft", "Island", "Mountain", "Lightning Bolt", "Goblin Piker", "Time Stop"]
           case ps of
             [theft, island, mountain, bolt, piker, timeStop] -> do

@@ -23,7 +23,7 @@ import qualified Parun.Types.Timestamp as Timestamp
 -- battlefield, this effect continues until end of turn", which
 -- Parun.Engine.Event.lingeringHandover hands over as the permanent goes -- by a
 -- zone change, with its owner under CR 800.4a, or into a subgame's wish under
--- CR 729.4a. Such an effect keeps the timestamp CR 613.7a gave it rather than
+-- CR 730.4a. Such an effect keeps the timestamp CR 613.7a gave it rather than
 -- taking a fresh one, since the card says it is the same effect continuing.
 --
 -- Parametric in `card` for Parun.Types.StaticAbility's reason, and instantiated at

@@ -9,7 +9,7 @@ import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.Prototype as Prototype
 
 -- | A bare object keyed by the record's field names, Parun.Codec.Equip's shape.
--- No keyword parameter, unlike that one: CR 718.1's inset frame holds a mana
+-- No keyword parameter, unlike that one: CR 719.1's inset frame holds a mana
 -- cost and a printed box, neither of which can name a Filter or a Cost.
 codec :: Codec.Codec Prototype.Prototype
 codec = Fields.object $ do

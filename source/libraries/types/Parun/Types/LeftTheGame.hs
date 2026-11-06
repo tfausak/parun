@@ -4,7 +4,7 @@ import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.Zone as Zone
 
 -- | An object that left the game rather than moving to a zone: the id it had,
--- and the zone it was in when it went (CR 729.4a, CR 800.4a).
+-- and the zone it was in when it went (CR 730.4a, CR 800.4a).
 data LeftTheGame = MkLeftTheGame
   { -- | The id it had while it existed, the key its CR 608.2h last known
     -- information is filed under.

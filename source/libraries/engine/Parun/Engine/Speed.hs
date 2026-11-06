@@ -9,7 +9,7 @@
 -- comprehensive rules as rule 704 is. Nothing here asks which EFFECT anything
 -- came from, which is the invariant that matters.
 --
--- Where it DIVERGES from the monarch is what the designation is on. CR 725.1
+-- Where it DIVERGES from the monarch is what the designation is on. CR 726.1
 -- makes the monarch "a designation a player can have", at most one per game, so
 -- it is a GameState field; CR 702.179b makes speed a value EACH player has or
 -- lacks, so it rides Player.speed, as Player.ringTemptations does for CR 701.54c.

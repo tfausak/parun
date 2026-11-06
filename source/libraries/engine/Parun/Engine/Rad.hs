@@ -1,25 +1,25 @@
--- | CR 728, "Rad Counters": the inherent triggered ability rule 728.1 writes out
+-- | CR 729, "Rad Counters": the inherent triggered ability rule 729.1 writes out
 -- in full, and nothing else -- the counters themselves are
 -- PlayerCounterKind.Rad on Player.counters, where every other player counter
 -- lives.
 --
 -- Parun.Engine.Monarch's and Parun.Engine.Speed's sibling, and for their reason:
--- rule 728.1's ability "has no source and is controlled by the active player",
+-- rule 729.1's ability "has no source and is controlled by the active player",
 -- so it rides no card's text and the rules core mints it. Nothing here asks
 -- which EFFECT anything came from; it BUILDS effects, which is the direction the
 -- closed/open split allows -- Parun.Engine.Monarch's end-step draw is the same
 -- act.
 --
 -- Why the ability is composed of ordinary opcodes rather than being one
--- rad-shaped opcode: every clause rule 728.1 states is ordinary Magic
+-- rad-shaped opcode: every clause rule 729.1 states is ordinary Magic
 -- vocabulary that printed cards also ask for -- a mill that counts the nonland
 -- cards it milled (The Wise Mothman), a life loss, and a removal of player
 -- counters (Survivor's Med Kit's "target player loses all rad counters"). The
 -- one-opcode spelling would be Effect.TemptWithTheRing's shape, which is right
--- for a KEYWORD ACTION (CR 701.54) and wrong here, rule 728.1 naming no action
+-- for a KEYWORD ACTION (CR 701.54) and wrong here, rule 729.1 naming no action
 -- of its own.
 --
--- CR 728.1a's "life loss from radiation" is the one thing rule 728.1 states that
+-- CR 729.1a's "life loss from radiation" is the one thing rule 729.1 states that
 -- ordinary vocabulary cannot: the loss below carries
 -- LifeLossCause.ByRadiation, which is what Strong, the Brutish Thespian's
 -- replacement narrows by. Parun.RadSpec's Strong group proves it.
@@ -73,7 +73,7 @@ radCountersOf pid gs =
     (Map.findWithDefault 0 PlayerCounterKind.Rad . Player.counters)
     (Map.lookup pid (GameState.players gs))
 
--- | The slot rule 728.1's mill binds its count into, for the two clauses after
+-- | The slot rule 729.1's mill binds its count into, for the two clauses after
 -- it to read back as Quantity.InSlot -- "for each nonland card milled this way".
 --
 -- An ordinary slot name, not a reserved one: it is written mid-resolution by
@@ -83,13 +83,13 @@ radCountersOf pid gs =
 milledSlot :: SlotName.SlotName
 milledSlot = SlotName.MkSlotName (Text.pack "milledThisWay")
 
--- | CR 728.1's "nonland card". A card type question, judged against each milled
+-- | CR 729.1's "nonland card". A card type question, judged against each milled
 -- card's own CR 613 projection (Resolve's Mill arm): rule 613.1 names no zone, so
 -- a layer-4 effect that makes a library card a land is one this rule sees.
 nonland :: Filter.Filter Keyword.Keyword
 nonland = Filter.Not (Filter.HasCardType CardType.Land)
 
--- | CR 728.1's intervening "if": "if that player has one or more rad counters".
+-- | CR 729.1's intervening "if": "if that player has one or more rad counters".
 -- "That player" is the one whose precombat main phase began, who is this
 -- ability's controller, so PlayerRelation.You resolves it.
 hasRadCounters :: Condition.Condition
@@ -101,7 +101,7 @@ hasRadCounters =
         (Quantity.Literal 1)
     )
 
--- | CR 728.1, in full: "At the beginning of each player's precombat main phase,
+-- | CR 729.1, in full: "At the beginning of each player's precombat main phase,
 -- if that player has one or more rad counters, that player mills a number of
 -- cards equal to the number of rad counters they have. For each nonland card
 -- milled this way, that player loses 1 life and removes one rad counter from
@@ -118,7 +118,7 @@ hasRadCounters =
 -- second instance that somehow waited behind the first must find none and do
 -- nothing.
 --
--- Single mode, no targets, mandatory: rule 728.1 fixes the whole text and
+-- Single mode, no targets, mandatory: rule 729.1 fixes the whole text and
 -- chooses nothing, which is what lets Engine.placeSourceless put it on the stack
 -- unprompted.
 ability :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
@@ -126,7 +126,7 @@ ability =
   Mint.triggerIf
     -- CR 500.1 / 505.1a: a turn has exactly one precombat main phase and it is
     -- the active player's, so @Relative You@ plus the active player as this
-    -- ability's controller IS rule 728.1's "each player's precombat main
+    -- ability's controller IS rule 729.1's "each player's precombat main
     -- phase" -- the rule quantifies over turns, not over the players of one.
     (TriggerCondition.StepBegins (StepBegins.MkStepBegins Phase.PrecombatMain Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))))
     hasRadCounters
@@ -139,7 +139,7 @@ ability =
                 (PlayerRef.Relative PlayerRelation.You)
                 (Quantity.PlayerCounters (PlayerCounterTally.MkPlayerCounterTally (PlayerRef.Relative PlayerRelation.You) PlayerCounterKind.Rad))
                 (Just (MillTally.MkMillTally {MillTally.slot = milledSlot, MillTally.filter = nonland}))
-                -- CR 701.17c's slot: rule 728.1 looks back at how MANY
+                -- CR 701.17c's slot: rule 729.1 looks back at how MANY
                 -- cards were milled, never at which.
                 Nothing
             ),
@@ -147,8 +147,8 @@ ability =
           -- loses 1 life" -- one life per card, which is the count
           -- itself.
           --
-          -- CR 728.1a's cause, the one field of this ability that no
-          -- card could have written: rule 728.1a makes "life loss
+          -- CR 729.1a's cause, the one field of this ability that no
+          -- card could have written: rule 729.1a makes "life loss
           -- from radiation" mean a loss this very ability caused, so
           -- the loss says so and Parun.Engine.Replacement.applies
           -- narrows by it.
@@ -165,7 +165,7 @@ ability =
         ]
     )
 
--- | CR 728.1: the ability, paired with each active player, for
+-- | CR 729.1: the ability, paired with each active player, for
 -- Parun.Engine.Event.Trigger.inherentTriggers -- "controlled by the active
 -- player". Under the shared team turns option each member of the active team
 -- has a precombat main phase, so each has the ability (CR 805.4d).

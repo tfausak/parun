@@ -148,22 +148,22 @@ spec s registry = Spec.describe s "Ante" $ do
         Spec.assertEqWith s "CR 407.2 the drawn card is in the ante" (printingsIn Zone.Ante after) [drawn]
         Spec.assertEqWith s "and the other stayed in her library" (printingsIn Zone.Library after) kept
       [] -> Spec.assertFailure s "alice's library is empty"
-  -- CR 727.2 rebuilds every card, the anted ones among them, so the restart's
+  -- CR 728.2 rebuilds every card, the anted ones among them, so the restart's
   -- own CR 407.2 step must not see the old ante. Twenty cards a deck: the old
   -- ante card is rebuilt below the eight the restart antes and draws, so a stale
   -- id would still name a library card at the end.
-  Spec.it s "CR 727.2/407.2 a restart returns the ante to the libraries and antes one card each again" $ do
+  Spec.it s "CR 728.2/407.2 a restart returns the ante to the libraries and antes one card each again" $ do
     mountain <- S.printingOf s registry "Mountain"
     let deck = Deck.fromCards (Map.singleton mountain 20)
         (anted, _) = startedWith anteGame ((S.alice, deck) NonEmpty.:| [(S.bob, deck)])
         restarted = S.runPure S.identityAnswer anted (Setup.restartGame S.performer Set.empty S.alice)
         inAnte oid = fmap Object.zone (Game.lookupObject oid restarted) == Just Zone.Ante
     Spec.assertEqWith s "CR 407.2 two cards in the ante again, each really there" (Set.size (GameState.ante restarted), all inAnte (Set.toList (GameState.ante restarted))) (2, True)
-    Spec.assertEqWith s "CR 727.2 and nobody's cards went missing" (ownedBy S.alice restarted, ownedBy S.bob restarted) (20, 20)
-  -- CR 727.1: a restarted game has no winner, so nothing is paid; CR 727.2:
+    Spec.assertEqWith s "CR 728.2 and nobody's cards went missing" (ownedBy S.alice restarted, ownedBy S.bob restarted) (20, 20)
+  -- CR 728.1: a restarted game has no winner, so nothing is paid; CR 728.2:
   -- ownership does not change, so a card alice took before the restart (the
   -- write Darkpact makes) is still hers, and still reported as bob's to begin.
-  Spec.it s "CR 727.1/727.2 a restart pays nothing, and an ownership change outlives it" $ do
+  Spec.it s "CR 728.1/728.2 a restart pays nothing, and an ownership change outlives it" $ do
     mountain <- S.printingOf s registry "Mountain"
     let deck = Deck.fromCards (Map.singleton mountain 20)
         (anted, _) = startedWith anteGame ((S.alice, deck) NonEmpty.:| [(S.bob, deck)])
@@ -171,19 +171,19 @@ spec s registry = Spec.describe s "Ante" $ do
       [bobs] -> do
         let taken = Game.setOwner bobs S.alice anted
             restarted = S.runPure S.identityAnswer taken (Setup.restartGame S.performer Set.empty S.alice)
-        Spec.assertEqWith s "CR 727.2 the card alice took is reported, bob's to begin and hers now" (changesOf restarted) [(S.bob, S.alice)]
-        Spec.assertEqWith s "CR 727.1 nobody won the restarted game" (GameState.result restarted) Nothing
-        Spec.assertEqWith s "CR 727.2 and nothing else changed hands" (ownedBy S.alice restarted, ownedBy S.bob restarted) (21, 19)
+        Spec.assertEqWith s "CR 728.2 the card alice took is reported, bob's to begin and hers now" (changesOf restarted) [(S.bob, S.alice)]
+        Spec.assertEqWith s "CR 728.1 nobody won the restarted game" (GameState.result restarted) Nothing
+        Spec.assertEqWith s "CR 728.2 and nothing else changed hands" (ownedBy S.alice restarted, ownedBy S.bob restarted) (21, 19)
       other -> Spec.assertFailure s ("bob anted " <> show (length other) <> " cards")
-  -- CR 729.2 moves the main-game libraries, and a seat whose library is empty
+  -- CR 730.2 moves the main-game libraries, and a seat whose library is empty
   -- brings nothing to ante.
-  Spec.it s "CR 729.2/407.2 a subgame seat with no library antes nothing" $ do
+  Spec.it s "CR 730.2/407.2 a subgame seat with no library antes nothing" $ do
     mountain <- S.printingOf s registry "Mountain"
     let parent0 = Setup.gameWith anteGame S.bothPlayers
         parent = snd (S.addLibraryCard mountain S.alice (snd (S.addLibraryCard mountain S.alice parent0)))
         sub0 = Setup.subgameStateFrom S.alice parent
         sub = S.runPure S.identityAnswer sub0 (Setup.startGameFromCards S.performer Set.empty)
-    Spec.assertEqWith s "CR 729.2 the subgame starts with no ante of its own" (GameState.ante sub0) Set.empty
+    Spec.assertEqWith s "CR 730.2 the subgame starts with no ante of its own" (GameState.ante sub0) Set.empty
     Spec.assertEqWith s "CR 407.2 alice antes one of her two cards, bob nothing" (length (anteOf S.alice sub), length (anteOf S.bob sub)) (1, 0)
   -- CR 800.4n: three seats so bob's concession leaves a game to stay in, and
   -- a card of his in exile that CR 800.4a does take.
@@ -195,23 +195,23 @@ spec s registry = Spec.describe s "Ante" $ do
         after = S.departs Departure.Type.Conceded S.bob g2
     Spec.assertEqWith s "CR 800.4n bob's ante card is still in the ante" (Set.member bobsAnte (GameState.ante after), fmap Object.zone (Game.lookupObject bobsAnte after)) (True, Just Zone.Ante)
     Spec.assertEqWith s "CR 800.4a while his exiled card left the game with him" (fmap Object.zone (Game.lookupObject bobsExile after)) Nothing
-  -- CR 800.4n / 729.5: bob concedes a subgame played for ante. His subgame
+  -- CR 800.4n / 730.5: bob concedes a subgame played for ante. His subgame
   -- ante card stays behind him (CR 800.4n), and at the subgame's end his
   -- main-game library comes back whole -- once, not with the ante card twice.
   -- Three seats, because a two-seat concession ends the game first.
-  Spec.it s "CR 800.4n/729.5 a player who leaves a subgame played for ante gets their main-game library back once" $ do
+  Spec.it s "CR 800.4n/730.5 a player who leaves a subgame played for ante gets their main-game library back once" $ do
     mountain <- S.printingOf s registry "Mountain"
     let stock pid gs0 = foldr (\_ gs -> snd (S.addLibraryCard mountain pid gs)) gs0 (replicate 9 ())
         parent = stock S.carol (stock S.bob (stock S.alice (Setup.gameWith anteGame S.threePlayers)))
         sub = S.runPure S.identityAnswer (Setup.subgameStateFrom S.alice parent) (Setup.startGameFromCards S.performer Set.empty)
         left = S.departs Departure.Type.Conceded S.bob sub
         back = Setup.funnelBack left parent
-    Spec.assertEqWith s "CR 729.5 bob's main-game library is whole again, and not one card more" (length (Game.zoneMembers Zone.Library S.bob back)) 9
+    Spec.assertEqWith s "CR 730.5 bob's main-game library is whole again, and not one card more" (length (Game.zoneMembers Zone.Library S.bob back)) 9
     Spec.assertEqWith s "CR 800.4n bob's subgame ante card stayed behind him" (length (anteOf S.bob left)) 1
-  -- CR 407.3 / 729.5: alice takes bob's subgame ante card (Darkpact's write,
+  -- CR 407.3 / 730.5: alice takes bob's subgame ante card (Darkpact's write,
   -- through the function its opcode calls), then bob concedes. The card goes
   -- to alice's main-game library, and bob's is rebuilt without it.
-  Spec.it s "CR 729.5 a card whose owner changed in a subgame goes home once, to its new owner" $ do
+  Spec.it s "CR 730.5 a card whose owner changed in a subgame goes home once, to its new owner" $ do
     mountain <- S.printingOf s registry "Mountain"
     let stock pid gs0 = foldr (\_ gs -> snd (S.addLibraryCard mountain pid gs)) gs0 (replicate 9 ())
         parent = stock S.carol (stock S.bob (stock S.alice (Setup.gameWith anteGame S.threePlayers)))
@@ -219,13 +219,13 @@ spec s registry = Spec.describe s "Ante" $ do
     case anteOf S.bob sub of
       [bobs] -> do
         let back = Setup.funnelBack (S.departs Departure.Type.Conceded S.bob (Game.setOwner bobs S.alice sub)) parent
-        Spec.assertEqWith s "CR 729.5 bob's main-game library is rebuilt without it" (length (Game.zoneMembers Zone.Library S.bob back)) 8
-        Spec.assertEqWith s "CR 729.5 and alice's holds it" (length (Game.zoneMembers Zone.Library S.alice back)) 10
+        Spec.assertEqWith s "CR 730.5 bob's main-game library is rebuilt without it" (length (Game.zoneMembers Zone.Library S.bob back)) 8
+        Spec.assertEqWith s "CR 730.5 and alice's holds it" (length (Game.zoneMembers Zone.Library S.alice back)) 10
       other -> Spec.assertFailure s ("bob anted " <> show (length other) <> " cards")
-  -- CR 407.3 / 800.4a / 729.5: alice takes a card of bob's in the subgame
+  -- CR 407.3 / 800.4a / 730.5: alice takes a card of bob's in the subgame
   -- (Darkpact's write), then she and bob concede. The card left with alice, so
   -- it is rebuilt from the main game under her, not under bob.
-  Spec.it s "CR 729.5 a card that left a subgame with its new owner goes home to them when its old owner left too" $ do
+  Spec.it s "CR 730.5 a card that left a subgame with its new owner goes home to them when its old owner left too" $ do
     mountain <- S.printingOf s registry "Mountain"
     let stock pid gs0 = foldr (\_ gs -> snd (S.addLibraryCard mountain pid gs)) gs0 (replicate 9 ())
         parent = stock S.carol (stock S.bob (stock S.alice (Setup.gameWith anteGame S.threePlayers)))
@@ -234,15 +234,15 @@ spec s registry = Spec.describe s "Ante" $ do
       bobs : _ -> do
         let left = S.departs Departure.Type.Conceded S.bob (S.departs Departure.Type.Conceded S.alice (Game.setOwner bobs S.alice sub))
             back = Setup.funnelBack left parent
-        Spec.assertEqWith s "CR 729.5 alice's main-game library holds it" (length (Game.zoneMembers Zone.Library S.alice back)) 10
-        Spec.assertEqWith s "CR 729.5 and bob's is rebuilt without it" (length (Game.zoneMembers Zone.Library S.bob back)) 8
+        Spec.assertEqWith s "CR 730.5 alice's main-game library holds it" (length (Game.zoneMembers Zone.Library S.alice back)) 10
+        Spec.assertEqWith s "CR 730.5 and bob's is rebuilt without it" (length (Game.zoneMembers Zone.Library S.bob back)) 8
         Spec.assertEqWith s "CR 108.3 the report lists it, from bob to alice" (changesOf back) [(S.bob, S.alice)]
       [] -> Spec.assertFailure s "bob drew no opening hand"
-  -- CR 108.3 / 729.4a: a card alice took from bob in the main game (its
+  -- CR 108.3 / 730.4a: a card alice took from bob in the main game (its
   -- identity says bob began the game with it) is wished into a subgame from
   -- her hand. It is the same card in there, so the report still lists it once
-  -- it comes home (CR 729.5).
-  Spec.it s "CR 729.4a a card brought into a subgame from the main game keeps its identity" $ do
+  -- it comes home (CR 730.5).
+  Spec.it s "CR 730.4a a card brought into a subgame from the main game keeps its identity" $ do
     mountain <- S.printingOf s registry "Mountain"
     bears <- S.printingOf s registry "Grizzly Bears"
     let stock pid gs0 = foldr (\_ gs -> snd (S.addLibraryCard mountain pid gs)) gs0 (replicate 9 ())
@@ -253,10 +253,10 @@ spec s registry = Spec.describe s "Ante" $ do
         (_, crossed) = Event.bringInFrom OutsideDestination.Hand S.alice bearsId sub
         back = Setup.funnelBack crossed (Setup.applyCrossings crossed parent)
     Spec.assertEqWith s "CR 108.3 the Bears are still bob's to begin and alice's now" (changesOf back) [(S.bob, S.alice)]
-  -- CR 800.4n / 729.5: bob wishes his own main-game Jeweled Bird into a
+  -- CR 800.4n / 730.5: bob wishes his own main-game Jeweled Bird into a
   -- three-seat subgame, antes it, and concedes. The Bird stays in the subgame,
   -- and at its end goes to his main-game library with the rest of his cards.
-  Spec.it s "CR 729.5 a departed player's ante card from the main game goes to their main-game library" $ do
+  Spec.it s "CR 730.5 a departed player's ante card from the main game goes to their main-game library" $ do
     mountain <- S.printingOf s registry "Mountain"
     bird <- S.printingOf s registry "Jeweled Bird"
     let stock pid gs0 = foldr (\_ gs -> snd (S.addLibraryCard mountain pid gs)) gs0 (replicate 9 ())
@@ -266,11 +266,11 @@ spec s registry = Spec.describe s "Ante" $ do
       (Just (inSub NonEmpty.:| []), crossed) -> do
         let anted = S.departs Departure.Type.Conceded S.bob (S.runPure S.identityAnswer crossed (Event.changeZone (pure ()) inSub Zone.Ante))
             back = Setup.funnelBack anted (Setup.applyCrossings anted parent)
-        Spec.assertEqWith s "CR 729.5 bob's main-game library holds his nine and the Bird" (length (Game.zoneMembers Zone.Library S.bob back)) 10
+        Spec.assertEqWith s "CR 730.5 bob's main-game library holds his nine and the Bird" (length (Game.zoneMembers Zone.Library S.bob back)) 10
       _ -> Spec.assertFailure s "the Bird was not brought in"
   -- The same from bob's sideboard (CR 400.11a): the Bird goes to his library,
   -- and so is no longer in his pool.
-  Spec.it s "CR 729.5 a departed player's ante card from their sideboard goes to their main-game library, not back to the pool" $ do
+  Spec.it s "CR 730.5 a departed player's ante card from their sideboard goes to their main-game library, not back to the pool" $ do
     mountain <- S.printingOf s registry "Mountain"
     bird <- S.printingOf s registry "Jeweled Bird"
     let stock pid gs0 = foldr (\_ gs -> snd (S.addLibraryCard mountain pid gs)) gs0 (replicate 9 ())
@@ -282,30 +282,30 @@ spec s registry = Spec.describe s "Ante" $ do
         anted = S.departs Departure.Type.Conceded S.bob (S.runPure S.identityAnswer brought (Event.changeZone (pure ()) inSub Zone.Ante))
         back = Setup.funnelBack anted (Setup.applyCrossings anted parent)
         poolOf pid gs = foldMap Player.outsideTheGame (Map.lookup pid (GameState.players gs))
-    Spec.assertEqWith s "CR 729.5 bob's main-game library holds his nine and the Bird" (length (Game.zoneMembers Zone.Library S.bob back)) 10
+    Spec.assertEqWith s "CR 730.5 bob's main-game library holds his nine and the Bird" (length (Game.zoneMembers Zone.Library S.bob back)) 10
     Spec.assertEqWith s "CR 400.11a and his pool no longer does" (poolOf S.bob back) Map.empty
-  -- CR 729.5: a subgame played for ante antes one card from each library, and
+  -- CR 730.5: a subgame played for ante antes one card from each library, and
   -- at its end each still-playing owner's ante card goes into their main-game
   -- library with the rest of their cards; the main game's own ante is untouched.
-  Spec.it s "CR 729.5 a subgame ante card goes back to its owner's main-game library" $ do
+  Spec.it s "CR 730.5 a subgame ante card goes back to its owner's main-game library" $ do
     mountain <- S.printingOf s registry "Mountain"
     piker <- S.printingOf s registry "Goblin Piker"
     let stock pid gs0 = foldr (\_ gs -> snd (S.addLibraryCard mountain pid gs)) gs0 (replicate 9 ())
         (mainAnte, parent) = S.addObjectIn Zone.Ante piker S.alice (stock S.bob (stock S.alice (Setup.gameWith anteGame S.bothPlayers)))
         sub = S.runPure S.identityAnswer (Setup.subgameStateFrom S.alice parent) (Setup.startGameFromCards S.performer Set.empty)
         back = Setup.funnelBack sub parent
-    Spec.assertEqWith s "CR 729.5 each main-game library is whole again, the anted card in it" (fmap (\pid -> length (Game.zoneMembers Zone.Library pid back)) [S.alice, S.bob]) [9, 9]
+    Spec.assertEqWith s "CR 730.5 each main-game library is whole again, the anted card in it" (fmap (\pid -> length (Game.zoneMembers Zone.Library pid back)) [S.alice, S.bob]) [9, 9]
     Spec.assertEqWith s "CR 407.2 the subgame had anted one card from each library" (fmap (\pid -> length (anteOf pid sub)) [S.alice, S.bob]) [1, 1]
-    Spec.assertEqWith s "CR 729.1a the main game's own ante is as it was" (GameState.ante back) (Set.singleton mainAnte)
-  -- CR 800.4n / 727.2: bob's ante card stayed when he left, and a restart
+    Spec.assertEqWith s "CR 730.1a the main game's own ante is as it was" (GameState.ante back) (Set.singleton mainAnte)
+  -- CR 800.4n / 728.2: bob's ante card stayed when he left, and a restart
   -- involves every card in the game. bob is not in the new game and has no
   -- library for it, so the card begins the new game where it was.
-  Spec.it s "CR 800.4n/727.2 a departed player's ante card stays in the ante through a restart" $ do
+  Spec.it s "CR 800.4n/728.2 a departed player's ante card stays in the ante through a restart" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (bobsAnte, g1) = S.addObjectIn Zone.Ante piker S.bob (Setup.gameWith anteGame S.threePlayers)
         left = S.departs Departure.Type.Conceded S.bob g1
         restarted = S.runPure S.identityAnswer left (Setup.restartGame S.performer Set.empty S.alice)
-    Spec.assertEqWith s "CR 727.2 bob's ante card is still in the ante" (GameState.ante restarted, fmap Object.zone (Game.lookupObject bobsAnte restarted)) (Set.singleton bobsAnte, Just Zone.Ante)
+    Spec.assertEqWith s "CR 728.2 bob's ante card is still in the ante" (GameState.ante restarted, fmap Object.zone (Game.lookupObject bobsAnte restarted)) (Set.singleton bobsAnte, Just Zone.Ante)
   -- CR 608.2d: "the player can't choose an option that's ... impossible". carol
   -- has no library, so she cannot ante, is not asked, and does not go to 20.
   -- Distinct starting lives so a wrong 20 cannot hide.
@@ -379,7 +379,7 @@ spec s registry = Spec.describe s "Ante" $ do
         bobs obj = obj {Object.identity = fmap (\i -> i {CardIdentity.startingOwner = S.bob}) (Object.identity obj)}
         g4 = g3 {GameState.objects = Map.adjust bobs c (GameState.objects g3)}
         alike = Interchangeable.objects (Projection.projectAll g4) g4
-        -- The same three as merged permanents (CR 730.2), each card's identity
+        -- The same three as merged permanents (CR 731.2), each card's identity
         -- riding in its component.
         asMerged obj = case Object.source obj of
           Source.OfCard pid -> obj {Object.source = Source.OfMerge (pure (ShownComponent.MkShownComponent (MergeComponent.OfCard (Game.componentCardOf obj pid)) Nothing Facing.FaceUp))}

@@ -221,7 +221,7 @@ a signature. A hand-built combat board needs `S.combatBoardOf`, or
   `Projection.controllerOf` is the control question.
 - A board that can't tell two readings apart (same zone, same timestamp, one
   player in two roles): change the board, not the assertion.
-- A rule stating exclusions needs each exclusion shown (CR 701.27g excludes
+- A rule stating exclusions needs each exclusion shown (CR 701.27h excludes
   both a previously turned face and a melded permanent).
 
 ### Cards

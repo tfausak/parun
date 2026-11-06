@@ -78,7 +78,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "CR 730.3c Bronze Tablet: exiling bob's merged permanent finds every card it became, so alice owns both and bob owns the Tablet",
+  "description": "CR 731.3c Bronze Tablet: exiling bob's merged permanent finds every card it became, so alice owns both and bob owns the Tablet",
   "final": [
     {
       "Count": {
@@ -133,7 +133,7 @@
       }
     }
   ],
-  "note": "Bob mutates Cubwarden over his Grizzly Bears on his turn; on alice's, the Tablet exiles the merged permanent as two cards (CR 730.3), and \"the other exiled card\" is each of them.",
+  "note": "Bob mutates Cubwarden over his Grizzly Bears on his turn; on alice's, the Tablet exiles the merged permanent as two cards (CR 731.3), and \"the other exiled card\" is each of them.",
   "timeline": [
     {
       "do": {

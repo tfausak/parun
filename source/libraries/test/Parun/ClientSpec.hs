@@ -203,7 +203,7 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertBool s (not (any (Text.isInfixOf (Text.pack "Hill Giant is put into a graveyard")) news)) ("the discard's move, told once: " <> show news)
     Spec.assertBool s (any discarding shown) "Player 1 discarded at cleanup"
 
-  Spec.it s "CR 729.1a a seat back from a Shahrazad subgame played past the main game's turn is shown the main game's news it was not yet shown" $ do
+  Spec.it s "CR 730.1a a seat back from a Shahrazad subgame played past the main game's turn is shown the main game's news it was not yet shown" $ do
     plains <- S.printingOf s registry "Plains"
     mountain <- S.printingOf s registry "Mountain"
     shahrazad <- S.printingOf s registry "Shahrazad"
@@ -262,7 +262,7 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "each bid prompt, and the refusal" (filter (\line -> heading line || Text.isPrefixOf (Text.pack "Type a number") line) shown) (fmap Text.pack ["Choose a number for Illicit Auction, at least 0; 0 lets the high bid stand:", "Choose a number for Illicit Auction, at least 3; 3 lets the high bid stand:", "Type a number of at least 3.", "Choose a number for Illicit Auction, at least 3; 3 lets the high bid stand:", "Choose a number for Illicit Auction, at least 4; 4 lets the high bid stand:"])
     Spec.assertEqWith s "Player 1 wins the Hill Giant for 4 life" (fmap (S.lifeOf S.alice) outcome) (Right (Just 16))
 
-  Spec.it s "CR 723.6 a seat controlled for its turn is still shown the rest of the turn before, and that turn, at its next question" $ do
+  Spec.it s "CR 724.6 a seat controlled for its turn is still shown the rest of the turn before, and that turn, at its next question" $ do
     gs <- started s registry
     giant <- S.printingOf s registry "Hill Giant"
     mindslaver <- S.printingOf s registry "Mindslaver"
@@ -411,7 +411,7 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Paying {1}{G}.")) shown) "asked with the cost"
     Spec.assertBool s (not (any (Text.isPrefixOf (Text.pack "Undone: ")) shown)) "a cast completed is not told undone"
 
-  Spec.it s "CR 733.1 a cast stopped partway is told undone at the caster's next priority" $ do
+  Spec.it s "CR 734.1 a cast stopped partway is told undone at the caster's next priority" $ do
     (_, resolved, tapped, shown) <- castPaying "stop" s registry "Grizzly Bears" ["Mountain", "Forest"]
     Spec.assertEqWith s "the bear did not resolve, and nothing stayed tapped" (resolved, tapped) (False, [])
     Spec.assertEqWith
@@ -444,7 +444,7 @@ spec s registry = Spec.describe s "Client" $ do
     let illegal = gs {GameState.undone = Map.singleton S.alice Undoing.IllegalDeclaration}
     Spec.assertEqWith s "an illegal declaration" (told S.alice illegal attacking) [Text.pack "Undone: The declaration of attackers could not be completed (it broke a restriction or requirement on attacking or blocking), so it was reversed and its payments canceled."]
 
-  Spec.it s "CR 732.3 a cast refused for repeating a loop is told undone, and why" $ do
+  Spec.it s "CR 733.3 a cast refused for repeating a loop is told undone, and why" $ do
     let gs = (Setup.emptyGame S.bothPlayers) {GameState.undone = Map.singleton S.alice Undoing.RepeatedLoop}
         view = PlayerView.viewFor S.alice gs
         mark = (PlayerView.Type.game view, PlayerView.Type.turn view, Natural.length (PlayerView.Type.witnessed view))
@@ -480,7 +480,7 @@ spec s registry = Spec.describe s "Client" $ do
           ]
       )
 
-  Spec.it s "CR 733.1 a cast reversed asks whether each mana ability is reversed too, as yes or no" $ do
+  Spec.it s "CR 734.1 a cast reversed asks whether each mana ability is reversed too, as yes or no" $ do
     (placed, resolved, tapped, shown) <- castTyping (convokes "{5}{G}{G}" "Siege Wurm") s registry "Siege Wurm" (replicate 4 "Forest" <> replicate 3 "Grizzly Bears")
     Spec.assertEqWith s "the wurm did not resolve, and no Forest stayed tapped" (resolved, filter (`elem` tapped) (take 4 placed)) (False, [])
     Spec.assertEqWith s "asked once per Forest" (length (filter (== Text.pack "That action was reversed. Reverse the mana ability of Your Forest (tapped) too?") shown)) 4

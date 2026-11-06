@@ -11,7 +11,7 @@ import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.SlotName as SlotName
 
 -- | CR 602.2b / 601.2b-f: what an activation was announced with, the part of
--- its game choice (CR 732.1) Action.Activate does not carry. Loop-local
+-- its game choice (CR 733.1) Action.Activate does not carry. Loop-local
 -- (Parun.Types.LoopTrail), so no codec.
 data Announcement = MkAnnouncement
   { -- | CR 601.2b: the chosen modes, sorted.

@@ -54,9 +54,9 @@ spec s = Spec.describe s "Parun.Codec.Source" $ do
             }
       )
       " {\"type\":\"OfMeld\",\"value\":{\"result\":8,\"components\":[{\"printing\":9},{\"printing\":10}]}} "
-  -- CR 730.2: a bare list rather than OfMeld's record, since a merged permanent
-  -- has no interned result face to name beside its components -- CR 730.2a reads
-  -- the head of this list instead. A CARD over a TOKEN, so rule 730.2d's
+  -- CR 731.2: a bare list rather than OfMeld's record, since a merged permanent
+  -- has no interned result face to name beside its components -- CR 731.2a reads
+  -- the head of this list instead. A CARD over a TOKEN, so rule 731.2d's
   -- distinction between the two kinds of component survives the wire.
   Spec.it s "OfMerge" $
     Common.assertCodec
@@ -108,7 +108,7 @@ spec s = Spec.describe s "Parun.Codec.Source" $ do
       Source.codec
       (Source.OfSpellCopy (PrintingId.MkPrintingId 7))
       " {\"type\":\"OfSpellCopy\",\"value\":7} "
-  -- CR 707.10a's other copy, CR 722.3c's copy of a card: the same payload again,
+  -- CR 707.10a's other copy, CR 723.3c's copy of a card: the same payload again,
   -- and a DIFFERENT tag from OfSpellCopy above -- the two zones CR 704.5e gives
   -- them are why an arm that wrote the other's tag would be a bug rather than a
   -- synonym.
@@ -118,7 +118,7 @@ spec s = Spec.describe s "Parun.Codec.Source" $ do
       Source.codec
       (Source.OfCardCopy (PrintingId.MkPrintingId 8))
       " {\"type\":\"OfCardCopy\",\"value\":8} "
-  -- CR 725.2 / CR 702.179d: the same ability as OfTrigger above, under a
+  -- CR 726.2 / CR 702.179d: the same ability as OfTrigger above, under a
   -- controller instead of a source id. The two arms differ only there, so an
   -- arm writing the other's tag would still have to write the other's key.
   Spec.it s "OfInherentTrigger" $

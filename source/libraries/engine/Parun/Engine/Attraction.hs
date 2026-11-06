@@ -1,4 +1,4 @@
--- | CR 717 and CR 701.51: a player's Attraction deck and opening an Attraction
+-- | CR 718 and CR 701.51: a player's Attraction deck and opening an Attraction
 -- from it, and the move off the top of a supplementary deck that the Unstable
 -- FAQ's assemble shares with it (Parun.Engine.Contraption). Rolling to visit (CR
 -- 701.52) is a die roll and lives with the CR 706 pipeline in
@@ -27,11 +27,11 @@ import qualified Parun.Types.SideDeck as SideDeck
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Zone as Zone
 
--- | CR 717.2: this player's Attraction deck, top card first.
+-- | CR 718.2: this player's Attraction deck, top card first.
 deckOf :: PlayerId -> GameState.GameState -> [ObjectId]
 deckOf = Game.sideDeckOf SideDeck.Attraction
 
--- | CR 717.4 and the Unstable FAQ: does this player control a permanent of this
+-- | CR 718.4 and the Unstable FAQ: does this player control a permanent of this
 -- subtype -- an Attraction for the roll to visit, a Contraption for the crank?
 -- Read off the projection, the subtype being a characteristic.
 controlsSubtype :: Subtype.Subtype -> PlayerId -> GameState.GameState -> Bool

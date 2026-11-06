@@ -124,7 +124,7 @@ spec s registry = Spec.describe s "Scenario" $ do
     result <- Scenario.stage registry setup
     Spec.assertEqWith s "token in hand" result (Left (ScenarioFailure.MkTokenOffBattlefield (CardName.MkCardName (Text.pack "Goblin Piker"))))
 
-  Spec.it s "CR 712.8 a placement showing a face its card lacks is rejected" $ do
+  Spec.it s "CR 712.6 a placement showing a face its card lacks is rejected" $ do
     let shown = (S.permanent "Goblin Piker") {Placement.face = Just (CardName.MkCardName (Text.pack "Nightfall Predator"))}
         alice = (S.playerSetup S.alice) {Seat.battlefield = Seq.singleton shown}
         setup = S.board (alice NonEmpty.:| [S.playerSetup S.bob]) S.alice S.precombatMain
@@ -171,7 +171,7 @@ spec s registry = Spec.describe s "Scenario" $ do
             Spec.assertEqWith s "same-moment source order" chosen ([first], [second])
       _ -> Spec.assertFailure s "the board omitted an alias"
 
-  Spec.it s "CR 723.5 a script is keyed on the decider, not the affected player" $ do
+  Spec.it s "CR 724.5 a script is keyed on the decider, not the affected player" $ do
     -- alice decides for bob. An entry written under alice answers the prompt;
     -- one written under bob is never reached, because bob answers nothing.
     let setup = S.duel S.declareAttackers [S.settled "attacker" "Goblin Piker"] []
@@ -514,7 +514,7 @@ spec s registry = Spec.describe s "Scenario" $ do
       Left failure -> Spec.assertFailure s (S.renderFailure failure)
       Right _ -> Spec.assertFailure s "the dangling qualifier was ignored"
 
-  -- CR 733.1: a refused move is one the engine reverses and asks for again, so
+  -- CR 734.1: a refused move is one the engine reverses and asks for again, so
   -- a legal declaration under `refuse` stands and fails the run.
   Spec.it s "a refused move that stands fails, naming the prompt asked next" $ do
     result <-
@@ -533,7 +533,7 @@ spec s registry = Spec.describe s "Scenario" $ do
       Left failure -> Spec.assertFailure s (S.renderFailure failure)
       Right _ -> Spec.assertFailure s "a declaration that stood passed as refused"
 
-  -- CR 601.2e / 733.1: a cast the engine finds illegal is reversed, so a script
+  -- CR 601.2e / 734.1: a cast the engine finds illegal is reversed, so a script
   -- whose cast is taken and then rejected fails rather than passing on a game
   -- in which nothing was cast. Convoking five creatures for the Loxodon's {4}{W}
   -- is a tap its cost has no room for.
@@ -593,7 +593,7 @@ spec s registry = Spec.describe s "Scenario" $ do
           Left failure -> Spec.assertFailure s (S.renderFailure failure)
           Right _ -> pure ()
 
-  -- CR 702.122a / 733.1: a crew activation whose taps fall short of crew 6 is
+  -- CR 702.122a / 734.1: a crew activation whose taps fall short of crew 6 is
   -- reversed, which leaves the game as the move found it.
   Spec.it s "a taken activation the engine reverses fails, naming it" $ do
     result <- runJson s registry (crewDreadnought ["$giant"])
@@ -627,7 +627,7 @@ spec s registry = Spec.describe s "Scenario" $ do
       Left failure -> Spec.assertFailure s (S.renderFailure failure)
       Right final -> Spec.assertEqWith s "both blockers died" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Goblin Piker")) S.bob final) 0
 
-  -- CR 733.1 / 118.12a: a payment that fails is reversed, which returns its
+  -- CR 734.1 / 118.12a: a payment that fails is reversed, which returns its
   -- payer to the choice, so a script that wrote only the failing payment fails
   -- rather than passing on a spell countered as if bob had declined.
   Spec.it s "a failed Mana Leak payment is asked again, failing the script" $ do

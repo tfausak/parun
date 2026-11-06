@@ -154,7 +154,7 @@ foretell perform pid oid = do
     Monad.forM_ paid $ \_ -> do
       -- One stamp per arrival, Parun.Engine.Plot's reason: the funnel answers
       -- with more than one only for a melded permanent leaving the battlefield
-      -- (CR 712.21), and this action exiles a card from a hand.
+      -- (CR 713.8), and this action exiles a card from a hand.
       exiled <- Event.changeZoneEntering (ManaAbilityPerformer.settle perform) oid Zone.Exile LibraryPosition.defaultValue riders Nothing
       Monad.forM_ exiled (State.modify' . becomeForetold (Maybe.listToMaybe (Maybe.mapMaybe reductionOf (foretellCostsOf oid before))))
       -- CR 702.143c: "foretelling a card" is this special action.
@@ -163,7 +163,7 @@ foretell perform pid oid = do
 -- A granted foretell stops applying once the card leaves the hand, yet the card
 -- keeps the cost it was given (Dream Devourer's ruling): so a reduction off the
 -- card's own mana cost is stamped onto the exiled card, where
--- Parun.Engine.Cost.grantedForetellCost settles it per face (CR 712.11b).
+-- Parun.Engine.Cost.grantedForetellCost settles it per face (CR 712.8b).
 --
 -- A STATED cost is not stamped: the exiled card's own face still prints it.
 -- What would refute that is an effect granting a stated foretell cost in a hand;
@@ -200,7 +200,7 @@ riders =
 -- the other.
 --
 -- What is written is the REDUCTION the effect stated and never a cost: rule
--- 702.143d's cost is per FACE (CR 712.11b), and the face is not known until the
+-- 702.143d's cost is per FACE (CR 712.8b), and the face is not known until the
 -- cast is proposed, so Parun.Engine.Cost.grantedForetellCost settles it there.
 -- Object.foretellCostReduction says why this field is that shape.
 --

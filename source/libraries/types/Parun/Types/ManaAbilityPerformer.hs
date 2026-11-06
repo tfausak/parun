@@ -26,7 +26,7 @@ import qualified Parun.Types.Throw as Throw
 -- Resolve.resolveSpellWith takes its subgame runner and Parun.Engine.Mulligan its
 -- hand-action performer the same way (Parun.Types.HandActionPerformer).
 --
--- Built by Parun.Engine.Resolve.Effect.performManaAbility around CR 729.1a's
+-- Built by Parun.Engine.Resolve.Effect.performManaAbility around CR 730.1a's
 -- subgame runner, which a triggered mana ability can need (CR 605.4a);
 -- Parun.Engine.Engine.performManaAbility is the live loop's, and every module
 -- below the loop takes the record or the runner as a parameter.

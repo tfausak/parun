@@ -74,7 +74,7 @@ import qualified Parun.Types.TurnWindow as TurnWindow
 import qualified Parun.Types.Zone as Zone
 
 -- The runner-aware resolve-the-top-of-stack: resolve one object, then let go of
--- the control its resolution held (CR 723.2).
+-- the control its resolution held (CR 724.2).
 resolveTopWith :: Game Result -> Game ()
 resolveTopWith runSubgame = do
   top <- State.gets GameState.stack
@@ -82,8 +82,8 @@ resolveTopWith runSubgame = do
   resolveOneWith runSubgame
   State.modify' endResolutionControl
 
--- CR 723.2: "you control the player while that spell is resolving" -- the rows
--- waiting on `oid` take hold as it begins to resolve, in place, so CR 723.1a's
+-- CR 724.2: "you control the player while that spell is resolving" -- the rows
+-- waiting on `oid` take hold as it begins to resolve, in place, so CR 724.1a's
 -- creation order is kept, and lapse with the rest of its resolution's rows.
 beginResolutionControl :: ObjectId -> GameState.GameState -> GameState.GameState
 beginResolutionControl oid gs =
@@ -92,7 +92,7 @@ beginResolutionControl oid gs =
         | otherwise = row
    in gs {GameState.control = fmap (fmap wake) (GameState.control gs)}
 
--- CR 723.2's lapse -- "until Word of Command finishes resolving". Applied after
+-- CR 724.2's lapse -- "until Word of Command finishes resolving". Applied after
 -- resolveOneWith rather than inside its spell branch, since either kind of
 -- object could carry the opcode, and this is the one place that knows a
 -- resolution is over.
@@ -101,13 +101,13 @@ beginResolutionControl oid gs =
 -- resolution is not re-entrant: nothing runs between the effect that wrote a row
 -- and this call except the rest of that same resolution.
 --
--- The CR 723.1 row UNDER it survives, which is the point of the stack: rule
--- 723.1a's "overwrite" is the continuous-effect sense, so once the later effect
+-- The CR 724.1 row UNDER it survives, which is the point of the stack: rule
+-- 724.1a's "overwrite" is the continuous-effect sense, so once the later effect
 -- has ended the earlier one is again the last created and works for the rest of
 -- the turn -- a Word of Command cast at a Mindslavered player hands that player
 -- back to the Mindslaver's controller, not to themselves; see #3351. Rule
--- 723.1's own expiry stays Parun.Engine.Engine.beginTurnOf's, and
--- Parun.GameSpec's "CR 723.1a gameplay: Word of Command over a Mindslaver hands
+-- 724.1's own expiry stays Parun.Engine.Engine.beginTurnOf's, and
+-- Parun.GameSpec's "CR 724.1a gameplay: Word of Command over a Mindslaver hands
 -- bob back to alice, not to himself" is what proves the hand-back.
 --
 -- A WhileResolving row outlives the resolution only while its spell is still on
@@ -128,7 +128,7 @@ outlivesResolution stack =
         ControlDuration.WhileSearching -> False
    in NonEmpty.nonEmpty . NonEmpty.filter survives
 
--- One object resolves. CR 729.1a's "the spell or ability that created the
+-- One object resolves. CR 730.1a's "the spell or ability that created the
 -- subgame" names both kinds of object, so the injected runner goes to the spell
 -- branch and to all three ability branches alike; see #137. Engine.priorityLoop
 -- supplies playSubgame.
@@ -156,7 +156,7 @@ resolveOneWith runSubgame = do
         -- cast), and neither is a melded permanent: CR 701.42a puts the two cards
         -- onto the battlefield directly rather than announcing anything.
         Source.OfMeld _ -> State.put gs {GameState.stack = rest}
-        -- Nor is a merged permanent: CR 730.2 merges an object INTO a permanent
+        -- Nor is a merged permanent: CR 731.2 merges an object INTO a permanent
         -- already on the battlefield.
         Source.OfMerge _ -> State.put gs {GameState.stack = rest}
         Source.OfToken _ -> State.put gs {GameState.stack = rest}
@@ -204,7 +204,7 @@ resolveOneWith runSubgame = do
         -- zone, never cast). Drop it, like a token.
         Source.OfEmblem _ -> State.put gs {GameState.stack = rest}
         Source.OfSpellCopy printingId -> resolveCardBacked runSubgame oid rest printingId
-        -- CR 722.3c calls the cast copy a SPELL in as many words -- "that
+        -- CR 723.3c calls the cast copy a SPELL in as many words -- "that
         -- permanent loses the prepared designation at the time the spell becomes
         -- cast" -- and CR 608.1 then resolves it like any other. So the same road
         -- the two card-backed arms above take, through the printing the mint
@@ -213,11 +213,11 @@ resolveOneWith runSubgame = do
         Source.OfInherentTrigger InherentTriggerSource.MkInherentTriggerSource {InherentTriggerSource.ability = ability} ->
           -- An inherent ability has no source object, so the ability object
           -- itself stands in for one and Object.owner is its controller -- the
-          -- monarch for CR 725.2's two abilities, the player whose engines are
+          -- monarch for CR 726.2's two abilities, the player whose engines are
           -- running for CR 702.179d's.
           --
           -- CR 608.2a: the intervening "if" is checked AGAIN as the ability
-          -- resolves, exactly as the OfTrigger arm above does it. Rule 725.2's
+          -- resolves, exactly as the OfTrigger arm above does it. Rule 726.2's
           -- abilities have none, so this was once elided; rule 702.179d's "if
           -- your speed is less than 4" is one, and eliding it would let a
           -- trigger that waited on the stack raise a speed already at max.
@@ -410,17 +410,17 @@ resolveCardBacked runSubgame oid rest printingId = do
       -- OTHER characteristic read of a stack object already does
       -- (Cost.costsFor resolves the same way, through Game.resolveFace).
       -- Action.playableLands asks the same question of a land play through
-      -- Card.landFaces, which CR 712.12 gives the same shape: a chosen face
+      -- Card.landFaces, which CR 712.9 gives the same shape: a chosen face
       -- where the layout has one, and the combined view where it does not.
       --
       -- Falls back to the combined view for parity with faceOf's own
       -- fallback; unreachable here since `obj` already resolved via this
       -- same `oid`.
       let face = Maybe.fromMaybe (Card.combined card) (Game.faceOf oid gs1)
-          -- CR 712.13 / 709.5d: the half this spell showed on the stack,
+          -- CR 712.10 / 709.5d: the half this spell showed on the stack,
           -- carried onto the permanent for the layouts whose rules say so and
           -- dropped for the rest (Card.enteringFace). What the permanent then
-          -- does with it is the MOVE's question and not this one -- CR 712.13
+          -- does with it is the MOVE's question and not this one -- CR 712.10
           -- leaves a double-faced permanent showing the face, CR 709.5d turns
           -- a Room's into an unlocked designation. Read off `obj` rather than
           -- off `face`, because what the rules carry is the object's own
@@ -499,18 +499,18 @@ resolveCardBacked runSubgame oid rest printingId = do
                 -- represented by more than one card or token". So this branch
                 -- takes NO zone change at all: `Event.merge` rewrites the
                 -- target's component list and forgets the spell, which is CR
-                -- 730.2b's "isn't considered to have just entered the
+                -- 731.2b's "isn't considered to have just entered the
                 -- battlefield" written as the absence of an entry rather than as
                 -- a flag on one.
                 --
                 -- The side is asked HERE, as the spell resolves, which is where
                 -- rule 702.140c puts the choice -- not at CR 601.2c's
                 -- announcement, where the target itself is chosen. Never elided:
-                -- CR 730.2a makes the two answers differ in the merged
+                -- CR 731.2a makes the two answers differ in the merged
                 -- permanent's every characteristic.
                 --
                 -- A merge that REFUSES (Event.mergeable's own note: a spell rule
-                -- 730.2's "card or copy" cannot name) falls through to the
+                -- 731.2's "card or copy" cannot name) falls through to the
                 -- ordinary entry below, so the spell resolves as the creature
                 -- spell it also is rather than being lost. Asked BEFORE the side
                 -- is, so a player is never put a question whose answer the
@@ -526,7 +526,7 @@ resolveCardBacked runSubgame oid rest printingId = do
                       Monad.unless merged entersOrdinarily
                     _ -> entersOrdinarily
                 else
-                  -- `entering` is carried on BOTH branches below: CR 712.13 is
+                  -- `entering` is carried on BOTH branches below: CR 712.10 is
                   -- about the resolving spell rather than about which kind of
                   -- permanent it becomes, and an Aura back face would carry its
                   -- face for the same reason a creature one does.

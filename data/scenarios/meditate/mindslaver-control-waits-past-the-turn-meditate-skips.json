@@ -123,7 +123,7 @@
     "step": "PrecombatMain"
   },
   "description": "Alice's Mindslaver over bob waits past the turn bob's Meditate skips, and she controls the turn he actually takes",
-  "note": "CR 723.1b and Mindslaver's ruling: a pending control of a player's next turn waits for a turn that player actually takes.",
+  "note": "CR 724.1b and Mindslaver's ruling: a pending control of a player's next turn waits for a turn that player actually takes.",
   "timeline": [
     {
       "do": {

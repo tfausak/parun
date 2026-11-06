@@ -368,11 +368,11 @@ castSpec s registry = Spec.describe s "Cast" $ do
     Spec.assertEqWith s "Panglacial is on the stack" onStack 1
     Spec.assertEqWith s "Panglacial left the library" (S.countByName (CardName.MkCardName $ Text.pack "Panglacial Wurm") S.alice after) 0
     Spec.assertEqWith s "seven Forests tapped to pay {5}{G}{G}" (S.tappedCount S.alice after) 7
-  -- CR 733.1 reverses a move from a library TO THE STACK; only a move to any
+  -- CR 734.1 reverses a move from a library TO THE STACK; only a move to any
   -- other zone, a shuffle, a reveal or a look stands.
   -- Cost.keepingLibraryActions once kept the failed state's library wholesale,
   -- which left a refused library cast in no zone at all.
-  Spec.it s "CR 733.1 a refused library cast puts Panglacial back in the library" $ do
+  Spec.it s "CR 734.1 a refused library cast puts Panglacial back in the library" $ do
     forest <- S.printingOf s registry "Forest"
     panglacialWurm <- S.printingOf s registry "Panglacial Wurm"
     let base = S.landsInPlay forest 7
@@ -388,7 +388,7 @@ castSpec s registry = Spec.describe s "Cast" $ do
           Prompt.ChooseManaSource {} -> pure Nothing
           _ -> pure (S.identityAnswer p)
         after = snd (State.evalState (Engine.runGame refuse gs (Cast.castWhileSearching S.manaPerformer S.alice)) False)
-    Spec.assertEqWith s "CR 733.1 Panglacial is back in the library" (Game.zoneMembers Zone.Library S.alice after) [wurmId]
+    Spec.assertEqWith s "CR 734.1 Panglacial is back in the library" (Game.zoneMembers Zone.Library S.alice after) [wurmId]
     Spec.assertEqWith s "nothing on the stack" (length (GameState.stack after)) 0
     Spec.assertEqWith s "no Forest tapped" (S.tappedCount S.alice after) 0
     Spec.assertEqWith s "CR 400.7 the same object, never moved" (Game.objectCount after) (Game.objectCount gs)
@@ -3196,7 +3196,7 @@ emergeSpec s registry = Spec.describe s "Emerge" $ do
   -- Wolves (both mana value 4, both vanilla), the Behemoth in hand. The runs
   -- differ in ONE thing -- which creature the caster names at CR 601.2b -- and
   -- the Altar eats the Hill Giant either way. Naming the Giant leaves CR 601.2h
-  -- nothing to sacrifice, so the whole cast reverses (CR 733.1); naming the
+  -- nothing to sacrifice, so the whole cast reverses (CR 734.1); naming the
   -- Wolves leaves the Wolves, so it is paid.
   --
   -- The mana is never what separates them: {7}{U} less four is {3}{U}, which the
@@ -3241,9 +3241,9 @@ emergeSpec s registry = Spec.describe s "Emerge" $ do
               step g action = snd (State.evalState (Engine.runGame answer g action) False)
            in step (step board (S.cast S.alice spellId)) (Stack.resolveTop >> Engine.settleForPriority)
         standing gs = (length (namedOnBattlefield "Drownyard Behemoth" gs), length (namedOnBattlefield "Hill Giant" gs), length (namedOnBattlefield "Russet Wolves" gs))
-    Spec.assertEqWith s "CR 601.2h the Hill Giant the Altar ate is the one CR 702.119c named, so nothing pays the sacrifice and CR 733.1 reverses the whole cast: the Behemoth is off the battlefield and both creatures are back on it" (standing (run giantId)) (0, 1, 1)
+    Spec.assertEqWith s "CR 601.2h the Hill Giant the Altar ate is the one CR 702.119c named, so nothing pays the sacrifice and CR 734.1 reverses the whole cast: the Behemoth is off the battlefield and both creatures are back on it" (standing (run giantId)) (0, 1, 1)
     Spec.assertEqWith s "CR 702.119c naming the Russet Wolves instead, on the same board and with the Altar eating the same Hill Giant, pays: the Behemoth resolved and both creatures are gone" (standing (run wolvesId)) (1, 0, 0)
-    Spec.assertEqWith s "and the reversed cast put the Behemoth back in alice's hand (CR 733.1)" (length (Game.zoneMembers Zone.Hand S.alice (run giantId))) 1
+    Spec.assertEqWith s "and the reversed cast put the Behemoth back in alice's hand (CR 734.1)" (length (Game.zoneMembers Zone.Hand S.alice (run giantId))) 1
 
   -- CR 702.119b on Crabomination {4}{B}{B} 5/5 Creature -- Crab Demon, "Emerge
   -- from artifact {5}{B}{B}" (Oracle text checked on Scryfall, 2026-09-18). The
@@ -3367,7 +3367,7 @@ harmonizeSpec s registry = Spec.describe s "Harmonize" $ do
   -- The runs differ in ONE thing -- which creature the caster names at CR 601.2b
   -- -- and the Elves are tapped for {G} in the mana window either way. Naming the
   -- Elves leaves the payment no untapped creature to tap, so the whole cast
-  -- reverses (CR 733.1); naming the Maiden leaves the Maiden, so it is paid.
+  -- reverses (CR 734.1); naming the Maiden leaves the Maiden, so it is paid.
   --
   -- The mana is never what separates them: {5}{U} less one is {4}{U}, which the
   -- five Islands pay on their own in both runs -- which is also why there are
@@ -3405,7 +3405,7 @@ harmonizeSpec s registry = Spec.describe s "Harmonize" $ do
               step g action = snd (State.evalState (Engine.runGame answer g action) False)
            in step (step board (S.cast S.alice spellId)) (Stack.resolveTop >> Engine.settleForPriority)
         standing gs = (handSize S.alice gs, length (namedInGraveyard "Unending Whisper" gs), length (Game.zoneMembers Zone.Exile S.alice gs))
-    Spec.assertEqWith s "CR 601.2h the Elves tapped for mana are the creature CR 702.180b named, so nothing pays the tap and CR 733.1 reverses the whole cast: no card was drawn and the Whisper is still in the graveyard" (standing (run elvesId)) (0, 1, 0)
+    Spec.assertEqWith s "CR 601.2h the Elves tapped for mana are the creature CR 702.180b named, so nothing pays the tap and CR 734.1 reverses the whole cast: no card was drawn and the Whisper is still in the graveyard" (standing (run elvesId)) (0, 1, 0)
     Spec.assertEqWith s "CR 702.180b naming the Bird Maiden instead, on the same board and with the same Elves tapped for mana, pays: the Whisper resolved, drew, and was exiled" (standing (run maidenId)) (1, 0, 1)
     Spec.assertEqWith s "and the reversed cast left the Bird Maiden untapped, which is the creature a tap pinned to a power rather than to an object would have taken" (tapStateOf maidenId (run elvesId)) (Just TapState.Untapped)
 
@@ -5215,18 +5215,18 @@ keptFaceDownSpec s registry = Spec.describe s "KeptFaceDown" $ do
     loggedBefore "the miracle reveal is logged after CR 601.2i's cast, not during CR 601.2g's payment" isSpellCast isMiracleReveal after
     loggedBefore "and after CR 601.2h discarded the Forest" isDiscard isMiracleReveal after
     Spec.assertEqWith s "the Wrath is face up again: CR 121.8's mark is gone" (GameState.keptFaceDown after) Nothing
-  -- CR 733.1: the {R} is unpaid with only the Forest's {G}{G}, so the cast is
-  -- reversed after the draw. The draw is an action CR 733.1 never reverses, and
+  -- CR 734.1: the {R} is unpaid with only the Forest's {G}{G}, so the cast is
+  -- reversed after the draw. The draw is an action CR 734.1 never reverses, and
   -- CR 121.8 offers the reveal only "after the spell becomes cast", which never
   -- comes. The answerer asks for every reversal it is offered.
-  Spec.it s "CR 121.8 / 733.1 a reversed cast keeps the drawn Thunderous Wrath in hand, face up and unrevealed" $ do
+  Spec.it s "CR 121.8 / 734.1 a reversed cast keeps the drawn Thunderous Wrath in hand, face up and unrevealed" $ do
     built <- S.buildBoardOrFail s registry (board "Forest" [S.ready (S.permanent "Mountain")] [("insight", "Magmatic Insight"), ("forest", "Forest")])
     land <- idOf "land" built
     insight <- idOf "insight" built
     let after = S.runPure (answerer land (const False)) (Staged.state built) (S.cast S.alice insight)
         wrath = wrathIn Zone.Hand after
     Spec.assertEqWith s "no miracle reveal: the spell never became cast" (filter isMiracleReveal (S.eventsOf after)) []
-    Spec.assertEqWith s "CR 733.1: the draw stands, so the Wrath is in alice's hand" (length wrath) 1
+    Spec.assertEqWith s "CR 734.1: the draw stands, so the Wrath is in alice's hand" (length wrath) 1
     Spec.assertBool s (any (named "Magmatic Insight" after) (Game.zoneMembers Zone.Hand S.alice after)) "and Magmatic Insight is back in hand"
     Spec.assertEqWith s "the Wrath has its characteristics back: its miracle keyword projects" (fmap (any isMiracle . Map.keys . flip Projection.keywordsOf after) wrath) [True]
   Spec.it s "CR 121.8 Thunderous Wrath drawn while Netter en-Dal's ability is paid for is offered its miracle reveal only once the ability is activated" $ do
@@ -5352,12 +5352,12 @@ nameOnStack :: CardName.CardName -> GameState.GameState -> ObjectId.ObjectId -> 
 nameOnStack wanted gs oid = case Game.lookupObject oid gs of
   Just o -> case Object.source o of
     Source.OfCard _ -> fmap Face.name (Game.faceOf oid gs) == Just wanted
-    -- CR 712.8g: the combined back face's name, which Game.faceOf already
+    -- CR 713.5c: the combined back face's name, which Game.faceOf already
     -- resolves to. No caller reaches one -- CR 701.42a never puts it on the
     -- stack -- so this is the OfCard read rather than a second rule.
     Source.OfMeld _ -> fmap Face.name (Game.faceOf oid gs) == Just wanted
-    -- CR 730.2a: the topmost component's name, which Game.faceOf already
-    -- resolves to. No caller reaches one -- CR 730.2 merges onto the
+    -- CR 731.2a: the topmost component's name, which Game.faceOf already
+    -- resolves to. No caller reaches one -- CR 731.2 merges onto the
     -- battlefield -- so this is the OfCard read rather than a second rule.
     Source.OfMerge _ -> fmap Face.name (Game.faceOf oid gs) == Just wanted
     Source.OfToken printingId -> fmap S.nameOf (Game.cardOfPrinting printingId gs) == Just wanted
@@ -5367,7 +5367,7 @@ nameOnStack wanted gs oid = case Game.lookupObject oid gs of
     -- CR 112.1a: a copy of a spell has a name, the copied spell's, and the same
     -- read finds it. No caller reaches one today.
     Source.OfSpellCopy _ -> fmap Face.name (Game.faceOf oid gs) == Just wanted
-    -- CR 722.3c's copy the same way: the one face of its own printing is what
+    -- CR 723.3c's copy the same way: the one face of its own printing is what
     -- Game.faceOf resolves to. No caller reaches one today.
     Source.OfCardCopy _ -> fmap Face.name (Game.faceOf oid gs) == Just wanted
     Source.OfInherentTrigger _ -> False

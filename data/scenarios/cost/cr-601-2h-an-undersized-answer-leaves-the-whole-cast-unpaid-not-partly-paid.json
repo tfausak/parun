@@ -1,6 +1,6 @@
 {
   "description": "CR 601.2h an undersized answer leaves the whole cast unpaid, not partly paid",
-  "note": "The discard is answered with no card where two are owed, so the cast is refused whole; CR 733.1's ReverseManaAbilities is answered Exercises, as the Haskell answerer does, so both Mountains end untapped.",
+  "note": "The discard is answered with no card where two are owed, so the cast is refused whole; CR 734.1's ReverseManaAbilities is answered Exercises, as the Haskell answerer does, so both Mountains end untapped.",
   "board": {
     "seats": [
       {

@@ -6,7 +6,7 @@ import qualified Parun.Types.Card as Card
 
 data Printing = MkPrinting
   { card :: Card.Card,
-    -- | CR 717.1: the numbers lit up on an Attraction, empty for every other
+    -- | CR 718.1: the numbers lit up on an Attraction, empty for every other
     -- card. Printing data rather than a characteristic (CR 109.3): two
     -- printings of one Attraction light different numbers.
     lights :: Set.Set Natural.Natural

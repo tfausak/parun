@@ -7,11 +7,11 @@
 -- and Parun.Types.Player's outsideTheGame -- Parun.Engine.Setup.createDeck's copy
 -- between them, and Parun.Engine.Resolve's two arms:
 -- Effect.FromOutsideTheGame and Effect.ExileThisSpell (CR 608.2n). Also
--- CR 729.4's second place a card can be outside the game: the main game as a
+-- CR 730.4's second place a card can be outside the game: the main game as a
 -- subgame sees it, which is Parun.Engine.Setup's subgameStateFrom and
 -- applyCrossings with Parun.Engine.Engine.playSubgame between them.
 --
--- Gameplay-level but for the CR 103.2a setup case and the CR 729.4 group that
+-- Gameplay-level but for the CR 103.2a setup case and the CR 730.4 group that
 -- follows it, which reach Event.eligible and Event.bringInto directly on a board
 -- Setup.subgameStateFrom built -- the main game those cases
 -- read is played out through the stack, but the wish inside the subgame is
@@ -25,10 +25,10 @@
 -- is not the hand, Research for a count other than one, Extrapolate the
 -- Impossible for CR 201.2b's different names and an opponent's pick among the
 -- revealed cards, and, in four cases, a Shahrazad
--- subgame for CR 729.4's main game -- Living Wish reaching two main-game
+-- subgame for CR 730.4's main game -- Living Wish reaching two main-game
 -- creatures, then Death Wish reaching a main-game Titania's Song (CR 604.2's
 -- handover), then Burning Wish reaching the resolving Shahrazad itself (CR
--- 729.5), then Burning Wish reaching a main-game graveyard (CR 729.4a).
+-- 730.5), then Burning Wish reaching a main-game graveyard (CR 730.4a).
 --
 -- The last group takes the OTHER road in: Ring of Ma'rûf's CR 614.6 draw
 -- replacement, whose rewrite reaches the same `bringInto` the resolution arm
@@ -161,9 +161,9 @@ printingsIn zone pid gs = Maybe.mapMaybe (\oid -> Game.printingOfObject oid gs) 
 poolOf :: PlayerId.PlayerId -> GameState.GameState -> Map.Map PrintingId.PrintingId Natural.Natural
 poolOf pid gs = maybe Map.empty Player.outsideTheGame (Map.lookup pid (GameState.players gs))
 
--- n fresh objects of one printing in a player's library: what CR 729.2 moves into
+-- n fresh objects of one printing in a player's library: what CR 730.2 moves into
 -- the subgame, and the one main-game zone that does move. Which END of the
--- library they land at is not a dial the case below turns -- CR 729.2 shuffles
+-- library they land at is not a dial the case below turns -- CR 730.2 shuffles
 -- each library as the subgame starts, and the sizing argument there holds for
 -- either order.
 stockLibrary :: Printing.Printing -> Int -> PlayerId.PlayerId -> GameState.GameState -> GameState.GameState
@@ -470,25 +470,25 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
     -- candidate with no identity, so the conjunction admits nobody.
     Spec.assertEqWith s "nothing was even offered" (length (Event.eligible atom wishId S.alice gs)) 0
     Spec.assertEqWith s "where the sorcery filter offers the one card" (length (Event.eligible (Filter.HasCardType CardType.Sorcery) wishId S.alice gs)) 1
-  -- CR 729.4: a subgame's own view of the main game. Alice's creature sits
+  -- CR 730.4: a subgame's own view of the main game. Alice's creature sits
   -- on the PARENT's battlefield; Setup.subgameStateFrom moves it into
-  -- GameState.outsideObjects (CR 729.4, "all objects in the main game ... are
+  -- GameState.outsideObjects (CR 730.4, "all objects in the main game ... are
   -- considered outside the subgame"), and a wish cast IN the subgame can reach
   -- it just as it reaches the sideboard pool. Called at the unit level --
   -- `Event.bringInto` directly -- rather than through a printed wish,
   -- since Living Wish's own casting is not this unit's concern.
-  Spec.it s "CR 729.4/729.4a a wish cast in a subgame reaches a main-game creature" $ do
+  Spec.it s "CR 730.4/730.4a a wish cast in a subgame reaches a main-game creature" $ do
     bear <- S.printingOf s registry "Prodigal Sorcerer"
     let (bearId, parent) = S.addPermanent bear S.alice (Setup.emptyGame S.bothPlayers)
         sub = Setup.subgameStateFrom S.alice parent
         predicate = Filter.Or [Filter.HasCardType CardType.Creature, Filter.HasCardType CardType.Land]
         after = snd (Engine.runGamePure S.identityAnswer sub (Event.bringInto (FromOutsideTheGame.MkFromOutsideTheGame 1 False OutsideDestination.Hand predicate True Set.empty Nothing) bearId S.alice))
-    Spec.assertEqWith s "CR 729.4/400.11c: the main-game creature arrives in her subgame hand" (printingsIn Zone.Hand S.alice after) [bear]
-    Spec.assertEqWith s "CR 729.4a: the crossing is recorded for the outer frame to apply" (Foldable.toList (GameState.broughtIn after)) [bearId]
+    Spec.assertEqWith s "CR 730.4/400.11c: the main-game creature arrives in her subgame hand" (printingsIn Zone.Hand S.alice after) [bear]
+    Spec.assertEqWith s "CR 730.4a: the crossing is recorded for the outer frame to apply" (Foldable.toList (GameState.broughtIn after)) [bearId]
     Spec.assertEqWith s "and it is no longer offered" (Map.member bearId (GameState.outsideObjects after)) False
   -- The discrimination OutsideCard exists for: BOTH of CR 400.11c's sources on
   -- offer at once, and the answer names the pool one, not the main-game one.
-  Spec.it s "CR 400.11c/729.4: the pool and the main game are offered together, and the answer picks the pool card" $ do
+  Spec.it s "CR 400.11c/730.4: the pool and the main game are offered together, and the answer picks the pool card" $ do
     bear <- S.printingOf s registry "Prodigal Sorcerer"
     dragon <- S.printingOf s registry "Hoarding Dragon"
     let (bearId, parent0) = S.addPermanent bear S.alice (Setup.emptyGame S.bothPlayers)
@@ -521,7 +521,7 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
         after = snd (Engine.runGamePure S.identityAnswer sub (Event.bringInto (FromOutsideTheGame.MkFromOutsideTheGame 1 False OutsideDestination.Hand predicate True Set.empty Nothing) bobsBearId S.alice))
     Spec.assertEqWith s "alice's hand stays empty: bob's creature is not hers to reach" (printingsIn Zone.Hand S.alice after) []
     Spec.assertEqWith s "and bob's card is untouched" (Map.member bobsBearId (GameState.outsideObjects after)) True
-  -- CR 708.2 over CR 729.4: what a subgame's wish sees of a FACE-DOWN main-game
+  -- CR 708.2 over CR 730.4: what a subgame's wish sees of a FACE-DOWN main-game
   -- permanent. alice casts Soul Summons ({1}{W} sorcery, "Manifest the top card
   -- of your library") in the main game over Sign in Blood, so the permanent
   -- standing outside the subgame is a card whose PRINTED face and whose CR 708.2a
@@ -540,8 +540,8 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
   -- The two Plains are lands outside the subgame, so the creature-or-land leg
   -- offers three candidates for one pick and cannot short-circuit. The Goblin
   -- Piker under Sign in Blood keeps CR 104.3c off the board and leaves the
-  -- library non-empty for CR 729.2 to move.
-  Spec.it s "CR 708.2/729.4 a manifested main-game sorcery is offered to a subgame's wish as a creature and not as a sorcery" $ do
+  -- library non-empty for CR 730.2 to move.
+  Spec.it s "CR 708.2/730.4 a manifested main-game sorcery is offered to a subgame's wish as a creature and not as a sorcery" $ do
     summons <- S.printingOf s registry "Soul Summons"
     plains <- S.printingOf s registry "Plains"
     signInBlood <- S.printingOf s registry "Sign in Blood"
@@ -566,7 +566,7 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
         offeredOuter predicate = Maybe.mapMaybe (\card -> case card of OutsideCard.InAnotherGame oid -> Just oid; _ -> Nothing) (Event.eligible predicate manifestedId S.alice sub)
     -- CR 708.2a's 2/2 creature is what the creature-or-land wish reaches, and CR
     -- 708.9's reveal is what arrives: the card itself, not the 2/2.
-    Spec.assertEqWith s "CR 708.2a/729.4: the creature-or-land wish takes the manifest, and CR 708.9 hands it over as the sorcery card underneath" (printingsIn Zone.Hand S.alice (wishing creatureOrLand)) [signInBlood]
+    Spec.assertEqWith s "CR 708.2a/730.4: the creature-or-land wish takes the manifest, and CR 708.9 hands it over as the sorcery card underneath" (printingsIn Zone.Hand S.alice (wishing creatureOrLand)) [signInBlood]
     -- The other arm of the same rule: "no characteristics other than those
     -- listed" leaves the manifest no card type but creature, so the sorcery wish
     -- has to settle for the face-up sorcery in the main-game graveyard.
@@ -577,7 +577,7 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
     Spec.assertEqWith s "and the card under it is Sign in Blood" (Game.printingOfObject manifestedId parent) (Just signInBlood)
     Spec.assertEqWith s "the creature-or-land wish was offered the manifest beside alice's two main-game Plains" (length (offeredOuter creatureOrLand), elem manifestedId (offeredOuter creatureOrLand)) (3, True)
     Spec.assertEqWith s "and the sorcery wish was offered the graveyard card alone" (elem manifestedId (offeredOuter (Filter.HasCardType CardType.Sorcery)), length (offeredOuter (Filter.HasCardType CardType.Sorcery))) (False, 1)
-  -- CR 712.8g over CR 729.4: a melded main-game permanent is ONE object outside
+  -- CR 713.5c over CR 730.4: a melded main-game permanent is ONE object outside
   -- the subgame (CR 701.42a), offered by its combined face. Granted (Fae of
   -- Wishes' Adventure, "You may reveal a noncreature card you own from outside
   -- the game and put it into your hand.") is the one printed wish whose filter
@@ -589,7 +589,7 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
   -- offer and no Hanweir card arrives. The answerer pins the Hanweir object by
   -- id and falls back to the head of the offer, which holds alice's main-game
   -- Mountains on both legs.
-  Spec.it s "CR 712.8g/729.4 Granted cannot see a melded Hanweir, whose combined face is a creature, and takes an unmelded Battlements" $ do
+  Spec.it s "CR 713.5c/730.4 Granted cannot see a melded Hanweir, whose combined face is a creature, and takes an unmelded Battlements" $ do
     mountain <- S.printingOf s registry "Mountain"
     island <- S.printingOf s registry "Island"
     battlements <- S.printingOf s registry "Hanweir Battlements"
@@ -616,17 +616,17 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
         (_, afterMelded) = granting melded
         (_, afterUnmelded) = granting unmelded
     -- The gameplay-level claims, first.
-    Spec.assertEqWith s "CR 712.8g: the melded township is a creature, so Granted brings no Hanweir card in" (hanweirIn afterMelded) []
-    Spec.assertEqWith s "CR 729.4: the unmelded Battlements is a noncreature card, and Granted takes it" (hanweirIn afterUnmelded) [battlements]
+    Spec.assertEqWith s "CR 713.5c: the melded township is a creature, so Granted brings no Hanweir card in" (hanweirIn afterMelded) []
+    Spec.assertEqWith s "CR 730.4: the unmelded Battlements is a noncreature card, and Granted takes it" (hanweirIn afterUnmelded) [battlements]
     -- What each leg rests on.
     Spec.assertBool s (Maybe.isJust townshipId) "the meld happened"
     Spec.assertEqWith s "Granted resolved on the melded leg, taking a Mountain instead" (printingsIn Zone.Hand S.alice afterMelded) [mountain]
-    Spec.assertEqWith s "CR 729.4: the township stays outside the subgame" (fmap (`Map.member` GameState.outsideObjects afterMelded) townshipId) (Just True)
-  -- CR 712.21 over CR 729.4: what a wish takes of a melded permanent is the
+    Spec.assertEqWith s "CR 730.4: the township stays outside the subgame" (fmap (`Map.member` GameState.outsideObjects afterMelded) townshipId) (Just True)
+  -- CR 713.8 over CR 730.4: what a wish takes of a melded permanent is the
   -- permanent, and the permanent leaving the battlefield is "two cards into
   -- the appropriate zone" -- here her subgame hand. Living Wish's creature
   -- filter admits the township's combined face.
-  Spec.it s "CR 712.21/729.4 a wish cast in a subgame takes a melded main-game permanent, and both its cards arrive" $ do
+  Spec.it s "CR 713.8/730.4 a wish cast in a subgame takes a melded main-game permanent, and both its cards arrive" $ do
     mountain <- S.printingOf s registry "Mountain"
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
@@ -635,16 +635,16 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
         township = Maybe.fromMaybe (ObjectId.MkObjectId 0) townshipId
         creature = Filter.HasCardType CardType.Creature
         after = snd (Engine.runGamePure exercising sub (Event.bringInto (FromOutsideTheGame.MkFromOutsideTheGame 1 False OutsideDestination.Hand creature True Set.empty Nothing) township S.alice))
-    Spec.assertEqWith s "CR 712.21: both of Hanweir's cards arrive in her subgame hand" (List.sort (fmap S.nameOf (Maybe.mapMaybe (`Game.cardOf` after) (Game.zoneMembers Zone.Hand S.alice after)))) (List.sort [S.nameOf (Printing.card battlements), S.nameOf (Printing.card garrison)])
-    Spec.assertEqWith s "CR 712.21e: one permanent crossed, under the township's id" (Foldable.toList (GameState.broughtIn after)) [township]
+    Spec.assertEqWith s "CR 713.8: both of Hanweir's cards arrive in her subgame hand" (List.sort (fmap S.nameOf (Maybe.mapMaybe (`Game.cardOf` after) (Game.zoneMembers Zone.Hand S.alice after)))) (List.sort [S.nameOf (Printing.card battlements), S.nameOf (Printing.card garrison)])
+    Spec.assertEqWith s "CR 713.8e: one permanent crossed, under the township's id" (Foldable.toList (GameState.broughtIn after)) [township]
     Spec.assertBool s (Maybe.isJust townshipId) "the meld happened"
-    Spec.assertEqWith s "CR 729.4: it was the one creature outside the subgame" (fmap (\oid -> [OutsideCard.InAnotherGame oid]) townshipId) (Just (Event.eligible creature township S.alice sub))
-  -- CR 712.21a: "if a melded permanent is put into its owner's graveyard or
+    Spec.assertEqWith s "CR 730.4: it was the one creature outside the subgame" (fmap (\oid -> [OutsideCard.InAnotherGame oid]) townshipId) (Just (Event.eligible creature township S.alice sub))
+  -- CR 713.8a: "if a melded permanent is put into its owner's graveyard or
   -- library, that player may arrange the two cards in any order" -- and a wish
   -- naming the top of her library (The Raven's Warning's chapter III) is that.
   -- A PAIR of answers to Prompt.OrderComponentCards over the same board, which
   -- must leave different cards on top.
-  Spec.it s "CR 712.21a a melded permanent a subgame puts on top of her library is arranged by her, and the answer decides the top card" $ do
+  Spec.it s "CR 713.8a a melded permanent a subgame puts on top of her library is arranged by her, and the answer decides the top card" $ do
     mountain <- S.printingOf s registry "Mountain"
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
@@ -662,20 +662,20 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
            in (fmap S.nameOf (Maybe.listToMaybe library >>= (`Game.cardOf` after)), length library)
         (asOffered, offeredCount) = topWith id
         (reversedOrder, reversedCount) = topWith reverse
-    Spec.assertBool s (asOffered /= reversedOrder) "CR 712.21a: the two arrangements leave different cards on top"
+    Spec.assertBool s (asOffered /= reversedOrder) "CR 713.8a: the two arrangements leave different cards on top"
     Spec.assertEqWith s "and each top card is one of Hanweir's" (all (`elem` [Just (S.nameOf (Printing.card battlements)), Just (S.nameOf (Printing.card garrison))]) [asOffered, reversedOrder]) True
-    Spec.assertEqWith s "CR 712.21: both cards arrive on each leg" (offeredCount, reversedCount) (2, 2)
+    Spec.assertEqWith s "CR 713.8: both cards arrive on each leg" (offeredCount, reversedCount) (2, 2)
     Spec.assertBool s (Maybe.isJust townshipId) "the meld happened"
-  -- CR 730.3 over CR 729.4: a merged permanent rides the same door. Cubwarden
+  -- CR 731.3 over CR 730.4: a merged permanent rides the same door. Cubwarden
   -- merged over alice's Goblin Piker is one object outside the subgame, offered
-  -- by its topmost component (CR 730.2a), and both cards arrive. Hand-built
+  -- by its topmost component (CR 731.2a), and both cards arrive. Hand-built
   -- through Object.source rather than cast, since the merge itself is
   -- Parun.MutateSpec's subject. Two more boards put a token on top, which CR
-  -- 730.2d makes a token and so no card a wish can bring in, and a token
+  -- 731.2d makes a token and so no card a wish can bring in, and a token
   -- underneath, which is no card to bring. The Piker is one alice won from bob
   -- (CR 108.3), so each card arriving with its own identity is what lets the
   -- subgame's ownership report name it and not the Cubwarden.
-  Spec.it s "CR 730.3/729.4 a wish cast in a subgame takes a merged main-game permanent, and both its cards arrive" $ do
+  Spec.it s "CR 731.3/730.4 a wish cast in a subgame takes a merged main-game permanent, and both its cards arrive" $ do
     cubwarden <- S.printingOf s registry "Cubwarden"
     piker <- S.printingOf s registry "Goblin Piker"
     let (mergedId, g1) = S.addPermanent cubwarden S.alice (Setup.emptyGame S.bothPlayers)
@@ -692,21 +692,21 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
         creature = Filter.HasCardType CardType.Creature
         wishing parent = snd (Engine.runGamePure exercising (Setup.subgameStateFrom S.alice parent) (Event.bringInto (FromOutsideTheGame.MkFromOutsideTheGame 1 False OutsideDestination.Hand creature True Set.empty Nothing) mergedId S.alice))
     let reported = [(fmap (S.nameOf . Printing.card) (Game.printingOfObject oid (wishing merged)), change) | c <- Foldable.toList (Ante.ownershipChanges (wishing merged)), let oid = OwnershipChange.object c; change = (OwnershipChange.startingOwner c, OwnershipChange.owner c)]
-    Spec.assertEqWith s "CR 108.3/729.4a: each card keeps its own identity, so only the Piker is bob's to begin" reported [(Just (S.nameOf (Printing.card piker)), (S.bob, S.alice))]
-    Spec.assertEqWith s "CR 730.3: both of the merged permanent's cards arrive in her subgame hand" (List.sort (printingsIn Zone.Hand S.alice (wishing merged))) (List.sort [cubwarden, piker])
-    Spec.assertEqWith s "CR 730.2d: a token on top makes it a token, and no card is brought in" (printingsIn Zone.Hand S.alice (wishing tokenTopped)) []
-    Spec.assertEqWith s "CR 730.3/111.7: Cubwarden over a token brings the one card, the token being none" (printingsIn Zone.Hand S.alice (wishing overToken)) [cubwarden]
+    Spec.assertEqWith s "CR 108.3/730.4a: each card keeps its own identity, so only the Piker is bob's to begin" reported [(Just (S.nameOf (Printing.card piker)), (S.bob, S.alice))]
+    Spec.assertEqWith s "CR 731.3: both of the merged permanent's cards arrive in her subgame hand" (List.sort (printingsIn Zone.Hand S.alice (wishing merged))) (List.sort [cubwarden, piker])
+    Spec.assertEqWith s "CR 731.2d: a token on top makes it a token, and no card is brought in" (printingsIn Zone.Hand S.alice (wishing tokenTopped)) []
+    Spec.assertEqWith s "CR 731.3/111.7: Cubwarden over a token brings the one card, the token being none" (printingsIn Zone.Hand S.alice (wishing overToken)) [cubwarden]
     Spec.assertEqWith s "the merged board's entry is offered by its topmost component" (fmap OutsideObject.printing (Map.lookup mergedId (GameState.outsideObjects (Setup.subgameStateFrom S.alice merged)))) (Just cubwardenPrinting)
-  -- CR 712.21 / 729.4a / 729.5 at gameplay level: alice casts Shahrazad over a
+  -- CR 713.8 / 730.4a / 730.5 at gameplay level: alice casts Shahrazad over a
   -- melded Hanweir, the Writhing Township, and inside the subgame Living Wish
-  -- takes the township. One permanent leaves the main game (CR 712.21e), and
+  -- takes the township. One permanent leaves the main game (CR 713.8e), and
   -- its two cards are what the subgame hands back to her main-game library.
   --
   -- The sizing is the Death Wish case's: one wish and eight Forests, so she
   -- holds the wish by turn 5 with three lands down, and bob decks on turn 6.
   -- Her main-game Plains and Mountains are lands outside the subgame too, so
   -- the offer has a choice in it; the answerer pins the township by id.
-  Spec.it s "CR 712.21/729.4a gameplay: Living Wish takes a melded Hanweir out of the main game, and both its cards come back to her library" $ do
+  Spec.it s "CR 713.8/730.4a gameplay: Living Wish takes a melded Hanweir out of the main game, and both its cards come back to her library" $ do
     plains <- S.printingOf s registry "Plains"
     forest <- S.printingOf s registry "Forest"
     mountain <- S.printingOf s registry "Mountain"
@@ -731,27 +731,27 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
           Prompt.ChooseOptional {} -> OptionalDecision.Exercises
           Prompt.ChooseFromOutsideTheGame _ _ offered _ _ ->
             [Maybe.fromMaybe (NonEmpty.head offered) (List.find (== OutsideCard.InAnotherGame township) (NonEmpty.toList offered))]
-          -- CR 729.2's roll, answered so the turn count above is the one played.
+          -- CR 730.2's roll, answered so the turn count above is the one played.
           Prompt.RandomFirstPlayer _ -> S.alice
           _ -> S.castAnswer p
         after = snd (Engine.runGamePure answer before Engine.priorityLoop)
         leftTheGame = [LeftTheGame.object l | GameEvent.LeftTheGame l <- fmap LoggedEvent.event (Foldable.toList (GameState.events after))]
         hanweirIn zone = filter (`elem` [battlements, garrison]) (printingsIn zone S.alice after)
     -- The gameplay-level claims, first.
-    Spec.assertEqWith s "CR 712.21/729.5: both of Hanweir's cards come back to her main-game library" (List.sort (hanweirIn Zone.Library)) (List.sort [battlements, garrison])
-    Spec.assertEqWith s "CR 712.21e/729.4a: one permanent left the main game, the township" leftTheGame [township]
+    Spec.assertEqWith s "CR 713.8/730.5: both of Hanweir's cards come back to her main-game library" (List.sort (hanweirIn Zone.Library)) (List.sort [battlements, garrison])
+    Spec.assertEqWith s "CR 713.8e/730.4a: one permanent left the main game, the township" leftTheGame [township]
     -- What the claims rest on.
     Spec.assertBool s (Maybe.isJust townshipId) "the meld happened"
     Spec.assertEqWith s "the township started on the main-game battlefield" (Set.member township (GameState.battlefield before)) True
-    Spec.assertEqWith s "CR 729.4a: it is gone from the main game" (Map.member township (GameState.objects after)) False
+    Spec.assertEqWith s "CR 730.4a: it is gone from the main game" (Map.member township (GameState.objects after)) False
     Spec.assertEqWith s "and neither card is on her battlefield" (hanweirIn Zone.Battlefield) []
-    Spec.assertEqWith s "CR 729.1b: alice won the subgame, so only bob paid" (S.lifeOf S.alice after, S.lifeOf S.bob after) (Just 20, Just 10)
-  -- CR 729.4 / 729.4a / 729.5, the whole road at gameplay level and the case #152
+    Spec.assertEqWith s "CR 730.1b: alice won the subgame, so only bob paid" (S.lifeOf S.alice after, S.lifeOf S.bob after) (Just 20, Just 10)
+  -- CR 730.4 / 730.4a / 730.5, the whole road at gameplay level and the case #152
   -- is about. alice casts Shahrazad in the main game; inside the subgame she casts
   -- Living Wish ({1}{G} sorcery, "You may reveal a creature or land card you own
   -- from outside the game and put it into your hand. Exile Living Wish.") twice
   -- and takes one of her main-game Goblin Pikers each time. Each Piker leaves the
-  -- MAIN GAME as it crosses (CR 729.4a), and bob's Super Shredder ("whenever
+  -- MAIN GAME as it crosses (CR 730.4a), and bob's Super Shredder ("whenever
   -- another permanent leaves the battlefield, put a +1/+1 counter on Super
   -- Shredder") is the main-game ability that watches it go.
   --
@@ -761,21 +761,21 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
   -- the wish be cast twice, so a pool spent by the first cast would show up here.
   --
   -- The sizing, which is what the fixture is built around: alice starts the
-  -- subgame (CR 729.2), so she skips her first draw (CR 103.8a) and her turns are
+  -- subgame (CR 730.2), so she skips her first draw (CR 103.8a) and her turns are
   -- 1, 3 and 5. One land per turn (CR 305.2) puts her second land down on turn 3,
   -- which is the first turn the {1}{G} wish is castable, and the second wish waits
   -- for turn 5. Both libraries hold nine cards: seven go to an opening hand, so
   -- bob draws his last two on turns 2 and 4 and draws from an empty library on
   -- turn 6, which ends the subgame under CR 704.5b -- one turn after alice's
-  -- second cast. Nine is also over CR 729.3's seven, so neither player decks
+  -- second cast. Nine is also over CR 730.3's seven, so neither player decks
   -- during setup. alice's nine are the two wishes and seven Forests; whichever end
   -- the shuffle answer leaves them at she holds both wishes by turn 5, since seven
   -- opening cards plus her turn-3 and turn-5 draws are her whole library.
   --
   -- The Plains she cast Shahrazad with are LANDS she owns on the main-game
-  -- battlefield, so CR 729.4 offers them to the wish alongside the Pikers; the
+  -- battlefield, so CR 730.4 offers them to the wish alongside the Pikers; the
   -- answerer names a Piker rather than taking the head of the offer.
-  Spec.it s "CR 729.4/729.4a/729.5 gameplay: Living Wish takes two main-game creatures out of a Shahrazad subgame, and the triggers wait for the main game" $ do
+  Spec.it s "CR 730.4/730.4a/730.5 gameplay: Living Wish takes two main-game creatures out of a Shahrazad subgame, and the triggers wait for the main game" $ do
     plains <- S.printingOf s registry "Plains"
     forest <- S.printingOf s registry "Forest"
     mountain <- S.printingOf s registry "Mountain"
@@ -809,11 +809,11 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
           -- redden rather than the case passing on the wrong card.
           Prompt.ChooseFromOutsideTheGame _ _ offered _ _ ->
             [Maybe.fromMaybe (NonEmpty.head offered) (List.find isPiker (NonEmpty.toList offered))]
-          -- CR 729.2's roll, answered so the turn count above is the one played.
+          -- CR 730.2's roll, answered so the turn count above is the one played.
           Prompt.RandomFirstPlayer _ -> S.alice
           _ -> S.castAnswer p
         after = snd (Engine.runGamePure answer before Engine.priorityLoop)
-        -- Scoped to bob, the player CR 729.1b makes pay: today he is the only
+        -- Scoped to bob, the player CR 730.1b makes pay: today he is the only
         -- main-game life-loser, but an unscoped match would also catch alice's.
         isLifeLoss e = case e of
           GameEvent.LifeLost change -> LifeChange.player change == S.bob
@@ -823,14 +823,14 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
           _ -> False
         -- CR 608.2n: "as the final part of an instant or sorcery spell's
         -- resolution, the spell is put into its owner's graveyard" -- so this is
-        -- the moment CR 729.5 calls the spell FINISHING resolving, and the only
+        -- the moment CR 730.5 calls the spell FINISHING resolving, and the only
         -- stack-to-graveyard move in the main game's log (Living Wish exiles
         -- itself inside the subgame, whose log is its own, and a resolved ability
         -- ceases to exist rather than moving).
         isSpellFinishing e = case e of
           GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) -> ZoneChange.from zc == Zone.Stack && ZoneChange.to zc == Zone.Graveyard
           _ -> False
-        -- CR 729.5's last sentence, read off the one log all three are recorded
+        -- CR 730.5's last sentence, read off the one log all three are recorded
         -- in. The chain: Shahrazad's own LoseLife clause runs during resolution,
         -- the spell then leaves the stack, and only after that can the trigger go
         -- on the stack and place its counter.
@@ -840,22 +840,22 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
     -- The fixture's own preconditions, which the runner under test cannot redden.
     Spec.assertEqWith s "both of alice's creatures start on the main-game battlefield" (Set.member firstPiker (GameState.battlefield before), Set.member secondPiker (GameState.battlefield before)) (True, True)
     Spec.assertEqWith s "and bob's Super Shredder starts with no counters" (plusOneCounters shredderId before) 0
-    Spec.assertEqWith s "CR 729.4: both main-game creatures left the main game for the subgame" (Set.member firstPiker (GameState.battlefield after), Set.member secondPiker (GameState.battlefield after)) (False, False)
-    Spec.assertEqWith s "CR 729.4a: Super Shredder's leaves-the-battlefield trigger resolved once per crossing" (plusOneCounters shredderId after) 2
-    Spec.assertEqWith s "CR 608.2n/729.5: the trigger's counter lands only after Shahrazad's last clause AND after the spell left the stack" resolutionThenTrigger (Just (True, True))
-    Spec.assertEqWith s "CR 729.5: the cards the wishes took come back to her main-game library" (length (filter (== piker) (printingsIn Zone.Library S.alice after))) 2
-    Spec.assertEqWith s "CR 729.5: and the subgame's own cards -- the wishes it exiled included -- came back with them" (length (printingsIn Zone.Library S.alice after)) 11
-    -- CR 729.1b: alice won the subgame (bob decked), so she is the one player the
+    Spec.assertEqWith s "CR 730.4: both main-game creatures left the main game for the subgame" (Set.member firstPiker (GameState.battlefield after), Set.member secondPiker (GameState.battlefield after)) (False, False)
+    Spec.assertEqWith s "CR 730.4a: Super Shredder's leaves-the-battlefield trigger resolved once per crossing" (plusOneCounters shredderId after) 2
+    Spec.assertEqWith s "CR 608.2n/730.5: the trigger's counter lands only after Shahrazad's last clause AND after the spell left the stack" resolutionThenTrigger (Just (True, True))
+    Spec.assertEqWith s "CR 730.5: the cards the wishes took come back to her main-game library" (length (filter (== piker) (printingsIn Zone.Library S.alice after))) 2
+    Spec.assertEqWith s "CR 730.5: and the subgame's own cards -- the wishes it exiled included -- came back with them" (length (printingsIn Zone.Library S.alice after)) 11
+    -- CR 730.1b: alice won the subgame (bob decked), so she is the one player the
     -- follow-on LoseLife excludes. 20 halves to 10.
-    Spec.assertEqWith s "CR 729.1b: only bob paid, which is how the subgame ended" (S.lifeOf S.alice after, S.lifeOf S.bob after) (Just 20, Just 10)
-    Spec.assertEqWith s "CR 729.1a: the subgame did not decide the main game" (GameState.result after) Nothing
+    Spec.assertEqWith s "CR 730.1b: only bob paid, which is how the subgame ended" (S.lifeOf S.alice after, S.lifeOf S.bob after) (Just 20, Just 10)
+    Spec.assertEqWith s "CR 730.1a: the subgame did not decide the main game" (GameState.result after) Nothing
   -- CR 604.2's exception on the crossing road, and the case #2459 named.
   -- Titania's Song ({3}{G} enchantment, "Each noncreature artifact loses all
   -- abilities and becomes an artifact creature with power and toughness each
   -- equal to its mana value. If this enchantment leaves the battlefield, this
   -- effect continues until end of turn."): CR 604.2 ends a static ability's
   -- effect when its permanent leaves the battlefield, and this card's own text
-  -- overrides that. CR 729.4a takes the enchantment out of the main game, which
+  -- overrides that. CR 730.4a takes the enchantment out of the main game, which
   -- IS leaving the battlefield, so the effect has to go on applying in the main
   -- game the subgame was played inside -- exactly as it does on CR 800.4a's road
   -- out of the game (Parun.DepartureSpec).
@@ -864,20 +864,20 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
   -- game into your hand. You lose half your life, rounded up. Exile Death Wish.")
   -- is the producer, and its unrestricted filter is why: #2459 was filed reading
   -- the pool's wishes as naming a card type apiece, but Death Wish names none, so
-  -- CR 729.4 offers it a main-game ENCHANTMENT. The Death Wish case further up
+  -- CR 730.4 offers it a main-game ENCHANTMENT. The Death Wish case further up
   -- proves the same filter admits an ordinary sorcery out of the POOL.
   --
   -- Jade Statue ({4} artifact) is the probe: a noncreature artifact of mana value
   -- 4, so an animated one is a 4/4 and an un-animated one is no creature at all.
   --
   -- The sizing is the case above's, one wish instead of two: alice starts the
-  -- subgame (CR 729.2) so her turns are 1, 3 and 5, and three Swamps are down on
+  -- subgame (CR 730.2) so her turns are 1, 3 and 5, and three Swamps are down on
   -- turn 5, which is the first turn the {1}{B}{B} wish is castable. Nine cards
   -- each: bob draws his last two on turns 2 and 4 and draws from an empty library
   -- on turn 6, ending the subgame one turn after alice's cast. alice's nine are
   -- the wish and eight Swamps, so whichever end the shuffle leaves the wish at
   -- she holds it by turn 5.
-  Spec.it s "CR 604.2/729.4a gameplay: Death Wish takes Titania's Song out of the main game and its effect goes on applying there" $ do
+  Spec.it s "CR 604.2/730.4a gameplay: Death Wish takes Titania's Song out of the main game and its effect goes on applying there" $ do
     plains <- S.printingOf s registry "Plains"
     swamp <- S.printingOf s registry "Swamp"
     mountain <- S.printingOf s registry "Mountain"
@@ -907,7 +907,7 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
           -- case passing on the wrong one.
           Prompt.ChooseFromOutsideTheGame _ _ offered _ _ ->
             [Maybe.fromMaybe (NonEmpty.head offered) (List.find (== OutsideCard.InAnotherGame songId) (NonEmpty.toList offered))]
-          -- CR 729.2's roll, answered so the turn count above is the one played.
+          -- CR 730.2's roll, answered so the turn count above is the one played.
           Prompt.RandomFirstPlayer _ -> S.alice
           _ -> S.castAnswer p
         after = snd (Engine.runGamePure answer before Engine.priorityLoop)
@@ -921,22 +921,22 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
     Spec.assertBool s (Projection.isCreatureOf statueId after) "CR 611.2a: and still an artifact creature"
     -- What the claim rests on: the Song genuinely left, and the handover is a
     -- stored effect rather than the Song still projecting from the battlefield.
-    Spec.assertEqWith s "CR 729.4a: the wish took the Song out of the main game entirely" (Map.member songId (GameState.objects after)) False
+    Spec.assertEqWith s "CR 730.4a: the wish took the Song out of the main game entirely" (Map.member songId (GameState.objects after)) False
     Spec.assertEqWith s "CR 604.2/611.2c: the continuing effect is stored, one per part of the ability" (length (GameState.continuousEffects after)) 4
-    Spec.assertEqWith s "CR 729.5: the Song comes back to her main-game library" (List.elem titaniasSong (printingsIn Zone.Library S.alice after)) True
-    Spec.assertEqWith s "CR 729.1b: alice won the subgame, so only bob paid" (S.lifeOf S.alice after, S.lifeOf S.bob after) (Just 20, Just 10)
-  -- CR 729.5's second sentence, the one the case above does not reach: "the spell
+    Spec.assertEqWith s "CR 730.5: the Song comes back to her main-game library" (List.elem titaniasSong (printingsIn Zone.Library S.alice after)) True
+    Spec.assertEqWith s "CR 730.1b: alice won the subgame, so only bob paid" (S.lifeOf S.alice after, S.lifeOf S.bob after) (Just 20, Just 10)
+  -- CR 730.5's second sentence, the one the case above does not reach: "the spell
   -- or ability that created the subgame finishes resolving, EVEN IF IT WAS
   -- CREATED BY A SPELL CARD THAT'S NO LONGER ON THE STACK". alice casts Shahrazad
   -- in the main game; inside the subgame she casts Burning Wish ({1}{R} sorcery,
   -- "You may reveal a sorcery card you own from outside the game and put it into
   -- your hand. Exile Burning Wish.") and names the Shahrazad that is resolving.
-  -- CR 729.4 offers it -- the main game's stack is outside the subgame like every
+  -- CR 730.4 offers it -- the main game's stack is outside the subgame like every
   -- other main-game zone -- so Setup.applyCrossings deletes the main game's own
   -- Shahrazad object and funnelBack files the subgame's incarnation in alice's
   -- main-game library.
   --
-  -- What CR 729.5 then requires is that Shahrazad's SECOND effect still runs with
+  -- What CR 730.5 then requires is that Shahrazad's SECOND effect still runs with
   -- the winner it bound. bob decks, so alice wins, and "each player who doesn't
   -- win the subgame loses half their life" must reach bob alone.
   --
@@ -945,14 +945,14 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
   -- PlayerRef.EachPlayerExcept excluding nobody, and alice halves too.
   --
   -- The sizing is the case above's, one wish instead of two. alice starts the
-  -- subgame (CR 729.2) so she skips her first draw (CR 103.8a) and her turns are
+  -- subgame (CR 730.2) so she skips her first draw (CR 103.8a) and her turns are
   -- 1, 3 and 5; nine cards each means seven go to an opening hand and bob draws
   -- from an empty library on turn 6, which ends the subgame under CR 704.5b.
   -- alice's nine are one Burning Wish and eight Mountains, so by turn 5 she has
   -- drawn her whole library and holds the wish whatever the shuffle did, with
-  -- three lands down against its {1}{R}. Nine is over CR 729.3's seven, so
+  -- three lands down against its {1}{R}. Nine is over CR 730.3's seven, so
   -- neither player decks during setup.
-  Spec.it s "CR 729.5 gameplay: a wish that takes the resolving Shahrazad itself still finishes resolving with the winner it bound" $ do
+  Spec.it s "CR 730.5 gameplay: a wish that takes the resolving Shahrazad itself still finishes resolving with the winner it bound" $ do
     plains <- S.printingOf s registry "Plains"
     mountain <- S.printingOf s registry "Mountain"
     shahrazad <- S.printingOf s registry "Shahrazad"
@@ -981,22 +981,22 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
           -- rather than in her library, which the second assertion reddens on.
           Prompt.ChooseFromOutsideTheGame _ _ offered _ _ ->
             [Maybe.fromMaybe (NonEmpty.head offered) (List.find isFromAnotherGame (NonEmpty.toList offered))]
-          -- CR 729.2's roll, answered so the turn count above is the one played.
+          -- CR 730.2's roll, answered so the turn count above is the one played.
           Prompt.RandomFirstPlayer _ -> S.alice
           _ -> S.castAnswer p
         after = snd (Engine.runGamePure answer before Engine.priorityLoop)
     Spec.assertEqWith s "the fixture starts both seats at twenty" (S.lifeOf S.alice before, S.lifeOf S.bob before) (Just 20, Just 20)
-    Spec.assertEqWith s "CR 729.5: the resolution finishes with the winner it bound -- alice won and is excluded, bob alone halves" (S.lifeOf S.alice after, S.lifeOf S.bob after) (Just 20, Just 10)
-    Spec.assertEqWith s "CR 729.4/729.5: the wish really took the resolving Shahrazad, which came back to alice's main-game library" (length (filter (== shahrazad) (printingsIn Zone.Library S.alice after))) 1
+    Spec.assertEqWith s "CR 730.5: the resolution finishes with the winner it bound -- alice won and is excluded, bob alone halves" (S.lifeOf S.alice after, S.lifeOf S.bob after) (Just 20, Just 10)
+    Spec.assertEqWith s "CR 730.4/730.5: the wish really took the resolving Shahrazad, which came back to alice's main-game library" (length (filter (== shahrazad) (printingsIn Zone.Library S.alice after))) 1
     Spec.assertEqWith s "CR 400.7/608.2n: and so it is in no main-game graveyard" (printingsIn Zone.Graveyard S.alice after) []
-    Spec.assertEqWith s "CR 729.1a: the subgame did not decide the main game" (GameState.result after) Nothing
+    Spec.assertEqWith s "CR 730.1a: the subgame did not decide the main game" (GameState.result after) Nothing
 
-  -- CR 729.4a's wider half: main-game abilities "trigger on objects leaving a
+  -- CR 730.4a's wider half: main-game abilities "trigger on objects leaving a
   -- main-game ZONE", not only the battlefield. alice's Spirit Mascot ({R}{W}
   -- creature, "Whenever one or more cards leave your graveyard, put a +1/+1
   -- counter on this creature.") watches her main-game graveyard, which holds a
   -- Sign in Blood. Inside the subgame Burning Wish takes a sorcery she owns from
-  -- outside the game, and CR 729.4 offers it two: the Sign in Blood, and the
+  -- outside the game, and CR 730.4 offers it two: the Sign in Blood, and the
   -- resolving Shahrazad on the main game's stack.
   --
   -- A PAIR differing in the answer alone. Taking the graveyard card is a card
@@ -1005,7 +1005,7 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
   --
   -- The sizing is the Shahrazad-taking case above's, which this board's
   -- second leg repeats.
-  Spec.it s "CR 729.4a gameplay: Burning Wish takes a card out of a main-game graveyard and Spirit Mascot sees it leave" $ do
+  Spec.it s "CR 730.4a gameplay: Burning Wish takes a card out of a main-game graveyard and Spirit Mascot sees it leave" $ do
     plains <- S.printingOf s registry "Plains"
     mountain <- S.printingOf s registry "Mountain"
     shahrazad <- S.printingOf s registry "Shahrazad"
@@ -1036,22 +1036,22 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
                 Prompt.ChooseOptional {} -> OptionalDecision.Exercises
                 Prompt.ChooseFromOutsideTheGame _ _ offered _ _ ->
                   [Maybe.fromMaybe (NonEmpty.head offered) (List.find wanted (NonEmpty.toList offered))]
-                -- CR 729.2's roll, answered so the turn count above is the one played.
+                -- CR 730.2's roll, answered so the turn count above is the one played.
                 Prompt.RandomFirstPlayer _ -> S.alice
                 _ -> S.castAnswer p
            in snd (Engine.runGamePure answer before Engine.priorityLoop)
         tookGraveyardCard = playWith True
         tookShahrazad = playWith False
     -- The gameplay-level claims, first.
-    Spec.assertEqWith s "CR 729.4a: a card left alice's main-game graveyard, so the Mascot got its counter" (plusOneCounters mascotId tookGraveyardCard) 1
-    Spec.assertEqWith s "CR 729.4a: a card left the main game's stack instead, so it got none" (plusOneCounters mascotId tookShahrazad) 0
+    Spec.assertEqWith s "CR 730.4a: a card left alice's main-game graveyard, so the Mascot got its counter" (plusOneCounters mascotId tookGraveyardCard) 1
+    Spec.assertEqWith s "CR 730.4a: a card left the main game's stack instead, so it got none" (plusOneCounters mascotId tookShahrazad) 0
     -- What each leg took, which is the pair's one difference.
     Spec.assertEqWith s "the first leg's wish took the Sign in Blood out of her graveyard" (Map.member signId (GameState.objects tookGraveyardCard), printingsIn Zone.Graveyard S.alice tookGraveyardCard) (False, [shahrazad])
     Spec.assertEqWith s "the second leg's wish took Shahrazad, leaving the Sign in Blood where it was" (Map.member signId (GameState.objects tookShahrazad), length (filter (== shahrazad) (printingsIn Zone.Library S.alice tookShahrazad))) (True, 1)
     Spec.assertEqWith s "the Mascot starts with no counters" (plusOneCounters mascotId before) 0
-    Spec.assertEqWith s "CR 729.1b: alice won the subgame on both legs, so only bob paid" (fmap (\gs -> (S.lifeOf S.alice gs, S.lifeOf S.bob gs)) [tookGraveyardCard, tookShahrazad]) [(Just 20, Just 10), (Just 20, Just 10)]
+    Spec.assertEqWith s "CR 730.1b: alice won the subgame on both legs, so only bob paid" (fmap (\gs -> (S.lifeOf S.alice gs, S.lifeOf S.bob gs)) [tookGraveyardCard, tookShahrazad]) [(Just 20, Just 10), (Just 20, Just 10)]
 
-  -- CR 729.5 again, against the two readers that looked the resolving spell up
+  -- CR 730.5 again, against the two readers that looked the resolving spell up
   -- by id: Synthetic Subgame Tithe ({W}{W} sorcery: players play a subgame,
   -- then roll a six-sided die, you gain life equal to the result, then 1 life
   -- for each player who didn't win). A synthetic because no printed subgame
@@ -1064,7 +1064,7 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
   -- A PAIR differing in the wish's "may" alone: declined, the Tithe stays on
   -- the stack and the same gains are read off a live object. The sizing is the
   -- Shahrazad-taking case above's.
-  Spec.it s "CR 729.5 gameplay: a subgame spell whose card a wish took still reads the die it rolled and counts who didn't win" $ do
+  Spec.it s "CR 730.5 gameplay: a subgame spell whose card a wish took still reads the die it rolled and counts who didn't win" $ do
     plains <- S.printingOf s registry "Plains"
     mountain <- S.printingOf s registry "Mountain"
     tithe <- S.printingOf s registry "Synthetic Subgame Tithe"
@@ -1085,17 +1085,17 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
                 Prompt.ChooseOptional {} -> decision
                 -- CR 706.2's result, distinct from every other number here.
                 Prompt.RollDie _ -> 4
-                -- CR 729.2's roll, answered so the turn count above is the one played.
+                -- CR 730.2's roll, answered so the turn count above is the one played.
                 Prompt.RandomFirstPlayer _ -> S.alice
                 _ -> S.castAnswer p
            in snd (Engine.runGamePure answer before Engine.priorityLoop)
         taken = playWith OptionalDecision.Exercises
         left = playWith OptionalDecision.Declines
     -- The gameplay-level claims, first: 20 + 4 for the die + 1 for bob.
-    Spec.assertEqWith s "CR 729.5: with the Tithe's card taken, alice still gains the die's 4 and 1 for bob" (S.lifeOf S.alice taken) (Just 25)
+    Spec.assertEqWith s "CR 730.5: with the Tithe's card taken, alice still gains the die's 4 and 1 for bob" (S.lifeOf S.alice taken) (Just 25)
     Spec.assertEqWith s "the same gains off a Tithe nothing took" (S.lifeOf S.alice left) (Just 25)
     -- What the pair rests on.
-    Spec.assertEqWith s "CR 729.4/729.5: the wish took the Tithe, which came back to alice's main-game library" (length (filter (== tithe) (printingsIn Zone.Library S.alice taken)), length (filter (== tithe) (printingsIn Zone.Graveyard S.alice taken))) (1, 0)
+    Spec.assertEqWith s "CR 730.4/730.5: the wish took the Tithe, which came back to alice's main-game library" (length (filter (== tithe) (printingsIn Zone.Library S.alice taken)), length (filter (== tithe) (printingsIn Zone.Graveyard S.alice taken))) (1, 0)
     Spec.assertEqWith s "the declined wish left it to finish into her graveyard" (length (filter (== tithe) (printingsIn Zone.Graveyard S.alice left))) 1
     Spec.assertEqWith s "bob lost nothing either way" (S.lifeOf S.bob taken, S.lifeOf S.bob left) (Just 20, Just 20)
 
@@ -1267,10 +1267,10 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
         withZirda = stockPool [(zirda, 1)]
     Spec.assertEqWith s "CR 903.11: in a Commander game her hand gets nothing" (printingsIn Zone.Hand S.alice (resolveWish exercising wishId (withZirda commanded))) []
     Spec.assertEqWith s "with no commander the same wish brings Zirda in" (printingsIn Zone.Hand S.alice (resolveWish exercising wishId (withZirda board))) [zirda]
-  -- CR 729.2c / 903.11: a subgame of a Commander game is one, so its wish
+  -- CR 730.2c / 903.11: a subgame of a Commander game is one, so its wish
   -- reaches no main-game card either. docs/decisions.md, "Whether a subgame of a
   -- Commander game is one".
-  Spec.it s "CR 729.2c/903.11 a wish in a subgame of a Commander game reaches no main-game creature" $ do
+  Spec.it s "CR 730.2c/903.11 a wish in a subgame of a Commander game reaches no main-game creature" $ do
     bear <- S.printingOf s registry "Prodigal Sorcerer"
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
     let (bearId, plain) = S.addPermanent bear S.alice (Setup.emptyGame S.bothPlayers)
@@ -1278,14 +1278,14 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
         predicate = Filter.Or [Filter.HasCardType CardType.Creature, Filter.HasCardType CardType.Land]
         offered parent = Event.eligible predicate bearId S.alice (Setup.subgameStateFrom S.alice parent)
     Spec.assertEqWith s "CR 903.11: under a commander nothing is offered" (offered commanded) []
-    Spec.assertEqWith s "CR 729.4: with none the main-game creature is" (offered plain) [OutsideCard.InAnotherGame bearId]
-  -- CR 407.3 / 729.4: only the nine ante cards remove a card from the ante, and
+    Spec.assertEqWith s "CR 730.4: with none the main-game creature is" (offered plain) [OutsideCard.InAnotherGame bearId]
+  -- CR 407.3 / 730.4: only the nine ante cards remove a card from the ante, and
   -- a subgame wish is not one of them. alice's main-game ante holds a Sign in
   -- Blood; inside a Shahrazad subgame, Burning Wish asks for it in vain. The
   -- game is played for ante, so the subgame antes one card from each library
-  -- too: each library holds one Mountain more than the CR 729.4a case's, and
+  -- too: each library holds one Mountain more than the CR 730.4a case's, and
   -- the subgame's random ante is pinned away from the Burning Wish.
-  Spec.it s "CR 407.3/729.4 gameplay: a subgame's Burning Wish cannot take a main-game ante card" $ do
+  Spec.it s "CR 407.3/730.4 gameplay: a subgame's Burning Wish cannot take a main-game ante card" $ do
     plains <- S.printingOf s registry "Plains"
     mountain <- S.printingOf s registry "Mountain"
     shahrazad <- S.printingOf s registry "Shahrazad"
@@ -1315,17 +1315,17 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
         ((_, after), offeredSign) = State.runState (Engine.runGame recordOffers before Engine.priorityLoop) False
     Spec.assertEqWith s "CR 407.3 the main-game ante card was never offered" offeredSign False
     Spec.assertEqWith s "CR 407.3 and it is still in alice's main-game ante" (Set.member signId (GameState.ante after), fmap Object.zone (Game.lookupObject signId after)) (True, Just Zone.Ante)
-    Spec.assertEqWith s "CR 729.1a the subgame did not decide the main game, so nobody decked out" (GameState.result after) Nothing
-  -- CR 108.3 / 729.4a / 729.5: an ownership change survives a card's trip
+    Spec.assertEqWith s "CR 730.1a the subgame did not decide the main game, so nobody decked out" (GameState.result after) Nothing
+  -- CR 108.3 / 730.4a / 730.5: an ownership change survives a card's trip
   -- through a subgame. In the main game alice's Tempest Efreet trades
   -- ownership with bob's one card in hand, a Sign in Blood (CR 407.3), which
   -- goes to her hand. Then she casts Shahrazad, and inside the subgame (the
-  -- CR 407.3/729.4 case's sizing) Burning Wish takes that Sign in Blood out of
-  -- her main-game hand. CR 729.5 sends it home to her main-game library, and
+  -- CR 407.3/730.4 case's sizing) Burning Wish takes that Sign in Blood out of
+  -- her main-game hand. CR 730.5 sends it home to her main-game library, and
   -- the ownership report still names bob as the player who began the game
   -- with it, beside the Efreet that went the other way and the subgame ante
   -- card alice won (CR 407.2).
-  Spec.it s "CR 108.3/729.4a gameplay: a card whose owner changed keeps its history through a subgame wish" $ do
+  Spec.it s "CR 108.3/730.4a gameplay: a card whose owner changed keeps its history through a subgame wish" $ do
     plains <- S.printingOf s registry "Plains"
     mountain <- S.printingOf s registry "Mountain"
     shahrazad <- S.printingOf s registry "Shahrazad"
@@ -1366,24 +1366,24 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
     Spec.assertEqWith s "and the Efreet the other way" (reportFor efreet) [(S.alice, S.bob)]
     Spec.assertEqWith s "CR 407.2 and alice, who won the subgame, took bob's subgame ante card" (reportFor mountain) [(S.bob, S.alice)]
     Spec.assertEqWith s "CR 407.3 the Efreet traded bob's Sign in Blood into alice's hand" (printingsIn Zone.Hand S.alice traded) [shahrazad, signInBlood]
-    Spec.assertEqWith s "CR 729.4a/729.5 the wish took it, and it came home to her main-game library" (printingsIn Zone.Hand S.alice after, length (filter (== signInBlood) (printingsIn Zone.Library S.alice after))) ([], 1)
-  Spec.it s "CR 407.3/729.4 a main-game ante card is not outside the subgame; the same card in exile is" $ do
+    Spec.assertEqWith s "CR 730.4a/730.5 the wish took it, and it came home to her main-game library" (printingsIn Zone.Hand S.alice after, length (filter (== signInBlood) (printingsIn Zone.Library S.alice after))) ([], 1)
+  Spec.it s "CR 407.3/730.4 a main-game ante card is not outside the subgame; the same card in exile is" $ do
     sign <- S.printingOf s registry "Sign in Blood"
     let parent = Setup.gameWith GameSettings.plain {GameSettings.ante = True} S.bothPlayers
         outsideOf zone = let (oid, placed) = S.addObjectIn zone sign S.alice parent in Map.member oid (GameState.outsideObjects (Setup.subgameStateFrom S.alice placed))
     Spec.assertEqWith s "CR 407.3 the ante card is not outside the subgame" (outsideOf Zone.Ante) False
-    Spec.assertEqWith s "CR 729.4 the same card in exile is" (outsideOf Zone.Exile) True
-  -- CR 702.26b/729.4: alice's Breezekeeper phased out in her untap step, and
+    Spec.assertEqWith s "CR 730.4 the same card in exile is" (outsideOf Zone.Exile) True
+  -- CR 702.26b/730.4: alice's Breezekeeper phased out in her untap step, and
   -- in her main phase she casts Shahrazad. Inside the subgame Living Wish ("a
   -- creature or land card") is not offered the Breezekeeper: a phased-out
-  -- permanent is treated as though it does not exist, CR 729.4 does not name
+  -- permanent is treated as though it does not exist, CR 730.4 does not name
   -- one, and the wish's ruling of 2007-09-16 says it can't acquire one. The
   -- answerer takes the Breezekeeper if offered, so the reading the rule rejects
   -- reddens every assertion below.
   --
   -- The sizing is the Death Wish case's: one {1}{G} wish and eight Forests for
   -- alice, castable on her turn 3, and bob decks on turn 6.
-  Spec.it s "CR 702.26b/729.4 gameplay: a subgame's Living Wish is not offered a phased-out Breezekeeper" $ do
+  Spec.it s "CR 702.26b/730.4 gameplay: a subgame's Living Wish is not offered a phased-out Breezekeeper" $ do
     plains <- S.printingOf s registry "Plains"
     forest <- S.printingOf s registry "Forest"
     mountain <- S.printingOf s registry "Mountain"
@@ -1413,7 +1413,7 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
     Spec.assertEqWith s "the subgame's Living Wish resolved and asked" wished True
     Spec.assertEqWith s "CR 702.26b the phased-out Breezekeeper was never offered" offeredKeeper False
     Spec.assertEqWith s "CR 702.26b and it is still alice's, phased out in the main game" (fmap Object.owner (Game.lookupObject keeperId after), Phasing.phasedOutStatus keeperId after) (Just S.alice, Just (PhasedOut.Directly S.alice))
-    Spec.assertEqWith s "CR 729.1a the subgame did not decide the main game" (GameState.result after) Nothing
+    Spec.assertEqWith s "CR 730.1a the subgame did not decide the main game" (GameState.result after) Nothing
   -- CR 400.11b: a destination that is not the hand. The Raven's Warning
   -- ({1}{W}{U} Enchantment -- Saga; name, cost, type line and Oracle text checked
   -- against api.scryfall.com 2026-09-16, paper printing `khm`) is the only
@@ -1423,7 +1423,7 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
   -- game into your library", which the Research group below drives.
   --
   -- Chapter III alone is what this case drives: the Saga is placed with two lore
-  -- counters, so CR 714.3c's turn-based action puts the third on and the final
+  -- counters, so CR 715.3c's turn-based action puts the third on and the final
   -- chapter is the one trigger on the stack.
   --
   -- ONE card already in her library, so the top is a different place from the
@@ -1463,7 +1463,7 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
     Spec.assertEqWith s "CR 400.11b and only the copy she named left the pool" (Map.size (poolOf S.alice resolved)) 1
     -- The fixture's own preconditions, AFTER the behaviour so neither can absorb a
     -- mutation the library is what observes.
-    Spec.assertEqWith s "setup: CR 714.3c's turn-based action put the third lore counter on" (S.counterOf CounterKind.Lore sagaId advanced) 3
+    Spec.assertEqWith s "setup: CR 715.3c's turn-based action put the third lore counter on" (S.counterOf CounterKind.Lore sagaId advanced) 3
     Spec.assertEqWith s "setup: her library held the one card and no more before chapter III resolved" (printingsIn Zone.Library S.alice settled) [dragon]
   -- A count other than one. Research ({G}{U} Instant, the left half of Research
   -- // Development: "Shuffle up to four cards you own from outside the game into

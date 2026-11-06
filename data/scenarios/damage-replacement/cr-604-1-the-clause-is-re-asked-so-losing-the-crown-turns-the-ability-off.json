@@ -1,6 +1,6 @@
 {
   "description": "CR 604.1 the clause is re-asked, so losing the crown turns the ability off",
-  "note": "The test hands the crown from bob to carol directly; here carol's Goblin Piker takes it in combat (CR 725.2) on turn 3, and the second Firebolt waits for alice's turn 4.",
+  "note": "The test hands the crown from bob to carol directly; here carol's Goblin Piker takes it in combat (CR 726.2) on turn 3, and the second Firebolt waits for alice's turn 4.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",

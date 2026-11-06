@@ -782,7 +782,7 @@ serraAvatarSpec s registry =
 -- Planar Void ({B} Enchantment): "Whenever another card is put into a graveyard
 -- from anywhere, exile that card." Oracle text verified against Scryfall
 -- 2026-09-02. The bystander reading of the condition Serra Avatar prints
--- self-scoped above, and the pool's producer for CR 712.21's Example, whose meld
+-- self-scoped above, and the pool's producer for CR 713.8's Example, whose meld
 -- board is Parun.MeldSpec's.
 --
 -- Three things separate it from the conditions on either side of it, one test
@@ -1766,7 +1766,7 @@ leavesBattlefieldSpec s registry =
 -- match would pin nothing: both sides would read empty for every condition.
 --
 -- The INHERENT conditions are the exception, and it is the rules' rather than an
--- oversight: CR 725.2's and CR 702.179d's abilities hang on no card, so
+-- oversight: CR 726.2's and CR 702.179d's abilities hang on no card, so
 -- Event.matchesTrigger answers False for them whatever the event and their real
 -- matchers live in Parun.Engine.Monarch and Parun.Engine.Speed. Their arms below
 -- name the event the RULE names anyway. What the pin says of those two is
@@ -1828,7 +1828,7 @@ representativeEvents cond =
   let departed = representativeDeparted
       arrived = ObjectId.MkObjectId 2
       moved from to = GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange departed arrived from to) S.emptyCharacteristics)
-      -- CR 729.4a's crossing: the zone left, and no destination.
+      -- CR 730.4a's crossing: the zone left, and no destination.
       leftTheGameFrom from = GameEvent.LeftTheGame (LeftTheGame.MkLeftTheGame departed from)
       -- CR 608.2n's own move: the same shape with Moved.duringResolution set,
       -- which is the only thing the condition one rule over reads.
@@ -1905,11 +1905,11 @@ representativeEvents cond =
         -- DealsDamage's), CR 603.2c's once-per-step scoping living in
         -- Event.eventTriggers instead -- a OneOrMore Leaves' posture above.
         TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> one combatDamage
-        -- CR 725.2's and CR 726.2's damage, dealt to alice: the inherent
+        -- CR 726.2's and CR 727.2's damage, dealt to alice: the inherent
         -- abilities' "you" is the monarch or the holder, the player hit.
         TriggerCondition.CreatureDealtCombatDamageToMonarch -> one combatDamageToAlice
         TriggerCondition.CreaturesDealtCombatDamageToInitiative -> one combatDamageToAlice
-        -- CR 726.2's third ability is controlled by the taker, so alice's take.
+        -- CR 727.2's third ability is controlled by the taker, so alice's take.
         TriggerCondition.PlayerTookInitiative -> one (GameEvent.TookInitiative S.alice)
         -- CR 702.179d's own event, an opponent's loss.
         -- CR 702.94a's cause, so the event is one this condition genuinely
@@ -1982,7 +1982,7 @@ representativeEvents cond =
             noTable (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol (Set.singleton (ObjectId.MkObjectId 41))))
               NonEmpty.:| [noTable (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 42, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.PutOntoBattlefield, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = Set.singleton (ObjectId.MkObjectId 43)}))]
         -- CR 603.6: one move into the zone the trigger names, from the first
-        -- origin it admits, and CR 712.21's second card, which a CardArrived
+        -- origin it admits, and CR 713.8's second card, which a CardArrived
         -- event announces rather than a Moved one: the floor has to hold for
         -- each. CR 608.2n's narrowing admits the spell's own resolution move
         -- alone. Every destination here is public, so CR 400.7e withholds
@@ -2009,7 +2009,7 @@ representativeEvents cond =
         -- trigger admits has the same floor, so one event out of the zone it
         -- names says as much as a list would. With none named, a move reaching
         -- a hand, which binds Binding.handArrival for a single card, and CR
-        -- 729.4a's crossing out of the zone, which reaches none. A batch binds
+        -- 730.4a's crossing out of the zone, which reaches none. A batch binds
         -- each event's share of CR 603.2c's "that many" off every one.
         TriggerCondition.LeavesZone t ->
           let from = LeavesZoneTrigger.from t
@@ -2049,7 +2049,7 @@ representativeEvents cond =
           (CounterMotion.Put _, Nothing) -> GameEvent.CountersPut (CountersPlaced.MkCountersPlaced S.alice departed kind 0 1)
           (CounterMotion.Removed, Just n) -> GameEvent.CountersRemoved (CounterChange.MkCounterChange departed kind (n + 2) n)
           (CounterMotion.Removed, Nothing) -> GameEvent.CountersRemoved (CounterChange.MkCounterChange departed kind 3 1)
-        -- CR 716.2a's own event, on `departed` and not the bearer, the arm above's
+        -- CR 717.2a's own event, on `departed` and not the bearer, the arm above's
         -- shape: the pair does not match, which is what pins the floor.
         TriggerCondition.SelfBecomesClassLevel n -> one (GameEvent.ClassLevelSet (ClassLevelChange.MkClassLevelChange departed (ClassLevel.MkClassLevel 1) n))
         -- CR 601.2i's own event, and CR 707.10's copy where the condition
@@ -2196,7 +2196,7 @@ representativeEvents cond =
                     AbilityTriggered.ability = bareAbility (TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Lore (CounterMotion.Put PlayerRelation.AnyPlayer) CounterHolder.Self (Just 3) CounterGrouping.EachPermanent))
                   }
             )
-        -- CR 725.1's own event, and the only one this condition admits. CR 725.3
+        -- CR 726.1's own event, and the only one this condition admits. CR 726.3
         -- makes it name exactly one player, so there is no second shape of the
         -- event for the floor to differ on. bob rather than the perspective
         -- player, on the Attacker arm's reasoning: an arm that stamped CR
@@ -2592,7 +2592,7 @@ everyTriggerCondition =
 -- Pays wherever `who` is offered a resolution cost, and answers everything else
 -- as S.identityAnswer does -- so a transcript with no ChooseToPay in it says the
 -- prompt was never raised rather than that the offer was refused. The Decider is
--- checked alongside the player because CR 723.1 can part the two; nothing in
+-- checked alongside the player because CR 724.1 can part the two; nothing in
 -- these fixtures controls anybody, so they must agree.
 paysFor :: PlayerId.PlayerId -> Prompt.Prompt r -> r
 paysFor who p = case p of

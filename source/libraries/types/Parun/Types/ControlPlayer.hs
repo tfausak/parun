@@ -3,13 +3,13 @@ module Parun.Types.ControlPlayer where
 import qualified Parun.Types.SlotName as SlotName
 
 -- | The payload of Parun.Types.Effect's ControlPlayerThisResolution arm (CR
--- 723.2): which slot names the player controlled, and rule 723.7's restriction
+-- 724.2): which slot names the player controlled, and rule 724.7's restriction
 -- that rides with the control.
 --
--- No duration field: the arm IS rule 723.2's duration, where
--- ControlPlayerNextTurn is rule 723.1's. Two opcodes rather than one carrying a
--- Parun.Types.ControlDuration, because rule 723.1's control is SCHEDULED for a
--- later turn (CR 723.1b) and rule 723.2's takes hold immediately -- the two
+-- No duration field: the arm IS rule 724.2's duration, where
+-- ControlPlayerNextTurn is rule 724.1's. Two opcodes rather than one carrying a
+-- Parun.Types.ControlDuration, because rule 724.1's control is SCHEDULED for a
+-- later turn (CR 724.1b) and rule 724.2's takes hold immediately -- the two
 -- write different fields of the game state.
 data ControlPlayer = MkControlPlayer
   { slot :: SlotName.SlotName,

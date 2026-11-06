@@ -1,6 +1,6 @@
 {
   "description": "CR 702.132a the same cast unwinds when alice names nobody",
-  "note": "Alice holds only her Forest and names no assistant; the payment fails and the cast unwinds, the Binox back in hand and the Forest untapped. CR 733.1's ReverseManaAbilities is answered Exercises, as the Haskell answerer does.",
+  "note": "Alice holds only her Forest and names no assistant; the payment fails and the cast unwinds, the Binox back in hand and the Forest untapped. CR 734.1's ReverseManaAbilities is answered Exercises, as the Haskell answerer does.",
   "board": {
     "seats": [
       {

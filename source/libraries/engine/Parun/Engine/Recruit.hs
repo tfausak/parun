@@ -146,7 +146,7 @@ soldierToken =
 --    discards nothing out of an empty one.
 -- 3. "Nonland" is asked of the card the discard funnel MINTED, through its CR 613
 --    projection: the hand incarnation is gone by then, and a double-faced card in
---    a graveyard has only its front face's characteristics (CR 712.8a).
+--    a graveyard has only its front face's characteristics (CR 712.6a).
 --
 -- CR 609.3 rather than CR 608.2d: an empty library or an empty hand makes a
 -- step do as much as possible rather than stopping the action, so

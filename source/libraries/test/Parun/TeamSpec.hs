@@ -271,7 +271,7 @@ sharedTurnsSpec s registry = Spec.describe s "SharedTeamTurns" $ do
     island <- S.printingOf s registry "Island"
     Spec.assertEqWith s "carol's team, then alice's, then carol's" (takers 3 (stockedWith island sharedTurns)) [S.carol, S.alice, S.carol]
     Spec.assertEqWith s "without the option every seat takes one" (takers 3 (stockedWith island id)) [S.bob, S.carol, S.dave]
-  -- CR 502.2a / 731.2a: bob casts one spell on his team's turn and alice none, so
+  -- CR 502.2a / 732.2a: bob casts one spell on his team's turn and alice none, so
   -- the previous turn's active team cast a spell. The count the next untap step
   -- reads is bob's one, where the unshared game reads alice's none.
   Spec.it s "CR 502.2a the handoff records what the previous active team cast" $ do
@@ -588,9 +588,9 @@ sharedTurnsSpec s registry = Spec.describe s "SharedTeamTurns" $ do
            in (fmap (\pid -> Map.member pid (GameState.pendingControl armed)) [S.alice, S.bob], S.lifeOf S.carol after)
     Spec.assertEqWith s "carol controlled alice's attack, so no Piker hit her" (run True) ([True, True], Just 20)
     Spec.assertEqWith s "without Mindslaver alice's Piker dealt carol 2" (run False) ([False, False], Just 18)
-  -- CR 726.4 / 805.2: the same choice for the initiative, and the taker ventures
-  -- into Undercity (CR 726.2).
-  Spec.it s "CR 726.4 the active team's primary player names who takes the initiative" $ do
+  -- CR 727.4 / 805.2: the same choice for the initiative, and the taker ventures
+  -- into Undercity (CR 727.2).
+  Spec.it s "CR 727.4 the active team's primary player names who takes the initiative" $ do
     undercity <- S.printingOf s registry "Undercity"
     let run option =
           let board = S.withInitiative S.carol (InitiativeSpec.owningUndercity undercity [S.alice, S.bob, S.carol, S.dave] (option (daveAliceTeams S.fourPlayerGame)))
@@ -611,7 +611,7 @@ sharedTurnsSpec s registry = Spec.describe s "SharedTeamTurns" $ do
 daveAliceTeams :: GameState.GameState -> GameState.GameState
 daveAliceTeams = S.inTeams [[S.dave, S.alice], [S.bob, S.carol]]
 
--- `leaving` concedes, every CR 725.4 / 726.4 active-player choice naming `named`
+-- `leaving` concedes, every CR 726.4 / 727.4 active-player choice naming `named`
 -- where offered; the answer is each choice's (chooser, candidates).
 departNaming :: PlayerId.PlayerId -> PlayerId.PlayerId -> GameState.GameState -> ([(PlayerId.PlayerId, [PlayerId.PlayerId])], GameState.GameState)
 departNaming named leaving board =

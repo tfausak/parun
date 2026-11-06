@@ -138,7 +138,7 @@ attackCostSpec s registry = Spec.describe s "AttackCosts" $ do
         after = S.runPure S.aggressiveAnswer gs (Combat.declareAttackers S.manaPerformer S.alice)
     Spec.assertEqWith s "both Pikers were declared" (S.attackerDeclarationsOf after) mine
     Spec.assertBool s (allTapped forests after) "CR 508.1h: all four Forests went"
-  Spec.it s "CR 733.1 the declaration asked again after an unpaid toll says why, until it is made" $ do
+  Spec.it s "CR 734.1 the declaration asked again after an unpaid toll says why, until it is made" $ do
     -- Two Pikers owe {4} and two Forests pay {2}, so the first declaration is
     -- reversed and asked again, and the one Piker declared then is paid for.
     prison <- S.printingOf s registry "Ghostly Prison"
@@ -336,7 +336,7 @@ attackCostSpec s registry = Spec.describe s "AttackCosts" $ do
     Spec.assertEqWith s "and nothing is attacking" (Combat.Type.attackers (GameState.combat after)) Map.empty
     Spec.assertBool s (allUntapped mine after) "CR 508.1f's tapping was undone too"
 
-  Spec.it s "CR 733.1 a card revealed to attack stays revealed when a later toll fails" $ do
+  Spec.it s "CR 734.1 a card revealed to attack stays revealed when a later toll fails" $ do
     -- alice pays Synthetic Tithe of Omens' reveal, then Synthetic Tithe of
     -- Memory's mill, then has one land for two Exalted Dragons' sacrifices:
     -- each Dragon's alone is payable, so both are offered. The mill
@@ -364,7 +364,7 @@ attackCostSpec s registry = Spec.describe s "AttackCosts" $ do
           _ -> pure (S.aggressiveAnswer p)
         after = snd (State.evalState (Engine.runGame answer board (Combat.declareAttackers S.manaPerformer S.alice)) 0)
         revealed = [Revealed.card r | GameEvent.Revealed r <- fmap LoggedEvent.event (Foldable.toList (GameState.events after)), Revealed.player r == S.alice]
-    Spec.assertBool s (any (`elem` [first, second]) revealed) "CR 733.1 the reveal from alice's library stands"
+    Spec.assertBool s (any (`elem` [first, second]) revealed) "CR 734.1 the reveal from alice's library stands"
     Spec.assertEqWith s "and so does the mill" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 1
     Spec.assertEqWith s "while the declaration is reversed" (Combat.Type.attackers (GameState.combat after)) Map.empty
   Spec.it s "CR 118.3 an empty library cannot pay Synthetic Tithe of Omens' reveal" $ do
@@ -546,7 +546,7 @@ blockCostSpec s registry = Spec.describe s "BlockCosts" $ do
         Spec.assertBool s (not (allUntapped [second] declared)) "CR 509.1f: the Warrior the rewind released is what paid"
       _ -> Spec.assertFailure s "fixture should have a Piker and two Warriors"
 
-  Spec.it s "CR 733.1 the block declaration asked again after an unpaid toll says why, until it is made" $ do
+  Spec.it s "CR 734.1 the block declaration asked again after an unpaid toll says why, until it is made" $ do
     -- The rewind case's board: both Warriors owe a tap nobody can pay, then the
     -- first alone is paid for by the second.
     warrior <- S.printingOf s registry "Hollow Warrior"
@@ -1921,7 +1921,7 @@ declarationRetrySpec s registry = Spec.describe s "DeclarationRetry" $ do
         Spec.assertBool s (not (Combat.legalBlockDeclaration S.bob Map.empty gs)) "declining really is illegal, so the first answer really was rewound"
         Spec.assertEqWith s "CR 509.1's preamble asked for a fresh declaration" asked 2
       _ -> Spec.assertFailure s "fixture should have one attacker"
-  Spec.it s "CR 733.1 the declaration asked again after CR 508.1d says why, until it is made" $ do
+  Spec.it s "CR 734.1 the declaration asked again after CR 508.1d says why, until it is made" $ do
     berserkers <- S.printingOf s registry "Berserkers of Blood Ridge"
     piker <- S.printingOf s registry "Goblin Piker"
     let (gs, mine, _) = S.combatBoardOf [berserkers, piker] []
@@ -1929,7 +1929,7 @@ declarationRetrySpec s registry = Spec.describe s "DeclarationRetry" $ do
     Spec.assertEqWith s "the second ask says the declaration was illegal" seen [Nothing, Just Undoing.IllegalDeclaration]
     Spec.assertEqWith s "the second declaration stands" (Set.fromList (S.attackerDeclarationsOf after)) (Set.fromList mine)
     Spec.assertEqWith s "and the note is gone once it is made" (GameState.undone after) Map.empty
-  Spec.it s "CR 733.1 the block declaration asked again after CR 509.1c says why, until it is made" $ do
+  Spec.it s "CR 734.1 the block declaration asked again after CR 509.1c says why, until it is made" $ do
     screen <- S.printingOf s registry "Razorgrass Screen"
     piker <- S.printingOf s registry "Goblin Piker"
     let (gs, mine, theirs) = attacking [piker] [screen, piker]
@@ -1941,7 +1941,7 @@ declarationRetrySpec s registry = Spec.describe s "DeclarationRetry" $ do
         Spec.assertEqWith s "and the note is gone once it is made" (GameState.undone after) Map.empty
       _ -> Spec.assertFailure s "fixture should have one attacker"
 
--- `answer`, recording beside its count the CR 733.1 note `pid` holds at each
+-- `answer`, recording beside its count the CR 734.1 note `pid` holds at each
 -- declaration of attackers or blockers it is asked.
 notedAt :: PlayerId.PlayerId -> (Prompt.Prompt r -> State.State Natural r) -> Asked.Asked GameState.GameState r -> State.State (Natural, [Maybe Undoing.Undoing]) r
 notedAt pid answer asked = do
@@ -2140,7 +2140,7 @@ floating :: PlayerId.PlayerId -> GameState.GameState -> Int
 floating pid gs = case Game.poolOf pid gs of
   Mana.Type.MkMana units -> length units
 
--- What a toll answerer counts: CR 508.1a's asks, and CR 733.1's.
+-- What a toll answerer counts: CR 508.1a's asks, and CR 734.1's.
 data TollAsks = MkTollAsks
   { tollDeclarations :: Int,
     tollReversals :: Int,
@@ -2151,7 +2151,7 @@ noTollAsks :: TollAsks
 noTollAsks = MkTollAsks {tollDeclarations = 0, tollReversals = 0, tollTapped = False}
 
 -- CR 605.3a's window answered with ONE of `lands` and then closed, every
--- window. CR 733.1's question answered with `decision`. CR 508.1a's
+-- window. CR 734.1's question answered with `decision`. CR 508.1a's
 -- declaration is every candidate the first time and the first alone after,
 -- retryAttackAnswer's posture.
 oneLandPerWindow :: OptionalDecision.OptionalDecision -> [ObjectId.ObjectId] -> Prompt.Prompt r -> State.State TollAsks r
@@ -2181,8 +2181,8 @@ oneLandPerWindow decision lands p = case p of
   _ -> pure (S.identityAnswer p)
 
 -- CR 508.1's and CR 509.1's preambles send an unpayable declaration to rule
--- 733, so the toll's payer may keep the mana abilities its window activated
--- (CR 733.1) while the declaration itself goes back. Every case is a PAIR on
+-- 734, so the toll's payer may keep the mana abilities its window activated
+-- (CR 734.1) while the declaration itself goes back. Every case is a PAIR on
 -- one board differing only in the answer to Prompt.ReverseManaAbilities.
 tollReversalSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 tollReversalSpec s registry = Spec.describe s "Reversal at a combat toll" $ do
@@ -2191,7 +2191,7 @@ tollReversalSpec s registry = Spec.describe s "Reversal at a combat toll" $ do
   -- for Springleaf Drum's cost: the declaration and the window wrote two
   -- different fields of one permanent. The Forest makes the {2} payable, so
   -- the Initiate is offered; the window activates the Drum alone.
-  Spec.it s "CR 733.1 the exert goes back with the declaration and the Drum's tap stands" $ do
+  Spec.it s "CR 734.1 the exert goes back with the declaration and the Drum's tap stands" $ do
     initiate <- S.printingOf s registry "Glory-Bound Initiate"
     watching <- S.printingOf s registry "Always Watching"
     drum <- S.printingOf s registry "Springleaf Drum"
@@ -2222,7 +2222,7 @@ tollReversalSpec s registry = Spec.describe s "Reversal at a combat toll" $ do
 
   -- Two Oppressive Rays blockers owe {6}, and bob's three Forests pay {3}:
   -- each block alone is payable, so both are offered (Combat.declarableBlockers).
-  Spec.it s "CR 733.1 a blocker's toll: the Forests stay tapped and their mana floats" $ do
+  Spec.it s "CR 734.1 a blocker's toll: the Forests stay tapped and their mana floats" $ do
     rays <- S.printingOf s registry "Oppressive Rays"
     forest <- S.printingOf s registry "Forest"
     piker <- S.printingOf s registry "Goblin Piker"

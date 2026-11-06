@@ -159,7 +159,7 @@ suspend perform pid oid = do
       -- move was cancelled, and then there is no exiled card to suspend.
       --
       -- One arrival, Plot.plot's reason: the funnel answers with more than one
-      -- only for a melded permanent leaving the battlefield (CR 712.21), and this
+      -- only for a melded permanent leaving the battlefield (CR 713.8), and this
       -- special action exiles a card from a hand.
       exiled <- Event.changeZoneReturning (ManaAbilityPerformer.settle perform) oid Zone.Exile
       Monad.forM_ exiled (\newId -> Event.putCounters (CounterCause.ByRule pid) newId CounterKind.Time counters)

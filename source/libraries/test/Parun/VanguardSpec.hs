@@ -273,10 +273,10 @@ spec s registry = Spec.describe s "Vanguard" $ do
         Spec.assertBool s (hasOne gone == Just True) "CR 608.2h: the record's view has the activated ability"
         Spec.assertBool s (hasOne control == Just False) "and the same record with a battlefield home does not"
 
-  -- CR 313.2 against CR 727.2: a restart puts every card into its owner's new
+  -- CR 313.2 against CR 728.2: a restart puts every card into its owner's new
   -- library, and the vanguard card is the exception -- it stays where it is, and
   -- rule 902.4's life total is dealt out again from it.
-  Spec.it s "CR 313.2 / 727.1 a restarted game keeps the vanguard in the command zone" $ do
+  Spec.it s "CR 313.2 / 728.1 a restarted game keeps the vanguard in the command zone" $ do
     mountain <- S.printingOf s registry "Mountain"
     selenia <- S.printingOf s registry "Selenia"
     let restarted = S.runPure keepAnswer (built mountain (Just selenia)) (Setup.restartGame S.performer Set.empty S.alice)
@@ -284,10 +284,10 @@ spec s registry = Spec.describe s "Vanguard" $ do
     Spec.assertEqWith s "and CR 902.4's twenty-seven is dealt out again" (S.lifeOf S.alice restarted) (Just 27)
     Spec.assertEqWith s "her opening hand is eight again" (handSize restarted) 8
 
-  -- CR 729.2b and CR 729.5b: the vanguard card crosses into a subgame and comes
-  -- back out of it, which is the pair CR 729.2c and CR 729.5c make for a
+  -- CR 730.2b and CR 730.5b: the vanguard card crosses into a subgame and comes
+  -- back out of it, which is the pair CR 730.2c and CR 730.5c make for a
   -- commander.
-  Spec.it s "CR 729.2b / 729.5b a subgame takes the vanguard card and gives it back" $ do
+  Spec.it s "CR 730.2b / 730.5b a subgame takes the vanguard card and gives it back" $ do
     mountain <- S.printingOf s registry "Mountain"
     selenia <- S.printingOf s registry "Selenia"
     let parent = built mountain (Just selenia)

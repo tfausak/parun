@@ -73,7 +73,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "CR 715.3a: Pixie Dust is an instant spell, so Vizier of the Menagerie's permission does not pay it, though it pays the creature half of the same card",
+  "description": "CR 716.3a: Pixie Dust is an instant spell, so Vizier of the Menagerie's permission does not pay it, though it pays the creature half of the same card",
   "note": "Four Forests. Pixie Dust's {1}{U} is refused; Moonshae Pixie's {3}{U} is cast, the card's own creature half.",
   "timeline": [
     {

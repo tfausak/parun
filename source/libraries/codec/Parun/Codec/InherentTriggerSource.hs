@@ -11,7 +11,7 @@ import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.InherentTriggerSource as InherentTriggerSource
 
 -- | The key is `controller` rather than `source`, which is the whole of what
--- separates this from Parun.Codec.TriggeredAbilitySource: CR 725.2's inherent
+-- separates this from Parun.Codec.TriggeredAbilitySource: CR 726.2's inherent
 -- trigger has no source object to name.
 codec :: Codec.Codec InherentTriggerSource.InherentTriggerSource
 codec = Fields.object $ do

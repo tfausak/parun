@@ -14,7 +14,7 @@ import qualified Parun.Types.Zone as Zone
 -- "another card is put into a graveyard from anywhere", Dutiful Knowledge
 -- Seeker's "one or more cards are put into a library from anywhere".
 --
--- A Matching card's Filter reads each ARRIVAL (CR 730.3's components one by
+-- A Matching card's Filter reads each ARRIVAL (CR 731.3's components one by
 -- one); the zones are no characteristic of the card and come from the event.
 data PutIntoZoneTrigger = MkPutIntoZoneTrigger
   { card :: ActingPermanent.ActingPermanent,

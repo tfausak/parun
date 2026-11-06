@@ -16,7 +16,7 @@ spec s = Spec.describe s "Parun.Codec.LifeLossCause" $ do
   -- CR 119.4: a cost paid in life.
   Spec.it s "ByPayment" $
     Common.assertCodec s LifeLossCause.codec LifeLossCause.ByPayment " \"ByPayment\" "
-  -- CR 728.1a: rule 728.1's own ability.
+  -- CR 729.1a: rule 729.1's own ability.
   Spec.it s "ByRadiation" $
     Common.assertCodec s LifeLossCause.codec LifeLossCause.ByRadiation " \"ByRadiation\" "
   Spec.it s "has a schema" $ Common.assertHasSchema s LifeLossCause.codec

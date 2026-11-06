@@ -1,6 +1,6 @@
 {
   "description": "CR 610.3b a crowning while Palace Jailer's exile waits for the stack keeps the creature where it is",
-  "note": "Grave Endeavor returns Palace Jailer, and the other die drains carol, the monarch, below zero. The Jailer's exile triggers during the spell's resolution; carol then loses to CR 704.5a and CR 725.4 crowns bob, the active player, before the trigger reaches the stack (CR 603.3). That crowning came after the ability triggered, so its move does not happen and bob's Goblin Piker keeps its +1/+1 counter. A look-back from the stack rather than from the trigger would miss it and exile the Piker.",
+  "note": "Grave Endeavor returns Palace Jailer, and the other die drains carol, the monarch, below zero. The Jailer's exile triggers during the spell's resolution; carol then loses to CR 704.5a and CR 726.4 crowns bob, the active player, before the trigger reaches the stack (CR 603.3). That crowning came after the ability triggered, so its move does not happen and bob's Goblin Piker keeps its +1/+1 counter. A look-back from the stack rather than from the trigger would miss it and exile the Piker.",
   "board": {
     "active": "bob",
     "step": "PrecombatMain",

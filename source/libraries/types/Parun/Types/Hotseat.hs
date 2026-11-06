@@ -31,7 +31,7 @@ data Hotseat = MkHotseat
     -- the colors the source auto last tapped is for.
     paying :: Map.Map PlayerId.PlayerId (Set.Set ManaType.ManaType),
     -- | Each seat whose last action chosen casts a spell or activates an
-    -- ability, as its next priority words it undone (CR 733.1), beside the
+    -- ability, as its next priority words it undone (CR 734.1), beside the
     -- game, turn and count of witnessed entries its view held then.
     attempted :: Map.Map PlayerId.PlayerId ((Natural.Natural, Natural.Natural, Natural.Natural), Text.Text)
   }

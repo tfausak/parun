@@ -8,7 +8,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- | The payload of Parun.Types.Effect's Mill arm (#1305).
 --
 -- The MillTally is "and remember how many of them counted", for a later effect
--- of the same resolution to read as Quantity.InSlot -- CR 728.1's "for each
+-- of the same resolution to read as Quantity.InSlot -- CR 729.1's "for each
 -- nonland card milled this way". Absent for a mill nothing looks back at.
 --
 -- The `slot` is the OTHER kind of looking back, CR 701.17c's: an effect naming

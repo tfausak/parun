@@ -370,7 +370,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       (PlayerEffect.HasProtectionFrom (Filter.And []))
       " {\"type\":\"HasProtectionFrom\",\"value\":{\"type\":\"And\",\"value\":[]}} "
-  -- CR 725 / Jared Carthalion, True Heir.
+  -- CR 726 / Jared Carthalion, True Heir.
   Spec.it s "CantBecomeMonarch" $
     Common.assertCodec
       s
@@ -405,7 +405,7 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       (PlayerEffect.EntriesTrigger EntriesTrigger.MkEntriesTrigger {EntriesTrigger.entrants = Filter.And [], EntriesTrigger.triggering = EntryTriggering.AnAdditionalTime})
       " {\"type\":\"EntriesTrigger\",\"value\":{\"entrants\":{\"type\":\"And\",\"value\":[]},\"triggering\":\"AnAdditionalTime\"}} "
-  -- CR 723.2 / Opposition Agent.
+  -- CR 724.2 / Opposition Agent.
   Spec.it s "ControlledWhileSearching" $
     Common.assertCodec
       s

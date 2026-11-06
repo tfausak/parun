@@ -7,7 +7,7 @@
 -- The QUERY half -- Game.stillPlaying / Game.stillPlayingInOrder -- lives in
 -- Parun.Engine.Game instead. This module imports Parun.Engine.Event, both directly
 -- (CR 800.4a records events and files last known information of its own) and
--- through Parun.Engine.Monarch (CR 725.4 reassignment happens inside `depart`),
+-- through Parun.Engine.Monarch (CR 726.4 reassignment happens inside `depart`),
 -- so the event pipeline cannot reach the question through here.
 module Parun.Engine.Departure where
 
@@ -92,7 +92,7 @@ depart reason pid = departTogether True reason [pid]
 -- to the next player" and "... skips a seat leaving in the same event" prove
 -- both placements.
 --
--- CR 725.4 belongs INSIDE this function, not after it: the active player becomes
+-- CR 726.4 belongs INSIDE this function, not after it: the active player becomes
 -- the monarch at the same time the player leaves. Every door -- leaveGame (CR
 -- 104.3a) and Parun.Engine.Sba's check (CR 704.5) -- gets it by construction
 -- rather than by remembering to call it. Monarch.reassignOnDeparture needs the
@@ -176,7 +176,7 @@ leaveAll departing = do
       -- CR 800.4a's first three clauses, in the rule's order.
       clauses pid = if continues then nonCardStackObjectsCease pid . controlEffectsEnd pid . objectsLeaveWith before pid else id
   -- ONE event: CR 800.4a's leaving is a single instant for every player in
-  -- the set, and CR 725.4 crowns "at the same time as that player leaves", so the
+  -- the set, and CR 726.4 crowns "at the same time as that player leaves", so the
   -- crowning shares the departure's event group and CR 610.3d returns the
   -- prisoners both free as one event. data/scenarios/simultaneous-moves'
   -- concession board proves it.
@@ -197,7 +197,7 @@ leaveAll departing = do
       Monad.unless (why == Departure.Drew) (State.modify' (Event.recordEvent (GameEvent.LostTheGame pid)))
     Monad.forM_ pids $ \pid -> do
       Monarch.reassignOnDeparture pid
-      -- CR 726.4, the same clause one rule over and for the same reason: the
+      -- CR 727.4, the same clause one rule over and for the same reason: the
       -- active player takes the initiative at the same time its holder leaves.
       Initiative.reassignOnDeparture pid
   -- CR 800.4a's fourth clause: "Then", so after the instant above.
@@ -232,12 +232,12 @@ teamFallsWith reason leaving gs =
 -- GameState.turnOrder is the roster the game began with and is never shortened
 -- (see Parun.Types.GameState), so counting seats answers that directly: a
 -- three-player game down to two survivors still continues, and a rebuilt game
--- (CR 727.1, CR 729.2) is seated from the game it came from.
+-- (CR 728.1, CR 730.2) is seated from the game it came from.
 --
 -- CR 800.4a's object removal is the one clause where this gate is OBSERVABLE
 -- rather than merely vacuous. Inside a two-player game CR 104.2a ends the game
 -- the moment a player leaves, so nothing there can see it -- but a two-player
--- SUBGAME is read after it ends: CR 729.5 has each player take the cards they
+-- SUBGAME is read after it ends: CR 730.5 has each player take the cards they
 -- own into their main-game library, and Setup.funnelBack does that from the
 -- finished subgame's object pool. Removing the loser's cards would destroy them.
 --
@@ -247,7 +247,7 @@ continuesAfterDeparture :: GameState -> Bool
 continuesAfterDeparture gs = length (GameState.turnOrder gs) > 2
 
 -- CR 800.4a, first clause: every object owned by the departing player leaves the
--- game, each through Event.leaveTheGame -- the step CR 729.4a's subgame crossing
+-- game, each through Event.leaveTheGame -- the step CR 730.4a's subgame crossing
 -- shares -- which files its CR 608.2h record, hands over CR 604.2's lingering
 -- effects and deletes it with everything keyed on it.
 --
@@ -301,7 +301,7 @@ continuesAfterDeparture gs = length (GameState.turnOrder gs) > 2
 --     It stays, it triggers, and CR 800.4d is what stops it reaching the stack;
 --     the filter is in Engine.apnapPlayers.
 --
---   * a CR 725 crowning watch in GameState.movedUntil whose controller is the
+--   * a CR 726 crowning watch in GameState.movedUntil whose controller is the
 --     departing player. CR 800.4a ends only effects which give that player
 --     control, and an exile grants none. Whether that player's opponents
 --     include the next monarch is decided at the crowning, by
@@ -346,7 +346,7 @@ objectsLeaveWith asOf pid gs =
       removed = List.foldl' (Event.leaveTheGame asOf) gs owned
       -- CR 108.3 / 407.3: a card whose owner changed keeps that change past the
       -- game it left, for Ante.ownershipChanges' report and Setup.funnelBack's
-      -- CR 729.5 return.
+      -- CR 730.5 return.
       departed = Map.filter Ante.ownerChanged (Map.restrictKeys (GameState.objects gs) (Set.fromList owned))
       recorded = removed {GameState.departedCards = Map.union departed (GameState.departedCards removed)}
       -- CR 708.9's third sentence: the departing player reveals each face-down
@@ -368,9 +368,9 @@ objectsLeaveWith asOf pid gs =
 --     Treason -- both in the pool). Projection.givesControlTo makes the match, so
 --     the case on Modification stays where it belongs.
 --   * GameState.control -- a live Decider, whether it holds for this turn (CR
---     723.1) or for one resolution (CR 723.2).
+--     724.1) or for one resolution (CR 724.2).
 --   * GameState.pendingControl -- a Decider scheduled for a later turn
---     (CR 723.1b). CR 800.4b says the same thing one step later, at
+--     (CR 724.1b). CR 800.4b says the same thing one step later, at
 --     Engine.beginTurnOf's promotion; neither is the other's spare.
 --   * a floating CR 616.1b control-on-entry replacement (Gather Specimens, the
 --     pool's producer), whose whole content is that objects enter under CR
@@ -442,7 +442,7 @@ controlEffectsEnd pid gs =
         { GameState.continuousEffects = filter (not . Projection.givesControlTo pid) (GameState.continuousEffects gs),
           -- Per ROW, not per player: CR 800.4a ends the departing player's own
           -- controlling effects, and a row underneath held by someone still
-          -- playing is untouched (CR 723.1a then makes the topmost survivor the
+          -- playing is untouched (CR 724.1a then makes the topmost survivor the
           -- one that works). A stack with nothing left loses its key.
           GameState.control = Map.mapMaybe (NonEmpty.nonEmpty . NonEmpty.filter (not . heldBy . PlayerControl.decider)) (GameState.control gs),
           GameState.pendingControl = Map.filter (not . heldBy . PlayerControl.decider) (GameState.pendingControl gs),
@@ -535,9 +535,9 @@ nonCardStackObjectsCease pid gs =
           -- stack not represented by cards" does not reach it. It is never on the
           -- stack anyway (CR 701.42a).
           Source.OfMeld _ -> False
-          -- CR 730.2 merges an object into a permanent on the battlefield, so a
+          -- CR 731.2 merges an object into a permanent on the battlefield, so a
           -- merged permanent is never on the stack either and rule 800.4a does
-          -- not reach it -- whatever its components are (CR 730.2d).
+          -- not reach it -- whatever its components are (CR 731.2d).
           Source.OfMerge _ -> False
           Source.OfToken _ -> True
           Source.OfAbility _ -> True
@@ -547,7 +547,7 @@ nonCardStackObjectsCease pid gs =
           -- 800.4a reaches it along with the rest.
           Source.OfSpellCopy _ -> True
           -- CR 707.10a's copy of a CARD is no more represented by a card than a
-          -- copy of a spell is, so CR 800.4a reaches it too once CR 722.3c's or CR
+          -- copy of a spell is, so CR 800.4a reaches it too once CR 723.3c's or CR
           -- 707.12's permission has put it on the stack. Before that it sits in the
           -- zone it was made in, where the zone filter this feeds never looks.
           Source.OfCardCopy _ -> True
@@ -665,7 +665,7 @@ exileAll gs victims =
 -- state-based action does (Commander.returnable). docs/decisions.md, "Whether a
 -- phased-out permanent exiled with its departed controller leaves visibly".
 -- Event.leaveTheGame files its CR 608.2h record and deletes it with its
--- phased-out row, and each card it represents (CR 712.21, CR 730.3) arrives in
+-- phased-out row, and each card it represents (CR 713.8, CR 731.3) arrives in
 -- its owner's exile as a new object (CR 400.7), its stickers on the one its
 -- owner picks (CR 400.7m, CR 123.5c, CR 613.7k).
 exilePhasedOut :: GameState -> ObjectId -> Game ()

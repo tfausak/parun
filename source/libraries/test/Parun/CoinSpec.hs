@@ -286,7 +286,7 @@ faceReadingSpec s registry = Spec.describe s "FlipCoin read for its face (CR 705
   Spec.it s "CR 705.2 no call is made for a flip nobody wins" $ do
     board <- oddsBoard s registry
     -- "No player wins or loses a coin flip for this kind of effect", so there is
-    -- nothing to call and nothing for a CR 723 controller to usurp. Not readable
+    -- nothing to call and nothing for a CR 724 controller to usurp. Not readable
     -- off the board -- both legs above leave the same board whether or not a
     -- call was asked and thrown away.
     Spec.assertEqWith s "CR 705.2: Odds asks no call" (oddsCalls CoinFace.Tails board) 0

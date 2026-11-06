@@ -42,7 +42,7 @@ data PaymentSubject
     -- it as its own argument.
     --
     -- The keyword is the ability's own Parun.Types.ActivatedAbility.keyword, which
-    -- CR 716.2c's "to gain a Class level" asks about rather than the source.
+    -- CR 717.2c's "to gain a Class level" asks about rather than the source.
     --
     -- The set is the mana types the payment may spend, Nothing for any: Throne
     -- of Eldraine's "Spend only mana of the chosen color to activate this
