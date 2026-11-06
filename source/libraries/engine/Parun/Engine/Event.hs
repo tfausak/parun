@@ -11070,12 +11070,20 @@ causedBy controller body = do
 -- Why a resolving instruction's discard happens: ByEffect (CR 609.1), unless
 -- it is CR 118.12's cost (payingOnResolution) -- Library of Leng's ruling,
 -- "costs aren't effects". Parun.ZoneChangeSpec's Tweeze case proves it.
--- Parun.Engine.Cost.counterCause still reads such a cost as an effect for
--- counters (#4544).
 resolvingDiscardCause :: GameState -> DiscardCause.DiscardCause
 resolvingDiscardCause gs
   | GameState.payingOnResolution gs = DiscardCause.Ordinary
   | otherwise = DiscardCause.ByEffect
+
+-- Why `pid`'s resolving instruction puts counters: CR 609.1's effect, unless
+-- it is CR 118.12's cost (payingOnResolution), which CR 614.16's rows do not
+-- reach; see docs/decisions.md, "Whether a cost paid on resolution is an
+-- effect". resolvingDiscardCause's twin. The scenario "CR 118.12 Doubling
+-- Season does not double Grub's blight" proves it.
+resolvingCounterCause :: PlayerId -> GameState -> CounterCause.CounterCause
+resolvingCounterCause pid gs
+  | GameState.payingOnResolution gs = CounterCause.ByPayment pid
+  | otherwise = CounterCause.ByEffect pid
 
 -- A second door rather than a return type on `discard`, the changeZoneReturning
 -- and destroyReturning shape: the ~dozen callers that only perform the discard

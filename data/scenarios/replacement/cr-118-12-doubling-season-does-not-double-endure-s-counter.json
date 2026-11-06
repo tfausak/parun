@@ -1,0 +1,109 @@
+{
+  "description": "CR 118.12 Doubling Season does not double endure's counter",
+  "note": "Fortress Kin-Guard's endure 1 is CR 118.12a's \"unless\" over a cost that puts a +1/+1 counter, and a cost is no effect (docs/decisions.md, \"Whether a cost paid on resolution is an effect\"), so CR 614.16's row leaves it alone: alice pays and the Kin-Guard has one counter, 2/3, and no Spirit.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Doubling Season"
+          },
+          {
+            "card": "Plains",
+            "label": "plains-1"
+          },
+          {
+            "card": "Plains",
+            "label": "plains-2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Fortress Kin-Guard",
+            "label": "kin-guard"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$kin-guard",
+          "mana": [
+            "$plains-1",
+            "$plains-2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "source": "Fortress Kin-Guard",
+      "do": {
+        "ChooseToPay": {
+          "decision": {
+            "type": "Pays"
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "Fortress Kin-Guard",
+          "kind": {
+            "type": "PlusOnePlusOne"
+          },
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "Fortress Kin-Guard",
+          "power": 2,
+          "toughness": 3
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Spirit Token",
+          "count": 0
+        }
+      }
+    }
+  ]
+}
