@@ -562,8 +562,9 @@ contextNames = context
 --   * IDENTITY: IsObject names an id outright.
 --   * The turn's EVENT LOG: the look-back atoms (DeclaredThisTurn,
 --     LeftLibraryThisTurn, DealtDamageThisTurn, EnteredThisTurn, the
---     crewed/convoked/saddled-the-source atoms) and EnteredWithSource
---     (GameState.enteredWith) and CouldAttackThisTurn
+--     crewed/convoked/saddled-the-source atoms), EnteredWithSource
+--     (GameState.enteredWith), CounterLinkedToSource
+--     (GameState.counteredWith) and CouldAttackThisTurn
 --     (GameState.couldAttackThisTurn) read a record kept per object id,
 --     answered by Asking's keyed -- and the look-back atoms by its history too.
 --   * A RESOLUTION CONTEXT: the slot atoms, the slot and amount operands, the
@@ -646,6 +647,7 @@ filterNames asking criterion = case criterion of
   Filter.IsEvaluated -> mempty
   Filter.IsHostOfSource -> mempty
   Filter.EnteredWithSource -> keyed asking
+  Filter.CounterLinkedToSource _moved -> keyed asking <> history asking HistoryRead.CounterMoves
   Filter.AttachedNoLaterThanSource -> contextNames asking
   Filter.CanHostSubject -> contextNames asking
   Filter.CanAttachToSubject -> contextNames asking

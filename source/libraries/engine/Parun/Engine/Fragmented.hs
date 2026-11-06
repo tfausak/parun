@@ -97,7 +97,9 @@ import qualified Text.Read as Read
 -- Dropped as history a card CAN read: `events` and `activationsThisTurn`.
 -- Compared, no state could recur, since every action appends to both; so they
 -- ride along uncompared, and `lapIsRead` asks whether anything in the game
--- reads what the loop appended to them.
+-- reads what the loop appended to them. `counteredWith` too, filed off the
+-- counter events a lap appends (HistoryRead.CounterMoves): compared, a lap's
+-- first counter makes it new to a game nothing in which reads it.
 digest :: GameState -> StateDigest
 digest gs =
   let (effects, objects, reacquire) = canonicalStamps gs
@@ -105,6 +107,7 @@ digest gs =
         gs
           { GameState.events = Seq.empty,
             GameState.activationsThisTurn = Seq.empty,
+            GameState.counteredWith = Map.empty,
             -- Only a countdown shield's key is read, and its row, compared here, shrinks as it grows.
             GameState.damagePreventedBy = Map.empty,
             GameState.nextObjectId = ObjectId.MkObjectId 0,
@@ -396,6 +399,7 @@ records reading event = case reading of
   HistoryRead.CoinFlips -> coinFlipped event
   HistoryRead.Convokes -> convoked event
   HistoryRead.Crews -> crewed event
+  HistoryRead.CounterMoves -> counterMoved event
   HistoryRead.Damage -> dealtDamage event
   HistoryRead.Deaths -> Maybe.isJust (Game.diedChange event)
   HistoryRead.Discards -> Maybe.isJust (Game.discardOf event)
@@ -419,6 +423,14 @@ moved event = case event of
   GameEvent.Moved {} -> True
   GameEvent.CardArrived {} -> True
   GameEvent.LeftTheGame {} -> True
+  _ -> False
+
+-- The counter events GameState.counteredWith is filed from
+-- (Parun.Engine.Resolve.Common.recordCounteredWith).
+counterMoved :: GameEvent -> Bool
+counterMoved event = case event of
+  GameEvent.CountersPut {} -> True
+  GameEvent.CountersRemoved {} -> True
   _ -> False
 
 becameMonarch :: GameEvent -> Bool

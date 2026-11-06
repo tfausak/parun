@@ -92,7 +92,11 @@ import qualified Parun.Types.CostBasis as CostBasis
 import qualified Parun.Types.CostChoice as CostChoice
 import qualified Parun.Types.CountedDiscard as CountedDiscard
 import qualified Parun.Types.CounterCause as CounterCause
+import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterLink as CounterLink
+import qualified Parun.Types.CounterLinked as CounterLinked
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
@@ -2271,6 +2275,24 @@ linkCraftMaterials resolving entered gs =
       materials = filter (`Set.member` GameState.exile gs) (Maybe.mapMaybe Recipient.objectOf paid)
       link = ExileLink.MkExileLink {ExileLink.source = entered, ExileLink.ability = Just Binding.craftLink, ExileLink.acquisition = Acquisition.Own}
    in gs {GameState.exiledWith = foldr (`Map.insert` link) (GameState.exiledWith gs) materials}
+
+-- CR 607.1: the counters this instruction's effect put on or removed from each
+-- object, filed against `source` off the counter events it logged after the
+-- first `logged` -- one window per instruction, recordExiledWith's, and a
+-- difference over the log rather than a case over the opcode. A counter event
+-- moving none files nothing, so neither does an instruction that did nothing
+-- (CR 609.3), and happenedBetween needs no copy-across.
+recordCounteredWith :: ObjectId -> Acquisition.Acquisition -> Int -> GameState -> GameState
+recordCounteredWith source acquisition logged gs =
+  let link moved = CounterLink.MkCounterLink {CounterLink.source = source, CounterLink.acquisition = acquisition, CounterLink.moved = moved}
+      moves logEntry = case LoggedEvent.event logEntry of
+        GameEvent.CountersPut placed
+          | CountersPlaced.after placed > CountersPlaced.before placed -> [(CountersPlaced.object placed, CounterLinked.PutWith (CountersPlaced.kind placed))]
+        GameEvent.CountersRemoved change
+          | CounterChange.before change > CounterChange.after change -> [(CounterChange.object change, CounterLinked.RemovedWith (CounterChange.kind change))]
+        _ -> []
+      filed = concatMap moves (Seq.drop logged (GameState.events gs))
+   in gs {GameState.counteredWith = foldr (\(oid, moved) -> Map.insertWith Set.union oid (Set.singleton (link moved))) (GameState.counteredWith gs) filed}
 
 -- CR 607.2a's link, filed as the instruction that made it finishes: every card
 -- that ARRIVED in exile while the effect ran is filed against that effect's

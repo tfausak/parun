@@ -478,12 +478,14 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
 applyEffectWith :: Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
 applyEffectWith runSubgame resolving source controller legal chosen effect = Event.causedBy (Just controller) $ do
   before <- State.gets GameState.exile
+  logged <- State.gets (Seq.length . GameState.events)
   -- Read BEFORE the effect runs, while the resolving ability is surely still an
   -- object to read.
   ability <- State.gets (resolvingAbilityName resolving)
   acquisition <- State.gets (\g -> Game.readingAcquisition resolving source g source)
   applyOneEffect runSubgame resolving source controller legal chosen effect
   State.modify' (Common.recordExiledWith ExileLink.MkExileLink {ExileLink.source = source, ExileLink.ability = ability, ExileLink.acquisition = acquisition} before)
+  State.modify' (Common.recordCounteredWith source acquisition logged)
   State.modify' (Common.recordExilePile before)
   -- CR 614.1c: the as-enters effects of what this instruction put onto the
   -- battlefield, before the next instruction reads the board. After the window

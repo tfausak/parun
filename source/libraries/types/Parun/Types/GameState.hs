@@ -26,6 +26,7 @@ import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.Combat as Combat
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterLink as CounterLink
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.Daytime as Daytime
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
@@ -584,6 +585,12 @@ data GameState = MkGameState
     -- Parun.Engine.Resolve.Arms.Objects's. Read by Filter.EnteredWithSource.
     -- Cleaned up by key only.
     enteredWith :: Map.Map ObjectId.ObjectId EntryLink.EntryLink,
+    -- | CR 400.7 / 607.1: the sources whose effects put counters on or removed
+    -- counters from each object, as that object, keyed by the incarnation and
+    -- written by Parun.Engine.Resolve.Effect.applyEffectWith off the
+    -- instruction's counter events, never a case over the opcode. Read by
+    -- Filter.CounterLinkedToSource. Cleaned up by key only.
+    counteredWith :: Map.Map ObjectId.ObjectId (Set.Set CounterLink.CounterLink),
     -- | CR 406.4: which pile each face-down exiled card is in, a name drawn from
     -- nextTimestamp and shared by every card one execution of one instruction
     -- exiled (Parun.Engine.Resolve.Common.recordExilePile). Cleaned up by key only.

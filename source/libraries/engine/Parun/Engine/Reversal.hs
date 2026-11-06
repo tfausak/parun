@@ -185,6 +185,7 @@ withoutAnnouncement before entry closed = do
   encoded <- mapOf GameState.encoded
   exiledWith <- mapOf GameState.exiledWith
   enteredWith <- mapOf GameState.enteredWith
+  counteredWith <- mapOf GameState.counteredWith
   exilePiles <- mapOf GameState.exilePiles
   extraTurns <- listOf GameState.extraTurns
   -- CR 100.6a: a monotone tally, so the closed window's value is the newest --
@@ -318,6 +319,7 @@ withoutAnnouncement before entry closed = do
         GameState.encoded = encoded,
         GameState.exiledWith = exiledWith,
         GameState.enteredWith = enteredWith,
+        GameState.counteredWith = counteredWith,
         GameState.exilePiles = exilePiles,
         GameState.extraTurns = extraTurns,
         GameState.subgamesThisMatch = subgamesThisMatch,

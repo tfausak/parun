@@ -124,7 +124,16 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- Poppet keeps an inert one. Canonical, they recur, and alice aiming at
     -- bob's Poppet again is refused; aiming at her Grizzly Bears is a
     -- different game choice (CR 732.1, 601.2c) and goes ahead.
-    Spec.assertEqWith s "CR 732.3 only alice's repeated aim is refused" (poppetAttempts poppet bears) [(False, True), (False, False), (True, True)]
+    Spec.assertEqWith s "CR 732.3 only alice's repeated aim is refused" (poppetAttempts poppet bears Nothing) [(False, True), (False, False), (True, True)]
+
+  Spec.it s "a card reading counter links keeps a counter loop's states distinct" $ do
+    poppet <- S.printingOf s registry "Grim Poppet"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    tomb <- S.printingOf s registry "Cyclopean Tomb"
+    -- The Poppet loop above, beside alice's Cyclopean Tomb: each lap files
+    -- counter links (CR 607.1) a card in the game reads, so her repeated aim
+    -- goes ahead.
+    Spec.assertEqWith s "CR 732.3 Cyclopean Tomb keeps alice's repeated aim" (poppetAttempts poppet bears (Just tomb)) [(False, True), (False, True), (True, True)]
 
   Spec.it s "an activation is refused as paid, not as announced" $ do
     birds <- S.printingOf s registry "Birds of Paradise"
@@ -382,13 +391,15 @@ type Aiming = ([ObjectId.ObjectId], Maybe ObjectId.ObjectId, Bool, Bool, [(Bool,
 
 -- alice, active in her precombat main phase, controls a Grim Poppet carrying
 -- one -1/-1 counter and a Grizzly Bears; bob controls a Grim Poppet with none.
--- alice aims her Poppet at bob's twice, then at her Bears.
-poppetAttempts :: Printing.Printing -> Printing.Printing -> [(Bool, Bool)]
-poppetAttempts poppet bears =
+-- alice aims her Poppet at bob's twice, then at her Bears; `reader`, when
+-- given, is a further permanent of hers.
+poppetAttempts :: Printing.Printing -> Printing.Printing -> Maybe Printing.Printing -> [(Bool, Bool)]
+poppetAttempts poppet bears reader =
   let (alices, gs1) = S.addPermanent poppet S.alice (Setup.emptyGame S.bothPlayers)
       (bobs, gs2) = S.addPermanent poppet S.bob gs1
       (bearsId, gs3) = S.addPermanent bears S.alice gs2
-   in attempts alices bobs bearsId [bobs, bobs, bearsId] (S.addCounter CounterKind.MinusOneMinusOne 1 alices gs3)
+      gs4 = maybe gs3 (\printing -> snd (S.addPermanent printing S.alice gs3)) reader
+   in attempts alices bobs bearsId [bobs, bobs, bearsId] (S.addCounter CounterKind.MinusOneMinusOne 1 alices gs4)
 
 -- alice, active in her precombat main phase with an empty pool, controls
 -- Birds of Paradise enchanted by Freed from the Real, and an Island when

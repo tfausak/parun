@@ -349,6 +349,7 @@ blankGame settings order active =
       GameState.encoded = Map.empty,
       GameState.exiledWith = Map.empty,
       GameState.enteredWith = Map.empty,
+      GameState.counteredWith = Map.empty,
       GameState.exilePiles = Map.empty,
       GameState.extraTurns = [],
       -- CR 100.6a: parun models no match around this game, so the match it

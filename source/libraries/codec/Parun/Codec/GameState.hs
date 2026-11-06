@@ -27,6 +27,7 @@ import qualified Parun.Codec.CastFromZone as CastFromZone
 import qualified Parun.Codec.Combat as Combat
 import qualified Parun.Codec.ContinuousEffect as ContinuousEffect
 import qualified Parun.Codec.CounterKind as CounterKind
+import qualified Parun.Codec.CounterLink as CounterLink
 import qualified Parun.Codec.DamageEvent as DamageEvent
 import qualified Parun.Codec.Daytime as Daytime
 import qualified Parun.Codec.DelayedTrigger as DelayedTrigger
@@ -235,6 +236,7 @@ codec resolve = Fields.object $ do
   encoded <- Fields.defaulted "encoded" Map.empty (Common.naturalMap ObjectId.codec ObjectId.codec) GameState.encoded
   exiledWith <- Fields.defaulted "exiledWith" Map.empty (Common.naturalMap ObjectId.codec ExileLink.codec) GameState.exiledWith
   enteredWith <- Fields.defaulted "enteredWith" Map.empty (Common.naturalMap ObjectId.codec EntryLink.codec) GameState.enteredWith
+  counteredWith <- Fields.defaulted "counteredWith" Map.empty (Common.naturalMap ObjectId.codec (Common.set CounterLink.codec)) GameState.counteredWith
   exilePiles <- Fields.defaulted "exilePiles" Map.empty (Common.naturalMap ObjectId.codec Timestamp.codec) GameState.exilePiles
   extraTurns <- Fields.defaulted "extraTurns" [] (Common.list ExtraTurn.codec) GameState.extraTurns
   subgamesThisMatch <- Fields.defaulted "subgamesThisMatch" 0 Common.natural GameState.subgamesThisMatch
@@ -364,6 +366,7 @@ codec resolve = Fields.object $ do
         GameState.encoded = encoded,
         GameState.exiledWith = exiledWith,
         GameState.enteredWith = enteredWith,
+        GameState.counteredWith = counteredWith,
         GameState.exilePiles = exilePiles,
         GameState.extraTurns = extraTurns,
         GameState.subgamesThisMatch = subgamesThisMatch,

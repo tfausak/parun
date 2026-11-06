@@ -1,7 +1,8 @@
 -- CR 607.2d / 109.5: the Filter.Context a source's OWN ability is matched in,
 -- with every answer the board gives about that source filled in one place --
 -- its host (CR 303.4b), its owner (CR 108.3), what it put onto the battlefield
--- (CR 400.7), what it exiled (CR 607.2a) and every choice it made as it entered (CR 614.1c) or while
+-- (CR 400.7), what its effects moved counters on (CR 607.1), what it exiled
+-- (CR 607.2a) and every choice it made as it entered (CR 614.1c) or while
 -- resolving (CR 608.2d) -- so no position can fill one and forget another.
 --
 -- Not the source's power, toughness, mana value, colours or names: those are
@@ -19,6 +20,7 @@ import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.Chosen as Chosen
+import qualified Parun.Types.CounterLink as CounterLink
 import qualified Parun.Types.EntryLink as EntryLink
 import qualified Parun.Types.ExileLink as ExileLink
 import qualified Parun.Types.GameState as GameState
@@ -55,6 +57,8 @@ framedWith choices source gs context =
       Filter.sourceOwner = fmap Object.owner (Game.lookupObject source gs),
       -- CR 607.5: only those the abilities doing the reading put there.
       Filter.sourceEntrants = Map.keysSet (Map.filter (== EntryLink.MkEntryLink source (SourceChoices.acquisition choices)) (GameState.enteredWith gs)),
+      -- CR 607.5: the same acquisition's counter links.
+      Filter.sourceCountered = Map.filter (not . Set.null) (fmap (Set.map CounterLink.moved . Set.filter (\link -> CounterLink.source link == source && CounterLink.acquisition link == SourceChoices.acquisition choices)) (GameState.counteredWith gs)),
       -- CR 607.2a: the cards in exile now (CR 400.7) linked to the source.
       Filter.sourceExiled = Map.filter ((== source) . ExileLink.source) (Map.restrictKeys (GameState.exiledWith gs) (GameState.exile gs)),
       -- CR 508.5, for a source that is attacking or was removed from combat
