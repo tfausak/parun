@@ -1948,11 +1948,11 @@ notedAt pid answer asked = do
   (n, seen) <- State.get
   let prompt = Asked.prompt asked
       (reply, n') = State.runState (answer prompt) n
-      declaring = case prompt of
+      isDeclaration = case prompt of
         Prompt.DeclareAttackers {} -> True
         Prompt.DeclareBlockers {} -> True
         _ -> False
-      noted = [Map.lookup pid (GameState.undone (Asked.game asked)) | declaring]
+      noted = [Map.lookup pid (GameState.undone (Asked.game asked)) | isDeclaration]
   State.put (n', seen <> noted)
   pure reply
 
