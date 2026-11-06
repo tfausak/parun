@@ -72,6 +72,7 @@ import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.TurnMarker as TurnMarker
+import qualified Parun.Types.Undoing as Undoing
 
 data GameState = MkGameState
   { -- | CR 800.2: the options this game was started with; never written after
@@ -643,6 +644,11 @@ data GameState = MkGameState
     rollingDie :: Maybe Natural.Natural,
     -- | CR 706.2b: whether an ability activated inside that step asked for the
     -- die to be rerolled (Goblin Bookie).
-    rerollRequested :: Bool
+    rerollRequested :: Bool,
+    -- | CR 733.1: why each player's cast or activation was last reversed,
+    -- since that player last chose an action at priority
+    -- (Parun.Engine.Engine.priorityLoop). Parun.Engine.PlayerView shows a
+    -- seat its own.
+    undone :: Map.Map PlayerId.PlayerId Undoing.Undoing
   }
   deriving (Eq, Ord, Show)

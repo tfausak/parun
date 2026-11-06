@@ -8,6 +8,7 @@ import qualified Parun.Codec.Phase as Phase
 import qualified Parun.Codec.PlayerId as PlayerId
 import qualified Parun.Codec.Result as Result
 import qualified Parun.Codec.SeatView as SeatView
+import qualified Parun.Codec.Undoing as Undoing
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
@@ -29,6 +30,7 @@ codec = Fields.object $ do
   witnessed <- Fields.required "witnessed" (Common.list LoggedEvent.codec) PlayerView.witnessed
   witnessedLastTurn <- Fields.required "witnessedLastTurn" (Common.list LoggedEvent.codec) PlayerView.witnessedLastTurn
   result <- Fields.required "result" (Common.maybe Result.codec) PlayerView.result
+  undone <- Fields.required "undone" (Common.maybe Undoing.codec) PlayerView.undone
   pure
     PlayerView.MkPlayerView
       { PlayerView.viewer = viewer,
@@ -42,5 +44,6 @@ codec = Fields.object $ do
         PlayerView.stack = stack,
         PlayerView.witnessed = witnessed,
         PlayerView.witnessedLastTurn = witnessedLastTurn,
-        PlayerView.result = result
+        PlayerView.result = result,
+        PlayerView.undone = undone
       }

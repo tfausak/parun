@@ -136,6 +136,7 @@ import qualified Parun.Types.TapPermanents as TapPermanents
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Teams as Teams
 import qualified Parun.Types.TurnUpProcedure as TurnUpProcedure
+import qualified Parun.Types.Undoing as Undoing
 import qualified Parun.Types.Zone as Zone
 
 -- The single activated ability of a printing. Total: the fallback is unreachable
@@ -5049,6 +5050,27 @@ announcedReversalSpec s registry = Spec.describe s "Reversal after an announceme
         Spec.assertEqWith s "the payer who reverses gets nothing floating" (poolSize S.alice reversed) 0
         Spec.assertBool s (not (isTapped battlementsId reversed || isTapped mountainId reversed)) "and both lands untapped"
         Spec.assertEqWith s "alice was asked once per land" asked 2
+        Spec.assertEqWith s "CR 601.2h and the next priority can say why" (GameState.undone kept) (Map.singleton S.alice Undoing.UnpaidCost)
+
+  -- Tyrant's Machine's "{4}, {T}: Tap target creature." announced with a
+  -- player for its creature.
+  Spec.it s "CR 601.2e an activation announcing an illegal target is reversed, and says why" $ do
+    machine <- S.printingOf s registry "Tyrant's Machine"
+    island <- S.printingOf s registry "Island"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (machineId, g1) = S.addPermanent machine S.alice (S.landsInPlay island 4)
+        (_, gs) = S.addPermanent piker S.bob g1
+        illegal :: Prompt.Prompt r -> r
+        illegal p = case p of
+          Prompt.ChooseTargets _ _ _ asked -> fmap (const (Set.singleton (Recipient.ToPlayer S.bob))) asked
+          _ -> S.identityAnswer p
+    case Face.activatedAbilities (S.combinedFace machine) of
+      [ability] -> do
+        let after = S.runPure illegal gs (Activate.activateAbility S.alice machineId ability)
+        Spec.assertEqWith s "CR 602.2a's ability object is gone from the stack" (GameState.stack after) []
+        Spec.assertBool s (not (isTapped machineId after)) "the Machine is untapped"
+        Spec.assertEqWith s "and the next priority can say why" (GameState.undone after) (Map.singleton S.alice Undoing.IllegalProposal)
+      _ -> Spec.assertFailure s "Tyrant's Machine should print one activated ability"
 
   -- Mystic Gate's "{W/U}, {T}" activated from nothing: its own window taps the
   -- Gate for its "{T}: Add {C}" and then the Island for {U}, so the {W/U} is

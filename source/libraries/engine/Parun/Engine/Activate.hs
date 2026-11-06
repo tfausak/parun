@@ -55,6 +55,7 @@ import qualified Parun.Types.Saddling as Saddling
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.StaticRead as StaticRead
+import qualified Parun.Types.Undoing as Undoing
 import qualified Parun.Types.Zone as Zone
 
 -- CR 602.2a: an ability activated from a hidden zone reveals the card that has
@@ -158,6 +159,8 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
       -- what tells the two apart, CR 700.2d's exception included.
       legal = Target.fillableModes StackObjectKind.ActivatedAbility (ActivatedAbility.name ability) (Just pid) Map.empty srcId Map.empty (ActivatedAbility.modal ability) gs
       selection = Modal.Type.selection (ActivatedAbility.modal ability)
+      -- CR 601.2e via CR 602.2b: an illegal proposal returns to `before`.
+      reject = Nothing <$ (State.put before >> Game.noteUndoing pid Undoing.IllegalProposal)
       -- CR 601.2f's reductions can name the KIND of ability (Fluctuator's
       -- "cycling abilities"), so every totalling below is asked with this
       -- ability's provenance -- the two gates and the payment alike, or a
@@ -180,7 +183,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
   -- Reject-not-repair: an answer that does not satisfy the printed instruction
   -- makes the whole activation a no-op, guarding every step below.
   if not (Modal.selectionSatisfiedBy legal selection chosenModes)
-    then Nothing <$ State.put before
+    then reject
     else do
       -- CR 602.2b routes the rest of the activation through CR 601.2b-i, so CR
       -- 601.2b's announcement of a variable cost (CR 107.3) governs an activation
@@ -311,7 +314,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
       -- applies.
       -- An answer outside the offered costs is rejected, ChooseCost's contract.
       if overCeiling || underFloor || (length offeredCosts > 1 && notElem printedCost offeredCosts) || not (Activatable.payableCost aimable stamp (ActivatedAbility.name ability) spendable pid srcId gs announcedAtX)
-        then Nothing <$ State.put before -- reject: the whole activation is a no-op
+        then reject -- the whole activation is a no-op
         else do
           -- CR 118.13a's announcement, which names an activated ability's
           -- activation cost, happens here at 601.2b's position and not when the
@@ -357,7 +360,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
           (announcedCost, _) <- Cost.announce (PaymentSubject.Activating srcId stamp spendable) ManaSpending.AsProduced pid srcId (Cost.substitutedManas (Cost.waterbendSubstitutions (Cost.Type.components totalledCost) Map.empty pid srcId gs) (Cost.totalManas gathered)) totalledCost
           (chosen, drawn) <- Target.chooseTargets (ActivatedAbility.name ability) pid abilId srcId seed (Maybe.fromMaybe 0 mAmount) slots sets
           if not (Target.selectionLegal StackObjectKind.ActivatedAbility (ActivatedAbility.name ability) (Just pid) seed srcId (Maybe.fromMaybe 0 mAmount) slots sets chosen gs)
-            then Nothing <$ State.put before -- reject: the whole activation is a no-op
+            then reject -- the whole activation is a no-op
             else do
               -- CR 602.2b / 601.2d: the division among the targets just fixed.
               divisions <- Target.announceDivision (ActivatedAbility.name ability) pid abilId srcId seed slots chosen
@@ -522,4 +525,4 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
                 -- CR 733.1: the payment reversed the activation back to
                 -- `before` itself, keeping what the payer chose to keep of the
                 -- mana window.
-                Payment.Unpaid -> pure Nothing
+                Payment.Unpaid -> Nothing <$ Game.noteUndoing pid Undoing.UnpaidCost

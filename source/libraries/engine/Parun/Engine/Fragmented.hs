@@ -92,8 +92,9 @@ import qualified Text.Read as Read
 --
 -- Dropped as bookkeeping no card reads: the id, timestamp, printing and event
 -- group supplies; CR 104.4b's `lastChoice` and `loopInvolvement`; CR 732.3's
--- own `repeatPicks`, which a RepeatIf's runs compare digests to fill; the
--- grow-only printing interning; and the scan state keyed off the log
+-- own `repeatPicks`, which a RepeatIf's runs compare digests to fill; CR
+-- 733.1's `undone`, which only a client reads; the grow-only printing
+-- interning; and the scan state keyed off the log
 -- (`scannedThrough`, `damageScannedThrough`, `battlefieldWhenTriggered`,
 -- `controlSample`, `stackedIn`). `lastKnown` and `stackArchive` are keyed by
 -- ids that have left (CR 400.7), so only the entries of the ids the rest of
@@ -125,6 +126,7 @@ digest gs =
             GameState.lastChoice = Timestamp.MkTimestamp 0,
             GameState.loopInvolvement = Map.empty,
             GameState.repeatPicks = Nothing,
+            GameState.undone = Map.empty,
             GameState.printings = Map.empty,
             GameState.printingIds = Map.empty,
             GameState.scannedThrough = 0,

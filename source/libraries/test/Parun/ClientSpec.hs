@@ -408,7 +408,17 @@ spec s registry = Spec.describe s "Client" $ do
       s
       "told once, before the next menu"
       (filter (Text.isPrefixOf (Text.pack "Undone: ")) (takeWhile (not . menuHeading) (drop 1 (dropWhile (/= Text.pack "> stop") shown))))
-      [Text.pack "Undone: Cast Grizzly Bears could not be completed, so it was reversed and its payments canceled."]
+      [Text.pack "Undone: Cast Grizzly Bears could not be completed (its cost was not paid), so it was reversed and its payments canceled."]
+
+  -- Ebony Charm's modes are asked as JSON (#5225), and no mode is not one.
+  Spec.it s "CR 601.2e a cast whose announced modes are illegal is told undone, and why" $ do
+    (_, _, tapped, shown) <- castPaying "[]" s registry "Ebony Charm" ["Swamp"]
+    Spec.assertEqWith s "nothing stayed tapped" tapped []
+    Spec.assertEqWith
+      s
+      "told once, before the next menu"
+      (filter (Text.isPrefixOf (Text.pack "Undone: ")) (takeWhile (not . menuHeading) (drop 1 (dropWhile (/= Text.pack "> []") shown))))
+      [Text.pack "Undone: Cast Ebony Charm could not be completed (a choice announced for it was illegal), so it was reversed and its payments canceled."]
 
   -- The Plateau makes red ahead of white, so taking its first yield fails.
   Spec.it s "auto pays through a dual land, taking the color still owed" $ do
@@ -819,10 +829,11 @@ withForest s registry = do
   pure (S.addPermanent forest S.alice gs)
 
 -- Casts the first of the spell it is offered, typing this word at its
--- payment, and passes otherwise.
+-- payment or at a question answered as JSON, and passes otherwise.
 castsOnce :: String -> String -> Screen -> Maybe Text.Text
 castsOnce word spell sc
   | any (Text.isPrefixOf (Text.pack "Paying ")) shown = Just (Text.pack word)
+  | Text.pack "Type the answer as JSON:" `elem` shown = Just (Text.pack word)
   | any menuHeading shown =
       let options = [(n, rest) | line <- shown, (n, rest) <- [Text.breakOn (Text.pack ". ") (Text.strip line)], Text.all (`elem` ['0' .. '9']) n, not (Text.null n)]
           cast = [n | not (typedYet word sc), (n, rest) <- options, rest == Text.pack (". Cast " <> spell)]

@@ -42,7 +42,8 @@ viewFor pid gs =
       PlayerView.stack = Maybe.mapMaybe (objectView pid gs) (GameState.stack gs),
       PlayerView.witnessed = witnessedIn (GameState.events gs),
       PlayerView.witnessedLastTurn = witnessedIn (GameState.eventsLastTurn gs),
-      PlayerView.result = GameState.result gs
+      PlayerView.result = GameState.result gs,
+      PlayerView.undone = Map.lookup pid (GameState.undone gs)
     }
   where
     witnessedIn :: Seq.Seq LoggedEvent.LoggedEvent -> [LoggedEvent.LoggedEvent]

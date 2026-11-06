@@ -1470,6 +1470,9 @@ priorityLoop = do
                               if offersAChoice && narrowedChoice
                                 then Game.choose (Prompt.ChooseAction decider p menu)
                                 else Game.ask (Prompt.ChooseAction decider p menu)
+                            -- CR 733.1: why the player's last action was
+                            -- reversed is news only until they choose the next.
+                            State.modify' (\g -> g {GameState.undone = Map.delete p (GameState.undone g)})
                             -- FILTERED, NOT TRUSTED: everything Action.legalActions
                             -- computed -- CR 302.6's tap-sickness gate, CR 307.5
                             -- timing, cost payability, CR 305.2's land allowance,

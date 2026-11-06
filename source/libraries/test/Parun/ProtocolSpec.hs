@@ -55,6 +55,7 @@ import qualified Parun.Types.Observer as Observer
 import qualified Parun.Types.Operand as Operand
 import qualified Parun.Types.PayOffer as PayOffer
 import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PlayerView as PlayerView
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Question as Question
 import qualified Parun.Types.Recipient as Recipient
@@ -62,6 +63,7 @@ import qualified Parun.Types.Reply as R
 import qualified Parun.Types.Request as Request
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.Undoing as Undoing
 import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -182,6 +184,24 @@ spec s registry = Spec.describe s "Protocol" $ do
         Spec.assertBool s (Maybe.isJust second) "second"
       _ -> Spec.assertFailure s "fewer than two discard lines"
 
+  Spec.it s "CR 733.1 a seat's view says why its cast was reversed, until it chooses its next action" $ do
+    gs <- started s registry
+    bears <- S.printingOf s registry "Grizzly Bears"
+    forest <- S.printingOf s registry "Forest"
+    let (_, g1) = S.addPermanent forest S.alice gs
+        (_, g2) = S.addPermanent forest S.alice g1
+        board = snd (S.addHandCard bears S.alice g2)
+        logged = State.execState (Driver.drive [observer] (Protocol.over (exchanging stopsOnce) chance) 10000 (pure . (>= 4) . GameState.turnNumber) board) []
+        sent = fmap snd (linesWithState logged)
+        afterStop = drop 1 (dropWhile (not . List.isInfixOf "\"kind\":\"ChooseManaSource\"") sent)
+        undone = [PlayerView.undone view | Just request <- fmap requestOf afterStop, Question.seat (Request.question request) == S.alice, Question.kind (Request.question request) == Text.pack "ChooseAction", Just view <- [Request.view request]]
+    case undone of
+      next : later -> do
+        Spec.assertEqWith s "the next priority says the cost was not paid" next (Just Undoing.UnpaidCost)
+        Spec.assertBool s (not (null later)) "alice is asked again"
+        Spec.assertEqWith s "and no later one says anything" (filter Maybe.isJust later) []
+      [] -> Spec.assertFailure s "alice never stopped a payment"
+
   Spec.it s "CR 205.3e a subtype of the wrong kind is refused and asked again" $ do
     gs <- started s registry
     let oid = ObjectId.MkObjectId 1
@@ -278,6 +298,21 @@ stray :: Text.Text -> State.State Log Text.Text
 stray line = do
   asked <- State.gets (length . filter (Text.isInfixOf (Text.pack "\"kind\":\"ChooseDiscard\"") . Text.pack) . Either.rights)
   if asked == 1 && Text.isInfixOf (Text.pack "\"kind\":\"ChooseDiscard\"") line then pure (Text.pack "[\"$9999\"]") else client line
+
+-- Casts the first spell offered and stops paying for it, the first time; then
+-- answers as `client` does.
+stopsOnce :: Text.Text -> State.State Log Text.Text
+stopsOnce line = do
+  stopped <- State.gets (any (List.isInfixOf "\"kind\":\"ChooseManaSource\"") . Either.rights)
+  case fmap Request.question (requestOf (Text.unpack line)) of
+    Just question
+      | Question.kind question == Text.pack "ChooseManaSource" -> pure (Text.pack "null")
+      | Question.kind question == Text.pack "ChooseAction",
+        not stopped,
+        R.Array actions <- Question.offer question,
+        Just i <- List.findIndex ((== Just (R.Text (Text.pack "Cast"))) . field "action") actions ->
+          pure (Text.pack (show i))
+    _ -> client line
 
 -- Passes, keeps, declines and discards the first cards offered, reading only
 -- the line.

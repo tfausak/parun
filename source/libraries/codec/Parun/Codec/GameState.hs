@@ -72,6 +72,7 @@ import qualified Parun.Codec.SideDeck as SideDeck
 import qualified Parun.Codec.SpellWasCast as SpellWasCast
 import qualified Parun.Codec.Timestamp as Timestamp
 import qualified Parun.Codec.TurnMarker as TurnMarker
+import qualified Parun.Codec.Undoing as Undoing
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
@@ -252,6 +253,7 @@ codec resolve = Fields.object $ do
   extraTurnUnderWay <- Fields.defaulted "extraTurnUnderWay" Nothing (Common.maybe Timestamp.codec) GameState.extraTurnUnderWay
   rollingDie <- Fields.defaulted "rollingDie" Nothing (Common.maybe Common.natural) GameState.rollingDie
   rerollRequested <- Fields.defaulted "rerollRequested" False Common.boolean GameState.rerollRequested
+  undone <- Fields.defaulted "undone" Map.empty (Common.naturalMap PlayerId.codec Undoing.codec) GameState.undone
   pure
     GameState.MkGameState
       { GameState.settings = settings,
@@ -386,6 +388,7 @@ codec resolve = Fields.object $ do
         GameState.extraTurnUnderWay = extraTurnUnderWay,
         GameState.rollingDie = rollingDie,
         GameState.rerollRequested = rerollRequested,
+        GameState.undone = undone,
         -- Derived rather than written: see the note above.
         GameState.printingIds = invert printings
       }

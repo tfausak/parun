@@ -53,6 +53,7 @@ import qualified Parun.Types.Reply as R
 import qualified Parun.Types.Request as Request
 import qualified Parun.Types.SeatView as SeatView
 import qualified Parun.Types.Terminal as Terminal
+import qualified Parun.Types.Undoing as Undoing
 import qualified Text.Read as Read
 
 -- | The client's monad: what it keeps between lines, and why play stopped.
@@ -111,7 +112,8 @@ attempt seat view question reply = case reply of
 
 -- | CR 733.1: at the seat's priority after a cast or an activation it chose,
 -- a line of news saying it was undone when its view has logged no spell cast
--- and no ability activated since. The view does not say why (gap #6439).
+-- and no ability activated since, and why where the view says
+-- (PlayerView.undone).
 undone :: (Monad m) => PlayerId.PlayerId -> PlayerView.PlayerView -> Client m ()
 undone seat view = do
   tried <- State.gets (Map.lookup seat . Hotseat.attempted)
@@ -121,7 +123,7 @@ undone seat view = do
       | game == PlayerView.game view,
         turn == PlayerView.turn view,
         not (any (completes . LoggedEvent.event) (List.genericDrop n (PlayerView.witnessed view))) ->
-          let line = Text.pack "Undone: " <> action <> Text.pack " could not be completed, so it was reversed and its payments canceled."
+          let line = Text.pack "Undone: " <> action <> Text.pack " could not be completed" <> foldMap because (PlayerView.undone view) <> Text.pack ", so it was reversed and its payments canceled."
            in State.modify' (\h -> h {Hotseat.news = Map.insertWith (flip (<>)) seat (Seq.singleton line) (Hotseat.news h)})
     _ -> pure ()
   where
@@ -129,6 +131,9 @@ undone seat view = do
       GameEvent.SpellCast {} -> True
       GameEvent.AbilityActivated {} -> True
       _ -> False
+    because why = Text.pack $ case why of
+      Undoing.IllegalProposal -> " (a choice announced for it was illegal)"
+      Undoing.UnpaidCost -> " (its cost was not paid)"
 
 -- | Asks the seat, handing the screen to it first.
 asked :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> PlayerView.PlayerView -> Request.Request -> Client m R.Reply
