@@ -5,8 +5,10 @@
 -- of one state (Parun.Engine.Projection.projectGiven).
 module Parun.Engine.Snapshot where
 
+import qualified Data.Map.Lazy as Map.Lazy
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
 import Data.Set (Set)
 import qualified Data.Set as Set
 import qualified Parun.Engine.CrewRestriction as CrewRestriction
@@ -47,11 +49,15 @@ given :: Map ObjectId ProjectedCharacteristics -> [Projection.ControlGrant] -> G
 given pcs grants_ gs =
   let fresh = Projection.viewsOf gs
       battlefield = Set.toList (GameState.battlefield gs)
+      -- One view per projected object, each built when first read and then
+      -- shared, so a pool every ability walks (a crew cost's) builds each
+      -- view once per enumeration rather than once per ability (#6483).
+      viewed = Map.Lazy.fromSet (\oid -> Projection.viewOfObjectGiven pcs grants_ oid gs) (Map.keysSet pcs)
    in MkSnapshot
         { projected = pcs,
           offBoard = Projection.projectEach (Set.difference (Map.keysSet (GameState.objects gs)) (GameState.battlefield gs)) gs,
           grants = grants_,
-          views = \oid -> if Map.member oid pcs then Projection.viewOfObjectGiven pcs grants_ oid gs else fresh oid,
+          views = \oid -> Maybe.fromMaybe (fresh oid) (Map.lookup oid viewed),
           unsacrificeable = SacrificeRestriction.cantBeSacrificed battlefield gs,
           cantCrewVehicles = CrewRestriction.cantCrew battlefield gs
         }

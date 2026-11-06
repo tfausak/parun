@@ -2168,6 +2168,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Capture Sphere", 1), -- Claustrophobia's wording
         ("Blossombind", 1), -- Claustrophobia's wording
         ("Starlight Snare", 1), -- Claustrophobia's wording
+        ("Infinite Coursework", 2), -- Claustrophobia's tap, and the Effect.Undesignate beside it
         ("Artificer's Hex", 2), -- its intervening "if" and the destruction it gates
         ("Armor of Faith", 1), -- an activated ability pumping the Aura's host
         ("Holy Armor", 1), -- the same, with +0/+1

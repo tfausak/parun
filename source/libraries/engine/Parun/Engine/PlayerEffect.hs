@@ -1906,16 +1906,17 @@ firstCast pid source criterion oid gs scope =
 -- activation cost of an ability stamped `stamp` -- Kíli the Resourceful's {0}
 -- for "the equip cost of the first equip ability you activate each turn".
 -- Offered at CR 601.2b by Parun.Engine.Activatable.costsFor; CR 118.9d's
--- increases and reductions then apply to whichever is chosen.
-alternativeActivationCosts :: PlayerId -> Maybe Keyword -> GameState -> [ManaCost.ManaCost]
-alternativeActivationCosts pid stamp gs =
+-- increases and reductions then apply to whichever is chosen. `effects` is
+-- `applying pid gs`, which an enumeration takes once for every ability (#6483).
+alternativeActivationCosts :: [(RowSource, PlayerEffect)] -> PlayerId -> Maybe Keyword -> GameState -> [ManaCost.ManaCost]
+alternativeActivationCosts effects pid stamp gs =
   let offered (source, effect) = case effect of
         PlayerEffect.AlternativeActivationCost (AlternativeActivationCost.MkAlternativeActivationCost granted onlyFirst amount) ->
           if any (Keyword.designates granted) stamp && maybe True (firstActivation pid source (Filter.Type.And []) ActivationCriteria.MkActivationCriteria {ActivationCriteria.grantedBy = Just granted, ActivationCriteria.whichKind = Nothing, ActivationCriteria.whichLoyalty = Nothing, ActivationCriteria.whichAbility = Nothing} Nothing gs) onlyFirst
             then Just amount
             else Nothing
         _ -> Nothing
-   in Maybe.mapMaybe offered (applying pid gs)
+   in Maybe.mapMaybe offered effects
 
 -- CR 613.11 / 601.2f through CR 602.2b: the cost increases, reductions and
 -- additional components that apply to `pid` ACTIVATING an ability of `srcId`

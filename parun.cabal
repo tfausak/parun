@@ -1663,6 +1663,8 @@ library codec
     Parun.Codec.TypesAreSpec
     Parun.Codec.Unblocking
     Parun.Codec.UnblockingSpec
+    Parun.Codec.Undesignate
+    Parun.Codec.UndesignateSpec
     Parun.Codec.Undoing
     Parun.Codec.UndoingSpec
     Parun.Codec.UntapHold
@@ -3373,6 +3375,7 @@ library types
     Parun.Types.TypeLine
     Parun.Types.TypesAre
     Parun.Types.Unblocking
+    Parun.Types.Undesignate
     Parun.Types.Undoing
     Parun.Types.UntapHold
     Parun.Types.UntapR

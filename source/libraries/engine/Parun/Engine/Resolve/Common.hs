@@ -3400,7 +3400,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.TakeTheInitiative {} -> False
   Effect.Designate {} -> False
   Effect.SetClassLevel {} -> False
-  Effect.Unsuspect {} -> False
+  Effect.Undesignate {} -> False
   -- CR 709.5f/g: locking chooses an UNLOCKED half of the Room and unlocking a
   -- locked one, so a Room holding no half of the wanted kind has nothing to
   -- choose among. Both readers are the executing arm's.
