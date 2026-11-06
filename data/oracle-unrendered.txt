@@ -6,6 +6,7 @@ _-o-saurus
 a-good-day-to-pie
 abomination
 abyssal-harvester
+academic-ascent
 affectionate-indrik
 alchemists-gift
 alesha-who-laughs-at-fate
@@ -392,6 +393,7 @@ call-of-the-wild
 call-to-the-grave
 caltrops
 camouflage
+campus-crier
 canopy-stalker
 cant-stay-away
 capricious-efreet
@@ -3101,6 +3103,7 @@ waterbending-lesson
 waterknot
 wave-of-rats
 wax-wane
+way-of-the-mentor
 wear-tear
 weathered-wayfarer
 weaver-of-lies

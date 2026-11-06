@@ -175,6 +175,8 @@ library codec
     Parun.Codec.AlternativeCost
     Parun.Codec.AlternativeCostSpec
     Parun.Codec.Amass
+    Parun.Codec.AmassKind
+    Parun.Codec.AmassKindSpec
     Parun.Codec.Anchor
     Parun.Codec.AnchorSpec
     Parun.Codec.Answer
@@ -2508,6 +2510,7 @@ library types
     Parun.Types.AlternativeActivationCost
     Parun.Types.AlternativeCost
     Parun.Types.Amass
+    Parun.Types.AmassKind
     Parun.Types.Anchor
     Parun.Types.Announcement
     Parun.Types.Answer
