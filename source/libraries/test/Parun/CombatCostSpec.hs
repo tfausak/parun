@@ -1921,6 +1921,40 @@ declarationRetrySpec s registry = Spec.describe s "DeclarationRetry" $ do
         Spec.assertBool s (not (Combat.legalBlockDeclaration S.bob Map.empty gs)) "declining really is illegal, so the first answer really was rewound"
         Spec.assertEqWith s "CR 509.1's preamble asked for a fresh declaration" asked 2
       _ -> Spec.assertFailure s "fixture should have one attacker"
+  Spec.it s "CR 733.1 the declaration asked again after CR 508.1d says why, until it is made" $ do
+    berserkers <- S.printingOf s registry "Berserkers of Blood Ridge"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (gs, mine, _) = S.combatBoardOf [berserkers, piker] []
+        ((_, after), (_, seen)) = State.runState (Engine.runGameAsked (notedAt S.alice declineThenAttackAnswer) gs (Combat.declareAttackers S.manaPerformer S.alice)) (0, [])
+    Spec.assertEqWith s "the second ask says the declaration was illegal" seen [Nothing, Just Undoing.IllegalDeclaration]
+    Spec.assertEqWith s "the second declaration stands" (Set.fromList (S.attackerDeclarationsOf after)) (Set.fromList mine)
+    Spec.assertEqWith s "and the note is gone once it is made" (GameState.undone after) Map.empty
+  Spec.it s "CR 733.1 the block declaration asked again after CR 509.1c says why, until it is made" $ do
+    screen <- S.printingOf s registry "Razorgrass Screen"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (gs, mine, theirs) = attacking [piker] [screen, piker]
+    case mine of
+      [attacker] -> do
+        let ((_, after), (_, seen)) = State.runState (Engine.runGameAsked (notedAt S.bob declineThenBlockAnswer) gs (Combat.declareBlockers S.manaPerformer)) (0, [])
+        Spec.assertEqWith s "the second ask says the declaration was illegal" seen [Nothing, Just Undoing.IllegalDeclaration]
+        Spec.assertEqWith s "the second declaration stands" (blockersOf attacker after) (Set.fromList theirs)
+        Spec.assertEqWith s "and the note is gone once it is made" (GameState.undone after) Map.empty
+      _ -> Spec.assertFailure s "fixture should have one attacker"
+
+-- `answer`, recording beside its count the CR 733.1 note `pid` holds at each
+-- declaration of attackers or blockers it is asked.
+notedAt :: PlayerId.PlayerId -> (Prompt.Prompt r -> State.State Natural r) -> Asked.Asked GameState.GameState r -> State.State (Natural, [Maybe Undoing.Undoing]) r
+notedAt pid answer asked = do
+  (n, seen) <- State.get
+  let prompt = Asked.prompt asked
+      (reply, n') = State.runState (answer prompt) n
+      declaring = case prompt of
+        Prompt.DeclareAttackers {} -> True
+        Prompt.DeclareBlockers {} -> True
+        _ -> False
+      noted = [Map.lookup pid (GameState.undone (Asked.game asked)) | declaring]
+  State.put (n', seen <> noted)
+  pure reply
 
 -- CR 509.3's THIRD road onto the blocking side, the one neither CR 509.1a's
 -- declaration nor CR 509.4's entry is: General Jarkeld (Ice Age) prints "{T}:
