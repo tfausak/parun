@@ -577,7 +577,7 @@ attackDeclarationAllowed :: CombatRestriction.AttackLimits -> Map (ObjectId, Att
 attackDeclarationAllowed limits alone declaration gs =
   aloneAllows alone declaration
     && all (\(seats, n) -> withinLimit (Just n) (declaredAt seats declaration gs)) (Map.toList (CombatRestriction.whole limits))
-    && all (\(pid, n) -> withinLimit (Just n) (declaredAgainst pid declaration)) (Map.toList (CombatRestriction.perDefender limits))
+    && all (\(key, n) -> withinLimit (Just n) (declaredAgainst key declaration)) (Map.toList (CombatRestriction.perTarget limits))
 
 -- CR 802.3a's first sentence through CR 508.5a: how many of a declaration's
 -- creatures are announced at one of `seats` -- the count an unscoped bound is
@@ -592,17 +592,17 @@ declaredAt seats declaration gs = length (filter (\target -> countsAt seats targ
 countsAt :: Set PlayerId -> AttackTarget.AttackTarget -> GameState -> Bool
 countsAt seats target gs = Maybe.maybe False (`Set.member` seats) (targetDefender target gs)
 
--- CR 802.3a: how many of a declaration's creatures are attacking `pid` -- the
--- count a seat-scoped bound is judged against. Crawlspace.
+-- CR 802.3a: how many of a declaration's creatures are attacking `key` -- the
+-- count a scoped bound is judged against. Crawlspace; Tomik, Orzhov Lawmage.
 --
--- The announcements aimed at that player's PLANESWALKERS, and at the battles
--- they protect, are not among them: rule 802.3a says "creatures attacking that
+-- The announcements aimed at a seat's PLANESWALKERS, and at the battles it
+-- protects, are not among that seat's: rule 802.3a says "creatures attacking that
 -- player", and Crawlspace's own ruling spells that out -- "your opponents can
 -- still attack planeswalkers you control with any number of creatures each
--- combat". So this is an equality on the announcement and not a targetDefender
+-- combat". So this is CombatRestriction.attacked and not a targetDefender
 -- reading, which is the opposite of what barredAnnouncements' gated half does.
-declaredAgainst :: PlayerId -> Map ObjectId AttackTarget.AttackTarget -> Int
-declaredAgainst pid = length . filter (== AttackTarget.OfPlayer pid) . Map.elems
+declaredAgainst :: CombatRestriction.Attacked -> Map ObjectId AttackTarget.AttackTarget -> Int
+declaredAgainst key = length . filter ((== key) . CombatRestriction.attacked) . Map.elems
 
 -- CR 508.1c / CR 509.1b read through Silent Arbiter: is a declaration of this
 -- SIZE one the bound in force allows? "No more than one" is `<=`, so the empty
@@ -638,7 +638,8 @@ withinLimit limit size = case limit of
 --      caps plus one exception at size one (aloneAllows): CR 802.3a's
 --      whole-declaration bounds over its per-seat ones, a whole bound counting
 --      the announcements at the seats its gate fails (every seat when ungated,
---      CR 508.5a) and each seat's the one announcement OfPlayer that seat. Those
+--      CR 508.5a) and each scoped one's the announcements naming what it counts
+--      the attackers of (CombatRestriction.attacked). Those
 --      caps become a flow network's capacities once a count per class of
 --      announcements is fixed, and heaviestBySize ranges over the counts the
 --      whole bounds allow. It never asks
@@ -803,17 +804,13 @@ ceilingUnder freely required limits alone barred candidates gs =
             -- already over one; an unscoped bound's over the announcements it
             -- counts.
             groupRooms = fmap (\(members, n) -> (members, toInteger n - toInteger (length (filter (\(_, (target, _)) -> Set.member target members) taken)))) wholeBounds
-            spent = Map.fromListWith (+) [(pid, 1 :: Integer) | (_, (AttackTarget.OfPlayer pid, _)) <- taken]
-            seatRooms = Map.mapWithKey (\pid n -> toInteger n - Map.findWithDefault 0 pid spent) (CombatRestriction.perDefender limits)
-            -- CR 802.3a: the room an announcement counts against, and Nothing
-            -- for the two of CR 506.3's things no bound is scoped to
-            -- (`declaredAgainst` has the rule and Crawlspace's ruling).
-            -- Exhaustive, so a fourth attackable thing has to decide here too.
-            roomAt target = case target of
-              AttackTarget.OfPlayer pid -> Map.lookup pid seatRooms
-              AttackTarget.OfPlaneswalker {} -> Nothing
-              AttackTarget.OfBattle {} -> Nothing
-            overfull = any ((< 0) . snd) groupRooms || any (< 0) seatRooms
+            spent = Map.fromListWith (+) [(CombatRestriction.attacked target, 1 :: Integer) | (_, (target, _)) <- taken]
+            targetRooms = Map.mapWithKey (\key n -> toInteger n - Map.findWithDefault 0 key spent) (CombatRestriction.perTarget limits)
+            -- CR 802.3a: the room an announcement counts against, Nothing where
+            -- no scoped bound counts it (`declaredAgainst` has the rule and
+            -- Crawlspace's ruling).
+            roomAt target = Map.lookup (CombatRestriction.attacked target) targetRooms
+            overfull = any ((< 0) . snd) groupRooms || any (< 0) targetRooms
             gains = heaviestBySize groupRooms roomAt (fmap snd rest)
             sized = fmap (\(_, gain) -> got + gain) (filter (\(more, _) -> held + more /= 1) (zip [0 :: Int ..] gains))
             -- CR 506.5's exception, the one size `sized` skips: a declaration of
@@ -2367,7 +2364,7 @@ couldAttack pid gs =
         let boosted = required {Requirement.pairs = Map.unionWith (+) (Map.fromList (fmap (\announcement -> (announcement, heavier)) announcements)) (Requirement.pairs required)}
             (_, witness) = ceilingUnder (\oid target -> Set.notMember (oid, target) forbidden) boosted limits alone barred candidates gs
          in if Requirement.met boosted (Set.fromList (Map.toList witness)) >= needed * heavier + most then Just witness else Nothing
-      unbounded = Map.null alone && Map.null (CombatRestriction.whole limits) && Map.null (CombatRestriction.perDefender limits)
+      unbounded = Map.null alone && Map.null (CombatRestriction.whole limits) && Map.null (CombatRestriction.perTarget limits)
       declarable oid = Maybe.isJust (witnessOf Set.empty 1 (fmap ((,) oid) targets))
       taxed = Set.fromList [(oid, target) | oid <- candidates, target <- targets, not (null (AttackCost.costsOn oid target gs))]
       -- CR 508.1f-j over a declaration: tapped, then each attacking player's

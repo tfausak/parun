@@ -242,6 +242,8 @@ library codec
     Parun.Codec.AttackerUnblockedSpec
     Parun.Codec.AttackingPlayers
     Parun.Codec.AttackingPlayersSpec
+    Parun.Codec.AttackLimitScope
+    Parun.Codec.AttackLimitScopeSpec
     Parun.Codec.AttackLimitUnless
     Parun.Codec.AttackLimitUnlessSpec
     Parun.Codec.AttackOption
@@ -2546,6 +2548,7 @@ library types
     Parun.Types.AttackerTrigger
     Parun.Types.AttackerUnblocked
     Parun.Types.AttackingPlayers
+    Parun.Types.AttackLimitScope
     Parun.Types.AttackLimitUnless
     Parun.Types.AttackOption
     Parun.Types.AttackPermission

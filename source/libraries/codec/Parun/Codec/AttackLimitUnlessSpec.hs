@@ -3,6 +3,7 @@ module Parun.Codec.AttackLimitUnlessSpec where
 import qualified Parun.Codec.AttackLimitUnless as AttackLimitUnless
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.AttackLimitScope as AttackLimitScope
 import qualified Parun.Types.AttackLimitUnless as AttackLimitUnless
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
@@ -26,8 +27,8 @@ spec s = Spec.describe s "Parun.Codec.AttackLimitUnless" $ do
     Common.assertCodec
       s
       AttackLimitUnless.codec
-      (AttackLimitUnless.MkAttackLimitUnless {AttackLimitUnless.limit = 2, AttackLimitUnless.defenders = Just (PlayerScope.Related PlayerRelation.You), AttackLimitUnless.unless = Nothing})
-      " {\"limit\":2,\"defenders\":{\"type\":\"You\"}} "
+      (AttackLimitUnless.MkAttackLimitUnless {AttackLimitUnless.limit = 2, AttackLimitUnless.defenders = Just (AttackLimitScope.Players (PlayerScope.Related PlayerRelation.You)), AttackLimitUnless.unless = Nothing})
+      " {\"limit\":2,\"defenders\":{\"type\":\"Players\",\"value\":{\"type\":\"You\"}}} "
   Spec.it s "MkAttackLimitUnless, unless written" $
     Common.assertCodec
       s

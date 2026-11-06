@@ -331,6 +331,7 @@ attacksAloneSpec s registry = Spec.describe s "AttacksAlone" $ do
 -- The Crawlspace cases are CR 802.3a's OTHER sentence: a bound scoped to one
 -- seat, which every case before them is the unscoped counterpart of. Those
 -- naming carol need three seats, and say why at the site.
+-- The Tomik cases scope it to one planeswalker.
 --
 -- The Charging Rhino cases are the blocking side's scope: a bound counted
 -- separately against each attacker it names.
@@ -571,6 +572,57 @@ boundedDeclarationSpec s registry = Spec.describe s "BoundedDeclaration" $ do
         Spec.assertBool s (not (Combat.legalAttackDeclarationAs S.alice (at S.bob mine) withJace)) "while on that same board all three at bob is still refused"
         Spec.assertBool s (Combat.legalAttackDeclarationAs S.alice (at S.bob theirs) control) "and with a plain Piker there instead of the Crawlspace, all three may attack bob"
       _ -> Spec.assertFailure s "fixture should have three attackers"
+  Spec.it s "CR 802.3a a Tomik bounds the creatures attacking EACH planeswalker its controller controls" $ do
+    -- Tomik, Orzhov Lawmage ("Planeswalkers you control have 'No more than one
+    -- creature can attack this planeswalker each combat.'"): the bound is
+    -- granted to each planeswalker and counts the attackers of that one alone,
+    -- so it is neither a seat's bound nor one over every planeswalker.
+    tomik <- S.printingOf s registry "Tomik, Orzhov Lawmage"
+    jace <- S.printingOf s registry "Jace Beleren"
+    ajani <- S.printingOf s registry "Ajani Goldmane"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let walkers holder gs0 =
+          let (jaceId, g1) = S.addPermanent jace holder gs0
+              (ajaniId, g2) = S.addPermanent ajani holder g1
+           in (jaceId, ajaniId, S.addCounter CounterKind.Loyalty 3 jaceId (S.addCounter CounterKind.Loyalty 4 ajaniId g2))
+        (bare, mine, _) = S.combatBoardOf [piker, piker, piker] []
+        (jaceId, ajaniId, control) = walkers S.bob bare
+        gs = snd (S.addPermanent tomik S.bob control)
+        -- Tomik on the ATTACKING side: "you" is alice, whose planeswalkers
+        -- nobody is attacking, so bob's are unbounded.
+        alicesTomik = snd (S.addPermanent tomik S.alice control)
+        at target = fmap (\oid -> (oid, target))
+    case mine of
+      [first, second, third] -> do
+        -- The proving assertion.
+        Spec.assertBool s (not (Combat.legalAttackDeclarationAs S.alice (at (AttackTarget.OfPlaneswalker jaceId) [first, second]) gs)) "two creatures may not both attack Jace"
+        Spec.assertBool s (Combat.legalAttackDeclarationAs S.alice (at (AttackTarget.OfPlaneswalker jaceId) [first] <> at (AttackTarget.OfPlaneswalker ajaniId) [second] <> at (AttackTarget.OfPlayer S.bob) [third]) gs) "but one at each planeswalker and one at bob is legal, so each planeswalker is bounded separately"
+        Spec.assertBool s (Combat.legalAttackDeclarationAs S.alice (at (AttackTarget.OfPlayer S.bob) mine) gs) "and the bound leaves bob himself unbounded"
+        Spec.assertBool s (Combat.legalAttackDeclarationAs S.alice (at (AttackTarget.OfPlaneswalker jaceId) [first, second]) control) "without the Tomik two may attack Jace"
+        Spec.assertBool s (Combat.legalAttackDeclarationAs S.alice (at (AttackTarget.OfPlaneswalker jaceId) [first, second]) alicesTomik) "and under alice's Tomik too, which grants to alice's planeswalkers"
+      _ -> Spec.assertFailure s "fixture should have three attackers"
+  Spec.it s "CR 508.1d two required creatures that can attack only a Tomik planeswalker: the maximum is ONE" $ do
+    -- Berserkers of Blood Ridge attack each combat if able. bob's Blazing Archon
+    -- ("Creatures can't attack you") leaves Jace the one attackable thing, and
+    -- Tomik lets one creature attack it, so the maximum is one requirement. A
+    -- ceiling blind to the bound answers two, which no legal declaration
+    -- attains, and refuses the one-Berserker declaration.
+    tomik <- S.printingOf s registry "Tomik, Orzhov Lawmage"
+    jace <- S.printingOf s registry "Jace Beleren"
+    archon <- S.printingOf s registry "Blazing Archon"
+    berserkers <- S.printingOf s registry "Berserkers of Blood Ridge"
+    let (bare, mine, _) = S.combatBoardOf [berserkers, berserkers] [archon]
+        (jaceId, withJace) = S.addPermanent jace S.bob bare
+        control = S.addCounter CounterKind.Loyalty 3 jaceId withJace
+        gs = snd (S.addPermanent tomik S.bob control)
+        atJace = fmap (\oid -> (oid, AttackTarget.OfPlaneswalker jaceId))
+    case mine of
+      [first, second] -> do
+        Spec.assertBool s (Combat.legalAttackDeclarationAs S.alice (atJace [first]) gs) "one Berserker at Jace attains the maximum"
+        Spec.assertBool s (not (Combat.legalAttackDeclarationAs S.alice (atJace [first, second]) gs)) "both at Jace is over the bound"
+        Spec.assertBool s (not (Combat.legalAttackDeclarationAs S.alice [] gs)) "and declining obeys none"
+        Spec.assertBool s (not (Combat.legalAttackDeclarationAs S.alice (atJace [first]) control)) "without the Tomik one Berserker falls short of the maximum"
+      _ -> Spec.assertFailure s "fixture should have two creatures"
   Spec.it s "CR 508.1d three required creatures under a Crawlspace: the maximum is TWO" $ do
     -- CR 508.1d's maximization reading the SCOPED bound, which the case above
     -- cannot see: there every weight is zero, so the ceiling is attained by every

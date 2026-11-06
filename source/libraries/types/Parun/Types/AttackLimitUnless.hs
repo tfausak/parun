@@ -1,8 +1,8 @@
 module Parun.Types.AttackLimitUnless where
 
 import qualified Numeric.Natural as Natural
+import qualified Parun.Types.AttackLimitScope as AttackLimitScope
 import qualified Parun.Types.Condition as Condition
-import qualified Parun.Types.PlayerScope as PlayerScope
 
 -- | A SIZE BOUND on how many creatures may be declared as attackers, the players
 -- CR 802.3a scopes it to, and CR 508.1c's "unless" gate. The bound names no
@@ -15,15 +15,16 @@ import qualified Parun.Types.PlayerScope as PlayerScope
 data AttackLimitUnless = MkAttackLimitUnless
   { limit :: Natural.Natural,
     -- | CR 802.3a: Nothing is the bound on the WHOLE declaration (Silent
-    -- Arbiter), Just the bound on the creatures attacking those players
-    -- (Crawlspace's "can attack you"). Elided rather than written null.
+    -- Arbiter), Just the bound on the creatures attacking what the scope names
+    -- (Crawlspace's "can attack you", Tomik, Orzhov Lawmage's "can attack this
+    -- planeswalker"). Elided rather than written null.
     --
-    -- Which announcements a scoped bound counts is not a second field: CR
+    -- Which announcements a seat-scoped bound counts is not a second field: CR
     -- 802.3a counts "creatures attacking that player", and Crawlspace's own
     -- ruling spells that out as excluding the planeswalkers that player
     -- controls. So there is no Parun.Types.AttackTargetKind set here as
     -- Parun.Types.CantAttackPlayer has one.
-    defenders :: Maybe PlayerScope.PlayerScope,
+    defenders :: Maybe AttackLimitScope.AttackLimitScope,
     -- | Nothing is the unconditional restriction. Elided rather than written
     -- null.
     unless :: Maybe Condition.Condition
