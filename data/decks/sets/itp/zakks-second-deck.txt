@@ -1,0 +1,23 @@
+2 Swamp
+2 Swamp
+1 Swamp
+2 Forest
+1 Forest
+1 Forest
+2 Plains
+1 Plains
+1 Plains
+2 Mesa Pegasus
+2 War Mammoth
+1 Elvish Archers
+1 Wall of Bone
+1 Whirling Dervish
+1 Glasses of Urza
+1 Rod of Ruin
+1 Dark Ritual
+1 Reverse Damage
+1 Winter Blast
+2 Weakness
+1 Circle of Protection: Black
+1 Circle of Protection: Red
+1 Warp Artifact
