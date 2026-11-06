@@ -34,6 +34,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Encoding
 import qualified Parun.Codec.Card as Card
+import qualified Parun.Engine.Card as EngineCard
 import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Parun.Exceptions.MissingRoot as MissingRoot
 import qualified Parun.JsonCodec.Codec as Codec
@@ -144,47 +145,71 @@ referenceCard (path, parsed) =
 slugFor :: CardName.CardName -> Slug.Slug
 slugFor = Slug.fromText . CardName.unwrap
 
--- Every name every card has, pointing at that card -- or every reason the pool
--- cannot be indexed.
+-- Every name a lookup answers to, pointing at its card -- or every reason the
+-- pool cannot be indexed.
 --
--- CR 709.4a: "Each split card has two names." Both are keys here, which is what
--- makes looking up either half a hit rather than a scan. CR 715.4 gives an
--- adventurer card only its normal characteristics off the stack, so its
--- alternative name is not a name it HAS the way a split card's two are -- but
--- CR 715.5 lets a player CHOOSE that alternative name wherever an effect asks
--- for a card name, which a name-keyed lookup has to answer to all the same.
--- CR 720.5 does the same for an omen card's alternative name, and CR 201.4d for
--- the back face of a double-faced card -- CR 712.8a gives that card only its
--- front face's characteristics off the battlefield, so its back face's name is
--- keyed here for the same reason an adventurer card's alternative name is.
+-- Two tiers. A card's OWN names are the ones it has off the stack
+-- (Parun.Engine.Card.combinedNames): both halves of a split card (CR 709.4a),
+-- the one name of anything else. Its other faces' names are ALTERNATIVE: an
+-- Adventure's, an omen's or a prepare spell's (CR 715.4, 720.4, 722.4), a back
+-- face's (CR 712.8a). A card does not have those, but a player may choose one
+-- as a card name (CR 715.5, 720.5, 722.5, 201.4d), which a name-keyed lookup has
+-- to answer all the same (Parun.Interpreter.chosenFace). So an own name wins: a
+-- prepare spell reprinting a real card (Encouraging Aviator's Jump) leaves the
+-- name to that card, and only a name no card owns answers by its alternative.
 --
--- A name claimed twice is fatal wherever it comes from -- two cards, or one card
--- repeating its own face name -- among the files indexed. Over the corpus parun
--- ships, Parun.EffectLintSpec's lints hold both halves for every file.
+-- An own name claimed by two cards is fatal, and so is a card repeating its own
+-- face name; see 'ambiguities'.
 index :: [(FilePath, Either Text.Text Card.Card)] -> Either [String] (Map.Map Slug.Slug Card.Card)
 index loaded =
   let parsed = Maybe.mapMaybe (\entry -> case entry of (path, Right card) -> Just (path, card); _ -> Nothing) loaded
-      keyed = do
-        (path, card) <- parsed
-        face <- NonEmpty.toList (Card.faces card)
-        pure (slugFor (Face.name face), (path, card))
       unparsed = Maybe.mapMaybe (\entry -> case entry of (path, Left reason) -> Just (path <> ": " <> Text.unpack reason); _ -> Nothing) loaded
-      claims = Map.fromListWith (<>) (fmap (\(slug, (path, _)) -> (slug, [path])) keyed)
-      -- A single path claiming its own slug more than once is one card
-      -- repeating a face name, not two cards colliding -- deduplicating tells
-      -- the two apart so the message names what actually happened instead of
-      -- rendering the same path twice, which reads like a bug in the report
-      -- rather than a description of the pool.
-      ambiguous =
-        fmap
-          ( \(slug, paths) -> case Set.toAscList (Set.fromList paths) of
-              [one] -> Text.unpack (Slug.unwrap slug) <> " is claimed by " <> one <> ", which repeats it across " <> show (length paths) <> " of its own faces"
-              distinct -> Text.unpack (Slug.unwrap slug) <> " is claimed by " <> List.intercalate ", " distinct
-          )
-          (filter (\(_, paths) -> length paths > 1) (Map.toAscList claims))
-   in case unparsed <> ambiguous of
-        [] -> Right (Map.fromList (fmap (\(slug, (_, card)) -> (slug, card)) keyed))
+      claimed = claims parsed
+      answer claimants = case (Map.toList (owners claimants), Map.toList (alternatives claimants)) of
+        ([(_, card)], _) -> Just card
+        ([], [(_, card)]) -> Just card
+        _ -> Nothing
+   in case unparsed <> ambiguities parsed of
+        [] -> Right (Map.mapMaybe answer claimed)
         problems -> Left problems
+
+-- Who claims one name: the cards owning it and the cards holding it only as an
+-- alternative, each by path, with every face of a path that claims it.
+data Claimants = MkClaimants
+  { owners :: Map.Map FilePath Card.Card,
+    alternatives :: Map.Map FilePath Card.Card,
+    claimsPerPath :: Map.Map FilePath Int
+  }
+
+instance Semigroup Claimants where
+  MkClaimants a b c <> MkClaimants a' b' c' = MkClaimants (Map.union a a') (Map.union b b') (Map.unionWith (+) c c')
+
+-- Every face name of every card, by slug, with who claims it.
+claims :: [(FilePath, Card.Card)] -> Map.Map Slug.Slug Claimants
+claims parsed = Map.fromListWith (<>) $ do
+  (path, card) <- parsed
+  let own = Set.map slugFor (EngineCard.combinedNames card)
+  face <- NonEmpty.toList (Card.faces card)
+  let slug = slugFor (Face.name face)
+      held = Map.singleton path card
+      claimant = if Set.member slug own then MkClaimants held Map.empty else MkClaimants Map.empty held
+  pure (slug, claimant (Map.singleton path 1))
+
+-- Every name the pool cannot answer with one card: one card repeating a face
+-- name, two cards owning one, or two cards holding one only as an alternative
+-- that no card owns. Over the corpus parun ships, Parun.EffectLintSpec's "no two
+-- cards claim one name" holds this for every file.
+--
+-- Answering a name two cards hold only as an alternative is not implemented
+-- (#6457).
+ambiguities :: [(FilePath, Card.Card)] -> [String]
+ambiguities parsed = do
+  (slug, claimants) <- Map.toAscList (claims parsed)
+  let name = Text.unpack (Slug.unwrap slug)
+      repeats = Map.toAscList (Map.filter (> 1) (claimsPerPath claimants))
+      contested = if Map.null (owners claimants) then alternatives claimants else owners claimants
+  fmap (\(path, n) -> name <> " is claimed by " <> path <> ", which repeats it across " <> show n <> " of its own faces") repeats
+    <> [name <> " is claimed by " <> List.intercalate ", " (Map.keys contested) | Map.size contested > 1]
 
 -- Where the file for a given slug lives, one file per card. What the slug IS
 -- varies by caller: for a single-faced card it is the card's own name, but

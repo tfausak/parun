@@ -35,6 +35,9 @@ Finished 2026-11-06.
   River (#6412), #4133 Cyclopean Tomb (#6433), #5746 whole-turn skip (#6436,
   Meditate and Eater of Days), #6204 Time Vault (#6438, plus Fasting), #5005
   False Orders (#6440, plus Ydwen Efreet), #6371 Forcefield (#6454).
+- Missed by the census: Jump. `parun deck` resolved it to Encouraging
+  Aviator's prepare spell, a name that card does not have (CR 722.4); added
+  with #6456. Beta and Alpha hold no card name Unlimited lacks.
 - Filed along the way: #6437 (a departed player's extra turn lost under shared
   team turns), #6445 (General Jarkeld's switch skips blocker counts).
 - Audits: 7 of 7 capability PRs; 5 found rules defects. Skipped the census and

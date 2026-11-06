@@ -477,6 +477,15 @@ waxWaneJson = committedJson "wax-wane.json"
 nightmareJson :: IO Text.Text
 nightmareJson = committedJson "nightmare.json"
 
+-- The committed Encouraging Aviator // Jump file, whose prepare spell is named
+-- for a real card (CR 722.4), and that card's own file: the pair a throwaway
+-- corpus needs to set an own name against an alternative one.
+aviatorJson :: IO Text.Text
+aviatorJson = committedJson "encouraging-aviator-jump.json"
+
+jumpJson :: IO Text.Text
+jumpJson = committedJson "jump.json"
+
 -- A committed card file's text, by its file name under data/cards.
 committedJson :: FilePath -> IO Text.Text
 committedJson file = do

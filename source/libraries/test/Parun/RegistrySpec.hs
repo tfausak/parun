@@ -84,6 +84,10 @@ problemsOf s label action = do
 found :: IO (Either InvalidCorpus.InvalidCorpus (Maybe a)) -> IO (Either InvalidCorpus.InvalidCorpus Bool)
 found = fmap (fmap Maybe.isJust)
 
+-- A card's face names, printed order.
+faceNames :: Card.Type.Card -> [CardName.CardName]
+faceNames = fmap Face.name . NonEmpty.toList . Card.Type.faces
+
 spec :: (Monad n) => Spec.Spec IO n -> n ()
 spec s = Spec.describe s "Parun.Registry" $ do
   Spec.it s "a card loads by its real name" $ do
@@ -208,9 +212,40 @@ spec s = Spec.describe s "Parun.Registry" $ do
       Spec.assertBool s (any (List.isInfixOf (root <> "/wax-wane.json")) problems) ("names the first claimant: " <> show problems)
       Spec.assertBool s (any (List.isInfixOf (root <> "/wane-wax.json")) problems) ("names the second claimant: " <> show problems)
 
-  -- index's own comment says a name claimed twice is fatal "wherever it comes
-  -- from -- two cards, or one card repeating its own face name"; the case
-  -- above is the two-cards half, this is the one-card half. Built by hand
+  -- CR 722.4: a preparation card has only its normal characteristics, so its
+  -- prepare spell's name is not one it has, and the card that does have it
+  -- answers for it.
+  Spec.it s "CR 722.4 a card owning a name outranks a prepare spell holding it" $ do
+    aviator <- S.aviatorJson
+    jump <- S.jumpJson
+    withCorpus "owned-over-alternative" [("encouraging-aviator-jump.json", aviator), ("jump.json", jump)] $ \_ registry -> do
+      byShared <- Registry.named registry "Jump"
+      Spec.assertEqWith s "the instant answers" (fmap (fmap faceNames) byShared) (Right (Just [CardName.MkCardName (Text.pack "Jump")]))
+      byOwn <- Registry.named registry "Encouraging Aviator"
+      Spec.assertEqWith s "and the Aviator its own name" (fmap (fmap faceNames) byOwn) (Right (Just (fmap (CardName.MkCardName . Text.pack) ["Encouraging Aviator", "Jump"])))
+
+  -- CR 722.5: a player may choose a prepare spell's name, so with no card
+  -- owning it the name still answers for the preparation card.
+  Spec.it s "CR 722.5 a prepare spell's name no card owns answers for its card" $ do
+    aviator <- S.aviatorJson
+    withCorpus "alternative-alone" [("encouraging-aviator-jump.json", aviator)] $ \_ registry -> do
+      byAlternative <- Registry.named registry "Jump"
+      Spec.assertEqWith s "the Aviator answers" (fmap (fmap faceNames) byAlternative) (Right (Just (fmap (CardName.MkCardName . Text.pack) ["Encouraging Aviator", "Jump"])))
+
+  -- Two cards holding one alternative name, neither owning it, leave no one card
+  -- to answer, so the lookup fails as a collision (#6457).
+  Spec.it s "a lookup reaching two cards sharing an alternative name fails, naming both" $ do
+    aviator <- S.aviatorJson
+    let other = Text.replace (Text.pack "\"name\": \"Encouraging Aviator\"") (Text.pack "\"name\": \"Other Aviator\"") aviator
+    Spec.assertBool s (other /= aviator) "the fixture's front face was actually renamed"
+    withCorpus "shared-alternative" [("encouraging-aviator-jump.json", aviator), ("other-aviator-jump.json", other)] $ \root registry -> do
+      problems <- problemsOf s "shared-alternative" (Registry.named registry "Jump")
+      Spec.assertBool s (any (List.isInfixOf (root <> "/encouraging-aviator-jump.json")) problems) ("names the first claimant: " <> show problems)
+      Spec.assertBool s (any (List.isInfixOf (root <> "/other-aviator-jump.json")) problems) ("names the second claimant: " <> show problems)
+
+  -- Registry.ambiguities refuses a name two cards own and a card repeating its
+  -- own face name; "a lookup reaching two cards that claim its name" is the
+  -- two-cards half, this is the one-card half. Built by hand
   -- (Wane renamed to Wax) rather than by editing data/cards, since a card
   -- that offends a lint must not be a card file parun ships.
   Spec.it s "a lookup reaching a card that repeats a face name fails, naming it" $ do
