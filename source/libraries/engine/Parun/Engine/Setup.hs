@@ -369,7 +369,8 @@ blankGame settings order active =
       GameState.turnAnchor = Nothing,
       GameState.extraTurnUnderWay = Nothing,
       GameState.rollingDie = Nothing,
-      GameState.rerollRequested = False
+      GameState.rerollRequested = False,
+      GameState.undone = Map.empty
     }
 
 createCard :: PlayerId -> PrintingId.PrintingId -> Game ObjectId

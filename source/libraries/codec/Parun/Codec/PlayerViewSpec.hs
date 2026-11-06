@@ -8,6 +8,7 @@ import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerView as PlayerView
 import qualified Parun.Types.Result as Result
+import qualified Parun.Types.Undoing as Undoing
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.PlayerView" $ do
@@ -29,7 +30,8 @@ testView =
       PlayerView.stack = [],
       PlayerView.witnessed = [],
       PlayerView.witnessedLastTurn = [],
-      PlayerView.result = Just (Result.Won (PlayerId.MkPlayerId 1))
+      PlayerView.result = Just (Result.Won (PlayerId.MkPlayerId 1)),
+      PlayerView.undone = Just Undoing.UnpaidCost
     }
 
 testViewJson :: String
@@ -38,7 +40,7 @@ testViewJson =
     <> SeatViewSpec.testSeatJson
     <> "],\"battlefield\":[],\"stack\":[],\"witnessed\":[],\"witnessedLastTurn\":[],\"result\":"
     <> wonJson
-    <> "}"
+    <> ",\"undone\":\"UnpaidCost\"}"
 
 wonJson :: String
 wonJson = "{\"type\":\"Won\",\"value\":1}"

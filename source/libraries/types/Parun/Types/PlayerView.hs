@@ -7,6 +7,7 @@ import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Result as Result
 import qualified Parun.Types.SeatView as SeatView
+import qualified Parun.Types.Undoing as Undoing
 
 -- | CR 400.2 / 723.4: everything one seat may see of a game, and nothing else.
 data PlayerView = MkPlayerView
@@ -27,6 +28,9 @@ data PlayerView = MkPlayerView
     -- | The previous turn's log entries the seat witnessed, for a client that
     -- last looked before that turn ended (CR 514.1's discard, for one).
     witnessedLastTurn :: [LoggedEvent.LoggedEvent],
-    result :: Maybe Result.Result
+    result :: Maybe Result.Result,
+    -- | CR 733.1: why the seat's last cast or activation was reversed, until it
+    -- next chooses an action (GameState.undone).
+    undone :: Maybe Undoing.Undoing
   }
   deriving (Eq, Show)

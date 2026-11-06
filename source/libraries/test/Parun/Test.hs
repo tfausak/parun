@@ -786,6 +786,7 @@ import qualified Parun.Codec.TurnedUpOffDeckSpec
 import qualified Parun.Codec.TypeLineSpec
 import qualified Parun.Codec.TypesAreSpec
 import qualified Parun.Codec.UnblockingSpec
+import qualified Parun.Codec.UndoingSpec
 import qualified Parun.Codec.UntapHoldSpec
 import qualified Parun.Codec.UntapRSpec
 import qualified Parun.Codec.UntapRestrictionSpec
@@ -1799,6 +1800,7 @@ spec s registry corpus = do
   Parun.Codec.TypeLineSpec.spec s
   Parun.Codec.TypesAreSpec.spec s
   Parun.Codec.UnblockingSpec.spec s
+  Parun.Codec.UndoingSpec.spec s
   Parun.Codec.UntapHoldSpec.spec s
   Parun.Codec.UntapRestrictionSpec.spec s
   Parun.Codec.UntapRewriteSpec.spec s

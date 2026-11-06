@@ -125,6 +125,7 @@ import qualified Parun.Types.StaticRead as StaticRead
 import qualified Parun.Types.Supertype as Supertype
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TargetSlot as TargetSlot
+import qualified Parun.Types.Undoing as Undoing
 import qualified Parun.Types.Uses as Uses
 import qualified Parun.Types.VariableChoice as VariableChoice
 import qualified Parun.Types.Zone as Zone
@@ -3385,7 +3386,7 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
       -- casting was proposed, which is the state before CR 601.2a's move. CR
       -- 601.6 says the same for a permission lost after the proposal completes.
       reject :: Game ()
-      reject = State.put before
+      reject = State.put before >> Game.noteUndoing pid Undoing.IllegalProposal
   -- CR 702.42a: entwine, asked FIRST -- before the mode choice CR 601.2b lists
   -- first -- because that rule states the widened selection and the extra payment
   -- as ONE decision. A player who entwines has thereby announced their mode
@@ -4046,7 +4047,7 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
                         -- `before`, keeping what each payer chose to keep of
                         -- their mana window, so there is nothing left to undo
                         -- here.
-                        Payment.Unpaid -> pure ()
+                        Payment.Unpaid -> Game.noteUndoing pid Undoing.UnpaidCost
                         -- WHICH of the candidate costs was paid is `castFor`
                         -- above, stamped on the spell as Object.castUsing. CR
                         -- 702.34a asks as the cast completes, and

@@ -119,6 +119,7 @@ import qualified Parun.Types.TokenLot as TokenLot
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Parun.Types.TypeLine as TypeLine
+import qualified Parun.Types.Undoing as Undoing
 import qualified Parun.Types.WhichTurn as WhichTurn
 import Parun.Types.Zone (Zone)
 import qualified Parun.Types.Zone as Zone
@@ -522,6 +523,11 @@ choose :: Prompt.Prompt a -> Game a
 choose p = do
   State.modify' (\gs -> gs {GameState.lastChoice = GameState.nextTimestamp gs})
   ask p
+
+-- | CR 733.1: notes why `pid`'s cast or activation was reversed, once the
+-- reversal has put back the state the action began in (GameState.undone).
+noteUndoing :: PlayerId -> Undoing.Undoing -> Game ()
+noteUndoing pid why = State.modify' (\gs -> gs {GameState.undone = Map.insert pid why (GameState.undone gs)})
 
 -- | @chooser@ picks one of @candidates@ through the prompt @question@ builds,
 -- THE ask-and-check of every choice of one player or object from a list the

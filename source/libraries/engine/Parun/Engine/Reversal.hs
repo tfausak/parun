@@ -204,6 +204,8 @@ withoutAnnouncement before entry closed = do
   extraTurnUnderWay <- one GameState.extraTurnUnderWay
   rollingDie <- one GameState.rollingDie
   rerollRequested <- one GameState.rerollRequested
+  -- Written only once a reversal is over, which no announcement spans.
+  undone <- one GameState.undone
   pure
     GameState.MkGameState
       { GameState.settings = settings,
@@ -338,7 +340,8 @@ withoutAnnouncement before entry closed = do
         GameState.turnAnchor = turnAnchor,
         GameState.extraTurnUnderWay = extraTurnUnderWay,
         GameState.rollingDie = rollingDie,
-        GameState.rerollRequested = rerollRequested
+        GameState.rerollRequested = rerollRequested,
+        GameState.undone = undone
       }
   where
     -- A whole value, compared as one leaf.
