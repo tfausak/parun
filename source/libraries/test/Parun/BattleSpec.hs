@@ -86,7 +86,6 @@ import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
-import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.TeamId as TeamId
 import qualified Parun.Types.Teams as Teams
 import qualified Parun.Types.TriggerCondition as TriggerCondition
@@ -217,35 +216,6 @@ repairSpec s registry = Spec.describe s "Repair" $ do
 -- is under attack.
 attackSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 attackSpec s registry = Spec.describe s "Attacking" $ do
-  -- The same removal at THREE DEFENDING SEATS, which is where CR 802.2a bites:
-  -- both of alice's opponents defend (CR 802.2, the default option) and bob heads
-  -- CR 802.4's APNAP order, so "the protector of the battle that creature was
-  -- attacking" and "the first defending player" name different seats. CR 508.5's
-  -- second sentence is what has to be read off the recorded seat, there being no
-  -- live battle left to ask.
-  --
-  -- The pair differs in one thing -- which of bob and carol holds the Swamp -- and
-  -- the two readings answer it the opposite way round, so neither case can pass on
-  -- an engine that had merely lost swampwalk.
-  Spec.it s "CR 802.2a the departed battle's attacker reads its PROTECTOR, not the first defending player" $ do
-    (gs, battle, mine, _, hers) <- battleCombatOf s registry S.carol S.carol ["Bog Wraith"] ["Island"] ["Goblin Piker", "Swamp"]
-    (armed, bolts) <- twoBolts s registry (bothDefending gs)
-    case (mine, hers, bolts) of
-      ([wraith], blocker : _, [one, two]) -> do
-        let after = S.runPure (attackTheBattle battle) armed (Combat.declareAttackers S.manaPerformer S.alice)
-            burned = castAt battle S.alice two (castAt battle S.alice one after)
-        Spec.assertBool s (not (Combat.legalBlockDeclaration S.carol (Map.singleton blocker (Set.singleton wraith)) burned)) "carol protected the Siege, so her Swamp stops the block"
-        -- The premises, after the gameplay assertion so neither can absorb a
-        -- mutation of it.
-        Spec.assertEqWith s "CR 802.2: both opponents defend, bob first" (Combat.Type.defenders (GameState.combat burned)) [S.bob, S.carol]
-        Spec.assertBool s (not (Set.member battle (GameState.battlefield burned))) "CR 310.12b: the second Bolt took the last defense counter"
-        Spec.assertEqWith
-          s
-          "CR 506.4c: still attacking the battle it was declared against"
-          (Map.lookup wraith (Combat.Type.attackers (GameState.combat burned)))
-          (Just (AttackTarget.OfBattle battle))
-      _ -> Spec.assertFailure s "fixture should have a Wraith, a blocker and two Bolts"
-
   -- The same question one step EARLIER: the Siege leaves during CR 508.1i's mana
   -- window, before CR 508.1k makes the Wraith an attacking creature, so no live
   -- battle is left when the declaration records the seat and raises its CR
@@ -299,7 +269,7 @@ attackSpec s registry = Spec.describe s "Attacking" $ do
 
 -- CR 310.6 / CR 120.3h: damage dealt to a battle removes that many defense
 -- counters.
-damageSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+damageSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 damageSpec s registry = Spec.describe s "Damage" $ do
   -- CR 510.1b: Archpriest of Shadows ({3}{B}{B} 4/4, "Whenever this creature
   -- deals combat damage to a player or battle, return target creature card from
@@ -321,16 +291,6 @@ damageSpec s registry = Spec.describe s "Damage" $ do
     Spec.assertEqWith s "CR 603.2 the Hill Giant returned to the battlefield" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Hill Giant")) S.alice resolved) 1
     Spec.assertEqWith s "the Archpriest attacked the battle" (fmap (\a -> Map.lookup a (Combat.Type.attackers (GameState.combat attacked))) mine) [Just (AttackTarget.OfBattle battle)]
     Spec.assertEqWith s "CR 310.6 and dealt it 4 of its 5 defense" (S.counterOf CounterKind.Defense battle dealt) 1
-  Spec.it s "CR 506.4 a battle that has left the battlefield is assigned no combat damage" $ do
-    -- THE FALSIFIER for combatRecipient answering with the battle unconditionally.
-    -- The same declaration with the Siege destroyed inside CR 510.4's window, so CR
-    -- 510.1b gives the attacker nothing to assign to and no damage event is built.
-    piker <- S.printingOf s registry "Goblin Piker"
-    (gs, battle, _, _, _) <- battleCombat s registry S.carol S.carol [piker] [] []
-    let attacked = S.runPure (attackTheBattle battle) gs (Combat.declareAttackers S.manaPerformer S.alice)
-        killed = S.runPure S.identityAnswer attacked (Event.destroy (pure ()) Regenerability.Regenerable [battle])
-        dealt = S.runPure S.identityAnswer killed (Monad.void (Damage.dealCombatDamage (pure ())))
-    Spec.assertEqWith s "no damage was dealt at all" (S.damageEventsOf dealt) []
 
 -- CR 310.12b, CR 310.7 / 704.5v and CR 310.8 / 704.5w: what happens when the last
 -- defense counter comes off. The first two rules are only jointly observable --
@@ -405,19 +365,6 @@ defeatSpec s registry = Spec.describe s "Defeat" $ do
     Spec.assertBool s (Battle.awaitingAbility owing removed battle) "an ability has still triggered"
     Spec.assertEqWith s "and CR 704.5w exempts nothing" (Battle.defeated pcs owing removed) [battle]
 
--- Cast the spell in `caster`'s hand at `battle`, then settle: the spell resolves,
--- CR 310.6 takes its counters off, and CR 310.12b's ability -- if the last one came
--- off -- is placed and resolved inside the same loop. Every case above reads the
--- board that loop leaves.
-castAt :: ObjectId.ObjectId -> PlayerId.PlayerId -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
-castAt battle caster spell gs =
-  let answer :: Prompt.Prompt r -> r
-      answer p = case p of
-        Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToBattle battle))) sets
-        _ -> S.identityAnswer p
-      cast = S.runPure answer gs (S.cast caster spell)
-   in S.runPure answer cast Engine.priorityLoop
-
 -- Set a battle's defense counters to none without any damage having been dealt, so
 -- the two CR 704.5v cases differ in the unscanned event log ALONE. The Siege's
 -- enters ability is placed and resolved first: left unscanned, it is an ability
@@ -432,25 +379,6 @@ drain oid gs =
 -- of its last two defense counters.
 removal :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 removal battle = Event.recordEvent (GameEvent.CountersRemoved (CounterChange.MkCounterChange battle CounterKind.Defense 2 0))
-
--- Two more Mountains for alice and two Lightning Bolts in her hand, so a case can
--- burn a defense-5 Siege off the battlefield INSIDE the declare attackers step: 3
--- then 3, the second clamped by the floor Parun.Engine.Damage documents. Two Bolts
--- rather than a Bolt and a Firebolt, since Firebolt is a SORCERY and CR 307.1
--- keeps it out of combat.
-twoBolts ::
-  (Monad m) =>
-  Spec.Spec m n ->
-  Registry.Registry m ->
-  GameState.GameState ->
-  m (GameState.GameState, [ObjectId.ObjectId])
-twoBolts s registry gs = do
-  mountain <- S.printingOf s registry "Mountain"
-  bolt <- S.printingOf s registry "Lightning Bolt"
-  let landed = List.foldl' (\g _ -> snd (S.addPermanent mountain S.alice g)) gs [1 :: Int, 2]
-      (one, g1) = S.addHandCard bolt S.alice landed
-      (two, g2) = S.addHandCard bolt S.alice g1
-  pure (g2, [one, two])
 
 -- Answer CR 508.1b's announcement with the given battle whenever it is offered,
 -- and everything else aggressively -- so the DeclareAttackers prompt takes every

@@ -122,10 +122,8 @@ spec-local helper, and the `other-*` tail, are left out: grep for them.
 - `check:card-types`: an object's card types
 - `move:ChooseManaYield`: the `ChooseManaYield` prompt
 - `board:last-known`: last-known information edited by hand
-- `board:attraction-deck`: an Attraction deck
 - `board:events`: this turn's event history
 - `check:playable-from-exile`: an exiled card someone may play
-- `check:block-requirements`: the block requirements in force
 - `check:sickness`: whether a creature is summoning sick
 - `board:exile-cast-permission`: an exiled card someone may cast
 - `check:tokens`: whether an object is a token
@@ -134,34 +132,6 @@ spec-local helper, and the `other-*` tail, are left out: grep for them.
 - `check:text-changes`: the text changes affecting an object
 
 ## Tests
-
-### `ArchenemySpec`
-
-- CR 205.4h an ongoing scheme stays face up and its static ability applies | `board:battlefield` `board:objects-ids` `board:player-startingdeck` `board:schemedecks`
-- CR 701.33 an ongoing scheme's own trigger abandons it | `board:battlefield` `board:objects-ids` `board:player-startingdeck` `board:schemedecks`
-- CR 904.9 the archenemy sets a scheme in motion, and CR 704.6e abandons it once its trigger resolves | `board:objects-ids` `board:player-startingdeck` `board:schemedecks`
-
-### `AttackKeywordTriggerSpec`
-
-- CR 500.5a the stored requirement lasts exactly the combat phase | `check:block-requirements`
-- CR 511.2 the delayed ability sacrifices it at end of combat | `check:delayed-triggers`
-- CR 702.100a a 0/1 entering ties both axes and evolves nothing | `check:helper-countersOn`
-- CR 702.100a an opponent's creature entering is not a trigger at all | `check:helper-countersOn` `check:helper-resolveAll`
-- CR 702.116a at four seats picking nobody arms no exile | `check:delayed-triggers`
-- CR 702.147a a decayed creature that did not attack is not sacrificed | `check:delayed-triggers`
-- CR 702.147a attacking arms one delayed ability | `check:delayed-triggers`
-
-### `AttractionSpec`
-
-- CR 701.51b Deadbeat Attendant puts the top of the Attraction deck onto the battlefield | `board:attractiondecks` `board:objects-ids`
-- CR 701.51c The Most Dangerous Gamer enters, opens an Attraction, and gets a counter | `board:attraction-deck` `board:replacement`
-- CR 701.51c an opponent opening an Attraction does not trigger "you" | `board:attractiondecks` `board:objects-ids`
-- CR 701.52a the roll to visit is a die roll: Pixie Guide adds a die and CR 706.6 ignores the lower | `board:printing-lights`
-- CR 702.159a a result lit up on the Attraction triggers its visit ability | `board:printing-lights`
-- CR 703.4g the turn machinery itself rolls as the precombat main phase begins | `check:prompt-payload`
-- CR 707.2 a copy of an Attraction rolls but lights nothing, and is no Astrotorium card | `check:events`
-- CR 717.1 the lights are the printing's | `board:printing-lights`
-- CR 717.2 the Attraction deck is in the command zone, not the library or the starting deck | `check:other-Attraction.deckOf` `check:other-Game.zoneOf` `check:other-GameState.command`
 
 ### `AuraSpec`
 
@@ -188,17 +158,6 @@ spec-local helper, and the `other-*` tail, are left out: grep for them.
 - CR 702.6a equipping attaches the Equipment to the target creature | `check:helper-attachedTo`
 - CR 704.5m: Cloudform is buried with the creature its granted enchant ability let it hold | `board:stage-a-placement-cannot-be-attached-to-o8`
 - with no permanent it can enchant the Aura does not move, and alice still gains it | `check:other-Object.timestamp`
-
-### `BattleSpec`
-
-- CR 506.4 a battle that has left the battlefield is assigned no combat damage | `check:event-log`
-- CR 508.4 the other road into combat records the same two seats | `check:combat-record`
-- CR 704.3 and the pass that buries it reports that an action was performed | `board:face` `board:protector`
-- CR 704.5v a battle at defense 0 with nothing pending is named by the state-based action | `board:counters` `check:other-Battle.defeated`
-- CR 704.5v and is NOT while its defeat ability is still owed a resolution | `board:counters` `check:intermediate-state` `check:other-Battle.defeated` `check:other-Battle.awaitingAbility`
-- CR 704.5w a NON-Siege battle at defense 0 is buried anyway | `board:counters` `check:intermediate-state` `check:other-Battle.defeated` `check:other-Battle.awaitingAbility`
-- CR 704.5x the repair reports that an action was performed | `check:other-Sba.performStateBasedActions`
-- CR 802.2a the departed battle's attacker reads its PROTECTOR, not the first defending player | `ref:departed-object`
 
 ### `BoardEffectSpec`
 
