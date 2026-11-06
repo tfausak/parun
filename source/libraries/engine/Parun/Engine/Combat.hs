@@ -80,6 +80,7 @@ import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TurnWindow as TurnWindow
+import qualified Parun.Types.Undoing as Undoing
 
 emptyCombat :: Combat
 emptyCombat =
@@ -2470,6 +2471,9 @@ attemptAttackDeclaration perform pid asked forced rejected = do
         else do
           now <- State.get
           chosen <- Game.choose (Prompt.DeclareAttackers (Decide.deciderFor chooser now) pid offerable)
+          -- CR 733.1: why the last declaration was reversed is news only
+          -- until the next is made.
+          Game.clearUndoing chooser
           -- Filtered, not trusted: an interpreter cannot attack with a creature
           -- that is not legally an attacker.
           let isCandidate oid = List.elem oid offerable
@@ -2749,7 +2753,11 @@ attemptAttackDeclaration perform pid asked forced rejected = do
             -- illegal repeat does, so CR 508.1d's requirements still hold. That
             -- declaration owes no toll, the ceiling ranging over free
             -- announcements only, so `forced` cannot come back here.
-            Monad.unless forced (attemptAttackDeclaration perform pid (Just chooser) (not again) (if again then Set.insert proposal rejected else rejected))
+            --
+            -- The chooser asked again is told why (GameState.undone).
+            Monad.unless forced $ do
+              Monad.when again (Game.noteUndoing chooser Undoing.UnpaidCost)
+              attemptAttackDeclaration perform pid (Just chooser) (not again) (if again then Set.insert proposal rejected else rejected)
           else
             -- CR 508.1k: each chosen creature STILL CONTROLLED by its attacking
             -- player becomes an attacking creature. After the payment, which is
@@ -3450,6 +3458,9 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
     chosen <- case pileDeclaration pid now of
       Just full | legalBlockDeclaration pid full now && all (null . snd) (blockTolls pid full now) -> pure full
       _ -> Game.choose (Prompt.DeclareBlockers (Decide.deciderFor chooser now) pid candidates attacking)
+    -- CR 733.1: why the last declaration was reversed is news only until the
+    -- next is made.
+    Game.clearUndoing chooser
     -- CR 509.1b: an illegal declaration is illegal AS A WHOLE. NOT filtered
     -- down to its legal entries, which is unsound rather than merely inelegant
     -- -- under menace, dropping one blocker from a pair leaves an illegal
@@ -3519,7 +3530,10 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
         -- case beside it is what a repeated answer does instead.
         gs2 <- State.get
         if not paid && again
-          then attemptBlockDeclaration perform pid (Just chooser) attacking (Set.insert chosen rejected)
+          then do
+            -- The chooser asked again is told why (GameState.undone).
+            Game.noteUndoing chooser Undoing.UnpaidCost
+            attemptBlockDeclaration perform pid (Just chooser) attacking (Set.insert chosen rejected)
           else do
             -- CR 702.22h: widened to the attackers' bands after the declaration
             -- is judged, CR 509.1b-c asking only about the block declared.

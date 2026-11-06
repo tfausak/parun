@@ -81,6 +81,7 @@ import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayOptions as PlayOptions
 import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PlayerView as PlayerView.Type
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Result as Result
@@ -90,6 +91,7 @@ import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SplitMix as SplitMix
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Terminal as Terminal
+import qualified Parun.Types.Undoing as Undoing
 import qualified Parun.Types.Zone as Zone
 import qualified Text.Read as Read
 
@@ -419,6 +421,30 @@ spec s registry = Spec.describe s "Client" $ do
       "told once, before the next menu"
       (filter (Text.isPrefixOf (Text.pack "Undone: ")) (takeWhile (not . menuHeading) (drop 1 (dropWhile (/= Text.pack "> []") shown))))
       [Text.pack "Undone: Cast Ebony Charm could not be completed (a choice announced for it was illegal), so it was reversed and its payments canceled."]
+
+  Spec.it s "CR 508.1 / 509.1 a declaration asked again after its cost went unpaid is told undone, and why" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (attacker, g1) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
+        (blocker, gs) = S.addPermanent piker S.bob g1
+        unpaid = gs {GameState.undone = Map.fromList [(S.alice, Undoing.UnpaidCost), (S.bob, Undoing.UnpaidCost)]}
+        told seat g prompt = filter (Text.isPrefixOf (Text.pack "Undone: ")) (snd (asking Hotseat.fresh {Hotseat.facing = Just seat} [""] g prompt))
+        attacking = Prompt.DeclareAttackers (Decider.MkDecider S.alice) S.alice [attacker]
+        blocking = Prompt.DeclareBlockers (Decider.MkDecider S.bob) S.bob [blocker] [attacker]
+    Spec.assertEqWith s "the attackers" (told S.alice unpaid attacking) [Text.pack "Undone: The declaration of attackers could not be completed (its cost was not paid), so it was reversed and its payments canceled."]
+    Spec.assertEqWith s "the blockers" (told S.bob unpaid blocking) [Text.pack "Undone: The declaration of blockers could not be completed (its cost was not paid), so it was reversed and its payments canceled."]
+    Spec.assertEqWith s "a declaration with nothing undone is told nothing" (told S.alice gs attacking) []
+
+  Spec.it s "CR 732.3 a cast refused for repeating a loop is told undone, and why" $ do
+    let gs = (Setup.emptyGame S.bothPlayers) {GameState.undone = Map.singleton S.alice Undoing.RepeatedLoop}
+        view = PlayerView.viewFor S.alice gs
+        mark = (PlayerView.Type.game view, PlayerView.Type.turn view, Natural.length (PlayerView.Type.witnessed view))
+        tried = Hotseat.fresh {Hotseat.facing = Just S.alice, Hotseat.attempted = Map.singleton S.alice (mark, Text.pack "Cast Blinking Spirit")}
+        shown = snd (asking tried [""] gs (Prompt.ChooseAction (Decider.MkDecider S.alice) S.alice [Action.Pass]))
+    Spec.assertEqWith
+      s
+      "told why"
+      (filter (Text.isPrefixOf (Text.pack "Undone: ")) shown)
+      [Text.pack "Undone: Cast Blinking Spirit could not be completed (it would repeat a loop, so a different choice is needed), so it was reversed and its payments canceled."]
 
   -- The Plateau makes red ahead of white, so taking its first yield fails.
   Spec.it s "auto pays through a dual land, taking the color still owed" $ do

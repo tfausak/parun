@@ -77,6 +77,7 @@ respond terminal lookUp line = do
   view <- maybe (stop (Text.pack "a request with no view")) pure (Request.view request)
   collect view
   Monad.when (Question.kind question == Text.pack "ChooseAction") (undone seat view)
+  Monad.when (Question.kind question `elem` fmap Text.pack ["DeclareAttackers", "DeclareBlockers"]) (redeclaring seat question view)
   fmap (Common.render . Codec.Reply.toValue) $
     if Question.kind question == Text.pack "Concede"
       then do
@@ -123,17 +124,32 @@ undone seat view = do
       | game == PlayerView.game view,
         turn == PlayerView.turn view,
         not (any (completes . LoggedEvent.event) (List.genericDrop n (PlayerView.witnessed view))) ->
-          let line = Text.pack "Undone: " <> action <> Text.pack " could not be completed" <> foldMap because (PlayerView.undone view) <> Text.pack ", so it was reversed and its payments canceled."
-           in State.modify' (\h -> h {Hotseat.news = Map.insertWith (flip (<>)) seat (Seq.singleton line) (Hotseat.news h)})
+          tellUndone seat action (PlayerView.undone view)
     _ -> pure ()
   where
     completes e = case e of
       GameEvent.SpellCast {} -> True
       GameEvent.AbilityActivated {} -> True
       _ -> False
-    because why = Text.pack $ case why of
+
+-- | CR 733.1 with CR 508.1 / 509.1's preambles: at a declaration of attackers
+-- or blockers, a line of news saying the seat's last one was undone when its
+-- view says why (PlayerView.undone), which the engine notes only for a
+-- declaration it asks again.
+redeclaring :: (Monad m) => PlayerId.PlayerId -> Question.Question -> PlayerView.PlayerView -> Client m ()
+redeclaring seat question view = Monad.forM_ (PlayerView.undone view) $ \why ->
+  tellUndone seat (Text.pack (if Question.kind question == Text.pack "DeclareAttackers" then "The declaration of attackers" else "The declaration of blockers")) (Just why)
+
+-- | The line of news saying `action` was undone, and why where the view says.
+tellUndone :: (Monad m) => PlayerId.PlayerId -> Text.Text -> Maybe Undoing.Undoing -> Client m ()
+tellUndone seat action why =
+  let line = Text.pack "Undone: " <> action <> Text.pack " could not be completed" <> foldMap because why <> Text.pack ", so it was reversed and its payments canceled."
+   in State.modify' (\h -> h {Hotseat.news = Map.insertWith (flip (<>)) seat (Seq.singleton line) (Hotseat.news h)})
+  where
+    because reason = Text.pack $ case reason of
       Undoing.IllegalProposal -> " (a choice announced for it was illegal)"
       Undoing.UnpaidCost -> " (its cost was not paid)"
+      Undoing.RepeatedLoop -> " (it would repeat a loop, so a different choice is needed)"
 
 -- | Asks the seat, handing the screen to it first.
 asked :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> PlayerView.PlayerView -> Request.Request -> Client m R.Reply

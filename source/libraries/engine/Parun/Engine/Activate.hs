@@ -524,5 +524,9 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
                   pure (Just completed)
                 -- CR 733.1: the payment reversed the activation back to
                 -- `before` itself, keeping what the payer chose to keep of the
-                -- mana window.
-                Payment.Unpaid -> Nothing <$ Game.noteUndoing pid Undoing.UnpaidCost
+                -- mana window. A CR 732.3 refusal has noted itself there, and
+                -- the priority loop cleared any older note before this action.
+                Payment.Unpaid -> do
+                  noted <- State.gets (Map.lookup pid . GameState.undone)
+                  Monad.unless (noted == Just Undoing.RepeatedLoop) (Game.noteUndoing pid Undoing.UnpaidCost)
+                  pure Nothing

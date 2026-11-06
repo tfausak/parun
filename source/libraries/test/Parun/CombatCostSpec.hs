@@ -33,6 +33,7 @@ import qualified Parun.Support as S
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.Action as A
 import qualified Parun.Types.ActiveAttackRequirement as ActiveAttackRequirement
+import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.BecameBlocking as BecameBlocking
 import qualified Parun.Types.BlockCount as BlockCount
@@ -65,6 +66,7 @@ import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerSource as TriggerSource
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
+import qualified Parun.Types.Undoing as Undoing
 import qualified Parun.Types.Zone as Zone
 
 -- CR 508.1d's cost clause and CR 508.1h-508.1j, proved by Ghostly Prison
@@ -136,6 +138,24 @@ attackCostSpec s registry = Spec.describe s "AttackCosts" $ do
         after = S.runPure S.aggressiveAnswer gs (Combat.declareAttackers S.manaPerformer S.alice)
     Spec.assertEqWith s "both Pikers were declared" (S.attackerDeclarationsOf after) mine
     Spec.assertBool s (allTapped forests after) "CR 508.1h: all four Forests went"
+  Spec.it s "CR 733.1 the declaration asked again after an unpaid toll says why, until it is made" $ do
+    -- Two Pikers owe {4} and two Forests pay {2}, so the first declaration is
+    -- reversed and asked again, and the one Piker declared then is paid for.
+    prison <- S.printingOf s registry "Ghostly Prison"
+    forest <- S.printingOf s registry "Forest"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (gs, mine, _) = imprisoning prison forest S.bob [piker, piker] 2
+        answering :: Asked.Asked GameState.GameState r -> State.State [Maybe Undoing.Undoing] r
+        answering asked = case Asked.prompt asked of
+          Prompt.DeclareAttackers _ _ candidates -> do
+            earlier <- State.get
+            State.put (earlier <> [Map.lookup S.alice (GameState.undone (Asked.game asked))])
+            pure (if null earlier then candidates else take 1 candidates)
+          p -> pure (S.aggressiveAnswer p)
+        ((_, after), seen) = State.runState (Engine.runGameAsked answering gs (Combat.declareAttackers S.manaPerformer S.alice)) []
+    Spec.assertEqWith s "the second ask says the toll was not paid" seen [Nothing, Just Undoing.UnpaidCost]
+    Spec.assertEqWith s "the second declaration stands" (S.attackerDeclarationsOf after) (take 1 mine)
+    Spec.assertEqWith s "and the note is gone once it is made" (GameState.undone after) Map.empty
   Spec.it s "Ghostly Prison's ruling: a creature that can't attack you can still attack a planeswalker you control" $ do
     -- "Unless some effect explicitly says otherwise, a creature that can't attack
     -- you can still attack a planeswalker you control" (Ghostly Prison, 2014-02-01).
@@ -524,6 +544,31 @@ blockCostSpec s registry = Spec.describe s "BlockCosts" $ do
         Spec.assertEqWith s "CR 509.1: the second declaration pays and blocks, so bob takes nothing" (S.lifeOf S.bob fought) (Just 20)
         Spec.assertEqWith s "and the block that stands is the second declaration's, not the first" (blockersOf attacker declared) (Set.singleton first)
         Spec.assertBool s (not (allUntapped [second] declared)) "CR 509.1f: the Warrior the rewind released is what paid"
+      _ -> Spec.assertFailure s "fixture should have a Piker and two Warriors"
+
+  Spec.it s "CR 733.1 the block declaration asked again after an unpaid toll says why, until it is made" $ do
+    -- The rewind case's board: both Warriors owe a tap nobody can pay, then the
+    -- first alone is paid for by the second.
+    warrior <- S.printingOf s registry "Hollow Warrior"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (gs, mine, theirs) = S.combatBoardOf [piker] [warrior, warrior]
+    case (mine, theirs) of
+      ([attacker], [first, second]) -> do
+        let answering :: Asked.Asked GameState.GameState r -> State.State [Maybe Undoing.Undoing] r
+            answering asked = case Asked.prompt asked of
+              Prompt.DeclareBlockers {} -> do
+                earlier <- State.get
+                State.put (earlier <> [Map.lookup S.bob (GameState.undone (Asked.game asked))])
+                pure $
+                  if null earlier
+                    then Map.fromList [(first, Set.singleton attacker), (second, Set.singleton attacker)]
+                    else Map.singleton first (Set.singleton attacker)
+              p -> pure (S.aggressiveAnswer p)
+            attacked = S.runPure S.aggressiveAnswer gs (Combat.declareAttackers S.manaPerformer S.alice)
+            ((_, after), seen) = State.runState (Engine.runGameAsked answering attacked (Combat.declareBlockers S.manaPerformer)) []
+        Spec.assertEqWith s "the second ask says the toll was not paid" seen [Nothing, Just Undoing.UnpaidCost]
+        Spec.assertEqWith s "the second declaration stands" (blockersOf attacker after) (Set.singleton first)
+        Spec.assertEqWith s "and the note is gone once it is made" (GameState.undone after) Map.empty
       _ -> Spec.assertFailure s "fixture should have a Piker and two Warriors"
 
 -- CR 305.7 as the SIX readers in this module read it, which is one shared gate:
