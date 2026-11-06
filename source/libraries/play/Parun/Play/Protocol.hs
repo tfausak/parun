@@ -22,6 +22,7 @@ import qualified Parun.Codec.Filter as Codec.Filter
 import qualified Parun.Codec.Keyword as Codec.Keyword
 import qualified Parun.Codec.ManaCost as Codec.ManaCost
 import qualified Parun.Codec.ManaType as Codec.ManaType
+import qualified Parun.Codec.ManaUnit as Codec.ManaUnit
 import qualified Parun.Codec.NumberFloor as Codec.NumberFloor
 import qualified Parun.Codec.Reference as Codec.Reference
 import qualified Parun.Codec.Reply as Codec.Reply
@@ -39,6 +40,7 @@ import qualified Parun.Engine.Projection.View as Projection.View
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Oracle as Oracle
 import qualified Parun.Play.Render as Render
 import qualified Parun.Scenario as Scenario
 import qualified Parun.Scenario.Prompt as Scenario.Prompt
@@ -48,6 +50,7 @@ import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Dividing as Dividing
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
@@ -60,12 +63,15 @@ import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.MulliganOffer as MulliganOffer
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Question as Question
 import qualified Parun.Types.Reference as Reference
 import qualified Parun.Types.Reply as R
 import qualified Parun.Types.Request as Request
 import qualified Parun.Types.SpellWasCast as SpellWasCast
+import qualified Parun.Types.TriggerEntry as TriggerEntry
+import qualified Parun.Types.TriggerSource as TriggerSource
 import qualified Text.Read as Read
 
 -- | Answers each prompt a seat answers over the line `send` carries, asking
@@ -207,7 +213,28 @@ offerOf gs prompt = case prompt of
             Dividing.Total total -> [("total", natural total)]
             Dividing.Parts parts -> [("parts", Reply.encode (Reply.list Reply.natural) namer (NonEmpty.toList parts))]
       )
+  -- CR 603.3b / 101.4c: each entry as its source and its Oracle text.
+  Prompt.OrderTriggers _ _ entries -> R.Array (fmap (triggerEntry gs) entries)
+  -- CR 601.2h: each pool unit whole, as the answer names it.
+  Prompt.ChooseManaToSpend _ _ units -> Reply.encode (Reply.list (Reply.viaCodec Codec.ManaUnit.codec)) namer (NonEmpty.toList units)
+  -- CR 701.23a: the searcher looks at the cards searched, so each is named.
+  Prompt.Search _ _ cards count -> fields [("from", objects cards), ("names", R.Array (fmap (R.Text . Render.snapshotName . (`Projection.project` gs)) cards)), ("count", natural count)]
   _ -> R.Null
+
+-- | CR 603.3b: an entry of a trigger ordering as its source (null for none, CR
+-- 113.7) and, where it renders, its ability's Oracle text, which tells apart
+-- two abilities of one source.
+triggerEntry :: GameState.GameState -> TriggerEntry.TriggerEntry -> R.Reply
+triggerEntry gs entry = fields (("source", source) : [("text", R.Text text) | text <- take 1 texts])
+  where
+    ability = TriggerEntry.ability entry
+    (source, texts) = case TriggerEntry.source entry of
+      TriggerSource.OfObject oid
+        | Maybe.isJust (Game.lookupObject oid gs) ->
+            let c = Projection.project oid gs
+             in (object oid, Oracle.triggered (Oracle.contextOf (Render.snapshotName c) []) (Set.member CardType.Creature (ProjectedCharacteristics.cardTypes c)) ability)
+        | otherwise -> (object oid, [])
+      TriggerSource.Sourceless -> (R.Null, Oracle.triggered (Oracle.contextOf Text.empty []) False ability)
 
 -- | An action as an offer names it: its constructor, the object it acts on,
 -- the face or half it names, and for an Activate, the ability's place among

@@ -98,6 +98,8 @@ import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SplitMix as SplitMix
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Terminal as Terminal
+import qualified Parun.Types.TriggerEntry as TriggerEntry
+import qualified Parun.Types.TriggerSource as TriggerSource
 import qualified Parun.Types.Undoing as Undoing
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChange as ZoneChange
@@ -801,6 +803,58 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "first" (Set.fromList (fmap (fst . fst) runs)) (Set.fromList [Just 1, Just 2])
     Spec.assertEqWith s "typed" (fmap (typed . snd) runs) (fmap (const 0) runs)
     Spec.assertBool s (any (\((first, _), shown) -> any (\n -> Text.pack ("Seat " <> show (otherSeat n) <> " was picked at random to choose who plays first.") `elem` written shown) first) runs) "the bot sometimes draws"
+
+  Spec.it s "CR 603.3b each trigger to order is listed by its source and Oracle text; numbers order them, Enter keeps the order, and a repeat is refused" $ do
+    monk <- S.printingOf s registry "Venerable Monk"
+    warden <- S.printingOf s registry "Soul Warden"
+    monkCard <- S.cardOf s registry "Venerable Monk"
+    wardenCard <- S.cardOf s registry "Soul Warden"
+    let (m, g1) = S.addPermanent monk S.alice (Setup.emptyGame S.bothPlayers)
+        (w, gs) = S.addPermanent warden S.alice g1
+        entriesOf oid card = [TriggerEntry.MkTriggerEntry (TriggerSource.OfObject oid) ability | face <- Foldable.toList (Card.faces card), ability <- Face.triggeredAbilities face]
+        facing = Hotseat.fresh {Hotseat.facing = Just S.alice}
+        prompt = Prompt.OrderTriggers (Decider.MkDecider S.alice) S.alice (entriesOf m monkCard <> entriesOf w wardenCard)
+        (ordered, shown) = asking facing ["2 1"] gs prompt
+    Spec.assertEqWith
+      s
+      "listed"
+      (takeWhile (Text.isPrefixOf (Text.pack "  ")) (drop 1 (dropWhile (not . Text.isPrefixOf (Text.pack "Order your triggered abilities")) shown)))
+      [Text.pack "  1. Venerable Monk: When this creature enters, you gain 2 life.", Text.pack "  2. Soul Warden: Whenever another creature enters, you gain 1 life."]
+    Spec.assertEqWith s "numbers order" ordered (Right [1, 0])
+    Spec.assertEqWith s "Enter keeps" (fst (asking facing [""] gs prompt)) (Right [0, 1])
+    Spec.assertEqWith s "a repeat is refused" (fst (asking facing ["1 1"] gs prompt)) (Left (Text.pack "end of input"))
+
+  Spec.it s "CR 601.2h the mana to spend is listed by type and what sets a unit apart, and the unit picked is spent" $ do
+    let plain = Mana.lifeForManaUnit (ManaType.Colored Color.Red)
+        snow = plain {ManaUnit.tags = Set.singleton ProductionTag.Snow}
+        facing = Hotseat.fresh {Hotseat.facing = Just S.alice}
+        prompt = Prompt.ChooseManaToSpend (Decider.MkDecider S.alice) S.alice (plain NonEmpty.:| [snow])
+        (spent, shown) = asking facing ["2"] (Setup.emptyGame S.bothPlayers) prompt
+    Spec.assertEqWith
+      s
+      "listed"
+      (takeWhile (Text.isPrefixOf (Text.pack "  ")) (drop 1 (dropWhile (/= Text.pack "Choose the mana to spend:") shown)))
+      [Text.pack "  1. {R}", Text.pack "  2. {R} (from a snow source)"]
+    Spec.assertEqWith s "the snow unit" spent (Right snow)
+
+  Spec.it s "CR 701.23a / 701.23b a search lists the library cards by name and takes up to its count, Enter for none" $ do
+    bears <- S.printingOf s registry "Grizzly Bears"
+    giant <- S.printingOf s registry "Hill Giant"
+    forest <- S.printingOf s registry "Forest"
+    let (b, g1) = S.addObjectIn Zone.Library bears S.alice (Setup.emptyGame S.bothPlayers)
+        (g, g2) = S.addObjectIn Zone.Library giant S.alice g1
+        (f, gs) = S.addObjectIn Zone.Library forest S.alice g2
+        facing = Hotseat.fresh {Hotseat.facing = Just S.alice}
+        prompt = Prompt.Search (Decider.MkDecider S.alice) S.alice [b, g, f] 2
+        (found, shown) = asking facing ["1 3"] gs prompt
+    Spec.assertEqWith
+      s
+      "listed"
+      (takeWhile (Text.isPrefixOf (Text.pack "  ")) (drop 1 (dropWhile (not . Text.isPrefixOf (Text.pack "Choose up to 2 cards to find")) shown)))
+      [Text.pack "  1. Grizzly Bears", Text.pack "  2. Hill Giant", Text.pack "  3. Forest"]
+    Spec.assertEqWith s "found" found (Right [b, f])
+    Spec.assertEqWith s "Enter finds none" (fst (asking facing [""] gs prompt)) (Right [])
+    Spec.assertEqWith s "past the count is refused" (fst (asking facing ["all"] gs prompt)) (Left (Text.pack "end of input"))
 
 -- The seat across the table.
 otherSeat :: Natural -> Natural
