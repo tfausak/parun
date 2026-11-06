@@ -1,9 +1,9 @@
 module Parun.Codec.SkipWindow where
 
-import qualified Parun.Codec.Phase as Phase
+import qualified Parun.Codec.PhaseSelector as PhaseSelector.Codec
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
-import qualified Parun.Types.PhaseSelector as PhaseSelector
+import Parun.Types.PhaseSelector (PhaseSelector)
 import qualified Parun.Types.SkipWindow as SkipWindow
 
 -- | Flat: a step or phase keeps Parun.Codec.PhaseSelector's spelling, and the
@@ -12,17 +12,14 @@ codec :: Codec.Codec SkipWindow.SkipWindow
 codec =
   Arm.tagged
     tagOf
-    [ Arm.payload "Step" Phase.codec (SkipWindow.PartOfTurn . PhaseSelector.Step) (\x -> case x of SkipWindow.PartOfTurn (PhaseSelector.Step y) -> Just y; _ -> Nothing),
-      Arm.nullary "BeginningPhase" (SkipWindow.PartOfTurn PhaseSelector.BeginningPhase),
-      Arm.nullary "CombatPhase" (SkipWindow.PartOfTurn PhaseSelector.CombatPhase),
-      Arm.nullary "EndingPhase" (SkipWindow.PartOfTurn PhaseSelector.EndingPhase),
-      Arm.nullary "Turn" SkipWindow.WholeTurn
-    ]
+    (PhaseSelector.Codec.arms SkipWindow.PartOfTurn partOfTurn <> [Arm.nullary "Turn" SkipWindow.WholeTurn])
+
+partOfTurn :: SkipWindow.SkipWindow -> Maybe PhaseSelector
+partOfTurn x = case x of
+  SkipWindow.PartOfTurn y -> Just y
+  SkipWindow.WholeTurn -> Nothing
 
 tagOf :: SkipWindow.SkipWindow -> String
 tagOf x = case x of
-  SkipWindow.PartOfTurn PhaseSelector.Step {} -> "Step"
-  SkipWindow.PartOfTurn PhaseSelector.BeginningPhase -> "BeginningPhase"
-  SkipWindow.PartOfTurn PhaseSelector.CombatPhase -> "CombatPhase"
-  SkipWindow.PartOfTurn PhaseSelector.EndingPhase -> "EndingPhase"
+  SkipWindow.PartOfTurn y -> PhaseSelector.Codec.tagOf y
   SkipWindow.WholeTurn -> "Turn"

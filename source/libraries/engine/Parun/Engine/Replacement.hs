@@ -951,10 +951,11 @@ matchesPrinted viewOf gs event candidate =
         -- phase into steps out of this comparison.
         --
         -- The event's PlayerId is the ACTIVE player, or for a whole turn the
-        -- player who would begin it, which is also whose step this is: every step and phase in a turn belongs to the player whose
-        -- turn it is, or to their team (CR 805.4). So Fatigue is `whosePhase`
-        -- Among that player, Necropotence is Related You (CR 109.5, the row's
-        -- controller), and Eon Hub is Related AnyPlayer.
+        -- player who would begin it, which is also whose step this is: every
+        -- step and phase in a turn belongs to the player whose turn it is, or
+        -- to their team (CR 805.4). So Fatigue is `whosePhase` Among that
+        -- player, Necropotence is Related You (CR 109.5, the row's controller),
+        -- and Eon Hub is Related AnyPlayer.
         --
         -- CR 805.8: under the shared team turns option a skip naming any player
         -- on the active team is that team's, so a teammate's row matches too.
@@ -2500,8 +2501,9 @@ readsApplier re = case re of
   ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ PlaneswalkRewrite.ArrangeTopTwo) -> False
   -- GameLossR's answer, and for its reason.
   ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ (PlaneswalkRewrite.RunEffects _)) -> True
-  -- CR 614.10: a skip replaces the step, phase or turn with nothing, whoever applies it;
-  -- whether a row's "you" is the player it is ABOUT was settled by `applies`.
+  -- CR 614.10: a skip replaces the step, phase or turn with nothing, whoever
+  -- applies it; whether a row's "you" is the player it is ABOUT was settled by
+  -- `applies`.
   ReplacementEffect.PhaseR _ -> False
 
 -- CR 614.6: does applying this effect replace a coin flip with a die roll or a

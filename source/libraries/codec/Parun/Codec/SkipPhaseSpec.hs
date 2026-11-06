@@ -14,7 +14,8 @@ import qualified Parun.Types.Uses as Uses
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.SkipPhase" $ do
-  -- CR 614.10a: the next occurrence, so both lifetime keys and the count are omitted.
+  -- CR 614.10a: the next occurrence, so both lifetime keys and the count are
+  -- omitted.
   Spec.it s "MkSkipPhase, the next occurrence" $
     Common.assertCodec
       s

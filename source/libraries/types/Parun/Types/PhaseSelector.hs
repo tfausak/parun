@@ -2,10 +2,10 @@ module Parun.Types.PhaseSelector where
 
 import qualified Parun.Types.Phase as Phase
 
--- | CR 500.11 / 614.10: which step-or-phase a skip names, and which one
--- Parun.Engine.Engine offers up as it is about to begin. The two sides of CR 614.1b are
--- compared by EQUALITY on this type, so a pattern that names a phase can never
--- be confused with one that names a step of it.
+-- | CR 500.1: one step or phase of a turn, as a skip (Parun.Types.SkipWindow),
+-- an activation or casting window, an expiry or an extra turn's own skips names
+-- it. Compared by EQUALITY, so a value that names a phase can never be confused
+-- with one that names a step of it.
 --
 -- A Parun.Types.Phase value is always a SCHEDULE ENTRY -- one step, or a phase
 -- that has none -- since GameState.remaining is a Seq of exactly those. That is

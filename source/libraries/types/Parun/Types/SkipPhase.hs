@@ -6,7 +6,8 @@ import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SkipWindow as SkipWindow
 import qualified Parun.Types.Uses as Uses
 
--- | CR 614.10: the players the PlayerRef names each skip `count` matching steps, phases or turns.
+-- | CR 614.10: the players the PlayerRef names each skip `count` matching
+-- steps, phases or turns.
 --
 -- `uses` and `duration` are CR 614.3's lifetime. Stonehorn Dignitary's "their
 -- next combat phase" is Once and Indefinite (CR 614.10a's wait); False Peace's

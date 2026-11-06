@@ -107,6 +107,24 @@ spec s registry = Spec.describe s "GrandMelee" $ do
         resolved = snd (Engine.runGamePure S.identityAnswer (S.runPure S.identityAnswer main (S.cast (seat 0) spellId)) Engine.priorityLoop)
     Spec.assertEqWith s "CR 500.11 seat 0's turn is passed over" (fmap fst (turnsAfter 10 resolved)) (seats [4, 1, 5, 2, 6, 3, 7, 4, 5, 1])
 
+  -- CR 807.4i / 614.10a: seat 0 casts Capture of Jingzhou, then Meditate, so
+  -- seat 0 keeps its marker for the extra turn, which waits for seat 4's, and
+  -- that extra turn is the next turn Meditate skips (Magosi, the Waterveil's
+  -- ruling). The kept marker then passes on to seat 1.
+  Spec.it s "CR 807.4i a kept marker's skipped extra turn passes it on" $ do
+    forest <- S.printingOf s registry "Forest"
+    island <- S.printingOf s registry "Island"
+    capture <- S.printingOf s registry "Capture of Jingzhou"
+    meditate <- S.printingOf s registry "Meditate"
+    let (captureId, withCapture) = S.addHandCard capture (seat 0) (S.landsFor island (seat 0) 8 (melee forest 8))
+        (meditateId, staged) = S.addHandCard meditate (seat 0) withCapture
+        resolve gs = snd (Engine.runGamePure S.identityAnswer gs Engine.priorityLoop)
+        main = untilPhase Phase.PrecombatMain staged
+        captured = resolve (S.runPure S.identityAnswer main (S.cast (seat 0) captureId))
+        resolved = resolve (S.runPure S.identityAnswer captured (S.cast (seat 0) meditateId))
+    Spec.assertEqWith s "the extra turn is pending" (length (GameState.extraTurns resolved)) 1
+    Spec.assertEqWith s "CR 807.4i seat 0's extra turn is passed over" (turnsAfter 5 resolved) [(seat 4, False), (seat 5, False), (seat 1, False), (seat 6, False), (seat 2, False)]
+
   -- CR 807.5a: on seat 0's turn only seats 7, 0 and 1 are within range of the
   -- marker. Once seat 1 has cast Shock, seat 2 is within range of an object's
   -- controller, so is asked too until it resolves.

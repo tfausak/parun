@@ -1717,11 +1717,12 @@ offerConcessions = do
 -- the seating order whose player is still in the game (takeNextTurn's question).
 -- CR 800.4k: a turn a departed player would begin does not begin, so such a seat
 -- is walked past. CR 800.4m: durations lasting until that player's next turn last
--- until that turn WOULD have begun, so Expiry.dropAtTurnOf fires at EVERY seat
--- the walk passes and at every extra turn popped (for the seat that does begin
--- one, the same call is CR 611.2a). CR 702.26n hangs off that same moment, so
--- Phasing.orphanSchedule fires at both places -- but only where the turn does not
--- begin, a seat that begins one being nobody's orphan.
+-- until that turn WOULD have begun, so Expiry.dropAtTurnOf fires at every
+-- departed seat the walk passes and at every extra turn popped (for the seat
+-- that does begin one, the same call is CR 611.2a); under CR 805.4 a departed
+-- seat whose team plays on waits for its team's turn. CR 702.26n hangs off
+-- that same moment, so Phasing.orphanSchedule fires at both places -- but only
+-- where the turn does not begin, a seat that begins one being nobody's orphan.
 --
 -- CR 500.11 / 614.10: a turn a skip takes is proceeded past as though it didn't
 -- exist, which is NOT CR 800.4k's turn that doesn't begin: none of the "would
@@ -1779,11 +1780,11 @@ takeOrdinaryTurn = do
           -- it is asked here before the seating order is.
           begins <- Event.beginsPhase SkipWindow.WholeTurn pid
           if begins
-            then -- CR 500.11: this turn's OWN skips (Savor the Moment) come into
-            -- being as it begins, and only on this branch -- neither a skipped
-            -- entry nor the CR 800.4k entry below belongs to a turn that begins.
-            -- Nothing of this turn has started yet, so CR 614.10 is not yet in
-            -- the way.
+            then -- CR 500.11: this turn's OWN skips (Savor the Moment) come
+            -- into being as it begins, and only on this branch -- neither a
+            -- skipped entry nor the CR 800.4k entry below belongs to a turn
+            -- that begins. Nothing of this turn has started yet, so CR 614.10
+            -- is not yet in the way.
               State.modify' (Replacement.installTurnSkips entry . beginTurn (Just (ExtraTurn.createdAt entry)) pid . dropAtTurnOfTeam pid)
             else takeOrdinaryTurn
         else do
@@ -1792,7 +1793,7 @@ takeOrdinaryTurn = do
           -- rescheduled here too. No board reaches it, an extra turn for a
           -- departed player needing a phased-out permanent besides, so it is
           -- the rule written out at its second site rather than a proved one.
-          State.modify' (expireLastTurn pid . Phasing.orphanSchedule pid . dropAtTurnOfTeam pid)
+          State.modify' (wouldHaveBegun pid)
           takeOrdinaryTurn
 
 -- CR 807.4c-d / 807.4g / 807.4i-j: the marker under way is kept, passed or
@@ -1831,8 +1832,10 @@ takeMarkedTurn = do
                 Nothing -> beginTurnOf pid swept
 
 -- CR 800.4k / 800.4m / 702.26n: a turn `pid` would have begun and doesn't.
+-- It sweeps `pid` alone: a teammate still playing has no turn that would have
+-- begun, only one that begins or is skipped (CR 614.10a).
 wouldHaveBegun :: PlayerId -> GameState -> GameState
-wouldHaveBegun pid gs = expireLastTurn pid (Phasing.orphanSchedule pid (dropAtTurnOfTeam pid gs))
+wouldHaveBegun pid gs = expireLastTurn pid (Phasing.orphanSchedule pid (Expiry.dropAtTurnOf pid gs))
 
 -- One seat at a time, bounded by the number of seats, so it terminates even when
 -- every seat has departed. The fallback returns the state without beginning a
@@ -1842,7 +1845,9 @@ wouldHaveBegun pid gs = expireLastTurn pid (Phasing.orphanSchedule pid (dropAtTu
 --
 -- CR 805.4: a seat whose player shares the turn the walk starts from has just
 -- taken it, so it is passed with no sweep -- that player's next turn is still to
--- come.
+-- come. A departed seat with a teammate still playing is passed likewise: its
+-- turn is the team's, which that teammate begins (dropAtTurnOfTeam sweeps it
+-- then) or skips (CR 800.4m, 614.10a).
 --
 -- CR 500.11: a seat whose turn a skip takes becomes the walk's new start, with
 -- the whole bound again, so its teammates are passed with it (CR 805.8) and a
@@ -1853,17 +1858,12 @@ walkToNextTurn seatsLeft anchor seat = do
   gs <- State.get
   Monad.when (seatsLeft > 0) $ do
     let next = nextInOrder (GameState.turnOrder gs) seat
-        swept = dropAtTurnOfTeam next gs
-        -- CR 702.26n: the phasing analogue of the sweep above, on the same line
-        -- for the same reason -- this is the moment the turn WOULD have begun.
-        -- A row keyed to a seat this walk passes is rescheduled and phases in at
-        -- the untap step of whichever seat the walk lands on. This branch only:
-        -- a seat that does begin a turn is nobody's orphan.
-        orphaned = expireLastTurn next (Phasing.orphanSchedule next swept)
-    if next /= anchor && Turn.sharesTurn gs anchor next
+        playing = Game.stillPlaying gs
+        teamPlays = any (Turn.sharesTurn gs next) playing
+    if (next /= anchor && Turn.sharesTurn gs anchor next) || (List.notElem next playing && teamPlays)
       then walkToNextTurn (seatsLeft - 1) anchor next
       else
-        if List.elem next (Game.stillPlaying swept)
+        if List.elem next playing
           then do
             begins <- Event.beginsPhase SkipWindow.WholeTurn next
             if begins
@@ -1872,7 +1872,11 @@ walkToNextTurn seatsLeft anchor seat = do
                 State.modify' (\g -> beginTurnOf next (dropAtTurnOfTeam next g) {GameState.turnAnchor = Nothing})
               else walkToNextTurn (length (GameState.turnOrder gs)) next next
           else do
-            State.put orphaned
+            -- CR 702.26n beside CR 800.4m: a row keyed to a seat this
+            -- walk passes is rescheduled and phases in at the untap step of
+            -- whichever seat the walk lands on. A seat that begins a turn is
+            -- nobody's orphan.
+            State.modify' (wouldHaveBegun next)
             walkToNextTurn (seatsLeft - 1) anchor next
 
 -- CR 800.4i: a departed player's last turn answers "during their last turn"
@@ -1880,11 +1884,14 @@ walkToNextTurn seatsLeft anchor seat = do
 expireLastTurn :: PlayerId -> GameState -> GameState
 expireLastTurn pid gs = gs {GameState.attacksInOwnLastTurn = Map.delete pid (GameState.attacksInOwnLastTurn gs)}
 
--- CR 611.2a / 800.4m's sweep for a turn that begins or would have begun: every
--- player who takes it, which under CR 805.4 is the whole team.
+-- CR 611.2a's sweep for a turn that begins: every player who takes it, which
+-- under CR 805.4 is the whole team. A departed teammate's turn is one that
+-- would have begun (CR 800.4m).
 dropAtTurnOfTeam :: PlayerId -> GameState -> GameState
 dropAtTurnOfTeam pid gs =
-  List.foldl' (flip Expiry.dropAtTurnOf) gs (filter (Turn.sharesTurn gs pid) (GameState.turnOrder gs))
+  let playing = Game.stillPlaying gs
+      sweepSeat g seat = if List.elem seat playing then Expiry.dropAtTurnOf seat g else wouldHaveBegun seat g
+   in List.foldl' sweepSeat gs (filter (Turn.sharesTurn gs pid) (GameState.turnOrder gs))
 
 -- The turn actually begins for `pid`, split out so the CR 800.4k seat walk has
 -- exactly one place to land.
