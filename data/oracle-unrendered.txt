@@ -1626,6 +1626,7 @@ longstalk-brawl
 longtusk-cub
 look-skyward-and-despair
 loot-exuberant-explorer
+loot-the-anomaly
 loot-the-pathfinder
 lord-of-the-pit
 lorescale-coatl
