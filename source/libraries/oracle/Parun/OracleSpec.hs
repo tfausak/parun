@@ -102,6 +102,7 @@ import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeLoss as LifeLoss
 import qualified Parun.Types.LifeLossCause as LifeLossCause
+import qualified Parun.Types.Loyalty as Loyalty
 import qualified Parun.Types.ManaAddition as ManaAddition
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaProduction as ManaProduction
@@ -791,6 +792,13 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "Tap two untapped creatures you control that share a creature type: Draw a card.")) (costed [CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed 2) untapped True)])
     Spec.assertEq s (Just (Text.pack "Exile seven other cards from your graveyard: Draw a card.")) (costed [CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard 7 (Filter.Not Filter.IsSource))])
     Spec.assertEq s (Just (Text.pack "Exile an instant or sorcery card from your graveyard: Draw a card.")) (costed [CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard 1 (Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery]))])
+
+  -- CR 107.7: a loyalty ability's cost is its loyalty symbol, the minus a
+  -- minus sign; the printed loyalty (CR 306.5a) is no rules text.
+  Spec.it s "render prints a loyalty symbol and not the printed loyalty" $ do
+    let walker = withFace (\f -> f {Face.loyalty = Just (Loyalty.Literal 3), Face.activatedAbilities = fmap (\c -> activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [c]) (draw (PlayerRef.Relative PlayerRelation.You) 1)) loyalties})
+        loyalties = [CostComponent.AddLoyaltyToThis 2, CostComponent.AddLoyaltyToThis 0, CostComponent.RemoveLoyaltyFromThis (CostAmount.Fixed 7), CostComponent.RemoveLoyaltyFromThis (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X")))]
+    Spec.assertEq s (Just (Text.pack "[+2]: Draw a card.\n[0]: Draw a card.\n[\8722\&7]: Draw a card.\n[\8722X]: Draw a card.")) (Oracle.render walker)
 
   -- CR 608.2c / 608.2d: a clause hanging off the one before it reads with
   -- it: "If you do" after a "may" (Tweeze), "unless you" before one
