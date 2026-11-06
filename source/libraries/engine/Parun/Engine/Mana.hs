@@ -2548,8 +2548,27 @@ canPayCommitting subject capacity spending pid committed committedEnergy claimed
 
 -- The same question given a board already walked -- see payableResolutionsGiven
 -- for what `sources` and `pcs` are and why handing them in changes no answer.
+--
+-- A cost with a resolution demanding no mana and no life ({T}, {0}) is answered
+-- by the board activating nothing (CR 605.3a's "may"), without the walk: every
+-- option only adds claims, life and energy to what that board spends, so no
+-- board passes where it fails. Parun.ManaSpec's "a cost demanding no mana"
+-- group pins it to the walk's answer.
 canPayCommittingGiven :: PaymentSubject.PaymentSubject -> Capacity -> ManaSpending -> [ObjectId] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> Natural -> Natural -> [Claim] -> ManaCost -> GameState -> Bool
-canPayCommittingGiven subject capacity spending sources pcs pid committed committedEnergy claimed cost gs = not (null (payableResolutionsGiven subject capacity spending sources pcs pid committed committedEnergy claimed cost gs))
+canPayCommittingGiven subject capacity spending sources pcs pid committed committedEnergy claimed cost gs
+  | any demandsNothing (resolutions spending cost) = activatingNothing pid committed committedEnergy claimed gs
+  | otherwise = not (null (payableResolutionsGiven subject capacity spending sources pcs pid committed committedEnergy claimed cost gs))
+  where
+    demandsNothing (demands, generic, life) = null demands && generic == 0 && life == 0
+
+-- CR 118.3 asked of the board activating no mana ability: the claims, CR
+-- 107.14's energy and CR 119.4's life the rest of the cost spends, held by
+-- themselves -- payableResolutionsGiven's guards on its pool-only board.
+activatingNothing :: PlayerId -> Natural -> Natural -> [Claim] -> GameState -> Bool
+activatingNothing pid committed committedEnergy claimed gs =
+  Claim.satisfiable claimed
+    && committedEnergy <= Game.energyOf pid gs
+    && Event.lifePayable pid gs committed
 
 -- One source's contribution to the supply side, as the OPTIONS each of its
 -- GROUPS of mana abilities offers (see the collapse below): each option is that

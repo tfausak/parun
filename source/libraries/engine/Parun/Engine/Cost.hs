@@ -3625,7 +3625,7 @@ midPayment capacity measure pcs pid oid cost restrictions ability gs =
 -- above and nothing else. ONLY the mana half gets the pre-walked board -- the
 -- COMPONENTS are still asked through canPayComponent, whose Sacrifice,
 -- TapForTotalPower and CollectEvidence arms make per-object walks of their own
--- (#6417).
+-- (#6432).
 canPaySomeCompletionGiven :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PaymentSubject.PaymentSubject -> ManaSpending.ManaSpending -> [ObjectId] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> ObjectId -> (ManaCost.ManaCost -> [ManaCost.ManaCost]) -> (ManaCost.ManaCost -> [(ManaCost.ManaCost, [(Keyword.Substitute, Natural)])]) -> Cost Keyword.Type.Keyword -> GameState -> Bool
 canPaySomeCompletionGiven slots subject spending sources pcs pid oid total_ substitute cost gs = case Cost.mana cost of
   Nothing -> False

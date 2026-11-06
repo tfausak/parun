@@ -2658,13 +2658,13 @@ pluralBoardSpec s registry = Spec.describe s "plural sources" $ do
     Spec.assertBool s (not (pays 21 (boardOf 20))) "nor twenty Elves a {21}"
 
 -- Mana.canPayCommittingGiven answers a cost demanding no mana ({T}, {0}) by the
--- board activating nothing, without payableResolutionsGiven's walk (#6417). The
--- plural board puts every kind of option beside it -- life (Treasonous Ogre),
+-- board activating nothing, without payableResolutionsGiven's walk. The plural
+-- board puts every kind of option beside it -- life (Treasonous Ogre),
 -- a contending tap (Springleaf Drum), eaten mana (Transmogrant Altar, Chromatic
 -- Star) -- and each case pins the shortcut to the walk's answer, on both sides
 -- of every guard it keeps: CR 119.4's life, CR 107.14's energy and CR 118.3's
 -- claims.
-demandsNoManaSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+demandsNoManaSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 demandsNoManaSpec s registry = Spec.describe s "a cost demanding no mana" $ do
   Spec.it s "CR 118.3 the board activating nothing answers what the walk answers" $ do
     ogre <- S.printingOf s registry "Treasonous Ogre"

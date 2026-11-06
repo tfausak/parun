@@ -315,10 +315,10 @@ legalActions pid gs =
       -- whole chain -- until measuring bytes was judged too compiler-specific
       -- to keep. A regression here fails nothing (gap #578).
       --
-      -- Not implemented: an O(1) per-permanent non-mana path. The cost gate is
-      -- still O(N) per permanent without a whole-board structure to hoist, and
-      -- so are the whole legal sets a mode whose slots read each other builds
-      -- (#6417).
+      -- Not implemented: an O(1) per-permanent non-mana path. A cost with
+      -- mana, or one sacrificing or tapping other permanents, is still O(N) per
+      -- permanent, and so are the whole legal sets a mode whose slots read each
+      -- other builds (#6432).
       grants = Projection.controlGrants gs
       pcs = Projection.projectAll gs
       -- ONE mana-source sweep of each kind for the whole enumeration. Each is a

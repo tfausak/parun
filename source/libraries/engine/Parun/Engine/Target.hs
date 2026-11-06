@@ -13,6 +13,7 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
+import qualified Parun.Engine.ActivationProhibition as ActivationProhibition
 import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Card as Card
 import qualified Parun.Engine.Count as Count
@@ -36,6 +37,7 @@ import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Acquisition as Acquisition
+import qualified Parun.Types.ActivationProhibition as ActivationProhibition.Type
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Binding as Binding.Type
@@ -82,6 +84,7 @@ import qualified Parun.Types.TargetCount as TargetCount
 import Parun.Types.TargetSlot (TargetSlot)
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.Teams as Teams
+import qualified Parun.Types.TextWord as TextWord
 import qualified Parun.Types.Together as Together
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneScope as ZoneScope
@@ -242,9 +245,7 @@ legalRecipientListGiven kind reader pools perspective unannounced bindings acqui
       -- answers blank. The scenarios with "gone" and "source" in their names prove
       -- each reader this view feeds.
       sourceView = Maybe.fromMaybe (Projection.viewOfObjectGiven pcs grants source gs) (Count.orLastKnown (Projection.fullViewGiven pcs grants gs) gs source)
-      -- The player rows out of the caller's Pools, which a whole enumeration
-      -- shares; a player the pools do not list is gathered on the spot.
-      rowsOf pid = Maybe.fromMaybe (PlayerEffect.applying pid gs) (lookup pid (playerRowsPool pools))
+      rowsOf pid = playerRowsOf pools pid gs
       -- CR 801.4's range, split from CR 109.5's "you": nobody's for a planar
       -- source (CR 801.18), which hexproof's `perspective` below still reads.
       reach = perspective >>= \you -> Plane.rangePerspective source you gs
@@ -861,7 +862,11 @@ data Pools = MkPools
     -- Not a pool of recipients either: the CR 101.2 targeting prohibitions in
     -- force, which legalRecipientsGiven asks of every object candidate. Lazy
     -- for the field above's reason.
-    targetRestrictionRows :: [TargetRestriction.Row]
+    targetRestrictionRows :: [TargetRestriction.Row],
+    -- Not a pool of recipients either: the CR 602.5 activation prohibitions in
+    -- force (ActivationProhibition.gathered), which the activation gate asks of
+    -- every ability. Lazy for playerRowsPool's reason.
+    activationProhibitionRows :: [(ObjectId, [(TextWord.TextWord, TextWord.TextWord)], ActivationProhibition.Type.ActivationProhibition)]
   }
 
 -- The pools of one board.
@@ -891,10 +896,16 @@ poolsOf b gs =
       exilePool = exileRecipients gs,
       antePool = anteRecipients gs,
       playerRowsPool = fmap (\pid -> (pid, PlayerEffect.applying pid gs)) (Game.stillPlaying gs),
-      targetRestrictionRows = TargetRestriction.rows gs
+      targetRestrictionRows = TargetRestriction.rows gs,
+      activationProhibitionRows = ActivationProhibition.gathered gs
     }
   where
     pcs = Snapshot.projected b
+
+-- `pid`'s CR 613.10/613.11 player rows out of the pools, which a whole
+-- enumeration shares; a player the pools do not list is gathered on the spot.
+playerRowsOf :: Pools -> PlayerId -> GameState -> [(RowSource, PlayerEffect)]
+playerRowsOf pools pid gs = Maybe.fromMaybe (PlayerEffect.applying pid gs) (lookup pid (playerRowsPool pools))
 
 -- The pools of the whole board, projected at once.
 wholePools :: GameState -> Pools

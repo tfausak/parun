@@ -108,12 +108,14 @@ gathered gs =
 -- battlefield asks this once and tests against the answer, where a predicate
 -- would re-walk the battlefield per candidate.
 cantActivate :: AbilityKind.AbilityKind -> Cost Keyword -> [ObjectId] -> GameState -> Set ObjectId
-cantActivate asked cost candidates gs =
-  let -- One whole-board projection and one grant walk for the whole walk, both
-      -- unforced until some permanent actually reaches `named`.
-      pcs = Projection.projectAll gs
-      grants = Projection.controlGrants gs
-      -- CR 605.1a's division, asked of the row rather than of the ability:
+cantActivate asked cost candidates gs = cantActivateGiven (Projection.projectAll gs) (Projection.controlGrants gs) (gathered gs) asked cost candidates gs
+
+-- The same question given a board the caller has already walked: `rows` MUST be
+-- `gathered gs`'s own answer, and `pcs` and `grants` the same board's, which a
+-- per-ability loop takes once rather than per ability.
+cantActivateGiven :: Map.Map ObjectId ProjectedCharacteristics.ProjectedCharacteristics -> [Projection.ControlGrant] -> [(ObjectId, [(TextWord.TextWord, TextWord.TextWord)], ActivationProhibition.ActivationProhibition)] -> AbilityKind.AbilityKind -> Cost Keyword -> [ObjectId] -> GameState -> Set ObjectId
+cantActivateGiven pcs grants rows asked cost candidates gs =
+  let -- CR 605.1a's division, asked of the row rather than of the ability:
       -- Nothing is every activated ability (Arrest, Volrath's Curse), and a
       -- named kind is only the abilities on that side of the rule
       -- (Realmbreaker's Grasp, whose "unless they're mana abilities" leaves
@@ -143,7 +145,7 @@ cantActivate asked cost candidates gs =
       -- refer to, which Parun.Types.ActiveObjectProhibition argues is exact
       -- rather than a shortcut.
       storedSubjects = RestrictedCreatures.prohibited Prohibition.Activate candidates gs
-   in Set.fromList (concatMap fromProhibition (gathered gs)) <> storedSubjects
+   in Set.fromList (concatMap fromProhibition rows) <> storedSubjects
 
 -- The printed WHO on this carrier: the permanents that `source`'s ability named
 -- `name` forbids activations on right now. Unioned with
@@ -201,3 +203,7 @@ reachesCost reach cost = case reach of
 -- battlefield either way, and the candidate list it filters is the singleton.
 prohibited :: AbilityKind.AbilityKind -> Cost Keyword -> ObjectId -> GameState -> Bool
 prohibited kind cost oid gs = Set.member oid (cantActivate kind cost [oid] gs)
+
+-- `prohibited` given a board the caller has already walked (cantActivateGiven).
+prohibitedGiven :: Map.Map ObjectId ProjectedCharacteristics.ProjectedCharacteristics -> [Projection.ControlGrant] -> [(ObjectId, [(TextWord.TextWord, TextWord.TextWord)], ActivationProhibition.ActivationProhibition)] -> AbilityKind.AbilityKind -> Cost Keyword -> ObjectId -> GameState -> Bool
+prohibitedGiven pcs grants rows kind cost oid gs = Set.member oid (cantActivateGiven pcs grants rows kind cost [oid] gs)
