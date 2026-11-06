@@ -115,6 +115,10 @@ data GameState = MkGameState
     -- | CR 729.4a: the outer ids this game has brought in, in crossing order,
     -- read by Parun.Engine.Setup.applyCrossings.
     broughtIn :: Seq.Seq ObjectId.ObjectId,
+    -- | CR 800.4a / 407.3: each card that left the game with a departed owner
+    -- who did not begin the game owning it, as it left, keyed by its last id
+    -- (Parun.Engine.Departure.objectsLeaveWith). Grows for the whole game.
+    departedCards :: Map.Map ObjectId.ObjectId Object.Object,
     -- | CR 106.4. Absent from the map means an empty pool.
     manaPool :: Map.Map PlayerId.PlayerId Mana.Mana,
     -- | CR 508/509. Lives for one combat phase; cleared at CR 511.
