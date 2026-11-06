@@ -377,6 +377,7 @@ import qualified Parun.Types.Reinforce as Reinforce
 import qualified Parun.Types.RemovalCount as RemovalCount
 import qualified Parun.Types.RemoveCounters as RemoveCounters
 import qualified Parun.Types.RemoveCountersAmong as RemoveCountersAmong
+import qualified Parun.Types.RemoveFromCombat as RemoveFromCombat
 import qualified Parun.Types.RemovePlayerCounters as RemovePlayerCounters
 import qualified Parun.Types.Repeat as Repeat
 import qualified Parun.Types.RepeatIf as RepeatIf
@@ -444,6 +445,7 @@ import qualified Parun.Types.TurnFaceDown as TurnFaceDown
 import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.TypeLine as TypeLine
+import qualified Parun.Types.Unblocking as Unblocking
 import qualified Parun.Types.UntapRestriction as UntapRestriction
 import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.Uses as Uses
@@ -762,7 +764,8 @@ objectRefPositions =
         ("meld", Effect.Meld (Meld.MkMeld (plantedRef "me") ()), [plantedRef "me"]),
         ("phase-out", Effect.PhaseOut (plantedRef "po"), [plantedRef "po"]),
         ("turn-face-down", Effect.TurnFaceDown (TurnFaceDown.MkTurnFaceDown (plantedRef "tf") FaceDownCharacteristics.defaultValue), [plantedRef "tf"]),
-        ("remove-from-combat", Effect.RemoveFromCombat (plantedRef "rc"), [plantedRef "rc"]),
+        ("remove-from-combat", Effect.RemoveFromCombat (RemoveFromCombat.MkRemoveFromCombat (plantedRef "rc") Unblocking.StayBlocked), [plantedRef "rc"]),
+        ("block-attacker", Effect.BlockAttacker (plantedRef "ba"), [plantedRef "ba"]),
         ("gain-control", Effect.GainControl (GainControl.MkGainControl Duration.UntilEndOfTurn (plantedRef "gc") (PlayerRef.Relative PlayerRelation.You)), [plantedRef "gc"]),
         ("require-block", Effect.RequireBlock (RequireBlock.MkRequireBlock Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "rb-blocker")) (Just (RestrictedCreatures.Named (plantedRef "rb-attacker"))) RequirementArity.EachSubject), [plantedRef "rb-blocker", plantedRef "rb-attacker"]),
         ("prohibit", Effect.Prohibit (Prohibit.MkProhibit Prohibition.Regenerate Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "cb"))), [plantedRef "cb"]),
@@ -1396,6 +1399,7 @@ ownCounts effect = case effect of
   -- CR 701.14a fixes both amounts at the fighters' own powers, so no Quantity.
   Effect.Fight _ -> []
   Effect.RemoveFromCombat _ -> []
+  Effect.BlockAttacker _ -> []
   Effect.BecomesBlocked _ -> []
   Effect.SwitchBlockers _ -> []
   Effect.ExchangeBlocks _ -> []
@@ -1914,6 +1918,7 @@ effectNestedEffects effect = case effect of
   Effect.TurnFaceUp {} -> []
   Effect.Fight {} -> []
   Effect.RemoveFromCombat {} -> []
+  Effect.BlockAttacker {} -> []
   Effect.BecomesBlocked {} -> []
   Effect.SwitchBlockers {} -> []
   Effect.ExchangeBlocks {} -> []
@@ -2493,6 +2498,7 @@ effectReplacements effect = case effect of
   Effect.TurnFaceUp _ -> []
   Effect.Fight _ -> []
   Effect.RemoveFromCombat _ -> []
+  Effect.BlockAttacker _ -> []
   Effect.BecomesBlocked _ -> []
   Effect.SwitchBlockers _ -> []
   Effect.ExchangeBlocks _ -> []
@@ -3073,6 +3079,7 @@ effectMintedFaces effect = case effect of
   Effect.TurnFaceUp _ -> []
   Effect.Fight _ -> []
   Effect.RemoveFromCombat _ -> []
+  Effect.BlockAttacker _ -> []
   Effect.BecomesBlocked _ -> []
   Effect.SwitchBlockers _ -> []
   Effect.ExchangeBlocks _ -> []
@@ -6085,7 +6092,8 @@ effectFilters effect = case effect of
   Effect.TurnFaceDown (TurnFaceDown.MkTurnFaceDown ref _) -> frame SourceHostFramed (objectRefFilters ref)
   Effect.TurnFaceUp _ -> []
   Effect.Fight _ -> []
-  Effect.RemoveFromCombat ref -> frame SourceHostFramed (objectRefFilters ref)
+  Effect.RemoveFromCombat payload -> frame SourceHostFramed (objectRefFilters (RemoveFromCombat.removed payload))
+  Effect.BlockAttacker ref -> frame SourceHostFramed (objectRefFilters ref)
   Effect.BecomesBlocked _ -> []
   Effect.SwitchBlockers _ -> []
   Effect.ExchangeBlocks _ -> []

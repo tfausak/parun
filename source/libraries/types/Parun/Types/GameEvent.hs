@@ -199,11 +199,10 @@ data GameEvent
     -- creature blocked when every blocker leaves combat, so an emptied
     -- Combat.blockers entry is not this event.
     --
-    -- The declaration is the only producer, which is no shortfall against rule
-    -- 509.1h's "an effect says that it becomes blocked or unblocked": the blocked
-    -- half is Parun.Engine.Combat.becomeBlocked, and no printing states the
-    -- unblocked half -- Scryfall has no card whose text makes a creature become
-    -- unblocked.
+    -- The declaration is the only producer: an effect making a creature become
+    -- unblocked (Parun.Engine.Combat.removeUnblocking, False Orders) records
+    -- nothing, Balduvian Warlord's 2006-07-15 ruling keeping "attacks and isn't
+    -- blocked" from triggering off it (CR 509.3g).
     --
     -- Carries CR 508.5's defending player for AttackerBlocked's reason; Abyssal
     -- Nightstalker's "defending player discards a card" reads it.

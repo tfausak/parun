@@ -645,6 +645,7 @@ import qualified Parun.Codec.ReferenceSpec
 import qualified Parun.Codec.RegenerabilitySpec
 import qualified Parun.Codec.ReinforceSpec
 import qualified Parun.Codec.RemoveCountersSpec
+import qualified Parun.Codec.RemoveFromCombatSpec
 import qualified Parun.Codec.RemovePlayerCountersSpec
 import qualified Parun.Codec.RepeatIfSpec
 import qualified Parun.Codec.RepeatPicksSpec
@@ -784,6 +785,7 @@ import qualified Parun.Codec.TurnedFaceUpSpec
 import qualified Parun.Codec.TurnedUpOffDeckSpec
 import qualified Parun.Codec.TypeLineSpec
 import qualified Parun.Codec.TypesAreSpec
+import qualified Parun.Codec.UnblockingSpec
 import qualified Parun.Codec.UntapHoldSpec
 import qualified Parun.Codec.UntapRSpec
 import qualified Parun.Codec.UntapRestrictionSpec
@@ -1655,6 +1657,7 @@ spec s registry corpus = do
   Parun.Codec.RegenerabilitySpec.spec s
   Parun.Codec.ReinforceSpec.spec s
   Parun.Codec.RemoveCountersSpec.spec s
+  Parun.Codec.RemoveFromCombatSpec.spec s
   Parun.Codec.RemovePlayerCountersSpec.spec s
   Parun.Codec.RepeatIfSpec.spec s
   Parun.Codec.RepeatPicksSpec.spec s
@@ -1794,6 +1797,7 @@ spec s registry corpus = do
   Parun.Codec.TurnWindowSpec.spec s
   Parun.Codec.TypeLineSpec.spec s
   Parun.Codec.TypesAreSpec.spec s
+  Parun.Codec.UnblockingSpec.spec s
   Parun.Codec.UntapHoldSpec.spec s
   Parun.Codec.UntapRestrictionSpec.spec s
   Parun.Codec.UntapRewriteSpec.spec s

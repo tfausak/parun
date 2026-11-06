@@ -103,7 +103,8 @@ emptyCombat =
       Combat.defenders = [],
       Combat.barred = [],
       Combat.bands = [],
-      Combat.pileBlocks = Nothing
+      Combat.pileBlocks = Nothing,
+      Combat.blockedBy = Map.empty
     }
 
 -- CR 511.3: as the end of combat step ends, everything is removed from combat.
@@ -1783,6 +1784,12 @@ blockersOf oid gs = Map.findWithDefault Set.empty oid (Combat.blockers (GameStat
 isBlocked :: ObjectId -> GameState -> Bool
 isBlocked oid gs = Map.member oid (Combat.blockers (GameState.combat gs))
 
+-- Combat.blockedBy's write, beside every write that adds a creature to an
+-- attacker's blockers (CR 509.1h). A union, so handing it the whole new
+-- `blockers` map is the same as handing it the arrivals.
+noteBlockedBy :: Map ObjectId (Set ObjectId) -> Combat -> Combat
+noteBlockedBy added c = c {Combat.blockedBy = Map.unionWith Set.union (Map.filter (not . Set.null) added) (Combat.blockedBy c)}
+
 -- CR 509.1h's escape clause performed: an effect SAYS an attacking creature
 -- becomes blocked (Effect.BecomesBlocked, Curtain of Light). An EMPTY set behind
 -- the key, which is the rule rather than a placeholder: a creature blocked this
@@ -1896,23 +1903,7 @@ switchBlockers first second gs =
         || null arrivals
         then gs
         else
-          let switched = gs {GameState.combat = c {Combat.blockers = moved}}
-              -- CR 608.2f: one action, so every arrival reads the board as it
-              -- stood BEFORE the switch -- the same reason declareBlockers reads
-              -- its flag and its set off the pre-declaration state.
-              record h (blocker, attacker) =
-                Event.recordEvent
-                  ( GameEvent.BecameBlocking
-                      ( BecameBlocking.MkBecameBlocking
-                          { BecameBlocking.blocker = blocker,
-                            BecameBlocking.attacker = attacker,
-                            BecameBlocking.producer = BlockProducer.ByEffect (Map.findWithDefault Set.empty attacker moved),
-                            BecameBlocking.attackerWasBlocked = isBlocked attacker gs,
-                            BecameBlocking.blockersBefore = blockersOf attacker gs
-                          }
-                      )
-                  )
-                  h
+          let switched = gs {GameState.combat = noteBlockedBy moved (c {Combat.blockers = moved})}
               -- CR 509.3c's "only if the attacking creature was an unblocked
               -- creature at that time". A REGRESSION FENCE rather than proved
               -- behaviour: General Jarkeld targets blocked attacking creatures,
@@ -1922,7 +1913,10 @@ switchBlockers first second gs =
               blocked h oid = case Defender.playerOfAttacker Projection.controllerWithLastKnown oid gs of
                 Nothing -> h
                 Just defending -> Event.recordEvent (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked oid defending (Map.findWithDefault Set.empty oid moved))) h
-           in List.foldl' blocked (List.foldl' record switched arrivals) becameBlocked
+           in -- CR 608.2f: one action, so every arrival reads the board as it
+              -- stood BEFORE the switch -- the same reason declareBlockers reads
+              -- its flag and its set off the pre-declaration state.
+              List.foldl' blocked (recordEffectBlocks gs moved arrivals switched) becameBlocked
 
 -- CR 509.3a's effect road, the one that makes a creature block ANEW: two
 -- blocking creatures are removed from combat, and then each blocks all the
@@ -1967,22 +1961,7 @@ exchangeBlocks first second gs =
       moved = List.foldl' add (Combat.blockers rc) pairs
       controllerOf oid = Projection.controllerOf oid gs
       joined = Map.union (Map.fromList (Maybe.mapMaybe (\(b, _) -> fmap (\p -> (b, p)) (controllerOf b)) pairs)) (Combat.joinedUnder rc)
-      exchanged = removed {GameState.combat = rc {Combat.blockers = moved, Combat.joinedUnder = joined}}
-      -- CR 608.2f: one action, so every pair reads the board as it stood
-      -- BEFORE the exchange, for switchBlockers' reason.
-      record h (blocker, attacker) =
-        Event.recordEvent
-          ( GameEvent.BecameBlocking
-              ( BecameBlocking.MkBecameBlocking
-                  { BecameBlocking.blocker = blocker,
-                    BecameBlocking.attacker = attacker,
-                    BecameBlocking.producer = BlockProducer.ByEffect (Map.findWithDefault Set.empty attacker moved),
-                    BecameBlocking.attackerWasBlocked = isBlocked attacker gs,
-                    BecameBlocking.blockersBefore = blockersOf attacker gs
-                  }
-              )
-          )
-          h
+      exchanged = removed {GameState.combat = noteBlockedBy moved (rc {Combat.blockers = moved, Combat.joinedUnder = joined})}
       blocks h (blocker, attackers) =
         if Set.null attackers
           then h
@@ -1992,7 +1971,97 @@ exchangeBlocks first second gs =
         || not (isBlocker second)
         || not (couldBlock first onSecond && couldBlock second onFirst)
         then gs
-        else List.foldl' blocks (List.foldl' record exchanged pairs) [(first, onSecond), (second, onFirst)]
+        else -- CR 608.2f: one action, so every pair reads the board as it
+        -- stood BEFORE the exchange, for switchBlockers' reason.
+          List.foldl' blocks (recordEffectBlocks gs moved pairs exchanged) [(first, onSecond), (second, onFirst)]
+
+-- CR 509.3b / 509.3d: the BecameBlocking each (blocker, attacker) pair an
+-- effect's block makes records, under BlockProducer.ByEffect, read against the
+-- board as it stood before the block (`before`) and the attackers' blockers
+-- after it (`after`). switchBlockers, exchangeBlocks and blockAttacker share it.
+recordEffectBlocks :: GameState -> Map ObjectId (Set ObjectId) -> [(ObjectId, ObjectId)] -> GameState -> GameState
+recordEffectBlocks before after pairs gs =
+  let record h (blocker, attacker) =
+        Event.recordEvent
+          ( GameEvent.BecameBlocking
+              ( BecameBlocking.MkBecameBlocking
+                  { BecameBlocking.blocker = blocker,
+                    BecameBlocking.attacker = attacker,
+                    BecameBlocking.producer = BlockProducer.ByEffect (Map.findWithDefault Set.empty attacker after),
+                    BecameBlocking.attackerWasBlocked = isBlocked attacker before,
+                    BecameBlocking.blockersBefore = blockersOf attacker before
+                  }
+              )
+          )
+          h
+   in List.foldl' record gs pairs
+
+-- CR 506.4 with CR 509.1h's unblocking (False Orders): remove the creature from
+-- combat, and each attacker it was blocking that had become blocked by only it
+-- this combat (Combat.blockedBy) becomes unblocked, losing its key. "This
+-- combat" includes blockers since gone (Balduvian Warlord's 2006-07-15 ruling).
+--
+-- No GameEvent.AttackerUnblocked: that ruling keeps "attacks and isn't blocked"
+-- from triggering (CR 509.3g), and the event is the declaration's alone.
+removeUnblocking :: ObjectId -> GameState -> GameState
+removeUnblocking oid gs =
+  let c = GameState.combat gs
+      sole attacker current = Set.member oid current && Map.lookup attacker (Combat.blockedBy c) == Just (Set.singleton oid)
+      freed = Map.keys (Map.filterWithKey sole (Combat.blockers c))
+      removed = Game.removeFromCombat oid gs
+      rc = GameState.combat removed
+   in removed {GameState.combat = rc {Combat.blockers = List.foldl' (flip Map.delete) (Combat.blockers rc) freed}}
+
+-- CR 509.3a's effect road for ONE creature (False Orders): it blocks an
+-- attacking creature `chooser` picks. The candidates are the attackers it could
+-- block (docs/decisions.md, "What a creature an effect makes block may
+-- block"): canBlock and pairAllowed, Sorrow's Path's gate, over attackers
+-- attacking its controller, a planeswalker they control or a battle they
+-- protect (CR 509.1a), less any it already blocks (CR 509.3b). Through
+-- Game.chooseAmong, so elided at one candidate and a no-op at none.
+--
+-- Its events are exchangeBlocks': BecameBlocking per pair, BlocksDeclared when
+-- it was not a blocking creature (CR 509.3a), and AttackerBlocked for an
+-- attacker that was unblocked (CR 509.3c, Balduvian Warlord's 2006-07-15
+-- ruling). CR 702.22h spreads the block across the attacker's band.
+blockAttacker :: PlayerId -> ObjectId -> Game ()
+blockAttacker chooser oid = do
+  gs <- State.get
+  let c = GameState.combat gs
+      attacking = Map.keys (Combat.attackers c)
+      blockable controller attacker =
+        not (Set.member oid (blockersOf attacker gs))
+          && Defender.playerOfAttacker Projection.controllerWithLastKnown attacker gs == Just controller
+          && pairAllowed [oid] attacking oid attacker gs
+  case Projection.controllerOf oid gs of
+    Just controller
+      | canBlock controller oid gs -> do
+          mAttacker <- Game.chooseAmong (\decider who pool -> Prompt.ChoosePermanent decider who oid pool Seq.empty) chooser (filter (blockable controller) attacking)
+          Monad.forM_ mAttacker $ \attacker -> do
+            let targets = filter (\a -> not (Set.member oid (blockersOf a gs))) (attacker : Set.toList (bandmatesOf attacker c))
+                pairs = fmap (\a -> (oid, a)) targets
+                moved = List.foldl' (\m a -> Map.insertWith Set.union a (Set.singleton oid) m) (Combat.blockers c) targets
+                wasBlocking = Game.isBlocking oid gs || Set.member oid (Combat.blockingNothing c)
+                blocked =
+                  gs
+                    { GameState.combat =
+                        noteBlockedBy
+                          moved
+                          c
+                            { Combat.blockers = moved,
+                              Combat.blockingNothing = Set.delete oid (Combat.blockingNothing c),
+                              Combat.joinedUnder = Map.insert oid controller (Combat.joinedUnder c)
+                            }
+                    }
+                declared h = if wasBlocking then h else Event.recordEvent (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared oid (Set.fromList targets))) h
+                becameBlocked h a =
+                  if isBlocked a gs
+                    then h
+                    else case Defender.playerOfAttacker Projection.controllerWithLastKnown a gs of
+                      Nothing -> h
+                      Just defending -> Event.recordEvent (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked a defending (Map.findWithDefault Set.empty a moved))) h
+            State.put (List.foldl' becameBlocked (declared (recordEffectBlocks gs moved pairs blocked)) targets)
+    _ -> pure ()
 
 -- Every creature currently IN combat: the attackers, plus every blocking
 -- creature, Combat.blockingNothing's included (CR 509.1g). Not the keys of
@@ -3112,15 +3181,16 @@ enterBlocking controller oid attacker = do
   State.put
     gs
       { GameState.combat =
-          c
-            { -- insertWith and not adjust: the attacker this creature is
-              -- put onto the battlefield blocking need not have been
-              -- blocked already, so the key may be absent.
-              Combat.blockers = Map.insertWith Set.union attacker (Set.singleton oid) (Combat.blockers c),
-              -- CR 506.4's comparand: this is where the creature joins
-              -- combat.
-              Combat.joinedUnder = Map.insert oid controller (Combat.joinedUnder c)
-            }
+          noteBlockedBy (Map.singleton attacker (Set.singleton oid)) $
+            c
+              { -- insertWith and not adjust: the attacker this creature is
+                -- put onto the battlefield blocking need not have been
+                -- blocked already, so the key may be absent.
+                Combat.blockers = Map.insertWith Set.union attacker (Set.singleton oid) (Combat.blockers c),
+                -- CR 506.4's comparand: this is where the creature joins
+                -- combat.
+                Combat.joinedUnder = Map.insert oid controller (Combat.joinedUnder c)
+              }
       }
   -- CR 509.3d's third producer, in that rule's own words: "In addition,
   -- it will trigger if a creature is put onto the battlefield blocking
@@ -3457,7 +3527,7 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
                   -- CR 506.4's comparand for the blockers, alongside the attackers'.
                   -- Unioned, the attackers' entries being already in this map.
                   joined = Map.union (Map.fromList (fmap (\(b, _) -> (b, blockerOf b)) live)) (Combat.joinedUnder (GameState.combat gs2))
-              State.modify' $ \g -> g {GameState.combat = (GameState.combat g) {Combat.blockers = merged, Combat.joinedUnder = joined}}
+              State.modify' $ \g -> g {GameState.combat = noteBlockedBy merged ((GameState.combat g) {Combat.blockers = merged, Combat.joinedUnder = joined})}
               -- CR 509.1a again, for the declaration that actually stands. A
               -- second write and not a duplicate of the one above: on the
               -- CR 509.1c degradation path `declaration` is

@@ -32,6 +32,27 @@ Each entry gives:
 
 Entries are ordered by the first rule each cites.
 
+## What a creature an effect makes block may block
+
+- **Question**: "You may have it block an attacking creature of your choice"
+  (False Orders). It is no declaration, so which attackers may be chosen: any,
+  or only those it could block? And may a tapped creature block?
+- **Rules**: CR 101.2, 506.4b, 509.1a, 509.1b, 509.4b; CR of
+  2026-09-25. The card's one ruling is silent.
+- **Decision**: Only attackers it could block alone: it must be untapped and
+  free of a "can't block", the pair must pass CR 509.1b's restrictions
+  (flying), and the attacker must be attacking its controller, a planeswalker
+  they control or a battle they protect. Set-shaped restrictions (menace) are
+  not asked. Sorrow's Path's printed "could block" is the same gate.
+- **Rejected**: Any attacker, reading CR 509.4b's exemption as the rule for
+  every road that is not a declaration: CR 101.2 lets a "can't" beat an
+  effect that directs a block, and CR 509.4b is stated for one road only.
+  Allowing a tapped creature, which CR 506.4b lets stay blocking but nothing
+  lets begin to block.
+- **Site**: `Parun.Engine.Combat`'s `blockAttacker`.
+  `data/scenarios/false-orders/cr-509-3a-false-orders-has-its-target-block-an-attacker-it-could-block.json`.
+- **Issue**: #5005.
+
 ## Who is the active player while a turn is skipped
 
 - **Question**: CR 732.3 has the active player break a fragmented loop, and CR

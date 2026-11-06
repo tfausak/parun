@@ -1365,6 +1365,8 @@ library codec
     Parun.Codec.RemoveCounters
     Parun.Codec.RemoveCountersAmong
     Parun.Codec.RemoveCountersSpec
+    Parun.Codec.RemoveFromCombat
+    Parun.Codec.RemoveFromCombatSpec
     Parun.Codec.RemovePlayerCounters
     Parun.Codec.RemovePlayerCountersSpec
     Parun.Codec.Repeat
@@ -1650,6 +1652,8 @@ library codec
     Parun.Codec.TypeLineSpec
     Parun.Codec.TypesAre
     Parun.Codec.TypesAreSpec
+    Parun.Codec.Unblocking
+    Parun.Codec.UnblockingSpec
     Parun.Codec.UntapHold
     Parun.Codec.UntapHoldSpec
     Parun.Codec.UntapR
@@ -3177,6 +3181,7 @@ library types
     Parun.Types.RemovalCount
     Parun.Types.RemoveCounters
     Parun.Types.RemoveCountersAmong
+    Parun.Types.RemoveFromCombat
     Parun.Types.RemovePlayerCounters
     Parun.Types.Repeat
     Parun.Types.RepeatIf
@@ -3346,6 +3351,7 @@ library types
     Parun.Types.TurnWindow
     Parun.Types.TypeLine
     Parun.Types.TypesAre
+    Parun.Types.Unblocking
     Parun.Types.UntapHold
     Parun.Types.UntapR
     Parun.Types.UntapRestriction

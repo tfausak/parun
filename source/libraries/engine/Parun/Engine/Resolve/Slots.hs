@@ -233,6 +233,7 @@ import qualified Parun.Types.RedirectDamage as RedirectDamage
 import qualified Parun.Types.RemovalCount as RemovalCount
 import qualified Parun.Types.RemoveCounters as RemoveCounters
 import qualified Parun.Types.RemoveCountersAmong as RemoveCountersAmong
+import qualified Parun.Types.RemoveFromCombat as RemoveFromCombat
 import qualified Parun.Types.RemovePlayerCounters as RemovePlayerCounters
 import qualified Parun.Types.Repeat as Repeat
 import qualified Parun.Types.RepeatIf as RepeatIf
@@ -853,7 +854,8 @@ effectObjectRefs effect = case effect of
   Effect.PhaseOut ref -> [ref]
   Effect.TurnFaceDown (TurnFaceDown.MkTurnFaceDown ref _) -> [ref]
   Effect.TurnFaceUp {} -> []
-  Effect.RemoveFromCombat ref -> [ref]
+  Effect.RemoveFromCombat payload -> [RemoveFromCombat.removed payload]
+  Effect.BlockAttacker ref -> [ref]
   Effect.BecomesBlocked {} -> []
   -- The two attackers come out of a target SLOT, not an ObjectRef.
   Effect.SwitchBlockers {} -> []
@@ -1084,6 +1086,7 @@ effectPlayerRefs effect = case effect of
   Effect.TurnFaceDown {} -> []
   Effect.TurnFaceUp {} -> []
   Effect.RemoveFromCombat {} -> []
+  Effect.BlockAttacker {} -> []
   Effect.BecomesBlocked {} -> []
   Effect.SwitchBlockers {} -> []
   Effect.ExchangeBlocks {} -> []
@@ -1371,6 +1374,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.TurnFaceDown {} -> Map.empty
   Effect.TurnFaceUp slot -> oneSlot slot
   Effect.RemoveFromCombat _ -> Map.empty
+  Effect.BlockAttacker _ -> Map.empty
   Effect.BecomesBlocked slot -> oneSlot slot
   -- SlotArity.Many, unlike the arm above: CR 601.2c gives this one instance of
   -- the word "target" exactly two recipients and resolution reads both.
@@ -2224,6 +2228,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.TurnFaceDown _ -> True
   Effect.TurnFaceUp _ -> True
   Effect.RemoveFromCombat _ -> True
+  Effect.BlockAttacker _ -> True
   Effect.BecomesBlocked _ -> True
   Effect.SwitchBlockers _ -> True
   Effect.ExchangeBlocks _ -> True
@@ -2526,6 +2531,7 @@ hasRead wanted =
         Effect.TurnFaceDown _ -> False
         Effect.TurnFaceUp _ -> False
         Effect.RemoveFromCombat _ -> False
+        Effect.BlockAttacker _ -> False
         Effect.BecomesBlocked _ -> False
         Effect.SwitchBlockers _ -> False
         Effect.ExchangeBlocks _ -> False
@@ -2824,6 +2830,7 @@ boundSlots effect = case effect of
   Effect.TurnFaceDown _ -> Set.empty
   Effect.TurnFaceUp _ -> Set.empty
   Effect.RemoveFromCombat _ -> Set.empty
+  Effect.BlockAttacker _ -> Set.empty
   Effect.BecomesBlocked _ -> Set.empty
   Effect.SwitchBlockers _ -> Set.empty
   Effect.ExchangeBlocks _ -> Set.empty

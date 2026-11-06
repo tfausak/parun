@@ -3374,6 +3374,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
     let named = objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot)
      in not (null named) && not (any (\target -> Set.member target (GameState.battlefield gs) && maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject target gs)) named)
   Effect.RemoveFromCombat {} -> False
+  Effect.BlockAttacker {} -> False
   Effect.BecomesBlocked {} -> False
   Effect.SwitchBlockers {} -> False
   Effect.ExchangeBlocks {} -> False

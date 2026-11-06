@@ -253,6 +253,7 @@ import qualified Parun.Types.RedirectDamage as RedirectDamage
 import qualified Parun.Types.RemovalCount as RemovalCount
 import qualified Parun.Types.RemoveCounters as RemoveCounters
 import qualified Parun.Types.RemoveCountersAmong as RemoveCountersAmong
+import qualified Parun.Types.RemoveFromCombat as RemoveFromCombat
 import qualified Parun.Types.RemovePlayerCounters as RemovePlayerCounters
 import qualified Parun.Types.Repeat as Repeat
 import qualified Parun.Types.RepeatIf as RepeatIf
@@ -775,7 +776,8 @@ rewriteEffect pairs effect = case effect of
   -- mutating the ref's rewrite reddens nothing.
   Effect.TurnFaceDown (TurnFaceDown.MkTurnFaceDown ref listed) -> Effect.TurnFaceDown (TurnFaceDown.MkTurnFaceDown (rewriteObjectRef pairs ref) (rewriteListing pairs listed))
   Effect.TurnFaceUp _ -> effect
-  Effect.RemoveFromCombat ref -> Effect.RemoveFromCombat (rewriteObjectRef pairs ref)
+  Effect.RemoveFromCombat payload -> Effect.RemoveFromCombat payload {RemoveFromCombat.removed = rewriteObjectRef pairs (RemoveFromCombat.removed payload)}
+  Effect.BlockAttacker ref -> Effect.BlockAttacker (rewriteObjectRef pairs ref)
   Effect.BecomesBlocked _ -> effect
   Effect.SwitchBlockers _ -> effect
   Effect.ExchangeBlocks _ -> effect
