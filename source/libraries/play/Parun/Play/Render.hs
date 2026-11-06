@@ -473,8 +473,8 @@ event view logged = case LoggedEvent.event logged of
     said parts = Just (Text.unwords parts <> Text.pack ".")
     less a b = if a > b then a - b else 0
     by actors one many object =
-      let named' = fmap name (Set.toList actors)
-       in said [listing named', Text.pack (if length named' == 1 then one else many), name object]
+      let names = fmap name (Set.toList actors)
+       in said [listing names, Text.pack (if length names == 1 then one else many), name object]
     ballot b =
       player (Ballot.voter b) <> Text.pack " votes for " <> case Ballot.choice b of
         BallotChoice.ForObject o -> snapshotName (ObjectSnapshot.characteristics o)
