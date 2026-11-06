@@ -645,10 +645,10 @@ data GameState = MkGameState
     -- | CR 706.2b: whether an ability activated inside that step asked for the
     -- die to be rerolled (Goblin Bookie).
     rerollRequested :: Bool,
-    -- | CR 733.1: why each player's cast or activation was last reversed,
-    -- since that player last chose an action at priority
-    -- (Parun.Engine.Engine.priorityLoop). Parun.Engine.PlayerView shows a
-    -- seat its own.
+    -- | CR 733.1: why each player's cast, activation or combat declaration
+    -- was last reversed, since that player last chose an action at priority
+    -- (Parun.Engine.Engine.priorityLoop) or made a declaration
+    -- (Parun.Engine.Combat). Parun.Engine.PlayerView shows a seat its own.
     undone :: Map.Map PlayerId.PlayerId Undoing.Undoing
   }
   deriving (Eq, Ord, Show)

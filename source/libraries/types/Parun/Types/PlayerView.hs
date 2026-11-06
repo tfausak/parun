@@ -29,8 +29,8 @@ data PlayerView = MkPlayerView
     -- last looked before that turn ended (CR 514.1's discard, for one).
     witnessedLastTurn :: [LoggedEvent.LoggedEvent],
     result :: Maybe Result.Result,
-    -- | CR 733.1: why the seat's last cast or activation was reversed, until it
-    -- next chooses an action (GameState.undone).
+    -- | CR 733.1: why the seat's last cast, activation or combat declaration
+    -- was reversed, until it next chooses one (GameState.undone).
     undone :: Maybe Undoing.Undoing
   }
   deriving (Eq, Show)

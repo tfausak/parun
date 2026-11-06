@@ -78,6 +78,7 @@ import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Sickness as Sickness
+import qualified Parun.Types.Undoing as Undoing
 import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -167,7 +168,9 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- the lap ends where it began. Paying so again is refused; paying with
     -- her Island is a different game choice (CR 601.2h via 602.2b) and goes
     -- ahead.
-    Spec.assertEqWith s "CR 732.3 only alice's repeated payment is refused" (freedPayments birds freed island) [(False, True), (False, False), (True, True)]
+    let paid = freedPayments birds freed island
+    Spec.assertEqWith s "CR 732.3 only alice's repeated payment is refused" (fmap fst paid) [(False, True), (False, False), (True, True)]
+    Spec.assertEqWith s "CR 733.1 and her next priority says why" (fmap snd paid) [Nothing, Just Undoing.RepeatedLoop, Nothing]
 
   Spec.it s "a mana ability is refused as the state it leaves" $ do
     birds <- S.printingOf s registry "Birds of Paradise"
@@ -175,7 +178,9 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- The same loop, the Birds tapped for {U} with priority (CR 605.3a) and
     -- the {U} spent from the pool. Tapping them for {U} again is refused; for
     -- {G}, which leaves another state, is not.
-    Spec.assertEqWith s "CR 732.3 only alice's repeated mana ability is refused" (freedTaps birds freed) [True, False, True]
+    let taps = freedTaps birds freed
+    Spec.assertEqWith s "CR 732.3 only alice's repeated mana ability is refused" (fmap fst taps) [True, False, True]
+    Spec.assertEqWith s "CR 733.1 and her next priority says why" (fmap snd taps) [Nothing, Just Undoing.RepeatedLoop, Nothing]
 
   Spec.it s "a choice the resolution offers does not make a repeated activation a new one" $ do
     stitcher <- S.printingOf s registry "Fatestitcher"
@@ -261,7 +266,9 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- object (CR 400.7), which no card can tell from the old one, so the
     -- second lap returns to the state the first began in, and casting it so
     -- again is refused.
-    Spec.assertEqWith s "CR 732.3 alice's repeated cast is refused" (blinkCasts spirit omniscience) [True, False]
+    let casts = blinkCasts spirit omniscience
+    Spec.assertEqWith s "CR 732.3 alice's repeated cast is refused" (fmap fst casts) [True, False]
+    Spec.assertEqWith s "CR 733.1 and her next priority says why" (fmap snd casts) [Nothing, Just Undoing.RepeatedLoop]
 
 -- How many times the answerer has the tapper activate before it passes
 -- instead, since without CR 732.3 the loop never ends.
@@ -439,8 +446,8 @@ freedBoard birds freed island =
 -- alice untaps her Birds with the Aura once per source in `script`, paying
 -- with that source in the mana window; bob passes throughout. Answers her
 -- attempts, each as whether it paid with the Island and whether it went on
--- the stack.
-freedPayments :: Printing.Printing -> Printing.Printing -> Printing.Printing -> [(Bool, Bool)]
+-- the stack, beside why her next priority says it was undone.
+freedPayments :: Printing.Printing -> Printing.Printing -> Printing.Printing -> [((Bool, Bool), Maybe Undoing.Undoing)]
 freedPayments birds freed island =
   let (birdsId, freedId, islandId, gs) = freedBoard birds freed (Just island)
       script = [birdsId, birdsId] <> Maybe.maybeToList islandId
@@ -449,14 +456,14 @@ freedPayments birds freed island =
 
 -- The sources alice has yet to pay with, the one the attempt under way pays
 -- with, whether she has just attempted one, and her attempts so far.
-type Paying = ([ObjectId.ObjectId], Maybe ObjectId.ObjectId, Bool, [(Bool, Bool)])
+type Paying = ([ObjectId.ObjectId], Maybe ObjectId.ObjectId, Bool, [((Bool, Bool), Maybe Undoing.Undoing)])
 
 paying :: ObjectId.ObjectId -> Maybe ObjectId.ObjectId -> Asked.Asked GameState.GameState r -> State.State Paying r
 paying freedId islandId asked = case Asked.prompt asked of
   Prompt.ChooseAction _ pid actions | pid == S.alice -> do
     (script, source, attempted, made) <- State.get
     let stacked = not (null (GameState.stack (Asked.game asked)))
-        recorded = if attempted then made <> [(Maybe.isJust source && source == islandId, stacked)] else made
+        recorded = if attempted then made <> [((Maybe.isJust source && source == islandId, stacked), undoneFor (Asked.game asked))] else made
     case (script, untapping freedId actions) of
       (next : rest, Just action) | not stacked -> do
         State.put (rest, Just next, True, recorded)
@@ -476,8 +483,9 @@ paying freedId islandId asked = case Asked.prompt asked of
 
 -- alice taps her Birds for each colour in `script` with priority, and spends
 -- what she can of it untapping them with the Aura; bob passes throughout.
--- Answers, per tap, whether it added mana.
-freedTaps :: Printing.Printing -> Printing.Printing -> [Bool]
+-- Answers, per tap, whether it added mana, beside why her next priority says
+-- it was undone.
+freedTaps :: Printing.Printing -> Printing.Printing -> [(Bool, Maybe Undoing.Undoing)]
 freedTaps birds freed =
   let (birdsId, freedId, _, gs) = freedBoard birds freed Nothing
       ((_, _), (_, _, _, made)) = State.runState (Engine.runGameAsked (tappingFor birdsId freedId) gs Engine.priorityLoop) ([Color.Blue, Color.Blue, Color.Green], Nothing, False, [])
@@ -485,7 +493,7 @@ freedTaps birds freed =
 
 -- The colours alice has yet to tap for, the one the tap under way is for,
 -- whether she has just tapped, and her taps so far.
-type Tapping = ([Color.Color], Maybe Color.Color, Bool, [Bool])
+type Tapping = ([Color.Color], Maybe Color.Color, Bool, [(Bool, Maybe Undoing.Undoing)])
 
 tappingFor :: ObjectId.ObjectId -> ObjectId.ObjectId -> Asked.Asked GameState.GameState r -> State.State Tapping r
 tappingFor birdsId freedId asked = case Asked.prompt asked of
@@ -495,7 +503,7 @@ tappingFor birdsId freedId asked = case Asked.prompt asked of
         stacked = not (null (GameState.stack g))
         pooled = not (null (Mana.Type.unwrap (Game.poolOf S.alice g)))
         tap = List.find (== Action.ActivateManaAbility birdsId) actions
-        recorded = if tapped then made <> [pooled] else made
+        recorded = if tapped then made <> [(pooled, undoneFor g)] else made
     case (script, tap) of
       _ | tapped && pooled -> do
         State.put (script, colour, False, recorded)
@@ -731,8 +739,8 @@ losesFrom spearId action = case action of
 -- record, which the first resolution would otherwise write); bob passes
 -- throughout. alice opens each lap casting the Spirit, up to `budget` times,
 -- and bounces it once it has resolved. Answers her casts, each as whether it
--- went on the stack.
-blinkCasts :: Printing.Printing -> Printing.Printing -> [Bool]
+-- went on the stack, beside why her next priority says it was undone.
+blinkCasts :: Printing.Printing -> Printing.Printing -> [(Bool, Maybe Undoing.Undoing)]
 blinkCasts spirit omniscience =
   let (_, gs1) = S.addPermanent omniscience S.alice (Setup.emptyGame S.bothPlayers)
       (spiritId, gs2) = S.addHandCard spirit S.alice gs1
@@ -746,7 +754,7 @@ blinkCasts spirit omniscience =
 
 -- The casts alice has left, whether she has just attempted one, and her
 -- attempts so far.
-type Blinking = (Int, Bool, [Bool])
+type Blinking = (Int, Bool, [(Bool, Maybe Undoing.Undoing)])
 
 blinking :: Asked.Asked GameState.GameState r -> State.State Blinking r
 blinking asked = case Asked.prompt asked of
@@ -755,7 +763,7 @@ blinking asked = case Asked.prompt asked of
     let stacked = not (null (GameState.stack (Asked.game asked)))
         cast = List.find casts actions
         bounce = List.find bounces actions
-        recorded = if attempted then made <> [stacked] else made
+        recorded = if attempted then made <> [(stacked, undoneFor (Asked.game asked))] else made
     case (cast, bounce) of
       _ | stacked -> do
         State.put (left, False, recorded)
@@ -778,3 +786,8 @@ blinking asked = case Asked.prompt asked of
     bounces action = case action of
       Action.Activate {} -> True
       _ -> False
+
+-- Why alice's last action was undone, as her view of the game says
+-- (GameState.undone).
+undoneFor :: GameState.GameState -> Maybe Undoing.Undoing
+undoneFor = Map.lookup S.alice . GameState.undone

@@ -524,10 +524,16 @@ choose p = do
   State.modify' (\gs -> gs {GameState.lastChoice = GameState.nextTimestamp gs})
   ask p
 
--- | CR 733.1: notes why `pid`'s cast or activation was reversed, once the
--- reversal has put back the state the action began in (GameState.undone).
+-- | CR 733.1: notes why `pid`'s cast, activation or combat declaration was
+-- reversed, once the reversal has put back the state the action began in
+-- (GameState.undone).
 noteUndoing :: PlayerId -> Undoing.Undoing -> Game ()
 noteUndoing pid why = State.modify' (\gs -> gs {GameState.undone = Map.insert pid why (GameState.undone gs)})
+
+-- | CR 733.1: `noteUndoing`'s note is news only until `pid` answers the next
+-- choice it explains.
+clearUndoing :: PlayerId -> Game ()
+clearUndoing pid = State.modify' (\gs -> gs {GameState.undone = Map.delete pid (GameState.undone gs)})
 
 -- | @chooser@ picks one of @candidates@ through the prompt @question@ builds,
 -- THE ask-and-check of every choice of one player or object from a list the

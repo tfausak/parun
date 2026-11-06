@@ -148,6 +148,7 @@ import qualified Parun.Types.TriggerSource as TriggerSource
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Parun.Types.TurnMarker as TurnMarker
+import qualified Parun.Types.Undoing as Undoing
 import qualified Parun.Types.UntapHold as UntapHold
 import qualified Parun.Types.Zone as Zone
 
@@ -1490,7 +1491,7 @@ priorityDecision trail = do
                           else Game.ask (Prompt.ChooseAction decider p menu)
                       -- CR 733.1: why the player's last action was
                       -- reversed is news only until they choose the next.
-                      State.modify' (\g -> g {GameState.undone = Map.delete p (GameState.undone g)})
+                      Game.clearUndoing p
                       -- FILTERED, NOT TRUSTED: everything Action.legalActions
                       -- computed -- CR 302.6's tap-sickness gate, CR 307.5
                       -- timing, cost payability, CR 305.2's land allowance,
@@ -1570,7 +1571,7 @@ priorityDecision trail = do
                           post <- State.get
                           let completion = Completion.MkCompletion {Completion.announcement = Nothing, Completion.paid = Fragmented.paid Nothing post}
                               completed = if Cost.touchedLibrary pre post then Nothing else Just completion
-                          Monad.when (any refusing completed) (Cost.restoreKeepingLibraryActions pre)
+                          Monad.when (any refusing completed) (Cost.restoreKeepingLibraryActions pre >> Game.noteUndoing p Undoing.RepeatedLoop)
                           grantAfterSettle p
                           pure (PriorityWindow.Open (Fragmented.complete completed trail'))
                         -- CR 116.2b / 702.37e / 701.40b: a special action, so
@@ -1700,7 +1701,7 @@ priorityDecision trail = do
                           post <- State.get
                           let completion = Completion.MkCompletion {Completion.announcement = Nothing, Completion.paid = Fragmented.paid Nothing post}
                               completed = if null nested && not (Cost.touchedLibrary pre post) then Just completion else Nothing
-                          Monad.when (any refusing completed) (Cost.restoreKeepingLibraryActions pre)
+                          Monad.when (any refusing completed) (Cost.restoreKeepingLibraryActions pre >> Game.noteUndoing p Undoing.RepeatedLoop)
                           grantAfterSettle p
                           pure (PriorityWindow.Open (Fragmented.complete completed trail'))
                         Action.Type.Activate oid ability -> do

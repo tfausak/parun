@@ -187,6 +187,7 @@ import qualified Parun.Types.TextWord as TextWord
 import qualified Parun.Types.Threshold as Threshold
 import qualified Parun.Types.TurnWindow as TurnWindow
 import qualified Parun.Types.TypeLine as TypeLine
+import qualified Parun.Types.Undoing as Undoing
 import qualified Parun.Types.VariableChoice as VariableChoice
 import qualified Parun.Types.WhichCounters as WhichCounters
 import qualified Parun.Types.Zone as Zone
@@ -5121,12 +5122,14 @@ paySubstitutingReadingThen refuses slots perform began earlier moment subject an
                   Payment.Paid convoked -> (mergeBound bound (mergeBound convoked paidOthers), convoked)
         -- CR 732.3 via 733.1: a payment completing a game choice the caller
         -- may not make again (Parun.Engine.Fragmented.forbidden) is reversed
-        -- like an unpaid one, each window its payer's to keep.
+        -- like an unpaid one, each window its payer's to keep, and noted as
+        -- refused, which the caller's note of an unpaid cost leaves standing.
         refused <- State.gets refuses
         case outcome of
           Payment.Paid _
             | refused -> do
                 Monad.void (reverseIllegal (earlier <> [own]) began)
+                Game.noteUndoing pid Undoing.RepeatedLoop
                 pure (Payment.Unpaid, Map.empty)
           -- The components' bound slots ride out unchanged: the mana window
           -- above binds none, and a caller that has a binding environment to
