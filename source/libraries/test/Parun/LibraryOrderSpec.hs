@@ -99,6 +99,7 @@ import qualified Parun.Types.Sickness as Sickness
 import qualified Parun.Types.SlotArity as SlotArity
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.StepBegan as StepBegan
+import qualified Parun.Types.Surveil as Surveil
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TopOfLibrary as TopOfLibrary
 import qualified Parun.Types.Zone as Zone
@@ -788,7 +789,7 @@ surveilPromptSpec s registry = Spec.describe s "SurveilPrompt" $ do
           State.modify (+ 1)
           pure (S.identityAnswer p)
         _ -> pure (S.identityAnswer p)
-      surveilTwo = Effect.Surveil (PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 2))
+      surveilTwo = Effect.Surveil (Surveil.MkSurveil (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 2) Nothing)
       apply effect sourceId = Resolve.applyEffect sourceId sourceId S.alice Map.empty Map.empty effect
       asks effect sourceId gs = State.execState (Engine.runGame counting gs (apply effect sourceId)) 0
   -- Nothing to LOOK at, the one case rule 701.25a's process cannot run on.
@@ -809,7 +810,7 @@ surveilPromptSpec s registry = Spec.describe s "SurveilPrompt" $ do
   -- occurs." Driven through the opcode, no printing surveilling zero.
   Spec.it s "CR 701.25c surveil 0 raises no prompt and moves nothing" $ do
     (ids, sourceId, board) <- surveilOpcodeBoard s registry 2
-    let surveilZero = Effect.Surveil (PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 0))
+    let surveilZero = Effect.Surveil (Surveil.MkSurveil (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 0) Nothing)
         after = S.runPure (surveilAnswer ([], [])) board (apply surveilZero sourceId)
     Spec.assertEqWith s "not asked" (asks surveilZero sourceId board) 0
     Spec.assertEqWith s "and the library is what it was" (Game.zoneMembers Zone.Library S.alice after) ids
@@ -824,7 +825,7 @@ enhancedSurveillanceSpec s registry = Spec.describe s "EnhancedSurveillance" $ d
     (ids, sourceId, base) <- surveilOpcodeBoard s registry 2
     enhanced <- S.printingOf s registry "Enhanced Surveillance"
     let board = snd (S.addPermanent enhanced S.alice base)
-        surveilZero = Effect.Surveil (PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 0))
+        surveilZero = Effect.Surveil (Surveil.MkSurveil (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 0) Nothing)
         after = S.runPure (surveilAnswer (ids, [])) board (Resolve.applyEffect sourceId sourceId S.alice Map.empty Map.empty surveilZero)
     Spec.assertEqWith s "the library is what it was" (Game.zoneMembers Zone.Library S.alice after) ids
     Spec.assertEqWith s "with an empty graveyard" (surveilGraveyard after) []

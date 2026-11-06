@@ -228,8 +228,6 @@ first.
   Rhymer; Semester Foreseer; Theorix Metamage; Variable Chaser; Vigorbloom
   Vanguard; Void Extrapolator; Whiplash Wordsmith. `EntryRiders` carries no
   designation, so nothing enters prepared (CR 722.3a).
-- #6489: Chandra, Chill of Compliance; Enlightened Confidant. Surveil binds no
-  slot for the cards it put into the graveyard (CR 701.25a).
 - #4295: Extrapolate the Impossible. Cards from outside the game can't be
   revealed and held for an opponent's choice, nor held to "different names" (CR
   701.23j).
