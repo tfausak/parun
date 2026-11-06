@@ -72,6 +72,7 @@ import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.MulliganOffer as MulliganOffer
 import qualified Parun.Types.NumberFloor as NumberFloor
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
@@ -146,7 +147,7 @@ spec s registry = Spec.describe s "Client" $ do
     bears <- S.printingOf s registry "Grizzly Bears"
     let (board, _) = S.handOne bears (List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) gs lands)
         turn = GameState.turnNumber board
-        seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce "Grizzly Bears")) (const (Right Nothing)))) botOrDefault
+        seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce "auto" "Grizzly Bears")) (const (Right Nothing)))) botOrDefault
         run = Driver.drive [] seats 40 (pure . (> turn) . GameState.turnNumber) board
         (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
         -- Since alice last answered: the auto payment ends her questions.
@@ -199,7 +200,7 @@ spec s registry = Spec.describe s "Client" $ do
     -- decks its second seat (CR 704.5b), past the main game's turn 3.
     let stock pid n g = List.foldl' (\g' _ -> snd (S.addLibraryCard mountain pid g')) g (replicate n ())
         board = (snd (S.addHandCard shahrazad S.alice (S.landsFor plains S.alice 2 (stock S.bob 8 (stock S.alice 9 (Setup.emptyGame (S.alice NonEmpty.:| [S.bob]))))))) {GameState.turnNumber = 3}
-        person = Game.human (screen 400 (castsOnce "Shahrazad")) (const (Right Nothing))
+        person = Game.human (screen 400 (castsOnce "auto" "Shahrazad")) (const (Right Nothing))
         seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) botOrDefault
         run = Driver.drive [] seats 40 (pure . (> 3) . GameState.turnNumber) board
         (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
@@ -227,7 +228,7 @@ spec s registry = Spec.describe s "Client" $ do
         stackLine = Text.pack "Stack, top first: Mindslaver's ability"
     -- Asked while Mindslaver is on the battlefield; the stack shown then and
     -- once its sacrifice has moved it, a witnessed move naming it.
-    Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Choose 1 target for Mindslaver's ability ")) shown) "the target prompt names it"
+    Spec.assertBool s (Text.pack "Choose 1 target for Mindslaver's ability:" `elem` shown) "the target prompt names it"
     Spec.assertEqWith s "the stack names it, then once it is sacrificed" (Set.toList (Set.fromList (stacks shown)), take 1 (stacks (dropWhile (/= Text.pack "  Graveyard: Mindslaver") shown))) ([stackLine], [stackLine])
     Spec.assertEqWith s "no face-down card" (filter (Text.isInfixOf (Text.pack "face-down")) shown) []
     Spec.assertEqWith s "CR 602.2 the activation names its player and source" (filter (Text.isInfixOf (Text.pack "activate")) shown) [Text.pack "Player 1 activates Mindslaver's ability."]
@@ -245,9 +246,9 @@ spec s registry = Spec.describe s "Client" $ do
         (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
         shown = reverse (written sc)
         heading = Text.isPrefixOf (Text.pack "Choose a number for Illicit Auction")
-    -- Player 2 tops 0 with 3; Player 1 is refused 2 and tops with 4, which
-    -- Player 2 lets stand.
-    Spec.assertEqWith s "each bid prompt, and the refusal" (filter (\line -> heading line || Text.isPrefixOf (Text.pack "Type a number") line) shown) (fmap Text.pack ["Choose a number for Illicit Auction, at least 0; 0 lets the high bid stand:", "Choose a number for Illicit Auction, at least 3; 3 lets the high bid stand:", "Type a number of at least 3.", "Choose a number for Illicit Auction, at least 4; 4 lets the high bid stand:"])
+    -- Player 2 tops 0 with 3; Player 1 is refused 2, asked again, and tops
+    -- with 4, which Player 2 lets stand.
+    Spec.assertEqWith s "each bid prompt, and the refusal" (filter (\line -> heading line || Text.isPrefixOf (Text.pack "Type a number") line) shown) (fmap Text.pack ["Choose a number for Illicit Auction, at least 0; 0 lets the high bid stand:", "Choose a number for Illicit Auction, at least 3; 3 lets the high bid stand:", "Type a number of at least 3.", "Choose a number for Illicit Auction, at least 3; 3 lets the high bid stand:", "Choose a number for Illicit Auction, at least 4; 4 lets the high bid stand:"])
     Spec.assertEqWith s "Player 1 wins the Hill Giant for 4 life" (fmap (S.lifeOf S.alice) outcome) (Right (Just 16))
 
   Spec.it s "CR 723.6 a seat controlled for its turn is still shown the rest of the turn before, and that turn, at its next question" $ do
@@ -294,7 +295,7 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "number" (answering gs "2" (Prompt.ChooseNumber alice S.alice o7 1 NumberFloor.Least (Just 2))) (Right 2)
     let (_, pastBound) = asking Hotseat.fresh {Hotseat.facing = Just S.alice} ["3"] gs (Prompt.ChooseNumber alice S.alice o7 1 NumberFloor.Least (Just 2))
     Spec.assertEqWith s "a number past its bound is refused by its range" (filter (Text.isPrefixOf (Text.pack "Type a number")) pastBound) [Text.pack "Type a number from 1 to 2."]
-    Spec.assertEqWith s "a number that is no bid notes no high bid" (filter (Text.isPrefixOf (Text.pack "Choose a number")) pastBound) [Text.pack "Choose a number for object 7, from 1 to 2:"]
+    Spec.assertEqWith s "a number that is no bid notes no high bid, asked again once refused" (filter (Text.isPrefixOf (Text.pack "Choose a number")) pastBound) (replicate 2 (Text.pack "Choose a number for object 7, from 1 to 2:"))
     Spec.assertEqWith s "an unbounded number" (answering gs "99" (Prompt.ChooseNumber alice S.alice o7 3 NumberFloor.Least Nothing)) (Right 99)
     Spec.assertEqWith s "combat damage" (answering gs "1 2" (Prompt.AssignCombatDamage alice S.alice o7 (Map.fromList [(Recipient.ToCreature o5, 0), (Recipient.ToCreature o9, 0)]) 3)) (Right (Map.fromList [(Recipient.ToCreature o5, 1), (Recipient.ToCreature o9, 2)]))
     Spec.assertEqWith s "division" (answering gs "3 1" (Prompt.ChooseDivision alice S.alice o7 (Dividing.Total 4) (Recipient.ToCreature o9 NonEmpty.:| [Recipient.ToPlayer S.bob]))) (Right (Map.fromList [(Recipient.ToCreature o9, 3), (Recipient.ToPlayer S.bob, 1)]))
@@ -393,14 +394,24 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Player 1 passes in ")) shown) "passed for"
 
   Spec.it s "auto pays a cost's color from the land that makes it and its generic from another" $ do
-    (lands, resolved, tapped, shown) <- autoCast s registry "Grizzly Bears" ["Mountain", "Mountain", "Forest"]
+    (lands, resolved, tapped, shown) <- castPaying "auto" s registry "Grizzly Bears" ["Mountain", "Mountain", "Forest"]
     Spec.assertEqWith s "the bear resolved" resolved True
     Spec.assertEqWith s "the Forest and one Mountain tapped" (fmap (`elem` tapped) lands) [True, False, True]
     Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Paying {1}{G}.")) shown) "asked with the cost"
+    Spec.assertBool s (not (any (Text.isPrefixOf (Text.pack "Undone: ")) shown)) "a cast completed is not told undone"
+
+  Spec.it s "CR 733.1 a cast stopped partway is told undone at the caster's next priority" $ do
+    (_, resolved, tapped, shown) <- castPaying "stop" s registry "Grizzly Bears" ["Mountain", "Forest"]
+    Spec.assertEqWith s "the bear did not resolve, and nothing stayed tapped" (resolved, tapped) (False, [])
+    Spec.assertEqWith
+      s
+      "told once, before the next menu"
+      (filter (Text.isPrefixOf (Text.pack "Undone: ")) (takeWhile (not . menuHeading) (drop 1 (dropWhile (/= Text.pack "> stop") shown))))
+      [Text.pack "Undone: Cast Grizzly Bears could not be completed, so it was reversed and its payments canceled."]
 
   -- The Plateau makes red ahead of white, so taking its first yield fails.
   Spec.it s "auto pays through a dual land, taking the color still owed" $ do
-    (lands, resolved, tapped, shown) <- autoCast s registry "Savannah Lions" ["Taiga", "Plateau"]
+    (lands, resolved, tapped, shown) <- castPaying "auto" s registry "Savannah Lions" ["Taiga", "Plateau"]
     Spec.assertEqWith s "the lions resolved" resolved True
     Spec.assertEqWith s "the Plateau tapped" (fmap (`elem` tapped) lands) [False, True]
     Spec.assertBool s (Text.pack "Auto takes W." `elem` shown) "took white"
@@ -433,6 +444,22 @@ spec s registry = Spec.describe s "Client" $ do
         cost = ManaCost.MkManaCost [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Red)]
         prompt = Prompt.ChooseManaSource (Decider.MkDecider S.alice) S.alice cost (f NonEmpty.:| [m])
     Spec.assertEqWith s "the Forest for the generic, the floating red paying the red" (fst (asking Hotseat.fresh {Hotseat.facing = Just S.alice} ["auto"] floating prompt)) (Right (Just f))
+
+  Spec.it s "a payment shows the payer's pool and what it leaves to pay, and a refused source reprints the sources" $ do
+    gs <- started s registry
+    mountain <- S.printingOf s registry "Mountain"
+    forest <- S.printingOf s registry "Forest"
+    let (f, g1) = S.addPermanent forest S.alice gs
+        (m, g2) = S.addPermanent mountain S.alice g1
+        floating = Mana.addMana S.alice [ManaSpec.unitOf (ManaType.Colored Color.Red)] g2
+        cost = ManaCost.MkManaCost [ManaSymbol.Generic 2, ManaSymbol.OfType (ManaType.Colored Color.Green)]
+        prompt = Prompt.ChooseManaSource (Decider.MkDecider S.alice) S.alice cost (f NonEmpty.:| [m])
+        heading = Text.pack "Paying {2}{G} with {R} in the pool, leaving {1}{G}. Choose a source to pay with, stop to stop paying, or auto (or press Enter) to pay the rest:"
+        (picked, shown) = asking Hotseat.fresh {Hotseat.facing = Just S.alice} ["9", "1"] floating prompt
+        refusal = dropWhile (/= Text.pack "> 9") shown
+    Spec.assertEqWith s "picked after the refusal" picked (Right (Just f))
+    Spec.assertBool s (heading `elem` shown) ("the pool and what is left: " <> show shown)
+    Spec.assertEqWith s "the sources again after the refusal" (take 3 (drop 2 refusal)) (take 3 (dropWhile (/= heading) shown))
 
   Spec.it s "auto asks again when it cannot pay the rest of a cost" $ do
     gs <- started s registry
@@ -467,7 +494,7 @@ spec s registry = Spec.describe s "Client" $ do
         tapped = case drop 2 placed of
           mountain : _ -> gs {GameState.objects = Map.adjust (\o -> o {Object.tapped = TapState.Tapped}) mountain (GameState.objects gs)}
           [] -> gs
-        shown = filter (Text.isPrefixOf (Text.pack "  ")) (Render.board (PlayerView.viewFor S.alice tapped))
+        shown = filter (Text.isPrefixOf (Text.pack "  ")) (Render.board True (PlayerView.viewFor S.alice tapped))
     Spec.assertEqWith
       s
       "grouped"
@@ -497,7 +524,7 @@ spec s registry = Spec.describe s "Client" $ do
                   (Zone.Library, wurm, S.bob),
                   (Zone.Library, island, S.bob)
                 ]
-            seen pid = filter (Text.isPrefixOf (Text.pack "  Seen")) (Render.board (PlayerView.viewFor pid gs))
+            seen pid = filter (Text.isPrefixOf (Text.pack "  Seen")) (Render.board True (PlayerView.viewFor pid gs))
         Spec.assertEqWith s "Telepathy and Future Sight, to alice" (seen S.alice) [Text.pack "  Seen in hand: Forest, Hill Giant 3/3", Text.pack "  Seen in library, top first: Craw Wurm 6/4"]
         Spec.assertEqWith s "bob's own hand stays under Your hand" (seen S.bob) [Text.pack "  Seen in library, top first: Craw Wurm 6/4"]
       _ -> Spec.assertFailure s "six printings"
@@ -516,6 +543,11 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "by name" (cardLines byName) ([Text.pack "Raging Goblin 2/2 (1 damage, 1 counter)", Text.pack "Raging Goblin {R}", Text.pack "Creature \8212 Berserker Goblin", Text.pack "2/2", Text.pack "Counters: 1 +1/+1"] <> Text.lines text)
     Spec.assertBool s (not (null (Text.lines text))) "Raging Goblin has Oracle text"
     Spec.assertBool s (Text.pack "Type card and a number from a list, or a card's name, to read that card." `elem` byName) "the first screen says how"
+    Spec.assertEqWith
+      s
+      "by a bare name the answer does not read"
+      (takeWhile (not . Text.isPrefixOf (Text.pack "> ")) (drop 1 (dropWhile (/= Text.pack "> Raging Goblin") (readout lookUp gs ["Raging Goblin", "1"] attacking))))
+      (cardLines byName)
     Spec.assertEqWith s "by number" (take 2 (cardLines byNumber)) [Text.pack "Hill Giant 3/3", Text.pack "Hill Giant {3}{R}"]
 
   Spec.it s "CR 708.2 / 708.5 card shows a face-down permanent's card only to a seat that may look at it" $ do
@@ -554,6 +586,17 @@ spec s registry = Spec.describe s "Client" $ do
         Text.pack "  4. Player 2's Island, in a graveyard"
       ]
     Spec.assertEqWith s "the number picks the one shown" picked (Right (Map.singleton slot (Set.singleton (Recipient.ToObject bobTapped))))
+    Spec.assertBool s (Text.pack "Choose 1 target for Demolish:" `elem` shown) "one slot goes unnamed"
+    let second = SlotName.MkSlotName (Text.pack "secondTarget")
+        twoSlots = Prompt.ChooseTargets (Decider.MkDecider S.alice) S.alice spell (Map.fromList [(slot, (1, legal)), (second, (1, legal))])
+        (_, twoShown) = asking Hotseat.fresh {Hotseat.facing = Just S.alice} ["1", "2"] gs twoSlots
+    Spec.assertEqWith s "several slots are named as words" (filter (Text.isPrefixOf (Text.pack "Choose 1 target")) twoShown) [Text.pack "Choose 1 target for Demolish (second target):", Text.pack "Choose 1 target for Demolish (target):"]
+
+  Spec.it s "CR 103.5 a mulligan is asked before the first turn, not in its untap step" $ do
+    gs <- started s registry
+    let offer = MulliganOffer.MkMulliganOffer {MulliganOffer.taken = 0, MulliganOffer.bottomCount = 1}
+        (_, shown) = asking Hotseat.fresh {Hotseat.facing = Just S.alice} ["1"] gs (Prompt.DeclareMulligan (Decider.MkDecider S.alice) S.alice offer)
+    Spec.assertEqWith s "the heading" (take 1 (drop 1 shown)) [Text.pack "Before the first turn. " <> Render.player (GameState.activePlayer gs) <> Text.pack " plays first."]
 
   Spec.it s "CR 404.3 a graveyard batch is listed top first; numbers rearrange it, Enter keeps it, and a repeat is refused" $ do
     bears <- S.printingOf s registry "Grizzly Bears"
@@ -725,11 +768,11 @@ asking hotseat typing gs prompt =
       (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT (Answerer.unwrap (Game.human terminal (const (Right Nothing))) (Asked.MkAsked [] gs prompt)) (SplitMix.MkSplitMix 0)) hotseat)) blank
    in (outcome, reverse (written sc))
 
--- Alice casting a creature spell with auto from a game after setup and the
--- named lands: the lands, whether it resolved, which lands it tapped, and
--- what the screen showed.
-autoCast :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> [String] -> m ([ObjectId.ObjectId], Bool, [ObjectId.ObjectId], [Text.Text])
-autoCast s registry spell names = do
+-- Alice casting a creature spell from a game after setup and the named lands,
+-- typing this word at each payment: the lands, whether it resolved, which
+-- lands it tapped, and what the screen showed.
+castPaying :: (Monad m) => String -> Spec.Spec m n -> Registry.Registry m -> String -> [String] -> m ([ObjectId.ObjectId], Bool, [ObjectId.ObjectId], [Text.Text])
+castPaying word s registry spell names = do
   gs <- started s registry
   printings <- mapM (S.printingOf s registry) names
   card <- S.printingOf s registry spell
@@ -737,7 +780,7 @@ autoCast s registry spell names = do
       (lands, withLands) = List.foldl' place ([], gs) printings
       board = snd (S.addHandCard card S.alice withLands)
       bears = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack spell)) S.alice
-      seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce spell)) (const (Right Nothing)))) botOrDefault
+      seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce word spell)) (const (Right Nothing)))) botOrDefault
       run = Driver.drive [] seats 20 (pure . (> bears board) . bears) board
       (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
       -- A game that stopped is read as the board it started from.
@@ -752,14 +795,14 @@ withForest s registry = do
   forest <- S.printingOf s registry "Forest"
   pure (S.addPermanent forest S.alice gs)
 
--- Casts the first of the spell it is offered, has auto pay for it, and
--- passes otherwise.
-castsOnce :: String -> Screen -> Maybe Text.Text
-castsOnce spell sc
-  | any (Text.isPrefixOf (Text.pack "Paying ")) shown = Just (Text.pack "auto")
+-- Casts the first of the spell it is offered, typing this word at its
+-- payment, and passes otherwise.
+castsOnce :: String -> String -> Screen -> Maybe Text.Text
+castsOnce word spell sc
+  | any (Text.isPrefixOf (Text.pack "Paying ")) shown = Just (Text.pack word)
   | any menuHeading shown =
       let options = [(n, rest) | line <- shown, (n, rest) <- [Text.breakOn (Text.pack ". ") (Text.strip line)], Text.all (`elem` ['0' .. '9']) n, not (Text.null n)]
-          cast = [n | not (typedYet "auto" sc), (n, rest) <- options, rest == Text.pack (". Cast " <> spell)]
+          cast = [n | not (typedYet word sc), (n, rest) <- options, rest == Text.pack (". Cast " <> spell)]
        in Maybe.listToMaybe (cast <> [n | (n, rest) <- options, rest == Text.pack ". Pass"])
   | otherwise = plays sc
   where

@@ -103,22 +103,22 @@ parse input = case Parsec.parse (Value.decode <* Parsec.eof) "" input of
 asObject :: Value.Value -> Either Text.Text [Pair.Pair Value.Value]
 asObject v = case v of
   Value.Object o -> Right $ Object.unwrap o
-  _ -> Left . Text.pack $ "expected object but got " <> show v
+  _ -> Left . Text.pack $ "expected object but got " <> Text.unpack (render v)
 
 asArray :: Value.Value -> Either Text.Text [Value.Value]
 asArray v = case v of
   Value.Array a -> Right $ Array.unwrap a
-  _ -> Left . Text.pack $ "expected array but got " <> show v
+  _ -> Left . Text.pack $ "expected array but got " <> Text.unpack (render v)
 
 asText :: Value.Value -> Either Text.Text Text.Text
 asText v = case v of
   Value.String s -> Right $ String.unwrap s
-  _ -> Left . Text.pack $ "expected string but got " <> show v
+  _ -> Left . Text.pack $ "expected string but got " <> Text.unpack (render v)
 
 asBoolean :: Value.Value -> Either Text.Text Bool
 asBoolean v = case v of
   Value.Boolean b -> Right $ Boolean.unwrap b
-  _ -> Left . Text.pack $ "expected boolean but got " <> show v
+  _ -> Left . Text.pack $ "expected boolean but got " <> Text.unpack (render v)
 
 asInteger :: Value.Value -> Either Text.Text Integer
 asInteger v = case v of
@@ -127,8 +127,8 @@ asInteger v = case v of
         e = Decimal.exponent d
      in if e >= 0
           then Right $ Decimal.mantissa d * (10 ^ e)
-          else Left . Text.pack $ "expected integer but got fraction " <> show v
-  _ -> Left . Text.pack $ "expected number but got " <> show v
+          else Left . Text.pack $ "expected integer but got fraction " <> Text.unpack (render v)
+  _ -> Left . Text.pack $ "expected number but got " <> Text.unpack (render v)
 
 asTagged :: Value.Value -> Either Text.Text (String, Maybe Value.Value)
 asTagged v = do
@@ -310,7 +310,7 @@ tuple ca cb =
         xs <- asArray value
         case xs of
           [av, bv] -> (,) <$> Codec.decode ca av <*> Codec.decode cb bv
-          _ -> Left . Text.pack $ "expected a 2-element array but got " <> show value,
+          _ -> Left . Text.pack $ "expected a 2-element array but got " <> Text.unpack (render value),
       Codec.schema = (\a b -> Schema.tupleOf [a, b]) <$> Codec.schema ca <*> Codec.schema cb
     }
 

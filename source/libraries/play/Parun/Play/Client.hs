@@ -34,7 +34,9 @@ import qualified Parun.Play.Render as Render
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CombatDamageOption as CombatDamageOption
+import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.Hotseat as Hotseat
+import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
@@ -73,6 +75,7 @@ respond terminal lookUp line = do
   -- (Parun.Play.Game.playOrDraw), so every request it reads has a view.
   view <- maybe (stop (Text.pack "a request with no view")) pure (Request.view request)
   collect view
+  Monad.when (Question.kind question == Text.pack "ChooseAction") (undone seat view)
   fmap (Common.render . Codec.Reply.toValue) $
     if Question.kind question == Text.pack "Concede"
       then do
@@ -81,13 +84,51 @@ respond terminal lookUp line = do
       else do
         (said, automatic) <- unasked view request
         case automatic of
-          Nothing -> mapM_ (say terminal) said >> asked terminal lookUp view request
+          Nothing -> do
+            mapM_ (say terminal) said
+            reply <- asked terminal lookUp view request
+            attempt seat view question reply
+            pure reply
           Just reply -> do
             -- Only the seat the screen faces is shown its news unasked.
             facing <- State.gets Hotseat.facing
             news <- if facing == Just seat then tell False seat else pure []
             mapM_ (say terminal) (news <> said)
             pure reply
+
+-- | Remembers a cast or an activation the seat chose, so its next priority
+-- can tell it whether the action was undone.
+attempt :: (Monad m) => PlayerId.PlayerId -> PlayerView.PlayerView -> Question.Question -> R.Reply -> Client m ()
+attempt seat view question reply = case reply of
+  R.Number i
+    | Question.kind question == Text.pack "ChooseAction",
+      Just option <- arrayOf (Question.offer question) >>= Maybe.listToMaybe . List.genericDrop i,
+      Just kind <- field "action" option >>= textOf,
+      kind `elem` [Text.pack "Cast", Text.pack "Activate"] ->
+        let mark = (PlayerView.game view, PlayerView.turn view, Natural.length (PlayerView.witnessed view))
+         in State.modify' (\h -> h {Hotseat.attempted = Map.insert seat (mark, actionName view option) (Hotseat.attempted h)})
+  _ -> pure ()
+
+-- | CR 733.1: at the seat's priority after a cast or an activation it chose,
+-- a line of news saying it was undone when its view has logged no spell cast
+-- and no ability activated since. The view does not say why (gap #6439).
+undone :: (Monad m) => PlayerId.PlayerId -> PlayerView.PlayerView -> Client m ()
+undone seat view = do
+  tried <- State.gets (Map.lookup seat . Hotseat.attempted)
+  State.modify' (\h -> h {Hotseat.attempted = Map.delete seat (Hotseat.attempted h)})
+  case tried of
+    Just ((game, turn, n), action)
+      | game == PlayerView.game view,
+        turn == PlayerView.turn view,
+        not (any (completes . LoggedEvent.event) (List.genericDrop n (PlayerView.witnessed view))) ->
+          let line = Text.pack "Undone: " <> action <> Text.pack " could not be completed, so it was reversed and its payments canceled."
+           in State.modify' (\h -> h {Hotseat.news = Map.insertWith (flip (<>)) seat (Seq.singleton line) (Hotseat.news h)})
+    _ -> pure ()
+  where
+    completes e = case e of
+      GameEvent.SpellCast {} -> True
+      GameEvent.AbilityActivated {} -> True
+      _ -> False
 
 -- | Asks the seat, handing the screen to it first.
 asked :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> PlayerView.PlayerView -> Request.Request -> Client m R.Reply
@@ -100,19 +141,23 @@ asked terminal lookUp view request = do
   news <- tell handed seat
   mapM_ (say terminal) $
     [Text.empty]
-      <> Render.board view
+      <> Render.board (Question.kind question `notElem` fmap Text.pack beforeFirstTurn) view
       <> news
       <> Render.hand view
       <> [Text.pack "Type card and a number from a list, or a card's name, to read that card." | first]
       <> foldMap (\p -> [Text.pack "That answer was refused: " <> p]) (Request.problem request)
   answer terminal lookUp seat view question
 
+-- | CR 103.5-103.6: the questions asked before the first turn (CR 103.8).
+beforeFirstTurn :: [String]
+beforeFirstTurn = ["DeclareMulligan", "Bottom", "MulliganAction", "OpeningHandAction"]
+
 -- | CR 104.3a's concession, quitting and reading a card are typed at any
 -- question, and "auto" or an empty line at a mana source; everything else is
 -- read by the question's own reader until it reads.
 answer :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> PlayerId.PlayerId -> PlayerView.PlayerView -> Question.Question -> Client m R.Reply
 answer terminal lookUp seat view question = case (Question.kind question, slotsOf question) of
-  (kind, Just (source, slots)) | kind == Text.pack "ChooseTargets" -> fmap R.Array (mapM (target source) slots)
+  (kind, Just (source, slots)) | kind == Text.pack "ChooseTargets" -> fmap R.Array (mapM (target source (length slots > 1)) slots)
   _ -> ask (listedObjects view (Question.offer question)) (choice view question)
   where
     ask listed (shown, reader) = do
@@ -136,14 +181,22 @@ answer terminal lookUp seat view question = case (Question.kind question, slotsO
                   Question.kind question == Text.pack "ChooseManaSource" ->
                     autoPay seat view (Question.offer question) >>= \paid -> case paid of
                       Just (said, reply) -> say terminal said >> pure reply
-                      Nothing -> say terminal (Text.pack "Auto can't pay the rest of this cost. Choose a source.") >> loop
-              _ -> either (\problem -> say terminal problem >> loop) pure (reader typed)
+                      Nothing -> refuse (Text.pack "Auto can't pay the rest of this cost. Choose a source.")
+              _ -> case reader typed of
+                Right reply -> pure reply
+                Left problem -> do
+                  -- A card's name the answer does not read shows that card.
+                  found <- either (stop . Text.pack . Exception.displayException) pure (readingByName lookUp view typed)
+                  if null found then refuse problem else mapM_ (say terminal) found >> loop
+          refuse problem = mapM_ (say terminal) (problem : shown) >> loop
       loop
-    target source (slot, wanted, offered) = do
+    -- A slot is named only to tell it from the spell's or ability's others.
+    target source several (slot, wanted, offered) = do
       let legal = bySeat view offered
           n = min wanted (Natural.length legal)
+          named = if several then foldMap (\t -> Text.pack " (" <> Render.spaced t <> Text.pack ")") (textOf slot) else Text.empty
           shown =
-            Text.concat [Text.pack "Choose ", Render.count n "target", Text.pack " for ", objectName view source, Text.pack " (", slotName slot, Text.pack "):"]
+            Text.concat [Text.pack "Choose ", Render.count n "target", Text.pack " for ", objectName view source, named, Text.pack ":"]
               : numbered (fmap (recipientName view) legal)
       picked <- ask (fmap recipientObject legal) (shown, fmap R.Array . exactly n legal)
       pure (R.Array [slot, picked])
@@ -202,7 +255,11 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
       )
   "ChooseManaSource" -> do
     cost <- field "cost" offer >>= decoded Codec.ManaCost.codec
-    sourcePick (Text.pack "Paying " <> Render.manaCost cost <> Text.pack ". Choose a source to pay with, stop to stop paying, or auto (or press Enter) to pay the rest:") (Text.pack "stop") (Text.pack ", stop, or auto")
+    let pool = foldMap (fmap ManaUnit.manaType . Mana.unwrap . SeatView.manaPool) (payerSeat view offer)
+        held = foldMap (\t -> Text.pack "{" <> Render.manaType t <> Text.pack "}") pool
+        left = foldMap (\(colored, rest) -> Text.pack ", leaving " <> Render.manaCost (ManaCost.MkManaCost ([ManaSymbol.Generic rest | rest > 0] <> fmap ManaSymbol.OfType colored))) (owing view offer)
+        progress = if null pool then Text.empty else Text.pack " with " <> held <> Text.pack " in the pool" <> left
+    sourcePick (Text.pack "Paying " <> Render.manaCost cost <> progress <> Text.pack ". Choose a source to pay with, stop to stop paying, or auto (or press Enter) to pay the rest:") (Text.pack "stop") (Text.pack ", stop, or auto")
   -- CR 601.2g: mana abilities are activated before the cost is paid.
   "ChooseExtraManaSource" -> sourcePick (Text.pack "The cost is covered. Choose another source to activate, or press Enter to pay now:") Text.empty (Text.pack ", or press Enter to pay now")
   "ChooseManaYield" -> do
@@ -335,11 +392,16 @@ reading lookUp view listed wanted
       Just o | i >= 1 -> Render.details lookUp view o
       _ -> Right [Text.pack ("Number " <> show i <> " in this list is not a card you can see.")]
   | otherwise =
-      flip fmap (traverse (Render.details lookUp view) (filter matches (Map.elems (Render.objects view)))) $ \shown -> case ListUtils.nubOrd shown of
-        [] -> [Text.pack "No card you can see is named " <> wanted <> Text.pack "."]
-        found -> List.intercalate [Text.empty] found
+      flip fmap (readingByName lookUp view wanted) $ \found ->
+        if null found then [Text.pack "No card you can see is named " <> wanted <> Text.pack "."] else found
+
+-- | Each object of the view named this, ignoring case, in full; none when
+-- no card the seat can see is.
+readingByName :: (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> PlayerView.PlayerView -> Text.Text -> Either InvalidCorpus.InvalidCorpus [Text.Text]
+readingByName lookUp view wanted =
+  fmap (List.intercalate [Text.empty] . ListUtils.nubOrd) (traverse (Render.details lookUp view) (filter matches (Map.elems (Render.objects view))))
   where
-    matches = any ((== Text.toCaseFold wanted) . Text.toCaseFold . CardName.unwrap) . Set.toList . Render.cardNames
+    matches = any ((== Text.toCaseFold (Text.strip wanted)) . Text.toCaseFold . CardName.unwrap) . Set.toList . Render.cardNames
 
 -- | The object behind each numbered option of an offer, where it names one:
 -- the offer's own list, or the cards or sources it chooses from.
@@ -461,24 +523,32 @@ onlyPass offer = do
 -- source makes what is still owed.
 autoSource :: PlayerView.PlayerView -> R.Reply -> Maybe (R.Reply, Set.Set ManaType.ManaType)
 autoSource view offer = do
-  payer <- field "payer" offer >>= textOf >>= Read.readMaybe . Text.unpack
-  cost <- field "cost" offer >>= decoded Codec.ManaCost.codec
-  owed <- mapM owedOf (ManaCost.unwrap cost)
+  (colored, generic) <- owing view offer
   sources <- field "sources" offer >>= arrayOf >>= mapM manaSource
-  let pool = foldMap (fmap ManaUnit.manaType . Mana.unwrap . SeatView.manaPool) (List.find ((== PlayerId.MkPlayerId payer) . SeatView.player) (PlayerView.seats view))
-      (colored, unspent) = List.foldl' spendOne ([], pool) (Either.rights owed)
-      generic = sum (Either.lefts owed)
-      wanted = Set.fromList colored
+  let wanted = Set.fromList colored
       makes (_, yields) = Set.fromList (concat yields)
       fewest by = Maybe.listToMaybe . List.sortOn by
   source <-
     if not (Set.null wanted)
       then fewest (\s -> (Set.size (Set.intersection wanted (makes s)), Set.size (makes s))) (filter (not . Set.disjoint wanted . makes) sources)
       else
-        if generic > Natural.length unspent
+        if generic > 0
           then fewest (Set.size . makes) (filter (not . Set.null . makes) sources)
           else Nothing
   pure (fst source, Set.intersection wanted (makes source))
+
+-- | CR 601.2g-h: what of a ChooseManaSource offer's cost the payer's pool leaves
+-- owed: each colored symbol the pool cannot pay, the generic mana the rest of
+-- the pool does not cover. Nothing when the cost holds a symbol other than
+-- generic or one type of mana.
+owing :: PlayerView.PlayerView -> R.Reply -> Maybe ([ManaType.ManaType], Natural)
+owing view offer = do
+  cost <- field "cost" offer >>= decoded Codec.ManaCost.codec
+  owed <- mapM owedOf (ManaCost.unwrap cost)
+  let pool = foldMap (fmap ManaUnit.manaType . Mana.unwrap . SeatView.manaPool) (payerSeat view offer)
+      (colored, unspent) = List.foldl' spendOne ([], pool) (Either.rights owed)
+      generic = sum (Either.lefts owed)
+  pure (colored, generic - min generic (Natural.length unspent))
   where
     owedOf symbol = case symbol of
       ManaSymbol.Generic n -> Just (Left n)
@@ -487,6 +557,12 @@ autoSource view offer = do
     spendOne (still, pool) t = case List.elemIndex t pool of
       Just i -> (still, take i pool <> drop (i + 1) pool)
       Nothing -> (still <> [t], pool)
+
+-- | The seat of a payment offer's payer.
+payerSeat :: PlayerView.PlayerView -> R.Reply -> Maybe SeatView.SeatView
+payerSeat view offer = do
+  payer <- field "payer" offer >>= textOf >>= Read.readMaybe . Text.unpack
+  List.find ((== PlayerId.MkPlayerId payer) . SeatView.player) (PlayerView.seats view)
 
 -- | A mana source as an offer names it, beside the mana types of each yield.
 manaSource :: R.Reply -> Maybe (R.Reply, [[ManaType.ManaType]])
@@ -603,9 +679,6 @@ slotsOf question = do
     R.Array [name, R.Array [wanted, R.Array legal]] -> fmap (\n -> (name, n, legal)) (naturalOf wanted)
     _ -> Nothing
   pure (source, parsed)
-
-slotName :: R.Reply -> Text.Text
-slotName = Common.render . Codec.Reply.toValue
 
 field :: String -> R.Reply -> Maybe R.Reply
 field key reply = case reply of
