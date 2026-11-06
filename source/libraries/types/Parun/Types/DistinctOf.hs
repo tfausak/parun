@@ -14,9 +14,8 @@ data DistinctOf
     ManaValues
   | -- | CR 202.1 / 202.1b: mana costs by symbol, a costless member adding none.
     ManaCosts
-  | -- | CR 208.1: powers, Loot, the Nexus's "each different power".
+  | -- | CR 208.1: powers.
     Powers
-  | -- | CR 205.3j / 306.3: planeswalker types, a member's other subtypes adding
-    -- none.
+  | -- | CR 205.3j / 306.3: planeswalker types, other subtypes adding none.
     PlaneswalkerTypes
   deriving (Bounded, Enum, Eq, Ord, Show)
