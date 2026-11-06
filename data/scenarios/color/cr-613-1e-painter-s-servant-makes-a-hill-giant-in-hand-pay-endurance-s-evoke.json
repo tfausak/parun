@@ -132,6 +132,33 @@
       "turn": 1
     },
     {
+      "do": {
+        "OrderTriggers": [
+          "Endurance",
+          "Endurance"
+        ]
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "AnnounceTargets",
+          "with": [
+            [
+              "player",
+              0
+            ]
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
       "check": {
         "Count": {
           "card": "Endurance",
