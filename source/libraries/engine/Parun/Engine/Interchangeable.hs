@@ -257,7 +257,8 @@ representatives pcs gs candidates =
 --     GameState.stackArchive is keyed by stack objects that have left too, and
 --     its bindings are read only on behalf of a stack object or a delayed
 --     trigger (CR 608.2h), which namedByAnother and namedByStored already
---     cover.
+--     cover. GameState.departedCards holds cards that have left the game (CR
+--     800.4a), read only by the ownership report and CR 729.5's return.
 --   * GameState.damagePreventedBy is read only for the source of the ability
 --     resolving, a spell already gone from the stack, never for a candidate.
 --   * GameState.drawsThisTurn names cards, and is read here through the same two

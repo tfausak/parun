@@ -11,6 +11,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
+import qualified Parun.Engine.Ante as Ante
 import qualified Parun.Engine.Archenemy as Archenemy
 import qualified Parun.Engine.Combat as Combat
 import qualified Parun.Engine.Commander as Commander
@@ -246,6 +247,7 @@ blankGame settings order active =
       -- CR 729.4: nobody is nested inside another game here.
       GameState.outsideObjects = Map.empty,
       GameState.broughtIn = Seq.empty,
+      GameState.departedCards = Map.empty,
       GameState.manaPool = Map.empty,
       GameState.combat = Combat.emptyCombat,
       GameState.events = Seq.empty,
@@ -1105,6 +1107,9 @@ restartGame perform exempt starter = do
             -- outside it.
             GameState.outsideObjects = GameState.outsideObjects gs,
             GameState.broughtIn = GameState.broughtIn gs,
+            -- CR 727.2: a card that left with its owner stays out, and so does
+            -- the ownership change it carried.
+            GameState.departedCards = GameState.departedCards gs,
             -- The id, printing and timestamp supplies, so reused cards keep
             -- unique ids, and what is keyed by them.
             GameState.nextObjectId = GameState.nextObjectId gs,
@@ -1555,12 +1560,18 @@ funnelBack finalSub parent =
       -- CR 800.4n: a departed owner's ante cards stay in the subgame, so they
       -- are not evidence the owner is still in it.
       ownersPresentInSub = Set.fromList (fmap Object.owner (filter (\obj -> Object.zone obj /= Zone.Ante) (Map.elems subObjects)))
-      -- Not implemented: a card whose owner changed in the subgame and that left
-      -- it with its new owner, whom the main game does not name (#4847).
       removedByDeparture oid = case Map.lookup oid (GameState.objects parent) of
         Nothing -> False
         Just obj -> Set.notMember (Object.owner obj) ownersPresentInSub
-      departedIds = Set.filter removedByDeparture movedIds
+      -- CR 729.5 / 407.3: a card whose owner changed in the subgame and that
+      -- left it with that owner (GameState.departedCards), whom the main game
+      -- does not name as its owner. It is rebuilt from the parent like a
+      -- departed owner's own cards, under the owner it left with.
+      departedOwners = Map.fromList [(identity, Object.owner obj) | obj <- Map.elems (GameState.departedCards finalSub), (_, identity) <- Ante.cardsOf obj]
+      ownerLeftWith obj = Object.identity obj >>= (`Map.lookup` departedOwners)
+      leftWithNewOwner oid = Maybe.isJust (Map.lookup oid (GameState.objects parent) >>= ownerLeftWith)
+      departedIds = Set.filter (\oid -> removedByDeparture oid || leftWithNewOwner oid) movedIds
+      fromParent ids = fmap (\obj -> maybe obj (\owner -> obj {Object.owner = owner}) (ownerLeftWith obj)) (Map.restrictKeys (GameState.objects parent) ids)
       -- CR 800.4n / 729.5: a departed owner's card still in the subgame -- an
       -- ante card, whoever owns it now (CR 407.2, 407.3) -- goes home from the
       -- subgame under its owner, and is not rebuilt from the parent as well.
@@ -1574,10 +1585,10 @@ funnelBack finalSub parent =
         Nothing -> False
       recoveredIds = Set.filter (not . survived) departedIds
       returned = fmap toLibraryCard (Map.filter isCard (Map.withoutKeys subObjects (Set.unions [subCmdIds, Map.keysSet subBacked, Map.keysSet subPlanar, Map.keysSet subSchemes])))
-      recovered = fmap toLibraryCard (Map.restrictKeys (GameState.objects parent) (Set.difference recoveredIds (Set.union oldCmdIds oldSuppIds)))
+      recovered = fmap toLibraryCard (fromParent (Set.difference recoveredIds (Set.union oldCmdIds oldSuppIds)))
       -- A supplementary deck whose owner departed inside the subgame goes back
       -- to being their deck, the commander's reason below.
-      recoveredSupp = Map.restrictKeys (GameState.objects parent) (Set.intersection recoveredIds oldSuppIds)
+      recoveredSupp = fromParent (Set.intersection recoveredIds oldSuppIds)
       backTo sub isKind = fmap toCommandCard (Map.union sub (Map.filterWithKey (\oid _ -> isKind oid parent) recoveredSupp))
       backedBack = backTo subBacked (\oid g -> Maybe.isJust (Game.sideDeckBack oid g))
       planarBack = backTo subPlanar Plane.isPlanarCard
@@ -1594,7 +1605,7 @@ funnelBack finalSub parent =
       -- zone it left the parent from, not to a library: CR 729.1b keeps the
       -- subgame's departure from meaning anything in the main game, where that
       -- player is still playing and their commander is still in the command zone.
-      recoveredCmd = fmap toCommandCard (Map.restrictKeys (GameState.objects parent) (Set.intersection recoveredIds oldCmdIds))
+      recoveredCmd = fmap toCommandCard (fromParent (Set.intersection recoveredIds oldCmdIds))
       allReturned = Map.union returned recovered
       toCommand = Map.union backFromSub recoveredCmd
       libraryOf pid = Seq.fromList (Map.keys (Map.filter (\obj -> Object.owner obj == pid) allReturned))

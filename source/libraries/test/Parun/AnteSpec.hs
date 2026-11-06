@@ -222,6 +222,22 @@ spec s registry = Spec.describe s "Ante" $ do
         Spec.assertEqWith s "CR 729.5 bob's main-game library is rebuilt without it" (length (Game.zoneMembers Zone.Library S.bob back)) 8
         Spec.assertEqWith s "CR 729.5 and alice's holds it" (length (Game.zoneMembers Zone.Library S.alice back)) 10
       other -> Spec.assertFailure s ("bob anted " <> show (length other) <> " cards")
+  -- CR 407.3 / 800.4a / 729.5: alice takes a card of bob's in the subgame
+  -- (Darkpact's write), then she and bob concede. The card left with alice, so
+  -- it is rebuilt from the main game under her, not under bob.
+  Spec.it s "CR 729.5 a card that left a subgame with its new owner goes home to them when its old owner left too" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    let stock pid gs0 = foldr (\_ gs -> snd (S.addLibraryCard mountain pid gs)) gs0 (replicate 9 ())
+        parent = stock S.carol (stock S.bob (stock S.alice (Setup.gameWith anteGame S.threePlayers)))
+        sub = S.runPure S.identityAnswer (Setup.subgameStateFrom S.alice parent) (Setup.startGameFromCards S.performer Set.empty)
+    case Game.zoneMembers Zone.Hand S.bob sub of
+      bobs : _ -> do
+        let left = S.departs Departure.Type.Conceded S.bob (S.departs Departure.Type.Conceded S.alice (Game.setOwner bobs S.alice sub))
+            back = Setup.funnelBack left parent
+        Spec.assertEqWith s "CR 729.5 alice's main-game library holds it" (length (Game.zoneMembers Zone.Library S.alice back)) 10
+        Spec.assertEqWith s "CR 729.5 and bob's is rebuilt without it" (length (Game.zoneMembers Zone.Library S.bob back)) 8
+        Spec.assertEqWith s "CR 108.3 the report lists it, from bob to alice" (changesOf back) [(S.bob, S.alice)]
+      [] -> Spec.assertFailure s "bob drew no opening hand"
   -- CR 108.3 / 729.4a: a card alice took from bob in the main game (its
   -- identity says bob began the game with it) is wished into a subgame from
   -- her hand. It is the same card in there, so the report still lists it once

@@ -135,6 +135,7 @@ codec resolve = Fields.object $ do
   players <- Fields.required "players" (Common.naturalMap PlayerId.codec Player.codec) GameState.players
   outsideObjects <- Fields.defaulted "outsideObjects" Map.empty (Common.naturalMap ObjectId.codec OutsideObject.codec) GameState.outsideObjects
   broughtIn <- Fields.defaulted "broughtIn" Seq.empty (Common.seq ObjectId.codec) GameState.broughtIn
+  departedCards <- Fields.defaulted "departedCards" Map.empty (Common.naturalMap ObjectId.codec Object.codec) GameState.departedCards
   manaPool <- Fields.defaulted "manaPool" Map.empty (Common.naturalMap PlayerId.codec Mana.codec) GameState.manaPool
   combat <- Fields.required "combat" Combat.codec GameState.combat
   events <- Fields.defaulted "events" Seq.empty (Common.seq LoggedEvent.codec) GameState.events
@@ -269,6 +270,7 @@ codec resolve = Fields.object $ do
         GameState.players = players,
         GameState.outsideObjects = outsideObjects,
         GameState.broughtIn = broughtIn,
+        GameState.departedCards = departedCards,
         GameState.manaPool = manaPool,
         GameState.combat = combat,
         GameState.events = events,

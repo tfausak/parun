@@ -938,6 +938,23 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
     Spec.assertEqWith s "and carol's" (libraryOf S.carol) 3
     Spec.assertEqWith s "CR 108.3 the report lists both" (List.sort (changesOf after)) [(S.bob, S.alice), (S.carol, S.alice)]
     Spec.assertEqWith s "the main game did not end" (GameState.result after) Nothing
+  -- CR 407.3 / 800.4a / 729.5: a Shahrazad subgame played for ante, in which
+  -- alice casts Darkpact on bob's ante card (darkpactAnswer), so it goes to
+  -- her subgame library, and then concedes. The card leaves the subgame with
+  -- her; bob outlasts carol and wins. It comes home to alice's main-game
+  -- library, and the report lists it.
+  Spec.it s "CR 729.5 gameplay: a card that left a subgame with its new owner goes to their main-game library" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    swamp <- S.printingOf s registry "Swamp"
+    plains <- S.printingOf s registry "Plains"
+    shahrazad <- S.printingOf s registry "Shahrazad"
+    darkpact <- S.printingOf s registry "Darkpact"
+    let after = castDarkpactInShahrazad mountain swamp plains shahrazad darkpact
+        libraryOf pid = length (Game.zoneMembers Zone.Library pid after)
+    Spec.assertEqWith s "CR 729.5 alice's main-game library holds her twelve and bob's ante card" (libraryOf S.alice) 13
+    Spec.assertEqWith s "CR 729.5 bob's is one short" (libraryOf S.bob) 11
+    Spec.assertEqWith s "and carol's is whole" (libraryOf S.carol) 10
+    Spec.assertEqWith s "CR 108.3 the report lists it, from bob to alice" (changesOf after) [(S.bob, S.alice)]
   -- The drawn board (CR 104.4a): all three leave, nobody is paid, and each
   -- library comes back whole, its ante card in it.
   Spec.it s "CR 104.4a/729.5 gameplay: a drawn Shahrazad subgame pays out no ante card" $ do
@@ -2710,6 +2727,42 @@ castShahrazad staged mountain plains shahrazad aliceLibrary =
             GameState.priority = Just S.alice
           }
    in snd (Engine.runGamePure shahrazadAnswer gStart Engine.priorityLoop)
+
+-- The Shahrazad board played for ante with Darkpact on top of alice's
+-- 12-card library and 11 Swamps below it; bob has 12 Mountains and carol 10.
+-- Each subgame library antes its bottom card (darkpactAnswer), so alice draws
+-- Darkpact and casts it off her third Swamp on turn 7, carol decks on turn 9,
+-- and bob is left to win.
+castDarkpactInShahrazad :: Printing.Printing -> Printing.Printing -> Printing.Printing -> Printing.Printing -> Printing.Printing -> GameState.GameState
+castDarkpactInShahrazad mountain swamp plains shahrazad darkpact =
+  let g0 = forAnte (Setup.emptyGame S.threePlayers)
+      g1 = addManyG swamp 11 S.alice (addManyG darkpact 1 S.alice g0)
+      g2 = addManyG mountain 12 S.bob (addManyG mountain 10 S.carol g1)
+      g3 = poolToLibraryG S.carol (poolToLibraryG S.bob (poolToLibraryG S.alice g2))
+      g4 = S.landsFor plains S.alice 2 g3
+      (_spellId, g5) = S.addHandCard shahrazad S.alice g4
+      gStart =
+        g5
+          { GameState.activePlayer = S.alice,
+            GameState.phase = Phase.PrecombatMain,
+            GameState.priority = Just S.alice
+          }
+   in snd (Engine.runGameAskedPure darkpactAnswer gStart Engine.priorityLoop)
+
+-- Casts and plays lands as S.castAnswer does, antes each library's bottom
+-- card, aims Darkpact at bob's ante card, and has alice concede the subgame
+-- once she owns a card bob began it with.
+darkpactAnswer :: Asked.Asked GameState.GameState r -> r
+darkpactAnswer asked =
+  let gs = Asked.game asked
+      bobs recipient = maybe False (\oid -> fmap Object.owner (Game.lookupObject oid gs) == Just S.bob) (Recipient.objectOf recipient)
+      tookBobs = any (\c -> OwnershipChange.startingOwner c == S.bob && OwnershipChange.owner c == S.alice) (Ante.ownershipChanges gs)
+   in case Asked.prompt asked of
+        Prompt.RandomObject candidates -> NonEmpty.last candidates
+        Prompt.ChooseTargets _ _ _ sets -> fmap (\(_, recipients) -> Set.filter bobs recipients) sets
+        Prompt.Concede pid
+          | pid == S.alice && not (null (Asked.enclosing asked)) && tookBobs -> Concession.Concedes
+        p -> S.castAnswer p
 
 -- subgameAnswer, naming the LAST candidate, pinned by position, wherever a
 -- winning team is asked who takes an ante card (CR 407.2 / 104.2c).

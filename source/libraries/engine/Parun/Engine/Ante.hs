@@ -15,6 +15,7 @@ import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.OwnershipChange as OwnershipChange
+import qualified Parun.Types.PrintingId as PrintingId
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Result as Result
 import qualified Parun.Types.Teams as Teams
@@ -25,27 +26,36 @@ import qualified Parun.Types.Teams as Teams
 barred :: GameSettings.GameSettings -> Face.Face card -> Bool
 barred settings face = Face.anteOnly face && not (GameSettings.ante settings)
 
--- | CR 108.3 / 407.3: every card in the game whose owner is not the player who
--- began the game owning it, one row per card. A merged or melded permanent (CR
--- 730.2, 701.42a) is one object made of several cards, each with its own
--- identity (Parun.Types.ComponentCard), so each of its cards is read, and owned
--- by the permanent's owner, the one owner parun keeps for it. A token, an emblem
--- and a copy carry no identity, so never appear. The scenario "CR 108.3 / 730.2
--- a merged permanent on the battlefield reports the card whose owner changed"
--- proves the merged case.
---
--- Not implemented: a card that left the game with a departed owner (#4847).
+-- | CR 108.3: the cards an object is, each with its printing and identity. A
+-- merged or melded permanent (CR 730.2, 701.42a) is one object made of several
+-- cards, each with its own identity (Parun.Types.ComponentCard). A token, an
+-- emblem and a copy carry no identity, so are none.
+cardsOf :: Object.Object -> [(PrintingId.PrintingId, CardIdentity.CardIdentity)]
+cardsOf obj =
+  let components = Game.componentsOf (Object.source obj)
+   in if Seq.null components
+        then Maybe.maybeToList ((,) <$> Game.printingIdOfSource (Object.source obj) <*> Object.identity obj)
+        else [(ComponentCard.printing card, identity) | Just card <- fmap Game.cardOfComponent (Foldable.toList components), Just identity <- [ComponentCard.identity card]]
+
+-- | Whether some card of the object is owned by a player who did not begin the
+-- game owning it (CR 108.3, 407.3).
+ownerChanged :: Object.Object -> Bool
+ownerChanged obj = any (\(_, identity) -> CardIdentity.startingOwner identity /= Object.owner obj) (cardsOf obj)
+
+-- | CR 108.3 / 407.3: every card whose owner is not the player who began the
+-- game owning it, one row per card: each card of an object in the game, owned
+-- by the object's owner, the one owner parun keeps for a merged or melded
+-- permanent, and each card that left the game with that owner (CR 800.4a,
+-- GameState.departedCards). The scenario "CR 108.3 / 730.2 a merged permanent
+-- on the battlefield reports the card whose owner changed" proves the merged
+-- case, and "CR 800.4a Tempest Efreet's new owner concedes and the report still
+-- lists it" the departed one.
 ownershipChanges :: GameState.GameState -> Seq.Seq OwnershipChange.OwnershipChange
 ownershipChanges gs =
-  let cardsOf obj =
-        let components = Game.componentsOf (Object.source obj)
-         in if Seq.null components
-              then Seq.fromList (Maybe.maybeToList ((,) <$> Game.printingIdOfSource (Object.source obj) <*> Object.identity obj))
-              else Seq.fromList [(ComponentCard.printing card, identity) | Just card <- fmap Game.cardOfComponent (Foldable.toList components), Just identity <- [ComponentCard.identity card]]
-      changed oid obj (printing, identity)
+  let changed oid obj (printing, identity)
         | CardIdentity.startingOwner identity /= Object.owner obj = Just (OwnershipChange.MkOwnershipChange oid printing (CardIdentity.startingOwner identity) (Object.owner obj))
         | otherwise = Nothing
-   in foldMap (\(oid, obj) -> Seq.fromList (Maybe.mapMaybe (changed oid obj) (Foldable.toList (cardsOf obj)))) (Map.toAscList (GameState.objects gs))
+   in foldMap (\(oid, obj) -> Seq.fromList (Maybe.mapMaybe (changed oid obj) (cardsOf obj))) (Map.toAscList (Map.union (GameState.objects gs) (GameState.departedCards gs)))
 
 -- | CR 407.2: "at the end of the game, the winner becomes the owner of all the
 -- cards in the ante zone", as Departure.settle sets the result. A draw has no

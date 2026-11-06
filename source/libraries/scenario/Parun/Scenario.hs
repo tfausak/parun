@@ -1932,8 +1932,9 @@ renderView gs viewIs =
           rows <- Monad.forM (Foldable.toList (Ante.ownershipChanges gs)) $ \change -> do
             let oid = OwnershipChange.object change
                 -- One card of a merged or melded permanent is named by its
-                -- printing, the object being several cards.
-                ofSeveral = maybe False (not . Seq.null . Game.componentsOf . Object.source) (Game.lookupObject oid gs)
+                -- printing, the object being several cards, and so is a card
+                -- that left the game with its owner (CR 800.4a).
+                ofSeveral = maybe True (not . Seq.null . Game.componentsOf . Object.source) (Game.lookupObject oid gs)
                 printed = maybe (Text.pack "unknown") (CardName.unwrap . Face.name . NonEmpty.head . Card.faces . Printing.card) (Game.printingOf (OwnershipChange.card change) gs)
             card <- if ofSeveral then pure printed else describeObject gs oid
             fromLabel <- labelOf (OwnershipChange.startingOwner change)
