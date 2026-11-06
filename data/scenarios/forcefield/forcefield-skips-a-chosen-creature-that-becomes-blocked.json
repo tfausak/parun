@@ -1,0 +1,12 @@
+{
+  "description": "CR 609.7b / 615.9: Forcefield rechecks its choice, so a chosen creature Curtain of Light makes blocked is no longer an unblocked creature and its trample damage is dealt whole",
+  "note": "Bob's Crash of Rhinos (8, trample) is unblocked and chosen; Curtain of Light then makes it blocked by nothing, and it assigns all 8 to alice (CR 702.19d): 12. A shield that kept the stale choice gives 19.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "bob", "battlefield": [{"card": "Crash of Rhinos", "label": "rhinos", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Forcefield", "label": "ff"}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}], "hand": [{"card": "Curtain of Light", "label": "curtain"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$rhinos"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Activate": {"object": "$ff", "ability": 0, "mana": ["$p1", null]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Cast": {"object": "$curtain", "mana": ["$p2", "$p3"], "targets": ["$rhinos"]}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 12}}}
+  ]
+}

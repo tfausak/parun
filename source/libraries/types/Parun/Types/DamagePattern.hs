@@ -44,11 +44,9 @@ import qualified Parun.Types.SlotName as SlotName
 -- Parun.Types.PhasePattern's Among is: card data cannot name an ObjectId or a
 -- PlayerId. Resolve's four arms that bake one (PreventNextDamage,
 -- PreventAllDamage, NextDamageInstance and RedirectDamage) share one
--- `installDamageRow`, and all but the CR 615.8 shield thread a printed KIND
--- through -- Turn the Tables' "all combat damage", Decorated Griffin's "the next
--- 1 combat damage"; no card in data/cards/ of CR 615.8's shape narrows the kind
--- (Impulsive Maneuvers would), so that opcode has no such field and passes
--- Nothing. The last producer is a RULE
+-- `installDamageRow`, and each threads a printed KIND through -- Turn the
+-- Tables' "all combat damage", Decorated Griffin's "the next 1 combat damage",
+-- Forcefield's CR 615.8 shield. The last producer is a RULE
 -- rather than a resolution: CR 702.16e's player half, which
 -- Parun.Engine.Replacement.collect mints naming the protected seat, since a
 -- PlayerRelation would have to be read against a perspective this row's CR 109.5
