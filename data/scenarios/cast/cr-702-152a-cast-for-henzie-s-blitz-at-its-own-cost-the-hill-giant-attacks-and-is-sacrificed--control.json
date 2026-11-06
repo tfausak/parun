@@ -51,30 +51,6 @@
     "step": "PrecombatMain"
   },
   "description": "CR 702.152a cast for Henzie's blitz at its own cost, the Hill Giant attacks and is sacrificed; cast for its printed cost it stays",
-  "final": [
-    {
-      "Life": {
-        "life": 20,
-        "player": "bob"
-      }
-    },
-    {
-      "Count": {
-        "card": "Hill Giant",
-        "count": 1,
-        "player": "alice",
-        "zone": "Battlefield"
-      }
-    },
-    {
-      "Count": {
-        "card": "Mountain",
-        "count": 0,
-        "player": "alice",
-        "zone": "Hand"
-      }
-    }
-  ],
   "note": "The same board as the blitz file, the cast naming the printed {3}{R}, which no keyword offered: the Giant has no haste, is not sacrificed and draws nothing.",
   "timeline": [
     {
@@ -120,6 +96,43 @@
       "player": "alice",
       "step": "DeclareAttackers",
       "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 20,
+          "player": "bob"
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Hill Giant",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "bob",
+      "step": "Upkeep",
+      "turn": 2
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Mountain",
+          "count": 0,
+          "player": "alice",
+          "zone": "Hand"
+        }
+      },
+      "player": "bob",
+      "step": "Upkeep",
+      "turn": 2
     }
   ]
 }
