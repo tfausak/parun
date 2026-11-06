@@ -1,6 +1,7 @@
 module Parun.Codec.LastKnownSpec where
 
 import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Codec.LastKnown as LastKnown
@@ -31,6 +32,9 @@ import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PrintingId as PrintingId
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Source as Source
+import qualified Parun.Types.StickerKind as StickerKind
+import qualified Parun.Types.StickerPlacement as StickerPlacement
+import qualified Parun.Types.StickerRef as StickerRef
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.Zone as Zone
@@ -56,6 +60,7 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           LastKnown.owner = PlayerId.MkPlayerId 6,
           LastKnown.source = Source.OfCard (PrintingId.MkPrintingId 2),
           LastKnown.counters = Map.singleton CounterKind.PlusOnePlusOne 3,
+          LastKnown.stickers = Seq.singleton (StickerPlacement.MkStickerPlacement (StickerRef.MkStickerRef (PlayerId.MkPlayerId 1) 2 StickerKind.Name 1) (Timestamp.MkTimestamp 4) (Just 0)),
           LastKnown.copiable = ProjectedCharacteristicsSpec.minimalCharacteristics,
           LastKnown.attached = Set.singleton (ObjectId.MkObjectId 9),
           LastKnown.host = Just (ObjectId.MkObjectId 11),
@@ -84,6 +89,7 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
           <> ",\"controller\":1,\"owner\":6,\"source\":{\"type\":\"OfCard\",\"value\":2}"
           <> ",\"counters\":[{\"key\":{\"type\":\"PlusOnePlusOne\"},\"value\":3}]"
+          <> ",\"stickers\":[{\"sticker\":{\"owner\":1,\"sheet\":2,\"kind\":\"Name\",\"index\":1},\"timestamp\":4,\"position\":0}]"
           <> ",\"copiable\":"
           <> minimalJson
           <> ",\"attached\":[9],\"host\":11"
@@ -109,6 +115,7 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           LastKnown.owner = PlayerId.MkPlayerId 4,
           LastKnown.source = Source.OfToken (PrintingId.MkPrintingId 5),
           LastKnown.counters = Map.empty,
+          LastKnown.stickers = Seq.empty,
           LastKnown.copiable = ProjectedCharacteristicsSpec.minimalCharacteristics,
           LastKnown.attached = Set.empty,
           LastKnown.host = Nothing,

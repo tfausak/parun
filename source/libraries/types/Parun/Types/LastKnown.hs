@@ -1,6 +1,7 @@
 module Parun.Types.LastKnown where
 
 import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
 import qualified Parun.Types.Acquisition as Acquisition
@@ -20,6 +21,7 @@ import qualified Parun.Types.PlayerChoice as PlayerChoice
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Parun.Types.Source as Source
+import qualified Parun.Types.StickerPlacement as StickerPlacement
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.Zone as Zone
@@ -86,6 +88,11 @@ data LastKnown = MkLastKnown
     -- sits beside the projection for the reason `controller` does rather than
     -- inside it.
     counters :: !(Map.Map (CounterKind.CounterKind Keyword.Keyword) Natural.Natural),
+    -- | CR 123.1: the stickers that were on it -- the same Object.stickers the
+    -- live object carried, resolved by Count.lastKnownView. Not copiable (CR
+    -- 123.1), so not in `characteristics`. _____ Balls of Fire destroyed in
+    -- response (Parun.StickerSpec) is the proof.
+    stickers :: !(Seq.Seq StickerPlacement.StickerPlacement),
     -- | CR 707.2: the COPIABLE values as the object left -- layer 1 alone, where
     -- `characteristics` above is the whole fold. What CR 608.2h hands a copy
     -- effect that names a permanent already gone (Watchful Radstag's "create a

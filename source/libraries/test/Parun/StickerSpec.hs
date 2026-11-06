@@ -1036,6 +1036,22 @@ spec s registry = Spec.describe s "Sticker" $ do
         (_, other, _) = entersNaming baaallerina (atBob (placingAt (Just bearsId) night 0)) g2
     Spec.assertEqWith s "CR 123.6d bob takes 1 for Otter's O" (S.lifeOf S.bob own) (Just 19)
     Spec.assertEqWith s "CR 123.3 a sticker on another permanent does not trigger it" (S.lifeOf S.bob other) (Just 20)
+  -- The card's ruling of 2022-10-07: gone as the trigger resolves, it counts
+  -- the o's its name stickers had when it left.
+  Spec.it s "CR 608.2h _____ Balls of Fire destroyed in response still deals bob 1 for Otter" $ do
+    sheets <- committedSheets
+    balls <- S.printingOf s registry "_____ Balls of Fire"
+    let (ballsId, entered) = S.entersWithTrigger balls S.alice (withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers))
+        how = (placingAt Nothing otter 0) {namingPrefers = (== Recipient.ToPlayer S.bob)}
+        respond = do
+          Engine.settleForPriority
+          Stack.resolveTop
+          Engine.settleForPriority
+          Event.destroy (pure ()) Regenerability.Regenerable [ballsId]
+          drain
+        ((_, after), _) = State.runState (Engine.runGame (naming how) entered respond) []
+    Spec.assertEqWith s "CR 701.8 Balls of Fire is in alice's graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 1
+    Spec.assertEqWith s "CR 608.2h bob takes 1 for the O Otter had" (S.lifeOf S.bob after) (Just 19)
   -- Trespasser, four tokens and one word, is the blank's negative.
   Spec.it s "CR 123.6a Angelic Harold pumps Grizzly Otter Bears, three words, and not Trespasser, whose blanks are not words" $ do
     sheets <- committedSheets

@@ -84,7 +84,6 @@ import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.SpecialAction as SpecialAction
 import qualified Parun.Types.StaticAbility as StaticAbility
-import qualified Parun.Types.StickerPlacement as StickerPlacement
 import qualified Parun.Types.Subtype as Subtype.Type
 import qualified Parun.Types.Teams as Teams
 import Parun.Types.Timestamp (Timestamp)
@@ -801,9 +800,9 @@ viewOfCharacteristics peers oid pc controller counters gs =
           && not (Game.isFrontFaceUp oid gs)
           && maybe True (Seq.null . Game.componentsOf . Object.source) (Game.lookupObject oid gs),
       Filter.counters = counters,
-      -- CR 123.1: off the object, live, `designations`' posture. Not
-      -- implemented: CR 608.2h's record of a departed object's stickers (#4890).
-      Filter.stickers = foldMap (Seq.fromList . Maybe.mapMaybe (\p -> Game.stickerContent (StickerPlacement.sticker p) gs) . Foldable.toList . Object.stickers) (Game.lookupObject oid gs),
+      -- CR 123.1: off the object, live, `designations`' posture; a departed
+      -- object's are Count.lastKnownView's (CR 608.2h).
+      Filter.stickers = foldMap (\o -> Game.stickerContents (Object.stickers o) gs) (Game.lookupObject oid gs),
       -- CR 701.54b: a designation rather than a characteristic. Nothing for an id
       -- naming no object -- a designation dies with the permanent (CR 400.7).
       Filter.ringBearerFor = Game.lookupObject oid gs >>= Object.ringBearerFor,

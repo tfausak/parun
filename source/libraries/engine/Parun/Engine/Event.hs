@@ -10655,6 +10655,8 @@ lastKnownFrom gs oid obj =
     -- CR 122.2: counters cease to exist on the zone change, so this is the last
     -- moment they can be recorded.
     (Object.counters obj)
+    -- CR 123.1: the stickers, per-incarnation like the counters.
+    (Object.stickers obj)
     -- CR 613.1a's layer, read off the copy binding and face `obj` carries.
     (copiedSnapshot oid gs)
     -- CR 303.4b / 301.5a with the arrow turned round, taken while the answer
