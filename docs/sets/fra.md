@@ -21,13 +21,10 @@ census did not settle.
 
 - Apex Witchstalker: `_Rule:TypeCycling`
 
-- Arcane Amphisbaena: not yet run through `parun translate` since empower Jace
-  landed (#6507)
 
 - Arni, Renowned Champion: `_LayerEffect:AdjustPTX`
 
-- Avatar of Burgeoning Echoes: not yet run through `parun translate` since
-  empower Jace landed (#6507)
+- Avatar of Burgeoning Echoes: `_Rule:Activated`
 
 - Awaken the Inferno: `_Rule:TypeCycling`
 
@@ -53,8 +50,7 @@ census did not settle.
 
 - Compel Brutality: `_GameNumber:LoyaltyOfPermanent`
 
-- Countersculpt: not yet run through `parun translate` since empower Jace landed
-  (#6507)
+- Countersculpt: `_Rule:CastEffect`
 
 - Craftwork Crusher: `_Actions:Modal_ChooseTwo`
 
@@ -76,11 +72,9 @@ census did not settle.
 
 - Darklight Phoenix: `_Rule:FromGraveyard`
 
-- Dedicated Commons: `_ReplacementActionWouldEnter:Unless`
 
 - Denzilore Fatehold: `_Trigger:Or`
 
-- Deserted Beach: `_ReplacementActionWouldEnter:Unless`
 
 - Diviner of Victory: translate skips preparation cards; verify the clauses
   besides "enters prepared"
@@ -105,10 +99,8 @@ census did not settle.
 
 - Face Yourself: `_CreatableToken:TokenCopyOfEachPermanent`
 
-- Fatehold Annex: `_ReplacementActionWouldEnter:Unless`
 
-- Fatehold Charm: not yet run through `parun translate` since empower Jace
-  landed (#6507)
+- Fatehold Charm: `_Target:TargetSpellOrTargetPermanent`
 
 - Fatehold Chronologist: translate skips preparation cards; verify the clauses
   besides "enters prepared"
@@ -123,7 +115,6 @@ census did not settle.
 
 - Flourishing Grapple: `_LayerEffect:LosesAllAbilities`
 
-- Formidable Commons: `_ReplacementActionWouldEnter:Unless`
 
 - Fulminous Forte: renders differently from its Oracle text
 
@@ -165,15 +156,13 @@ census did not settle.
 
 - Hapatra, the Desert Frost: `_Target:UptoOneTargetPermanentEachPlayerControls`
 
-- Haunted Ridge: `_ReplacementActionWouldEnter:Unless`
 
 - Heartstring Puller: `_CreatableToken:NamedTokenWithPT`
 
 - Heartwood Crafter: translate skips preparation cards; verify the clauses
   besides "enters prepared"
 
-- Hexhaven Battalion: not yet run through `parun translate` since empower Jace
-  landed (#6507)
+- Hexhaven Battalion: `_CreatableToken:NamedTokenWithPT`
 
 - Hexhaven Dueling Arena: `_Permanents:AttackedThisTurn`
 
@@ -190,16 +179,13 @@ census did not settle.
 
 - Ingris Stingerquill: `_Trigger:WhenACreatureAttacks`
 
-- Innovative Commons: `_ReplacementActionWouldEnter:Unless`
 
-- Inspired Tethermage: not yet run through `parun translate` since empower Jace
-  landed (#6507)
+- Inspired Tethermage:
+  `_Trigger:WhenAPlayerPutsAnyNumberOfCountersOfTypeOnAPermanent`
 
-- Jace's Machinations: not yet run through `parun translate` since empower Jace
-  landed (#6507)
+- Jace's Machinations: `_Action:CreatePlayerEffectUntil`
 
-- Jace, Reality Sculptor: not yet run through `parun translate` since empower
-  Jace landed (#6507)
+- Jace, Reality Sculptor: `field: Loyalty`
 
 - Jiang Yanggu, Alone: `_Trigger:WhenACreatureAttacksAPlayerAlone`
 
@@ -210,8 +196,6 @@ census did not settle.
 
 - Karn, Gilded Guardian: `_GameNumber:NumColorsAmongPermanents`
 
-- Keeper of the Quiet Hour: not yet run through `parun translate` since empower
-  Jace landed (#6507)
 
 - Kindred Judgment: `_Action:ChooseACreatureType`
 
@@ -219,7 +203,6 @@ census did not settle.
 
 - Kiora of Salt and Sand: `_Trigger:WhenAPlayerAttacks`
 
-- Konstrari Annex: `_ReplacementActionWouldEnter:Unless`
 
 - Konstrari Charm: `_Actions:Modal_ChooseOne`
 
@@ -254,28 +237,22 @@ census did not settle.
 
 - Memory Trap: `_Action:Exile`
 
-- Meticulous Commons: `_ReplacementActionWouldEnter:Unless`
 
 - Mind Meanderer: `_Permanents:IsPlaneswalkerType`
 
-- Mindseeker Oculus: not yet run through `parun translate` since empower Jace
-  landed (#6507)
 
 - Multiply by Zero: `_LayerEffect:SetPT`
 
 - Murmuring Volume: `_Cost:DiscardACard`
 
-- No Admittance: not yet run through `parun translate` since empower Jace landed
-  (#6507)
+- No Admittance: renders differently from its Oracle text
 
 - Null Summoner: `_Condition:EnteringPermanentPassesFilter`
 
 - Omnipresence: `_Rule:PlayerEffect`
 
-- Overgrown Farmland: `_ReplacementActionWouldEnter:Unless`
 
-- Overwrite the Multiverse: not yet run through `parun translate` since empower
-  Jace landed (#6507)
+- Overwrite the Multiverse: `_Action:Exile`
 
 - Paradox Shaper // Omit Variables: translate skips preparation cards
 
@@ -285,8 +262,7 @@ census did not settle.
 
 - Pia, Determined Rebuilder: `_LayerEffect:AdjustPTX`
 
-- Plan for All Outcomes: not yet run through `parun translate` since empower
-  Jace landed (#6507)
+- Plan for All Outcomes: `_Permanents:IsPermanent`
 
 - Primal Witchstalker: `_Action:Reflexive_Mill_WhenYouDo`
 
@@ -296,8 +272,6 @@ census did not settle.
 
 - Prophesied End: `_Action:If`
 
-- Protege's Awakening: not yet run through `parun translate` since empower Jace
-  landed (#6507)
 
 - Prudent Fateseer: translate skips preparation cards; verify the clauses
   besides "enters prepared"
@@ -311,20 +285,17 @@ census did not settle.
 
 - Refute Destiny: `_Action:Surveil`
 
-- Repurposed Enforcer: not yet run through `parun translate` since empower Jace
-  landed (#6507)
+- Repurposed Enforcer: renders differently from its Oracle text
 
 - Restore with Empathy: `_CardsInGraveyards:IsPermanent`
 
 - Return to the Light Realms:
   `_Action:ReturnEachCardFromPlayersGraveyardToBattlefield`
 
-- Rewrite Regrets: not yet run through `parun translate` since empower Jace
-  landed (#6507)
+- Rewrite Regrets: `_CardsInGraveyards:ManaValueIs`
 
 - Rise of the Deathbringer: `_GameNumber:TheGreatestPowerAmongPermanents`
 
-- Rockfall Vale: `_ReplacementActionWouldEnter:Unless`
 
 - Roiling Canopy: `_Permanent:Trigger_ThatPermanent`
 
@@ -339,8 +310,7 @@ census did not settle.
 
 - Samut, Tyrant of Naktamun: `_Rule:StackSpellsEffect`
 
-- Sanctum Lurker: not yet run through `parun translate` since empower Jace
-  landed (#6507)
+- Sanctum Lurker: `_PermanentRule:ArentPutIntoGraveyardForHaving0Loyalty`
 
 - Seasoned Cryomancer:
   `_Action:Reflexive_Discard_WhenYouDiscardOneOrMoreCardsOfTypeThisWay`
@@ -348,7 +318,6 @@ census did not settle.
 - Semester Foreseer: translate skips preparation cards; verify the clauses
   besides "enters prepared"
 
-- Shipwreck Marsh: `_ReplacementActionWouldEnter:Unless`
 
 - Silence the Echo: `_Rule:CastEffect`
 
@@ -356,8 +325,7 @@ census did not settle.
 
 - Solitary Cell: `_Permanents:ManaValueIs`
 
-- Solve for Disappointment: not yet run through `parun translate` since empower
-  Jace landed (#6507)
+- Solve for Disappointment: `_Action:RevealHandAndPlayerChoosesACardToDiscard`
 
 - Something Worth Saving: `_Action:PutACardFromGraveyardIntoHand`
 
@@ -368,7 +336,6 @@ census did not settle.
 
 - Stingcaster Mage: `_Action:CreateGraveyardCardEffectUntil`
 
-- Stingerquill Annex: `_ReplacementActionWouldEnter:Unless`
 
 - Stingerquill Charm: `_CreatableToken:NamedTokenWithPT`
 
@@ -380,8 +347,6 @@ census did not settle.
 
 - Surgical Precision: `_Permanents:ToughnessIs`
 
-- Tam's Resistance: not yet run through `parun translate` since empower Jace
-  landed (#6507)
 
 - Tenured Tethermage: `_Action:CreateTokens`
 
@@ -399,13 +364,10 @@ census did not settle.
 
 - Theoretical Necromancer: `_Rule:FromGraveyard`
 
-- Theorist's Proxy: not yet run through `parun translate` since empower Jace
-  landed (#6507)
+- Theorist's Proxy: `_Action:CreateFutureSpellEffect`
 
-- Theorist's Sanctum: not yet run through `parun translate` since empower Jace
-  landed (#6507)
+- Theorist's Sanctum: `_ReplacementActionWouldEnter:MayCost`
 
-- Theorix Annex: `_ReplacementActionWouldEnter:Unless`
 
 - Theorix Charm: `_Player:ControllerOfSpell`
 
@@ -418,7 +380,6 @@ census did not settle.
 
 - Tomik, Izzet Sparkmage: `_Rule:ReplaceWouldDealDamage`
 
-- Transformative Commons: `_ReplacementActionWouldEnter:Unless`
 
 - Traxos, Academy Guardian: `_Rule:CastEffect`
 
@@ -440,7 +401,6 @@ census did not settle.
 
 - Verdant Kraken: renders differently from its Oracle text
 
-- Vigorbloom Annex: `_ReplacementActionWouldEnter:Unless`
 
 - Vigorbloom Charm: `_Action:Fight`
 
@@ -451,14 +411,11 @@ census did not settle.
 
 - Vinelasher Adept: `_Rule:TypeCycling`
 
-- Violent Echoes: not yet run through `parun translate` since empower Jace
-  landed (#6507)
+- Violent Echoes: `_Action:If`
 
 - Void Extrapolator: translate skips preparation cards; verify the clauses
   besides "enters prepared"
 
-- Vraska's Final Mercy: not yet run through `parun translate` since empower Jace
-  landed (#6507)
 
 - Vraska, Soul of Stone: `_Rule:Activated`
 
@@ -467,32 +424,23 @@ census did not settle.
 - Warrior's Blades: `_Rule:EquipWithModifiers`; verify a reduction counting
   counters on the target (Dwarven Mauler shows targets reach it)
 
-- Way of the Cryomancer: not yet run through `parun translate` since empower
-  Jace landed (#6507)
+- Way of the Cryomancer: `_Rule:Activated`
 
-- Way of the Deathbringer: not yet run through `parun translate` since empower
-  Jace landed (#6507)
+- Way of the Deathbringer: `_Rule:Activated`
 
-- Way of the Healer: not yet run through `parun translate` since empower Jace
-  landed (#6507)
+- Way of the Healer: `_Rule:Activated`
 
-- Way of the Mind Sculptor: not yet run through `parun translate` since empower
-  Jace landed (#6507)
+- Way of the Mind Sculptor: `_Trigger:WhenAPlayerActivatesAnAbility`
 
-- Way of the Necromancer: not yet run through `parun translate` since empower
-  Jace landed (#6507)
+- Way of the Necromancer: `_CounterType:LoyaltyCounter`
 
-- Way of the Paradox: not yet run through `parun translate` since empower Jace
-  landed (#6507)
+- Way of the Paradox: `_Trigger:WhenAPlayerActivatesAnAbility`
 
-- Way of the Pyromancer: not yet run through `parun translate` since empower
-  Jace landed (#6507)
+- Way of the Pyromancer: `_Rule:Activated`
 
-- Way of the Warlord: not yet run through `parun translate` since empower Jace
-  landed (#6507)
+- Way of the Warlord: `_Rule:Activated`
 
-- Way of the Wildspeaker: not yet run through `parun translate` since empower
-  Jace landed (#6507)
+- Way of the Wildspeaker: `_Rule:Activated`
 
 - Whiplash Wordsmith: translate skips preparation cards; verify the clauses
   besides "enters prepared"

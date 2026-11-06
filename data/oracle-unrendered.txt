@@ -6,7 +6,6 @@ _-o-saurus
 a-good-day-to-pie
 abomination
 abyssal-harvester
-academic-ascent
 affectionate-indrik
 alchemists-gift
 alesha-who-laughs-at-fate
@@ -393,7 +392,6 @@ call-of-the-wild
 call-to-the-grave
 caltrops
 camouflage
-campus-crier
 canopy-stalker
 cant-stay-away
 capricious-efreet
@@ -755,7 +753,6 @@ dragon-whelp
 dragonhawk-fates-tempest
 dragonlords-servant
 dragons-prey
-dragonskull-summit
 dragonstorm-globe
 drain-life
 drain-power
@@ -777,7 +774,6 @@ drogskol-reaver
 drop-of-honey
 dropkick-bomber
 drought
-drowned-catacomb
 drownyard-behemoth
 druid-of-horns
 druidic-satchel
@@ -1135,7 +1131,6 @@ gilder-bairn
 gilt-leaf-winnower
 giltspire-avenger
 glacial-crasher
-glacial-fortress
 glamer-spinners
 glamerdye
 glasses-of-urza
@@ -2312,7 +2307,6 @@ rolling-stones
 rooftop-nuisance
 root-maze
 root-snare
-rootbound-crag
 rootha-mastering-the-moment
 rootpath-purifier
 rootwater-matriarch
@@ -2695,7 +2689,6 @@ sunder-shaman
 sundial-of-the-infinite
 sunglasses-of-urza
 sunken-hope
-sunpetal-grove
 sunscape-battlemage
 sunweb
 super-shredder

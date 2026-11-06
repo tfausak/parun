@@ -252,14 +252,15 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- "You" is left out of a sentence of its own and kept before "and", where
   -- current Oracle text repeats it (Ancient Craving) and older text does not
   -- (Ambition's Cost), and a second instruction may follow ", then" (Owl
-  -- Familiar); beside another player's instruction it stands alone (Afterlife
+  -- Familiar) or stand as a sentence of its own (Vraska's Final Mercy);
+  -- beside another player's instruction it stands alone (Afterlife
   -- Insurance) or keeps "you" before "and" (Bad Deal).
   Spec.it s "render leaves out a lone you and keeps one before and" $ do
     let divination = spell [clause [draw (PlayerRef.Relative PlayerRelation.You) 2]] []
     Spec.assertEq s [[Text.pack "Draw two cards."]] (Oracle.abilities divination)
     let craving = spell [clause [draw (PlayerRef.Relative PlayerRelation.You) 3, loseLife (PlayerRef.Relative PlayerRelation.You) 3]] []
     Spec.assertEq s (Just (Text.pack "You draw three cards and you lose 3 life.")) (Oracle.render craving)
-    Spec.assertEq s [[Text.pack "You draw three cards and you lose 3 life.", Text.pack "You draw three cards and lose 3 life.", Text.pack "Draw three cards, then lose 3 life."]] (Oracle.abilities craving)
+    Spec.assertEq s [[Text.pack "You draw three cards and you lose 3 life.", Text.pack "You draw three cards and lose 3 life.", Text.pack "Draw three cards, then lose 3 life.", Text.pack "Draw three cards. You lose 3 life.", Text.pack "Draw three cards.\nYou lose 3 life.", Text.pack "Draw three cards. Then you lose 3 life."]] (Oracle.abilities craving)
     let insurance = spell [clause [loseLife (PlayerRef.InSlot target) 2, draw (PlayerRef.Relative PlayerRelation.You) 1]] [(target, TargetSlot.required Pool.Players Nothing)]
     Spec.assertEq s [[Text.pack "Target player loses 2 life. Draw a card.", Text.pack "Target player loses 2 life.\nDraw a card.", Text.pack "Target player loses 2 life. Then draw a card.", Text.pack "Target player loses 2 life and you draw a card."]] (Oracle.abilities insurance)
 

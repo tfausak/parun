@@ -422,10 +422,16 @@ enchant context slot = do
   [Text.pack "Enchant " <> one]
 
 -- | A static ability's replacement effect (CR 614.1): "This land enters
--- tapped." (CR 614.1d). Any other replacement effect, or one with a
--- condition, a zone it functions from or a name, is not spelled out here.
+-- tapped." (CR 614.1d), or "... unless [condition]." when it applies only
+-- while a condition fails ('Trigger.unless'). Any other replacement effect,
+-- or one with a zone it functions from or a name, is not spelled out here.
 replacement :: Target.Context -> PrintedReplacement.PrintedReplacement card ability effect -> [Text.Text]
 replacement context r = case r of
-  PrintedReplacement.MkPrintedReplacement Nothing (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.Type.IsSource EntryRewrite.Tapped)) zones Nothing
-    | Set.null zones -> [Target.self context <> Text.pack " enters tapped."]
+  PrintedReplacement.MkPrintedReplacement condition (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.Type.IsSource EntryRewrite.Tapped)) zones Nothing
+    | Set.null zones -> case condition of
+        Nothing -> [Target.self context <> Text.pack " enters tapped."]
+        Just c -> do
+          holding <- foldMap pure (Trigger.unless c)
+          words' <- Trigger.condition context holding
+          [Target.self context <> Text.pack " enters tapped unless " <> words' <> Text.pack "."]
   _ -> []
