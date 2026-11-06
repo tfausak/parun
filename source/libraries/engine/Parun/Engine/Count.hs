@@ -644,6 +644,9 @@ aggregate quantityOf aggregation members = case aggregation of
   Aggregation.Distinct DistinctOf.ManaValues -> Just (toInteger (Set.size (Set.fromList (Maybe.mapMaybe (Filter.manaValue . snd) members))))
   -- CR 202.1b: a member with no mana cost adds nothing; {0} is a cost.
   Aggregation.Distinct DistinctOf.ManaCosts -> Just (toInteger (Set.size (Set.fromList (Maybe.mapMaybe (fmap manaCostKey . Filter.manaCost . snd) members))))
+  Aggregation.Distinct DistinctOf.Powers -> Just (toInteger (Set.size (Set.fromList (Maybe.mapMaybe (Filter.power . snd) members))))
+  -- CR 205.3j: a member's creature or other subtypes add nothing.
+  Aggregation.Distinct DistinctOf.PlaneswalkerTypes -> Just (toInteger (Set.size (Set.filter Subtype.isPlaneswalkerType (Set.unions (fmap (Filter.subtypes . snd) members)))))
   -- The size of the largest group of members holding one value in common --
   -- not "pairwise sharing", which is not transitive (a Human Cleric, a Human
   -- Rogue and an Elf Rogue are no three sharing a type). A member joins a group

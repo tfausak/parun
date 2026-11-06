@@ -433,6 +433,7 @@ import qualified Parun.Types.StatedFlip as StatedFlip
 import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.StepOfControllerOf as StepOfControllerOf
+import qualified Parun.Types.Surveil as Surveil
 import qualified Parun.Types.Suspend as Suspend
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Types.Tap as Tap
@@ -1530,7 +1531,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.LookAt lookAt -> lookAtNames asking lookAt
   Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary objectRef chooser) -> objectRefNames asking objectRef <> playerRefNames asking chooser
   Effect.Scry playerQuantity -> playerQuantityNames asking playerQuantity
-  Effect.Surveil playerQuantity -> playerQuantityNames asking playerQuantity
+  Effect.Surveil (Surveil.MkSurveil player quantity slot) -> playerRefNames asking player <> quantityNames asking quantity <> foldMap (slotNames asking) slot
   Effect.Fateseal playerQuantity -> playerQuantityNames asking playerQuantity
   Effect.Clash slotName -> slotNames asking slotName
   Effect.AsYouCascade slotName -> slotNames asking slotName
@@ -2554,6 +2555,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.DamageCantBeRedirected damagePattern -> damagePatternNames asking damagePattern
   PlayerEffect.CantSearchLibraries _cantSearchLibraries -> mempty
   PlayerEffect.CantBecomeMonarch -> mempty
+  PlayerEffect.LegendRuleDoesntApply -> mempty
   PlayerEffect.CantSetSchemesInMotion -> mempty
   PlayerEffect.EntriesTrigger entries -> filterNames asking (EntriesTrigger.entrants entries)
   PlayerEffect.AdditionalTriggers bearers -> filterNames asking bearers
