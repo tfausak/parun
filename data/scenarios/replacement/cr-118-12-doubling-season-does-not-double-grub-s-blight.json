@@ -1,0 +1,137 @@
+{
+  "description": "CR 118.12 Doubling Season does not double Grub's blight",
+  "note": "Grub, Notorious Auntie's \"you may blight 1. If you do\" makes the blight CR 118.12's cost, and a cost is no effect (docs/decisions.md, \"Whether a cost paid on resolution is an effect\"), so CR 614.16's row leaves it alone: one -1/-1 counter on the Wall of Stone, not two. The token copy is the effect half, so Doubling Season's other clause makes two. alice pays {R} to Grub, Storied Matriarch's first-main-phase trigger so Grub, Notorious Auntie is what attacks.",
+  "board": {
+    "active": "alice",
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Grub, Storied Matriarch",
+            "label": "grub",
+            "ready": true
+          },
+          {
+            "card": "Wall of Stone",
+            "label": "wall",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain"
+          },
+          {
+            "card": "Doubling Season",
+            "label": "season"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "source": "$grub",
+      "do": {
+        "ChooseToPay": {
+          "decision": {
+            "type": "Pays"
+          },
+          "mana": [
+            "$mountain"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$grub"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "source": "$grub",
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseBlight",
+          "with": "$wall"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "OrderTimestamps": [
+          "Wall of Stone#2",
+          "Wall of Stone#3"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "Names": {
+          "object": "$grub",
+          "names": [
+            "Grub, Notorious Auntie"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "$wall",
+          "kind": {
+            "type": "MinusOneMinusOne"
+          },
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Wall of Stone",
+          "count": 3
+        }
+      }
+    }
+  ]
+}

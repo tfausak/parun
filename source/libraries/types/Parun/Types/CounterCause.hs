@@ -33,13 +33,10 @@ data CounterCause
     -- alike. Parun.Engine.Resolve's PutCounters and proliferate arms are the first
     -- kind; CR 714.3a's Saga entry and CR 702.136a's riot are the second.
     ByEffect PlayerId.PlayerId
-  | -- | A player, paying a cost with no resolution behind it -- CR 601.2h's
-    -- payment and CR 508.1j \/ 509.1f's combat toll, which
-    -- Parun.Types.PaymentMoment tells apart from CR 118.12's. Soul Immolation's
-    -- "blight X" is the case. Not an effect, CR 609.1 giving it no resolution to
-    -- be the result of, so CR 614.16's rows do not reach it; still a player
-    -- putting counters, so a clause naming a player does -- Vorinclex, Monstrous
-    -- Raider doubles that blight where Doubling Season leaves it alone.
+  | -- | A player paying a cost (CR 601.2h, CR 508.1j \/ 509.1f, CR 118.12):
+    -- no effect, so CR 614.16's rows do not reach it, but a clause naming a
+    -- player does (docs/decisions.md, "Whether a cost paid on resolution is an
+    -- effect").
     ByPayment PlayerId.PlayerId
   | -- | A rule, acting on its own -- CR 714.3c's turn-based action is the only one
     -- today, and its player is that rule's "that player". Not an effect, so CR

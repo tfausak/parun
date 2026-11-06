@@ -2615,6 +2615,7 @@ spellskite
 spelltwine
 sphere-of-safety
 sphinx-ambassador
+sphinx-bone-wand
 sphinx-of-clear-skies
 sphinx-of-forgotten-lore
 sphinx-of-the-final-word

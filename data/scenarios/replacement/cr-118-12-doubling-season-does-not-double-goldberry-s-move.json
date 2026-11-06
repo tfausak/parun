@@ -1,0 +1,139 @@
+{
+  "description": "CR 118.12 Doubling Season does not double Goldberry's move",
+  "note": "Goldberry, River-Daughter's \"Move one or more counters ... If you do, draw a card\" makes the move CR 118.12's cost, and CR 122.5 makes a move a put; a cost is no effect (docs/decisions.md, \"Whether a cost paid on resolution is an effect\"), so CR 614.16's row leaves it alone: the one +1/+1 counter that leaves Goldberry lands as one, and the \"If you do\" draws her a card.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          },
+          {
+            "card": "Doubling Season"
+          },
+          {
+            "card": "Goldberry, River-Daughter",
+            "label": "goldberry",
+            "ready": true,
+            "counters": [
+              {
+                "key": {
+                  "type": "PlusOnePlusOne"
+                },
+                "value": 1
+              }
+            ]
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "taker"
+          }
+        ],
+        "library": [
+          {
+            "card": "Goblin Piker"
+          },
+          {
+            "card": "Goblin Piker"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$goldberry",
+          "ability": 1,
+          "targets": [
+            "$taker"
+          ],
+          "mana": [
+            "$i1",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseMovedCountersAtLeastOne",
+          "with": [
+            [
+              {
+                "type": "PlusOnePlusOne"
+              },
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "$taker",
+          "kind": {
+            "type": "PlusOnePlusOne"
+          },
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "$goldberry",
+          "kind": {
+            "type": "PlusOnePlusOne"
+          },
+          "count": 0
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Hand",
+          "card": "Goblin Piker",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

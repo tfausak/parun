@@ -1,0 +1,115 @@
+{
+  "description": "CR 118.12 Doubling Season does not double Sphinx-Bone Wand's charge counter",
+  "note": "Sphinx-Bone Wand's \"you may put a charge counter on this artifact. If you do\" makes the counter CR 118.12's cost, and a cost is no effect (docs/decisions.md, \"Whether a cost paid on resolution is an effect\"), so CR 614.16's row leaves it alone: one charge counter, and the Wand deals 1 damage to bob, where a doubled counter would deal 2.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "mountain"
+          },
+          {
+            "card": "Doubling Season"
+          },
+          {
+            "card": "Sphinx-Bone Wand",
+            "label": "wand"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Shock",
+            "label": "shock"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Wall of Stone",
+            "label": "bobs-wall"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$shock",
+          "targets": [
+            "$bobs-wall"
+          ],
+          "mana": [
+            "$mountain"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseTargets": {
+          "target": [
+            "$bob"
+          ]
+        }
+      },
+      "source": "$wand"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "source": "$wand",
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "$wand",
+          "kind": {
+            "type": "Named",
+            "value": "charge"
+          },
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 19
+        }
+      }
+    }
+  ]
+}

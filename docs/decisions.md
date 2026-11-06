@@ -86,6 +86,32 @@ Entries are ordered by the first rule each cites.
   to the next seat, and the pass cycle restarts".
 - **Issue**: #143.
 
+## Whether a cost paid on resolution is an effect
+
+- **Question**: CR 118.12 makes the "[do something]" of "If [a player] does"
+  a cost paid as the spell or ability resolves. Do "if an effect would put
+  counters" replacements (CR 614.16) apply to the counters that cost puts?
+- **Rules**: CR 118.12, 118.12a, 609.1, 614.16, 701.63a, 122.5; Library of
+  Leng's ruling of 2004-10-04 ("costs aren't effects"), Doubling Season's of
+  2024-11-08 and B.O.B.'s of 2020-02-29 (activation costs only); CR of
+  2026-09-25.
+- **Decision**: No. It is a cost and no effect, as for a discard: Doubling
+  Season does not double Grub, Notorious Auntie's or Boggart Mischief's
+  blight, endure's counter, Goldberry, River-Daughter's move or Sphinx-Bone
+  Wand's charge counter. A replacement naming a player (Vorinclex, Monstrous
+  Raider) or any counter (Hardened Scales) still applies, and the "[effect]"
+  half's tokens are still doubled.
+- **Rejected**: An effect, by CR 609.1's broad definition: it equally admits an
+  activation cost's result, which the rulings refuse, and needs their "costs
+  aren't effects" to stop at costs paid before resolution. Splitting by moment
+  (a resolution to hang an effect on): CR 118.12 already names the action a
+  cost.
+- **Site**: `Parun.Engine.Event.resolvingCounterCause`, and
+  `Parun.Engine.Cost`'s counter-placing arms, proved by the scenarios "CR
+  118.12 Doubling Season does not double Grub's blight" and "CR 118.12
+  Doubling Season does not double a blight paid as the trigger resolves".
+- **Issue**: #4544.
+
 ## Whether one instruction naming a recipient twice deals one damage event
 
 - **Question**: Char aimed at its own caster deals 4 and 2 to one player. Is
