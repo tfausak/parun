@@ -2193,11 +2193,14 @@ requiresSicknessCheck cost =
 -- activating: CR 302.6 asks about the controller's control since their most
 -- recent turn began, which differs where an effect lets another player tap it
 -- for mana (Piracy, `pid` standing in only where it has no controller).
-sicknessOkGiven :: Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> ObjectId -> Cost Keyword.Type.Keyword -> GameState -> Bool
-sicknessOkGiven pcs pid oid cost gs =
+--
+-- `grants` is the board's Projection.controlGrants, which an enumeration takes
+-- once rather than once per ability (#1448).
+sicknessOkGiven :: [Projection.ControlGrant] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> ObjectId -> Cost Keyword.Type.Keyword -> GameState -> Bool
+sicknessOkGiven grants pcs pid oid cost gs =
   not (requiresSicknessCheck cost)
     || not (Set.member CardType.Creature (Projection.cardTypesGiven pcs oid gs))
-    || Summoning.settledOrHastyGiven pcs (Maybe.fromMaybe pid (Projection.controllerOf oid gs)) oid gs
+    || Summoning.settledOrHastyGiven pcs (Maybe.fromMaybe pid (Projection.controllerOfGiven grants oid gs)) oid gs
 
 -- CR 606.5: multiple costs to add or remove loyalty counters are combined into a
 -- single one. Carth the Lion's added [+1] on Jace Beleren's printed [-10] is one
@@ -3124,7 +3127,7 @@ manaActivationsGiven effects measure pcs pid oid printedCost restrictions abilit
    in if payable
         && all (\component -> canPayComponent Map.empty pid oid component gs) (Cost.components cost)
         && jointlyPayable Map.empty pid oid (Cost.components cost) gs
-        && sicknessOkGiven pcs pid oid cost gs
+        && sicknessOkGiven (Projection.controlGrants gs) pcs pid oid cost gs
         -- CR 701.35a's "its activated abilities can't be activated", which reaches a
         -- mana ability too. Here rather than in Mana.manaSourcesGiven, because this
         -- is what BOTH of CR 605.3a's windows consult -- sickness's position above.
@@ -3622,7 +3625,7 @@ midPayment capacity measure pcs pid oid cost restrictions ability gs =
 -- above and nothing else. ONLY the mana half gets the pre-walked board -- the
 -- COMPONENTS are still asked through canPayComponent, whose Sacrifice,
 -- TapForTotalPower and CollectEvidence arms make per-object walks of their own
--- (#1448).
+-- (#6417).
 canPaySomeCompletionGiven :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PaymentSubject.PaymentSubject -> ManaSpending.ManaSpending -> [ObjectId] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> ObjectId -> (ManaCost.ManaCost -> [ManaCost.ManaCost]) -> (ManaCost.ManaCost -> [(ManaCost.ManaCost, [(Keyword.Substitute, Natural)])]) -> Cost Keyword.Type.Keyword -> GameState -> Bool
 canPaySomeCompletionGiven slots subject spending sources pcs pid oid total_ substitute cost gs = case Cost.mana cost of
   Nothing -> False
