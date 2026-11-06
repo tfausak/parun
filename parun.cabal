@@ -2448,6 +2448,7 @@ library test
     Parun.SplitSecondSpec
     Parun.StationSpec
     Parun.StickerSpec
+    Parun.SubtypeSpec
     Parun.Support
     Parun.TargetPerPlayerSpec
     Parun.TargetSpec

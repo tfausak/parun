@@ -11,8 +11,7 @@ These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at; "verify" marks a clause the
 census did not settle.
 
-- Aerid Konstrari: `_CreatableToken:HeartwoodToken`; needs the Heartwood
-  artifact type in `Parun.Types.Subtype` (CR 205.3g, 111.10x)
+- Aerid Konstrari: `_CreatableToken:HeartwoodToken`
 
 - Afterthought Sentry: `_Target:UptoOneTargetGraveyardCard`
 
@@ -22,7 +21,10 @@ census did not settle.
 
 - Apex Witchstalker: `_Rule:TypeCycling`
 
+
 - Arni, Renowned Champion: `_LayerEffect:AdjustPTX`
+
+- Avatar of Burgeoning Echoes: `_Rule:Activated`
 
 - Awaken the Inferno: `_Rule:TypeCycling`
 
@@ -48,6 +50,8 @@ census did not settle.
 
 - Compel Brutality: `_GameNumber:LoyaltyOfPermanent`
 
+- Countersculpt: `_Rule:CastEffect`
+
 - Craftwork Crusher: `_Actions:Modal_ChooseTwo`
 
 - Craterclaw Colossus: `_LayerEffect:AdjustPTX`
@@ -68,11 +72,9 @@ census did not settle.
 
 - Darklight Phoenix: `_Rule:FromGraveyard`
 
-- Dedicated Commons: `_ReplacementActionWouldEnter:Unless`
 
 - Denzilore Fatehold: `_Trigger:Or`
 
-- Deserted Beach: `_ReplacementActionWouldEnter:Unless`
 
 - Diviner of Victory: translate skips preparation cards; verify the clauses
   besides "enters prepared"
@@ -97,7 +99,8 @@ census did not settle.
 
 - Face Yourself: `_CreatableToken:TokenCopyOfEachPermanent`
 
-- Fatehold Annex: `_ReplacementActionWouldEnter:Unless`
+
+- Fatehold Charm: `_Target:TargetSpellOrTargetPermanent`
 
 - Fatehold Chronologist: translate skips preparation cards; verify the clauses
   besides "enters prepared"
@@ -112,7 +115,6 @@ census did not settle.
 
 - Flourishing Grapple: `_LayerEffect:LosesAllAbilities`
 
-- Formidable Commons: `_ReplacementActionWouldEnter:Unless`
 
 - Fulminous Forte: renders differently from its Oracle text
 
@@ -154,20 +156,19 @@ census did not settle.
 
 - Hapatra, the Desert Frost: `_Target:UptoOneTargetPermanentEachPlayerControls`
 
-- Haunted Ridge: `_ReplacementActionWouldEnter:Unless`
 
 - Heartstring Puller: `_CreatableToken:NamedTokenWithPT`
 
 - Heartwood Crafter: translate skips preparation cards; verify the clauses
-  besides "enters prepared"; needs the Heartwood artifact type in
-  `Parun.Types.Subtype` (CR 205.3g)
+  besides "enters prepared"
+
+- Hexhaven Battalion: `_CreatableToken:NamedTokenWithPT`
 
 - Hexhaven Dueling Arena: `_Permanents:AttackedThisTurn`
 
 - Hexhaven Invigorator: `_Trigger:WhenAPermanentIsDealtDamage`
 
-- Hungering Puppetbeast: `_CreatableToken:HeartwoodToken`; needs the Heartwood
-  artifact type
+- Hungering Puppetbeast: `_CreatableToken:HeartwoodToken`
 
 - Hunter's Axe: `_Rule:TriggerA`
 
@@ -178,7 +179,13 @@ census did not settle.
 
 - Ingris Stingerquill: `_Trigger:WhenACreatureAttacks`
 
-- Innovative Commons: `_ReplacementActionWouldEnter:Unless`
+
+- Inspired Tethermage:
+  `_Trigger:WhenAPlayerPutsAnyNumberOfCountersOfTypeOnAPermanent`
+
+- Jace's Machinations: `_Action:CreatePlayerEffectUntil`
+
+- Jace, Reality Sculptor: `field: Loyalty`
 
 - Jiang Yanggu, Alone: `_Trigger:WhenACreatureAttacksAPlayerAlone`
 
@@ -189,19 +196,18 @@ census did not settle.
 
 - Karn, Gilded Guardian: `_GameNumber:NumColorsAmongPermanents`
 
+
 - Kindred Judgment: `_Action:ChooseACreatureType`
 
 - Kiora of Fire and Ashes: renders differently from its Oracle text
 
 - Kiora of Salt and Sand: `_Trigger:WhenAPlayerAttacks`
 
-- Konstrari Annex: `_ReplacementActionWouldEnter:Unless`
 
 - Konstrari Charm: `_Actions:Modal_ChooseOne`
 
 - Konstrari Improviser: translate skips preparation cards; verify the clauses
-  besides "enters prepared"; needs the Heartwood artifact type in
-  `Parun.Types.Subtype` (CR 205.3g)
+  besides "enters prepared"
 
 - Koth, the Geomancer: `_Action:If`
 
@@ -231,19 +237,22 @@ census did not settle.
 
 - Memory Trap: `_Action:Exile`
 
-- Meticulous Commons: `_ReplacementActionWouldEnter:Unless`
 
 - Mind Meanderer: `_Permanents:IsPlaneswalkerType`
+
 
 - Multiply by Zero: `_LayerEffect:SetPT`
 
 - Murmuring Volume: `_Cost:DiscardACard`
 
+- No Admittance: renders differently from its Oracle text
+
 - Null Summoner: `_Condition:EnteringPermanentPassesFilter`
 
 - Omnipresence: `_Rule:PlayerEffect`
 
-- Overgrown Farmland: `_ReplacementActionWouldEnter:Unless`
+
+- Overwrite the Multiverse: `_Action:Exile`
 
 - Paradox Shaper // Omit Variables: translate skips preparation cards
 
@@ -253,6 +262,8 @@ census did not settle.
 
 - Pia, Determined Rebuilder: `_LayerEffect:AdjustPTX`
 
+- Plan for All Outcomes: `_Permanents:IsPermanent`
+
 - Primal Witchstalker: `_Action:Reflexive_Mill_WhenYouDo`
 
 - Proft, Consulting Detective: `_Trigger:Or`
@@ -260,6 +271,7 @@ census did not settle.
 - Proft, Sinister Mastermind: `_Rule:CastEffect`
 
 - Prophesied End: `_Action:If`
+
 
 - Prudent Fateseer: translate skips preparation cards; verify the clauses
   besides "enters prepared"
@@ -273,14 +285,17 @@ census did not settle.
 
 - Refute Destiny: `_Action:Surveil`
 
+- Repurposed Enforcer: renders differently from its Oracle text
+
 - Restore with Empathy: `_CardsInGraveyards:IsPermanent`
 
 - Return to the Light Realms:
   `_Action:ReturnEachCardFromPlayersGraveyardToBattlefield`
 
+- Rewrite Regrets: `_CardsInGraveyards:ManaValueIs`
+
 - Rise of the Deathbringer: `_GameNumber:TheGreatestPowerAmongPermanents`
 
-- Rockfall Vale: `_ReplacementActionWouldEnter:Unless`
 
 - Roiling Canopy: `_Permanent:Trigger_ThatPermanent`
 
@@ -295,19 +310,22 @@ census did not settle.
 
 - Samut, Tyrant of Naktamun: `_Rule:StackSpellsEffect`
 
+- Sanctum Lurker: `_PermanentRule:ArentPutIntoGraveyardForHaving0Loyalty`
+
 - Seasoned Cryomancer:
   `_Action:Reflexive_Discard_WhenYouDiscardOneOrMoreCardsOfTypeThisWay`
 
 - Semester Foreseer: translate skips preparation cards; verify the clauses
   besides "enters prepared"
 
-- Shipwreck Marsh: `_ReplacementActionWouldEnter:Unless`
 
 - Silence the Echo: `_Rule:CastEffect`
 
 - Solarium Sentry: `_Spells:ManaValueIs`
 
 - Solitary Cell: `_Permanents:ManaValueIs`
+
+- Solve for Disappointment: `_Action:RevealHandAndPlayerChoosesACardToDiscard`
 
 - Something Worth Saving: `_Action:PutACardFromGraveyardIntoHand`
 
@@ -318,7 +336,6 @@ census did not settle.
 
 - Stingcaster Mage: `_Action:CreateGraveyardCardEffectUntil`
 
-- Stingerquill Annex: `_ReplacementActionWouldEnter:Unless`
 
 - Stingerquill Charm: `_CreatableToken:NamedTokenWithPT`
 
@@ -330,7 +347,8 @@ census did not settle.
 
 - Surgical Precision: `_Permanents:ToughnessIs`
 
-- Tenured Tethermage: `_Action:CreateTokens`; needs the Heartwood artifact type
+
+- Tenured Tethermage: `_Action:CreateTokens`
 
 - Tether Technician: `_Action:Reflexive_Discard_WhenYouDo`
 
@@ -346,7 +364,10 @@ census did not settle.
 
 - Theoretical Necromancer: `_Rule:FromGraveyard`
 
-- Theorix Annex: `_ReplacementActionWouldEnter:Unless`
+- Theorist's Proxy: `_Action:CreateFutureSpellEffect`
+
+- Theorist's Sanctum: `_ReplacementActionWouldEnter:MayCost`
+
 
 - Theorix Charm: `_Player:ControllerOfSpell`
 
@@ -359,7 +380,6 @@ census did not settle.
 
 - Tomik, Izzet Sparkmage: `_Rule:ReplaceWouldDealDamage`
 
-- Transformative Commons: `_ReplacementActionWouldEnter:Unless`
 
 - Traxos, Academy Guardian: `_Rule:CastEffect`
 
@@ -381,7 +401,6 @@ census did not settle.
 
 - Verdant Kraken: renders differently from its Oracle text
 
-- Vigorbloom Annex: `_ReplacementActionWouldEnter:Unless`
 
 - Vigorbloom Charm: `_Action:Fight`
 
@@ -392,8 +411,11 @@ census did not settle.
 
 - Vinelasher Adept: `_Rule:TypeCycling`
 
+- Violent Echoes: `_Action:If`
+
 - Void Extrapolator: translate skips preparation cards; verify the clauses
   besides "enters prepared"
+
 
 - Vraska, Soul of Stone: `_Rule:Activated`
 
@@ -402,13 +424,30 @@ census did not settle.
 - Warrior's Blades: `_Rule:EquipWithModifiers`; verify a reduction counting
   counters on the target (Dwarven Mauler shows targets reach it)
 
+- Way of the Cryomancer: `_Rule:Activated`
+
+- Way of the Deathbringer: `_Rule:Activated`
+
+- Way of the Healer: `_Rule:Activated`
+
+- Way of the Mind Sculptor: `_Trigger:WhenAPlayerActivatesAnAbility`
+
+- Way of the Necromancer: `_CounterType:LoyaltyCounter`
+
+- Way of the Paradox: `_Trigger:WhenAPlayerActivatesAnAbility`
+
+- Way of the Pyromancer: `_Rule:Activated`
+
+- Way of the Warlord: `_Rule:Activated`
+
+- Way of the Wildspeaker: `_Rule:Activated`
+
 - Whiplash Wordsmith: translate skips preparation cards; verify the clauses
   besides "enters prepared"
 
 - Winter, Tormented Loner: `_Action:Reflexive_Sacrifice_WhenYouDo`
 
-- Woodwork Prodigy // Soul Tether: translate skips preparation cards; Soul
-  Tether needs the Heartwood artifact type
+- Woodwork Prodigy // Soul Tether: translate skips preparation cards
 
 - Wrath of the Bloodmane: `_Rule:CastEffect`
 
@@ -426,24 +465,4 @@ census did not settle.
 
 ## Needs a capability
 
-Each card is tracked by its issue and is added when that issue lands. Hardest
-first.
-
-- #6485: Academic Ascent; Arcane Amphisbaena; Avatar of Burgeoning Echoes;
-  Campus Crier; Countersculpt; Fatehold Charm; Hexhaven Battalion; Inspired
-  Tethermage; Jace's Machinations; Jace, Reality Sculptor; Keeper of the Quiet
-  Hour; Mindseeker Oculus; No Admittance; Overwrite the Multiverse; Plan for All
-  Outcomes; Protege's Awakening; Repurposed Enforcer; Rewrite Regrets; Sanctum
-  Lurker; Solve for Disappointment; Tam's Resistance; Theorist's Proxy;
-  Theorist's Sanctum; Violent Echoes; Vraska's Final Mercy; Way of the
-  Cryomancer; Way of the Deathbringer; Way of the Healer; Way of the Mentor; Way
-  of the Mind Sculptor; Way of the Necromancer; Way of the Paradox; Way of the
-  Pyromancer; Way of the Warlord; Way of the Wildspeaker. No keyword action
-  creates or empowers a Jace planeswalker token (CR 701.71a); amass is the
-  sibling.
-
-- #6494: Tomik, Orzhov Lawmage. An attack limit scopes to players, never to one
-  planeswalker (CR 508.1c).
-
-- #6496: Loot, the Anomaly. `CombatDamageAmount` can't treat a negative power as
-  positive (CR 510.1a, 107.1b).
+None.

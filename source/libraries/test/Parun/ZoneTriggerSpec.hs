@@ -1846,7 +1846,7 @@ representativeEvents cond =
         let targeting recipient = noTable (GameEvent.BecameTarget (BecameTarget.MkBecameTarget recipient arrived (Maybe.fromMaybe StackObjectKind.Spell (BecomesTargetedTrigger.kind c)) S.bob))
          in targeting (Recipient.ToObject departed) NonEmpty.:| [targeting (Recipient.ToPlayer S.alice) | TargetedSubject.includesYou (BecomesTargetedTrigger.subject c)]
       -- The batch's CR 400.7e table, with the sacrificed permanent's graveyard
-      -- arrival in it -- Event.eventTriggers' `becameInGraveyard` for a sacrifice
+      -- arrival in it -- Event.Trigger.eventTriggersGiven's `becameInGraveyard` for a sacrifice
       -- that reached a graveyard.
       buried = Map.singleton departed arrived
       -- CR 614.5's identity for a shield the BEARER's own resolution installed,

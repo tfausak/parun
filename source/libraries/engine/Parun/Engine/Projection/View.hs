@@ -52,6 +52,7 @@ import qualified Parun.Types.Condition as Condition.Type
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.CopyException as CopyException
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.Counterability as Counterability
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.Filter as Filter.Type
@@ -1451,6 +1452,29 @@ stampedSnapshotOf oid gs = do
   if Object.flipped object
     then fmap (\stamp -> Maybe.fromMaybe stamp (PC.flipped stamp)) stamped
     else stamped
+
+-- CR 113.6d / 113.6e / 113.6g / 613.1f: a face, less the abilities it prints
+-- about its own casting where a layer-6 wipe reaches the spell (`spell`,
+-- Parun.Engine.Cost.asSpellProjected): its additional and alternative costs (CR
+-- 118.8, 118.9), its casting restrictions and X ceiling (CR 113.6e) and its
+-- "can't be countered" (CR 113.6g). A perpetual wipe reaches the spell, one
+-- confined to graveyards does not. Parun.CostSpec's "CR 118.8 a Demon of
+-- Catastrophes that perpetually lost all abilities is cast without a
+-- sacrifice" and "CR 113.6d under Yixlid Jailer a Fireblast cast from the
+-- graveyard still sacrifices two Mountains", and the scenarios
+-- patriars-humiliation/cr-113-6g-* and cr-113-6e-*, prove it.
+wipedFace :: ProjectedCharacteristics -> Face.Face card -> Face.Face card
+wipedFace spell face
+  | PC.lostAllAbilities spell =
+      face
+        { Face.additionalCosts = [],
+          Face.additionalCostChoices = [],
+          Face.alternativeCosts = [],
+          Face.castingRestrictions = [],
+          Face.maximumX = [],
+          Face.counterability = Counterability.Counterable
+        }
+  | otherwise = face
 
 -- CR 707.2 / 608.2: the face a spell on the stack announces against and
 -- resolves, its spell abilities and type line read off its COPIABLE values

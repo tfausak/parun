@@ -38,6 +38,8 @@ import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AffectedUnless as AffectedUnless
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.Amass as Amass
+import qualified Parun.Types.AmassKind as AmassKind
 import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.AttackTrigger as AttackTrigger
 import qualified Parun.Types.AttackerTrigger as AttackerTrigger
@@ -343,16 +345,26 @@ rule face n = case Node.tag n of
     relation <- players who
     rows <- Common.asArray effects' >>= traverse (Node.node Monad.>=> playerRule)
     pure face {Face.playerAbilities = Face.playerAbilities face <> [PlayerStaticAbility.MkPlayerStaticAbility (PlayerScope.Related relation) Nothing Nothing e | e <- rows]}
-  -- "This land enters tapped" (CR 614.1d).
+  -- "This land enters tapped" (CR 614.1d), or "... unless [condition]",
+  -- which applies while the condition fails ('Oracle.Trigger.unless').
   "AsPermanentEnters" -> do
     (who, replacements) <- pair n
     p <- Node.node who
     Monad.unless (Node.tag p == "ThisPermanent") (Node.untranslated p)
     rewrites <- Common.asArray replacements >>= traverse Node.node
     case rewrites of
-      [r] | Node.tag r == "EntersTapped", Maybe.isNothing (Node.args r) -> pure face {Face.replacementEffects = Face.replacementEffects face <> [entersTapped]}
+      [r] | tapped r -> pure face {Face.replacementEffects = Face.replacementEffects face <> [entersTapped]}
+      [r] | Node.tag r == "Unless" -> do
+        (conditionValue, inner) <- pair r
+        within <- Common.asArray inner >>= traverse Node.node
+        Monad.unless (fmap tapped within == [True]) (Node.untranslated r)
+        c <- Node.node conditionValue >>= intervening outermost
+        failing <- maybe (Node.untranslated r) Right (Oracle.Trigger.unless c)
+        pure face {Face.replacementEffects = Face.replacementEffects face <> [entersTapped {PrintedReplacement.condition = Just failing}]}
       r : _ -> Node.untranslated r
       [] -> Node.untranslated n
+    where
+      tapped r = Node.tag r == "EntersTapped" && Maybe.isNothing (Node.args r)
   -- "As long as [condition], [static ability]" (CR 611.3a): the static
   -- abilities of the rules within, each applying while the condition holds.
   -- Any other rule within is not read here.
@@ -1207,6 +1219,10 @@ effects context n = case Node.tag n of
   "PutCounters" -> do
     actions <- Node.arguments n >>= traverse Node.node
     fmap concat (traverse (counters context) actions)
+  -- CR 701.71a.
+  "EmpowerJace" -> do
+    q <- Node.argument n >>= quantity context
+    pure [Effect.Amass Amass.MkAmass {Amass.quantity = q, Amass.kind = AmassKind.EmpowerJace, Amass.slot = Nothing}]
   _ -> playerEffects context (PlayerRef.Relative PlayerRelation.You) n
   where
     damage dealer amount recipient = do

@@ -22,6 +22,8 @@ import qualified Parun.Types.ActivationRestriction as ActivationRestriction
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AffectedUnless as AffectedUnless
 import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.Amass as Amass
+import qualified Parun.Types.AmassKind as AmassKind
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
@@ -174,6 +176,23 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
   Spec.it s "reads entering tapped as a replacement effect of the source" $ do
     Spec.assertEq s (Right ()) (accepts charcoalDiamond)
     Spec.assertEq s [ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.Tapped)] (fmap PrintedReplacement.effect (Face.replacementEffects (translated charcoalDiamond)))
+
+  -- CR 614.1d: "This land enters tapped unless [condition]" applies while
+  -- the condition fails, so it is held as the complement of what it names.
+  Spec.it s "reads entering tapped unless a condition as entering tapped under its complement" $ do
+    Spec.assertEq s (Right ()) (accepts fateholdAnnex)
+    Spec.assertEq s (Right ()) (accepts desertedBeach)
+    let yours fs = Quantity.Count (Count.MkCount (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) (Filter.And (fs <> [Filter.HeldBy Holder.Controller PlayerRelation.You])) Aggregation.Members)
+        atMost q k = Just (Condition.Compares (Compares.MkCompares q Comparison.AtMost (Quantity.Literal k)))
+        tapped = ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.Tapped)
+    Spec.assertEq s [(atMost (yours [Filter.HasCardType CardType.Planeswalker]) 0, tapped)] [(PrintedReplacement.condition r, PrintedReplacement.effect r) | r <- Face.replacementEffects (translated fateholdAnnex)]
+    Spec.assertEq s [(atMost (yours [Filter.Not Filter.IsSource, Filter.HasCardType CardType.Land]) 1, tapped)] [(PrintedReplacement.condition r, PrintedReplacement.effect r) | r <- Face.replacementEffects (translated desertedBeach)]
+
+  -- CR 701.71a: "Empower Jace 6", the amass of a Jace; and a second
+  -- instruction of "you" in a sentence of its own.
+  Spec.it s "reads empowering Jace as an amass of a Jace" $ do
+    Spec.assertEq s (Right ()) (accepts protegesAwakening)
+    Spec.assertEq s [Amass.MkAmass (Quantity.Literal 6) AmassKind.EmpowerJace Nothing] [a | Effect.Amass a <- spellEffects (translated protegesAwakening)]
 
   -- CR 601.2i / 112.2: the caster of a spell is its controller, which a
   -- cast trigger's filter names; "a player" names none.
@@ -671,4 +690,25 @@ bloodBurglar :: (String, String)
 bloodBurglar =
   ( "{\"_OracleCard\":\"Card\",\"Name\":\"Blood Burglar\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Vampire\",\"Rogue\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1},{\"_ManaSymbol\":\"ManaCostB\"}],\"Rules\":[{\"_Rule\":\"If\",\"args\":[{\"_Condition\":\"IsPlayersTurn\",\"args\":{\"_Player\":\"You\"}},[{\"_Rule\":\"PermanentLayerEffect\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_StaticLayerEffect\":\"AddAbility\",\"args\":[{\"_Rule\":\"Lifelink\"}]}]]}]]}],\"CardPT\":{\"Power\":2,\"Toughness\":2}}",
     "During your turn, this creature has lifelink.(Damage dealt by this creature also causes you to gain that much life.)"
+  )
+
+-- | Protege's Awakening's AST, and its Oracle text.
+protegesAwakening :: (String, String)
+protegesAwakening =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Protege's Awakening\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Sorcery\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":3},{\"_ManaSymbol\":\"ManaCostU\"}],\"Rules\":[{\"_Rule\":\"SpellActions\",\"args\":{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"EmpowerJace\",\"args\":{\"_GameNumber\":\"Integer\",\"args\":6}},{\"_Action\":\"DrawACard\"}]}}]}",
+    "Empower Jace 6. (Put six loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[\8722\&1]: Surveil 1\" and \"[\8722\&3]: Draw a card.\")\nDraw a card."
+  )
+
+-- | Deserted Beach's AST, and its Oracle text.
+desertedBeach :: (String, String)
+desertedBeach =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Deserted Beach\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Land\"],\"Subtypes\":[]},\"Rules\":[{\"_Rule\":\"AsPermanentEnters\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_ReplacementActionWouldEnter\":\"Unless\",\"args\":[{\"_Condition\":\"PlayerPassesFilter\",\"args\":[{\"_Player\":\"You\"},{\"_Players\":\"ControlsNum\",\"args\":[{\"_Comparison\":\"GreaterThanOrEqualTo\",\"args\":{\"_GameNumber\":\"Integer\",\"args\":2}},{\"_Permanents\":\"And\",\"args\":[{\"_Permanents\":\"Other\",\"args\":{\"_Permanent\":\"ThisPermanent\"}},{\"_Permanents\":\"IsCardtype\",\"args\":\"Land\"}]}]}]},[{\"_ReplacementActionWouldEnter\":\"EntersTapped\"}]]}]]},{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"TapPermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"AddMana\",\"args\":{\"_ManaProduce\":\"Or\",\"args\":[{\"_ManaProduce\":\"ManaProduceW\"},{\"_ManaProduce\":\"ManaProduceU\"}]}}]}]}]}",
+    "This land enters tapped unless you control two or more other lands.\n{T}: Add {W} or {U}."
+  )
+
+-- | Fatehold Annex's AST, and its Oracle text.
+fateholdAnnex :: (String, String)
+fateholdAnnex =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Fatehold Annex\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Land\"],\"Subtypes\":[]},\"Rules\":[{\"_Rule\":\"AsPermanentEnters\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_ReplacementActionWouldEnter\":\"Unless\",\"args\":[{\"_Condition\":\"PlayerPassesFilter\",\"args\":[{\"_Player\":\"You\"},{\"_Players\":\"ControlsA\",\"args\":{\"_Permanents\":\"IsCardtype\",\"args\":\"Planeswalker\"}}]},[{\"_ReplacementActionWouldEnter\":\"EntersTapped\"}]]}]]},{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"TapPermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"AddMana\",\"args\":{\"_ManaProduce\":\"Or\",\"args\":[{\"_ManaProduce\":\"ManaProduceW\"},{\"_ManaProduce\":\"ManaProduceU\"}]}}]}]}]}",
+    "This land enters tapped unless you control a planeswalker.\n{T}: Add {W} or {U}."
   )

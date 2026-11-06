@@ -2473,7 +2473,7 @@ hauntSpec s registry =
         -- The zone, not the link: the same haunting card, still haunting the same
         -- Piker, moved to a graveyard. CR 113.6k puts this ability in exile alone,
         -- so a graveyard reading of it must find nothing -- which is what
-        -- eventTriggers' `inExile` source is for, since `inGraveyards` filters on
+        -- Event.Trigger.standingOf's `inExile` source is for, since `inGraveyards` filters on
         -- the same functionsIn call and rejects it.
         Spec.it s "CR 113.6k the same ability does not fire from a graveyard" $ do
           fixture@(_, victimId, _, _, secondBolt, _) <- board

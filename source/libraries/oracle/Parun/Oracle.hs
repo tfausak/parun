@@ -124,7 +124,7 @@ faceAbilities face =
         (one, _) <- Target.described context slot'
         -- Free: a later reference may be "that creature" (Unstable Mutation).
         [word <> Text.pack " " <> one, Text.pack "that " <> one]
-      context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Map.empty [] [] [] [] host
+      context = contextOf self host
       -- A printed loyalty (CR 306.5a) is no Oracle text, as power is not.
       rest = face {Face.loyalty = Nothing, Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = [], Face.staticAbilities = [], Face.replacementEffects = [], Face.combatRestrictions = [], Face.playerAbilities = [], Face.enchant = [], Face.characteristicPT = Nothing}
       subtypes = TypeLine.subtypes (Face.typeLine face)
@@ -145,6 +145,11 @@ faceAbilities face =
         <> fmap (activated context) (Face.activatedAbilities face)
         <> fmap (triggered context (Set.member CardType.Creature (TypeLine.types (Face.typeLine face)))) (Face.triggeredAbilities face)
         <> [[] | unread]
+
+-- | What an ability of the card named `self` renders in, `host` being what an
+-- aura's or equipment's ability calls the object it is attached to.
+contextOf :: Text.Text -> [Text.Text] -> Target.Context
+contextOf self = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Map.empty [] [] [] []
 
 -- | A triggered ability: "[When/Whenever/At] [trigger event], [effect]" (CR
 -- 603.1), the effect calling the source "it" once the event has named it

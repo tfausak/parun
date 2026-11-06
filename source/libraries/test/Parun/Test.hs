@@ -974,6 +974,7 @@ import qualified Parun.SpeedSpec
 import qualified Parun.SplitSecondSpec
 import qualified Parun.StationSpec
 import qualified Parun.StickerSpec
+import qualified Parun.SubtypeSpec
 import qualified Parun.TargetPerPlayerSpec
 import qualified Parun.TargetSpec
 import qualified Parun.TeamSpec
@@ -2016,6 +2017,7 @@ spec s registry corpus = do
   Parun.SplitSecondSpec.spec s registry
   Parun.StationSpec.spec s registry
   Parun.StickerSpec.spec s registry
+  Parun.SubtypeSpec.spec s
   Parun.TargetPerPlayerSpec.spec s registry
   Parun.TargetSpec.spec s registry
   Parun.TeamSpec.spec s registry

@@ -33,7 +33,10 @@ Read `docs/` by section, on demand, never a whole doc "for context".
 - What's next? `gh issue list`
 - Architecture rationale: `docs/design.md`
 - Rules ground truth: `docs/rules.txt`, grepped by rule number --- never
-  memory, and never a rule number quoted in an issue or a brief.
+  memory, and never a rule number quoted in an issue or a brief. A CR update
+  adds every new entry of a closed list (card types, supertypes, a subtype
+  family) to its enum in the same PR, card or no card: a flat list is data,
+  not a capability. `Parun.SubtypeSpec` fails until it does.
 - Readings the rules don't force: `docs/decisions.md`, checked before deciding
   one and on every CR update
 - Readings only a synthetic card can observe: `docs/synthetic-readings.md`,

@@ -371,6 +371,18 @@ condition context c = case c of
     _ -> []
   _ -> []
 
+-- | The condition holding exactly when this one fails, where the DSL can say
+-- it: a count of at least k and one of at most k - 1, either way. An "unless"
+-- (CR 614.1d's "enters tapped unless ...") is held as the condition under
+-- which its rewrite applies, so the words name this one's complement.
+unless :: Condition.Condition -> Maybe Condition.Condition
+unless c = case c of
+  Condition.Compares (Compares.MkCompares measured Comparison.AtLeast (Quantity.Literal k))
+    | k > 0 -> Just (Condition.Compares (Compares.MkCompares measured Comparison.AtMost (Quantity.Literal (k - 1))))
+  Condition.Compares (Compares.MkCompares measured Comparison.AtMost (Quantity.Literal k))
+    | k >= 0 -> Just (Condition.Compares (Compares.MkCompares measured Comparison.AtLeast (Quantity.Literal (k + 1))))
+  _ -> Nothing
+
 -- | A life tally's predicate after its subject: " lost life last turn".
 lifeChanged :: LifeTally.LifeTally -> Text.Text
 lifeChanged tally =
@@ -465,7 +477,14 @@ counted context n comparison k = case Count.scope n of
         p <- Filter.phrase (Filter.Type.And rest) (Target.keyword context)
         (before, number) <- quantifier comparison k
         noun <- Filter.describe number Target.permanent p
-        let some = maybe (before noun <> Text.pack " " <> noun) (Text.pack "another " <>) (Monad.guard (number == Filter.Singular) >> Text.stripPrefix (Text.pack "other ") noun)
+        -- Free for one of several nouns: one article (Moonlit Scavengers'
+        -- "an artifact or enchantment") or one each (Sunpetal Grove's "a Forest
+        -- or a Plains").
+        some <- case Monad.guard (number == Filter.Singular) >> Text.stripPrefix (Text.pack "other ") noun of
+          Just others -> [Text.pack "another " <> others]
+          Nothing ->
+            let parts = Text.splitOn (Text.pack " or ") noun
+             in [before noun <> Text.pack " " <> noun] <> [Text.intercalate (Text.pack " or ") [Prose.article part <> Text.pack " " <> part | part <- parts] | number == Filter.Singular, comparison == Comparison.AtLeast, k == 1, length parts > 1]
         case controllers of
           [Filter.Type.HeldBy Holder.Controller PlayerRelation.You] -> [Text.pack "you control " <> some]
           [Filter.Type.HeldBy Holder.Controller PlayerRelation.Opponent] -> [Text.pack "an opponent controls " <> some]

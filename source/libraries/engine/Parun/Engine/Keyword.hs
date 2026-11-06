@@ -288,9 +288,10 @@ import qualified Parun.Types.ZoneScope as ZoneScope
 -- stack (CR 113.6), and the graveyard reads go through the projection
 -- (Cost.costsFor, Cast.projectedKeywords).
 --
--- Not implemented: beyond the cast scan's triggered abilities and the keywords
--- the cast itself reads (Cost.spellKeywords), which go through the projection,
--- what is read while the object is on the STACK stays printed (#4707).
+-- Not implemented: beyond the cast scan's triggered abilities, the keywords the
+-- cast itself reads (Cost.spellKeywords) and the fields a layer-6 wipe takes
+-- (Projection.wipedFace), what is read while the object is on the STACK stays
+-- printed (#6529).
 
 -- CR 702.70b: multiple instances of poisonous each trigger separately, so this
 -- returns one ability PER INSTANCE -- `Poisonous 1` twice is two abilities and two
