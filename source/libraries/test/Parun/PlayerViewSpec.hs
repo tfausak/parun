@@ -232,7 +232,7 @@ spec s registry = Spec.describe s "PlayerView" $ do
         answer question = case Asked.prompt question of
           prompt@(Prompt.ChooseOptional _ pid _ _ _ _) -> do
             let gs = Asked.game question
-            State.modify' (<> [(pid, GameState.priority gs, take 1 (Render.board (PlayerView.viewFor pid gs)))])
+            State.modify' (<> [(pid, GameState.priority gs, take 1 (Render.board True (PlayerView.viewFor pid gs)))])
             pure (S.identityAnswer prompt)
           prompt -> pure (S.identityAnswer prompt)
         asked = State.execState (Engine.runGameAsked answer board (S.cast S.alice spell >> Engine.priorityLoop)) []

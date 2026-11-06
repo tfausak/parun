@@ -69,20 +69,23 @@ import qualified Parun.Types.ZoneChange as ZoneChange
 player :: PlayerId.PlayerId -> Text.Text
 player pid = Text.pack ("Player " <> show (PlayerId.unwrap pid + 1))
 
--- | The board summary: whose turn and step, then each seat's totals,
--- permanents and public zones, and the cards of another seat's hand or any
--- seat's library the deciding seat may see (CR 400.2), the deciding seat
--- first, then the stack.
-board :: PlayerView.PlayerView -> [Text.Text]
-board view =
-  [ Text.concat
-      [ Text.pack ("Turn " <> show (PlayerView.turn view) <> ", "),
-        player (PlayerView.active view),
-        Text.pack "'s ",
-        phase (PlayerView.phase view),
-        maybe Text.empty (\p -> Text.pack ". Priority: " <> player p) (PlayerView.priority view),
-        Text.pack "."
-      ]
+-- | The board summary: whose turn and step, or before the first turn whose
+-- it will be (CR 103.5-103.8), then each seat's totals, permanents and public
+-- zones, and the cards of another seat's hand or any seat's library the
+-- deciding seat may see (CR 400.2), the deciding seat first, then the stack.
+board :: Bool -> PlayerView.PlayerView -> [Text.Text]
+board begun view =
+  [ if begun
+      then
+        Text.concat
+          [ Text.pack ("Turn " <> show (PlayerView.turn view) <> ", "),
+            player (PlayerView.active view),
+            Text.pack "'s ",
+            phase (PlayerView.phase view),
+            maybe Text.empty (\p -> Text.pack ". Priority: " <> player p) (PlayerView.priority view),
+            Text.pack "."
+          ]
+      else Text.pack "Before the first turn. " <> player (PlayerView.active view) <> Text.pack " plays first."
   ]
     <> concatMap seat (List.sortOn ((/= PlayerView.viewer view) . SeatView.player) (PlayerView.seats view))
     <> stack

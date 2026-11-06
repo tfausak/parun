@@ -29,11 +29,15 @@ data Hotseat = MkHotseat
     autoPass :: Bool,
     -- | Each seat that chose auto during the payment now under way, beside
     -- the colors the source auto last tapped is for.
-    paying :: Map.Map PlayerId.PlayerId (Set.Set ManaType.ManaType)
+    paying :: Map.Map PlayerId.PlayerId (Set.Set ManaType.ManaType),
+    -- | Each seat whose last action chosen casts a spell or activates an
+    -- ability, as its next priority words it undone (CR 733.1), beside the
+    -- game, turn and count of witnessed entries its view held then.
+    attempted :: Map.Map PlayerId.PlayerId ((Natural.Natural, Natural.Natural, Natural.Natural), Text.Text)
   }
   deriving (Eq, Show)
 
 -- | A screen no seat has looked at yet, passing for a seat with nothing
 -- else to do.
 fresh :: Hotseat
-fresh = MkHotseat {facing = Nothing, unread = False, conceding = Set.empty, seen = Map.empty, news = Map.empty, greeted = Set.empty, autoPass = True, paying = Map.empty}
+fresh = MkHotseat {facing = Nothing, unread = False, conceding = Set.empty, seen = Map.empty, news = Map.empty, greeted = Set.empty, autoPass = True, paying = Map.empty, attempted = Map.empty}
