@@ -7118,10 +7118,13 @@ changeZoneInBatchReturning settle asOf oid requestedDest = changeZoneAttaching s
 -- `simultaneously` group (CR 603.2c, 603.6a), one board every member's CR 616.1
 -- loop reads (applyReplacementsIn), the other members visible to CR 614.12's
 -- entry choices as changeZoneEnteringIn's batch sees them (amongPending), CR
--- 401.4 / 404.3's arrangement, and CR 613.7m's order (together).
+-- 401.4 / 404.3's arrangement, and CR 613.7m's order (Restamp.settle, run as
+-- `together` ends).
 --
 -- Parun.LeavesTriggerSpec's Rest in Peace case and data/scenarios/
--- simultaneous-moves' Banisher Priest and Palace Jailer boards prove it.
+-- simultaneous-moves' Banisher Priest and Palace Jailer boards prove it;
+-- data/scenarios/restamp's "orders permanents returning together" pair
+-- (Glorious Protector) proves the order.
 changeZonesTogether :: Game () -> [(ObjectId, Zone)] -> Game [Seq.Seq ObjectId]
 changeZonesTogether settle batch = simultaneously . together $ do
   -- Lich's Mirror's ruling, asked of the whole batch before any of it moves.
@@ -7133,7 +7136,10 @@ changeZonesTogether settle batch = simultaneously . together $ do
         State.modify' (\g -> g {GameState.enteringPending = Map.delete oid (GameState.enteringPending g)})
         new <- changeZoneAttaching settle (Just before) sofar oid dest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
         pure (foldr Set.insert sofar new, new : acc)
-  fmap (reverse . snd) (amongPending Nothing entering (Monad.foldM step (Set.empty, []) moves))
+  arrived <- fmap (reverse . snd) (amongPending Nothing entering (Monad.foldM step (Set.empty, []) moves))
+  -- CR 613.7m: noted here, ordered as `together` ends.
+  Restamp.settle (GameState.nextTimestamp before) (concatMap Foldable.toList arrived)
+  pure arrived
 
 -- changeZoneReturning's body, returning the destination incarnations' ids: one
 -- fresh id per arrival on a completed move (CR 400.7), which is one for every
