@@ -1,0 +1,92 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": "Green"
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": "Blue"
+          }
+        }
+      ],
+      "name": "Entrust the Spark",
+      "oracleText": "You may sacrifice a planeswalker. If you do, search your library for a planeswalker card, put it onto the battlefield, then shuffle.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Search",
+                    "value": {
+                      "destination": "Battlefield",
+                      "filter": {
+                        "type": "HasCardType",
+                        "value": "Planeswalker"
+                      },
+                      "owner": {
+                        "type": "Relative",
+                        "value": "You"
+                      },
+                      "quantity": {
+                        "type": "Literal",
+                        "value": 1
+                      },
+                      "searcher": {
+                        "type": "Relative",
+                        "value": "You"
+                      }
+                    }
+                  }
+                ],
+                "payGate": {
+                  "branch": "IfPaid",
+                  "cost": {
+                    "components": [
+                      {
+                        "type": "Sacrifice",
+                        "value": {
+                          "count": {
+                            "type": "Fixed",
+                            "value": 1
+                          },
+                          "whichPermanents": {
+                            "type": "HasCardType",
+                            "value": "Planeswalker"
+                          }
+                        }
+                      }
+                    ],
+                    "mana": []
+                  },
+                  "payer": {
+                    "type": "InSlot",
+                    "value": "you"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          "Sorcery"
+        ]
+      }
+    }
+  ]
+}

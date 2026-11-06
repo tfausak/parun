@@ -24,7 +24,7 @@
         }
       ],
       "name": "Heart-Piercer Bow",
-      "oracleText": "Whenever equipped creature attacks, this Equipment deals 1 damage to target creature defending player controls.\nEquip {1}",
+      "oracleText": "Whenever equipped creature attacks, this Equipment deals 1 damage to target creature defending player controls.\nEquip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)",
       "triggeredAbilities": [
         {
           "condition": {

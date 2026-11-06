@@ -213,7 +213,7 @@
         }
       ],
       "name": "Gideon Blackblade",
-      "oracleText": "During your turn, Gideon Blackblade is a 4/4 Human Soldier creature with indestructible that's still a planeswalker.\nPrevent all damage that would be dealt to Gideon Blackblade during your turn.\n+1: Up to one other target creature you control gains your choice of vigilance, lifelink, or indestructible until end of turn.\n−6: Exile target nonland permanent.",
+      "oracleText": "During your turn, Gideon Blackblade is a 4/4 Human Soldier creature with indestructible that's still a planeswalker.\nPrevent all damage that would be dealt to Gideon Blackblade during your turn.\n[+1]: Up to one other target creature you control gains your choice of vigilance, lifelink, or indestructible until end of turn.\n[−6]: Exile target nonland permanent.",
       "replacementEffects": [
         {
           "condition": {
