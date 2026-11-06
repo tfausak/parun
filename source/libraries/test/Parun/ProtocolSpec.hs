@@ -68,7 +68,7 @@ spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Protocol" $ do
   Spec.it s "every answer in ten turns of a game survives the protocol's encode and decode" $ do
     matchup <- redGreen s registry
-    let checking :: Answerer.Answerer (State.State [(Text.Text, Bool)])
+    let checking :: Answerer.Answerer (Asked.Asked GameState.GameState) (State.State [(Text.Text, Bool)])
         checking = Answerer.MkAnswerer $ \asked -> do
           let prompt = Asked.prompt asked
               answer = S.castAnswer prompt
@@ -239,7 +239,7 @@ overTheLine replies gs game =
   let send line = State.state $ \(out, rest) -> case rest of
         reply : more -> (Common.render (Codec.Reply.toValue reply), (out <> [Text.unpack line], more))
         [] -> error ("no reply left for " <> Text.unpack line)
-      fallback :: Answerer.Answerer (State.State ([String], [R.Reply]))
+      fallback :: Answerer.Answerer (Asked.Asked GameState.GameState) (State.State ([String], [R.Reply]))
       fallback = Answerer.MkAnswerer (pure . Replay.defaultAnswer . Asked.prompt)
       (ran, (sent, _)) = State.runState (Engine.runGameAsked (Answerer.unwrap (Protocol.over send fallback)) gs game) ([], replies)
    in (ran, sent)
@@ -263,7 +263,7 @@ exchanging :: (Text.Text -> State.State Log Text.Text) -> Text.Text -> State.Sta
 exchanging answer line = State.modify' (<> [Right (Text.unpack line)]) >> answer line
 
 -- Chance and the interpreter's prompts, answered as a recording would be.
-chance :: Answerer.Answerer (State.State Log)
+chance :: Answerer.Answerer (Asked.Asked GameState.GameState) (State.State Log)
 chance = Answerer.MkAnswerer (pure . Replay.defaultAnswer . Asked.prompt)
 
 -- Answers "nonsense" to the first line it is sent, then as `client` does.

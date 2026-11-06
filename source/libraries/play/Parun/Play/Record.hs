@@ -52,7 +52,7 @@ recording seats sink =
 -- its seat, or the active player's for chance (where the runner looks), CR
 -- 104.3a's Concede move when a seat concedes, and nothing for a standing
 -- refusal to concede or the interpreter's questions.
-entryFor :: Map.Map PlayerId.PlayerId Label.Label -> Asked.Asked r -> r -> Maybe Timed.Timed
+entryFor :: Map.Map PlayerId.PlayerId Label.Label -> Asked.Asked GameState.GameState r -> r -> Maybe Timed.Timed
 entryFor seats asked answer = case prompt of
   Prompt.Concede pid
     | answer == Concession.Concedes -> Just (at pid Move.Concede)

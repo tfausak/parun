@@ -1,6 +1,5 @@
 module Parun.Types.Asked where
 
-import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Prompt as Prompt
 
 -- A question, together with the game that raised it. This -- not 'Prompt' -- is
@@ -19,16 +18,17 @@ import qualified Parun.Types.Prompt as Prompt
 -- the same game as before"; the state answers that and every other question an
 -- interface has to ask about the game it is displaying.
 --
--- The state is the WHOLE state, filtered for nobody. Parun.Engine.Visibility.sees
--- answers what a given player may see of it, and Parun.Play.Protocol sends a
--- seat only Parun.Engine.PlayerView.viewFor's view. Not implemented: an
--- in-process answerer is still handed this state (#5418). This type makes CR
--- 723.4's split decidable, not enforced.
+-- `g` is what the asked party holds of each game. The engine raises every
+-- question with the WHOLE state, filtered for nobody, which its own answerers
+-- (the scenario driver, chance, Parun.Play.Protocol) read. A seat is handed
+-- only its view, a Parun.Types.PlayerView in each game's place: in process
+-- through Parun.Engine.Driver.seated, over the line through
+-- Parun.Play.Protocol (CR 400.2, 723.4).
 --
 -- 'Prompt' is deliberately untouched: it stays the vocabulary of questions, the
 -- Parun.Engine.Replay transcript stays keyed on it, and an answerer that does not
 -- care which game it is in ignores this wrapper (Engine.runGame).
-data Asked r = MkAsked
+data Asked g r = MkAsked
   { -- | The games this one is nested inside, OUTERMOST first -- so the main game
     -- heads the list and the game immediately containing `game` ends it. Empty
     -- for a question raised by the main game itself, which is every question
@@ -37,10 +37,9 @@ data Asked r = MkAsked
     -- A stack, which is why it is a list: the style guide reserves lists for
     -- stacks, and nesting is exactly what this records. Engine.playSubgame pushes
     -- onto it as each level's program passes outward through its parent's frame.
-    enclosing :: [GameState.GameState],
-    -- | The state of the game that raised the question, as of the moment it was
-    -- raised.
-    game :: GameState.GameState,
+    enclosing :: [g],
+    -- | The game that raised the question, as of the moment it was raised.
+    game :: g,
     prompt :: Prompt.Prompt r
   }
 
@@ -49,12 +48,16 @@ data Asked r = MkAsked
 -- Applied by Engine.playSubgame to every instruction of the subgame's program at
 -- once, so a question from N levels down is wrapped N times, innermost parent
 -- first -- which is why pushing onto the front builds an outermost-first list.
-under :: GameState.GameState -> Asked r -> Asked r
+under :: g -> Asked g r -> Asked g r
 under parent asked = asked {enclosing = parent : enclosing asked}
 
 -- CR 729.1a: the main game, the one every other level is nested inside. The
 -- asking game itself when nothing encloses it.
-mainGame :: Asked r -> GameState.GameState
+mainGame :: Asked g r -> g
 mainGame asked = case enclosing asked of
   [] -> game asked
   outermost : _ -> outermost
+
+-- | The same question, `f` applied to each game it is in.
+mapGames :: (g -> h) -> Asked g r -> Asked h r
+mapGames f asked = asked {enclosing = fmap f (enclosing asked), game = f (game asked)}

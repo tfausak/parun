@@ -71,11 +71,11 @@ spec s registry = Spec.describe s "Driver" $ do
     Spec.assertBool s (after == start) "untouched"
 
 -- Answers as S.castAnswer does, logging who each prompt was for under `tag`.
-tagged :: String -> Answerer.Answerer (State.State [(String, Maybe PlayerId.PlayerId)])
+tagged :: String -> Answerer.Answerer (Asked.Asked GameState.GameState) (State.State [(String, Maybe PlayerId.PlayerId)])
 tagged tag = Answerer.MkAnswerer $ \asked ->
   S.castAnswer (Asked.prompt asked) <$ State.modify' (<> [(tag, Driver.deciderOf (Asked.prompt asked))])
 
-casting :: (Monad m) => Answerer.Answerer m
+casting :: (Monad m) => Answerer.Answerer (Asked.Asked GameState.GameState) m
 casting = Answerer.MkAnswerer (pure . S.castAnswer . Asked.prompt)
 
 start0 :: NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> GameState.GameState

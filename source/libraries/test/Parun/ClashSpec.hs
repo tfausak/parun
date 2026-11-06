@@ -196,7 +196,7 @@ spec s registry = Spec.describe s "Clash" $ do
         isRevealedName g oid = fmap S.nameOf (Game.cardOf oid g) `elem` [Just (S.printingName giant), Just (S.printingName bolt)]
         -- At each prompt that matters, carol's view of every library card named
         -- like a revealed one, and those cards' ids.
-        watching :: Asked.Asked r -> State.State [(String, [ObjectId.ObjectId], [Visibility.Type.Visibility])] r
+        watching :: Asked.Asked GameState.GameState r -> State.State [(String, [ObjectId.ObjectId], [Visibility.Type.Visibility])] r
         watching asked = do
           let g = Asked.game asked
               shown = filter (isRevealedName g) (foldMap (\pid -> Game.zoneMembers Zone.Library pid g) [S.alice, S.bob])

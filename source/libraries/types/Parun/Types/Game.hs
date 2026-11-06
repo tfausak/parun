@@ -11,4 +11,4 @@ import qualified Parun.Types.Program as Program
 -- that raised it (#153). StateT folds the Program from the OUTSIDE, which means
 -- the interpreter never sees the state at a suspension unless the instruction
 -- brings it -- and Parun.Engine.Game.ask is the one place that puts it there.
-type Game = State.StateT GameState.GameState (Program.Program Asked.Asked)
+type Game = State.StateT GameState.GameState (Program.Program (Asked.Asked GameState.GameState))

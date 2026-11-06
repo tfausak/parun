@@ -18,6 +18,7 @@ import qualified Parun.Engine.Driver as Driver
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Monarch as Monarch
+import qualified Parun.Engine.PlayerView as PlayerView
 import qualified Parun.Engine.Replay as Replay
 import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Setup as Setup
@@ -134,7 +135,7 @@ spec s registry = Spec.describe s "Bot" $ do
 
 -- Every answer the bot gives the prompt over many seeds.
 drawn :: (Ord r) => Prompt.Prompt r -> Set.Set r
-drawn prompt = Set.fromList (fmap (State.evalState (Answerer.unwrap Bot.bot (Asked.MkAsked [] (Setup.emptyGame S.bothPlayers) prompt)) . SplitMix.MkSplitMix) [1 .. 256])
+drawn prompt = Set.fromList (fmap (State.evalState (Answerer.unwrap Bot.bot (Asked.mapGames (PlayerView.viewFor S.alice) (Asked.MkAsked [] (Setup.emptyGame S.bothPlayers) prompt))) . SplitMix.MkSplitMix) [1 .. 256])
 
 decider :: Decider.Decider
 decider = Decide.deciderFor S.alice (Setup.emptyGame S.bothPlayers)
@@ -148,8 +149,8 @@ data Answered = MkAnswered {within :: Bool, attacked :: Bool}
 
 played :: Word.Word64 -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> ((Result.Result, GameState.GameState), [Answered])
 played seed matchup =
-  let seats :: Map.Map PlayerId.PlayerId (Answerer.Answerer (State.StateT SplitMix.SplitMix (State.State [Answered])))
-      seats = Map.fromList [(S.alice, Bot.bot), (S.bob, Bot.bot)]
+  let seats :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Asked.Asked GameState.GameState) (State.StateT SplitMix.SplitMix (State.State [Answered])))
+      seats = Map.fromList [(S.alice, Driver.seated Bot.bot Chance.chance), (S.bob, Driver.seated Bot.bot Chance.chance)]
    in State.runState (State.evalStateT (Driver.match [watching] (Driver.bySeat seats Chance.chance) GameSettings.plain Map.empty matchup) (SplitMix.MkSplitMix seed)) []
 
 watching :: Observer.Observer (State.StateT SplitMix.SplitMix (State.State [Answered]))
@@ -168,7 +169,7 @@ declares prompt answer = case prompt of
   Prompt.DeclareAttackers {} -> not (null (answer :: [ObjectId.ObjectId]))
   _ -> False
 
-setUp :: Answerer.Answerer (State.State SplitMix.SplitMix) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> State.State SplitMix.SplitMix GameState.GameState
+setUp :: Answerer.Answerer (Asked.Asked GameState.GameState) (State.State SplitMix.SplitMix) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> State.State SplitMix.SplitMix GameState.GameState
 setUp answerer matchup =
   fmap snd (Engine.runGameAsked (Answerer.unwrap answerer) (Setup.gameWith GameSettings.plain (fmap fst matchup)) (Setup.newGame (Resolve.performHandAction Engine.playSubgame) matchup))
 

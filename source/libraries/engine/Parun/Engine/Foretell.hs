@@ -143,10 +143,9 @@ foretellable pid gs = filter (\oid -> canForetell pid oid gs) (Game.zoneMembers 
 -- that proves it.
 --
 -- CR 702.143e is what makes each foretold card a pile of its own in
--- Parun.Engine.Exile.pileOf. Not implemented: that rule's ORDERING of one
--- player's several foretold cards. It hides nothing, because parun conceals
--- nothing from an answerer -- Parun.Types.Asked hands over the whole GameState
--- (#5418).
+-- Parun.Engine.Exile.pileOf, and a seat's view lists exile by id, which CR
+-- 400.7's fresh incarnation mints in arrival order. Not implemented: a
+-- foretell cost other than the printed one in any seat's view (#6392).
 foretell :: ManaAbilityPerformer.ManaAbilityPerformer -> PlayerId -> ObjectId -> Game ()
 foretell perform pid oid = do
   before <- State.get

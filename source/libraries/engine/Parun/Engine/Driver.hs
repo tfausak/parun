@@ -12,6 +12,7 @@ import qualified Data.Maybe as Maybe
 import Numeric.Natural (Natural)
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.PlayerView as PlayerView
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
@@ -22,19 +23,29 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GraveyardOrder as GraveyardOrder
 import qualified Parun.Types.Observer as Observer
 import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PlayerView as PlayerView.Type
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Result as Result
 
 -- | A prompt whose seat has an answerer goes to it; every other prompt, chance
 -- included, goes to the fallback.
-bySeat :: Map.Map PlayerId.PlayerId (Answerer.Answerer m) -> Answerer.Answerer m -> Answerer.Answerer m
+bySeat :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Asked.Asked GameState.GameState) m) -> Answerer.Answerer (Asked.Asked GameState.GameState) m -> Answerer.Answerer (Asked.Asked GameState.GameState) m
 bySeat seats fallback = Answerer.MkAnswerer $ \asked ->
   let answerer = Maybe.fromMaybe fallback (deciderOf (Asked.prompt asked) >>= (`Map.lookup` seats))
    in Answerer.unwrap answerer asked
 
+-- | CR 400.2 / 723.4: a prompt some seat decides goes to `answerer` as that
+-- seat may see it, never the whole game; every other prompt, chance
+-- included, goes to the fallback. Parun.PlayerViewSpec's "CR 400.2 a seat
+-- answers from its own view" is the proof.
+seated :: Answerer.Answerer (Asked.Asked PlayerView.Type.PlayerView) m -> Answerer.Answerer (Asked.Asked GameState.GameState) m -> Answerer.Answerer (Asked.Asked GameState.GameState) m
+seated answerer fallback = Answerer.MkAnswerer $ \asked -> case deciderOf (Asked.prompt asked) of
+  Just seat -> Answerer.unwrap answerer (Asked.mapGames (PlayerView.viewFor seat) asked)
+  Nothing -> Answerer.unwrap fallback asked
+
 -- | Every observer's before, in order, then the answer, then every observer's
 -- after, in order.
-ask :: (Monad m) => [Observer.Observer m] -> Answerer.Answerer m -> Asked.Asked r -> m r
+ask :: (Monad m) => [Observer.Observer m] -> Answerer.Answerer (Asked.Asked GameState.GameState) m -> Asked.Asked GameState.GameState r -> m r
 ask observers answerer asked = do
   mapM_ (\observer -> Observer.before observer asked) observers
   answer <- Answerer.unwrap answerer asked
@@ -43,13 +54,13 @@ ask observers answerer asked = do
 
 -- | A whole game, from setup to its result, each player in `orders` starting
 -- at that graveyard order (CR 404.3) and every other at Indifferent.
-match :: (Monad m) => [Observer.Observer m] -> Answerer.Answerer m -> GameSettings.GameSettings -> Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> m (Result.Result, GameState.GameState)
+match :: (Monad m) => [Observer.Observer m] -> Answerer.Answerer (Asked.Asked GameState.GameState) m -> GameSettings.GameSettings -> Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> m (Result.Result, GameState.GameState)
 match observers answerer settings orders matchup =
   Engine.runGameAsked (ask observers answerer) (Map.foldrWithKey Game.setGraveyardOrder (Setup.gameWith settings (fmap fst matchup)) orders) (Engine.playFrom matchup)
 
 -- | Whole steps (CR 500.1) from a state, until the game has a result, the
 -- budget is spent, or the predicate holds.
-drive :: (Monad m) => [Observer.Observer m] -> Answerer.Answerer m -> Natural -> (GameState.GameState -> m Bool) -> GameState.GameState -> m GameState.GameState
+drive :: (Monad m) => [Observer.Observer m] -> Answerer.Answerer (Asked.Asked GameState.GameState) m -> Natural -> (GameState.GameState -> m Bool) -> GameState.GameState -> m GameState.GameState
 drive observers answerer budget stop gs = do
   stopping <- stop gs
   if budget == 0 || Maybe.isJust (GameState.result gs) || stopping
