@@ -10912,6 +10912,18 @@ announcing body = do
       State.modify' (\g -> g {GameState.keptFaceDown = Nothing, GameState.announcedTops = Nothing})
       pure result
 
+-- CR 401.5's window for a special action (CR 116): run `body` as the taking of
+-- one, so a library's new top card is held back until it is finished
+-- (Game.shownTop). Not `announcing`, CR 121.8 keeping a drawn card face down
+-- only while a spell is cast or an ability activated; a mana ability activated
+-- during the action opens that window inside this one.
+takingSpecialAction :: Game a -> Game a
+takingSpecialAction body = do
+  State.modify' (\g -> g {GameState.actionTops = Just (Game.libraryTops g)})
+  result <- body
+  State.modify' (\g -> g {GameState.actionTops = Nothing})
+  pure result
+
 -- CR 121.8: the spell became cast (CR 601.2i) or the ability activated (CR
 -- 602.2b), so the cards drawn meanwhile turn face up and a reveal they were
 -- offered "as it's being drawn" is offered now, CR 121.9's look included. Only

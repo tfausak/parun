@@ -710,13 +710,13 @@ libraryTops :: GameState -> Map.Map PlayerId ObjectId
 libraryTops gs = Map.fromList [(pid, top) | pid <- Map.keys (GameState.players gs), Just top <- [topOf Zone.Library pid gs]]
 
 -- | CR 401.5: the top card of a player's library, unless it became the top while
--- a spell is being cast or an ability activated (GameState.announcedTops), when
--- it isn't revealed and can't be looked at until that ends. Not implemented: the
--- same while a special action is taken (#5003).
+-- a spell is being cast or an ability activated (GameState.announcedTops) or
+-- while a special action is taken (GameState.actionTops), when it isn't
+-- revealed and can't be looked at until that ends.
 shownTop :: PlayerId -> GameState -> Maybe ObjectId
-shownTop pid gs = case (topOf Zone.Library pid gs, GameState.announcedTops gs) of
-  (Just top, Just tops) | Map.lookup pid tops /= Just top -> Nothing
-  (top, _) -> top
+shownTop pid gs = case topOf Zone.Library pid gs of
+  Just top | any (any (\tops -> Map.lookup pid tops /= Just top)) [GameState.announcedTops gs, GameState.actionTops gs] -> Nothing
+  top -> top
 
 -- CR 404.3: set a player's standing graveyard-order setting
 -- (Parun.Types.GraveyardOrder). The player's to change, not the rules': a client
