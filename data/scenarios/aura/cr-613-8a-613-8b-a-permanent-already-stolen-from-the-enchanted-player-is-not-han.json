@@ -1,0 +1,133 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "attached": "piker",
+            "card": "Control Magic",
+            "label": "magic"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "carol"
+      },
+      {
+        "battlefield": [
+          {
+            "attached": "bob",
+            "card": "Synthetic Puppeteer's Yoke",
+            "label": "yoke"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          },
+          {
+            "card": "Forest",
+            "label": "forest"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "Upkeep"
+  },
+  "description": "CR 613.8a/613.8b a permanent already stolen from the enchanted player is not handed over again",
+  "note": "CR 613.8a/613.8b: the Yoke's set is what the enchanted player controls read AFTER every layer-2 effect it depends on. Applying Control Magic changes what the Yoke applies to, and the Yoke changes nothing about Control Magic -- it enchants bob, not carol -- so the Yoke is the dependent effect and waits. carol's Control Magic is placed first (carol is seated first for that; CR 613.7d stamps each placement in order). THREE SEATS: on two, carol would collapse onto the Yoke's controller. The Forest is the control: nothing else reaches it, so it still moves. carol, who took the Piker before the Yoke was attached, is the one who attacks with it on her turn. The control file stamps the Yoke first, a fence: CR 613.7 alone then puts Control Magic last.",
+  "timeline": [
+    {
+      "check": {
+        "View": {
+          "is": "carol",
+          "object": "$piker",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "alice",
+          "object": "$forest",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Attack": [
+          "$piker"
+        ]
+      },
+      "player": "carol",
+      "step": "DeclareAttackers",
+      "turn": 3
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$bob"
+      },
+      "player": "carol",
+      "source": "$piker",
+      "step": "DeclareAttackers",
+      "turn": 3
+    },
+    {
+      "check": {
+        "Attackers": {
+          "attackers": {
+            "$piker": "$bob"
+          }
+        }
+      },
+      "player": "carol",
+      "step": "DeclareBlockers",
+      "turn": 3
+    }
+  ]
+}

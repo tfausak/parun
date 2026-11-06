@@ -1,0 +1,235 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Goblin Piker",
+            "label": "host"
+          },
+          {
+            "card": "Gliding Licid",
+            "label": "licid",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          },
+          {
+            "card": "Island",
+            "label": "i3"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "j1"
+          },
+          {
+            "card": "Island",
+            "label": "j2"
+          },
+          {
+            "card": "Island",
+            "label": "j3"
+          },
+          {
+            "card": "Island",
+            "label": "j4"
+          },
+          {
+            "card": "Island",
+            "label": "j5"
+          },
+          {
+            "card": "Island",
+            "label": "j6"
+          },
+          {
+            "card": "Island",
+            "label": "j7"
+          },
+          {
+            "card": "Island",
+            "label": "j8"
+          },
+          {
+            "card": "Island",
+            "label": "j9"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Confiscate",
+            "label": "confiscate"
+          }
+        ],
+        "library": [
+          {
+            "card": "Hill Giant"
+          },
+          {
+            "card": "Hill Giant"
+          },
+          {
+            "card": "Hill Giant"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 109.5: the activator keeps the pay-to-end offer after Confiscate steals the animated Licid",
+  "note": "CR 109.5's two sentences, told apart: the pay-to-end clause is part of an ACTIVATED ability, so its \"you\" is the player who activated it, not the current controller of the object it is on. The readings differ only once control of the source moves after the ability resolved, and Confiscate moves it: the animated Licid is an Enchantment -- Aura and no longer a Creature, so \"enchant permanent\" is the steal that reaches it. Both seats hold untapped Islands, so neither leg reads a mana shortfall: alice is offered ending the effect and bob, who merely controls the Licid now, is not.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            "$i1",
+            null
+          ],
+          "object": "$licid",
+          "targets": [
+            "$host"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "$host",
+          "object": "$licid",
+          "of": "AttachedTo"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$j1",
+            "$j2",
+            "$j3",
+            "$j4",
+            "$j5",
+            "$j6",
+            null
+          ],
+          "object": "$confiscate",
+          "targets": [
+            "$licid"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "object": "$licid",
+          "of": "Controller"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "check": {
+        "View": {
+          "is": "$licid",
+          "object": "Confiscate",
+          "of": "AttachedTo"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Pass",
+            "ActivateManaAbility $j7",
+            "ActivateManaAbility $j8",
+            "ActivateManaAbility $j9"
+          ],
+          "of": "Offered",
+          "player": "bob"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Pass",
+            "EndEffect $licid",
+            "ActivateManaAbility $i2",
+            "ActivateManaAbility $i3"
+          ],
+          "of": "Offered",
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 2
+    }
+  ]
+}

@@ -353,8 +353,8 @@ isBestowed gs oid = maybe False Object.bestowed (Game.lookupObject oid gs)
 -- a GRANTED enchant (CR 613.1f, Modification.GainEnchant): reading the
 -- printed face instead would leave a permanent that became an Aura by effect
 -- permanently exempt from this rule, since its own card declares no enchant at
--- all. Parun.AuraSpec's "CR 704.5m: Cloudform is buried with the creature its
--- granted enchant ability let it hold" is what discriminates the two reads.
+-- all. data/scenarios/aura's "CR 704.5m: Cloudform is buried with the creature
+-- its granted enchant ability let it hold" is what discriminates the two reads.
 --
 -- CR 303.4c's own wording splits that last clause differently, and both halves
 -- land in the SAME place here because a pool's candidate list already excludes

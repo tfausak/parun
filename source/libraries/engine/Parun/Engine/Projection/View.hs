@@ -2455,8 +2455,8 @@ data ControlEffect = MkControlEffect
 -- Parun.Engine.Projection's layer fold takes. Every read inside a step is the
 -- running table's, so nothing re-enters this fold.
 --
--- Parun.AuraSpec's "CR 613.8b two Confiscates enchanting each other apply in
--- timestamp order" proves the loop.
+-- data/scenarios/aura's "CR 613.8b two Confiscates enchanting each other apply
+-- in timestamp order" proves the loop.
 layerTwo :: [ControlGrant] -> GameState -> Map ObjectId PlayerId.PlayerId
 layerTwo grants gs =
   let stored =
@@ -2608,8 +2608,8 @@ controlNames ctrl gs source a = case a of
   -- read as Matching's battlefield walk narrowed by the candidate's controller
   -- in the running table. CR 613.8a: another control effect that moves a
   -- candidate changes what this one applies to, so layerTwo applies it first;
-  -- Parun.AuraSpec's "CR 613.8a/613.8b a permanent already stolen from the
-  -- enchanted player is not handed over again" proves it.
+  -- data/scenarios/aura's "CR 613.8a/613.8b a permanent already stolen from
+  -- the enchanted player is not handed over again" proves it.
   --
   -- The battlefield bound is the arm's own, and it is what answers CR 702.26b
   -- for a phased-out permanent, which Parun.Engine.Phasing.phaseOut removes from

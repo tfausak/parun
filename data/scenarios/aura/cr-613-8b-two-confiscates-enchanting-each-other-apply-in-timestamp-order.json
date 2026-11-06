@@ -1,0 +1,166 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Simic Guildmage",
+            "label": "mage"
+          },
+          {
+            "attached": "land",
+            "card": "Confiscate",
+            "label": "alices"
+          },
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "land"
+          },
+          {
+            "attached": "alices",
+            "card": "Confiscate",
+            "label": "bobs"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 613.8b two Confiscates enchanting each other apply in timestamp order",
+  "note": "CR 613.8b's loop clause through two Confiscates. alice's enchants bob's Forest; bob's enchants alice's, so bob controls it and the Forest. Simic Guildmage then moves alice's onto bob's -- bob controls both hosts, which is the ability's destination test -- and CR 701.3c restamps it. Each grant now names the other's source, so each depends on the other (CR 613.8a) and the two apply in timestamp order: bob's older one first, handing him alice's Confiscate, whose grant then hands its own controller, bob, the Confiscate it enchants. Reversing the order gives alice both; falling back to each Aura's owner gives each player their own.",
+  "timeline": [
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "object": "$alices",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "object": "$land",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Activate": {
+          "ability": 1,
+          "mana": [
+            "$i1",
+            "$i2"
+          ],
+          "object": "$mage",
+          "targets": [
+            "$alices"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "object": "$alices",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "object": "$bobs",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "$bobs",
+          "object": "$alices",
+          "of": "AttachedTo"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "$alices",
+          "object": "$bobs",
+          "of": "AttachedTo"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
