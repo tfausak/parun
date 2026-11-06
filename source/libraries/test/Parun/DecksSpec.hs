@@ -32,12 +32,13 @@ spec s registry = do
       parsed <- either (pure . Left . (: []) . Text.unpack) (fmap (either (Left . (: []) . Exception.displayException) (either (Left . fmap (Text.unpack . DeckList.explain)) Right)) . DeckList.parse registry) contents
       Spec.assertEqWith s (path <> ": problems") (Either.fromLeft [] parsed) []
 
-    Monad.forM_ [("Portal", "por"), ("Portal Second Age", "p02"), ("Portal Three Kingdoms", "ptk"), ("Starter 1999", "s99"), ("Starter 2000", "s00")] $ \(set, code) ->
+    let starters = ("starter-1", "starter-2")
+    Monad.forM_ [("Portal", "por", starters), ("Portal Second Age", "p02", starters), ("Portal Three Kingdoms", "ptk", starters), ("Starter 1999", "s99", starters), ("Starter 2000", "s00", starters), ("Introductory Two-Player Set", "itp", ("kazzs-first-deck", "zakks-first-deck"))] $ \(set, code, (first, second)) ->
       Spec.it s ("two bots finish a game with the " <> set <> " starter decks, and it replays clean") $ do
         let read' name = do
               contents <- Decks.loadFile (root <> "/sets/" <> code <> name)
               either (const (pure (Left []))) (fmap (Either.fromRight (Left [])) . DeckList.parse registry) contents
-        decksRead <- (,) <$> read' "/starter-1.txt" <*> read' "/starter-2.txt"
+        decksRead <- (,) <$> read' ("/" <> first <> ".txt") <*> read' ("/" <> second <> ".txt")
         case decksRead of
           (Right one, Right two) -> played (S.alice, one) (S.bob, two)
           _ -> Spec.assertFailure s "the starter decks did not read"
