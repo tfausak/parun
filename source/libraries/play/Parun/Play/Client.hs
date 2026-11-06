@@ -24,6 +24,7 @@ import qualified Parun.Codec.Cost as Codec.Cost
 import qualified Parun.Codec.Keyword as Codec.Keyword
 import qualified Parun.Codec.ManaCost as Codec.ManaCost
 import qualified Parun.Codec.ManaType as Codec.ManaType
+import qualified Parun.Codec.ManaUnit as Codec.ManaUnit
 import qualified Parun.Codec.NumberFloor as Codec.NumberFloor
 import qualified Parun.Codec.Reply as Codec.Reply
 import qualified Parun.Codec.Request as Codec.Request
@@ -45,6 +46,7 @@ import qualified Parun.Types.Hotseat as Hotseat
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaRetention as ManaRetention
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.ManaUnit as ManaUnit
@@ -54,6 +56,7 @@ import qualified Parun.Types.ObjectView as ObjectView
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerView as PlayerView
+import qualified Parun.Types.ProductionTag as ProductionTag
 import qualified Parun.Types.Question as Question
 import qualified Parun.Types.Reply as R
 import qualified Parun.Types.Request as Request
@@ -390,6 +393,39 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
           Right amounts | fits amounts -> Right (R.Array [R.Array [recipient, R.Number (toInteger amount)] | (recipient, amount) <- zip targets amounts])
           _ -> Left wrong
       )
+  -- CR 603.3b / 101.4c: first to last, the first named going on the stack
+  -- first; Enter keeps the order shown.
+  "OrderTriggers" -> do
+    entries <- arrayOf offer
+    let size = Natural.length entries
+        wrong = Text.pack ("Type each number from 1 to " <> show size <> " once, or press Enter.")
+    pure
+      ( Text.pack "Order your triggered abilities: type their numbers first to last, separated by spaces, or press Enter to keep this order. On the stack, the last resolves first:" : numbered (fmap (triggerName view) entries),
+        \typed -> case numbers typed of
+          Right [] -> Right (R.Array (fmap (R.Number . toInteger) [0 .. size - 1]))
+          Right picked | List.sort picked == [1 .. size] -> Right (R.Array (fmap (R.Number . toInteger . subtract 1) picked))
+          _ -> Left wrong
+      )
+  -- CR 601.2h: the pool's unit that pays the next symbol, sent back whole.
+  "ChooseManaToSpend" -> do
+    units <- arrayOf offer
+    shown <- mapM (decoded Codec.ManaUnit.codec) units
+    pure
+      ( Text.pack "Choose the mana to spend:" : numbered (fmap unitName shown),
+        fmap (pickFrom units) . one (Natural.length units)
+      )
+  -- CR 701.23b: up to the count, which may be none.
+  "Search" -> do
+    from <- field "from" offer >>= arrayOf
+    names <- field "names" offer >>= arrayOf >>= mapM textOf
+    wanted <- field "count" offer >>= naturalOf
+    let n = min wanted (Natural.length from)
+    pure
+      ( Text.pack "Choose up to " <> Render.count n "card" <> Text.pack " to find, by number or range such as 1-3, separated by spaces, or press Enter for none:" : numbered names,
+        \typed -> do
+          picked <- some from typed
+          if Natural.length picked <= n then Right (R.Array picked) else Left (Text.pack ("Choose at most " <> show n <> "."))
+      )
   _ -> Nothing
   where
     offer = Question.offer question
@@ -616,6 +652,27 @@ payerSeat view offer = do
 candidateName :: Text.Text -> R.Reply -> Text.Text
 candidateName self candidate =
   Maybe.fromMaybe (Common.render (Codec.Reply.toValue candidate)) (decoded (Codec.Cost.codec Codec.Keyword.codec) candidate >>= Maybe.listToMaybe . Oracle.Cost.cost self (Oracle.Keyword.keywordWord self))
+
+-- | A trigger ordering's entry: its source, and its Oracle text where the
+-- offer carries it.
+triggerName :: PlayerView.PlayerView -> R.Reply -> Text.Text
+triggerName view entry =
+  let source = maybe (Text.pack "A rule") (objectName view) (Monad.mfilter (/= R.Null) (field "source" entry))
+   in maybe (source <> Text.pack "'s triggered ability") (\text -> source <> Text.pack ": " <> text) (field "text" entry >>= textOf)
+
+-- | A unit of mana in the pool: its type, and what sets it apart from others
+-- of its type (CR 106.6, 106.4, 107.4h).
+unitName :: ManaUnit.ManaUnit -> Text.Text
+unitName unit =
+  let notes =
+        [Text.pack "from a snow source" | Set.member ProductionTag.Snow (ManaUnit.tags unit)]
+          <> [Text.pack "from a Treasure" | Set.member ProductionTag.Treasure (ManaUnit.tags unit)]
+          <> [Text.pack "from an artifact" | Set.member ProductionTag.Artifact (ManaUnit.tags unit)]
+          <> [Text.pack "kept until end of turn" | ManaUnit.retention unit == ManaRetention.UntilEndOfTurn]
+          <> [Text.pack "kept until end of combat" | ManaUnit.retention unit == ManaRetention.UntilEndOfCombat]
+          <> [Text.pack "restricted" | Maybe.isJust (ManaUnit.restriction unit)]
+          <> [Text.pack "with an effect when spent" | Maybe.isJust (ManaUnit.rider unit) || Maybe.isJust (ManaUnit.spendTrigger unit)]
+   in Text.pack "{" <> Render.manaType (ManaUnit.manaType unit) <> Text.pack "}" <> (if null notes then Text.empty else Text.pack " (" <> Text.intercalate (Text.pack ", ") notes <> Text.pack ")")
 
 -- | A mana source as an offer names it, beside the mana types of each yield.
 manaSource :: R.Reply -> Maybe (R.Reply, [[ManaType.ManaType]])
