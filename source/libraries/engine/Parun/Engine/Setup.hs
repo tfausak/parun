@@ -1140,12 +1140,6 @@ restartGame perform exempt starter = do
      in gs {GameState.objects = Map.mapWithKey (\oid obj -> if staying oid then obj else obj {Object.stickers = Seq.empty}) (GameState.objects gs)}
   startGameFromCards perform exempt
 
--- CR 100.2d / 729.2a: every card in every player's Attraction (CR 717.2),
--- Contraption (the Unstable FAQ), planar (CR 901.3) and scheme (CR 904.3) deck.
-supplementaryDeckIds :: GameState -> Set.Set ObjectId
-supplementaryDeckIds gs =
-  Set.fromList (foldMap (foldMap Foldable.toList) (GameState.sideDecks gs))
-
 -- CR 729.2: build a fresh subgame state from the parent's LIBRARY cards, plus
 -- CR 729.2a's supplementary decks, CR 729.2b's vanguards and CR 729.2c's
 -- commanders; no other main-game zone enters. The object pool is
@@ -1193,7 +1187,7 @@ subgameStateFrom starter parent =
       -- CR 729.2a: each supplementary deck moves in, and startGameFromCards
       -- shuffles it. The face-up Attractions, Contraptions, planes and schemes
       -- stay behind.
-      suppIds = supplementaryDeckIds parent
+      suppIds = Game.supplementaryDeckIds parent
       movedObjects = Map.restrictKeys (GameState.objects parent) (Set.unions [libIds, cmdIds, suppIds])
       -- Invariant: `libIds` here and funnelBack's `oldLibIds` MUST compute the
       -- identical id set, and so must `cmdIds` and funnelBack's `oldCmdIds`.
@@ -1536,7 +1530,7 @@ funnelBack finalSub parent =
       -- and into the library by `returned` if it ended the subgame anywhere else
       -- (CR 729.5's first sentence).
       oldCmdIds = Set.filter (\oid -> Commander.isCommander oid parent || Vanguard.isVanguard oid parent) (GameState.command parent)
-      oldSuppIds = supplementaryDeckIds parent
+      oldSuppIds = Game.supplementaryDeckIds parent
       movedIds = Set.unions [oldLibIds, oldCmdIds, oldSuppIds]
       -- CR 800.4n: a departed owner's ante cards stay in the subgame, so they
       -- are not evidence the owner is still in it.
