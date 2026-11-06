@@ -460,7 +460,7 @@ manaProduced effect = case effect of
   Effect.TakeTheInitiative {} -> Nothing
   Effect.Designate (Designate.MkDesignate {}) -> Nothing
   Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> Nothing
-  Effect.Unsuspect _ -> Nothing
+  Effect.Undesignate _ -> Nothing
   Effect.SetHalfLocked (SetHalfLocked.MkSetHalfLocked {}) -> Nothing
   Effect.CounterAndMark _ -> Nothing
   Effect.BecomeProtector _ -> Nothing
@@ -660,7 +660,7 @@ playerChoice effect = case effect of
   Effect.TakeTheInitiative {} -> Nothing
   Effect.Designate {} -> Nothing
   Effect.SetClassLevel {} -> Nothing
-  Effect.Unsuspect _ -> Nothing
+  Effect.Undesignate _ -> Nothing
   Effect.SetHalfLocked {} -> Nothing
   Effect.CounterAndMark _ -> Nothing
   Effect.BecomeProtector _ -> Nothing
@@ -955,7 +955,7 @@ movesLibraryCard effect = case effect of
   Effect.CreateEmblem {} -> False
   Effect.Designate (Designate.MkDesignate {}) -> False
   Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> False
-  Effect.Unsuspect _ -> False
+  Effect.Undesignate _ -> False
   Effect.SetHalfLocked (SetHalfLocked.MkSetHalfLocked {}) -> False
   Effect.CounterAndMark _ -> False
   Effect.BecomeProtector _ -> False

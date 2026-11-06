@@ -463,6 +463,7 @@ import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.TurnTally as TurnTally
 import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
+import qualified Parun.Types.Undesignate as Undesignate
 import qualified Parun.Types.UntapR as UntapR
 import qualified Parun.Types.UntapRestriction as UntapRestriction
 import qualified Parun.Types.UntapRewrite as UntapRewrite
@@ -1612,7 +1613,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.TakeTheInitiative _initiativeTarget -> mempty
   Effect.Designate designate -> designateNames asking designate
   Effect.SetClassLevel setClassLevel -> setClassLevelNames asking setClassLevel
-  Effect.Unsuspect objectRef -> objectRefNames asking objectRef
+  Effect.Undesignate (Undesignate.MkUndesignate _ objectRef) -> objectRefNames asking objectRef
   Effect.SetHalfLocked setHalfLocked -> setHalfLockedNames asking setHalfLocked
   Effect.CounterAndMark counterAndMark -> permanentActedNames asking (slotNames asking) counterAndMark
   Effect.BecomeProtector slotName -> slotNames asking slotName

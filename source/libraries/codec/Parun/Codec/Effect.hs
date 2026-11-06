@@ -128,6 +128,7 @@ import qualified Parun.Codec.Surveil as Surveil
 import qualified Parun.Codec.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Codec.Tap as Tap
 import qualified Parun.Codec.TurnFaceDown as TurnFaceDown
+import qualified Parun.Codec.Undesignate as Undesignate
 import qualified Parun.Codec.Vote as Vote
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
@@ -284,7 +285,7 @@ codec cardCodec abilityCodec =
           Arm.payload "TakeTheInitiative" InitiativeTarget.codec Effect.TakeTheInitiative (\x -> case x of Effect.TakeTheInitiative y -> Just y; _ -> Nothing),
           Arm.payload "Designate" Designate.codec Effect.Designate (\x -> case x of Effect.Designate y -> Just y; _ -> Nothing),
           Arm.payload "SetClassLevel" SetClassLevel.codec Effect.SetClassLevel (\x -> case x of Effect.SetClassLevel y -> Just y; _ -> Nothing),
-          Arm.payload "Unsuspect" ObjectRef.codec Effect.Unsuspect (\x -> case x of Effect.Unsuspect y -> Just y; _ -> Nothing),
+          Arm.payload "Undesignate" Undesignate.codec Effect.Undesignate (\x -> case x of Effect.Undesignate y -> Just y; _ -> Nothing),
           Arm.payload "SetHalfLocked" SetHalfLocked.codec Effect.SetHalfLocked (\x -> case x of Effect.SetHalfLocked y -> Just y; _ -> Nothing),
           Arm.payload "CounterAndMark" (PermanentActed.codec SlotName.codec) Effect.CounterAndMark (\x -> case x of Effect.CounterAndMark y -> Just y; _ -> Nothing),
           Arm.payload "BecomeProtector" SlotName.codec Effect.BecomeProtector (\x -> case x of Effect.BecomeProtector y -> Just y; _ -> Nothing),
@@ -468,7 +469,7 @@ tagOf x = case x of
   Effect.TakeTheInitiative {} -> "TakeTheInitiative"
   Effect.Designate {} -> "Designate"
   Effect.SetClassLevel {} -> "SetClassLevel"
-  Effect.Unsuspect {} -> "Unsuspect"
+  Effect.Undesignate {} -> "Undesignate"
   Effect.SetHalfLocked {} -> "SetHalfLocked"
   Effect.CounterAndMark {} -> "CounterAndMark"
   Effect.BecomeProtector {} -> "BecomeProtector"

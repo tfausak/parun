@@ -259,6 +259,7 @@ import qualified Parun.Types.TurnUpProcedure as TurnUpProcedure
 import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.TypeLine as TypeLine
+import qualified Parun.Types.Undesignate as Undesignate
 import qualified Parun.Types.UntapR as UntapR
 import qualified Parun.Types.UntapRewrite as UntapRewrite
 import qualified Parun.Types.Uses as Uses
@@ -448,7 +449,7 @@ ownQuantities effect = case effect of
   -- CR 701.37c's X, the one Quantity a designation carries.
   Effect.Designate (Designate.MkDesignate _ _ value) -> Foldable.toList value
   Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> []
-  Effect.Unsuspect _ -> []
+  Effect.Undesignate _ -> []
   Effect.SetHalfLocked {} -> []
   Effect.CounterAndMark _ -> []
   Effect.BecomeProtector _ -> []
@@ -1731,7 +1732,7 @@ effectObjectRefs effect =
         Effect.TakeTheInitiative {} -> []
         Effect.Designate {} -> []
         Effect.SetClassLevel {} -> []
-        Effect.Unsuspect ref -> read_ [ref]
+        Effect.Undesignate (Undesignate.MkUndesignate _ ref) -> read_ [ref]
         Effect.SetHalfLocked {} -> []
         Effect.CounterAndMark {} -> []
         Effect.BecomeProtector {} -> []

@@ -224,6 +224,7 @@ import qualified Parun.Types.TextWord as TextWord
 import qualified Parun.Types.TopOfLibrary as TopOfLibrary
 import qualified Parun.Types.TurnFaceDown as TurnFaceDown
 import qualified Parun.Types.Unblocking as Unblocking
+import qualified Parun.Types.Undesignate as Undesignate
 import qualified Parun.Types.Uses as Uses
 import qualified Parun.Types.Vote as Vote
 import qualified Parun.Types.VoteChoices as VoteChoices
@@ -2274,16 +2275,16 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       fromJson
       (Effect.SetClassLevel (SetClassLevel.MkSetClassLevel (ClassLevel.MkClassLevel 2) (SlotName.MkSlotName (Text.pack "self"))))
       " {\"type\":\"SetClassLevel\",\"value\":{\"level\":2,\"slot\":\"self\"}} "
-  -- CR 701.60a's ending, with an ObjectRef on the wire where Designate above
+  -- CR 701.60a and CR 722.3b, with an ObjectRef on the wire where Designate above
   -- writes a slot name directly: Eliminate the Impossible names a set rather
   -- than one permanent.
-  Spec.it s "Unsuspect" $
+  Spec.it s "Undesignate" $
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.Unsuspect (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature)))
-      " {\"type\":\"Unsuspect\",\"value\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
+      (Effect.Undesignate (Undesignate.MkUndesignate Designation.Suspected (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature))))
+      " {\"type\":\"Undesignate\",\"value\":{\"designation\":\"Suspected\",\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}}} "
   -- CR 709.5g's lock. Keys to the House prints both settings, so the one wire
   -- key that tells them apart is what a round trip has to carry.
   Spec.it s "SetHalfLocked" $

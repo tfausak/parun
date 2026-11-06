@@ -1,0 +1,83 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Kíli the Resourceful",
+            "label": "kili"
+          },
+          {
+            "card": "War Mammoth",
+            "label": "mammoth"
+          },
+          {
+            "card": "Aegis of the Legion",
+            "label": "aegis"
+          },
+          {
+            "card": "Bonesplitter",
+            "label": "splitter"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 118.9 the gate offers an equip only the alternative cost can pay for",
+  "note": "Storied gives alice an enduring story before she first has priority (Kíli is legendary, the Aegis and Bonesplitter artifacts). With no land, only Kíli's {0} pays either equip, so each offer is the enumeration reading the alternative; the control drops Kíli and offers nothing but Pass.",
+  "timeline": [
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Pass",
+            "Activate $aegis",
+            "Activate $splitter"
+          ],
+          "of": "Offered",
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Activate": {
+          "object": "$aegis",
+          "targets": [
+            "$mammoth"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "$mammoth",
+          "object": "$aegis",
+          "of": "AttachedTo"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

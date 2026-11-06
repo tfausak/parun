@@ -93,7 +93,6 @@ import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.Daytime as Daytime
 import qualified Parun.Types.Designate as Designate
-import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DrawR as DrawR
 import qualified Parun.Types.DrawRewrite as DrawRewrite
 import Parun.Types.Effect (Effect)
@@ -157,6 +156,7 @@ import qualified Parun.Types.SkipPhase as SkipPhase
 import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.SpellWasCopied as SpellWasCopied
 import qualified Parun.Types.StackObjectKind as StackObjectKind
+import qualified Parun.Types.Undesignate as Undesignate
 import qualified Parun.Types.Uses as Uses
 import qualified Parun.Types.Zone as Zone
 
@@ -1767,17 +1767,19 @@ setClassLevel legal (SetClassLevel.MkSetClassLevel level slot) =
           _ -> pure ()
     _ -> pure ()
 
--- CR 701.60a's other ending: undoes Designate's write for that one designation.
--- CR 701.60c's menace and can't-block are read off the set live, so nothing
--- else has to be undone. An illegal slot (CR 608.2b), a player recipient and a
--- set that matched nothing all arrive as the empty list.
-unsuspectArm :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
-unsuspectArm resolving source controller legal ref =
+-- CR 701.60a's and CR 722.3b's endings: undoes Designate's write for the one
+-- designation named. Everything that reads a mark reads the set live -- CR
+-- 701.60c's menace and can't-block, and Parun.Engine.Prepare.copyStands, whose
+-- CR 722.3c sweep then removes the prepare copy -- so nothing else has to be
+-- undone. An illegal slot (CR 608.2b), a player recipient and a set that matched
+-- nothing all arrive as the empty list.
+undesignate :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Undesignate.Undesignate -> Game ()
+undesignate resolving source controller legal (Undesignate.MkUndesignate designation ref) =
   State.modify' $ \gs ->
-    let unsuspect o = o {Object.designations = Set.delete Designation.Suspected (Object.designations o)}
+    let strip o = o {Object.designations = Set.delete designation (Object.designations o)}
      in gs
           { GameState.objects =
-              foldr (Map.adjust unsuspect) (GameState.objects gs) (objectRefObjects legal resolving controller source gs ref)
+              foldr (Map.adjust strip) (GameState.objects gs) (objectRefObjects legal resolving controller source gs ref)
           }
 
 -- CR 709.5f and CR 709.5g, one arm because the two rules are one sentence with

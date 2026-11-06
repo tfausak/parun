@@ -308,6 +308,7 @@ import qualified Parun.Types.TurnFaceDown as TurnFaceDown
 import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.TypeLine as TypeLine
+import qualified Parun.Types.Undesignate as Undesignate
 import qualified Parun.Types.UntapRestriction as UntapRestriction
 import qualified Parun.Types.Vote as Vote
 import qualified Parun.Types.VoteChoices as VoteChoices
@@ -1080,7 +1081,7 @@ rewriteEffect pairs effect = case effect of
   Effect.TakeTheInitiative {} -> effect
   Effect.Designate (Designate.MkDesignate d slot value) -> Effect.Designate (Designate.MkDesignate d slot (fmap (rewriteQuantity pairs) value))
   Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> effect
-  Effect.Unsuspect ref -> Effect.Unsuspect (rewriteObjectRef pairs ref)
+  Effect.Undesignate (Undesignate.MkUndesignate d ref) -> Effect.Undesignate (Undesignate.MkUndesignate d (rewriteObjectRef pairs ref))
   Effect.SetHalfLocked (SetHalfLocked.MkSetHalfLocked {}) -> effect
   Effect.CounterAndMark _ -> effect
   Effect.BecomeProtector _ -> effect

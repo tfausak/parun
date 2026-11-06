@@ -193,6 +193,7 @@ import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
 import qualified Parun.Types.Defense as Defense
 import qualified Parun.Types.Designate as Designate
+import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.Destroy as Destroy
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.Devour as Devour
@@ -447,6 +448,7 @@ import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.TypeLine as TypeLine
 import qualified Parun.Types.Unblocking as Unblocking
+import qualified Parun.Types.Undesignate as Undesignate
 import qualified Parun.Types.UntapRestriction as UntapRestriction
 import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.Uses as Uses
@@ -774,7 +776,7 @@ objectRefPositions =
         ("require-attack", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "ra")) (Just (AttackTargetRef.Players (PlayerRef.Relative PlayerRelation.You)))), [plantedRef "ra"]),
         ("require-attack-permanent", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "rp-attacker")) (Just (AttackTargetRef.Permanents (plantedRef "rp-defender")))), [plantedRef "rp-attacker", plantedRef "rp-defender"]),
         ("forbid-attack", Effect.ForbidAttack (ForbidAttack.MkForbidAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "fa")) Nothing), [plantedRef "fa"]),
-        ("unsuspect", Effect.Unsuspect (plantedRef "us"), [plantedRef "us"]),
+        ("undesignate", Effect.Undesignate (Undesignate.MkUndesignate Designation.Suspected (plantedRef "us")), [plantedRef "us"]),
         ("shuffle-into-library", Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary Nothing (plantedRef "sl") Nothing), [plantedRef "sl"]),
         ("ante", Effect.Ante (Ante.MkAnte (PlayerRef.Relative PlayerRelation.You) (plantedRef "an") Nothing), [plantedRef "an"]),
         ("put-sticker", Effect.PutSticker (PutSticker.MkPutSticker (PlayerRef.Relative PlayerRelation.You) (plantedRef "ps") (Set.singleton StickerKind.Art) Nothing False Nothing), [plantedRef "ps"]),
@@ -1459,7 +1461,7 @@ ownCounts effect = case effect of
   -- sentence. A designation set with no number has no Count to reach.
   Effect.Designate (Designate.MkDesignate _ _ value) -> foldMap quantityCounts value
   Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> []
-  Effect.Unsuspect _ -> []
+  Effect.Undesignate _ -> []
   Effect.SetHalfLocked {} -> []
   Effect.CounterAndMark _ -> []
   Effect.BecomeProtector _ -> []
@@ -1961,7 +1963,7 @@ effectNestedEffects effect = case effect of
   Effect.EndCombatPhase -> []
   Effect.GainControl {} -> []
   Effect.ExchangeControl _ -> []
-  Effect.Unsuspect {} -> []
+  Effect.Undesignate {} -> []
   Effect.SetHalfLocked {} -> []
   Effect.CounterAndMark {} -> []
   Effect.BecomeProtector {} -> []
@@ -2554,7 +2556,7 @@ effectReplacements effect = case effect of
   Effect.TakeTheInitiative _ -> []
   Effect.Designate (Designate.MkDesignate {}) -> []
   Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> []
-  Effect.Unsuspect _ -> []
+  Effect.Undesignate _ -> []
   Effect.SetHalfLocked {} -> []
   Effect.CounterAndMark _ -> []
   Effect.BecomeProtector _ -> []
@@ -3136,7 +3138,7 @@ effectMintedFaces effect = case effect of
   Effect.TakeTheInitiative _ -> []
   Effect.Designate (Designate.MkDesignate {}) -> []
   Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> []
-  Effect.Unsuspect _ -> []
+  Effect.Undesignate _ -> []
   Effect.SetHalfLocked {} -> []
   Effect.CounterAndMark _ -> []
   Effect.BecomeProtector _ -> []
@@ -6190,7 +6192,7 @@ effectFilters effect = case effect of
   -- from here. A designation set with no number has none to reach.
   Effect.Designate (Designate.MkDesignate _ _ value) -> foldMap quantityFilters value
   Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> []
-  Effect.Unsuspect ref -> frame SourceHostFramed (objectRefFilters ref)
+  Effect.Undesignate (Undesignate.MkUndesignate _ ref) -> frame SourceHostFramed (objectRefFilters ref)
   Effect.SetHalfLocked {} -> []
   Effect.CounterAndMark _ -> []
   Effect.BecomeProtector _ -> []
