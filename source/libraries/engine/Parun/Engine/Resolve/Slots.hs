@@ -276,6 +276,7 @@ import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnFaceDown as TurnFaceDown
 import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
+import qualified Parun.Types.Undesignate as Undesignate
 import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.Vote as Vote
 import qualified Parun.Types.VoteChoices as VoteChoices
@@ -890,7 +891,7 @@ effectObjectRefs effect = case effect of
   Effect.TakeTheInitiative {} -> []
   Effect.Designate {} -> []
   Effect.SetClassLevel {} -> []
-  Effect.Unsuspect ref -> [ref]
+  Effect.Undesignate (Undesignate.MkUndesignate _ ref) -> [ref]
   Effect.SetHalfLocked {} -> []
   Effect.CounterAndMark {} -> []
   Effect.BecomeProtector {} -> []
@@ -1123,7 +1124,7 @@ effectPlayerRefs effect = case effect of
   Effect.TakeTheInitiative {} -> []
   Effect.Designate {} -> []
   Effect.SetClassLevel {} -> []
-  Effect.Unsuspect {} -> []
+  Effect.Undesignate {} -> []
   Effect.SetHalfLocked {} -> []
   Effect.CounterAndMark {} -> []
   Effect.BecomeProtector {} -> []
@@ -1579,7 +1580,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- posture, so its own slots are joined in.
   Effect.Designate (Designate.MkDesignate _ slot value) -> joinTwo (oneSlot slot) (joinSlots (fmap quantitySlots (Foldable.toList value)))
   Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ slot) -> oneSlot slot
-  Effect.Unsuspect _ -> Map.empty
+  Effect.Undesignate _ -> Map.empty
   -- A READ, Designate's: the slot names the permanent whose half is locked or
   -- unlocked. WHICH half is chosen at resolution and is no slot of any kind.
   Effect.SetHalfLocked (SetHalfLocked.MkSetHalfLocked _ _ slot) -> oneSlot slot
@@ -2372,7 +2373,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.TakeTheInitiative InitiativeTarget.ControllerOfSource -> False
   Effect.Designate (Designate.MkDesignate _ _ value) -> all Quantity.slotsAreExhaustive value
   Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> True
-  Effect.Unsuspect _ -> True
+  Effect.Undesignate _ -> True
   Effect.SetHalfLocked (SetHalfLocked.MkSetHalfLocked {}) -> True
   Effect.CounterAndMark _ -> True
   Effect.BecomeProtector _ -> True
@@ -2637,7 +2638,7 @@ hasRead wanted =
         Effect.TakeTheInitiative {} -> False
         Effect.Designate (Designate.MkDesignate _ _ value) -> any (Quantity.hasRead wanted) value
         Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> False
-        Effect.Unsuspect _ -> False
+        Effect.Undesignate _ -> False
         Effect.SetHalfLocked (SetHalfLocked.MkSetHalfLocked {}) -> False
         Effect.CounterAndMark _ -> False
         Effect.BecomeProtector _ -> False
@@ -2936,7 +2937,7 @@ boundSlots effect = case effect of
   Effect.TakeTheInitiative {} -> Set.empty
   Effect.Designate (Designate.MkDesignate {}) -> Set.empty
   Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> Set.empty
-  Effect.Unsuspect _ -> Set.empty
+  Effect.Undesignate _ -> Set.empty
   Effect.SetHalfLocked (SetHalfLocked.MkSetHalfLocked {}) -> Set.empty
   Effect.CounterAndMark _ -> Set.empty
   Effect.BecomeProtector _ -> Set.empty

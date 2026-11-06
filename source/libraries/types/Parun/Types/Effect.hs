@@ -116,6 +116,7 @@ import qualified Parun.Types.Surveil as Surveil
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TurnFaceDown as TurnFaceDown
+import qualified Parun.Types.Undesignate as Undesignate
 import qualified Parun.Types.Vote as Vote
 
 -- | The ISA (design.md section 1): first-order, non-recursive in CONTROL FLOW
@@ -602,10 +603,8 @@ data Effect card ability
     -- this Class is level N-1" half rides the ability's own
     -- ActivationRestriction.OnlyIf, CR 602.5's rider.
     SetClassLevel SetClassLevel.SetClassLevel
-  | -- | CR 701.60a's other ending: the named permanents are no longer suspected.
-    -- Not a designation-parameterised inverse of Designate, that ending
-    -- belonging to `Suspected` alone.
-    Unsuspect ObjectRef.ObjectRef
+  | -- | CR 701.60a and CR 722.3b: the named permanents lose a designation.
+    Undesignate Undesignate.Undesignate
   | -- | CR 709.5f and CR 709.5g: lock or unlock halves of the slot's permanent
     -- (Keys to the House). One opcode over a setting, the two rules being one
     -- sentence with two words swapped; which half is asked at resolution (CR
