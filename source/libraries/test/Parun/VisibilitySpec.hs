@@ -325,7 +325,7 @@ specialActionTopSpec s registry =
     top <- labelled "top"
     let note :: String -> GameState.GameState -> State.State (Bool, [(String, Visibility.Type.Visibility)]) ()
         note label g = State.modify' (\(shuffled, notes) -> (shuffled, notes <> foldMap (\oid -> [(label, Visibility.sees S.bob oid g)]) (Game.topOf Zone.Library S.alice g)))
-        answer :: Asked.Asked r -> State.State (Bool, [(String, Visibility.Type.Visibility)]) r
+        answer :: Asked.Asked GameState.GameState r -> State.State (Bool, [(String, Visibility.Type.Visibility)]) r
         answer asked = do
           shuffled <- State.gets fst
           let g = Asked.game asked
