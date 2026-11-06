@@ -393,7 +393,8 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
           Right amounts | fits amounts -> Right (R.Array [R.Array [recipient, R.Number (toInteger amount)] | (recipient, amount) <- zip targets amounts])
           _ -> Left wrong
       )
-  -- CR 603.3b: the first named goes on the stack first; Enter keeps the order shown.
+  -- CR 603.3b / 101.4c: first to last, the first named going on the stack
+  -- first; Enter keeps the order shown.
   "OrderTriggers" -> do
     entries <- arrayOf offer
     let size = Natural.length entries
@@ -671,7 +672,7 @@ unitName unit =
           <> [Text.pack "kept until end of combat" | ManaUnit.retention unit == ManaRetention.UntilEndOfCombat]
           <> [Text.pack "restricted" | Maybe.isJust (ManaUnit.restriction unit)]
           <> [Text.pack "with an effect when spent" | Maybe.isJust (ManaUnit.rider unit) || Maybe.isJust (ManaUnit.spendTrigger unit)]
-   in Render.manaType (ManaUnit.manaType unit) <> (if null notes then Text.empty else Text.pack " (" <> Text.intercalate (Text.pack ", ") notes <> Text.pack ")")
+   in Text.pack "{" <> Render.manaType (ManaUnit.manaType unit) <> Text.pack "}" <> (if null notes then Text.empty else Text.pack " (" <> Text.intercalate (Text.pack ", ") notes <> Text.pack ")")
 
 -- | A mana source as an offer names it, beside the mana types of each yield.
 manaSource :: R.Reply -> Maybe (R.Reply, [[ManaType.ManaType]])

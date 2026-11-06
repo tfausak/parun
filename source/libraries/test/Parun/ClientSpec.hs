@@ -88,6 +88,7 @@ import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayOptions as PlayOptions
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerView as PlayerView.Type
+import qualified Parun.Types.ProductionTag as ProductionTag
 import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
@@ -819,7 +820,7 @@ spec s registry = Spec.describe s "Client" $ do
       s
       "listed"
       (takeWhile (Text.isPrefixOf (Text.pack "  ")) (drop 1 (dropWhile (not . Text.isPrefixOf (Text.pack "Order your triggered abilities")) shown)))
-      [Text.pack "  1. Venerable Monk: When this creature enters, you gain 2 life.", Text.pack "  2. Soul Warden: Whenever another creature enters, you gain 1 life."]
+      [Text.pack "  1. Venerable Monk: When Venerable Monk enters, you gain 2 life.", Text.pack "  2. Soul Warden: Whenever another creature enters, you gain 1 life."]
     Spec.assertEqWith s "numbers order" ordered (Right [1, 0])
     Spec.assertEqWith s "Enter keeps" (fst (asking facing [""] gs prompt)) (Right [0, 1])
     Spec.assertEqWith s "a repeat is refused" (fst (asking facing ["1 1"] gs prompt)) (Left (Text.pack "end of input"))
