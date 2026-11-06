@@ -2554,6 +2554,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.DamageCantBeRedirected damagePattern -> damagePatternNames asking damagePattern
   PlayerEffect.CantSearchLibraries _cantSearchLibraries -> mempty
   PlayerEffect.CantBecomeMonarch -> mempty
+  PlayerEffect.LegendRuleDoesntApply -> mempty
   PlayerEffect.CantSetSchemesInMotion -> mempty
   PlayerEffect.EntriesTrigger entries -> filterNames asking (EntriesTrigger.entrants entries)
   PlayerEffect.AdditionalTriggers bearers -> filterNames asking bearers
