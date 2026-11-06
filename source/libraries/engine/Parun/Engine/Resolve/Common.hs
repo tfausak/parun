@@ -4076,9 +4076,12 @@ changeLifeByDelta settle pid delta =
 -- it is shown (CR 701.23e), for a destination that can take one: Invasion of
 -- Arcavios's "reveal it, and put it into your hand". Nothing for the rest, which
 -- then offers nothing out there -- MTGJSON dump of 2026-08-23, text "search" with
--- "outside the game": Invasion of Arcavios and Turtles Forever, both ending in a
--- hand; a search sending a card from outside the game onto the battlefield would
--- refute it.
+-- "outside the game": Invasion of Arcavios, ending in a hand, and Turtles
+-- Forever; a search sending a card from outside the game onto the battlefield
+-- would refute it.
+--
+-- Not implemented: a Reveal search's find outside the game, held for a later
+-- clause (#6508).
 outsideArrival :: SearchDestination.SearchDestination -> Maybe (OutsideDestination.OutsideDestination, Bool)
 outsideArrival destination = case destination of
   SearchDestination.RevealThenHand -> Just (OutsideDestination.Hand, True)
@@ -4125,15 +4128,10 @@ shufflesAfter destination = case destination of
   SearchDestination.Top -> True
   SearchDestination.Hand -> True
 
--- Search.differentIn: the cards, in order, that keep the group apart -- each
--- shares no value on any named axis with a card kept ahead of it.
+-- Search.differentIn: the cards, in order, that keep the group apart --
+-- Event.differingKept over the projection.
 differing :: Set.Set DifferentIn.DifferentIn -> GameState -> [ObjectId] -> [ObjectId]
-differing axes gs = go Set.empty
-  where
-    go _ [] = []
-    go seen (oid : rest) = case differingValues axes gs oid of
-      Just values | Set.disjoint values seen -> oid : go (values <> seen) rest
-      _ -> go seen rest
+differing axes gs = Event.differingKept (differingValues axes gs)
 
 -- Search.descriptions (CR 701.23h): the cards, in order, that can each answer
 -- for a distinct description together with every card kept ahead of them. No
@@ -4156,46 +4154,16 @@ matchDescriptions fits descriptions
     assign (options : more) used = any (\i -> not (Set.member i used) && assign more (Set.insert i used)) options
 
 -- CR 609.3 for Search.exactly: the most cards, up to `cap`, that `differing`
--- could keep together from `candidates` -- searched exhaustively rather than
--- greedily, since a split card's two names (CR 201.2a) can block two cards a
--- greedy pass would have kept apart. Cards with the same values are one
--- candidate, which keeps the search to the distinct ones. Exhaustive rather
--- than greedy is a REGRESSION FENCE: no board pairs a split card with a card
--- sharing one of its names, so a greedy count reddens nothing.
+-- could keep together from `candidates` (Event.mostDifferingOf).
 mostDiffering :: Set.Set DifferentIn.DifferentIn -> GameState -> Natural -> [ObjectId] -> Natural
-mostDiffering axes gs cap candidates = go Set.empty 0 0 distinct
-  where
-    found = Maybe.mapMaybe (differingValues axes gs) candidates
-    -- A card with no value at all shares none, so only the others collapse.
-    distinct = ListUtils.nubOrd (filter (not . Set.null) found) <> filter Set.null found
-    go seen n best rest
-      | n >= cap = cap
-      | n + List.genericLength rest <= best = best
-      | otherwise = case rest of
-          [] -> max n best
-          values : more ->
-            let taken = if Set.disjoint values seen then go (values <> seen) (n + 1) best more else best
-             in if taken >= cap then cap else go seen n (max best taken) more
+mostDiffering axes gs cap = Event.mostDifferingOf cap . fmap (differingValues axes gs)
 
--- One card's values on Search.differentIn's axes, keyed by axis so a power never
--- meets a toughness, or Nothing for a card no group admits. Read off the CR 613
--- projection, so a split card's two names count (CR 201.2a) and a star's power
--- is its characteristic-defining ability's number (CR 208.2a, 604.3). CR 201.2b
--- demands each card HAVE a name; a card with no power or toughness shares none.
+-- One card's values on Search.differentIn's axes (Event.differingOf), read off
+-- the CR 613 projection, so a split card's two names count (CR 201.2a) and a
+-- star's power is its characteristic-defining ability's number (CR 208.2a,
+-- 604.3).
 differingValues :: Set.Set DifferentIn.DifferentIn -> GameState -> ObjectId -> Maybe (Set.Set (DifferentIn.DifferentIn, Either CardName.CardName (Either Integer CardType.CardType)))
-differingValues axes gs oid =
-  if Set.member DifferentIn.Names axes && Set.null (Filter.names view)
-    then Nothing
-    else Just (foldMap valuesOf axes)
-  where
-    view = Projection.viewOfObject oid gs
-    number axis = foldMap (Set.singleton . (,) axis . Right . Left)
-    valuesOf axis = case axis of
-      DifferentIn.Names -> Set.map ((,) axis . Left) (Filter.names view)
-      DifferentIn.Powers -> number axis (Filter.power view)
-      DifferentIn.ManaValues -> number axis (Filter.manaValue view)
-      DifferentIn.Toughnesses -> number axis (Filter.toughness view)
-      DifferentIn.CardTypes -> Set.map ((,) axis . Right . Right) (Filter.cardTypes view)
+differingValues axes gs oid = Event.differingOf axes (Projection.viewOfObject oid gs)
 
 -- One found card's move, a member of the search's batch whose board is `asOf`
 -- (Event.changeZoneInBatch).

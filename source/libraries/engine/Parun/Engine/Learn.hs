@@ -16,6 +16,7 @@ module Parun.Engine.Learn where
 
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Set as Set
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Types.DiscardCause as DiscardCause
@@ -49,7 +50,9 @@ lessonFromOutside =
       FromOutsideTheGame.upTo = False,
       FromOutsideTheGame.destination = OutsideDestination.Hand,
       FromOutsideTheGame.filter = Filter.HasSubtype Subtype.Lesson :: Filter.Filter Keyword.Keyword,
-      FromOutsideTheGame.reveal = True
+      FromOutsideTheGame.reveal = True,
+      FromOutsideTheGame.differentIn = Set.empty,
+      FromOutsideTheGame.pick = Nothing
     }
 
 -- | CR 701.48a: the learner takes one of the rule's two branches, or neither.

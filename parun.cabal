@@ -1168,6 +1168,8 @@ library codec
     Parun.Codec.OutsideDestinationSpec
     Parun.Codec.OutsideObject
     Parun.Codec.OutsideObjectSpec
+    Parun.Codec.OutsidePick
+    Parun.Codec.OutsidePickSpec
     Parun.Codec.OwnedZone
     Parun.Codec.OwnedZoneSpec
     Parun.Codec.PaidExpiry
@@ -3077,6 +3079,7 @@ library types
     Parun.Types.OutsideCard
     Parun.Types.OutsideDestination
     Parun.Types.OutsideObject
+    Parun.Types.OutsidePick
     Parun.Types.OwnedZone
     Parun.Types.OwnershipChange
     Parun.Types.PaidExpiry

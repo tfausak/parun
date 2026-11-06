@@ -1,7 +1,8 @@
 module Parun.Types.DifferentIn where
 
 -- | A characteristic no two cards a search finds may share (CR 701.23a's
--- "matches the given description", said of the found group as a whole).
+-- "matches the given description", said of the found group as a whole), or no
+-- two cards a wish reveals (Parun.Types.FromOutsideTheGame).
 data DifferentIn
   = -- | Gifts Ungiven's "with different names" (CR 201.2b).
     Names

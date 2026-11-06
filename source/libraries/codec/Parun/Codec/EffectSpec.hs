@@ -2475,7 +2475,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.FromOutsideTheGame (FromOutsideTheGame.MkFromOutsideTheGame 1 False OutsideDestination.Hand (Filter.HasCardType CardType.Sorcery) True))
+      (Effect.FromOutsideTheGame (FromOutsideTheGame.MkFromOutsideTheGame 1 False OutsideDestination.Hand (Filter.HasCardType CardType.Sorcery) True Set.empty Nothing))
       " {\"type\":\"FromOutsideTheGame\",\"value\":{\"count\":1,\"destination\":\"Hand\",\"filter\":{\"type\":\"HasCardType\",\"value\":\"Sorcery\"},\"reveal\":true,\"upTo\":false}} "
   -- CR 608.2n: no payload at all -- the spell exiling itself is the whole of it.
   Spec.it s "ExileThisSpell" $
