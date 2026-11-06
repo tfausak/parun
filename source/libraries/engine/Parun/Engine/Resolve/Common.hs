@@ -490,7 +490,8 @@ fallShort = State.modify' (\gs -> gs {GameState.fellShort = GameState.fellShort 
 -- Object.controlClock by Parun.ResolveSpec's "CR 118.12 Victimize with no creature
 -- to sacrifice returns nothing", boardAtControlSample by Parun.AuraSpec's "CR
 -- 603.12 Thorin's Equipment go to its target, which then deals damage equal to its
--- power". The rest is a regression fence: un-copying lastChoice or repeatPicks leaves the suite
+-- power". The rest is a regression fence: un-copying lastChoice, repeatPicks or
+-- undone (a cast the instruction offered and CR 733.1 reversed) leaves the suite
 -- green. The state half: the scenario "CR 603.12 a choice that records no event
 -- still arms its when you do".
 happenedBetween :: GameState -> GameState -> Bool
@@ -516,6 +517,7 @@ happenedBetween before after =
             GameState.referenceNames = GameState.referenceNames before,
             GameState.lastChoice = GameState.lastChoice before,
             GameState.repeatPicks = GameState.repeatPicks before,
+            GameState.undone = GameState.undone before,
             GameState.drewFromEmpty = GameState.drewFromEmpty before,
             GameState.fellShort = GameState.fellShort before,
             GameState.damagePreventedBy = GameState.damagePreventedBy before,
