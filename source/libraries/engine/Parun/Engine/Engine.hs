@@ -1749,10 +1749,12 @@ turnAnchorOf gs = Maybe.fromMaybe (GameState.activePlayer gs) (GameState.turnAnc
 -- follows it -- observable only when the taker is not the active player, where it
 -- stops the extra turn eating that player's ordinary one. CR 800.4k applies as to
 -- an ordinary turn: it does not begin, the entry is still SPENT, and both "would
--- have begun" rules still fire.
+-- have begun" rules still fire -- under CR 805.4 only once the taker's whole team
+-- has left.
 --
 -- CR 805.8: under the shared team turns option the taker's team takes the extra
--- turn, which beginTurnOf's CR 805.4 answer gives it with no arm here. One
+-- turn, which beginTurnOf's CR 805.4 answer gives it, an arm here being needed
+-- only for a departed taker (takeOrdinaryTurn's teammate). One
 -- effect's entries are already one per team (Parun.Engine.Resolve.Effect's
 -- TakeExtraTurn arm).
 --
@@ -1774,21 +1776,26 @@ takeOrdinaryTurn = do
           -- 800.4k's, and the ordinary rotation resumes from the same seat.
           popped = gs {GameState.extraTurns = rest, GameState.turnAnchor = Just (turnAnchorOf gs)}
       State.put popped
-      if List.elem pid (Game.stillPlaying popped)
-        then do
+      -- CR 805.4 / 805.8: under the shared team turns option the extra turn is
+      -- the taker's team's, so a departed taker's teammate still playing begins
+      -- it, and CR 800.4k spends it only once the whole team has left.
+      let playing = Game.stillPlayingInOrder popped
+          takerOf = if List.elem pid playing then Just pid else List.find (Turn.sharesTurn popped pid) playing
+      case takerOf of
+        Just taker -> do
           -- CR 614.10a: Magosi, the Waterveil's ruling makes a pending extra
           -- turn "your next turn" whatever order the effects resolved in, so
           -- it is asked here before the seating order is.
-          begins <- Event.beginsPhase SkipWindow.WholeTurn pid
+          begins <- Event.beginsPhase SkipWindow.WholeTurn taker
           if begins
             then -- CR 500.11: this turn's OWN skips (Savor the Moment) come
             -- into being as it begins, and only on this branch -- neither a
             -- skipped entry nor the CR 800.4k entry below belongs to a turn
             -- that begins. Nothing of this turn has started yet, so CR 614.10
             -- is not yet in the way.
-              State.modify' (Replacement.installTurnSkips entry . beginTurn (Just (ExtraTurn.createdAt entry)) pid . dropAtTurnOfTeam pid)
+              State.modify' (Replacement.installTurnSkips entry . beginTurn (Just (ExtraTurn.createdAt entry)) taker . dropAtTurnOfTeam taker)
             else takeOrdinaryTurn
-        else do
+        Nothing -> do
           -- CR 702.26n, as on walkToNextTurn's departed-seat branch below: this
           -- entry is a turn `pid` would have begun, so a row keyed to them is
           -- rescheduled here too. No board reaches it, an extra turn for a
