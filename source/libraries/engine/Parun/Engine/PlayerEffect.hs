@@ -32,6 +32,7 @@ import qualified Data.Foldable as Foldable
 import qualified Data.Functor.Const as Functor
 import qualified Data.Functor.Identity as Functor
 import qualified Data.List as List
+import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Ord as Ord
@@ -2294,6 +2295,85 @@ mayCastFrom pid zone oid gs = not (null (castPermissionsFrom pid zone oid gs))
 couldCastFrom :: PlayerId -> Zone.Zone -> ObjectId -> GameState -> Bool
 couldCastFrom pid zone oid gs = any (mayCastFrom pid zone oid) (gs : prototypedReading oid gs)
 
+-- The CR 601.3 CastFrom grant a player effect is, if it is one: the one
+-- exhaustive list castPermissionsFrom and anyCastFromRow read.
+castFromGrantOf :: PlayerEffect -> Maybe CastFromZone.CastFromZone
+castFromGrantOf effect = case effect of
+  PlayerEffect.CastFrom grant -> Just grant
+  -- The other CR 601.3 permission on this axis names a TIME, and this
+  -- question is about a ZONE.
+  PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
+  PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
+  PlayerEffect.KeywordRiderGrant _ -> Nothing
+  PlayerEffect.LoyaltyGrant _ -> Nothing
+  PlayerEffect.MayTapForMana _ -> Nothing
+  PlayerEffect.PlayAdditionalLands _ -> Nothing
+  PlayerEffect.CantCastSpells -> Nothing
+  PlayerEffect.CantActivateAbilities {} -> Nothing
+  PlayerEffect.CantCastMoreThan _ -> Nothing
+  PlayerEffect.ModifyCost {} -> Nothing
+  PlayerEffect.AlternativeActivationCost {} -> Nothing
+  PlayerEffect.NoMaximumHandSize -> Nothing
+  PlayerEffect.SetMaximumHandSize _ -> Nothing
+  PlayerEffect.IncreaseMaximumHandSize _ -> Nothing
+  PlayerEffect.ReduceMaximumHandSize _ -> Nothing
+  PlayerEffect.DontLoseUnspentMana _ -> Nothing
+  PlayerEffect.LoseLifeForUnspentMana -> Nothing
+  PlayerEffect.MayPayLifeForMana {} -> Nothing
+  PlayerEffect.SpendManaAsThough _ -> Nothing
+  PlayerEffect.CantBeTargetedBy {} -> Nothing
+  PlayerEffect.CantBeCountered _ -> Nothing
+  PlayerEffect.RestrictTargeting _ -> Nothing
+  PlayerEffect.TargetPastHexproof _ -> Nothing
+  PlayerEffect.DamageCantBePrevented _ -> Nothing
+  PlayerEffect.DamageCantBeRedirected _ -> Nothing
+  PlayerEffect.CantSearchLibraries _ -> Nothing
+  PlayerEffect.HasProtectionFrom _ -> Nothing
+  PlayerEffect.CantBecomeMonarch -> Nothing
+  PlayerEffect.CantSetSchemesInMotion -> Nothing
+  PlayerEffect.EntriesTrigger _ -> Nothing
+  PlayerEffect.AdditionalTriggers _ -> Nothing
+  PlayerEffect.ControlledWhileSearching -> Nothing
+  PlayerEffect.BlocksFromPiles -> Nothing
+  PlayerEffect.YouChoose _ -> Nothing
+  PlayerEffect.ExilesFoundWhileSearching -> Nothing
+  PlayerEffect.CantAttackWithCreatures -> Nothing
+  -- A PROHIBITION, and CR 601.3 asks the two halves separately:
+  -- prohibitsCasting above is where Damping Engine and Silence are read.
+  PlayerEffect.CantCastMatching _ -> Nothing
+  PlayerEffect.PutTappedAsYouCascade _ -> Nothing
+  PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
+  PlayerEffect.CantPlayLands _ -> Nothing
+  -- The play-side twin can name the same ZONE and still answers nothing
+  -- here: CR 305.1 makes playing a land a special action, so a grant to
+  -- play lands from a graveyard permits no cast (Crucible of Worlds lets
+  -- nobody cast anything).
+  PlayerEffect.PlayLandsFrom _ -> Nothing
+  PlayerEffect.PlotFrom _ -> Nothing
+  -- A COST and not a permission at all: Omniscience says what a spell
+  -- pays, never where it may be cast from, so it opens no zone.
+  -- mayCastFromHandWithoutPayingManaCost below is its one reader, and CR
+  -- 601.3's permission is still owed separately.
+  PlayerEffect.CastFromHandWithoutPayingManaCost _ -> Nothing
+  PlayerEffect.CantGetCounters _ -> Nothing
+  PlayerEffect.StateCoinFlip _ -> Nothing
+  PlayerEffect.ModifyDieRoll _ -> Nothing
+  PlayerEffect.AdditionalVotes _ -> Nothing
+  PlayerEffect.AdditionalSurveilCards _ -> Nothing
+  PlayerEffect.CantGainLife -> Nothing
+  PlayerEffect.CantLoseLife -> Nothing
+  PlayerEffect.RevealsDraw _ -> Nothing
+  PlayerEffect.Precluded _ -> Nothing
+  PlayerEffect.Shows _ -> Nothing
+
+-- Is a CR 601.3 CastFrom row printed or stored anywhere, whoever it reaches and
+-- whether or not its "as long as" clause holds (CR 611.3a)? A superset of every
+-- `applying` list's rows, for a gate that must know none can open a zone.
+anyCastFromRow :: GameState -> Bool
+anyCastFromRow gs =
+  any (\(_, _, _, _, effect) -> Maybe.isJust (castFromGrantOf effect)) (printedRows gs)
+    || any (Maybe.isJust . castFromGrantOf . ActivePlayerEffect.effect) (GameState.playerEffects gs)
+
 -- The permissions mayCastFrom answers off: every CR 601.3 CastFrom row applying
 -- to `pid` that opens `zone` for `oid` and has a use left, paired with the object
 -- that granted it, in `applying`'s timestamp order.
@@ -2304,80 +2384,12 @@ couldCastFrom pid zone oid gs = any (mayCastFrom pid zone oid) (gs : prototypedR
 -- it consumes cannot disagree.
 castPermissionsFrom :: PlayerId -> Zone.Zone -> ObjectId -> GameState -> [(Maybe ObjectId, CastFromZone.CastFromZone)]
 castPermissionsFrom pid zone oid gs =
-  let allows (source, effect) = case effect of
-        PlayerEffect.CastFrom grant ->
-          opensZoneOf pid zone oid (CastFromZone.from grant) gs
-            && inPool source (CastFromZone.pool grant)
-            && matchesObjectFor (permissionHolder pid (RowSource.object source) gs) source (CastFromZone.matching grant) oid gs
-            && unspentPermission pid (RowSource.object source) grant gs
-        -- The other CR 601.3 permission on this axis names a TIME, and this
-        -- question is about a ZONE.
-        PlayerEffect.CastAsThoughItHadFlash _ -> False
-        PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
-        PlayerEffect.KeywordRiderGrant _ -> False
-        PlayerEffect.LoyaltyGrant _ -> False
-        PlayerEffect.MayTapForMana _ -> False
-        PlayerEffect.PlayAdditionalLands _ -> False
-        PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities {} -> False
-        PlayerEffect.CantCastMoreThan _ -> False
-        PlayerEffect.ModifyCost {} -> False
-        PlayerEffect.AlternativeActivationCost {} -> False
-        PlayerEffect.NoMaximumHandSize -> False
-        PlayerEffect.SetMaximumHandSize _ -> False
-        PlayerEffect.IncreaseMaximumHandSize _ -> False
-        PlayerEffect.ReduceMaximumHandSize _ -> False
-        PlayerEffect.DontLoseUnspentMana _ -> False
-        PlayerEffect.LoseLifeForUnspentMana -> False
-        PlayerEffect.MayPayLifeForMana {} -> False
-        PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy {} -> False
-        PlayerEffect.CantBeCountered _ -> False
-        PlayerEffect.RestrictTargeting _ -> False
-        PlayerEffect.TargetPastHexproof _ -> False
-        PlayerEffect.DamageCantBePrevented _ -> False
-        PlayerEffect.DamageCantBeRedirected _ -> False
-        PlayerEffect.CantSearchLibraries _ -> False
-        PlayerEffect.HasProtectionFrom _ -> False
-        PlayerEffect.CantBecomeMonarch -> False
-        PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesTrigger _ -> False
-        PlayerEffect.AdditionalTriggers _ -> False
-        PlayerEffect.ControlledWhileSearching -> False
-        PlayerEffect.BlocksFromPiles -> False
-        PlayerEffect.YouChoose _ -> False
-        PlayerEffect.ExilesFoundWhileSearching -> False
-        PlayerEffect.CantAttackWithCreatures -> False
-        -- A PROHIBITION, and CR 601.3 asks the two halves separately:
-        -- prohibitsCasting above is where Damping Engine and Silence are read.
-        PlayerEffect.CantCastMatching _ -> False
-        PlayerEffect.PutTappedAsYouCascade _ -> False
-        PlayerEffect.CastOnlyAtSorcerySpeed -> False
-        PlayerEffect.CantPlayLands _ -> False
-        -- The play-side twin can name the same ZONE and still answers nothing
-        -- here: CR 305.1 makes playing a land a special action, so a grant to
-        -- play lands from a graveyard permits no cast (Crucible of Worlds lets
-        -- nobody cast anything).
-        PlayerEffect.PlayLandsFrom _ -> False
-        PlayerEffect.PlotFrom _ -> False
-        -- A COST and not a permission at all: Omniscience says what a spell
-        -- pays, never where it may be cast from, so it opens no zone.
-        -- mayCastFromHandWithoutPayingManaCost below is its one reader, and CR
-        -- 601.3's permission is still owed separately.
-        PlayerEffect.CastFromHandWithoutPayingManaCost _ -> False
-        PlayerEffect.CantGetCounters _ -> False
-        PlayerEffect.StateCoinFlip _ -> False
-        PlayerEffect.ModifyDieRoll _ -> False
-        PlayerEffect.AdditionalVotes _ -> False
-        PlayerEffect.AdditionalSurveilCards _ -> False
-        PlayerEffect.CantGainLife -> False
-        PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsDraw _ -> False
-        PlayerEffect.Precluded _ -> False
-        PlayerEffect.Shows _ -> False
-      grantOf (source, effect) = case effect of
-        PlayerEffect.CastFrom grant -> Just (RowSource.object source, grant)
-        _ -> Nothing
+  let allows (source, grant) =
+        opensZoneOf pid zone oid (CastFromZone.from grant) gs
+          && inPool source (CastFromZone.pool grant)
+          && matchesObjectFor (permissionHolder pid (RowSource.object source) gs) source (CastFromZone.matching grant) oid gs
+          && unspentPermission pid (RowSource.object source) grant gs
+      grantOf (source, effect) = fmap ((,) source) (castFromGrantOf effect)
       -- CR 109.5: the Filter's "you" is the granting ability's controller, not
       -- the card's -- an exiled card's is its owner (CR 108.4a), which would
       -- make Dawnhand Dissident's "cards you own" true of every card.
@@ -2392,7 +2404,7 @@ castPermissionsFrom pid zone oid gs =
         PermissionPool.InExiledPile pile -> case (RowSource.object source, Map.lookup oid (GameState.exiledWith gs)) of
           (Just sid, Just link) -> Binding.isLinkedExile (RowSource.ability source) (maybe (Game.acquisitionFor (RowSource.ability source) sid gs) SourceChoices.acquisition (RowSource.choices source)) pile sid link
           _ -> False
-   in Maybe.mapMaybe grantOf (filter allows (applying pid gs))
+   in fmap (Bifunctor.first RowSource.object) (filter allows (Maybe.mapMaybe grantOf (applying pid gs)))
 
 -- CR 601.3: has this permission a use left this turn? Unlimited always; a
 -- once-each-turn one only while GameState.castPermissionsUsedThisTurn does not
@@ -2525,7 +2537,7 @@ landPermissionOptions rides pid oid gs = case Game.lookupObject oid gs of
   Nothing -> []
   Just obj ->
     let zone = Object.zone obj
-        free = (zone == Zone.Hand && Object.owner obj == pid) || elem (zone, Object.owner obj) (playLandPiles pid gs) || mayPlayByMayhem pid oid gs || mayPlayFromOwnGraveyard pid oid gs
+        free = (zone == Zone.Hand && Object.owner obj == pid) || elem (zone, Object.owner obj) (playLandPiles pid gs) || mayPlayByMayhem pid oid gs || mayPlayFromOwnGraveyard Map.empty pid oid gs
      in permissionOptions rides free (landPermissionsFrom pid zone oid gs)
 
 -- CR 702.187c: may `pid` play `oid` out of their graveyard under the card's own
@@ -2553,14 +2565,15 @@ mayPlayByMayhem pid oid gs = case Game.lookupObject oid gs of
 -- permission the card has there (CastingPermission.PlayFromGraveyard, Kethis,
 -- the Hidden Hand's grant)? Read through the projection (CR 613.1f), so Yixlid
 -- Jailer's "lose all abilities" takes it away. A per-CARD permission, as
--- mayPlayByMayhem is.
-mayPlayFromOwnGraveyard :: PlayerId -> ObjectId -> GameState -> Bool
-mayPlayFromOwnGraveyard pid oid gs = case Game.lookupObject oid gs of
+-- mayPlayByMayhem is. Read out of a Projection.projectEach map of the same
+-- state where the caller holds one (#6472), afresh otherwise.
+mayPlayFromOwnGraveyard :: Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> ObjectId -> GameState -> Bool
+mayPlayFromOwnGraveyard offBoard pid oid gs = case Game.lookupObject oid gs of
   Nothing -> False
   Just obj ->
     Object.zone obj == Zone.Graveyard
       && Object.owner obj == pid
-      && elem CastingPermission.PlayFromGraveyard (PC.castingPermissions (Projection.project oid gs))
+      && elem CastingPermission.PlayFromGraveyard (PC.castingPermissions (Projection.projectEachGiven offBoard oid gs))
 
 -- CR 702.170f: the (zone, owner) piles some PlotFrom grant opens to `pid`, for
 -- Parun.Engine.Plot to draw candidates from, playPermissionPiles' shape; which of

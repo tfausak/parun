@@ -84,6 +84,7 @@ import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.KickerDecision as KickerDecision
 import qualified Parun.Types.LandPlayed as LandPlayed
+import qualified Parun.Types.Layer as Layer
 import qualified Parun.Types.Mana as Mana.Type
 import qualified Parun.Types.ManaAbilityPerformer as ManaAbilityPerformer
 import qualified Parun.Types.ManaCost as ManaCost
@@ -2166,14 +2167,14 @@ castableSpells pid gs =
   let -- ONE control-grant walk and one projection for the whole enumeration
       -- (#435).
       shared = (Projection.controlGrants gs, Projection.projectAll gs)
-   in filter (\(oid, name, facing) -> castableGiven (Just shared) pid oid name facing gs) (castProposals pid gs)
+   in filter (\(oid, name, facing) -> castableGiven (Just shared) pid oid name facing gs) (castProposals (not . unpermittedInGraveyard gs) pid gs)
 
 -- Every cast castableSpells asks `castable` about, in castZones' order: each
--- castable face of each card in a zone this player could cast from, in each
--- facing it may be cast in, plus a hand's fuse card. Unfiltered, so a test can
--- hold castableSpells against the plain per-card `castable`.
-castProposals :: PlayerId -> GameState -> [(ObjectId, CardName.CardName, Facing.Facing)]
-castProposals pid gs =
+-- castable face of each card `among` admits in a zone this player could cast
+-- from, in each facing it may be cast in, plus a hand's fuse card. A test holds
+-- castableSpells against the plain per-card `castable` over `const True`.
+castProposals :: (ObjectId -> Bool) -> PlayerId -> GameState -> [(ObjectId, CardName.CardName, Facing.Facing)]
+castProposals among pid gs =
   let proposals oid = do
         face <- castableFacesFor oid gs
         facing <- castFacings oid face gs
@@ -2203,8 +2204,34 @@ castProposals pid gs =
         Monad.guard (zone == Zone.Hand)
         face <- Maybe.maybeToList (fusedFaceOf oid gs)
         pure (oid, Face.name face, Facing.FaceUp)
-      inZone zone = concatMap (\oid -> proposals oid <> fusedProposals zone oid) (zoneCandidates zone pid gs)
+      inZone zone = concatMap (\oid -> proposals oid <> fusedProposals zone oid) (filter among (zoneCandidates zone pid gs))
    in concatMap inZone castZones
+
+-- CR 601.3 / 613.1f: is `oid` a graveyard card no permission can name on this
+-- board, in any half or facing? Decided without projecting it, so
+-- castableSpells pays nothing per such card (#6472).
+--
+-- Each of permitsCastFromGraveyard's permissions needs something the card or
+-- the board lacks. The card prints no keyword, static ability or casting
+-- permission on any face and carries no copy stamp (CR 707.2) and no
+-- Object.playPermission. The board's effects, every gate open, change only
+-- power and toughness (CR 613.4), so none grants it a keyword, an ability or a
+-- permission, under any proposal of a card adding no effect of its own; and no
+-- CastFrom row exists at all. False wherever any of that fails, leaving the
+-- card to `castable`.
+unpermittedInGraveyard :: GameState -> ObjectId -> Bool
+unpermittedInGraveyard gs =
+  let ptOnly g = let l = Projection.layer (Projection.gModification g) in l >= Layer.CharacteristicPT && l <= Layer.SwitchPT
+      quiet = all ptOnly (Projection.gatherUngated gs) && not (PlayerEffect.anyCastFromRow gs)
+      printsNothing face = Set.null (Face.keywordSet face) && null (Face.staticAbilities face) && null (Face.castingPermissions face)
+   in \oid -> case (Game.lookupObject oid gs, Game.cardOf oid gs) of
+        (Just obj, Just card) ->
+          Object.zone obj == Zone.Graveyard
+            && Maybe.isNothing (Game.copyStampOf obj)
+            && Maybe.isNothing (Object.playPermission obj)
+            && all printsNothing (Card.Type.faces card)
+            && quiet
+        _ -> False
 
 -- CR 702.102a: the fused spell this card in a hand may be cast as, or Nothing
 -- when it has no fuse there. The caller owns the zone; this asks the ABILITY,
@@ -2919,7 +2946,7 @@ castWays rides offered pid oid zone face gs castFor =
   let named = ownedBy pid oid gs && any (\family -> (castFor >>= Keyword.familyOf) == Just family) [family | CastingPermission.CastFromGraveyard (Just family) [] <- Cost.permissionsOf oid face gs]
       ownOpen = case zone of
         Zone.Exile -> exileOpen pid oid face gs
-        Zone.Graveyard -> permitsPlayUnderPermission pid oid gs || PlayerEffect.mayPlayFromOwnGraveyard pid oid gs || named
+        Zone.Graveyard -> permitsPlayUnderPermission pid oid gs || PlayerEffect.mayPlayFromOwnGraveyard Map.empty pid oid gs || named
         _ -> False
       -- CR 118.8: not under an effect's offer, which is the permission that
       -- cast is made under (Demonic Embrace's second ruling; StickerSpec's "a

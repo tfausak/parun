@@ -2425,7 +2425,12 @@ fillableModesGiven kind reader pools perspective seed source extra modal gs =
             -- CR 115.6 / 601.2c: a slot is unfillable when the board cannot supply
             -- the MINIMUM its count demands. An "up to one" slot with no legal
             -- recipient demands none, and is answered with zero targets.
+            --
+            -- A mode whose every floor is zero is filled by announcing no
+            -- target at all, which no sibling's filter or bound can refuse, so
+            -- its slots are not judged even jointly (#6472).
             filled
+              | all ((== 0) . floorOf) slots = True
               | not (any (jointlyJudged declared) slots) = all enough slots
               | otherwise =
                   not (or (Map.elems (Map.intersectionWith short slots (slotCapacities counting announced slots sets gs))))

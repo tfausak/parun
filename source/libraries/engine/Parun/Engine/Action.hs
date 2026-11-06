@@ -131,7 +131,11 @@ playableLands pid gs =
       -- CR 601.3 / 305.1: per card too, the permission being an ability the
       -- card has where it lies (CastingPermission.PlayFromGraveyard), so it is
       -- read through the projection and a layer-6 removal takes it away.
-      fromGraveyard = filter (\oid -> PlayerEffect.mayPlayFromOwnGraveyard pid oid gs) (Game.zoneMembers Zone.Graveyard pid gs)
+      -- Against ONE gather for the whole graveyard rather than one per card
+      -- (#6472).
+      graveyard = Game.zoneMembers Zone.Graveyard pid gs
+      buried = Projection.projectEach (Set.fromList graveyard) gs
+      fromGraveyard = filter (\oid -> PlayerEffect.mayPlayFromOwnGraveyard buried pid oid gs) graveyard
       -- Every card here is open whichever land face it is played as.
       open = Set.fromList (fromHand <> fromGranted <> fromExile <> fromMayhem <> fromGraveyard)
    in concatMap playable (ListUtils.nubOrd (fromHand <> fromGranted <> fromPermitted <> fromExile <> fromMayhem <> fromGraveyard))
@@ -315,11 +319,12 @@ legalActions pid gs =
       -- whole chain -- until measuring bytes was judged too compiler-specific
       -- to keep. A regression here fails nothing (gap #578).
       --
-      -- Not implemented: an O(1) per-object path. Each mana source's
-      -- triggered-yield measure still scans every permanent's triggers, a card
-      -- in a graveyard is still projected against the whole board, and a mode
-      -- whose slots read each other still builds every slot's whole legal set
-      -- (#6472).
+      -- Not implemented: an O(1) per-object path. An ability's alternative
+      -- costs and crew pool still walk the board per ability, each mana
+      -- source's triggered-yield measure scans every permanent's triggers, a
+      -- graveyard card Cast.unpermittedInGraveyard cannot rule out is projected
+      -- against the whole board per proposal, and a mode whose slots read each
+      -- other and demand a target builds every slot's whole legal set (#6483).
       grants = Projection.controlGrants gs
       pcs = Projection.projectAll gs
       -- ONE mana-source sweep of each kind for the whole enumeration. Each is a
@@ -355,10 +360,11 @@ legalActions pid gs =
       -- (Target.Pools), so building one per slot per ability walked the
       -- battlefield once per permanent. Lazy per pool, so an enumeration that
       -- targets only creatures pays for the creature walk alone (#1073).
-      pools = Target.poolsOf (Snapshot.given pcs grants gs) gs
+      snapshot = Snapshot.given pcs grants gs
+      pools = Target.poolsOf snapshot gs
       activations =
         let forObject oid =
-              fmap (Action.Activate oid) (filter (\ab -> Activatable.activatableGiven pools supplySources pid oid ab gs) (Activatable.abilitiesForGiven pcs oid gs))
+              fmap (Action.Activate oid) (filter (\ab -> Activatable.activatableGiven pools supplySources pid oid ab gs) (Activatable.abilitiesForGiven pcs (Snapshot.offBoard snapshot) oid gs))
          in concatMap forObject (Activatable.activationSourcesGiven grants pcs pid gs)
       -- CR 605.3a's first window -- "a player may activate an activated mana
       -- ability whenever they have priority" -- which the activation list above

@@ -1,6 +1,6 @@
 -- One GameState's shared reads, taken once and handed to every question an
 -- enumeration asks of it: the whole-board projection (#200, #716), the
--- control-grant walk, and the CR 101.2 prohibition sets a cost gate reads per
+-- off-battlefield one, the control-grant walk, and the CR 101.2 prohibition sets a cost gate reads per
 -- ability. Answers nothing a fresh read would not, the board being a snapshot
 -- of one state (Parun.Engine.Projection.projectGiven).
 module Parun.Engine.Snapshot where
@@ -27,6 +27,9 @@ data Snapshot = MkSnapshot
   { -- Every object's characteristics, or empty to project each object on
     -- demand (Projection.projectGiven's fallback).
     projected :: Map ObjectId ProjectedCharacteristics,
+    -- Every object off the battlefield, each projected against one gather
+    -- when first read (Projection.projectEach, #6472).
+    offBoard :: Map ObjectId ProjectedCharacteristics,
     grants :: [Projection.ControlGrant],
     -- Projection.viewsOf's answer, read off `projected` for a permanent.
     views :: ObjectId -> Filter.View,
@@ -46,6 +49,7 @@ given pcs grants_ gs =
       battlefield = Set.toList (GameState.battlefield gs)
    in MkSnapshot
         { projected = pcs,
+          offBoard = Projection.projectEach (Set.difference (Map.keysSet (GameState.objects gs)) (GameState.battlefield gs)) gs,
           grants = grants_,
           views = \oid -> if Map.member oid pcs then Projection.viewOfObjectGiven pcs grants_ oid gs else fresh oid,
           unsacrificeable = SacrificeRestriction.cantBeSacrificed battlefield gs,
