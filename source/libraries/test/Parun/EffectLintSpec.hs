@@ -73,6 +73,7 @@ import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
+import qualified Parun.Types.ChooseGroup as ChooseGroup
 import qualified Parun.Types.ChooseNumber as ChooseNumber
 import qualified Parun.Types.ChoosePermanents as ChoosePermanents
 import qualified Parun.Types.Chooser as Chooser
@@ -457,7 +458,7 @@ ownQuantities effect = case effect of
   Effect.ChoosePlayer _ -> []
   Effect.ChoosePlayerAtRandom _ -> []
   Effect.ChoosePermanents choice -> Foldable.toList (HowMany.quantity (ChosenPermanents.count (ChoosePermanents.permanents choice)))
-  Effect.ChooseSector _ -> []
+  Effect.ChooseGroup _ -> []
   Effect.RollDie rollDie -> RollDie.count rollDie : Maybe.maybeToList (RollDie.modifier rollDie)
   Effect.FlipCoin flipCoin -> [FlipCoin.count flipCoin]
   Effect.TakeExtraTurn takeExtraTurn -> [TakeExtraTurn.count takeExtraTurn]
@@ -1707,7 +1708,7 @@ effectObjectRefs effect =
         Effect.ChoosePlayer {} -> []
         Effect.ChoosePlayerAtRandom {} -> []
         Effect.ChoosePermanents {} -> []
-        Effect.ChooseSector {} -> []
+        Effect.ChooseGroup choice -> read_ (Resolve.groupingRefs (ChooseGroup.among choice) <> Foldable.toList (ChooseGroup.about choice))
         Effect.RollDie {} -> []
         Effect.FlipCoin {} -> []
         Effect.TakeExtraTurn {} -> []

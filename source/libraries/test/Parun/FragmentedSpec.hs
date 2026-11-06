@@ -417,7 +417,7 @@ freedPayments birds freed island =
 -- with, whether she has just attempted one, and her attempts so far.
 type Paying = ([ObjectId.ObjectId], Maybe ObjectId.ObjectId, Bool, [(Bool, Bool)])
 
-paying :: ObjectId.ObjectId -> Maybe ObjectId.ObjectId -> Asked.Asked r -> State.State Paying r
+paying :: ObjectId.ObjectId -> Maybe ObjectId.ObjectId -> Asked.Asked GameState.GameState r -> State.State Paying r
 paying freedId islandId asked = case Asked.prompt asked of
   Prompt.ChooseAction _ pid actions | pid == S.alice -> do
     (script, source, attempted, made) <- State.get
@@ -453,7 +453,7 @@ freedTaps birds freed =
 -- whether she has just tapped, and her taps so far.
 type Tapping = ([Color.Color], Maybe Color.Color, Bool, [Bool])
 
-tappingFor :: ObjectId.ObjectId -> ObjectId.ObjectId -> Asked.Asked r -> State.State Tapping r
+tappingFor :: ObjectId.ObjectId -> ObjectId.ObjectId -> Asked.Asked GameState.GameState r -> State.State Tapping r
 tappingFor birdsId freedId asked = case Asked.prompt asked of
   Prompt.ChooseAction _ pid actions | pid == S.alice -> do
     (script, colour, tapped, made) <- State.get
@@ -514,7 +514,7 @@ attempts alices bobs other script board =
   let ((_, _), (_, _, _, _, made)) = State.runState (Engine.runGameAsked (aiming alices bobs other) (inMain board) Engine.priorityLoop) (script, Nothing, False, True, [])
    in made
 
-aiming :: ObjectId.ObjectId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Asked.Asked r -> State.State Aiming r
+aiming :: ObjectId.ObjectId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Asked.Asked GameState.GameState r -> State.State Aiming r
 aiming alices bobs other asked = case Asked.prompt asked of
   Prompt.ChooseAction _ pid actions -> do
     (script, aim, attempted, alicesLap, made) <- State.get
@@ -570,7 +570,7 @@ spearAttempts spear birds rouser =
 -- whether the lap is hers to open, and her attempts so far.
 type Spearing = (Int, Bool, Bool, [Bool])
 
-spearing :: ObjectId.ObjectId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Asked.Asked r -> State.State Spearing r
+spearing :: ObjectId.ObjectId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Asked.Asked GameState.GameState r -> State.State Spearing r
 spearing spearId birdsId rouserId asked = case Asked.prompt asked of
   Prompt.ChooseAction _ pid actions -> do
     (left, attempted, alicesLap, made) <- State.get
@@ -642,7 +642,7 @@ pingAttempts sorcerer collar rouser reader =
 -- One lap's script: alice opens it activating `tapperId` at `aim`, and bob
 -- answers with his Rouser at the tapper once it has resolved. Answers alice's
 -- attempts, each as whether it went on the stack.
-lapping :: ObjectId.ObjectId -> ObjectId.ObjectId -> Recipient.Recipient -> Asked.Asked r -> State.State Spearing r
+lapping :: ObjectId.ObjectId -> ObjectId.ObjectId -> Recipient.Recipient -> Asked.Asked GameState.GameState r -> State.State Spearing r
 lapping tapperId rouserId aim asked = case Asked.prompt asked of
   Prompt.ChooseAction _ pid actions -> do
     (left, attempted, alicesLap, made) <- State.get
@@ -714,7 +714,7 @@ blinkCasts spirit omniscience =
 -- attempts so far.
 type Blinking = (Int, Bool, [Bool])
 
-blinking :: Asked.Asked r -> State.State Blinking r
+blinking :: Asked.Asked GameState.GameState r -> State.State Blinking r
 blinking asked = case Asked.prompt asked of
   Prompt.ChooseAction _ pid actions | pid == S.alice -> do
     (left, attempted, made) <- State.get

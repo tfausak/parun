@@ -181,6 +181,22 @@ contested groups =
           pure (key, 1)
       )
 
+-- The objects `contested` marked, closed under pools: every object on an axis
+-- that some one of these claims' pools on that axis shares with an object
+-- already in. A claim drawing on the result draws only on it, so the claims
+-- that do are one subset for Hall's condition, its union no larger than this.
+--
+-- Parun.Engine.Mana.payableResolutionsGiven's relaxation is the reader: on a
+-- board CR 118.3 admits, those claims take at most this many objects per axis.
+contendedReach :: Set.Set (ClaimAxis.ClaimAxis, ObjectId) -> [Claim] -> Set.Set (ClaimAxis.ClaimAxis, ObjectId)
+contendedReach marked claims =
+  let keysOf claim = Set.map ((,) (Claim.axis claim)) (Claim.pool claim)
+      pools = fmap keysOf (Set.toList (Set.fromList claims))
+      grow reached =
+        let next = Set.unions (reached : filter (not . Set.disjoint reached) pools)
+         in if Set.size next == Set.size reached then reached else grow next
+   in grow marked
+
 -- Whether any of these claims draws on an object `contested` above marked.
 contends :: Set.Set (ClaimAxis.ClaimAxis, ObjectId) -> [Claim] -> Bool
 contends marked = any (\claim -> any (\oid -> Set.member (Claim.axis claim, oid) marked) (Claim.pool claim))

@@ -34,6 +34,7 @@ import qualified Parun.Types.EntwineDecision as EntwineDecision
 import qualified Parun.Types.ForageMode as ForageMode
 import Parun.Types.Game (Game)
 import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GraveyardArrangement as GraveyardArrangement
 import qualified Parun.Types.GuessAnswer as GuessAnswer
 import qualified Parun.Types.KickerDecision as KickerDecision
@@ -61,7 +62,7 @@ import qualified Parun.Types.WordFamily as WordFamily
 recording :: Game a -> Game (a, [Response])
 recording game = State.StateT (go . State.runStateT game)
   where
-    go :: Program.Program Asked.Asked (a, GameState) -> Program.Program Asked.Asked ((a, [Response]), GameState)
+    go :: Program.Program (Asked.Asked GameState.GameState) (a, GameState) -> Program.Program (Asked.Asked GameState.GameState) ((a, [Response]), GameState)
     go program = case program of
       Program.Return (a, gs) -> Program.Return ((a, []), gs)
       Program.Then asked k -> Program.Then asked (\answer -> fmap (\((a, rest), gs) -> ((a, encode (Asked.prompt asked) answer : rest), gs)) (go (k answer)))
@@ -77,7 +78,7 @@ replaying answers = fmap fst . replayingRest answers
 replayingRest :: [Response] -> Game a -> Game (a, [Response])
 replayingRest answers game = State.StateT (go answers . State.runStateT game)
   where
-    go :: [Response] -> Program.Program Asked.Asked (a, GameState) -> Program.Program Asked.Asked ((a, [Response]), GameState)
+    go :: [Response] -> Program.Program (Asked.Asked GameState.GameState) (a, GameState) -> Program.Program (Asked.Asked GameState.GameState) ((a, [Response]), GameState)
     go remaining program = case program of
       Program.Return (a, gs) -> Program.Return ((a, remaining), gs)
       Program.Then asked k -> case remaining of

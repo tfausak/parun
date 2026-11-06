@@ -214,7 +214,7 @@ miracleBeforePlacementSpec s registry = do
             ready = withWrath {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
             isWrath g oid = fmap S.nameOf (Game.cardOf oid g) == Just (S.printingName wrath)
             -- At each of alice's target prompts, what she sees of bob's Wrath.
-            answer :: Asked.Asked r -> State.State [Visibility.Type.Visibility] r
+            answer :: Asked.Asked GameState.GameState r -> State.State [Visibility.Type.Visibility] r
             answer asked = case Asked.prompt asked of
               Prompt.OfferedMiracleReveal {} -> pure (if revealing then OptionalDecision.Exercises else OptionalDecision.Declines)
               p@(Prompt.ChooseTargets _ pid _ _) | pid == S.alice -> do
@@ -272,7 +272,7 @@ shuffledRevealSpec s registry =
         giants g = [oid | oid <- Game.zoneMembers Zone.Library S.alice g, fmap S.nameOf (Game.cardOf oid g) == Just (S.printingName giant)]
         note :: String -> GameState.GameState -> State.State [(String, [ObjectId.ObjectId], [Visibility.Type.Visibility])] ()
         note label g = State.modify' (<> [(label, giants g, fmap (\oid -> Visibility.sees S.bob oid g) (giants g))])
-        answer :: Asked.Asked r -> State.State [(String, [ObjectId.ObjectId], [Visibility.Type.Visibility])] r
+        answer :: Asked.Asked GameState.GameState r -> State.State [(String, [ObjectId.ObjectId], [Visibility.Type.Visibility])] r
         answer asked = case Asked.prompt asked of
           Prompt.Search _ _ offered _ -> pure (filter (== found) offered)
           p@(Prompt.Shuffle _) -> note "shuffle" (Asked.game asked) >> pure (S.identityAnswer p)

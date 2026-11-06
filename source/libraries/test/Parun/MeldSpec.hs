@@ -135,7 +135,7 @@ sparing oid inner p = case p of
   _ -> inner p
 
 -- `sparing` over S.identityAnswer, as an interpreter's answerer beneath.
-sparingAsked :: (Applicative m) => ObjectId.ObjectId -> Asked.Asked r -> m r
+sparingAsked :: (Applicative m) => ObjectId.ObjectId -> Asked.Asked GameState.GameState r -> m r
 sparingAsked oid asked = pure (sparing oid S.identityAnswer (Asked.prompt asked))
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()

@@ -59,7 +59,7 @@ import qualified Text.Read as Read
 -- | Answers each prompt a seat answers over the line `send` carries, asking
 -- again with the problem until the reply reads and is on offer; every other
 -- prompt goes to `fallback`.
-over :: (Monad m) => (Text.Text -> m Text.Text) -> Answerer.Answerer m -> Answerer.Answerer m
+over :: (Monad m) => (Text.Text -> m Text.Text) -> Answerer.Answerer (Asked.Asked GameState.GameState) m -> Answerer.Answerer (Asked.Asked GameState.GameState) m
 over send fallback = Answerer.MkAnswerer $ \asked -> case requestFor asked of
   Nothing -> Answerer.unwrap fallback asked
   Just request ->
@@ -103,7 +103,7 @@ render = Common.render . Codec.encode Codec.Request.codec
 
 -- | What the seat answering this prompt is sent, or Nothing for a prompt no
 -- seat answers.
-requestFor :: Asked.Asked r -> Maybe Request.Request
+requestFor :: Asked.Asked GameState.GameState r -> Maybe Request.Request
 requestFor asked =
   fmap
     (\question -> Request.MkRequest (Just (PlayerView.viewFor (Question.seat question) (Asked.game asked))) question Nothing)

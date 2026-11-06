@@ -1357,7 +1357,7 @@ type Sightings = [(Bool, Set.Set ObjectId.ObjectId, Set.Set ObjectId.ObjectId)]
 -- throughPile, recording what both seats' views show at each prompt raised
 -- after the draw out of the pile -- the window CR 406.4 keeps the card hidden
 -- through. The draw itself is the RandomObject prompt.
-watchingPayment :: Asked.Asked r -> State.State (Maybe Sightings) r
+watchingPayment :: Asked.Asked GameState.GameState r -> State.State (Maybe Sightings) r
 watchingPayment asked = do
   let p = Asked.prompt asked
       gs = Asked.game asked

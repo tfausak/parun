@@ -31,6 +31,7 @@ import qualified Parun.Codec.CastOffer as CastOffer
 import qualified Parun.Codec.ChangeTargets as ChangeTargets
 import qualified Parun.Codec.ChangeText as ChangeText
 import qualified Parun.Codec.ChooseCardName as ChooseCardName
+import qualified Parun.Codec.ChooseGroup as ChooseGroup
 import qualified Parun.Codec.ChooseNumber as ChooseNumber
 import qualified Parun.Codec.ChoosePermanents as ChoosePermanents
 import qualified Parun.Codec.ChoosePlayer as ChoosePlayer
@@ -299,7 +300,7 @@ codec cardCodec abilityCodec =
           Arm.payload "ChoosePlayer" ChoosePlayer.codec Effect.ChoosePlayer (\x -> case x of Effect.ChoosePlayer y -> Just y; _ -> Nothing),
           Arm.payload "ChoosePlayerAtRandom" ChoosePlayerAtRandom.codec Effect.ChoosePlayerAtRandom (\x -> case x of Effect.ChoosePlayerAtRandom y -> Just y; _ -> Nothing),
           Arm.payload "ChoosePermanents" ChoosePermanents.codec Effect.ChoosePermanents (\x -> case x of Effect.ChoosePermanents y -> Just y; _ -> Nothing),
-          Arm.payload "ChooseSector" SlotName.codec Effect.ChooseSector (\x -> case x of Effect.ChooseSector y -> Just y; _ -> Nothing),
+          Arm.payload "ChooseGroup" ChooseGroup.codec Effect.ChooseGroup (\x -> case x of Effect.ChooseGroup y -> Just y; _ -> Nothing),
           Arm.payload "RollDie" RollDie.codec Effect.RollDie (\x -> case x of Effect.RollDie y -> Just y; _ -> Nothing),
           Arm.payload "FlipCoin" FlipCoin.codec Effect.FlipCoin (\x -> case x of Effect.FlipCoin y -> Just y; _ -> Nothing),
           Arm.payload "Guess" Guess.codec Effect.Guess (\x -> case x of Effect.Guess y -> Just y; _ -> Nothing),
@@ -481,7 +482,7 @@ tagOf x = case x of
   Effect.ChoosePlayer {} -> "ChoosePlayer"
   Effect.ChoosePlayerAtRandom {} -> "ChoosePlayerAtRandom"
   Effect.ChoosePermanents {} -> "ChoosePermanents"
-  Effect.ChooseSector {} -> "ChooseSector"
+  Effect.ChooseGroup {} -> "ChooseGroup"
   Effect.RollDie {} -> "RollDie"
   Effect.FlipCoin {} -> "FlipCoin"
   Effect.Guess {} -> "Guess"

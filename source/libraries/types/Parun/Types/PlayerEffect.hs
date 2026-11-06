@@ -225,8 +225,7 @@ data PlayerEffect
   | -- | CR 118.9 / Omniscience: this player may cast a matching spell from their
     -- hand without paying its mana cost.
     --
-    -- What a narrowing filter would see of a card in a hand is unobserved (#4712,
-    -- the same gap the graveyard arm records).
+    -- The filter reads the card's CR 613.1 view in the hand, as CastFrom's does.
     CastFromHandWithoutPayingManaCost (Filter.Filter Keyword.Keyword)
   | -- | CR 101.2 / 122.1 / Solemnity, Melira Sylvok Outcast: this player can't get
     -- counters -- of the kind the Maybe names, or of every kind where it is Nothing.

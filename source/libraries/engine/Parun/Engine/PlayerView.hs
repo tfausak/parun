@@ -1,6 +1,6 @@
 -- One seat's view of a game: built field by field from the state, never as a
--- redacted copy of it, so a field the state gains reaches no client until it
--- is added here on purpose.
+-- redacted copy of it, so a field the state gains reaches no seat, in process
+-- or over the line, until it is added here on purpose.
 module Parun.Engine.PlayerView where
 
 import qualified Data.Foldable as Foldable

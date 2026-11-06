@@ -24,7 +24,6 @@ import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Parun.Extra.Integer as Integer
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
-import qualified Parun.Play.Bot as Bot
 import qualified Parun.Play.Game as Game
 import qualified Parun.Play.Protocol as Protocol
 import qualified Parun.Play.Record as Record
@@ -109,7 +108,7 @@ play options lookUp (one, two) = do
           then (idOf 2, two) NonEmpty.:| [(idOf 1, one)]
           else (idOf 1, one) NonEmpty.:| [(idOf 2, two)]
       answerer n
-        | Set.member n (PlayOptions.bots options) = Bot.bot
+        | Set.member n (PlayOptions.bots options) = Game.bot
         | PlayOptions.json options = Game.wired exchange
         | otherwise = Game.human terminal lookUp
       seats = Map.fromList [(idOf n, answerer n) | n <- [1, 2]]

@@ -2,10 +2,10 @@
 
 module Parun.Types.Answerer where
 
-import qualified Parun.Types.Asked as Asked
-
--- | Something that answers the engine's prompts: a scenario's timeline, a
--- person, a bot, or chance.
-newtype Answerer m = MkAnswerer
-  { unwrap :: forall r. Asked.Asked r -> m r
+-- | Something that answers the engine's questions, each put as a `q`: a
+-- scenario's timeline, a person, a bot, or chance. The engine puts them as
+-- 'Parun.Types.Asked.Asked' over the whole state, a seat's answerer as Asked
+-- over that seat's view.
+newtype Answerer q m = MkAnswerer
+  { unwrap :: forall r. q r -> m r
   }

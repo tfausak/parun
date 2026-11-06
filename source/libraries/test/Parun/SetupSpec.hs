@@ -1438,7 +1438,7 @@ data Conspired
 
 -- CR 315.2's choice taken whole when `taking`, else declined; every other
 -- question as `answer`, keeping each hand.
-conspiring :: Bool -> (forall a. Prompt.Prompt a -> a) -> Asked.Asked r -> State.State [Conspired] r
+conspiring :: Bool -> (forall a. Prompt.Prompt a -> a) -> Asked.Asked GameState.GameState r -> State.State [Conspired] r
 conspiring taking answer asked =
   let depth = length (Asked.enclosing asked)
    in case Asked.prompt asked of
@@ -1521,7 +1521,7 @@ recordShuffles answer p = do
 
 -- Cast whatever is castable, else pass, recording how deep each question was
 -- asked, the game it was asked of, and the cards of a shuffle.
-recordAsked :: Asked.Asked r -> State.State [(Int, GameState.GameState, [ObjectId.ObjectId])] r
+recordAsked :: Asked.Asked GameState.GameState r -> State.State [(Int, GameState.GameState, [ObjectId.ObjectId])] r
 recordAsked asked = do
   let shuffled = case Asked.prompt asked of
         Prompt.Shuffle ids -> ids

@@ -48,6 +48,7 @@ import qualified Parun.Types.ActiveObjectProhibition as ActiveObjectProhibition
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AffectedPlayers as AffectedPlayers
 import qualified Parun.Types.AfterObjectTurn as AfterObjectTurn
+import qualified Parun.Types.AnyNumberOf as AnyNumberOf
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
@@ -3092,6 +3093,34 @@ spec s registry = Spec.describe s "Parun.Engine.Combat" $ do
   textChangedCombatAffectedSpec s registry
   controlChangeSicknessSpec s registry
   camouflageDivisionOrderSpec s registry
+  ragingRiverPromptSpec s registry
+
+-- Raging River {R}{R} Enchantment (Oracle text checked against
+-- api.scryfall.com 2026-11-05): "Then, for each attacking creature you control,
+-- choose "left" or "right."" Effect.ChooseGroup's `about`: each Prompt.ChoosePile
+-- names the attacker it is asked for, not Raging River.
+ragingRiverPromptSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+ragingRiverPromptSpec s registry =
+  let told :: Prompt.Prompt r -> State.State [ObjectId.ObjectId] r
+      told p = case p of
+        Prompt.DeclareAttackers _ _ candidates -> pure candidates
+        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.IntoPile candidates _ _ -> pure (Set.fromList (take 1 candidates))
+        Prompt.ChoosePile _ _ subject piles _ -> do
+          State.modify' (<> [subject])
+          pure (NonEmpty.head piles)
+        _ -> pure (S.identityAnswer p)
+   in Spec.describe s "RagingRiver"
+        . Spec.it s "CR 700.3 each label is asked naming the attacker it is for"
+        $ do
+          river <- S.printingOf s registry "Raging River"
+          bears <- S.printingOf s registry "Grizzly Bears"
+          giant <- S.printingOf s registry "Hill Giant"
+          ogre <- S.printingOf s registry "Gray Ogre"
+          elves <- S.printingOf s registry "Llanowar Elves"
+          let (board, ours, _) = S.combatBoardOf [bears, giant] [ogre, elves]
+              (_, gs) = S.addPermanent river S.alice board
+              asked = State.execState (Engine.runGame told gs (Combat.declareAttackers S.manaPerformer S.alice >> Engine.priorityLoop)) []
+          Spec.assertEqWith s "one pile prompt per attacker, each naming it" (List.sort asked) (List.sort ours)
 
 -- CR 101.4 / 802.4 / Camouflage: at three seats, every defending player's
 -- creatures are divided, in APNAP order, before any pile is assigned at random

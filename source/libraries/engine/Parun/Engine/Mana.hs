@@ -2582,8 +2582,8 @@ canPayCommittingGiven subject capacity spending sources pcs pid committed commit
 -- That is what keeps CR 107.5's {T} affordable: every land and every mana
 -- creature claims itself, so without the test a board of n sources would be 2^n
 -- boards below; see #1725. It does not bound the case where they genuinely meet --
--- a Springleaf Drum beside n mana creatures widens all n -- which is the same
--- unpruned search #595 tracks.
+-- a Springleaf Drum beside n mana creatures widens all n -- whose unpayable costs
+-- payableResolutionsGiven's relaxation refuses before that search.
 --
 -- The COLLAPSE is where several yields become one option, and it is exact rather
 -- than a shortcut. Where a yield adds at most one mana, its option is at most one
@@ -2980,8 +2980,7 @@ boundedMultisets k xs = case (k, xs) of
 -- `any` short-circuits, so a payable cost stops at the first board that pays it,
 -- and a relaxation refuses most unpayable ones before the walk starts
 -- (payableResolutionsGiven's `bounded`). One the relaxation admits still walks
--- every board: it ignores claims, so a Springleaf Drum beside n Llanowar Elves
--- asked for n + 1 is not refused, and no domination prune is implemented (#595).
+-- every board.
 --
 -- Clause 1 is Hall's condition: a saturating matching exists iff no set of
 -- demands outruns the supplies that could serve it. Checked directly rather than
@@ -3215,6 +3214,16 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
       -- before it, less what their costs and its own spent, leave.
       ordered option = not (null (optionDemands option)) || not (null (optionDoublings option))
       doubles = not (all (all (null . optionDoublings . snd)) options)
+      -- What the relaxation below holds the CLAIMS to: the objects contention
+      -- reaches (Claim.contendedReach), and how many of them each option, and
+      -- the cost's own claims, take per axis. A board CR 118.3 admits takes no
+      -- more of them than there are, since the claims drawing on them are one
+      -- subset for Claim.satisfiable's Hall condition.
+      reach = Claim.contendedReach contested (claimed <> concatMap (concatMap (optionClaims . snd)) options)
+      room = Map.fromListWith (+) [(axis, 1 :: Natural) | (axis, _) <- Set.toList reach]
+      takesOf claims = Map.fromListWith (+) [(Claim.Type.axis claim, Claim.objectsOf claim) | claim <- claims, Claim.contends reach [claim]]
+      within taken = and (Map.intersectionWith (<=) taken room)
+      weighed = fmap (fmap (\(_, option) -> (option, takesOf (optionClaims option)))) options
       -- CR 119.4's floor, asked of every board: the player effects walked once.
       affordable = Event.lifePayable pid gs
       payable (demands, generic, life) =
@@ -3263,10 +3272,12 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
                     && all hallHolds (List.subsequences (Set.toList (Set.fromList wanted_)))
             -- CR 118.3 asked of a RELAXATION first, which no board beats: each
             -- group takes whichever option serves the clause at hand best, with
-            -- only CR 119.4's one life total holding them together and every
-            -- claim ignored. `best` is that choice for one clause -- a knapsack
-            -- over the life the options pay -- and Nothing when no choice at all
-            -- clears the life clause.
+            -- only CR 119.4's one life total and the contended objects' count
+            -- (`within`) holding them together. `best` is that choice for one
+            -- clause -- a knapsack over the life the options pay and the objects
+            -- they claim -- and Nothing when no choice at all clears both. A
+            -- Springleaf Drum beside n Llanowar Elves is n mana under it, the
+            -- Drum's tap taking one of the Elves.
             --
             -- Asked of Hall's condition over the cost's OWN demands, every supply
             -- sitting before `costPosition`; and of the count every board is held
@@ -3279,14 +3290,17 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
                     let step sofar choices =
                           Map.fromListWith
                             max
-                            [ (spent + optionLife option, total + value option)
-                            | (spent, total) <- Map.toList sofar,
-                              (_, option) <- choices,
+                            [ (key, total + value option)
+                            | ((spent, taken), total) <- Map.toList sofar,
+                              (option, takes) <- choices,
+                              let key@(_, more) = (spent + optionLife option, Map.unionWith (+) taken takes),
+                              within more,
                               affordable (committed + life + spent + optionLife option)
                             ]
-                        start :: Map.Map Natural Integer
-                        start = if affordable (committed + life) then Map.singleton 0 0 else Map.empty
-                        reached = Foldable.foldl' step start options
+                        held = takesOf claimed
+                        start :: Map.Map (Natural, Map.Map ClaimAxis.ClaimAxis Natural) Integer
+                        start = if affordable (committed + life) && within held then Map.singleton (0, held) 0 else Map.empty
+                        reached = Foldable.foldl' step start weighed
                      in if Map.null reached then Nothing else Just (maximum (Map.elems reached))
                   count :: [a] -> Integer
                   count = toInteger . length

@@ -540,7 +540,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.ChoosePlayer payload -> Damage.choosePlayer resolving source controller payload
   Effect.ChoosePlayerAtRandom payload -> Damage.choosePlayerAtRandom resolving source controller payload
   Effect.ChoosePermanents payload -> Damage.choosePermanents resolving source controller legal payload
-  Effect.ChooseSector payload -> Damage.chooseSector resolving source controller payload
+  Effect.ChooseGroup payload -> Damage.chooseGroup resolving source controller legal payload
   Effect.RollDie payload -> Damage.rollDieArm throwDice runSubgame resolving source controller legal payload
   Effect.Reroll -> Damage.reroll
   Effect.RerollStoredResults payload -> Damage.rerollStoredResults throwDice runSubgame resolving source controller legal payload

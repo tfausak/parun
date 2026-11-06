@@ -835,7 +835,7 @@ queuedChamberAnswer ::
   (Monad m) =>
   PlayerId.PlayerId ->
   CardName.CardName ->
-  Asked.Asked r ->
+  Asked.Asked GameState.GameState r ->
   State.StateT [CardName.CardName] m r
 queuedChamberAnswer opponent fallback asked = case Asked.prompt asked of
   Prompt.ChooseCardName {} -> do
@@ -1346,7 +1346,7 @@ lookedUpHalo s registry name gs oid = do
   pure after
 
 -- Names `name` whenever a card name is asked for, and otherwise S.identityAnswer.
-namingAnswer :: (Monad m) => CardName.CardName -> Asked.Asked r -> m r
+namingAnswer :: (Monad m) => CardName.CardName -> Asked.Asked GameState.GameState r -> m r
 namingAnswer name asked = case Asked.prompt asked of
   Prompt.ChooseCardName {} -> pure name
   p -> pure (S.identityAnswer p)

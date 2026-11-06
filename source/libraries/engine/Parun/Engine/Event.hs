@@ -10970,8 +10970,8 @@ revealUnderStatics pid drawn nth timing = do
 --
 -- CR 121.9's "may look at that card as they draw it before choosing" is logged
 -- as a look before the first offer, and only when there is an offer to make.
--- Not implemented: an answerer is handed the whole state, hidden cards
--- included, and the prompt names the card regardless (#5418).
+-- The prompt names the card to the one player CR 121.9 lets look at it, so it
+-- names nothing hidden from its answerer.
 --
 -- The reveal goes through the ordinary funnel with CR 702.94a's cause, which is
 -- what makes the linked trigger (CR 603.11) findable: `eventTriggers`' hand source

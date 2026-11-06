@@ -137,8 +137,8 @@ policingCardNames ::
   (Monad m) =>
   Registry.Registry m ->
   (forall r. InvalidCorpus.InvalidCorpus -> m r) ->
-  (forall r. Asked.Asked r -> m r) ->
-  Asked.Asked a ->
+  (forall r. Asked.Asked GameState.GameState r -> m r) ->
+  Asked.Asked GameState.GameState a ->
   m a
 policingCardNames registry failed answer asked = case Asked.prompt asked of
   Prompt.ChooseCardName _ chooser _ restriction _ ->
@@ -173,8 +173,8 @@ lookingUpCards ::
   (Monad m) =>
   Registry.Registry m ->
   (forall r. InvalidCorpus.InvalidCorpus -> m r) ->
-  (forall r. Asked.Asked r -> m r) ->
-  Asked.Asked a ->
+  (forall r. Asked.Asked GameState.GameState r -> m r) ->
+  Asked.Asked GameState.GameState a ->
   m a
 lookingUpCards registry failed answer asked = case Asked.prompt asked of
   Prompt.LookUpCard name -> fetched failed (Registry.fetchCard registry name)

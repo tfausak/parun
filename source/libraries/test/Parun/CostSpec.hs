@@ -5927,7 +5927,7 @@ assisting helper amount forestId plainsIds p =
 -- recorded in order.
 -- `reversingAssist` over the whole question, recording the game bob is asked
 -- in.
-seeingAssist :: OptionalDecision.OptionalDecision -> OptionalDecision.OptionalDecision -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Asked.Asked r -> State.State [GameState.GameState] r
+seeingAssist :: OptionalDecision.OptionalDecision -> OptionalDecision.OptionalDecision -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Asked.Asked GameState.GameState r -> State.State [GameState.GameState] r
 seeingAssist alice bob forestId plainsIds asked = case Asked.prompt asked of
   Prompt.ReverseManaAbilities _ player _
     | player == S.bob -> do

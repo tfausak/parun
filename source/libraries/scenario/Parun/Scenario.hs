@@ -576,10 +576,10 @@ facingFor reason = case reason of
 -- | The timeline, answering every prompt the engine asks. Its checks run here
 -- rather than in an observer: they share the moment's queue with its moves, so
 -- a check behind a refused move (CR 733.1) runs only once that move is taken.
-scripted :: Answerer.Answerer Run
+scripted :: Answerer.Answerer (Asked.Asked GameState.GameState) Run
 scripted = Answerer.MkAnswerer answerPrompt
 
-answerPrompt :: Asked.Asked r -> Run r
+answerPrompt :: Asked.Asked GameState.GameState r -> Run r
 answerPrompt asked = do
   rehearsal <- State.get
   -- A replayed recording ends at the first prompt past its last entry; the
@@ -601,7 +601,7 @@ recorded prompt = case prompt of
   Prompt.Type.ReferenceNames {} -> False
   _ -> True
 
-answerScheduled :: Asked.Asked r -> Run r
+answerScheduled :: Asked.Asked GameState.GameState r -> Run r
 answerScheduled asked = do
   let prompt = Asked.prompt asked
       gs = Asked.game asked
@@ -684,7 +684,7 @@ subChoiceFor key prompt decider choices =
   where
     holdsTargets = Maybe.isJust (Choices.targets choices) || not (Map.null (Choices.targetsBySlot choices))
 
-answerTopPrompt :: Maybe Label.Label -> Asked.Asked r -> Run r
+answerTopPrompt :: Maybe Label.Label -> Asked.Asked GameState.GameState r -> Run r
 answerTopPrompt decider asked = do
   -- An Answer naming this prompt wins over its dedicated move, so a recording
   -- can answer anything one way.
@@ -696,7 +696,7 @@ answerTopPrompt decider asked = do
     Just (key, index, timed) -> answerGeneric (Asked.game asked) key (Prompt.kindOf (Asked.prompt asked)) index timed (Asked.prompt asked)
     Nothing -> answerDedicated decider asked
 
-answerDedicated :: Maybe Label.Label -> Asked.Asked r -> Run r
+answerDedicated :: Maybe Label.Label -> Asked.Asked GameState.GameState r -> Run r
 answerDedicated decider asked =
   let prompt = Asked.prompt asked
       gs = Asked.game asked
@@ -1299,7 +1299,7 @@ matchesActivation oid selected action = case action of
   Action.Activate candidate ability -> candidate == oid && maybe True ((== Just ability) . Maybe.listToMaybe) selected
   _ -> False
 
-answerActionChoice :: When.When -> Move.Move -> Choices.Choices -> Asked.Asked r -> Run r
+answerActionChoice :: When.When -> Move.Move -> Choices.Choices -> Asked.Asked GameState.GameState r -> Run r
 answerActionChoice key verb choices asked =
   let prompt = Asked.prompt asked
       gs = Asked.game asked
