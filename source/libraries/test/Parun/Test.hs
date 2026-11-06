@@ -530,6 +530,7 @@ import qualified Parun.Codec.NextDamageOutcomeSpec
 import qualified Parun.Codec.NextStepOfSpec
 import qualified Parun.Codec.NinjutsuSpec
 import qualified Parun.Codec.NinjutsuVariantSpec
+import qualified Parun.Codec.NumberFloorSpec
 import qualified Parun.Codec.ObjectCountSpec
 import qualified Parun.Codec.ObjectIdSpec
 import qualified Parun.Codec.ObjectRefSpec
@@ -1529,6 +1530,7 @@ spec s registry corpus = do
   Parun.Codec.ObjectSnapshotSpec.spec s
   Parun.Codec.ObjectSpec.spec s
   Parun.Codec.OfferCastSpec.spec s
+  Parun.Codec.NumberFloorSpec.spec s
   Parun.Codec.OnsetSpec.spec s
   Parun.Codec.OperandSpec.spec s
   Parun.Codec.OptionalDecisionSpec.spec s

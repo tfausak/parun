@@ -102,6 +102,7 @@ import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.MoveCounters as MoveCounters
 import qualified Parun.Types.MoveSpread as MoveSpread
 import qualified Parun.Types.MovedKinds as MovedKinds
+import qualified Parun.Types.NumberFloor as NumberFloor
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import Parun.Types.ObjectRef (ObjectRef)
@@ -1502,7 +1503,7 @@ chooseNumber resolving source controller legal (ChooseNumber.MkChooseNumber slot
     let viewOf = effectViewOf resolving source legal gs
         context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         ask most = do
-          answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor pid gs) pid resolving 0 most)
+          answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor pid gs) pid resolving 0 NumberFloor.Least most)
           State.modify' (Common.bindAmountSlot resolving source slot (maybe answer (min answer) most))
     case upTo of
       Nothing -> ask Nothing

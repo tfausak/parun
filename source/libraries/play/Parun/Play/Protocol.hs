@@ -20,6 +20,7 @@ import qualified Parun.Codec.Filter as Codec.Filter
 import qualified Parun.Codec.Keyword as Codec.Keyword
 import qualified Parun.Codec.ManaCost as Codec.ManaCost
 import qualified Parun.Codec.ManaType as Codec.ManaType
+import qualified Parun.Codec.NumberFloor as Codec.NumberFloor
 import qualified Parun.Codec.Reference as Codec.Reference
 import qualified Parun.Codec.Reply as Codec.Reply
 import qualified Parun.Codec.Request as Codec.Request
@@ -171,7 +172,7 @@ offerOf gs prompt = case prompt of
   Prompt.ChooseManaYield _ _ source options -> fields [("source", object source), ("yields", Reply.encode (Reply.list (Reply.list (Reply.viaCodec Codec.ManaType.codec))) namer (fmap (fmap ManaUnit.manaType . Mana.yieldUnits) (Foldable.toList options)))]
   Prompt.ChooseManaSpentOnX _ _ source shares -> fields [("source", object source), ("shares", Reply.encode (Reply.list (Reply.list (Reply.viaCodec Codec.ManaType.codec))) namer (fmap (fmap ManaUnit.manaType . Mana.Type.unwrap) (Foldable.toList shares)))]
   Prompt.ChooseX _ _ source variable least greatest -> fields [("source", object source), ("variable", Reply.encode (Reply.viaCodec Codec.SlotName.codec) namer variable), ("least", natural least), ("greatest", natural greatest)]
-  Prompt.ChooseNumber _ _ source least most -> fields ([("source", object source), ("least", natural least)] <> [("greatest", natural greatest) | Just greatest <- [most]])
+  Prompt.ChooseNumber _ _ source least meaning most -> fields ([("source", object source), ("least", natural least), ("floor", Reply.encode (Reply.viaCodec Codec.NumberFloor.codec) namer meaning)] <> [("greatest", natural greatest) | Just greatest <- [most]])
   Prompt.ChooseOptional _ _ source _ _ _ -> fields [("source", object source)]
   Prompt.ChooseGuess _ _ source proposition -> fields [("source", object source), ("proposition", Reply.encode (Reply.viaCodec (Codec.Filter.codec Codec.Keyword.codec)) namer proposition)]
   Prompt.AssignCombatDamage _ _ source lethal total ->
