@@ -220,8 +220,6 @@ first.
   sibling.
 - #6493: Hall of Echoes. Nothing switches off the legend rule for a player for a
   duration (CR 704.5j).
-- #6492: Draconic Visitor. A token replacement scales or appends tokens but
-  can't substitute different ones (CR 614.1a).
 - #6486: Blossom-Blessed Angel; Carnivorous Cultivator; Diviner of Victory;
   Emergency Phytomedic; Fatehold Chronologist; Hallway Heckler; Heartwood
   Crafter; Konstrari Improviser; Pompous Battlemage; Prudent Fateseer; Pyre

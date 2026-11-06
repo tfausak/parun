@@ -615,7 +615,7 @@ printedBoxOffends card =
         )
     )
 
--- CR 614.1a: a token replacement that neither scales nor appends replaces the
+-- CR 614.1a: a token replacement that neither scales nor adds a lot replaces the
 -- event with itself, which no printing says. Both fields are elided on the
 -- wire, so the codec cannot refuse the pair; card data is held to it here.
 --

@@ -3054,6 +3054,7 @@ tokenPlusNames :: Asking r -> (card -> r) -> TokenPlus.TokenPlus card -> r
 tokenPlusNames _asking onCard x = case x of
   TokenPlus.One card -> onCard card
   TokenPlus.ThatMany card -> onCard card
+  TokenPlus.Instead card -> onCard card
 
 tokenRNames :: (Monoid r) => Asking r -> (card -> r) -> TokenR.TokenR card -> r
 tokenRNames asking onCard x = case x of

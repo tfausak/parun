@@ -2357,8 +2357,9 @@ replacementEffectRiders replacement = case replacement of
   ReplacementEffect.PlaneswalkR {} -> []
   ReplacementEffect.PhaseR _ -> []
 
--- CR 111.1's token a replacement MINTS: TokenR's appended token (Queen Allenal
--- of Ruadach's Soldier), the one arm embedding a whole Card. The axis
+-- CR 111.1's token a replacement MINTS: TokenR's added token (Queen Allenal of
+-- Ruadach's Soldier, Draconic Visitor's Dragon), the one arm embedding a whole
+-- Card. The axis
 -- effectMintedFaces walks for a Create, one carrier over.
 --
 -- Exhaustive rather than a wildcard, this file's discipline for a sum: a second
