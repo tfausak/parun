@@ -2108,7 +2108,8 @@ departedAttackerSpec s registry =
                       Combat.Type.defenders = [S.bob],
                       Combat.Type.barred = [],
                       Combat.Type.bands = [],
-                      Combat.Type.pileBlocks = Nothing
+                      Combat.Type.pileBlocks = Nothing,
+                      Combat.Type.blockedBy = Map.empty
                     }
               }
           gone = S.departs Departure.Type.Conceded S.alice fighting
@@ -2158,7 +2159,8 @@ departedDefenderSpec s registry =
                       Combat.Type.defenders = [S.bob],
                       Combat.Type.barred = [],
                       Combat.Type.bands = [],
-                      Combat.Type.pileBlocks = Nothing
+                      Combat.Type.pileBlocks = Nothing,
+                      Combat.Type.blockedBy = Map.empty
                     }
               }
           gone = S.departs Departure.Type.Conceded S.bob attacking

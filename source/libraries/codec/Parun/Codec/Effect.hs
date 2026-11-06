@@ -105,6 +105,7 @@ import qualified Parun.Codec.Quantity as Quantity
 import qualified Parun.Codec.RedirectDamage as RedirectDamage
 import qualified Parun.Codec.RemoveCounters as RemoveCounters
 import qualified Parun.Codec.RemoveCountersAmong as RemoveCountersAmong
+import qualified Parun.Codec.RemoveFromCombat as RemoveFromCombat
 import qualified Parun.Codec.RemovePlayerCounters as RemovePlayerCounters
 import qualified Parun.Codec.Repeat as Repeat
 import qualified Parun.Codec.RepeatIf as RepeatIf
@@ -194,8 +195,9 @@ codec cardCodec abilityCodec =
           Arm.payload "Sacrifice" SacrificeEffect.codec Effect.Sacrifice (\x -> case x of Effect.Sacrifice y -> Just y; _ -> Nothing),
           Arm.payload "TurnFaceDown" (TurnFaceDown.codec abilityCodec) Effect.TurnFaceDown (\x -> case x of Effect.TurnFaceDown y -> Just y; _ -> Nothing),
           Arm.payload "TurnFaceUp" SlotName.codec Effect.TurnFaceUp (\x -> case x of Effect.TurnFaceUp y -> Just y; _ -> Nothing),
-          Arm.payload "RemoveFromCombat" ObjectRef.codec Effect.RemoveFromCombat (\x -> case x of Effect.RemoveFromCombat y -> Just y; _ -> Nothing),
+          Arm.payload "RemoveFromCombat" RemoveFromCombat.codec Effect.RemoveFromCombat (\x -> case x of Effect.RemoveFromCombat y -> Just y; _ -> Nothing),
           Arm.payload "BecomesBlocked" SlotName.codec Effect.BecomesBlocked (\x -> case x of Effect.BecomesBlocked y -> Just y; _ -> Nothing),
+          Arm.payload "BlockAttacker" ObjectRef.codec Effect.BlockAttacker (\x -> case x of Effect.BlockAttacker y -> Just y; _ -> Nothing),
           Arm.payload "SwitchBlockers" SlotName.codec Effect.SwitchBlockers (\x -> case x of Effect.SwitchBlockers y -> Just y; _ -> Nothing),
           Arm.payload "ExchangeBlocks" ExchangeBlocks.codec Effect.ExchangeBlocks (\x -> case x of Effect.ExchangeBlocks y -> Just y; _ -> Nothing),
           Arm.payload "Counter" Counter.codec Effect.Counter (\x -> case x of Effect.Counter y -> Just y; _ -> Nothing),
@@ -378,6 +380,7 @@ tagOf x = case x of
   Effect.TurnFaceUp {} -> "TurnFaceUp"
   Effect.RemoveFromCombat {} -> "RemoveFromCombat"
   Effect.BecomesBlocked {} -> "BecomesBlocked"
+  Effect.BlockAttacker {} -> "BlockAttacker"
   Effect.SwitchBlockers {} -> "SwitchBlockers"
   Effect.ExchangeBlocks {} -> "ExchangeBlocks"
   Effect.Counter {} -> "Counter"

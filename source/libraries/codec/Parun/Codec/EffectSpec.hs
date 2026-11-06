@@ -187,6 +187,7 @@ import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.RemovalCount as RemovalCount
 import qualified Parun.Types.RemoveCounters as RemoveCounters
 import qualified Parun.Types.RemoveCountersAmong as RemoveCountersAmong
+import qualified Parun.Types.RemoveFromCombat as RemoveFromCombat
 import qualified Parun.Types.RemovePlayerCounters as RemovePlayerCounters
 import qualified Parun.Types.Repeat as Repeat
 import qualified Parun.Types.RepeatIf as RepeatIf
@@ -220,6 +221,7 @@ import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TextWord as TextWord
 import qualified Parun.Types.TopOfLibrary as TopOfLibrary
 import qualified Parun.Types.TurnFaceDown as TurnFaceDown
+import qualified Parun.Types.Unblocking as Unblocking
 import qualified Parun.Types.Uses as Uses
 import qualified Parun.Types.Vote as Vote
 import qualified Parun.Types.VoteChoices as VoteChoices
@@ -1821,14 +1823,29 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.RemoveFromCombat (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
-      " {\"type\":\"RemoveFromCombat\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
+      (Effect.RemoveFromCombat (RemoveFromCombat.MkRemoveFromCombat (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) Unblocking.StayBlocked))
+      " {\"type\":\"RemoveFromCombat\",\"value\":{\"removed\":{\"type\":\"InSlot\",\"value\":\"target\"}}} "
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.RemoveFromCombat (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature)))
-      " {\"type\":\"RemoveFromCombat\",\"value\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
+      (Effect.RemoveFromCombat (RemoveFromCombat.MkRemoveFromCombat (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature)) Unblocking.StayBlocked))
+      " {\"type\":\"RemoveFromCombat\",\"value\":{\"removed\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}}} "
+  -- CR 509.1h: False Orders' unblocking.
+  Spec.it s "RemoveFromCombat unblocking the sole-blocked" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (Effect.RemoveFromCombat (RemoveFromCombat.MkRemoveFromCombat (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) Unblocking.SoleBlockedUnblocked))
+      " {\"type\":\"RemoveFromCombat\",\"value\":{\"removed\":{\"type\":\"InSlot\",\"value\":\"target\"},\"unblocking\":\"SoleBlockedUnblocked\"}} "
+  Spec.it s "BlockAttacker" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (Effect.BlockAttacker (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
+      " {\"type\":\"BlockAttacker\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
   Spec.it s "BecomesBlocked" $
     Common.assertJsonCodec
       s

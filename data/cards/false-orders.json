@@ -1,0 +1,90 @@
+{
+  "faces": [
+    {
+      "castingRestrictions": [
+        {
+          "type": "DuringPhase",
+          "value": {
+            "scope": {
+              "type": "PlayersTurn",
+              "value": {
+                "type": "Relative",
+                "value": "AnyPlayer"
+              }
+            },
+            "window": {
+              "type": "Step",
+              "value": {
+                "type": "Combat",
+                "value": "DeclareBlockers"
+              }
+            }
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": "Red"
+          }
+        }
+      ],
+      "name": "False Orders",
+      "oracleText": "Cast this spell only during the declare blockers step.\nRemove target creature defending player controls from combat. Creatures it was blocking that had become blocked by only that creature this combat become unblocked. You may have it block an attacking creature of your choice.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "RemoveFromCombat",
+                    "value": {
+                      "removed": {
+                        "type": "InSlot",
+                        "value": "target"
+                      },
+                      "unblocking": "SoleBlockedUnblocked"
+                    }
+                  }
+                ]
+              },
+              {
+                "effects": [
+                  {
+                    "type": "BlockAttacker",
+                    "value": {
+                      "type": "InSlot",
+                      "value": "target"
+                    }
+                  }
+                ],
+                "optionality": {
+                  "type": "Optional"
+                }
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "filter": {
+                  "type": "ControlledByRole",
+                  "value": "Defending"
+                },
+                "pool": {
+                  "type": "Creatures"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          "Instant"
+        ]
+      }
+    }
+  ]
+}
