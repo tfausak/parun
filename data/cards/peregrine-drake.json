@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -57,9 +55,7 @@
                             },
                             "filter": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Land"
-                              }
+                              "value": "Land"
                             }
                           }
                         }
@@ -74,14 +70,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Drake"
-          }
+          "Drake"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

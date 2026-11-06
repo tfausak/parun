@@ -22,19 +22,19 @@ spec s = Spec.describe s "Parun.Codec.Operand" $ do
       s
       Operand.codec
       (Operand.OfSource Measure.Toughness)
-      " {\"type\":\"OfSource\",\"value\":{\"type\":\"Toughness\"}} "
+      " {\"type\":\"OfSource\",\"value\":\"Toughness\"} "
   Spec.it s "Own" $
     Common.assertCodec
       s
       Operand.codec
       (Operand.Own Measure.Power)
-      " {\"type\":\"Own\",\"value\":{\"type\":\"Power\"}} "
+      " {\"type\":\"Own\",\"value\":\"Power\"} "
   Spec.it s "OfBound" $
     Common.assertCodec
       s
       Operand.codec
       (Operand.OfBound (BoundMeasure.MkBoundMeasure (SlotName.MkSlotName (Text.pack "thatExploitedCreature")) Measure.Toughness))
-      " {\"type\":\"OfBound\",\"value\":{\"slot\":\"thatExploitedCreature\",\"measure\":{\"type\":\"Toughness\"}}} "
+      " {\"type\":\"OfBound\",\"value\":{\"slot\":\"thatExploitedCreature\",\"measure\":\"Toughness\"}} "
   Spec.it s "AmountInSlot" $
     Common.assertCodec
       s
@@ -52,5 +52,5 @@ spec s = Spec.describe s "Parun.Codec.Operand" $ do
       s
       Operand.codec
       (Operand.OfEachOtherCandidate Measure.ManaValue)
-      " {\"type\":\"OfEachOtherCandidate\",\"value\":{\"type\":\"ManaValue\"}} "
+      " {\"type\":\"OfEachOtherCandidate\",\"value\":\"ManaValue\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Operand.codec

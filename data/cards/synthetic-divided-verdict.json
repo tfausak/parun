@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -47,9 +45,7 @@
                         "type": "InSlot",
                         "value": "victim"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -70,12 +66,8 @@
                 "filter": {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 "pool": {
@@ -94,15 +86,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Black"
-                          }
+                          "value": "Black"
                         }
                       ]
                     },
@@ -118,23 +106,15 @@
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "Opponent"
-                        }
+                        "holder": "Controller",
+                        "relation": "Opponent"
                       }
                     },
                     {
                       "type": "Measures",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
-                        "measure": {
-                          "type": "ManaValue"
-                        },
+                        "comparison": "Exactly",
+                        "measure": "ManaValue",
                         "operand": {
                           "type": "EnclosingAmount"
                         }
@@ -152,9 +132,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

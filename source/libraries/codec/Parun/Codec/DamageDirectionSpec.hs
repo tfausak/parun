@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.DamageDirection" $ do
       s
       DamageDirection.codec
       DamageDirection.DealtTo
-      " {\"type\":\"DealtTo\"} "
+      " \"DealtTo\" "
   Spec.it s "DealtBy" $
     Common.assertCodec
       s
       DamageDirection.codec
       DamageDirection.DealtBy
-      " {\"type\":\"DealtBy\"} "
+      " \"DealtBy\" "
   -- Parun.Codec.DamageKindSpec's reason: Arm.enum derives the arm list from the
   -- type, so this is what would catch a constructor the derivation missed or two
   -- that encode alike.

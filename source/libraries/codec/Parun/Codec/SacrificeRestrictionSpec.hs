@@ -30,5 +30,5 @@ spec s = Spec.describe s "Parun.Codec.SacrificeRestriction" $ do
               )
           )
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},{\"type\":\"Not\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Owner\"},\"relation\":{\"type\":\"You\"}}}}]}}} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Creature\"},{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}},{\"type\":\"Not\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Owner\",\"relation\":\"You\"}}}]}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s SacrificeRestriction.codec

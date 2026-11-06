@@ -27,17 +27,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Golem"
-          }
+          "Golem"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

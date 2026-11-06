@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -44,9 +40,7 @@
                   }
                 ],
                 "payGate": {
-                  "branch": {
-                    "type": "IfNotPaid"
-                  },
+                  "branch": "IfNotPaid",
                   "cost": {
                     "mana": [
                       {
@@ -58,12 +52,8 @@
                   "payer": {
                     "type": "HolderOfBound",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "hop": {
-                        "type": "Itself"
-                      },
+                      "holder": "Controller",
+                      "hop": "Itself",
                       "slot": "spell"
                     }
                   }
@@ -89,9 +79,7 @@
                         "type": "InSlot",
                         "value": "creature"
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ]
@@ -114,9 +102,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -136,9 +122,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

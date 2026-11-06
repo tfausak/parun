@@ -84,9 +84,7 @@
       "do": {
         "Answer": {
           "prompt": "CallCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       }
     },
@@ -95,9 +93,7 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "source": "$pokey"
     },
@@ -106,9 +102,7 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": {
-        "ChooseOptional": {
-          "type": "Declines"
-        }
+        "ChooseOptional": "Declines"
       },
       "source": "$pokey"
     },

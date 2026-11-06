@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -25,14 +23,10 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "HasDesignation",
-                "value": {
-                  "type": "Solved"
-                }
+                "value": "Solved"
               },
               "threshold": {
                 "type": "Literal",
@@ -44,23 +38,15 @@
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Creature"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Creature",
+                "mode": "InAddition"
               }
             },
             {
               "type": "CreatureSubtype",
               "value": {
-                "mode": {
-                  "type": "InAddition"
-                },
-                "subtype": {
-                  "type": "Gorgon"
-                }
+                "mode": "InAddition",
+                "subtype": "Gorgon"
               }
             },
             {
@@ -110,9 +96,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -145,17 +129,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -166,9 +146,7 @@
               {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "AtLeast"
-                  },
+                  "comparison": "AtLeast",
                   "measured": {
                     "type": "Count",
                     "value": {
@@ -186,9 +164,7 @@
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           }
                         ]
                       },
@@ -197,9 +173,7 @@
                         "value": {
                           "type": "CardArrivedIn",
                           "value": {
-                            "to": {
-                              "type": "Graveyard"
-                            }
+                            "to": "Graveyard"
                           }
                         }
                       }
@@ -214,14 +188,10 @@
               {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "Exactly"
-                  },
+                  "comparison": "Exactly",
                   "measured": {
                     "type": "HasDesignation",
-                    "value": {
-                      "type": "Solved"
-                    }
+                    "value": "Solved"
                   },
                   "threshold": {
                     "type": "Literal",
@@ -240,9 +210,7 @@
                       {
                         "type": "Designate",
                         "value": {
-                          "designation": {
-                            "type": "Solved"
-                          },
+                          "designation": "Solved",
                           "slot": "self"
                         }
                       }
@@ -256,14 +224,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Case"
-          }
+          "Case"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

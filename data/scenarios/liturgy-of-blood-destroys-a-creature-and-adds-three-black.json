@@ -103,14 +103,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Black"
-                }
+                "value": "Black"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -118,14 +114,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Black"
-                }
+                "value": "Black"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -133,14 +125,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Black"
-                }
+                "value": "Black"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null

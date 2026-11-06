@@ -126,9 +126,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$m1",
             null
@@ -159,9 +157,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "DrawStep",
@@ -224,9 +220,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$m1",
             null
@@ -257,9 +251,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "DrawStep",
@@ -301,9 +293,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "player": "alice",

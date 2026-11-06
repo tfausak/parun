@@ -38,9 +38,7 @@
                                 "type": "FromOutsideTheGame",
                                 "value": {
                                   "count": 1,
-                                  "destination": {
-                                    "type": "Hand"
-                                  },
+                                  "destination": "Hand",
                                   "filter": {
                                     "type": "And",
                                     "value": []
@@ -54,12 +52,8 @@
                               }
                             }
                           },
-                          "origin": {
-                            "type": "Other"
-                          },
-                          "uses": {
-                            "type": "Once"
-                          }
+                          "origin": "Other",
+                          "uses": "Once"
                         }
                       }
                     ]
@@ -80,9 +74,7 @@
       "oracleText": "{5}, {T}, Exile this artifact: The next time you would draw a card this turn, instead put a card you own from outside the game into your hand.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

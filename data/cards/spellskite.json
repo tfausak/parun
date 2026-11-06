@@ -7,9 +7,7 @@
             "mana": [
               {
                 "type": "Phyrexian",
-                "value": {
-                  "type": "Blue"
-                }
+                "value": "Blue"
               }
             ]
           },
@@ -65,20 +63,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horror"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Horror",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

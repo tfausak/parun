@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.PlayerDesignation" $ do
       s
       PlayerDesignation.codec
       PlayerDesignation.CitysBlessing
-      " {\"type\":\"CitysBlessing\"} "
+      " \"CitysBlessing\" "
   Spec.it s "EnduringStory" $
     Common.assertCodec
       s
       PlayerDesignation.codec
       PlayerDesignation.EnduringStory
-      " {\"type\":\"EnduringStory\"} "
+      " \"EnduringStory\" "
   -- Parun.Codec.DesignationSpec's closing case, and for its reason: Arm.enum
   -- derives the arm list from the type, so this is what would catch a
   -- constructor the derivation missed or two that encode alike.

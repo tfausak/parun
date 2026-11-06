@@ -28,7 +28,7 @@ spec s = Spec.describe s "Parun.Codec.TopOfLibraryUntil" $ do
             TopOfLibraryUntil.count = Quantity.Literal 1
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}},\"count\":{\"type\":\"Literal\",\"value\":1}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}},\"count\":{\"type\":\"Literal\",\"value\":1}} "
   -- Open the Way's "until you reveal X land cards": the count is CR 601.2b's
   -- announced X, read from the slot casting filled.
   Spec.it s "MkTopOfLibraryUntil carries the announced X Open the Way needs" $
@@ -41,7 +41,7 @@ spec s = Spec.describe s "Parun.Codec.TopOfLibraryUntil" $ do
             TopOfLibraryUntil.count = Quantity.InSlot (SlotName.MkSlotName (Text.pack "X"))
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"count\":{\"type\":\"InSlot\",\"value\":\"X\"}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"count\":{\"type\":\"InSlot\",\"value\":\"X\"}} "
   -- The filter is what a MATCH is, so a ref without one names a walk that never
   -- stops: a decode failure rather than a library taken whole.
   Spec.it s "a walk with no filter is rejected" $
@@ -53,6 +53,6 @@ spec s = Spec.describe s "Parun.Codec.TopOfLibraryUntil" $ do
   Spec.it s "a walk with no count is rejected" $
     Spec.assertBool
       s
-      (Either.isLeft (Common.parse (Text.pack " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}} ") >>= Codec.decode TopOfLibraryUntil.codec))
+      (Either.isLeft (Common.parse (Text.pack " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"}} ") >>= Codec.decode TopOfLibraryUntil.codec))
       "expected a decode failure"
   Spec.it s "has a schema" $ Common.assertHasSchema s TopOfLibraryUntil.codec

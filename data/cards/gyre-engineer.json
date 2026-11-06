@@ -24,9 +24,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Green"
-                              }
+                              "value": "Green"
                             }
                           }
                         }
@@ -38,9 +36,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Blue"
-                              }
+                              "value": "Blue"
                             }
                           }
                         }
@@ -62,18 +58,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -89,17 +81,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Vedalken"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Vedalken",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -16,17 +16,13 @@
                 "value": {
                   "phase": {
                     "type": "Beginning",
-                    "value": {
-                      "type": "Upkeep"
-                    }
+                    "value": "Upkeep"
                   },
                   "scope": {
                     "type": "PlayersTurn",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     }
                   }
                 }
@@ -44,9 +40,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -79,9 +73,7 @@
                             "value": {
                               "filter": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Land"
-                                }
+                                "value": "Land"
                               },
                               "graveyards": {
                                 "type": "Scoped",
@@ -92,16 +84,12 @@
                             }
                           },
                           "riders": {
-                            "tapped": {
-                              "type": "Tapped"
-                            },
+                            "tapped": "Tapped",
                             "under": {
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -128,9 +116,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -142,9 +128,7 @@
                       "type": "Not",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       }
                     },
                     "pool": {
@@ -165,14 +149,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cridhe"
-          }
+          "Cridhe"
         ],
         "types": [
-          {
-            "type": "Plane"
-          }
+          "Plane"
         ]
       }
     }

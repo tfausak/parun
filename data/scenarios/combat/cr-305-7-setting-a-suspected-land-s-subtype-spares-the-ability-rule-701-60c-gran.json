@@ -171,9 +171,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseBasicLandType",
-          "with": {
-            "type": "Island"
-          }
+          "with": "Island"
         }
       }
     },
@@ -232,9 +230,7 @@
           "of": "Designations",
           "object": "$suspect",
           "is": [
-            {
-              "type": "Suspected"
-            }
+            "Suspected"
           ]
         }
       }

@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -55,9 +53,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -73,9 +69,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -90,22 +84,16 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          }
+          "Beast"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
     {
       "colorIndicator": [
-        {
-          "type": "Green"
-        }
+        "Green"
       ],
       "keywords": [
         {
@@ -123,14 +111,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          }
+          "Beast"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

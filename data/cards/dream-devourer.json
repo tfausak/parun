@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -33,35 +31,25 @@
                   "type": "Not",
                   "value": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Land"
-                    }
+                    "value": "Land"
                   }
                 },
                 {
                   "type": "IsInZone",
-                  "value": {
-                    "type": "Hand"
-                  }
+                  "value": "Hand"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Owner"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Owner",
+                    "relation": "You"
                   }
                 },
                 {
                   "type": "Not",
                   "value": {
                     "type": "HasKeywordFamily",
-                    "value": {
-                      "type": "Foretell"
-                    }
+                    "value": "Foretell"
                   }
                 }
               ]
@@ -95,12 +83,8 @@
           "condition": {
             "type": "PlayerActs",
             "value": {
-              "action": {
-                "type": "Foretell"
-              },
-              "player": {
-                "type": "You"
-              }
+              "action": "Foretell",
+              "player": "You"
             }
           },
           "modal": {
@@ -144,17 +128,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Demon"
-          }
+          "Cleric",
+          "Demon"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

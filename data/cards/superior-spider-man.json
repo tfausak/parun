@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -44,9 +40,7 @@
                 "value": {
                   "among": {
                     "type": "InZone",
-                    "value": {
-                      "type": "Graveyard"
-                    }
+                    "value": "Graveyard"
                   },
                   "clauses": [
                     {
@@ -65,15 +59,9 @@
                         {
                           "type": "AddSubtypes",
                           "value": [
-                            {
-                              "type": "Hero"
-                            },
-                            {
-                              "type": "Human"
-                            },
-                            {
-                              "type": "Spider"
-                            }
+                            "Hero",
+                            "Human",
+                            "Spider"
                           ]
                         }
                       ]
@@ -81,9 +69,7 @@
                   ],
                   "eligible": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   "whenYouDo": [
                     {
@@ -93,9 +79,7 @@
                           "type": "InSlot",
                           "value": "thatCopiedObject"
                         },
-                        "zone": {
-                          "type": "Exile"
-                        }
+                        "zone": "Exile"
                       }
                     }
                   ]
@@ -111,25 +95,15 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hero"
-          },
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Spider"
-          }
+          "Hero",
+          "Human",
+          "Spider"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

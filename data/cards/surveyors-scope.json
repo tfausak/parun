@@ -23,31 +23,23 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "Battlefield"
-                          },
+                          "destination": "Battlefield",
                           "filter": {
                             "type": "And",
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Land"
-                                }
+                                "value": "Land"
                               },
                               {
                                 "type": "HasSupertype",
-                                "value": {
-                                  "type": "Basic"
-                                }
+                                "value": "Basic"
                               }
                             ]
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Count",
@@ -60,9 +52,7 @@
                                 "value": {
                                   "filter": {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Land"
-                                    }
+                                    "value": "Land"
                                   },
                                   "margin": {
                                     "type": "MoreThanYou",
@@ -74,18 +64,14 @@
                                 "type": "OverPlayers",
                                 "value": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
+                                  "value": "AnyPlayer"
                                 }
                               }
                             }
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -107,9 +93,7 @@
       "oracleText": "{T}, Exile this artifact: Search your library for up to X basic land cards, where X is the number of players who control at least two more lands than you. Put those cards onto the battlefield, then shuffle.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

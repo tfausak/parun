@@ -4,8 +4,8 @@
   "board": {"active": "bob", "step": "Untap", "seats": [{"name": "bob", "battlefield": [{"card": "Goblin Kaboomist", "label": "kaboomist"}, {"card": "Mountain", "label": "mtn"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Ornithopter", "label": "bird"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [
     {"turn": 1, "step": "Upkeep", "player": "bob", "do": "Pass"},
-    {"turn": 1, "step": "Upkeep", "player": "bob", "do": {"Answer": {"prompt": "CallCoin", "with": {"type": "Heads"}}}},
-    {"turn": 1, "step": "Upkeep", "player": "bob", "do": {"Answer": {"prompt": "FlipCoin", "with": {"type": "Heads"}}}},
+    {"turn": 1, "step": "Upkeep", "player": "bob", "do": {"Answer": {"prompt": "CallCoin", "with": "Heads"}}},
+    {"turn": 1, "step": "Upkeep", "player": "bob", "do": {"Answer": {"prompt": "FlipCoin", "with": "Heads"}}},
     {"turn": 1, "step": "Upkeep", "player": "bob", "check": {"Damage": {"object": "$kaboomist", "damage": 0}}},
     {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}},
     {"turn": 2, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$bears", "$bird"]}},

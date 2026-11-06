@@ -85,9 +85,7 @@
       "step": "PrecombatMain",
       "player": "bob",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     }
   ],

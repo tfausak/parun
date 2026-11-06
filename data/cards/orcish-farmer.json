@@ -26,32 +26,22 @@
                               "player": {
                                 "type": "HolderOfBound",
                                 "value": {
-                                  "holder": {
-                                    "type": "Controller"
-                                  },
-                                  "hop": {
-                                    "type": "Itself"
-                                  },
+                                  "holder": "Controller",
+                                  "hop": "Itself",
                                   "slot": "target"
                                 }
                               },
                               "step": {
                                 "type": "Beginning",
-                                "value": {
-                                  "type": "Untap"
-                                }
+                                "value": "Untap"
                               }
                             }
                           },
                           "modification": {
                             "type": "LandSubtype",
                             "value": {
-                              "mode": {
-                                "type": "Replace"
-                              },
-                              "subtype": {
-                                "type": "Swamp"
-                              }
+                              "mode": "Replace",
+                              "subtype": "Swamp"
                             }
                           },
                           "ref": {
@@ -67,9 +57,7 @@
                   "target": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     },
                     "pool": {
                       "type": "Permanents"
@@ -90,18 +78,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -117,14 +101,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Orc"
-          }
+          "Orc"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

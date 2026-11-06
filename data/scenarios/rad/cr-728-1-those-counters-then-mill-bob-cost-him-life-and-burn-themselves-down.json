@@ -100,9 +100,7 @@
       "check": {
         "PlayerCounters": {
           "player": "bob",
-          "kind": {
-            "type": "Rad"
-          },
+          "kind": "Rad",
           "count": 2
         }
       }
@@ -162,9 +160,7 @@
       "check": {
         "PlayerCounters": {
           "player": "bob",
-          "kind": {
-            "type": "Rad"
-          },
+          "kind": "Rad",
           "count": 0
         }
       }

@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -28,12 +26,8 @@
           "effect": {
             "type": "Shows",
             "value": {
-              "cards": {
-                "type": "TopOfLibrary"
-              },
-              "to": {
-                "type": "ThatPlayer"
-              }
+              "cards": "TopOfLibrary",
+              "to": "ThatPlayer"
             }
           },
           "scope": {
@@ -47,32 +41,22 @@
               "from": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Library"
-                }
+                "zone": "Library"
               },
               "matching": {
                 "type": "And",
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "Measures",
                     "value": {
-                      "comparison": {
-                        "type": "AtLeast"
-                      },
-                      "measure": {
-                        "type": "Power"
-                      },
+                      "comparison": "AtLeast",
+                      "measure": "Power",
                       "operand": {
                         "type": "Literal",
                         "value": 4
@@ -116,14 +100,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dragon"
-          }
+          "Dragon"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

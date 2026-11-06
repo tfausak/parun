@@ -2,9 +2,7 @@
   "faces": [
     {
       "colorIndicator": [
-        {
-          "type": "Red"
-        }
+        "Red"
       ],
       "manaCost": [],
       "name": "Crimson Kobolds",
@@ -19,14 +17,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Kobold"
-          }
+          "Kobold"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

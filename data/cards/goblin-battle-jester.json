@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -35,9 +33,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               },
               "spell": {
@@ -48,19 +44,13 @@
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Red"
-                      }
+                      "value": "Red"
                     }
                   ]
                 }
@@ -86,9 +76,7 @@
                           "duration": {
                             "type": "UntilEndOfTurn"
                           },
-                          "what": {
-                            "type": "Block"
-                          }
+                          "what": "Block"
                         }
                       }
                     ]
@@ -108,14 +96,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          }
+          "Goblin"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

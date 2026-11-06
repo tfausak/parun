@@ -14,9 +14,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -34,9 +32,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -49,15 +45,11 @@
                       "value": [
                         {
                           "type": "IsAttackingPlayer",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         },
                         {
                           "type": "IsAttackingBattle",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       ]
                     },
@@ -76,18 +68,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
       "name": "Synthetic Bulwark Snare",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

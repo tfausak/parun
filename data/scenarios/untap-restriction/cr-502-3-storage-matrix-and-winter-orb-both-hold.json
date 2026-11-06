@@ -63,9 +63,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseCardType",
-          "with": {
-            "type": "Land"
-          }
+          "with": "Land"
         }
       }
     },

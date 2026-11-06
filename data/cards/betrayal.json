@@ -6,12 +6,8 @@
           "filter": {
             "type": "HeldBy",
             "value": {
-              "holder": {
-                "type": "Controller"
-              },
-              "relation": {
-                "type": "Opponent"
-              }
+              "holder": "Controller",
+              "relation": "Opponent"
             }
           },
           "pool": {
@@ -24,9 +20,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -46,9 +40,7 @@
                   }
                 }
               },
-              "status": {
-                "type": "Tapped"
-              }
+              "status": "Tapped"
             }
           },
           "modal": {
@@ -62,9 +54,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -82,14 +72,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

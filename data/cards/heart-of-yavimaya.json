@@ -24,9 +24,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Green"
-                              }
+                              "value": "Green"
                             }
                           }
                         }
@@ -109,9 +107,7 @@
                   "count": 1,
                   "filter": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Forest"
-                    }
+                    "value": "Forest"
                   }
                 }
               }
@@ -121,9 +117,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -33,20 +31,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Barbarian"
-          },
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Barbarian",
+          "Human",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

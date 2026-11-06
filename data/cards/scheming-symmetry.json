@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -23,9 +21,7 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "Top"
-                      },
+                      "destination": "Top",
                       "filter": {
                         "type": "And",
                         "value": []
@@ -65,9 +61,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

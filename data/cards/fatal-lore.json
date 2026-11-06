@@ -10,24 +10,18 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
-      "modeChooser": {
-        "type": "Opponent"
-      },
+      "modeChooser": "Opponent",
       "name": "Fatal Lore",
       "oracleText": "An opponent chooses one —\n• You draw three cards.\n• You destroy up to two target creatures that player controls. They can't be regenerated. That player draws up to three cards.",
       "spell": {
@@ -41,9 +35,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -66,9 +58,7 @@
                         "type": "InSlot",
                         "value": "creatures"
                       },
-                      "regenerability": {
-                        "type": "CantBeRegenerated"
-                      }
+                      "regenerability": "CantBeRegenerated"
                     }
                   }
                 ]
@@ -117,9 +107,7 @@
                 "filter": {
                   "type": "HeldByBound",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
+                    "holder": "Controller",
                     "slot": "modeChooser"
                   }
                 },
@@ -133,9 +121,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

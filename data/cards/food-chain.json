@@ -14,19 +14,13 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       }
                     ]
@@ -57,9 +51,7 @@
                                 "value": {
                                   "quantity": {
                                     "type": "Measure",
-                                    "value": {
-                                      "type": "ManaValue"
-                                    }
+                                    "value": "ManaValue"
                                   },
                                   "slot": "thatExiledPermanent"
                                 }
@@ -72,9 +64,7 @@
                           "restriction": {
                             "casts": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             }
                           }
                         }
@@ -96,9 +86,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -106,9 +94,7 @@
       "oracleText": "Exile a creature you control: Add X mana of any one color, where X is 1 plus the exiled creature's mana value. Spend this mana only to cast creature spells.",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

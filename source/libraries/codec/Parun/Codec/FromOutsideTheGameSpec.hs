@@ -24,7 +24,7 @@ spec s = Spec.describe s "Parun.Codec.FromOutsideTheGame" $ do
             FromOutsideTheGame.reveal = True
           }
       )
-      " {\"count\":1,\"destination\":{\"type\":\"Hand\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Sorcery\"}},\"reveal\":true,\"upTo\":false} "
+      " {\"count\":1,\"destination\":\"Hand\",\"filter\":{\"type\":\"HasCardType\",\"value\":\"Sorcery\"},\"reveal\":true,\"upTo\":false} "
   -- Research's shape, and the pair is the point: every field differs from the
   -- case above, so a dropped count, upTo, reveal, filter or destination alike
   -- fails to round-trip. The empty And is CR 400.11c's
@@ -42,4 +42,4 @@ spec s = Spec.describe s "Parun.Codec.FromOutsideTheGame" $ do
             FromOutsideTheGame.reveal = False
           }
       )
-      " {\"count\":4,\"destination\":{\"type\":\"LibraryShuffled\"},\"filter\":{\"type\":\"And\",\"value\":[]},\"reveal\":false,\"upTo\":true} "
+      " {\"count\":4,\"destination\":\"LibraryShuffled\",\"filter\":{\"type\":\"And\",\"value\":[]},\"reveal\":false,\"upTo\":true} "

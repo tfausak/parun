@@ -31,9 +31,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 {
                   "type": "HasAttached",
@@ -68,9 +66,7 @@
                   }
                 }
               },
-              "status": {
-                "type": "Tapped"
-              }
+              "status": "Tapped"
             }
           },
           "modal": {
@@ -121,14 +117,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Fortification"
-          }
+          "Fortification"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -51,9 +49,7 @@
                             "value": "target"
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -66,12 +62,8 @@
                             "type": "InSlot",
                             "value": "exiled"
                           },
-                          "spending": {
-                            "type": "AnyType"
-                          },
-                          "verb": {
-                            "type": "Cast"
-                          }
+                          "spending": "AnyType",
+                          "verb": "Cast"
                         }
                       },
                       {
@@ -83,26 +75,18 @@
                           "effect": {
                             "type": "ZoneChangeR",
                             "value": {
-                              "destination": {
-                                "type": "Exile"
-                              },
+                              "destination": "Exile",
                               "matching": {
                                 "whatObject": {
                                   "type": "IsBound",
                                   "value": "exiled"
                                 },
-                                "whenDestination": {
-                                  "type": "Graveyard"
-                                }
+                                "whenDestination": "Graveyard"
                               }
                             }
                           },
-                          "origin": {
-                            "type": "Other"
-                          },
-                          "uses": {
-                            "type": "Unlimited"
-                          }
+                          "origin": "Other",
+                          "uses": "Unlimited"
                         }
                       }
                     ]
@@ -115,15 +99,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Instant"
-                          }
+                          "value": "Instant"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Sorcery"
-                          }
+                          "value": "Sorcery"
                         }
                       ]
                     },
@@ -145,17 +125,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Pirate"
-          }
+          "Human",
+          "Pirate"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

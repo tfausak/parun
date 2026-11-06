@@ -18,9 +18,7 @@
         {
           "effect": {
             "type": "Precluded",
-            "value": {
-              "type": "Lose"
-            }
+            "value": "Lose"
           },
           "scope": {
             "type": "You"
@@ -29,9 +27,7 @@
         {
           "effect": {
             "type": "Precluded",
-            "value": {
-              "type": "Win"
-            }
+            "value": "Win"
           },
           "scope": {
             "type": "Opponent"
@@ -48,17 +44,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Angel"
-          }
+          "Angel"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

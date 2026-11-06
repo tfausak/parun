@@ -17,9 +17,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -37,9 +35,7 @@
                     "type": "IsSource"
                   }
                 },
-                "whichKind": {
-                  "type": "Combat"
-                }
+                "whichKind": "Combat"
               },
               "rewrite": {
                 "type": "PreventAll"
@@ -58,9 +54,7 @@
                     "type": "IsSource"
                   }
                 },
-                "whichKind": {
-                  "type": "Combat"
-                }
+                "whichKind": "Combat"
               },
               "rewrite": {
                 "type": "PreventAll"
@@ -71,14 +65,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -21,5 +21,5 @@ spec s = Spec.describe s "Parun.Codec.AttachTarget" $ do
             AttachTarget.filter = Filter.HasCardType CardType.Creature
           }
       )
-      " {\"slot\":\"target\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"slot\":\"target\",\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AttachTarget.codec

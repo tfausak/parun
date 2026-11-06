@@ -17,9 +17,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -35,9 +33,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -58,9 +54,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -68,9 +62,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -80,14 +72,10 @@
                   "filter": {
                     "type": "DealtDamageTo",
                     "value": {
-                      "kind": {
-                        "type": "Combat"
-                      },
+                      "kind": "Combat",
                       "party": {
                         "type": "Related",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       }
                     }
                   },
@@ -116,9 +104,7 @@
                             "type": "InSlot",
                             "value": "became"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -131,14 +117,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Rat"
-          }
+          "Rat"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

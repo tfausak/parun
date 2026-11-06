@@ -18,9 +18,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -38,9 +36,7 @@
                             "type": "InSlot",
                             "value": "cards"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -71,9 +67,7 @@
                         }
                       }
                     },
-                    "together": {
-                      "type": "InOneZone"
-                    }
+                    "together": "InOneZone"
                   }
                 }
               }
@@ -86,9 +80,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -104,17 +96,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Pirate"
-          }
+          "Human",
+          "Pirate"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

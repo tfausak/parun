@@ -5,17 +5,11 @@
       "oracleText": "({T}: Add {G} or {W}.)",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Forest"
-          },
-          {
-            "type": "Plains"
-          }
+          "Forest",
+          "Plains"
         ],
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

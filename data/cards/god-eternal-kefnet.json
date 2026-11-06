@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -38,9 +34,7 @@
             "type": "RevealsDraw",
             "value": {
               "nth": 1,
-              "obligation": {
-                "type": "Optional"
-              }
+              "obligation": "Optional"
             }
           },
           "scope": {
@@ -66,15 +60,11 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Instant"
-                    }
+                    "value": "Instant"
                   },
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Sorcery"
-                    }
+                    "value": "Sorcery"
                   }
                 ]
               }
@@ -115,9 +105,7 @@
                 "value": {
                   "destinations": [
                     {
-                      "zone": {
-                        "type": "Graveyard"
-                      }
+                      "zone": "Graveyard"
                     }
                   ]
                 }
@@ -127,9 +115,7 @@
                 "value": {
                   "destinations": [
                     {
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   ]
                 }
@@ -156,9 +142,7 @@
                             "type": "InSlot",
                             "value": "became"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ],
@@ -174,22 +158,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "God"
-          },
-          {
-            "type": "Zombie"
-          }
+          "God",
+          "Zombie"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

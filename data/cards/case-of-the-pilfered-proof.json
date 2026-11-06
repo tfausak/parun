@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -23,14 +21,10 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "HasDesignation",
-                "value": {
-                  "type": "Solved"
-                }
+                "value": "Solved"
               },
               "threshold": {
                 "type": "Literal",
@@ -77,9 +71,7 @@
                                         "value": {
                                           "player": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "You"
-                                            }
+                                            "value": "You"
                                           },
                                           "quantity": {
                                             "type": "Literal",
@@ -98,14 +90,10 @@
                       "name": "Clue Token",
                       "typeLine": {
                         "subtypes": [
-                          {
-                            "type": "Clue"
-                          }
+                          "Clue"
                         ],
                         "types": [
-                          {
-                            "type": "Artifact"
-                          }
+                          "Artifact"
                         ]
                       }
                     }
@@ -132,19 +120,13 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         },
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Detective"
-                          }
+                          "value": "Detective"
                         }
                       ]
                     }
@@ -161,19 +143,13 @@
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       },
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Detective"
-                        }
+                        "value": "Detective"
                       }
                     ]
                   }
@@ -216,17 +192,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -237,9 +209,7 @@
               {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "AtLeast"
-                  },
+                  "comparison": "AtLeast",
                   "measured": {
                     "type": "Count",
                     "value": {
@@ -252,19 +222,13 @@
                           {
                             "type": "HeldBy",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "relation": {
-                                "type": "You"
-                              }
+                              "holder": "Controller",
+                              "relation": "You"
                             }
                           },
                           {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Detective"
-                            }
+                            "value": "Detective"
                           }
                         ]
                       },
@@ -273,13 +237,9 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     }
@@ -293,14 +253,10 @@
               {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "Exactly"
-                  },
+                  "comparison": "Exactly",
                   "measured": {
                     "type": "HasDesignation",
-                    "value": {
-                      "type": "Solved"
-                    }
+                    "value": "Solved"
                   },
                   "threshold": {
                     "type": "Literal",
@@ -319,9 +275,7 @@
                       {
                         "type": "Designate",
                         "value": {
-                          "designation": {
-                            "type": "Solved"
-                          },
+                          "designation": "Solved",
                           "slot": "self"
                         }
                       }
@@ -335,14 +289,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Case"
-          }
+          "Case"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

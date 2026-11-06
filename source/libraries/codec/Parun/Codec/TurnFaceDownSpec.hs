@@ -38,5 +38,5 @@ spec s = Spec.describe s "Parun.Codec.TurnFaceDown" $ do
                   }
             }
       )
-      " {\"characteristics\":{\"typeLine\":{\"subtypes\":[{\"type\":\"Cyberman\"}],\"types\":[{\"type\":\"Artifact\"},{\"type\":\"Creature\"}]}},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
+      " {\"characteristics\":{\"typeLine\":{\"subtypes\":[\"Cyberman\"],\"types\":[\"Artifact\",\"Creature\"]}},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s (TurnFaceDown.codec Common.text)

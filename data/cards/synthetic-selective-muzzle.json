@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -26,9 +24,7 @@
                   {
                     "type": "PreventAllDamage",
                     "value": {
-                      "direction": {
-                        "type": "DealtBy"
-                      },
+                      "direction": "DealtBy",
                       "duration": {
                         "type": "UntilEndOfTurn"
                       },
@@ -41,19 +37,13 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "HeldBy",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "relation": {
-                                "type": "You"
-                              }
+                              "holder": "Controller",
+                              "relation": "You"
                             }
                           }
                         ]
@@ -75,9 +65,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

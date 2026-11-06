@@ -64,29 +64,21 @@
                           "descriptions": [
                             {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Forest"
-                              }
+                              "value": "Forest"
                             },
                             {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Plains"
-                              }
+                              "value": "Plains"
                             }
                           ],
-                          "destination": {
-                            "type": "BattlefieldTapped"
-                          },
+                          "destination": "BattlefieldTapped",
                           "filter": {
                             "type": "And",
                             "value": []
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -94,9 +86,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -127,9 +117,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -32,9 +30,7 @@
               "value": [
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Shaman"
-                  }
+                  "value": "Shaman"
                 },
                 {
                   "type": "And",
@@ -47,9 +43,7 @@
                     },
                     {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Wizard"
-                      }
+                      "value": "Wizard"
                     }
                   ]
                 }
@@ -71,17 +65,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

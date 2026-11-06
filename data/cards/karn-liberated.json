@@ -34,9 +34,7 @@
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -79,9 +77,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -130,39 +126,27 @@
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Artifact"
-                                      }
+                                      "value": "Artifact"
                                     },
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Battle"
-                                      }
+                                      "value": "Battle"
                                     },
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Creature"
-                                      }
+                                      "value": "Creature"
                                     },
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Enchantment"
-                                      }
+                                      "value": "Enchantment"
                                     },
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Land"
-                                      }
+                                      "value": "Land"
                                     },
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Planeswalker"
-                                      }
+                                      "value": "Planeswalker"
                                     }
                                   ]
                                 },
@@ -170,9 +154,7 @@
                                   "type": "Not",
                                   "value": {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Aura"
-                                    }
+                                    "value": "Aura"
                                   }
                                 }
                               ]
@@ -194,9 +176,7 @@
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -221,19 +201,13 @@
       "oracleText": "[+4]: Target player exiles a card from their hand.\n[−3]: Exile target permanent.\n[−14]: Restart the game, leaving in exile all non-Aura permanent cards exiled with Karn. Then put those cards onto the battlefield under your control.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Karn"
-          }
+          "Karn"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

@@ -24,9 +24,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Black"
-                              }
+                              "value": "Black"
                             }
                           }
                         }
@@ -54,9 +52,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -87,9 +83,7 @@
                                         "type": "Not",
                                         "value": {
                                           "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Spirit"
-                                          }
+                                          "value": "Spirit"
                                         }
                                       }
                                     }
@@ -107,9 +101,7 @@
                                         "type": "Not",
                                         "value": {
                                           "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Spirit"
-                                          }
+                                          "value": "Spirit"
                                         }
                                       }
                                     }
@@ -126,14 +118,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Spirit"
-                                    }
+                                    "Spirit"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -160,9 +148,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtMost"
-              },
+              "comparison": "AtMost",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -174,25 +160,17 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       },
                       {
                         "type": "HasSupertype",
-                        "value": {
-                          "type": "Basic"
-                        }
+                        "value": "Basic"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       }
                     ]
@@ -202,13 +180,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -234,9 +208,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

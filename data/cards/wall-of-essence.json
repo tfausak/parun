@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -37,9 +35,7 @@
             "type": "IsDealtDamage",
             "value": {
               "dealt": {
-                "kind": {
-                  "type": "Combat"
-                },
+                "kind": "Combat",
                 "recipient": {
                   "type": "Self"
                 }
@@ -57,9 +53,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "InSlot",
@@ -77,14 +71,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Wall"
-          }
+          "Wall"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

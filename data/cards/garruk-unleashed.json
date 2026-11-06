@@ -108,9 +108,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Green"
-                                  }
+                                  "Green"
                                 ],
                                 "name": "Beast Token",
                                 "power": {
@@ -123,14 +121,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Beast"
-                                    }
+                                    "Beast"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -148,9 +142,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -162,9 +154,7 @@
                               "value": {
                                 "filter": {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 "margin": {
                                   "type": "MoreThanYou",
@@ -176,9 +166,7 @@
                               "type": "OverPlayers",
                               "value": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "Opponent"
-                                }
+                                "value": "Opponent"
                               }
                             }
                           }
@@ -246,17 +234,13 @@
                                       "value": {
                                         "phase": {
                                           "type": "Ending",
-                                          "value": {
-                                            "type": "EndStep"
-                                          }
+                                          "value": "EndStep"
                                         },
                                         "scope": {
                                           "type": "PlayersTurn",
                                           "value": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "You"
-                                            }
+                                            "value": "You"
                                           }
                                         }
                                       }
@@ -270,20 +254,14 @@
                                                 {
                                                   "type": "Search",
                                                   "value": {
-                                                    "destination": {
-                                                      "type": "Battlefield"
-                                                    },
+                                                    "destination": "Battlefield",
                                                     "filter": {
                                                       "type": "HasCardType",
-                                                      "value": {
-                                                        "type": "Creature"
-                                                      }
+                                                      "value": "Creature"
                                                     },
                                                     "owner": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -291,9 +269,7 @@
                                                     },
                                                     "searcher": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     }
                                                   }
                                                 }
@@ -334,18 +310,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -353,19 +325,13 @@
       "oracleText": "[+1]: Up to one target creature gets +3/+3 and gains trample until end of turn.\n[−2]: Create a 3/3 green Beast creature token. Then if an opponent controls more creatures than you, put a loyalty counter on Garruk.\n[−7]: You get an emblem with \"At the beginning of your end step, you may search your library for a creature card, put it onto the battlefield, then shuffle.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Garruk"
-          }
+          "Garruk"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

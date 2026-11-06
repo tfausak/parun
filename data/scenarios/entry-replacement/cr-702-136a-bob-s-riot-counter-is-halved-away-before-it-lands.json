@@ -62,9 +62,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseRiot",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },

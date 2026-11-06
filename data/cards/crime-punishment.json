@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -40,9 +36,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 ]
@@ -55,15 +49,11 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Enchantment"
-                      }
+                      "value": "Enchantment"
                     }
                   ]
                 },
@@ -83,9 +73,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     },
@@ -98,18 +86,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -134,33 +118,23 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Artifact"
-                                  }
+                                  "value": "Artifact"
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Enchantment"
-                                  }
+                                  "value": "Enchantment"
                                 }
                               ]
                             },
                             {
                               "type": "Measures",
                               "value": {
-                                "comparison": {
-                                  "type": "Exactly"
-                                },
-                                "measure": {
-                                  "type": "ManaValue"
-                                },
+                                "comparison": "Exactly",
+                                "measure": "ManaValue",
                                 "operand": {
                                   "type": "AmountInSlot",
                                   "value": "X"
@@ -170,9 +144,7 @@
                           ]
                         }
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -183,9 +155,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

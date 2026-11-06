@@ -9,23 +9,17 @@
               "mana": [
                 {
                   "type": "Phyrexian",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               ]
             }
           },
-          "scope": {
-            "type": "ControllerAndPlaneswalkers"
-          },
+          "scope": "ControllerAndPlaneswalkers",
           "subject": {
             "type": "Matching",
             "value": {
               "type": "HasCardType",
-              "value": {
-                "type": "Creature"
-              }
+              "value": "Creature"
             }
           }
         }
@@ -37,24 +31,18 @@
         },
         {
           "type": "Phyrexian",
-          "value": {
-            "type": "White"
-          }
+          "value": "White"
         },
         {
           "type": "Phyrexian",
-          "value": {
-            "type": "White"
-          }
+          "value": "White"
         }
       ],
       "name": "Norn's Annex",
       "oracleText": "({W/P} can be paid with either {W} or 2 life.)\nCreatures can't attack you or planeswalkers you control unless their controller pays {W/P} for each of those creatures.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

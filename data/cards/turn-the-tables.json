@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -43,9 +39,7 @@
                         "type": "InSlot",
                         "value": "you"
                       },
-                      "kind": {
-                        "type": "Combat"
-                      },
+                      "kind": "Combat",
                       "to": {
                         "type": "InSlot",
                         "value": "target"
@@ -70,9 +64,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

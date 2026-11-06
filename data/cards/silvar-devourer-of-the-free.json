@@ -14,9 +14,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Human"
-                    }
+                    "value": "Human"
                   }
                 }
               }
@@ -89,18 +87,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -116,22 +110,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          },
-          {
-            "type": "Nightmare"
-          }
+          "Cat",
+          "Nightmare"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

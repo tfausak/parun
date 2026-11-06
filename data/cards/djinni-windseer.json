@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -59,9 +57,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "AtLeast"
-                            },
+                            "comparison": "AtLeast",
                             "measured": {
                               "type": "InSlot",
                               "value": "result"
@@ -75,9 +71,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "AtMost"
-                            },
+                            "comparison": "AtMost",
                             "measured": {
                               "type": "InSlot",
                               "value": "result"
@@ -96,9 +90,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -115,9 +107,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "AtLeast"
-                            },
+                            "comparison": "AtLeast",
                             "measured": {
                               "type": "InSlot",
                               "value": "result"
@@ -131,9 +121,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "AtMost"
-                            },
+                            "comparison": "AtMost",
                             "measured": {
                               "type": "InSlot",
                               "value": "result"
@@ -152,9 +140,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -168,9 +154,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "InSlot",
                           "value": "result"
@@ -187,9 +171,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -207,14 +189,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Djinn"
-          }
+          "Djinn"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

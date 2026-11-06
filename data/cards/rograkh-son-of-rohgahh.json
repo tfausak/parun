@@ -2,9 +2,7 @@
   "faces": [
     {
       "colorIndicator": [
-        {
-          "type": "Red"
-        }
+        "Red"
       ],
       "keywords": [
         {
@@ -33,22 +31,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Kobold"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Kobold",
+          "Warrior"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

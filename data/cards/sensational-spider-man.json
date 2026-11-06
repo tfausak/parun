@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -117,9 +113,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "InSlot",
@@ -134,9 +128,7 @@
                   "target": {
                     "filter": {
                       "type": "ControlledByRole",
-                      "value": {
-                        "type": "Defending"
-                      }
+                      "value": "Defending"
                     },
                     "pool": {
                       "type": "Creatures"
@@ -150,25 +142,15 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hero"
-          },
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Spider"
-          }
+          "Hero",
+          "Human",
+          "Spider"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

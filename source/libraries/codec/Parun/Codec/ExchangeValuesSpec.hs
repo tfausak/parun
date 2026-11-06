@@ -24,7 +24,7 @@ spec s = Spec.describe s "Parun.Codec.ExchangeValues" $ do
             ExchangeValues.duration = Duration.Indefinite
           }
       )
-      " {\"one\":{\"type\":\"LifeTotal\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"other\":{\"type\":\"Toughness\",\"value\":{\"type\":\"InSlot\",\"value\":\"self\"}}} "
+      " {\"one\":{\"type\":\"LifeTotal\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}},\"other\":{\"type\":\"Toughness\",\"value\":{\"type\":\"InSlot\",\"value\":\"self\"}}} "
   Spec.it s "with a duration" $
     Common.assertCodec
       s

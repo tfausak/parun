@@ -40,35 +40,25 @@
                                       "value": [
                                         {
                                           "type": "HasCardType",
-                                          "value": {
-                                            "type": "Artifact"
-                                          }
+                                          "value": "Artifact"
                                         },
                                         {
                                           "type": "HasCardType",
-                                          "value": {
-                                            "type": "Creature"
-                                          }
+                                          "value": "Creature"
                                         }
                                       ]
                                     },
                                     {
                                       "type": "HasSubtype",
-                                      "value": {
-                                        "type": "Vehicle"
-                                      }
+                                      "value": "Vehicle"
                                     }
                                   ]
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -99,27 +89,19 @@
                       "type": "PlusOnePlusOne"
                     }
                   },
-                  "spread": {
-                    "type": "FromAmong"
-                  },
+                  "spread": "FromAmong",
                   "whichPermanent": {
                     "type": "And",
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Artifact"
-                        }
+                        "value": "Artifact"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       }
                     ]
@@ -145,9 +127,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -186,25 +166,15 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hero"
-          },
-          {
-            "type": "Spider"
-          }
+          "Hero",
+          "Spider"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

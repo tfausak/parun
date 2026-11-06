@@ -13,9 +13,7 @@
         },
         {
           "type": "Phyrexian",
-          "value": {
-            "type": "Red"
-          }
+          "value": "Red"
         }
       ],
       "name": "Slash Panther",
@@ -30,20 +28,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Cat",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

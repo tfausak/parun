@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -35,17 +31,11 @@
               "from": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               },
-              "limit": {
-                "type": "OnceEachOfYourTurns"
-              },
+              "limit": "OnceEachOfYourTurns",
               "matching": {
                 "type": "And",
                 "value": [
@@ -54,42 +44,30 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       },
                       {
                         "type": "Or",
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Artifact"
-                            }
+                            "value": "Artifact"
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Battle"
-                            }
+                            "value": "Battle"
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Enchantment"
-                            }
+                            "value": "Enchantment"
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Planeswalker"
-                            }
+                            "value": "Planeswalker"
                           }
                         ]
                       }
@@ -100,29 +78,21 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Artifact"
-                        }
+                        "value": "Artifact"
                       },
                       {
                         "type": "HasSupertype",
-                        "value": {
-                          "type": "Legendary"
-                        }
+                        "value": "Legendary"
                       },
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Saga"
-                        }
+                        "value": "Saga"
                       }
                     ]
                   }
                 ]
               },
-              "verb": {
-                "type": "Play"
-              }
+              "verb": "Play"
             }
           },
           "scope": {
@@ -151,9 +121,7 @@
                   "effect": {
                     "type": "ZoneChangeR",
                     "value": {
-                      "destination": {
-                        "type": "Exile"
-                      },
+                      "destination": "Exile",
                       "matching": {
                         "whatObject": {
                           "type": "IsSource"
@@ -188,9 +156,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -208,22 +174,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Doctor"
-          },
-          {
-            "type": "TimeLord"
-          }
+          "Doctor",
+          "TimeLord"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

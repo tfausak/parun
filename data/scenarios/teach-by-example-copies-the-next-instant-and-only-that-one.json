@@ -100,9 +100,7 @@
           "prompt": "AnnounceHybridHalf",
           "with": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       }

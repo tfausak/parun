@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -31,9 +29,7 @@
                         "type": "InSlot",
                         "value": "artifact"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -43,9 +39,7 @@
               "artifact": {
                 "filter": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Artifact"
-                  }
+                  "value": "Artifact"
                 },
                 "pool": {
                   "type": "Permanents"
@@ -64,9 +58,7 @@
                         "type": "InSlot",
                         "value": "enchantment"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -76,9 +68,7 @@
               "enchantment": {
                 "filter": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Enchantment"
-                  }
+                  "value": "Enchantment"
                 },
                 "pool": {
                   "type": "Permanents"
@@ -97,9 +87,7 @@
                         "type": "InSlot",
                         "value": "graveyardCard"
                       },
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   }
                 ]
@@ -123,9 +111,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

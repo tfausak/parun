@@ -9,7 +9,7 @@
           { "card": "Swamp", "label": "s2", "ready": true } ],
         "hand": [ { "card": "Doom Blade", "label": "blade" } ] },
       { "name": "bob",
-        "battlefield": [ { "card": "Goblin Piker", "label": "piker", "faceDown": { "type": "Manifested" } } ] }
+        "battlefield": [ { "card": "Goblin Piker", "label": "piker", "faceDown": "Manifested" } ] }
     ],
     "active": "alice",
     "step": "PrecombatMain"

@@ -33,17 +33,11 @@
                           "effect": {
                             "type": "DestructionR",
                             "value": {
-                              "rewrite": {
-                                "type": "Regenerate"
-                              }
+                              "rewrite": "Regenerate"
                             }
                           },
-                          "origin": {
-                            "type": "Other"
-                          },
-                          "uses": {
-                            "type": "Once"
-                          }
+                          "origin": "Other",
+                          "uses": "Once"
                         }
                       }
                     ]
@@ -63,9 +57,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -86,17 +78,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -122,21 +110,15 @@
                               },
                               "filter": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               "scope": {
                                 "type": "InHistory",
                                 "value": {
                                   "type": "MovedBetween",
                                   "value": {
-                                    "from": {
-                                      "type": "Battlefield"
-                                    },
-                                    "to": {
-                                      "type": "Graveyard"
-                                    }
+                                    "from": "Battlefield",
+                                    "to": "Graveyard"
                                   }
                                 }
                               }
@@ -158,14 +140,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Zombie"
-          }
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

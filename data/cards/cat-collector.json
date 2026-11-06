@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -73,9 +71,7 @@
                                                   "value": {
                                                     "player": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -94,14 +90,10 @@
                                 "name": "Food Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Food"
-                                    }
+                                    "Food"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -124,30 +116,20 @@
           "condition": {
             "type": "LifeChanges",
             "value": {
-              "direction": {
-                "type": "Gained"
-              },
-              "frequency": {
-                "type": "FirstTimeEachTurn"
-              },
-              "player": {
-                "type": "You"
-              }
+              "direction": "Gained",
+              "frequency": "FirstTimeEachTurn",
+              "player": "You"
             }
           },
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "Exactly"
-              },
+              "comparison": "Exactly",
               "measured": {
                 "type": "IsActivePlayer",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -169,9 +151,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  }
+                                  "White"
                                 ],
                                 "name": "Cat Token",
                                 "power": {
@@ -184,14 +164,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Cat"
-                                    }
+                                    "Cat"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -213,17 +189,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Citizen"
-          },
-          {
-            "type": "Human"
-          }
+          "Citizen",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

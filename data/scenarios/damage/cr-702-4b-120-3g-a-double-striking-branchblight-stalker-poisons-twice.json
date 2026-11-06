@@ -100,9 +100,7 @@
       "check": {
         "PlayerCounters": {
           "player": "bob",
-          "kind": {
-            "type": "Poison"
-          },
+          "kind": "Poison",
           "count": 4
         }
       }

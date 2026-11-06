@@ -19,9 +19,7 @@
           {
             "card": "Ainok Tracker",
             "label": "mine",
-            "faceDown": {
-              "type": "Manifested"
-            }
+            "faceDown": "Manifested"
           }
         ],
         "hand": [
@@ -46,9 +44,7 @@
           {
             "card": "Thragtusk",
             "label": "victim",
-            "faceDown": {
-              "type": "Manifested"
-            }
+            "faceDown": "Manifested"
           }
         ],
         "library": [

@@ -30,9 +30,7 @@
                           },
                           "modification": {
                             "type": "RemoveSupertype",
-                            "value": {
-                              "type": "Snow"
-                            }
+                            "value": "Snow"
                           },
                           "ref": {
                             "type": "InSlot",
@@ -50,15 +48,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Land"
-                          }
+                          "value": "Land"
                         },
                         {
                           "type": "HasSupertype",
-                          "value": {
-                            "type": "Snow"
-                          }
+                          "value": "Snow"
                         }
                       ]
                     },
@@ -99,9 +93,7 @@
                           },
                           "modification": {
                             "type": "AddSupertype",
-                            "value": {
-                              "type": "Snow"
-                            }
+                            "value": "Snow"
                           },
                           "ref": {
                             "type": "InSlot",
@@ -119,23 +111,17 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Land"
-                          }
+                          "value": "Land"
                         },
                         {
                           "type": "HasSupertype",
-                          "value": {
-                            "type": "Basic"
-                          }
+                          "value": "Basic"
                         },
                         {
                           "type": "Not",
                           "value": {
                             "type": "HasSupertype",
-                            "value": {
-                              "type": "Snow"
-                            }
+                            "value": "Snow"
                           }
                         }
                       ]
@@ -160,9 +146,7 @@
       "oracleText": "{2}, {T}: Target snow land is no longer snow.\n{2}, {T}: Target nonsnow basic land becomes snow.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

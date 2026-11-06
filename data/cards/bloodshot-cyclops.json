@@ -17,9 +17,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               }
@@ -42,9 +40,7 @@
                                 "value": {
                                   "quantity": {
                                     "type": "Measure",
-                                    "value": {
-                                      "type": "Power"
-                                    }
+                                    "value": "Power"
                                   },
                                   "slot": "thatSacrificedPermanent"
                                 }
@@ -81,9 +77,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -99,17 +93,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cyclops"
-          },
-          {
-            "type": "Giant"
-          }
+          "Cyclops",
+          "Giant"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

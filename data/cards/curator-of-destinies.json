@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -67,9 +63,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -96,16 +90,12 @@
                               },
                               "pileChooser": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "Opponent"
-                                }
+                                "value": "Opponent"
                               },
                               "slot": "looked"
                             }
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -119,9 +109,7 @@
                             "type": "InSlot",
                             "value": "looked"
                           },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       }
                     ]
@@ -134,14 +122,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Sphinx"
-          }
+          "Sphinx"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

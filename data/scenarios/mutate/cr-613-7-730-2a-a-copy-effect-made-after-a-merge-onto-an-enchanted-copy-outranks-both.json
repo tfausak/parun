@@ -49,8 +49,8 @@
           "targets": ["$doppelganger"],
           "cost": [
             { "type": "Generic", "value": 2 },
-            { "type": "OfType", "value": { "type": "Colored", "value": { "type": "White" } } },
-            { "type": "OfType", "value": { "type": "Colored", "value": { "type": "White" } } }
+            { "type": "OfType", "value": { "type": "Colored", "value": "White" } },
+            { "type": "OfType", "value": { "type": "Colored", "value": "White" } }
           ],
           "mana": ["$plains-1", "$plains-2", "$plains-3", "$plains-4", null]
         }

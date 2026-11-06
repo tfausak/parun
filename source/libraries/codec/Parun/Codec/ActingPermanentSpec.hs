@@ -21,6 +21,6 @@ spec s = Spec.describe s "Parun.Codec.ActingPermanent" $ do
       s
       ActingPermanent.codec
       (ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You))
-      " {\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
+      " {\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActingPermanent.codec

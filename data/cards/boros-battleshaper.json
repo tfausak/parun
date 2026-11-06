@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -42,17 +38,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "BeginningOfCombat"
-                }
+                "value": "BeginningOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -121,9 +113,7 @@
                           "duration": {
                             "type": "UntilEndOfCombat"
                           },
-                          "what": {
-                            "type": "Block"
-                          }
+                          "what": "Block"
                         }
                       }
                     ]
@@ -162,17 +152,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Minotaur"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Minotaur",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

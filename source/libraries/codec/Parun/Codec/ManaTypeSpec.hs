@@ -13,7 +13,7 @@ spec s = Spec.describe s "Parun.Codec.ManaType" $ do
       s
       ManaType.codec
       (ManaType.Colored Color.Red)
-      " {\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}} "
+      " {\"type\":\"Colored\",\"value\":\"Red\"} "
   Spec.it s "Colorless" $
     Common.assertCodec
       s

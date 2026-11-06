@@ -7,15 +7,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             }
           }
         }
@@ -31,30 +27,22 @@
           "effect": {
             "type": "ZoneChangeR",
             "value": {
-              "destination": {
-                "type": "Exile"
-              },
+              "destination": "Exile",
               "matching": {
                 "whatObject": {
                   "type": "Or",
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Instant"
-                      }
+                      "value": "Instant"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Sorcery"
-                      }
+                      "value": "Sorcery"
                     }
                   ]
                 },
-                "whenDestination": {
-                  "type": "Graveyard"
-                }
+                "whenDestination": "Graveyard"
               }
             }
           }
@@ -66,17 +54,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dryad"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Dryad",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

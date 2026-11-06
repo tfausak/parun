@@ -15,16 +15,12 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   }
                 }
               ]
             },
-            "variant": {
-              "type": "Mega"
-            }
+            "variant": "Mega"
           }
         }
       ],
@@ -37,18 +33,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -64,17 +56,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ogre"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Ogre",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

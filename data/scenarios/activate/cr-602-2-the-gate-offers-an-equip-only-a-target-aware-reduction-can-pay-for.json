@@ -71,9 +71,7 @@
       "do": {
         "Answer": {
           "prompt": "ReverseManaAbilities",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },

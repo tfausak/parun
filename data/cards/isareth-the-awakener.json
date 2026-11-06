@@ -34,9 +34,7 @@
                             ]
                           },
                           "slot": "returned",
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       },
                       {
@@ -48,9 +46,7 @@
                           "effect": {
                             "type": "ZoneChangeR",
                             "value": {
-                              "destination": {
-                                "type": "Exile"
-                              },
+                              "destination": "Exile",
                               "matching": {
                                 "whatObject": {
                                   "type": "And",
@@ -61,21 +57,15 @@
                                     },
                                     {
                                       "type": "IsInZone",
-                                      "value": {
-                                        "type": "Battlefield"
-                                      }
+                                      "value": "Battlefield"
                                     }
                                   ]
                                 }
                               }
                             }
                           },
-                          "origin": {
-                            "type": "Other"
-                          },
-                          "uses": {
-                            "type": "Unlimited"
-                          }
+                          "origin": "Other",
+                          "uses": "Unlimited"
                         }
                       }
                     ]
@@ -92,19 +82,13 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "Measures",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
-                            "measure": {
-                              "type": "ManaValue"
-                            },
+                            "comparison": "Exactly",
+                            "measure": "ManaValue",
                             "operand": {
                               "type": "EnclosingAmount"
                             }
@@ -142,18 +126,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -200,9 +180,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "mana": [
                           {
@@ -228,22 +206,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

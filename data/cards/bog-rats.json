@@ -13,9 +13,7 @@
             },
             "blockers": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Wall"
-              }
+              "value": "Wall"
             }
           }
         }
@@ -25,9 +23,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -43,14 +39,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Rat"
-          }
+          "Rat"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

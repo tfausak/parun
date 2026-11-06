@@ -47,7 +47,7 @@ spec s = Spec.describe s "Parun.Codec.OutsideObject" $ do
             OutsideObject.cards = card (PrintingId.MkPrintingId 1) Nothing NonEmpty.:| []
           }
       )
-      " {\"owner\":0,\"printing\":1,\"facing\":{\"type\":\"FaceDown\",\"value\":{\"reason\":{\"type\":\"Manifested\"},\"listed\":{}}},\"cards\":[{\"printing\":1}]} "
+      " {\"owner\":0,\"printing\":1,\"facing\":{\"type\":\"FaceDown\",\"value\":{\"reason\":\"Manifested\",\"listed\":{}}},\"cards\":[{\"printing\":1}]} "
   -- CR 712.21 / 712.8g: a melded permanent, offered by its combined face and
   -- bringing both cards.
   Spec.it s "MkOutsideObject melded" $

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -35,9 +33,7 @@
                   }
                 ],
                 "payGate": {
-                  "branch": {
-                    "type": "IfNotPaid"
-                  },
+                  "branch": "IfNotPaid",
                   "cost": {
                     "mana": [
                       {
@@ -49,12 +45,8 @@
                   "payer": {
                     "type": "HolderOfBound",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "hop": {
-                        "type": "Itself"
-                      },
+                      "holder": "Controller",
+                      "hop": "Itself",
                       "slot": "spell"
                     }
                   }
@@ -65,9 +57,7 @@
                   {
                     "type": "Designate",
                     "value": {
-                      "designation": {
-                        "type": "Suspected"
-                      },
+                      "designation": "Suspected",
                       "slot": "creature"
                     }
                   }
@@ -98,9 +88,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

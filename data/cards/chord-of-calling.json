@@ -14,27 +14,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -49,27 +43,19 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "Battlefield"
-                      },
+                      "destination": "Battlefield",
                       "filter": {
                         "type": "And",
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "Measures",
                             "value": {
-                              "comparison": {
-                                "type": "AtMost"
-                              },
-                              "measure": {
-                                "type": "ManaValue"
-                              },
+                              "comparison": "AtMost",
+                              "measure": "ManaValue",
                               "operand": {
                                 "type": "AmountInSlot",
                                 "value": "X"
@@ -80,9 +66,7 @@
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -90,9 +74,7 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -104,9 +86,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

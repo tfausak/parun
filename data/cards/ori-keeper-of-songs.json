@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -38,20 +36,14 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "HasPlayerDesignation",
                 "value": {
-                  "designation": {
-                    "type": "EnduringStory"
-                  },
+                  "designation": "EnduringStory",
                   "player": {
                     "type": "Relative",
-                    "value": {
-                      "type": "You"
-                    }
+                    "value": "You"
                   }
                 }
               },
@@ -90,22 +82,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Bard"
-          },
-          {
-            "type": "Dwarf"
-          }
+          "Bard",
+          "Dwarf"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -10,7 +10,7 @@
         "hand": [ { "card": "Unsummon", "label": "unsummon" } ],
         "library": [ { "card": "Swamp" }, { "card": "Swamp" }, { "card": "Swamp" } ] },
       { "name": "bob",
-        "battlefield": [ { "card": "Goblin Piker", "label": "piker", "faceDown": { "type": "Manifested" } } ] }
+        "battlefield": [ { "card": "Goblin Piker", "label": "piker", "faceDown": "Manifested" } ] }
     ],
     "active": "alice",
     "step": "PrecombatMain"

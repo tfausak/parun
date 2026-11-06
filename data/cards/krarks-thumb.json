@@ -14,9 +14,7 @@
           "effect": {
             "type": "InstructionR",
             "value": {
-              "instruction": {
-                "type": "FlipCoin"
-              },
+              "instruction": "FlipCoin",
               "rewrite": {
                 "type": "Scaled",
                 "value": {
@@ -33,14 +31,10 @@
       ],
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

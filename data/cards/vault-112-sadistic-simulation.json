@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -37,9 +33,7 @@
               },
               "motion": {
                 "type": "Put",
-                "value": {
-                  "type": "AnyPlayer"
-                }
+                "value": "AnyPlayer"
               },
               "threshold": 1
             }
@@ -78,14 +72,10 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Energy"
-                          },
+                          "kind": "Energy",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -123,9 +113,7 @@
               },
               "motion": {
                 "type": "Put",
-                "value": {
-                  "type": "AnyPlayer"
-                }
+                "value": "AnyPlayer"
               },
               "threshold": 2
             }
@@ -164,14 +152,10 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Energy"
-                          },
+                          "kind": "Energy",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -209,9 +193,7 @@
               },
               "motion": {
                 "type": "Put",
-                "value": {
-                  "type": "AnyPlayer"
-                }
+                "value": "AnyPlayer"
               },
               "threshold": 3
             }
@@ -232,9 +214,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "InSlot",
                           "value": "paid"
@@ -250,9 +230,7 @@
                         "type": "Shuffle",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       },
                       {
@@ -267,16 +245,12 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -289,9 +263,7 @@
                             "type": "InSlot",
                             "value": "exiled"
                           },
-                          "verb": {
-                            "type": "Play"
-                          }
+                          "verb": "Play"
                         }
                       }
                     ]
@@ -304,14 +276,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Saga"
-          }
+          "Saga"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -27,9 +27,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -63,9 +61,7 @@
                             "value": {
                               "chooser": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "Opponent"
-                                }
+                                "value": "Opponent"
                               },
                               "filter": {
                                 "type": "And",
@@ -73,12 +69,8 @@
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "You"
                                     }
                                   },
                                   {
@@ -91,9 +83,7 @@
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -130,9 +120,7 @@
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -145,17 +133,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Crab"
-          },
-          {
-            "type": "Nightmare"
-          }
+          "Crab",
+          "Nightmare"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

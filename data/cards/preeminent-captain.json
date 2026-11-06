@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -57,23 +55,17 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Soldier"
-                                    }
+                                    "value": "Soldier"
                                   }
                                 ]
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -81,13 +73,9 @@
                             "attacking": {
                               "type": "Chosen"
                             },
-                            "tapped": {
-                              "type": "Tapped"
-                            }
+                            "tapped": "Tapped"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ],
@@ -103,17 +91,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Kithkin"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Kithkin",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

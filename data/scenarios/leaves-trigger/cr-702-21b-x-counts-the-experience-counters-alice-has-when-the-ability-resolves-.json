@@ -6,9 +6,7 @@
         "name": "alice",
         "counters": [
           {
-            "key": {
-              "type": "Experience"
-            },
+            "key": "Experience",
             "value": 1
           }
         ],
@@ -119,9 +117,7 @@
       "check": {
         "PlayerCounters": {
           "player": "alice",
-          "kind": {
-            "type": "Experience"
-          },
+          "kind": "Experience",
           "count": 1
         }
       }
@@ -195,9 +191,7 @@
       "check": {
         "PlayerCounters": {
           "player": "alice",
-          "kind": {
-            "type": "Experience"
-          },
+          "kind": "Experience",
           "count": 2
         }
       }

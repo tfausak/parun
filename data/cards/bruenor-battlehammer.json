@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -35,17 +31,13 @@
               "cost": [],
               "grantedBy": {
                 "type": "OfFamily",
-                "value": {
-                  "type": "Equip"
-                }
+                "value": "Equip"
               },
               "onlyFirst": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -68,19 +60,13 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -105,9 +91,7 @@
                           "value": [
                             {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Equipment"
-                              }
+                              "value": "Equipment"
                             },
                             {
                               "type": "IsAttachedTo",
@@ -122,13 +106,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Battlefield"
-                            }
+                            "zone": "Battlefield"
                           }
                         }
                       }
@@ -150,22 +130,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dwarf"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Dwarf",
+          "Warrior"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

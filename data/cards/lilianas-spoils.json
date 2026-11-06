@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -56,9 +54,7 @@
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       },
@@ -77,9 +73,7 @@
                         "value": {
                           "filter": {
                             "type": "HasColor",
-                            "value": {
-                              "type": "Black"
-                            }
+                            "value": "Black"
                           },
                           "slot": "looked"
                         }
@@ -94,9 +88,7 @@
                         "type": "InSlot",
                         "value": "taken"
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ],
@@ -111,17 +103,13 @@
                     "value": {
                       "placement": {
                         "type": "RandomOrder",
-                        "value": {
-                          "type": "Bottom"
-                        }
+                        "value": "Bottom"
                       },
                       "ref": {
                         "type": "InSlot",
                         "value": "looked"
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -131,9 +119,7 @@
               "target": {
                 "filter": {
                   "type": "IsPlayer",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
                 "pool": {
                   "type": "Players"
@@ -145,9 +131,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

@@ -36,8 +36,8 @@
   },
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$cutpurse", "mana": ["$island-1", "$island-2", "$island-3"] } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "ChooseToPay": { "decision": { "type": "Pays" }, "mana": ["$forest-1", null] } }, "source": "Rishadan Cutpurse" },
-    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "ChooseToPay": { "decision": { "type": "Pays" }, "mana": ["$swamp-1", null] } }, "source": "Rishadan Cutpurse" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "ChooseToPay": { "decision": "Pays", "mana": ["$forest-1", null] } }, "source": "Rishadan Cutpurse" },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "ChooseToPay": { "decision": "Pays", "mana": ["$swamp-1", null] } }, "source": "Rishadan Cutpurse" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$forest-1", "tapped": true } } },

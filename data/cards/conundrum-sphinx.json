@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -60,9 +56,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           },
                           "restriction": {
                             "type": "And",
@@ -86,9 +80,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "AnyPlayer"
-                                }
+                                "value": "AnyPlayer"
                               }
                             }
                           },
@@ -107,16 +99,12 @@
                             "value": {
                               "filter": {
                                 "type": "HasChosenName",
-                                "value": {
-                                  "type": "CandidateOwner"
-                                }
+                                "value": "CandidateOwner"
                               },
                               "slot": "revealed"
                             }
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -130,9 +118,7 @@
                             "type": "InSlot",
                             "value": "revealed"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -145,14 +131,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Sphinx"
-          }
+          "Sphinx"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

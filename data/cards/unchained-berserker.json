@@ -7,9 +7,7 @@
           "value": {
             "quality": {
               "type": "HasColor",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             },
             "spares": null
           }
@@ -24,9 +22,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -47,9 +43,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -72,13 +66,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -112,17 +102,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Berserker"
-          },
-          {
-            "type": "Human"
-          }
+          "Berserker",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -22,9 +22,7 @@
                         "value": {
                           "scope": {
                             "type": "InRole",
-                            "value": {
-                              "type": "Active"
-                            }
+                            "value": "Active"
                           },
                           "slot": "namedPlayer"
                         }
@@ -46,25 +44,19 @@
                                     "value": [
                                       {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Creature"
-                                        }
+                                        "value": "Creature"
                                       },
                                       {
                                         "type": "Not",
                                         "value": {
                                           "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Wall"
-                                          }
+                                          "value": "Wall"
                                         }
                                       },
                                       {
                                         "type": "HeldByBound",
                                         "value": {
-                                          "holder": {
-                                            "type": "Controller"
-                                          },
+                                          "holder": "Controller",
                                           "slot": "namedPlayer"
                                         }
                                       }
@@ -75,13 +67,9 @@
                                     "value": {
                                       "player": {
                                         "type": "Relative",
-                                        "value": {
-                                          "type": "AnyPlayer"
-                                        }
+                                        "value": "AnyPlayer"
                                       },
-                                      "zone": {
-                                        "type": "Battlefield"
-                                      }
+                                      "zone": "Battlefield"
                                     }
                                   }
                                 }
@@ -92,25 +80,19 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "Not",
                                   "value": {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Wall"
-                                    }
+                                    "value": "Wall"
                                   }
                                 },
                                 {
                                   "type": "HeldByBound",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
+                                    "holder": "Controller",
                                     "slot": "namedPlayer"
                                   }
                                 }
@@ -130,25 +112,19 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "Not",
                                   "value": {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Wall"
-                                    }
+                                    "value": "Wall"
                                   }
                                 },
                                 {
                                   "type": "HeldByBound",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
+                                    "holder": "Controller",
                                     "slot": "namedPlayer"
                                   }
                                 }
@@ -179,9 +155,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 }
               }
             },
@@ -189,9 +163,7 @@
               "type": "BeforeStep",
               "value": {
                 "type": "Combat",
-                "value": {
-                  "type": "BeginningOfCombat"
-                }
+                "value": "BeginningOfCombat"
               }
             }
           ]
@@ -204,17 +176,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -245,25 +213,19 @@
                                       "value": [
                                         {
                                           "type": "HasCardType",
-                                          "value": {
-                                            "type": "Creature"
-                                          }
+                                          "value": "Creature"
                                         },
                                         {
                                           "type": "Not",
                                           "value": {
                                             "type": "HasSubtype",
-                                            "value": {
-                                              "type": "Wall"
-                                            }
+                                            "value": "Wall"
                                           }
                                         },
                                         {
                                           "type": "HeldByBound",
                                           "value": {
-                                            "holder": {
-                                              "type": "Controller"
-                                            },
+                                            "holder": "Controller",
                                             "slot": "namedPlayer"
                                           }
                                         }
@@ -275,17 +237,13 @@
                                   "type": "Not",
                                   "value": {
                                     "type": "DeclaredThisTurn",
-                                    "value": {
-                                      "type": "Attacker"
-                                    }
+                                    "value": "Attacker"
                                   }
                                 }
                               ]
                             }
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -310,9 +268,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -328,14 +284,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Imp"
-          }
+          "Imp"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

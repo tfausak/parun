@@ -18,14 +18,14 @@ spec s = Spec.describe s "Parun.Codec.EventShape" $ do
       s
       EventShape.codec
       (EventShape.MovedBetween (MovedBetween.MkMovedBetween Zone.Battlefield Zone.Graveyard))
-      " {\"type\":\"MovedBetween\",\"value\":{\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}}} "
+      " {\"type\":\"MovedBetween\",\"value\":{\"from\":\"Battlefield\",\"to\":\"Graveyard\"}} "
   -- CR 603.6c's origin with no destination: a bare Zone.
   Spec.it s "MovedFrom" $
     Common.assertCodec
       s
       EventShape.codec
       (EventShape.MovedFrom Zone.Battlefield)
-      " {\"type\":\"MovedFrom\",\"value\":{\"type\":\"Battlefield\"}} "
+      " {\"type\":\"MovedFrom\",\"value\":\"Battlefield\"} "
   -- CR 712.21e's second half: the destination, and the origins that do not
   -- count. Parun.Codec.CardArrivedInSpec covers the payload's own two shapes;
   -- this case is here for the tag the arm wraps it in.
@@ -34,7 +34,7 @@ spec s = Spec.describe s "Parun.Codec.EventShape" $ do
       s
       EventShape.codec
       (EventShape.CardArrivedIn (CardArrivedIn.MkCardArrivedIn {CardArrivedIn.to = Zone.Graveyard, CardArrivedIn.excluding = Set.singleton Zone.Battlefield}))
-      " {\"type\":\"CardArrivedIn\",\"value\":{\"excluding\":[{\"type\":\"Battlefield\"}],\"to\":{\"type\":\"Graveyard\"}}} "
+      " {\"type\":\"CardArrivedIn\",\"value\":{\"excluding\":[\"Battlefield\"],\"to\":\"Graveyard\"}} "
   -- CR 601.2i's cast: PAYLOADLESS, so the encoded form is the bare tag and a
   -- decoder that demanded a value would reject every card that names it.
   Spec.it s "SpellCast names its window" $
@@ -42,5 +42,5 @@ spec s = Spec.describe s "Parun.Codec.EventShape" $ do
       s
       EventShape.codec
       (EventShape.SpellCast CastWindow.BeforeEvaluated)
-      " {\"type\":\"SpellCast\",\"value\":{\"type\":\"BeforeEvaluated\"}} "
+      " {\"type\":\"SpellCast\",\"value\":\"BeforeEvaluated\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s EventShape.codec

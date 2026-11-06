@@ -15,7 +15,7 @@ spec s = Spec.describe s "Parun.Codec.ManaCost" $ do
       s
       ManaCost.codec
       (ManaCost.MkManaCost [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Red)])
-      " [{\"type\":\"Generic\",\"value\":1},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}}}] "
+      " [{\"type\":\"Generic\",\"value\":1},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Red\"}}] "
   -- CR 118.5a: {0} is a real, payable cost, and ManaCost's empty list IS {0} --
   -- so the empty array has to round-trip, not just a nonempty one.
   Spec.it s "MkManaCost []" $

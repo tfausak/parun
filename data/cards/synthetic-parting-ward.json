@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -30,9 +28,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   },
                   {
@@ -41,16 +37,12 @@
                       "duration": {
                         "type": "UntilEndOfTurn"
                       },
-                      "kind": {
-                        "type": "Combat"
-                      },
+                      "kind": "Combat",
                       "quantity": {
                         "type": "Literal",
                         "value": 2
                       },
-                      "whoRecipient": {
-                        "type": "You"
-                      }
+                      "whoRecipient": "You"
                     }
                   }
                 ]
@@ -68,9 +60,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

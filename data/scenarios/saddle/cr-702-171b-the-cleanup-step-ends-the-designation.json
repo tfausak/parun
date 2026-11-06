@@ -80,9 +80,7 @@
           "of": "Designations",
           "object": "$bridled-bighorn",
           "is": [
-            {
-              "type": "Saddled"
-            }
+            "Saddled"
           ]
         }
       }

@@ -14,7 +14,7 @@ spec s = Spec.describe s "Parun.Codec.PhaseSelector" $ do
       s
       PhaseSelector.codec
       (PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep))
-      " {\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":{\"type\":\"DrawStep\"}}} "
+      " {\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":\"DrawStep\"}} "
   Spec.it s "BeginningPhase" $
     Common.assertCodec
       s

@@ -17,9 +17,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Artifact"
-                    }
+                    "value": "Artifact"
                   }
                 }
               }
@@ -69,18 +67,14 @@
                   "type": "PlayersTurn",
                   "value": {
                     "type": "Relative",
-                    "value": {
-                      "type": "You"
-                    }
+                    "value": "You"
                   }
                 },
                 "window": {
                   "type": "Step",
                   "value": {
                     "type": "Beginning",
-                    "value": {
-                      "type": "Upkeep"
-                    }
+                    "value": "Upkeep"
                   }
                 }
               }
@@ -97,9 +91,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -115,17 +107,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Artificer"
-          },
-          {
-            "type": "Dwarf"
-          }
+          "Artificer",
+          "Dwarf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

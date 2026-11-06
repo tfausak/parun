@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -41,9 +39,7 @@
                       {
                         "type": "Designate",
                         "value": {
-                          "designation": {
-                            "type": "Suspected"
-                          },
+                          "designation": "Suspected",
                           "slot": "self"
                         }
                       },
@@ -54,12 +50,8 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  },
-                                  {
-                                    "type": "Blue"
-                                  }
+                                  "White",
+                                  "Blue"
                                 ],
                                 "name": "Detective Token",
                                 "power": {
@@ -72,14 +64,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Detective"
-                                    }
+                                    "Detective"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -101,17 +89,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Human",
+          "Rogue"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

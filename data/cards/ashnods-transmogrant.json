@@ -45,12 +45,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Artifact"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Artifact",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -68,9 +64,7 @@
                       "type": "Not",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Artifact"
-                        }
+                        "value": "Artifact"
                       }
                     },
                     "pool": {
@@ -93,9 +87,7 @@
       "oracleText": "{T}, Sacrifice this artifact: Put a +1/+1 counter on target nonartifact creature. That creature becomes an artifact in addition to its other types.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

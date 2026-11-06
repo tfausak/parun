@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -51,15 +47,11 @@
                 },
                 {
                   "type": "HasColor",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               ]
             }
@@ -90,16 +82,12 @@
                   "type": "Not",
                   "value": {
                     "type": "HasColor",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   }
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               ]
             }
@@ -127,25 +115,15 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Noble"
-          },
-          {
-            "type": "Phyrexian"
-          },
-          {
-            "type": "Vampire"
-          }
+          "Noble",
+          "Phyrexian",
+          "Vampire"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

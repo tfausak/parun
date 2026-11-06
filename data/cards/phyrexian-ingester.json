@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -44,9 +42,7 @@
                       },
                       "quantity": {
                         "type": "Measure",
-                        "value": {
-                          "type": "Power"
-                        }
+                        "value": "Power"
                       }
                     }
                   }
@@ -61,9 +57,7 @@
                       },
                       "quantity": {
                         "type": "Measure",
-                        "value": {
-                          "type": "Toughness"
-                        }
+                        "value": "Toughness"
                       }
                     }
                   }
@@ -96,9 +90,7 @@
                             "type": "InSlot",
                             "value": "creature"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ],
@@ -127,17 +119,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Beast",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

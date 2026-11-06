@@ -134,9 +134,7 @@
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "White"
-                }
+                "value": "White"
               }
             }
           ],
@@ -195,9 +193,7 @@
           "prompt": "AnnounceHybridHalf",
           "with": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       }
@@ -211,9 +207,7 @@
           "prompt": "AnnounceHybridHalf",
           "with": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       }

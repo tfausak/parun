@@ -38,7 +38,7 @@ spec s = Spec.describe s "Parun.Codec.Anchor" $ do
       s
       codec
       (Anchor.AnyPermanent (Filter.Type.HasCardType CardType.Creature))
-      " {\"type\":\"AnyPermanent\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"AnyPermanent\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
 
 codec :: Codec.Codec (Anchor.Anchor (Filter.Type.Filter Keyword.Type.Keyword))
 codec = Anchor.codec (Filter.codec Keyword.codec)

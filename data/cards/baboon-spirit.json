@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -34,9 +32,7 @@
                             "value": "target"
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -62,12 +58,8 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -89,17 +81,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -113,9 +101,7 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "origin": {
-                            "type": "Exile"
-                          },
+                          "origin": "Exile",
                           "ref": {
                             "type": "InSlot",
                             "value": "exiled"
@@ -125,9 +111,7 @@
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -147,9 +131,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -187,19 +169,13 @@
                     },
                     {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Spirit"
-                      }
+                      "value": "Spirit"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -233,9 +209,7 @@
                                         "type": "Not",
                                         "value": {
                                           "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Spirit"
-                                          }
+                                          "value": "Spirit"
                                         }
                                       }
                                     }
@@ -253,9 +227,7 @@
                                         "type": "Not",
                                         "value": {
                                           "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Spirit"
-                                          }
+                                          "value": "Spirit"
                                         }
                                       }
                                     }
@@ -272,14 +244,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Spirit"
-                                    }
+                                    "Spirit"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -301,17 +269,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Monkey"
-          },
-          {
-            "type": "Spirit"
-          }
+          "Monkey",
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

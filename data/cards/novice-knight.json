@@ -18,15 +18,11 @@
                     "value": [
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Aura"
-                        }
+                        "value": "Aura"
                       },
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Equipment"
-                        }
+                        "value": "Equipment"
                       }
                     ]
                   }
@@ -46,9 +42,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -64,17 +58,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Knight"
-          }
+          "Human",
+          "Knight"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

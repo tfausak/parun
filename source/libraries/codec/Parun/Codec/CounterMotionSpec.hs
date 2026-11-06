@@ -14,7 +14,7 @@ spec s = Spec.describe s "Parun.Codec.CounterMotion" $ do
       s
       CounterMotion.codec
       (CounterMotion.Put PlayerRelation.You)
-      " {\"type\":\"Put\",\"value\":{\"type\":\"You\"}} "
+      " {\"type\":\"Put\",\"value\":\"You\"} "
   Spec.it s "Removed" $
     Common.assertCodec
       s

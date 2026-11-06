@@ -8,17 +8,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "EndOfCombat"
-                }
+                "value": "EndOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -60,9 +56,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -91,9 +85,7 @@
               {
                 "type": "Blocks",
                 "value": {
-                  "role": {
-                    "type": "Blocker"
-                  }
+                  "role": "Blocker"
                 }
               }
             ]
@@ -120,14 +112,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          }
+          "Elemental"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -26,9 +24,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "LessThan"
-                    },
+                    "comparison": "LessThan",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -40,15 +36,11 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Instant"
-                              }
+                              "value": "Instant"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Sorcery"
-                              }
+                              "value": "Sorcery"
                             }
                           ]
                         },
@@ -57,13 +49,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
-                            "zone": {
-                              "type": "Graveyard"
-                            }
+                            "zone": "Graveyard"
                           }
                         }
                       }
@@ -82,9 +70,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 ]
@@ -93,9 +79,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -107,15 +91,11 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Instant"
-                              }
+                              "value": "Instant"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Sorcery"
-                              }
+                              "value": "Sorcery"
                             }
                           ]
                         },
@@ -124,13 +104,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
-                            "zone": {
-                              "type": "Graveyard"
-                            }
+                            "zone": "Graveyard"
                           }
                         }
                       }
@@ -162,9 +138,7 @@
                           }
                         ]
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 ]
@@ -174,9 +148,7 @@
               "target": {
                 "filter": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 "pool": {
                   "type": "CardsInGraveyard",
@@ -194,9 +166,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

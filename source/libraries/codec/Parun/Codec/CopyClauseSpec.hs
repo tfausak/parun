@@ -39,5 +39,5 @@ spec s = Spec.describe s "Parun.Codec.CopyClause" $ do
       s
       (CopyClause.codec Common.text)
       (CopyClause.MkCopyClause (Just (Condition.Compares (Compares.MkCompares (Quantity.HasDesignation Designation.Embalmed) Comparison.AtLeast (Quantity.Literal 1)))) [CopyException.SetColors (Set.singleton Color.White)] Nothing)
-      " {\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"HasDesignation\",\"value\":{\"type\":\"Embalmed\"}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"exceptions\":[{\"type\":\"SetColors\",\"value\":[{\"type\":\"White\"}]}]} "
+      " {\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"HasDesignation\",\"value\":\"Embalmed\"},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"exceptions\":[{\"type\":\"SetColors\",\"value\":[\"White\"]}]} "
   Spec.it s "has a schema" $ Common.assertHasSchema s (CopyClause.codec Common.text)

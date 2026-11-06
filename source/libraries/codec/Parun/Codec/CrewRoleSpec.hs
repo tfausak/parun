@@ -9,7 +9,7 @@ import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.CrewRole" $ do
   Spec.it s "Vehicle" $
-    Common.assertCodec s CrewRole.codec (CrewRole.Vehicle TriggerFrequency.FirstTimeEachTurn) " {\"type\":\"Vehicle\",\"value\":{\"type\":\"FirstTimeEachTurn\"}} "
+    Common.assertCodec s CrewRole.codec (CrewRole.Vehicle TriggerFrequency.FirstTimeEachTurn) " {\"type\":\"Vehicle\",\"value\":\"FirstTimeEachTurn\"} "
   Spec.it s "Crewer" $
     Common.assertCodec s CrewRole.codec CrewRole.Crewer " {\"type\":\"Crewer\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CrewRole.codec

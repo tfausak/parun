@@ -93,7 +93,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           Nothing
           Nothing
       )
-      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Attach\",\"value\":\"target\"}]}],\"targetSlots\":{\"target\":{\"pool\":{\"type\":\"Creatures\"},\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}}}}]},\"restrictions\":[{\"type\":\"SorcerySpeed\"}]} "
+      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Attach\",\"value\":\"target\"}]}],\"targetSlots\":{\"target\":{\"pool\":{\"type\":\"Creatures\"},\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}}}}]},\"restrictions\":[{\"type\":\"SorcerySpeed\"}]} "
   -- CR 602.5's conjunction, in the JSON: two clauses in printed order, which is
   -- the shape a single tagged object could not hold.
   Spec.it s "MkActivatedAbility, Kongming's Contraptions' two clauses" $
@@ -115,7 +115,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           Nothing
           Nothing
       )
-      " {\"cost\":{\"mana\":null,\"components\":[{\"type\":\"TapThis\"}]},\"modal\":{\"modes\":[{}]},\"restrictions\":[{\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"DeclareAttackers\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}},{\"type\":\"AttackedThisStep\"}]} "
+      " {\"cost\":{\"mana\":null,\"components\":[{\"type\":\"TapThis\"}]},\"modal\":{\"modes\":[{}]},\"restrictions\":[{\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":\"DeclareAttackers\"}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}}},{\"type\":\"AttackedThisStep\"}]} "
   -- CR 702.6a: the stamp Parun.Engine.Keyword.mintedBy writes, which is the one
   -- key no card in data/cards/ carries -- an ability already on the stack has to
   -- round-trip it, since Parun.Codec.GameState reaches this codec through

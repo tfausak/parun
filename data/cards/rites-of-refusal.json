@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -38,9 +36,7 @@
                         "discarded": "discarded",
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     }
@@ -60,9 +56,7 @@
                   }
                 ],
                 "payGate": {
-                  "branch": {
-                    "type": "IfNotPaid"
-                  },
+                  "branch": "IfNotPaid",
                   "cost": {
                     "mana": [
                       {
@@ -74,12 +68,8 @@
                   "payer": {
                     "type": "HolderOfBound",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "hop": {
-                        "type": "Itself"
-                      },
+                      "holder": "Controller",
+                      "hop": "Itself",
                       "slot": "spell"
                     }
                   },
@@ -102,9 +92,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

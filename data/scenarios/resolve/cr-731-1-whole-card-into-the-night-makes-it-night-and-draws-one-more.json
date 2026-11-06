@@ -143,9 +143,7 @@
       "check": {
         "View": {
           "of": "Daytime",
-          "is": {
-            "type": "Night"
-          }
+          "is": "Night"
         }
       }
     },

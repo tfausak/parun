@@ -11,18 +11,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -50,26 +46,18 @@
                   }
                 }
               },
-              "from": {
-                "type": "Graveyard"
-              },
+              "from": "Graveyard",
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
-              "whose": {
-                "type": "You"
-              }
+              "whose": "You"
             }
           },
-          "limit": {
-            "type": "OncePerTurn"
-          },
+          "limit": "OncePerTurn",
           "modal": {
             "modes": [
               {
@@ -81,9 +69,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -101,17 +87,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Bird"
-          },
-          {
-            "type": "Scout"
-          }
+          "Bird",
+          "Scout"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

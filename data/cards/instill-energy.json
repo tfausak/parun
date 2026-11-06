@@ -34,9 +34,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             },
@@ -52,9 +50,7 @@
           "affected": {
             "type": "Attached"
           },
-          "waives": {
-            "type": "SummoningSickness"
-          }
+          "waives": "SummoningSickness"
         }
       ],
       "enchant": [
@@ -69,9 +65,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -79,14 +73,10 @@
       "oracleText": "Enchant creature\nEnchanted creature can attack as though it had haste.\n{0}: Untap enchanted creature. Activate only during your turn and only once each turn.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

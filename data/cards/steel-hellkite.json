@@ -75,20 +75,14 @@
                                   "type": "Not",
                                   "value": {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Land"
-                                    }
+                                    "value": "Land"
                                   }
                                 },
                                 {
                                   "type": "Measures",
                                   "value": {
-                                    "comparison": {
-                                      "type": "Exactly"
-                                    },
-                                    "measure": {
-                                      "type": "ManaValue"
-                                    },
+                                    "comparison": "Exactly",
+                                    "measure": "ManaValue",
                                     "operand": {
                                       "type": "AmountInSlot",
                                       "value": "X"
@@ -98,26 +92,18 @@
                                 {
                                   "type": "DealtDamageTo",
                                   "value": {
-                                    "dealer": {
-                                      "type": "Source"
-                                    },
-                                    "kind": {
-                                      "type": "Combat"
-                                    },
+                                    "dealer": "Source",
+                                    "kind": "Combat",
                                     "party": {
                                       "type": "HolderOfCandidate",
-                                      "value": {
-                                        "type": "Controller"
-                                      }
+                                      "value": "Controller"
                                     }
                                   }
                                 }
                               ]
                             }
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -157,17 +143,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dragon"
-          }
+          "Dragon"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

@@ -70,15 +70,11 @@
                 "type": "Colorless"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": {
                 "casts": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Artifact"
-                  }
+                  "value": "Artifact"
                 }
               },
               "rider": null,
@@ -89,15 +85,11 @@
                 "type": "Colorless"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": {
                 "casts": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Artifact"
-                  }
+                  "value": "Artifact"
                 }
               },
               "rider": null,
@@ -108,15 +100,11 @@
                 "type": "Colorless"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": {
                 "casts": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Artifact"
-                  }
+                  "value": "Artifact"
                 }
               },
               "rider": null,
@@ -127,9 +115,7 @@
                 "type": "Colorless"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null

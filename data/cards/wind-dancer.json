@@ -64,9 +64,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -82,14 +80,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Faerie"
-          }
+          "Faerie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -16,13 +16,9 @@
             "value": {
               "entrants": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Creature"
               },
-              "triggering": {
-                "type": "NoTrigger"
-              }
+              "triggering": "NoTrigger"
             }
           },
           "scope": {
@@ -32,9 +28,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

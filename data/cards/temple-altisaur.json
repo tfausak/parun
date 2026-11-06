@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -39,19 +37,13 @@
                     },
                     {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Dinosaur"
-                      }
+                      "value": "Dinosaur"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -71,14 +63,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dinosaur"
-          }
+          "Dinosaur"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

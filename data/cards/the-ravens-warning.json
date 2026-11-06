@@ -11,19 +11,13 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   },
                   {
@@ -34,9 +28,7 @@
                   }
                 ]
               },
-              "recipient": {
-                "type": "AnyPlayer"
-              }
+              "recipient": "AnyPlayer"
             }
           },
           "modal": {
@@ -65,9 +57,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -92,18 +82,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -119,9 +105,7 @@
               },
               "motion": {
                 "type": "Put",
-                "value": {
-                  "type": "AnyPlayer"
-                }
+                "value": "AnyPlayer"
               },
               "threshold": 1
             }
@@ -139,9 +123,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Blue"
-                                  }
+                                  "Blue"
                                 ],
                                 "keywords": [
                                   {
@@ -159,14 +141,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Bird"
-                                    }
+                                    "Bird"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -183,9 +161,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -209,9 +185,7 @@
               },
               "motion": {
                 "type": "Put",
-                "value": {
-                  "type": "AnyPlayer"
-                }
+                "value": "AnyPlayer"
               },
               "threshold": 2
             }
@@ -247,9 +221,7 @@
               },
               "motion": {
                 "type": "Put",
-                "value": {
-                  "type": "AnyPlayer"
-                }
+                "value": "AnyPlayer"
               },
               "threshold": 3
             }
@@ -264,9 +236,7 @@
                         "type": "FromOutsideTheGame",
                         "value": {
                           "count": 1,
-                          "destination": {
-                            "type": "LibraryTop"
-                          },
+                          "destination": "LibraryTop",
                           "filter": {
                             "type": "And",
                             "value": []
@@ -288,14 +258,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Saga"
-          }
+          "Saga"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

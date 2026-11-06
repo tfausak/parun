@@ -22,9 +22,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -43,35 +41,23 @@
               "type": "Colors",
               "value": {
                 "colors": [
-                  {
-                    "type": "Black"
-                  }
+                  "Black"
                 ],
-                "mode": {
-                  "type": "Replace"
-                }
+                "mode": "Replace"
               }
             },
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Creature"
-                },
-                "mode": {
-                  "type": "Replace"
-                }
+                "cardType": "Creature",
+                "mode": "Replace"
               }
             },
             {
               "type": "CreatureSubtype",
               "value": {
-                "mode": {
-                  "type": "Replace"
-                },
-                "subtype": {
-                  "type": "Skeleton"
-                }
+                "mode": "Replace",
+                "subtype": "Skeleton"
               }
             },
             {
@@ -92,14 +78,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

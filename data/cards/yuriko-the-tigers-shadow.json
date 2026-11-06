@@ -11,25 +11,19 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Blue"
-                    }
+                    "value": "Blue"
                   }
                 },
                 {
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   }
                 }
               ]
             },
-            "variant": {
-              "type": "Commander"
-            }
+            "variant": "Commander"
           }
         }
       ],
@@ -42,18 +36,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -79,33 +69,23 @@
                   "value": [
                     {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Ninja"
-                      }
+                      "value": "Ninja"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
                 }
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -128,9 +108,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -145,9 +123,7 @@
                             "value": "revealed"
                           },
                           "slot": "put",
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       },
                       {
@@ -155,9 +131,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           },
                           "quantity": {
                             "type": "Count",
@@ -166,9 +140,7 @@
                                 "type": "Total",
                                 "value": {
                                   "type": "Measure",
-                                  "value": {
-                                    "type": "ManaValue"
-                                  }
+                                  "value": "ManaValue"
                                 }
                               },
                               "filter": {
@@ -193,22 +165,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Ninja"
-          }
+          "Human",
+          "Ninja"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

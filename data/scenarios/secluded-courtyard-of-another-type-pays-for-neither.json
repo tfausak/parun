@@ -134,9 +134,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseCreatureType",
-          "with": {
-            "type": "Elf"
-          }
+          "with": "Elf"
         }
       }
     },

@@ -3,10 +3,10 @@
   "note": "Alice pays with four Forests in her first upkeep and takes nothing; she declines in her next and takes 8. Bob's upkeep between asks nothing.",
   "board": {"active": "alice", "step": "Untap", "seats": [{"name": "alice", "battlefield": [{"card": "Force of Nature", "label": "force"}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}, {"card": "Forest", "label": "f4"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [
-    {"turn": 1, "step": "Upkeep", "player": "alice", "source": "$force", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$f1", "$f2", "$f3", "$f4"]}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "source": "$force", "do": {"ChooseToPay": {"decision": "Pays", "mana": ["$f1", "$f2", "$f3", "$f4"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}},
-    {"turn": 3, "step": "Upkeep", "player": "alice", "source": "$force", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "source": "$force", "do": {"ChooseToPay": {"decision": "Declines"}}},
     {"turn": 3, "step": "DrawStep", "player": "alice", "check": {"Life": {"player": "alice", "life": 12}}},
     {"turn": 3, "step": "DrawStep", "player": "alice", "check": {"Life": {"player": "bob", "life": 20}}}
   ]

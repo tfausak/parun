@@ -27,9 +27,7 @@
           {
             "card": "Forest",
             "label": "manifest",
-            "faceDown": {
-              "type": "Manifested"
-            }
+            "faceDown": "Manifested"
           },
           {
             "card": "Song of the Dryads",

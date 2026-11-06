@@ -129,9 +129,7 @@
       "do": {
         "Answer": {
           "prompt": "ChoosePayLifeOnEntry",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       },
       "player": "alice",

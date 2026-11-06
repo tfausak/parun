@@ -36,7 +36,7 @@ spec s = Spec.describe s "Parun.Codec.DrawRewrite" $ do
               FromOutsideTheGame.reveal = False
             }
       )
-      " {\"type\":\"FromOutsideTheGame\",\"value\":{\"count\":1,\"destination\":{\"type\":\"Hand\"},\"filter\":{\"type\":\"And\",\"value\":[]},\"reveal\":false,\"upTo\":false}} "
+      " {\"type\":\"FromOutsideTheGame\",\"value\":{\"count\":1,\"destination\":\"Hand\",\"filter\":{\"type\":\"And\",\"value\":[]},\"reveal\":false,\"upTo\":false}} "
   -- CR 702.52a: Darkblast's dredge 3.
   Spec.it s "Dredge" $
     Common.assertCodec

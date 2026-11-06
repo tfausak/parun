@@ -55,17 +55,13 @@
             "type": "Crews",
             "value": {
               "type": "Vehicle",
-              "value": {
-                "type": "FirstTimeEachTurn"
-              }
+              "value": "FirstTimeEachTurn"
             }
           },
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "Exactly"
-              },
+              "comparison": "Exactly",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -111,15 +107,11 @@
                                     "actor": {
                                       "type": "Self"
                                     },
-                                    "kind": {
-                                      "type": "Combat"
-                                    },
+                                    "kind": "Combat",
                                     "recipients": [
                                       {
                                         "type": "Player",
-                                        "value": {
-                                          "type": "AnyPlayer"
-                                        }
+                                        "value": "AnyPlayer"
                                       }
                                     ]
                                   }
@@ -135,9 +127,7 @@
                                               "value": {
                                                 "player": {
                                                   "type": "Relative",
-                                                  "value": {
-                                                    "type": "You"
-                                                  }
+                                                  "value": "You"
                                                 },
                                                 "quantity": {
                                                   "type": "Literal",
@@ -170,14 +160,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Vehicle"
-          }
+          "Vehicle"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

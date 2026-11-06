@@ -56,9 +56,7 @@
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -90,15 +88,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             }
           }
         },
@@ -107,15 +101,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             }
           }
         }
@@ -142,19 +132,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ashiok"
-          }
+          "Ashiok"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

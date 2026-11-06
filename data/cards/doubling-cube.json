@@ -33,9 +33,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           }
@@ -59,9 +57,7 @@
       "oracleText": "{3}, {T}: Double the amount of each type of unspent mana you have.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

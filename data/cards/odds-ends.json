@@ -6,18 +6,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -32,9 +28,7 @@
                   {
                     "type": "FlipCoin",
                     "value": {
-                      "reading": {
-                        "type": "Heads"
-                      },
+                      "reading": "Heads",
                       "slot": "heads"
                     }
                   }
@@ -44,9 +38,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "InSlot",
                       "value": "heads"
@@ -73,9 +65,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "InSlot",
                       "value": "heads"
@@ -109,15 +99,11 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Instant"
-                      }
+                      "value": "Instant"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Sorcery"
-                      }
+                      "value": "Sorcery"
                     }
                   ]
                 },
@@ -131,9 +117,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     },
@@ -147,18 +131,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -178,9 +158,7 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "IsAttacking"
@@ -212,9 +190,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

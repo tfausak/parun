@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -54,15 +50,11 @@
                 "value": [
                   {
                     "type": "WasCastFrom",
-                    "value": {
-                      "type": "Graveyard"
-                    }
+                    "value": "Graveyard"
                   },
                   {
                     "type": "WasCastFrom",
-                    "value": {
-                      "type": "Exile"
-                    }
+                    "value": "Exile"
                   }
                 ]
               },
@@ -104,9 +96,7 @@
                             "value": "spell"
                           },
                           "slot": "plotted",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -133,17 +123,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Bird"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Bird",
+          "Rogue"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

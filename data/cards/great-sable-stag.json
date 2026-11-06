@@ -10,9 +10,7 @@
           "value": {
             "quality": {
               "type": "HasColor",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             },
             "spares": null
           }
@@ -22,9 +20,7 @@
           "value": {
             "quality": {
               "type": "HasColor",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             },
             "spares": null
           }
@@ -39,18 +35,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -66,14 +58,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elk"
-          }
+          "Elk"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

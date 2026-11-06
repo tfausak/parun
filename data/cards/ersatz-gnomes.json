@@ -27,9 +27,7 @@
                             "type": "Colors",
                             "value": {
                               "colors": [],
-                              "mode": {
-                                "type": "Replace"
-                              }
+                              "mode": "Replace"
                             }
                           },
                           "ref": {
@@ -77,9 +75,7 @@
                             "type": "Colors",
                             "value": {
                               "colors": [],
-                              "mode": {
-                                "type": "Replace"
-                              }
+                              "mode": "Replace"
                             }
                           },
                           "ref": {
@@ -121,17 +117,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Gnome"
-          }
+          "Gnome"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

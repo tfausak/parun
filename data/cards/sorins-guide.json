@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -51,18 +47,14 @@
                         "type": "Search",
                         "value": {
                           "andOr": true,
-                          "destination": {
-                            "type": "RevealThenHand"
-                          },
+                          "destination": "RevealThenHand",
                           "filter": {
                             "type": "HasName",
                             "value": "Sorin, Vampire Lord"
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -70,17 +62,11 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "zones": [
-                            {
-                              "type": "Library"
-                            },
-                            {
-                              "type": "Graveyard"
-                            }
+                            "Library",
+                            "Graveyard"
                           ]
                         }
                       }
@@ -97,14 +83,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Vampire"
-          }
+          "Vampire"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

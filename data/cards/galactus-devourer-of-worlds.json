@@ -3,9 +3,7 @@
     {
       "attackRequirements": [
         {
-          "object": {
-            "type": "OpponentWithMostLife"
-          },
+          "object": "OpponentWithMostLife",
           "subject": {
             "type": "Matching",
             "value": {
@@ -15,9 +13,7 @@
           "while": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtMost"
-              },
+              "comparison": "AtMost",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -29,19 +25,13 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       },
                       {
@@ -55,13 +45,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -120,9 +106,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -146,22 +130,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Alien"
-          },
-          {
-            "type": "Elder"
-          }
+          "Alien",
+          "Elder"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -8,15 +8,11 @@
             "value": [
               {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Artifact"
-                }
+                "value": "Artifact"
               },
               {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Creature"
               }
             ]
           },
@@ -34,9 +30,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -65,14 +59,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

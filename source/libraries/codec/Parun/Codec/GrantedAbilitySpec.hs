@@ -100,7 +100,7 @@ spec s = Spec.describe s "Parun.Codec.GrantedAbility" $ do
               Set.empty
           )
       )
-      " {\"type\":\"Triggered\",\"value\":{\"condition\":{\"type\":\"DealsDamage\",\"value\":{\"actor\":{\"type\":\"Self\"},\"kind\":{\"type\":\"Combat\"},\"recipients\":[{\"type\":\"Player\",\"value\":{\"type\":\"AnyPlayer\"}}]}},\"modal\":{\"modes\":[{}]}}} "
+      " {\"type\":\"Triggered\",\"value\":{\"condition\":{\"type\":\"DealsDamage\",\"value\":{\"actor\":{\"type\":\"Self\"},\"kind\":\"Combat\",\"recipients\":[{\"type\":\"Player\",\"value\":\"AnyPlayer\"}]}},\"modal\":{\"modes\":[{}]}}} "
   -- Streetwise Negotiator's "This creature assigns combat damage equal to its
   -- toughness rather than its power", as backup hands it over.
   Spec.it s "Static" $
@@ -117,7 +117,7 @@ spec s = Spec.describe s "Parun.Codec.GrantedAbility" $ do
               (NonEmpty.singleton (Modification.AssignCombatDamage CombatDamageAmount.EqualToToughness))
           )
       )
-      " {\"type\":\"Static\",\"value\":{\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"modifications\":[{\"type\":\"AssignCombatDamage\",\"value\":{\"type\":\"EqualToToughness\"}}]}} "
+      " {\"type\":\"Static\",\"value\":{\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"modifications\":[{\"type\":\"AssignCombatDamage\",\"value\":\"EqualToToughness\"}]}} "
   -- Chomping Kavu's "This creature can't be blocked by creatures with power 2
   -- or less", as backup hands it over.
   Spec.it s "Rules" $
@@ -130,7 +130,7 @@ spec s = Spec.describe s "Parun.Codec.GrantedAbility" $ do
                 [CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy (Affected.Matching Filter.IsSource) (Filter.Measures (Measures.MkMeasures Measure.Power Comparison.AtMost (Operand.Literal 2))) Nothing Nothing)]
             }
       )
-      " {\"type\":\"Rules\",\"value\":{\"combatRestrictions\":[{\"type\":\"CantBeBlockedBy\",\"value\":{\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"blockers\":{\"type\":\"Measures\",\"value\":{\"measure\":{\"type\":\"Power\"},\"comparison\":{\"type\":\"AtMost\"},\"operand\":{\"type\":\"Literal\",\"value\":2}}}}}]}} "
+      " {\"type\":\"Rules\",\"value\":{\"combatRestrictions\":[{\"type\":\"CantBeBlockedBy\",\"value\":{\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"blockers\":{\"type\":\"Measures\",\"value\":{\"measure\":\"Power\",\"comparison\":\"AtMost\",\"operand\":{\"type\":\"Literal\",\"value\":2}}}}}]}} "
   -- CR 613.11: Nerd Rage's "You have no maximum hand size".
   Spec.it s "Player" $
     Common.assertCodec
@@ -160,5 +160,5 @@ spec s = Spec.describe s "Parun.Codec.GrantedAbility" $ do
       s
       codec
       (GrantedAbility.SelfSpendManaAsThough (SpendManaAsThough.MkSpendManaAsThough ManaFilter.Any (Set.singleton (ManaType.Colored Color.Red)) False Nothing))
-      " {\"type\":\"SelfSpendManaAsThough\",\"value\":{\"which\":{\"type\":\"Any\"},\"asThough\":[{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}}],\"only\":false}} "
+      " {\"type\":\"SelfSpendManaAsThough\",\"value\":{\"which\":{\"type\":\"Any\"},\"asThough\":[{\"type\":\"Colored\",\"value\":\"Red\"}],\"only\":false}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

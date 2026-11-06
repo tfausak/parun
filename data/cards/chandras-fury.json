@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -50,9 +48,7 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "Or",
@@ -60,21 +56,15 @@
                                     {
                                       "type": "HeldByBound",
                                       "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
+                                        "holder": "Controller",
                                         "slot": "target"
                                       }
                                     },
                                     {
                                       "type": "ControllerRelatesToBound",
                                       "value": {
-                                        "hop": {
-                                          "type": "Itself"
-                                        },
-                                        "relation": {
-                                          "type": "You"
-                                        },
+                                        "hop": "Itself",
+                                        "relation": "You",
                                         "slot": "target"
                                       }
                                     }
@@ -102,9 +92,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

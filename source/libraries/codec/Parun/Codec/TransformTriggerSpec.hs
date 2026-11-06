@@ -28,5 +28,5 @@ spec s = Spec.describe s "Parun.Codec.TransformTrigger" $ do
       s
       TransformTrigger.codec
       (TransformTrigger.MkTransformTrigger (ActingPermanent.Matching (Filter.Not (Filter.HasSubtype Subtype.Human))) (Just (CardName.MkCardName (Text.pack "Wildsong Howler"))))
-      " {\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Human\"}}}},\"into\":\"Wildsong Howler\"} "
+      " {\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"HasSubtype\",\"value\":\"Human\"}}},\"into\":\"Wildsong Howler\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s TransformTrigger.codec

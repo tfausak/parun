@@ -23,18 +23,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -53,12 +49,8 @@
           "condition": {
             "type": "FlipsCoin",
             "value": {
-              "outcome": {
-                "type": "Won"
-              },
-              "player": {
-                "type": "You"
-              }
+              "outcome": "Won",
+              "player": "You"
             }
           },
           "modal": {
@@ -102,12 +94,8 @@
           "condition": {
             "type": "FlipsCoin",
             "value": {
-              "outcome": {
-                "type": "Lost"
-              },
-              "player": {
-                "type": "You"
-              }
+              "outcome": "Lost",
+              "player": "You"
             }
           },
           "modal": {
@@ -140,9 +128,7 @@
                   "opponentsTarget": {
                     "chooser": {
                       "type": "Relative",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "AnyTarget"
@@ -156,17 +142,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Minotaur"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Minotaur",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

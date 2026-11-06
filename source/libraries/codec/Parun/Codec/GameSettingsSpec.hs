@@ -35,7 +35,7 @@ spec s = Spec.describe s "Parun.Codec.GameSettings" $ do
       s
       GameSettings.codec
       GameSettings.MkGameSettings {GameSettings.brawl = False, GameSettings.attackOption = Just AttackOption.MultiplePlayers, GameSettings.teams = Teams.none, GameSettings.sharedTeamTurns = False, GameSettings.sharedTeamLife = False, GameSettings.rangeOfInfluence = RangeOfInfluence.unlimited, GameSettings.deployCreatures = False, GameSettings.emperors = Emperors.none, GameSettings.twoHeadedGiant = False, GameSettings.alternatingTeams = False, GameSettings.ante = False, GameSettings.singlePlanarDeck = False}
-      " {\"brawl\":false,\"attackOption\":{\"type\":\"MultiplePlayers\"},\"teams\":{},\"sharedTeamTurns\":false,\"sharedTeamLife\":false,\"rangeOfInfluence\":{},\"deployCreatures\":false,\"emperors\":{},\"twoHeadedGiant\":false,\"alternatingTeams\":false,\"ante\":false,\"singlePlanarDeck\":false} "
+      " {\"brawl\":false,\"attackOption\":\"MultiplePlayers\",\"teams\":{},\"sharedTeamTurns\":false,\"sharedTeamLife\":false,\"rangeOfInfluence\":{},\"deployCreatures\":false,\"emperors\":{},\"twoHeadedGiant\":false,\"alternatingTeams\":false,\"ante\":false,\"singlePlanarDeck\":false} "
   -- CR 803.1a: the option CR 807.2b makes the Grand Melee default. Its sibling
   -- Rightward is Parun.Codec.AttackOptionSpec's business; what is this record's
   -- is that the field carries a NAMED option rather than a flag.
@@ -44,7 +44,7 @@ spec s = Spec.describe s "Parun.Codec.GameSettings" $ do
       s
       GameSettings.codec
       GameSettings.MkGameSettings {GameSettings.brawl = False, GameSettings.attackOption = Just AttackOption.Leftward, GameSettings.teams = Teams.none, GameSettings.sharedTeamTurns = False, GameSettings.sharedTeamLife = False, GameSettings.rangeOfInfluence = RangeOfInfluence.unlimited, GameSettings.deployCreatures = False, GameSettings.emperors = Emperors.none, GameSettings.twoHeadedGiant = False, GameSettings.alternatingTeams = False, GameSettings.ante = False, GameSettings.singlePlanarDeck = False}
-      " {\"brawl\":false,\"attackOption\":{\"type\":\"Leftward\"},\"teams\":{},\"sharedTeamTurns\":false,\"sharedTeamLife\":false,\"rangeOfInfluence\":{},\"deployCreatures\":false,\"emperors\":{},\"twoHeadedGiant\":false,\"alternatingTeams\":false,\"ante\":false,\"singlePlanarDeck\":false} "
+      " {\"brawl\":false,\"attackOption\":\"Leftward\",\"teams\":{},\"sharedTeamTurns\":false,\"sharedTeamLife\":false,\"rangeOfInfluence\":{},\"deployCreatures\":false,\"emperors\":{},\"twoHeadedGiant\":false,\"alternatingTeams\":false,\"ante\":false,\"singlePlanarDeck\":false} "
   -- CR 810.1 / 810.2 / 810.4 / 804.1: a Two-Headed Giant game, two teams of two
   -- each taking its turns together and sharing one life total, with the deploy
   -- creatures option.
@@ -74,7 +74,7 @@ spec s = Spec.describe s "Parun.Codec.GameSettings" $ do
           GameSettings.ante = False,
           GameSettings.singlePlanarDeck = False
         }
-      " {\"brawl\":false,\"attackOption\":{\"type\":\"MultiplePlayers\"},\"teams\":{\"0\":0,\"1\":1,\"2\":0,\"3\":1},\"sharedTeamTurns\":true,\"sharedTeamLife\":true,\"rangeOfInfluence\":{},\"deployCreatures\":true,\"emperors\":{},\"twoHeadedGiant\":true,\"alternatingTeams\":false,\"ante\":false,\"singlePlanarDeck\":false} "
+      " {\"brawl\":false,\"attackOption\":\"MultiplePlayers\",\"teams\":{\"0\":0,\"1\":1,\"2\":0,\"3\":1},\"sharedTeamTurns\":true,\"sharedTeamLife\":true,\"rangeOfInfluence\":{},\"deployCreatures\":true,\"emperors\":{},\"twoHeadedGiant\":true,\"alternatingTeams\":false,\"ante\":false,\"singlePlanarDeck\":false} "
   -- CR 801.2a: the limited range of influence option, one seat for two players.
   Spec.it s "a game using a limited range of influence" $
     Common.assertCodec
@@ -94,7 +94,7 @@ spec s = Spec.describe s "Parun.Codec.GameSettings" $ do
           GameSettings.ante = False,
           GameSettings.singlePlanarDeck = False
         }
-      " {\"brawl\":false,\"attackOption\":{\"type\":\"MultiplePlayers\"},\"teams\":{},\"sharedTeamTurns\":false,\"sharedTeamLife\":false,\"rangeOfInfluence\":{\"0\":1,\"1\":1},\"deployCreatures\":false,\"emperors\":{},\"twoHeadedGiant\":false,\"alternatingTeams\":false,\"ante\":false,\"singlePlanarDeck\":false} "
+      " {\"brawl\":false,\"attackOption\":\"MultiplePlayers\",\"teams\":{},\"sharedTeamTurns\":false,\"sharedTeamLife\":false,\"rangeOfInfluence\":{\"0\":1,\"1\":1},\"deployCreatures\":false,\"emperors\":{},\"twoHeadedGiant\":false,\"alternatingTeams\":false,\"ante\":false,\"singlePlanarDeck\":false} "
   -- CR 809.2 / 809.3: an Emperor game, two teams of three with each team's
   -- emperor in its middle seat.
   Spec.it s "an Emperor game" $
@@ -115,21 +115,21 @@ spec s = Spec.describe s "Parun.Codec.GameSettings" $ do
           GameSettings.ante = False,
           GameSettings.singlePlanarDeck = False
         }
-      " {\"brawl\":false,\"attackOption\":{\"type\":\"Adjacent\"},\"teams\":{\"0\":0,\"1\":0,\"2\":0,\"3\":1,\"4\":1,\"5\":1},\"sharedTeamTurns\":false,\"sharedTeamLife\":false,\"rangeOfInfluence\":{\"0\":1,\"1\":2,\"2\":1,\"3\":1,\"4\":2,\"5\":1},\"deployCreatures\":true,\"emperors\":{\"0\":1,\"1\":4},\"twoHeadedGiant\":false,\"alternatingTeams\":false,\"ante\":false,\"singlePlanarDeck\":false} "
+      " {\"brawl\":false,\"attackOption\":\"Adjacent\",\"teams\":{\"0\":0,\"1\":0,\"2\":0,\"3\":1,\"4\":1,\"5\":1},\"sharedTeamTurns\":false,\"sharedTeamLife\":false,\"rangeOfInfluence\":{\"0\":1,\"1\":2,\"2\":1,\"3\":1,\"4\":2,\"5\":1},\"deployCreatures\":true,\"emperors\":{\"0\":1,\"1\":4},\"twoHeadedGiant\":false,\"alternatingTeams\":false,\"ante\":false,\"singlePlanarDeck\":false} "
   -- CR 407.1: the same record with the ante option turned on.
   Spec.it s "a game played for ante" $
     Common.assertCodec
       s
       GameSettings.codec
       GameSettings.plain {GameSettings.ante = True}
-      " {\"brawl\":false,\"attackOption\":{\"type\":\"MultiplePlayers\"},\"teams\":{},\"sharedTeamTurns\":false,\"sharedTeamLife\":false,\"rangeOfInfluence\":{},\"deployCreatures\":false,\"emperors\":{},\"twoHeadedGiant\":false,\"alternatingTeams\":false,\"ante\":true,\"singlePlanarDeck\":false} "
+      " {\"brawl\":false,\"attackOption\":\"MultiplePlayers\",\"teams\":{},\"sharedTeamTurns\":false,\"sharedTeamLife\":false,\"rangeOfInfluence\":{},\"deployCreatures\":false,\"emperors\":{},\"twoHeadedGiant\":false,\"alternatingTeams\":false,\"ante\":true,\"singlePlanarDeck\":false} "
   -- CR 901.15: the same record with the single planar deck option turned on.
   Spec.it s "a Planechase game with one communal planar deck" $
     Common.assertCodec
       s
       GameSettings.codec
       GameSettings.plain {GameSettings.singlePlanarDeck = True}
-      " {\"brawl\":false,\"attackOption\":{\"type\":\"MultiplePlayers\"},\"teams\":{},\"sharedTeamTurns\":false,\"sharedTeamLife\":false,\"rangeOfInfluence\":{},\"deployCreatures\":false,\"emperors\":{},\"twoHeadedGiant\":false,\"alternatingTeams\":false,\"ante\":false,\"singlePlanarDeck\":true} "
+      " {\"brawl\":false,\"attackOption\":\"MultiplePlayers\",\"teams\":{},\"sharedTeamTurns\":false,\"sharedTeamLife\":false,\"rangeOfInfluence\":{},\"deployCreatures\":false,\"emperors\":{},\"twoHeadedGiant\":false,\"alternatingTeams\":false,\"ante\":false,\"singlePlanarDeck\":true} "
   -- CR 811: an Alternating Teams game, two teams of two seated alternately.
   Spec.it s "an Alternating Teams game" $
     Common.assertCodec
@@ -141,4 +141,4 @@ spec s = Spec.describe s "Parun.Codec.GameSettings" $ do
           GameSettings.ante = False,
           GameSettings.singlePlanarDeck = False
         }
-      " {\"brawl\":false,\"attackOption\":{\"type\":\"MultiplePlayers\"},\"teams\":{\"0\":0,\"1\":1,\"2\":0,\"3\":1},\"sharedTeamTurns\":false,\"sharedTeamLife\":false,\"rangeOfInfluence\":{},\"deployCreatures\":false,\"emperors\":{},\"twoHeadedGiant\":false,\"alternatingTeams\":true,\"ante\":false,\"singlePlanarDeck\":false} "
+      " {\"brawl\":false,\"attackOption\":\"MultiplePlayers\",\"teams\":{\"0\":0,\"1\":1,\"2\":0,\"3\":1},\"sharedTeamTurns\":false,\"sharedTeamLife\":false,\"rangeOfInfluence\":{},\"deployCreatures\":false,\"emperors\":{},\"twoHeadedGiant\":false,\"alternatingTeams\":true,\"ante\":false,\"singlePlanarDeck\":false} "

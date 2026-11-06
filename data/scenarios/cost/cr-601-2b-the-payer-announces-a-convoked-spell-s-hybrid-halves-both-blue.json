@@ -60,9 +60,7 @@
           "prompt": "AnnounceHybridHalf",
           "with": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       }
@@ -76,9 +74,7 @@
           "prompt": "AnnounceHybridHalf",
           "with": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       }
@@ -110,9 +106,7 @@
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "Blue"
-                }
+                "value": "Blue"
               }
             }
           ],

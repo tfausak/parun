@@ -60,9 +60,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseRedirect",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

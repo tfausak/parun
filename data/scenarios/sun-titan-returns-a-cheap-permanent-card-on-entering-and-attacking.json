@@ -142,9 +142,7 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {
@@ -187,9 +185,7 @@
       "step": "DeclareAttackers",
       "player": "alice",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {

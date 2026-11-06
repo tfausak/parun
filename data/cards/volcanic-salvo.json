@@ -16,9 +16,7 @@
                 "type": "Total",
                 "value": {
                   "type": "Measure",
-                  "value": {
-                    "type": "Power"
-                  }
+                  "value": "Power"
                 }
               },
               "filter": {
@@ -26,19 +24,13 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   }
                 ]
@@ -48,13 +40,9 @@
                 "value": {
                   "player": {
                     "type": "Relative",
-                    "value": {
-                      "type": "AnyPlayer"
-                    }
+                    "value": "AnyPlayer"
                   },
-                  "zone": {
-                    "type": "Battlefield"
-                  }
+                  "zone": "Battlefield"
                 }
               }
             }
@@ -70,18 +58,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -127,15 +111,11 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Planeswalker"
-                      }
+                      "value": "Planeswalker"
                     }
                   ]
                 },
@@ -149,9 +129,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

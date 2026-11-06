@@ -18,9 +18,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -39,9 +37,7 @@
           "condition": {
             "type": "PermanentActs",
             "value": {
-              "action": {
-                "type": "PhaseOut"
-              },
+              "action": "PhaseOut",
               "permanent": {
                 "type": "Self"
               }
@@ -60,9 +56,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -82,9 +76,7 @@
           "condition": {
             "type": "PermanentActs",
             "value": {
-              "action": {
-                "type": "PhaseIn"
-              },
+              "action": "PhaseIn",
               "permanent": {
                 "type": "Self"
               }
@@ -101,9 +93,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -121,14 +111,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Imp"
-          }
+          "Imp"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

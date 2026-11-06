@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -29,9 +27,7 @@
                     "value": {
                       "filter": {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Food"
-                        }
+                        "value": "Food"
                       },
                       "players": {
                         "type": "EachInSlot",
@@ -87,9 +83,7 @@
                                               "value": {
                                                 "player": {
                                                   "type": "Relative",
-                                                  "value": {
-                                                    "type": "You"
-                                                  }
+                                                  "value": "You"
                                                 },
                                                 "quantity": {
                                                   "type": "Literal",
@@ -108,14 +102,10 @@
                             "name": "Food Token",
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Food"
-                                }
+                                "Food"
                               ],
                               "types": [
-                                {
-                                  "type": "Artifact"
-                                }
+                                "Artifact"
                               ]
                             }
                           }
@@ -143,9 +133,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Green"
-                              }
+                              "Green"
                             ],
                             "name": "Giant Token",
                             "power": {
@@ -158,14 +146,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Giant"
-                                }
+                                "Giant"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -191,9 +175,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

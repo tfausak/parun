@@ -102,9 +102,7 @@
             "type": "Landwalk",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Mountain"
-              }
+              "value": "Mountain"
             }
           },
           "count": 1

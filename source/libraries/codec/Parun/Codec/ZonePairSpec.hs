@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.ZonePair" $ do
       s
       ZonePair.codec
       ZonePair.HandAndGraveyard
-      " {\"type\":\"HandAndGraveyard\"} "
+      " \"HandAndGraveyard\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s ZonePair.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s ZonePair.codec

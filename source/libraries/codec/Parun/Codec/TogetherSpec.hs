@@ -12,6 +12,6 @@ spec s = Spec.describe s "Parun.Codec.Together" $ do
       s
       Together.codec
       Together.InOneZone
-      " {\"type\":\"InOneZone\"} "
+      " \"InOneZone\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s Together.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s Together.codec

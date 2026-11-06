@@ -14,7 +14,7 @@ spec s = Spec.describe s "Parun.Codec.CounteredEnd" $ do
       s
       CounteredEnd.codec
       (CounteredEnd.Stated LibraryPosition.Top)
-      " {\"type\":\"Stated\",\"value\":{\"type\":\"Top\"}} "
+      " {\"type\":\"Stated\",\"value\":\"Top\"} "
   -- Hinder's "your choice of the top or bottom".
   Spec.it s "CounteringPlayerChooses" $
     Common.assertCodec

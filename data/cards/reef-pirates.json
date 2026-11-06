@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -46,9 +42,7 @@
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 }
               ]
             }
@@ -82,17 +76,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Pirate"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Pirate",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

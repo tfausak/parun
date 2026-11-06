@@ -6,18 +6,14 @@
           "type": "Landwalk",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Forest"
-            }
+            "value": "Forest"
           }
         },
         {
           "type": "Landwalk",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Swamp"
-            }
+            "value": "Swamp"
           }
         }
       ],
@@ -27,15 +23,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             }
           }
         },
@@ -44,15 +36,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             }
           }
         },
@@ -61,15 +49,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             }
           }
         }
@@ -86,14 +70,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hag"
-          }
+          "Hag"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

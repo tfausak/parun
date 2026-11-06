@@ -4,9 +4,7 @@
       "castingRestrictions": [
         {
           "type": "DuringCombatBefore",
-          "value": {
-            "type": "DeclareBlockers"
-          }
+          "value": "DeclareBlockers"
         }
       ],
       "manaCost": [
@@ -14,9 +12,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -69,9 +65,7 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "IsAttacking"
@@ -98,9 +92,7 @@
               "target": {
                 "filter": {
                   "type": "ControlledByRole",
-                  "value": {
-                    "type": "Defending"
-                  }
+                  "value": "Defending"
                 },
                 "pool": {
                   "type": "Creatures"
@@ -112,9 +104,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

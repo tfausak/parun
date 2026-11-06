@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -35,9 +33,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               },
               "spell": {
@@ -48,12 +44,8 @@
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
@@ -61,27 +53,19 @@
                       "value": [
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "White"
-                          }
+                          "value": "White"
                         },
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Blue"
-                          }
+                          "value": "Blue"
                         },
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Black"
-                          }
+                          "value": "Black"
                         },
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Red"
-                          }
+                          "value": "Red"
                         }
                       ]
                     }
@@ -122,17 +106,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Druid"
-          },
-          {
-            "type": "Human"
-          }
+          "Druid",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
@@ -146,9 +124,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -172,16 +148,12 @@
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       },
                       "slot": "exiled",
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   },
                   {
@@ -192,9 +164,7 @@
                         "value": {
                           "step": {
                             "type": "Ending",
-                            "value": {
-                              "type": "EndStep"
-                            }
+                            "value": "EndStep"
                           }
                         }
                       },
@@ -212,14 +182,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Adventure"
-          }
+          "Adventure"
         ],
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

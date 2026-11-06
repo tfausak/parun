@@ -59,9 +59,7 @@
       "do": {
         "Answer": {
           "prompt": "CallCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       }
     },
@@ -72,9 +70,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       }
     },

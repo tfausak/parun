@@ -25,9 +25,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -48,9 +46,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -96,16 +92,12 @@
                           },
                           "production": {
                             "type": "AnyColor",
-                            "value": {
-                              "type": "AnyCombination"
-                            }
+                            "value": "AnyCombination"
                           },
                           "restriction": {
                             "casts": {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Dragon"
-                              }
+                              "value": "Dragon"
                             }
                           }
                         }
@@ -143,9 +135,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Red"
-                                  }
+                                  "Red"
                                 ],
                                 "keywords": [
                                   {
@@ -163,14 +153,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Dragon"
-                                    }
+                                    "Dragon"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -203,18 +189,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -222,19 +204,13 @@
       "oracleText": "[+1]: You may discard a card. If you do, draw a card.\n[+1]: Add two mana in any combination of colors. Spend this mana only to cast Dragon spells.\n[−7]: Create four 5/5 red Dragon creature tokens with flying.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Sarkhan"
-          }
+          "Sarkhan"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

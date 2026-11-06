@@ -20,11 +20,11 @@ spec s = Spec.describe s "Parun.Codec.NextStepOf" $ do
       s
       NextStepOf.codec
       (NextStepOf.Type.MkNextStepOf (Phase.Beginning BeginningStep.Upkeep) (PlayerRef.Relative PlayerRelation.You))
-      " {\"step\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}}} "
+      " {\"step\":{\"type\":\"Beginning\",\"value\":\"Upkeep\"}} "
   Spec.it s "names any other player" $
     Common.assertCodec
       s
       NextStepOf.codec
       (NextStepOf.Type.MkNextStepOf (Phase.Beginning BeginningStep.Untap) (PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "target"))))
-      " {\"player\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"target\"}},\"step\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Untap\"}}} "
+      " {\"player\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"target\"}},\"step\":{\"type\":\"Beginning\",\"value\":\"Untap\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s NextStepOf.codec

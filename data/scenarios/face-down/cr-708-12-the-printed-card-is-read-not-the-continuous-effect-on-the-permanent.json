@@ -27,9 +27,7 @@
           {
             "card": "Thragtusk",
             "label": "manifest",
-            "faceDown": {
-              "type": "Manifested"
-            }
+            "faceDown": "Manifested"
           },
           {
             "card": "Song of the Dryads",
@@ -112,9 +110,7 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {

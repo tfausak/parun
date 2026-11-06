@@ -22,9 +22,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           },
                           "production": {
                             "type": "OfType",
@@ -51,9 +49,7 @@
       "name": "Synthetic Alms Engine",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

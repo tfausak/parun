@@ -29,7 +29,7 @@ spec s = Spec.describe s "Parun.Codec.CostChoice" $ do
               NonEmpty.:| [Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 1]), Cost.components = []}]
           )
       )
-      " [{\"components\":[{\"type\":\"Behold\",\"value\":{\"count\":1,\"whichObjects\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}}],\"mana\":[]},{\"mana\":[{\"type\":\"Generic\",\"value\":1}]}] "
+      " [{\"components\":[{\"type\":\"Behold\",\"value\":{\"count\":1,\"whichObjects\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}}],\"mana\":[]},{\"mana\":[{\"type\":\"Generic\",\"value\":1}]}] "
   -- CR 118.6 by accident: a choice with no options has no way to be paid, which
   -- Common.nonEmpty is what refuses.
   Spec.it s "an empty array is rejected rather than decoded" $

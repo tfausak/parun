@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -27,25 +25,17 @@
               "value": [
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Vampire"
-                  }
+                  "value": "Vampire"
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Owner"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Owner",
+                    "relation": "You"
                   }
                 }
               ]
@@ -70,17 +60,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Berserker"
-          },
-          {
-            "type": "Vampire"
-          }
+          "Berserker",
+          "Vampire"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -40,18 +36,14 @@
                       "type": "OfType",
                       "value": {
                         "type": "Colored",
-                        "value": {
-                          "type": "White"
-                        }
+                        "value": "White"
                       }
                     },
                     {
                       "type": "OfType",
                       "value": {
                         "type": "Colored",
-                        "value": {
-                          "type": "Black"
-                        }
+                        "value": "Black"
                       }
                     }
                   ],
@@ -60,9 +52,7 @@
               },
               "matching": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Cleric"
-                }
+                "value": "Cleric"
               },
               "subject": {
                 "type": "Spells"
@@ -84,17 +74,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Human"
-          }
+          "Cleric",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

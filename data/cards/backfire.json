@@ -13,9 +13,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -38,9 +36,7 @@
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               ]
             }
@@ -66,12 +62,8 @@
                                   "players": {
                                     "type": "HolderOfBound",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "hop": {
-                                        "type": "Itself"
-                                      },
+                                      "holder": "Controller",
+                                      "hop": "Itself",
                                       "slot": "thatDamager"
                                     }
                                   }
@@ -91,14 +83,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

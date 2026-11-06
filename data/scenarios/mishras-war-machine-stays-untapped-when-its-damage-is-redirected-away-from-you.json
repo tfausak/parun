@@ -192,9 +192,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "player": "alice",
@@ -283,9 +281,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "player": "alice",
@@ -367,9 +363,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "player": "alice",

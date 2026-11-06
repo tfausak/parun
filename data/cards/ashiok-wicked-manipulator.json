@@ -30,9 +30,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -56,9 +54,7 @@
                               "slot": "looked"
                             }
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -72,9 +68,7 @@
                             "type": "InSlot",
                             "value": "looked"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -110,9 +104,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Black"
-                                  }
+                                  "Black"
                                 ],
                                 "name": "Nightmare Token",
                                 "power": {
@@ -130,17 +122,13 @@
                                       "value": {
                                         "phase": {
                                           "type": "Combat",
-                                          "value": {
-                                            "type": "BeginningOfCombat"
-                                          }
+                                          "value": "BeginningOfCombat"
                                         },
                                         "scope": {
                                           "type": "PlayersTurn",
                                           "value": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "You"
-                                            }
+                                            "value": "You"
                                           }
                                         }
                                       }
@@ -148,9 +136,7 @@
                                     "intervening": {
                                       "type": "Compares",
                                       "value": {
-                                        "comparison": {
-                                          "type": "AtLeast"
-                                        },
+                                        "comparison": "AtLeast",
                                         "measured": {
                                           "type": "Count",
                                           "value": {
@@ -168,9 +154,7 @@
                                               "value": {
                                                 "type": "CardArrivedIn",
                                                 "value": {
-                                                  "to": {
-                                                    "type": "Exile"
-                                                  }
+                                                  "to": "Exile"
                                                 }
                                               }
                                             }
@@ -214,14 +198,10 @@
                                 ],
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Nightmare"
-                                    }
+                                    "Nightmare"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -272,20 +252,14 @@
                                     "type": "Total",
                                     "value": {
                                       "type": "Measure",
-                                      "value": {
-                                        "type": "ManaValue"
-                                      }
+                                      "value": "ManaValue"
                                     }
                                   },
                                   "filter": {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Owner"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Owner",
+                                      "relation": "You"
                                     }
                                   },
                                   "scope": {
@@ -293,13 +267,9 @@
                                     "value": {
                                       "player": {
                                         "type": "Relative",
-                                        "value": {
-                                          "type": "AnyPlayer"
-                                        }
+                                        "value": "AnyPlayer"
                                       },
-                                      "zone": {
-                                        "type": "Exile"
-                                      }
+                                      "zone": "Exile"
                                     }
                                   }
                                 }
@@ -310,9 +280,7 @@
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -343,18 +311,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -366,9 +330,7 @@
             "type": "LifeLossR",
             "value": {
               "matching": {
-                "whichCause": {
-                  "type": "ByPayment"
-                },
+                "whichCause": "ByPayment",
                 "whose": {
                   "type": "You"
                 }
@@ -382,19 +344,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ashiok"
-          }
+          "Ashiok"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

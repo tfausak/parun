@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -25,17 +23,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -73,35 +67,23 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "Opponent"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "Opponent"
                                     }
                                   },
                                   {
                                     "type": "Measures",
                                     "value": {
-                                      "comparison": {
-                                        "type": "AtMost"
-                                      },
-                                      "measure": {
-                                        "type": "Toughness"
-                                      },
+                                      "comparison": "AtMost",
+                                      "measure": "Toughness",
                                       "operand": {
                                         "type": "OfEachOtherCandidate",
-                                        "value": {
-                                          "type": "Toughness"
-                                        }
+                                        "value": "Toughness"
                                       }
                                     }
                                   }
@@ -124,9 +106,7 @@
             "value": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "Exactly"
-                },
+                "comparison": "Exactly",
                 "measured": {
                   "type": "Count",
                   "value": {
@@ -138,19 +118,13 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "Opponent"
-                            }
+                            "holder": "Controller",
+                            "relation": "Opponent"
                           }
                         }
                       ]
@@ -160,13 +134,9 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
-                        "zone": {
-                          "type": "Battlefield"
-                        }
+                        "zone": "Battlefield"
                       }
                     }
                   }
@@ -203,9 +173,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

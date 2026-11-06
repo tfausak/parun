@@ -31,5 +31,5 @@ spec s = Spec.describe s "Parun.Codec.Suspend" $ do
             Suspend.cost = Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Red)]), Cost.components = []}
           }
       )
-      " {\"counters\":{\"type\":\"Literal\",\"value\":1},\"cost\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}}}]}} "
+      " {\"counters\":{\"type\":\"Literal\",\"value\":1},\"cost\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Red\"}}]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

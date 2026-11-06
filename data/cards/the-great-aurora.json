@@ -10,27 +10,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -47,9 +41,7 @@
                     "value": {
                       "library": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
                       "ref": {
                         "type": "AllOf",
@@ -82,9 +74,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
                       "quantity": {
                         "type": "Plus",
@@ -104,9 +94,7 @@
                                   },
                                   {
                                     "type": "HeldByRecipient",
-                                    "value": {
-                                      "type": "Owner"
-                                    }
+                                    "value": "Owner"
                                   }
                                 ]
                               },
@@ -115,13 +103,9 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   },
-                                  "zone": {
-                                    "type": "Library"
-                                  }
+                                  "zone": "Library"
                                 }
                               }
                             }
@@ -139,16 +123,12 @@
                                     "type": "Not",
                                     "value": {
                                       "type": "IsInZone",
-                                      "value": {
-                                        "type": "Library"
-                                      }
+                                      "value": "Library"
                                     }
                                   },
                                   {
                                     "type": "HeldByRecipient",
-                                    "value": {
-                                      "type": "Owner"
-                                    }
+                                    "value": "Owner"
                                   }
                                 ]
                               },
@@ -177,15 +157,11 @@
                           },
                           "filter": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           }
                         }
                       },
@@ -194,9 +170,7 @@
                           "type": "Owner"
                         }
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 ]
@@ -214,9 +188,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

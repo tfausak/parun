@@ -14,9 +14,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -32,17 +30,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Plant"
-          },
-          {
-            "type": "Wall"
-          }
+          "Plant",
+          "Wall"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

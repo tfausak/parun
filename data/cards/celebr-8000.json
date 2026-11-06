@@ -24,17 +24,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "BeginningOfCombat"
-                }
+                "value": "BeginningOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -53,9 +49,7 @@
                             "value": 2
                           },
                           "other": "second",
-                          "reading": {
-                            "type": "Both"
-                          },
+                          "reading": "Both",
                           "sides": 6,
                           "slot": "first"
                         }
@@ -66,9 +60,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "InSlot",
                           "value": "first"
@@ -111,9 +103,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "InSlot",
                           "value": "second"
@@ -159,9 +149,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
+                            "comparison": "Exactly",
                             "measured": {
                               "type": "InSlot",
                               "value": "first"
@@ -175,9 +163,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
+                            "comparison": "Exactly",
                             "measured": {
                               "type": "InSlot",
                               "value": "second"
@@ -218,9 +204,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
+                            "comparison": "Exactly",
                             "measured": {
                               "type": "InSlot",
                               "value": "first"
@@ -234,9 +218,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
+                            "comparison": "Exactly",
                             "measured": {
                               "type": "InSlot",
                               "value": "second"
@@ -277,9 +259,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
+                            "comparison": "Exactly",
                             "measured": {
                               "type": "InSlot",
                               "value": "first"
@@ -293,9 +273,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
+                            "comparison": "Exactly",
                             "measured": {
                               "type": "InSlot",
                               "value": "second"
@@ -336,9 +314,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
+                            "comparison": "Exactly",
                             "measured": {
                               "type": "InSlot",
                               "value": "first"
@@ -352,9 +328,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
+                            "comparison": "Exactly",
                             "measured": {
                               "type": "InSlot",
                               "value": "second"
@@ -395,9 +369,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
+                            "comparison": "Exactly",
                             "measured": {
                               "type": "InSlot",
                               "value": "first"
@@ -411,9 +383,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
+                            "comparison": "Exactly",
                             "measured": {
                               "type": "InSlot",
                               "value": "second"
@@ -451,9 +421,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "InSlot",
                           "value": "first"
@@ -493,20 +461,12 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Clown"
-          },
-          {
-            "type": "Robot"
-          }
+          "Clown",
+          "Robot"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

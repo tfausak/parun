@@ -11,9 +11,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -29,20 +27,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Assassin"
-          },
-          {
-            "type": "Robot"
-          }
+          "Assassin",
+          "Robot"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

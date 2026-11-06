@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -29,17 +27,13 @@
                     "value": {
                       "placement": {
                         "type": "Stated",
-                        "value": {
-                          "type": "Top"
-                        }
+                        "value": "Top"
                       },
                       "ref": {
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -57,9 +51,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

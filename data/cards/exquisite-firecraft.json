@@ -6,9 +6,7 @@
         "value": {
           "type": "Compares",
           "value": {
-            "comparison": {
-              "type": "AtLeast"
-            },
+            "comparison": "AtLeast",
             "measured": {
               "type": "Count",
               "value": {
@@ -20,15 +18,11 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Instant"
-                      }
+                      "value": "Instant"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Sorcery"
-                      }
+                      "value": "Sorcery"
                     }
                   ]
                 },
@@ -37,13 +31,9 @@
                   "value": {
                     "player": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     },
-                    "zone": {
-                      "type": "Graveyard"
-                    }
+                    "zone": "Graveyard"
                   }
                 }
               }
@@ -64,18 +54,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -119,9 +105,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

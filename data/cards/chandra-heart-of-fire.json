@@ -41,16 +41,12 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -141,9 +137,7 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "Exile"
-                          },
+                          "destination": "Exile",
                           "filter": {
                             "type": "And",
                             "value": [
@@ -152,47 +146,33 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Instant"
-                                    }
+                                    "value": "Instant"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Sorcery"
-                                    }
+                                    "value": "Sorcery"
                                   }
                                 ]
                               },
                               {
                                 "type": "HasColor",
-                                "value": {
-                                  "type": "Red"
-                                }
+                                "value": "Red"
                               }
                             ]
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": null,
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "slot": "found",
                           "zones": [
-                            {
-                              "type": "Library"
-                            },
-                            {
-                              "type": "Graveyard"
-                            }
+                            "Library",
+                            "Graveyard"
                           ]
                         }
                       },
@@ -206,9 +186,7 @@
                             "type": "InSlot",
                             "value": "found"
                           },
-                          "verb": {
-                            "type": "Cast"
-                          }
+                          "verb": "Cast"
                         }
                       },
                       {
@@ -218,9 +196,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         }
@@ -232,9 +208,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         }
@@ -246,9 +220,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         }
@@ -260,9 +232,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         }
@@ -274,9 +244,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         }
@@ -288,9 +256,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         }
@@ -316,18 +282,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -335,19 +297,13 @@
       "oracleText": "[+1]: Discard your hand, then exile the top three cards of your library. Until end of turn, you may play cards exiled this way.\n[+1]: Chandra deals 2 damage to any target.\n[−9]: Search your graveyard and library for any number of red instant and/or sorcery cards, exile them, then shuffle. You may cast them this turn. Add six {R}.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Chandra"
-          }
+          "Chandra"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

@@ -10,27 +10,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -59,9 +53,7 @@
           "effect": {
             "type": "InstructionR",
             "value": {
-              "instruction": {
-                "type": "FaceVillainousChoice"
-              },
+              "instruction": "FaceVillainousChoice",
               "rewrite": {
                 "type": "Scaled",
                 "value": {
@@ -82,22 +74,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Noble"
-          },
-          {
-            "type": "TimeLord"
-          }
+          "Noble",
+          "TimeLord"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

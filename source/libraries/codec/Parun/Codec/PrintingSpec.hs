@@ -17,7 +17,7 @@ import qualified Parun.Types.Printing as Printing
 -- | The whole record, spelled once: 'Printing.codec' writes it, and so does
 -- 'Printing.reference'\'s Inline arm.
 mountainJson :: String
-mountainJson = "{\"faces\":[{\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[{\"type\":\"Basic\"}],\"types\":[{\"type\":\"Land\"}],\"subtypes\":[{\"type\":\"Mountain\"}]}}]}"
+mountainJson = "{\"faces\":[{\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[\"Basic\"],\"types\":[\"Land\"],\"subtypes\":[\"Mountain\"]}}]}"
 
 -- | A Mountain with lights, which no printing has: the codec does not care what
 -- the card is.

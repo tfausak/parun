@@ -119,9 +119,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseExert",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

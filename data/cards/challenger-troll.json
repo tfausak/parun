@@ -12,30 +12,20 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   },
                   {
                     "type": "Measures",
                     "value": {
-                      "comparison": {
-                        "type": "AtLeast"
-                      },
-                      "measure": {
-                        "type": "Power"
-                      },
+                      "comparison": "AtLeast",
+                      "measure": "Power",
                       "operand": {
                         "type": "Literal",
                         "value": 4
@@ -58,9 +48,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -76,14 +64,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Troll"
-          }
+          "Troll"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

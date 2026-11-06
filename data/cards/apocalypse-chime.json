@@ -46,9 +46,7 @@
                               ]
                             }
                           },
-                          "regenerability": {
-                            "type": "CantBeRegenerated"
-                          }
+                          "regenerability": "CantBeRegenerated"
                         }
                       }
                     ]
@@ -69,9 +67,7 @@
       "oracleText": "{2}, {T}, Sacrifice this artifact: Destroy all nontoken permanents with a name originally printed in the Homelands expansion. They can't be regenerated.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

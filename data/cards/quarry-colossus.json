@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -63,19 +59,13 @@
                                   "value": [
                                     {
                                       "type": "HasSubtype",
-                                      "value": {
-                                        "type": "Plains"
-                                      }
+                                      "value": "Plains"
                                     },
                                     {
                                       "type": "HeldBy",
                                       "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
-                                        "relation": {
-                                          "type": "You"
-                                        }
+                                        "holder": "Controller",
+                                        "relation": "You"
                                       }
                                     }
                                   ]
@@ -85,13 +75,9 @@
                                   "value": {
                                     "player": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "AnyPlayer"
-                                      }
+                                      "value": "AnyPlayer"
                                     },
-                                    "zone": {
-                                      "type": "Battlefield"
-                                    }
+                                    "zone": "Battlefield"
                                   }
                                 }
                               }
@@ -101,9 +87,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -123,14 +107,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Giant"
-          }
+          "Giant"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

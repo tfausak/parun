@@ -9,9 +9,7 @@
             "unless": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "AtLeast"
-                },
+                "comparison": "AtLeast",
                 "measured": {
                   "type": "Count",
                   "value": {
@@ -23,15 +21,11 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Island"
-                          }
+                          "value": "Island"
                         },
                         {
                           "type": "ControlledByRole",
-                          "value": {
-                            "type": "Defending"
-                          }
+                          "value": "Defending"
                         }
                       ]
                     },
@@ -40,13 +34,9 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         },
-                        "zone": {
-                          "type": "Battlefield"
-                        }
+                        "zone": "Battlefield"
                       }
                     }
                   }
@@ -69,9 +59,7 @@
       "name": "Synthetic Tidal Palisade",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

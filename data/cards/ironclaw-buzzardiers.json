@@ -9,9 +9,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -61,12 +59,8 @@
             "attackers": {
               "type": "Measures",
               "value": {
-                "comparison": {
-                  "type": "AtLeast"
-                },
-                "measure": {
-                  "type": "Power"
-                },
+                "comparison": "AtLeast",
+                "measure": "Power",
                 "operand": {
                   "type": "Literal",
                   "value": 2
@@ -85,9 +79,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -103,17 +95,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Orc"
-          },
-          {
-            "type": "Scout"
-          }
+          "Orc",
+          "Scout"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

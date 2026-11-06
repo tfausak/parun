@@ -12,6 +12,6 @@ spec s = Spec.describe s "Parun.Codec.LoyaltyClause" $ do
       s
       LoyaltyClause.codec
       LoyaltyClause.OncePerTurn
-      " {\"type\":\"OncePerTurn\"} "
+      " \"OncePerTurn\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s LoyaltyClause.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s LoyaltyClause.codec

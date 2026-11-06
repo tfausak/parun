@@ -37,7 +37,7 @@ spec s = Spec.describe s "Parun.Codec.ExilePlayPermission" $ do
           ExilePlayPermission.landEnters = TapState.Untapped,
           ExilePlayPermission.budget = Nothing
         }
-      " {\"player\":1,\"source\":2,\"expiry\":{\"type\":\"Never\"},\"spending\":{\"type\":\"AsProduced\"},\"alternativeCost\":null,\"condition\":null,\"origin\":{\"type\":\"Adventure\"},\"verb\":{\"type\":\"Play\"},\"increase\":0,\"landEnters\":{\"type\":\"Untapped\"},\"budget\":null} "
+      " {\"player\":1,\"source\":2,\"expiry\":{\"type\":\"Never\"},\"spending\":\"AsProduced\",\"alternativeCost\":null,\"condition\":null,\"origin\":\"Adventure\",\"verb\":\"Play\",\"increase\":0,\"landEnters\":\"Untapped\",\"budget\":null} "
   -- CR 601.3 with CR 118.14's rider, the shape Dire Fleet Daredevil writes: a
   -- granted permission lasting until end of turn, mana of any type spendable on
   -- it.
@@ -58,7 +58,7 @@ spec s = Spec.describe s "Parun.Codec.ExilePlayPermission" $ do
           ExilePlayPermission.landEnters = TapState.Untapped,
           ExilePlayPermission.budget = Nothing
         }
-      " {\"player\":3,\"source\":4,\"expiry\":{\"type\":\"AtCleanup\"},\"spending\":{\"type\":\"AnyType\"},\"alternativeCost\":null,\"condition\":null,\"origin\":{\"type\":\"Granted\"},\"verb\":{\"type\":\"Play\"},\"increase\":0,\"landEnters\":{\"type\":\"Untapped\"},\"budget\":null} "
+      " {\"player\":3,\"source\":4,\"expiry\":{\"type\":\"AtCleanup\"},\"spending\":\"AnyType\",\"alternativeCost\":null,\"condition\":null,\"origin\":\"Granted\",\"verb\":\"Play\",\"increase\":0,\"landEnters\":\"Untapped\",\"budget\":null} "
   -- CR 118.9's waiver, the shape Extract Power writes: a granted permission
   -- lasting as long as the card remains exiled, with the mana cost waived -- an
   -- alternative cost of nothing. The two riders are independent, so this one
@@ -80,7 +80,7 @@ spec s = Spec.describe s "Parun.Codec.ExilePlayPermission" $ do
           ExilePlayPermission.landEnters = TapState.Untapped,
           ExilePlayPermission.budget = Nothing
         }
-      " {\"player\":5,\"source\":6,\"expiry\":{\"type\":\"Never\"},\"spending\":{\"type\":\"AsProduced\"},\"alternativeCost\":{\"type\":\"InsteadOfManaCost\",\"value\":[]},\"condition\":null,\"origin\":{\"type\":\"Granted\"},\"verb\":{\"type\":\"Play\"},\"increase\":0,\"landEnters\":{\"type\":\"Untapped\"},\"budget\":null} "
+      " {\"player\":5,\"source\":6,\"expiry\":{\"type\":\"Never\"},\"spending\":\"AsProduced\",\"alternativeCost\":{\"type\":\"InsteadOfManaCost\",\"value\":[]},\"condition\":null,\"origin\":\"Granted\",\"verb\":\"Play\",\"increase\":0,\"landEnters\":\"Untapped\",\"budget\":null} "
   -- Lightstall Inquisitor's: CR 601.2f's increase and CR 614.1d's tapped entry.
   Spec.it s "a granted permission with Lightstall Inquisitor's riders" $
     Common.assertCodec
@@ -99,6 +99,6 @@ spec s = Spec.describe s "Parun.Codec.ExilePlayPermission" $ do
           ExilePlayPermission.landEnters = TapState.Tapped,
           ExilePlayPermission.budget = Nothing
         }
-      " {\"player\":7,\"source\":8,\"expiry\":{\"type\":\"Never\"},\"spending\":{\"type\":\"AsProduced\"},\"alternativeCost\":null,\"condition\":null,\"origin\":{\"type\":\"Granted\"},\"verb\":{\"type\":\"Play\"},\"increase\":1,\"landEnters\":{\"type\":\"Tapped\"},\"budget\":null} "
+      " {\"player\":7,\"source\":8,\"expiry\":{\"type\":\"Never\"},\"spending\":\"AsProduced\",\"alternativeCost\":null,\"condition\":null,\"origin\":\"Granted\",\"verb\":\"Play\",\"increase\":1,\"landEnters\":\"Tapped\",\"budget\":null} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ExilePlayPermission.codec

@@ -18,5 +18,5 @@ spec s = Spec.describe s "Parun.Codec.InstructionR" $ do
       s
       InstructionR.codec
       (InstructionR.MkInstructionR PlayerInstruction.FlipCoin (ControllerRelation.Related PlayerRelation.You) (InstructionRewrite.Scaled (Scaling.Multiply 2)))
-      " {\"instruction\":{\"type\":\"FlipCoin\"},\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"Scaled\",\"value\":{\"type\":\"Multiply\",\"value\":2}}} "
+      " {\"instruction\":\"FlipCoin\",\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"Scaled\",\"value\":{\"type\":\"Multiply\",\"value\":2}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s InstructionR.codec

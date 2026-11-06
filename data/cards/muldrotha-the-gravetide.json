@@ -10,27 +10,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -44,25 +38,37 @@
               "from": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               },
-              "limit": {
-                "type": "OnceEachOfYourTurns"
-              },
+              "limit": "OnceEachOfYourTurns",
               "matching": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Land"
-                }
+                "value": "Land"
               },
-              "verb": {
-                "type": "Play"
+              "verb": "Play"
+            }
+          },
+          "scope": {
+            "type": "You"
+          }
+        },
+        {
+          "effect": {
+            "type": "CastFrom",
+            "value": {
+              "from": {
+                "player": {
+                  "type": "Relative",
+                  "value": "You"
+                },
+                "zone": "Graveyard"
+              },
+              "limit": "OnceEachOfYourTurns",
+              "matching": {
+                "type": "HasCardType",
+                "value": "Artifact"
               }
             }
           },
@@ -77,22 +83,14 @@
               "from": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               },
-              "limit": {
-                "type": "OnceEachOfYourTurns"
-              },
+              "limit": "OnceEachOfYourTurns",
               "matching": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Artifact"
-                }
+                "value": "Battle"
               }
             }
           },
@@ -107,22 +105,14 @@
               "from": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               },
-              "limit": {
-                "type": "OnceEachOfYourTurns"
-              },
+              "limit": "OnceEachOfYourTurns",
               "matching": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Battle"
-                }
+                "value": "Creature"
               }
             }
           },
@@ -137,22 +127,14 @@
               "from": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               },
-              "limit": {
-                "type": "OnceEachOfYourTurns"
-              },
+              "limit": "OnceEachOfYourTurns",
               "matching": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Enchantment"
               }
             }
           },
@@ -167,52 +149,14 @@
               "from": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               },
-              "limit": {
-                "type": "OnceEachOfYourTurns"
-              },
+              "limit": "OnceEachOfYourTurns",
               "matching": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Enchantment"
-                }
-              }
-            }
-          },
-          "scope": {
-            "type": "You"
-          }
-        },
-        {
-          "effect": {
-            "type": "CastFrom",
-            "value": {
-              "from": {
-                "player": {
-                  "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
-                },
-                "zone": {
-                  "type": "Graveyard"
-                }
-              },
-              "limit": {
-                "type": "OnceEachOfYourTurns"
-              },
-              "matching": {
-                "type": "HasCardType",
-                "value": {
-                  "type": "Planeswalker"
-                }
+                "value": "Planeswalker"
               }
             }
           },
@@ -231,22 +175,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Avatar"
-          },
-          {
-            "type": "Elemental"
-          }
+          "Avatar",
+          "Elemental"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

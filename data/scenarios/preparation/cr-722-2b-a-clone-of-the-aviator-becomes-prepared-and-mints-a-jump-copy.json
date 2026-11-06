@@ -148,9 +148,7 @@
           "of": "Designations",
           "object": "Clone",
           "is": [
-            {
-              "type": "Prepared"
-            }
+            "Prepared"
           ]
         }
       }
@@ -164,9 +162,7 @@
           "of": "Designations",
           "object": "$aviator",
           "is": [
-            {
-              "type": "Prepared"
-            }
+            "Prepared"
           ]
         }
       }
@@ -263,9 +259,7 @@
           "of": "Designations",
           "object": "$aviator",
           "is": [
-            {
-              "type": "Prepared"
-            }
+            "Prepared"
           ]
         }
       }

@@ -18,9 +18,7 @@
                 "type": "Step",
                 "value": {
                   "type": "Beginning",
-                  "value": {
-                    "type": "Upkeep"
-                  }
+                  "value": "Upkeep"
                 }
               }
             }
@@ -29,9 +27,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

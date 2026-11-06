@@ -96,9 +96,7 @@
       "player": "bob",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "source": "Mana Leak"

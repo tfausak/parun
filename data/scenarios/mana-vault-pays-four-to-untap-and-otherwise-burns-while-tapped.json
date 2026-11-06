@@ -106,9 +106,7 @@
       "player": "alice",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$p1",
             "$p2",
@@ -187,13 +185,9 @@
                 "type": "Colorless"
               },
               "tags": [
-                {
-                  "type": "Artifact"
-                }
+                "Artifact"
               ],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -203,13 +197,9 @@
                 "type": "Colorless"
               },
               "tags": [
-                {
-                  "type": "Artifact"
-                }
+                "Artifact"
               ],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -219,13 +209,9 @@
                 "type": "Colorless"
               },
               "tags": [
-                {
-                  "type": "Artifact"
-                }
+                "Artifact"
               ],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -240,9 +226,7 @@
       "player": "alice",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       }
     },

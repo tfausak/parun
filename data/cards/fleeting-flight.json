@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -60,9 +58,7 @@
                       "duration": {
                         "type": "UntilEndOfTurn"
                       },
-                      "kind": {
-                        "type": "Combat"
-                      },
+                      "kind": "Combat",
                       "ref": {
                         "type": "InSlot",
                         "value": "target"
@@ -84,9 +80,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

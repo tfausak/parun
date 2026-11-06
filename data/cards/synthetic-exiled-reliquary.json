@@ -29,9 +29,7 @@
                             "type": "InSlot",
                             "value": "thatExiledCard"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -68,9 +66,7 @@
                             "type": "InSlot",
                             "value": "thatExiledCard"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -90,9 +86,7 @@
       "name": "Synthetic Exiled Reliquary",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

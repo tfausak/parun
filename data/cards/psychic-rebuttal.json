@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -40,9 +38,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -54,15 +50,11 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Instant"
-                              }
+                              "value": "Instant"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Sorcery"
-                              }
+                              "value": "Sorcery"
                             }
                           ]
                         },
@@ -71,13 +63,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
-                            "zone": {
-                              "type": "Graveyard"
-                            }
+                            "zone": "Graveyard"
                           }
                         }
                       }
@@ -117,23 +105,17 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Instant"
-                          }
+                          "value": "Instant"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Sorcery"
-                          }
+                          "value": "Sorcery"
                         }
                       ]
                     },
                     {
                       "type": "TargetsPlayer",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     }
                   ]
                 },
@@ -147,9 +129,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -45,9 +45,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "mana": [
                           {
@@ -59,12 +57,8 @@
                       "payer": {
                         "type": "HolderOfBound",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "hop": {
-                            "type": "Itself"
-                          },
+                          "holder": "Controller",
+                          "hop": "Itself",
                           "slot": "target"
                         }
                       },
@@ -73,9 +67,7 @@
                         "value": {
                           "quantity": {
                             "type": "Measure",
-                            "value": {
-                              "type": "ManaValue"
-                            }
+                            "value": "ManaValue"
                           },
                           "slot": "target"
                         }
@@ -92,16 +84,12 @@
                           "type": "Not",
                           "value": {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Wall"
-                            }
+                            "value": "Wall"
                           }
                         },
                         {
                           "type": "ControlledByRole",
-                          "value": {
-                            "type": "Active"
-                          }
+                          "value": "Active"
                         },
                         {
                           "type": "ControlledSinceTurnBegan"
@@ -121,9 +109,7 @@
               "type": "BeforeStep",
               "value": {
                 "type": "Combat",
-                "value": {
-                  "type": "DeclareAttackers"
-                }
+                "value": "DeclareAttackers"
               }
             }
           ]
@@ -136,17 +122,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -159,9 +141,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -179,9 +159,7 @@
                                   "type": "Not",
                                   "value": {
                                     "type": "DeclaredThisTurn",
-                                    "value": {
-                                      "type": "Attacker"
-                                    }
+                                    "value": "Attacker"
                                   }
                                 }
                               ]
@@ -191,13 +169,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
+                                  "value": "AnyPlayer"
                                 },
-                                "zone": {
-                                  "type": "Battlefield"
-                                }
+                                "zone": "Battlefield"
                               }
                             }
                           }
@@ -216,9 +190,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -239,9 +211,7 @@
       "oracleText": "{3}, {T}: Choose target non-Wall creature the active player has controlled continuously since the beginning of the turn. That player may pay {X}, where X is that creature's mana value. If they don't pay, the creature attacks this turn if able, and at the beginning of the next end step, destroy it if it didn't attack this turn. Activate only before attackers are declared.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -60,9 +60,7 @@
       "do": {
         "Answer": {
           "prompt": "ReverseManaAbilities",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },
@@ -73,9 +71,7 @@
       "do": {
         "Answer": {
           "prompt": "ReverseManaAbilities",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },
@@ -86,9 +82,7 @@
       "do": {
         "Answer": {
           "prompt": "ReverseManaAbilities",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },

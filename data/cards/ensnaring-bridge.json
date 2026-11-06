@@ -12,19 +12,13 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "Measures",
                     "value": {
-                      "comparison": {
-                        "type": "GreaterThan"
-                      },
-                      "measure": {
-                        "type": "Power"
-                      },
+                      "comparison": "GreaterThan",
+                      "measure": "Power",
                       "operand": {
                         "type": "EnclosingAmount"
                       }
@@ -48,13 +42,9 @@
                   "value": {
                     "player": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     },
-                    "zone": {
-                      "type": "Hand"
-                    }
+                    "zone": "Hand"
                   }
                 }
               }
@@ -72,9 +62,7 @@
       "oracleText": "Creatures with power greater than the number of cards in your hand can't attack.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

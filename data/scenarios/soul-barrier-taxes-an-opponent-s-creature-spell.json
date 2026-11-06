@@ -183,9 +183,7 @@
       "player": "bob",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$f3",
             "$f4",

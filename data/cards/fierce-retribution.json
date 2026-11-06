@@ -14,9 +14,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -32,9 +30,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -48,16 +44,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "CastUsing",
                       "value": {
                         "type": "OfFamily",
-                        "value": {
-                          "type": "Cleave"
-                        }
+                        "value": "Cleave"
                       }
                     },
                     "threshold": {
@@ -74,9 +66,7 @@
                         "type": "InSlot",
                         "value": "uncleaved"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -85,16 +75,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "CastUsing",
                       "value": {
                         "type": "OfFamily",
-                        "value": {
-                          "type": "Cleave"
-                        }
+                        "value": "Cleave"
                       }
                     },
                     "threshold": {
@@ -111,9 +97,7 @@
                         "type": "InSlot",
                         "value": "cleaved"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -139,9 +123,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

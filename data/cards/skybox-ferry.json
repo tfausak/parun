@@ -42,14 +42,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Vehicle"
-          }
+          "Vehicle"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

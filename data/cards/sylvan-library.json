@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -25,17 +23,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "DrawStep"
-                }
+                "value": "DrawStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -51,9 +45,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -77,24 +69,18 @@
                               "value": {
                                 "placement": {
                                   "type": "Stated",
-                                  "value": {
-                                    "type": "Top"
-                                  }
+                                  "value": "Top"
                                 },
                                 "ref": {
                                   "type": "InSlot",
                                   "value": "card"
                                 },
-                                "zone": {
-                                  "type": "Library"
-                                }
+                                "zone": "Library"
                               }
                             }
                           ],
                           "payGate": {
-                            "branch": {
-                              "type": "IfNotPaid"
-                            },
+                            "branch": "IfNotPaid",
                             "cost": {
                               "components": [
                                 {
@@ -109,9 +95,7 @@
                             },
                             "payer": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             }
                           },
                           "ref": {
@@ -126,15 +110,11 @@
                               },
                               "filter": {
                                 "type": "LeftLibraryThisTurn",
-                                "value": {
-                                  "type": "Drawn"
-                                }
+                                "value": "Drawn"
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -157,9 +137,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

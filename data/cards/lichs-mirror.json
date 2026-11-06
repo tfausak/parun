@@ -20,9 +20,7 @@
                   "value": {
                     "library": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     },
                     "ref": {
                       "type": "AllOf",
@@ -50,12 +48,8 @@
                           "value": {
                             "type": "HeldBy",
                             "value": {
-                              "holder": {
-                                "type": "Owner"
-                              },
-                              "relation": {
-                                "type": "You"
-                              }
+                              "holder": "Owner",
+                              "relation": "You"
                             }
                           }
                         }
@@ -68,9 +62,7 @@
                   "value": {
                     "player": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     },
                     "quantity": {
                       "type": "Literal",
@@ -83,9 +75,7 @@
                   "value": {
                     "player": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     },
                     "quantity": {
                       "type": "Literal",
@@ -103,9 +93,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

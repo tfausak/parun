@@ -16,14 +16,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Book"
-          }
+          "Book"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -67,9 +67,7 @@
       "oracleText": "{2}: Target creature gets +1/+0 until end of turn.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

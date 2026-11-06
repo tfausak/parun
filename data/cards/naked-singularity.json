@@ -29,15 +29,11 @@
             "value": {
               "matching": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Plains"
-                }
+                "value": "Plains"
               },
               "produces": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               }
             }
           }
@@ -48,15 +44,11 @@
             "value": {
               "matching": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Island"
-                }
+                "value": "Island"
               },
               "produces": {
                 "type": "Colored",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               }
             }
           }
@@ -67,15 +59,11 @@
             "value": {
               "matching": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Swamp"
-                }
+                "value": "Swamp"
               },
               "produces": {
                 "type": "Colored",
-                "value": {
-                  "type": "White"
-                }
+                "value": "White"
               }
             }
           }
@@ -86,15 +74,11 @@
             "value": {
               "matching": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Mountain"
-                }
+                "value": "Mountain"
               },
               "produces": {
                 "type": "Colored",
-                "value": {
-                  "type": "Blue"
-                }
+                "value": "Blue"
               }
             }
           }
@@ -105,15 +89,11 @@
             "value": {
               "matching": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Forest"
-                }
+                "value": "Forest"
               },
               "produces": {
                 "type": "Colored",
-                "value": {
-                  "type": "Black"
-                }
+                "value": "Black"
               }
             }
           }
@@ -121,9 +101,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

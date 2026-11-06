@@ -13,14 +13,14 @@ spec s = Spec.describe s "Parun.Codec.StackObjectKind" $ do
       s
       StackObjectKind.codec
       StackObjectKind.Spell
-      " {\"type\":\"Spell\"} "
+      " \"Spell\" "
   -- CR 113.3b's limb, which CR 602.2b routes through the same targeting step.
   Spec.it s "ActivatedAbility" $
     Common.assertCodec
       s
       StackObjectKind.codec
       StackObjectKind.ActivatedAbility
-      " {\"type\":\"ActivatedAbility\"} "
+      " \"ActivatedAbility\" "
   -- CR 113.3c's, which CR 603.3d routes through it as well. Professor Hojo's
   -- "an activated ability" is the printing that tells the two apart.
   Spec.it s "TriggeredAbility" $
@@ -28,7 +28,7 @@ spec s = Spec.describe s "Parun.Codec.StackObjectKind" $ do
       s
       StackObjectKind.codec
       StackObjectKind.TriggeredAbility
-      " {\"type\":\"TriggeredAbility\"} "
+      " \"TriggeredAbility\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

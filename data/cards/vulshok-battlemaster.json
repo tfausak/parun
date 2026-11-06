@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -53,9 +51,7 @@
                             "type": "EachMatching",
                             "value": {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Equipment"
-                              }
+                              "value": "Equipment"
                             }
                           }
                         }
@@ -70,17 +66,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Human",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

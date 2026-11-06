@@ -23,7 +23,7 @@ spec s = Spec.describe s "Parun.Codec.BecomesTargetedTrigger" $ do
       s
       BecomesTargetedTrigger.codec
       BecomesTargetedTrigger.defaultValue {BecomesTargetedTrigger.relation = PlayerRelation.Opponent}
-      " {\"relation\":{\"type\":\"Opponent\"}} "
+      " {\"relation\":\"Opponent\"} "
   -- Leyline of Combustion's "you and/or" over Professor Hojo's creatures you
   -- control, an activated ability, one batch.
   Spec.it s "round-trips every field" $
@@ -37,5 +37,5 @@ spec s = Spec.describe s "Parun.Codec.BecomesTargetedTrigger" $ do
             BecomesTargetedTrigger.batching = Batching.OneOrMore
           }
       )
-      " {\"subject\":{\"type\":\"YouOrPermanent\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]}}},\"relation\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"ActivatedAbility\"},\"batching\":{\"type\":\"OneOrMore\"}} "
+      " {\"subject\":{\"type\":\"YouOrPermanent\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Creature\"},{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}]}}},\"relation\":\"Opponent\",\"kind\":\"ActivatedAbility\",\"batching\":\"OneOrMore\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s BecomesTargetedTrigger.codec

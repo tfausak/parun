@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -33,16 +31,12 @@
                         "type": "And",
                         "value": []
                       },
-                      "player": {
-                        "type": "You"
-                      }
+                      "player": "You"
                     }
                   }
                 }
               },
-              "controller": {
-                "type": "Opponent"
-              }
+              "controller": "Opponent"
             }
           },
           "modal": {
@@ -56,9 +50,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -75,9 +67,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -98,9 +88,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

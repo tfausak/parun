@@ -17,9 +17,7 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       {
                         "type": "Not",
@@ -98,27 +96,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -142,9 +134,7 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "Not",
@@ -154,9 +144,7 @@
                   }
                 ]
               },
-              "player": {
-                "type": "You"
-              }
+              "player": "You"
             }
           },
           "modal": {
@@ -176,9 +164,7 @@
                                 "value": {
                                   "quantity": {
                                     "type": "Measure",
-                                    "value": {
-                                      "type": "ManaValue"
-                                    }
+                                    "value": "ManaValue"
                                   },
                                   "slot": "thatDepartedPermanent"
                                 }
@@ -190,9 +176,7 @@
                             }
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -203,9 +187,7 @@
                             "value": {
                               "step": {
                                 "type": "Ending",
-                                "value": {
-                                  "type": "EndStep"
-                                }
+                                "value": "EndStep"
                               }
                             }
                           },
@@ -213,9 +195,7 @@
                             "type": "InSlot",
                             "value": "exiled"
                           },
-                          "spending": {
-                            "type": "AnyType"
-                          }
+                          "spending": "AnyType"
                         }
                       }
                     ]
@@ -235,22 +215,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Demon"
-          },
-          {
-            "type": "Mercenary"
-          }
+          "Demon",
+          "Mercenary"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

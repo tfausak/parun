@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -37,9 +35,7 @@
                         "type": "IsBound",
                         "value": "creature"
                       },
-                      "whoRecipient": {
-                        "type": "You"
-                      }
+                      "whoRecipient": "You"
                     }
                   }
                 ]
@@ -57,9 +53,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

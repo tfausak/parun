@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -42,9 +40,7 @@
               "recipients": [
                 {
                   "type": "Permanent",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               ]
             }
@@ -70,12 +66,8 @@
                                   "players": {
                                     "type": "HolderOfBound",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "hop": {
-                                        "type": "Itself"
-                                      },
+                                      "holder": "Controller",
+                                      "hop": "Itself",
                                       "slot": "became"
                                     }
                                   }
@@ -92,9 +84,7 @@
                                 "value": {
                                   "players": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   }
                                 }
                               }
@@ -112,14 +102,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Spirit"
-          }
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

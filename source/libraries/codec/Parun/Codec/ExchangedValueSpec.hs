@@ -17,7 +17,7 @@ spec s = Spec.describe s "Parun.Codec.ExchangedValue" $ do
       s
       ExchangedValue.codec
       (ExchangedValue.LifeTotal (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"LifeTotal\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"type\":\"LifeTotal\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   Spec.it s "Power" $
     Common.assertCodec
       s

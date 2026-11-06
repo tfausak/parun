@@ -15,27 +15,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -62,12 +56,8 @@
                         {
                           "type": "AddSupertypes",
                           "value": [
-                            {
-                              "type": "Legendary"
-                            },
-                            {
-                              "type": "Snow"
-                            }
+                            "Legendary",
+                            "Snow"
                           ]
                         }
                       ]
@@ -76,9 +66,7 @@
                       "condition": {
                         "type": "Compares",
                         "value": {
-                          "comparison": {
-                            "type": "AtLeast"
-                          },
+                          "comparison": "AtLeast",
                           "measured": {
                             "type": "Count",
                             "value": {
@@ -93,9 +81,7 @@
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   }
                                 ]
                               },
@@ -104,13 +90,9 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   },
-                                  "zone": {
-                                    "type": "Battlefield"
-                                  }
+                                  "zone": "Battlefield"
                                 }
                               }
                             }
@@ -147,12 +129,8 @@
                   "eligible": {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   }
                 }
@@ -167,22 +145,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Shapeshifter"
-          }
+          "Shapeshifter"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          },
-          {
-            "type": "Snow"
-          }
+          "Legendary",
+          "Snow"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

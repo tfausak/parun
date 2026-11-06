@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -41,20 +39,14 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "Battlefield"
-                          },
+                          "destination": "Battlefield",
                           "filter": {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Forest"
-                            }
+                            "value": "Forest"
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -62,9 +54,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -78,17 +68,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Scout"
-          }
+          "Elf",
+          "Scout"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

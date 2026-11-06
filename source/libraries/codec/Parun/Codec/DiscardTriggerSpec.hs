@@ -26,14 +26,14 @@ spec s = Spec.describe s "Parun.Codec.DiscardTrigger" $ do
       s
       DiscardTrigger.codec
       (DiscardTrigger.MkDiscardTrigger (DiscardSubject.Discarder youAnything) DiscardWay.Cycled Batching.EachOccurrence)
-      " {\"subject\":{\"type\":\"Discarder\",\"value\":{\"player\":{\"type\":\"You\"},\"filter\":{\"type\":\"And\",\"value\":[]}}},\"way\":{\"type\":\"Cycled\"}} "
+      " {\"subject\":{\"type\":\"Discarder\",\"value\":{\"player\":\"You\",\"filter\":{\"type\":\"And\",\"value\":[]}}},\"way\":\"Cycled\"} "
   -- Magmakin Artillerist's "whenever you discard one or more cards".
   Spec.it s "OneOrMore writes its key" $
     Common.assertCodec
       s
       DiscardTrigger.codec
       (DiscardTrigger.MkDiscardTrigger (DiscardSubject.Discarder youAnything) DiscardWay.AnyDiscard Batching.OneOrMore)
-      " {\"subject\":{\"type\":\"Discarder\",\"value\":{\"player\":{\"type\":\"You\"},\"filter\":{\"type\":\"And\",\"value\":[]}}},\"batching\":{\"type\":\"OneOrMore\"}} "
+      " {\"subject\":{\"type\":\"Discarder\",\"value\":{\"player\":\"You\",\"filter\":{\"type\":\"And\",\"value\":[]}}},\"batching\":\"OneOrMore\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DiscardTrigger.codec
   where
     youAnything = PlayerActsOn.MkPlayerActsOn PlayerRelation.You (Filter.And [])

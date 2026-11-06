@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -50,20 +46,14 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "BattlefieldAttached"
-                          },
+                          "destination": "BattlefieldAttached",
                           "filter": {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Aura"
-                            }
+                            "value": "Aura"
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -71,14 +61,10 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "zones": [
-                            {
-                              "type": "Hand"
-                            }
+                            "Hand"
                           ]
                         }
                       }
@@ -95,17 +81,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

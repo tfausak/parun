@@ -32,9 +32,7 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "RevealThenHand"
-                          },
+                          "destination": "RevealThenHand",
                           "filter": {
                             "type": "Shares",
                             "value": {
@@ -45,19 +43,13 @@
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Creature"
-                                      }
+                                      "value": "Creature"
                                     },
                                     {
                                       "type": "HeldBy",
                                       "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
-                                        "relation": {
-                                          "type": "You"
-                                        }
+                                        "holder": "Controller",
+                                        "relation": "You"
                                       }
                                     },
                                     {
@@ -76,9 +68,7 @@
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -86,9 +76,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -105,17 +93,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Golem"
-          }
+          "Golem"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

@@ -121,9 +121,7 @@
       "player": "bob",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "source": "Rakshasa's Disdain"

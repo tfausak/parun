@@ -28,7 +28,7 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bolt", "targets": ["$opter"], "mana": ["$mountain"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Yedora, Grave Gardener", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Yedora, Grave Gardener", "do": { "ChooseOptional": "Exercises" } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Take": { "action": "ActivateManaAbility Ornithopter" } } },
     {
       "turn": 1,
@@ -40,9 +40,9 @@
           "player": "alice",
           "is": [
             {
-              "manaType": { "type": "Colored", "value": { "type": "Blue" } },
+              "manaType": { "type": "Colored", "value": "Blue" },
               "tags": [],
-              "retention": { "type": "Ordinary" },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null

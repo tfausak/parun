@@ -58,9 +58,7 @@
                           "duration": {
                             "type": "UntilEndOfTurn"
                           },
-                          "what": {
-                            "type": "Block"
-                          }
+                          "what": "Block"
                         }
                       }
                     ]
@@ -81,21 +79,15 @@
                         {
                           "type": "HeldByBound",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
+                            "holder": "Controller",
                             "slot": "target"
                           }
                         },
                         {
                           "type": "ControllerRelatesToBound",
                           "value": {
-                            "hop": {
-                              "type": "Itself"
-                            },
-                            "relation": {
-                              "type": "You"
-                            },
+                            "hop": "Itself",
+                            "relation": "You",
                             "slot": "target"
                           }
                         }
@@ -143,16 +135,12 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -205,16 +193,12 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -269,15 +253,11 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Instant"
-                                    }
+                                    "value": "Instant"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Sorcery"
-                                    }
+                                    "value": "Sorcery"
                                   }
                                 ]
                               },
@@ -308,18 +288,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -327,19 +303,13 @@
       "oracleText": "[+1]: Chandra deals 1 damage to target player or planeswalker and 1 damage to up to one target creature that player or that planeswalker's controller controls. That creature can't block this turn.\n[0]: Exile the top card of your library. You may play it this turn.\n[−7]: Exile the top ten cards of your library. Choose an instant or sorcery card exiled this way and copy it three times. You may cast the copies without paying their mana costs.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Chandra"
-          }
+          "Chandra"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

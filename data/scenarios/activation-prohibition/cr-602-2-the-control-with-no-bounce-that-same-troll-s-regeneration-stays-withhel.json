@@ -6,9 +6,7 @@
         "name": "alice",
         "counters": [
           {
-            "key": {
-              "type": "Energy"
-            },
+            "key": "Energy",
             "value": 2
           }
         ],

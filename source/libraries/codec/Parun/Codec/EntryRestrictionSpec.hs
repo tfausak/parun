@@ -24,5 +24,5 @@ spec s = Spec.describe s "Parun.Codec.EntryRestriction" $ do
           (Affected.MatchingOffBattlefield (Filter.HasCardType CardType.Creature))
           (Set.fromList [Zone.Library, Zone.Graveyard])
       )
-      " {\"affected\":{\"type\":\"MatchingOffBattlefield\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"origins\":[{\"type\":\"Library\"},{\"type\":\"Graveyard\"}]} "
+      " {\"affected\":{\"type\":\"MatchingOffBattlefield\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"origins\":[\"Library\",\"Graveyard\"]} "
   Spec.it s "has a schema" $ Common.assertHasSchema s EntryRestriction.codec

@@ -15,9 +15,7 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Green"
-                    }
+                    "value": "Green"
                   }
                 }
               ]
@@ -34,9 +32,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -79,9 +75,7 @@
                             "type": "InSlot",
                             "value": "permanent"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -96,15 +90,11 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Artifact"
-                            }
+                            "value": "Artifact"
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Enchantment"
-                            }
+                            "value": "Enchantment"
                           }
                         ]
                       }
@@ -121,14 +111,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ooze"
-          }
+          "Ooze"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

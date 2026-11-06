@@ -102,8 +102,20 @@
       "player": "alice",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
+          "decision": "Pays"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "AnnounceHybridHalf",
+          "with": {
+            "type": "Colored",
+            "value": "Red"
           }
         }
       }
@@ -117,25 +129,7 @@
           "prompt": "AnnounceHybridHalf",
           "with": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
-          }
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "AnnounceHybridHalf",
-          "with": {
-            "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       }

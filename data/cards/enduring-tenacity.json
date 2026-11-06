@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -40,12 +36,8 @@
           "condition": {
             "type": "LifeChanges",
             "value": {
-              "direction": {
-                "type": "Gained"
-              },
-              "player": {
-                "type": "You"
-              }
+              "direction": "Gained",
+              "player": "You"
             }
           },
           "modal": {
@@ -74,9 +66,7 @@
                   "target": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -93,9 +83,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ],
               "permanent": {
@@ -108,9 +96,7 @@
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     }
                   ]
                 }
@@ -135,12 +121,8 @@
                               {
                                 "type": "CardType",
                                 "value": {
-                                  "cardType": {
-                                    "type": "Enchantment"
-                                  },
-                                  "mode": {
-                                    "type": "Replace"
-                                  }
+                                  "cardType": "Enchantment",
+                                  "mode": "Replace"
                                 }
                               }
                             ],
@@ -148,9 +130,7 @@
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -163,20 +143,12 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Glimmer"
-          },
-          {
-            "type": "Snake"
-          }
+          "Glimmer",
+          "Snake"
         ],
         "types": [
-          {
-            "type": "Creature"
-          },
-          {
-            "type": "Enchantment"
-          }
+          "Creature",
+          "Enchantment"
         ]
       }
     }

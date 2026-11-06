@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -66,9 +62,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -80,9 +74,7 @@
                       "type": "Not",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       }
                     },
                     "pool": {
@@ -98,9 +90,7 @@
           "condition": {
             "type": "PutIntoZone",
             "value": {
-              "batching": {
-                "type": "OneOrMore"
-              },
+              "batching": "OneOrMore",
               "card": {
                 "type": "Matching",
                 "value": {
@@ -110,9 +100,7 @@
                   }
                 }
               },
-              "to": {
-                "type": "Library"
-              }
+              "to": "Library"
             }
           },
           "modal": {
@@ -141,9 +129,7 @@
                                         "type": "Not",
                                         "value": {
                                           "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Spirit"
-                                          }
+                                          "value": "Spirit"
                                         }
                                       }
                                     }
@@ -161,9 +147,7 @@
                                         "type": "Not",
                                         "value": {
                                           "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Spirit"
-                                          }
+                                          "value": "Spirit"
                                         }
                                       }
                                     }
@@ -180,14 +164,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Spirit"
-                                    }
+                                    "Spirit"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -209,22 +189,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Bird"
-          },
-          {
-            "type": "Spirit"
-          }
+          "Bird",
+          "Spirit"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

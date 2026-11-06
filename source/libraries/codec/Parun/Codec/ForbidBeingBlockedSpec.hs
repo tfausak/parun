@@ -23,5 +23,5 @@ spec s = Spec.describe s "Parun.Codec.ForbidBeingBlocked" $ do
             ForbidBeingBlocked.blockers = Filter.Not (Filter.Shares Trait.Sector Anchor.Source)
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"blockers\":{\"type\":\"Not\",\"value\":{\"type\":\"Shares\",\"value\":{\"trait\":{\"type\":\"Sector\"},\"anchor\":{\"type\":\"Source\"}}}}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"affected\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"blockers\":{\"type\":\"Not\",\"value\":{\"type\":\"Shares\",\"value\":{\"trait\":{\"type\":\"Sector\"},\"anchor\":{\"type\":\"Source\"}}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ForbidBeingBlocked.codec

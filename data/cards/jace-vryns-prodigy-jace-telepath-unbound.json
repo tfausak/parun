@@ -22,9 +22,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -39,9 +37,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -56,9 +52,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -74,13 +68,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 },
-                                "zone": {
-                                  "type": "Graveyard"
-                                }
+                                "zone": "Graveyard"
                               }
                             }
                           }
@@ -100,9 +90,7 @@
                             "value": "self"
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -118,9 +106,7 @@
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -140,9 +126,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -158,22 +142,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
@@ -270,12 +246,8 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "verb": {
-                            "type": "Cast"
-                          },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "verb": "Cast",
+                          "zone": "Graveyard"
                         }
                       },
                       {
@@ -287,26 +259,18 @@
                           "effect": {
                             "type": "ZoneChangeR",
                             "value": {
-                              "destination": {
-                                "type": "Exile"
-                              },
+                              "destination": "Exile",
                               "matching": {
                                 "whatObject": {
                                   "type": "IsBound",
                                   "value": "target"
                                 },
-                                "whenDestination": {
-                                  "type": "Graveyard"
-                                }
+                                "whenDestination": "Graveyard"
                               }
                             }
                           },
-                          "origin": {
-                            "type": "Other"
-                          },
-                          "uses": {
-                            "type": "Unlimited"
-                          }
+                          "origin": "Other",
+                          "uses": "Unlimited"
                         }
                       }
                     ]
@@ -319,15 +283,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Instant"
-                          }
+                          "value": "Instant"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Sorcery"
-                          }
+                          "value": "Sorcery"
                         }
                       ]
                     },
@@ -381,9 +341,7 @@
                                           "type": "PlayersTurn",
                                           "value": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "AnyPlayer"
-                                            }
+                                            "value": "AnyPlayer"
                                           }
                                         },
                                         "spell": {
@@ -391,12 +349,8 @@
                                           "value": {
                                             "type": "HeldBy",
                                             "value": {
-                                              "holder": {
-                                                "type": "Controller"
-                                              },
-                                              "relation": {
-                                                "type": "You"
-                                              }
+                                              "holder": "Controller",
+                                              "relation": "You"
                                             }
                                           }
                                         }
@@ -428,9 +382,7 @@
                                             "target": {
                                               "filter": {
                                                 "type": "IsPlayer",
-                                                "value": {
-                                                  "type": "Opponent"
-                                                }
+                                                "value": "Opponent"
                                               },
                                               "pool": {
                                                 "type": "Players"
@@ -456,9 +408,7 @@
         }
       ],
       "colorIndicator": [
-        {
-          "type": "Blue"
-        }
+        "Blue"
       ],
       "loyalty": {
         "type": "Literal",
@@ -468,19 +418,13 @@
       "oracleText": "[+1]: Up to one target creature gets -2/-0 until your next turn.\n[−3]: You may cast target instant or sorcery card from your graveyard this turn. If that spell would be put into your graveyard, exile it instead.\n[−9]: You get an emblem with \"Whenever you cast a spell, target opponent mills five cards.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Jace"
-          }
+          "Jace"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

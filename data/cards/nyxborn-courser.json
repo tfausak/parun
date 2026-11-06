@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -37,20 +33,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Centaur"
-          },
-          {
-            "type": "Scout"
-          }
+          "Centaur",
+          "Scout"
         ],
         "types": [
-          {
-            "type": "Creature"
-          },
-          {
-            "type": "Enchantment"
-          }
+          "Creature",
+          "Enchantment"
         ]
       }
     }

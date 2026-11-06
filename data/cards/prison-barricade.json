@@ -17,9 +17,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -35,9 +33,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -52,16 +48,12 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "TimesPaid",
                 "value": {
                   "type": "Printed",
-                  "value": {
-                    "type": "Kicker"
-                  }
+                  "value": "Kicker"
                 }
               },
               "threshold": {
@@ -119,14 +111,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Wall"
-          }
+          "Wall"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -114,9 +114,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "Upkeep",
@@ -146,9 +144,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Declines"
-        }
+        "ChooseOptional": "Declines"
       },
       "player": "alice",
       "step": "Upkeep",

@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -46,9 +42,7 @@
             "type": "PlayerDrawsNthCard",
             "value": {
               "nth": 2,
-              "player": {
-                "type": "You"
-              }
+              "player": "You"
             }
           },
           "modal": {
@@ -77,9 +71,7 @@
                                         "type": "Not",
                                         "value": {
                                           "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Spirit"
-                                          }
+                                          "value": "Spirit"
                                         }
                                       }
                                     }
@@ -97,9 +89,7 @@
                                         "type": "Not",
                                         "value": {
                                           "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Spirit"
-                                          }
+                                          "value": "Spirit"
                                         }
                                       }
                                     }
@@ -116,14 +106,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Spirit"
-                                    }
+                                    "Spirit"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -145,20 +131,12 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ally"
-          },
-          {
-            "type": "Druid"
-          },
-          {
-            "type": "Human"
-          }
+          "Ally",
+          "Druid",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

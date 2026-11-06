@@ -17,9 +17,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Artifact"
-                    }
+                    "value": "Artifact"
                   }
                 }
               }
@@ -89,9 +87,7 @@
                         {
                           "type": "HeldByBound",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
+                            "holder": "Controller",
                             "slot": "chosen"
                           }
                         },
@@ -130,18 +126,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -166,9 +158,7 @@
               "recipients": [
                 {
                   "type": "Permanent",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               ]
             }
@@ -205,22 +195,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Alien"
-          },
-          {
-            "type": "Cleric"
-          }
+          "Alien",
+          "Cleric"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

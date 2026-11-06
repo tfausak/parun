@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -43,23 +41,17 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "HasColor",
-                            "value": {
-                              "type": "Black"
-                            }
+                            "value": "Black"
                           }
                         ]
                       }
                     }
                   },
-                  "role": {
-                    "type": "Blocker"
-                  }
+                  "role": "Blocker"
                 }
               },
               {
@@ -74,23 +66,17 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "HasColor",
-                            "value": {
-                              "type": "Black"
-                            }
+                            "value": "Black"
                           }
                         ]
                       }
                     }
                   },
-                  "role": {
-                    "type": "Attacker"
-                  }
+                  "role": "Attacker"
                 }
               }
             ]
@@ -136,17 +122,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Human"
-          }
+          "Cleric",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

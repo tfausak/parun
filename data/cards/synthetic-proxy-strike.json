@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -48,21 +46,15 @@
                                     "type": "InSlot",
                                     "value": "victim"
                                   },
-                                  "regenerability": {
-                                    "type": "Regenerable"
-                                  }
+                                  "regenerability": "Regenerable"
                                 }
                               }
                             ]
                           }
                         }
                       },
-                      "origin": {
-                        "type": "Other"
-                      },
-                      "uses": {
-                        "type": "Once"
-                      }
+                      "origin": "Other",
+                      "uses": "Once"
                     }
                   }
                 ]
@@ -92,9 +84,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

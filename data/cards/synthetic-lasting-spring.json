@@ -26,9 +26,7 @@
                               "type": "Colorless"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfTurn"
-                          }
+                          "retention": "UntilEndOfTurn"
                         }
                       }
                     ]
@@ -48,9 +46,7 @@
       "name": "Synthetic Lasting Spring",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -9,9 +9,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -57,9 +55,7 @@
                                     "actor": {
                                       "type": "Self"
                                     },
-                                    "kind": {
-                                      "type": "Combat"
-                                    }
+                                    "kind": "Combat"
                                   }
                                 },
                                 "modal": {
@@ -108,19 +104,13 @@
                         },
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Goblin"
-                          }
+                          "value": "Goblin"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -144,9 +134,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -171,19 +159,13 @@
                 },
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Goblin"
-                  }
+                  "value": "Goblin"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -212,17 +194,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Goblin",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.Prohibition" $ do
       s
       Prohibition.codec
       Prohibition.Regenerate
-      " {\"type\":\"Regenerate\"} "
+      " \"Regenerate\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s Prohibition.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s Prohibition.codec
@@ -21,4 +21,4 @@ spec s = Spec.describe s "Parun.Codec.Prohibition" $ do
       s
       Prohibition.codec
       Prohibition.PhaseIn
-      " {\"type\":\"PhaseIn\"} "
+      " \"PhaseIn\" "

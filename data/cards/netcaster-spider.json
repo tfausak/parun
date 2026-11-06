@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -43,9 +41,7 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HasKeyword",
@@ -56,9 +52,7 @@
                   ]
                 }
               },
-              "role": {
-                "type": "Blocker"
-              }
+              "role": "Blocker"
             }
           },
           "modal": {
@@ -102,14 +96,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Spider"
-          }
+          "Spider"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

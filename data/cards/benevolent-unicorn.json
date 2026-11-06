@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -30,9 +28,7 @@
               "matching": {
                 "whatSource": {
                   "type": "IsInZone",
-                  "value": {
-                    "type": "Stack"
-                  }
+                  "value": "Stack"
                 }
               },
               "rewrite": {
@@ -52,14 +48,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Unicorn"
-          }
+          "Unicorn"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

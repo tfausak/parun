@@ -6,18 +6,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -37,24 +33,18 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Planeswalker"
-                            }
+                            "value": "Planeswalker"
                           }
                         ]
                       },
                       "permanents": "sacrificed",
                       "players": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -68,9 +58,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -80,12 +68,8 @@
                         "filter": {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         },
                         "scope": {
@@ -118,39 +102,27 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Artifact"
-                                    }
+                                    "value": "Artifact"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Battle"
-                                    }
+                                    "value": "Battle"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Enchantment"
-                                    }
+                                    "value": "Enchantment"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Land"
-                                    }
+                                    "value": "Land"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Planeswalker"
-                                    }
+                                    "value": "Planeswalker"
                                   }
                                 ]
                               },
@@ -168,12 +140,8 @@
                                       {
                                         "type": "HeldBy",
                                         "value": {
-                                          "holder": {
-                                            "type": "Controller"
-                                          },
-                                          "relation": {
-                                            "type": "You"
-                                          }
+                                          "holder": "Controller",
+                                          "relation": "You"
                                         }
                                       }
                                     ]
@@ -190,9 +158,7 @@
                           }
                         }
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ],
@@ -206,9 +172,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

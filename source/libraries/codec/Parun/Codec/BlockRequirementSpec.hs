@@ -65,7 +65,7 @@ spec s = Spec.describe s "Parun.Codec.BlockRequirement" $ do
           )
           RequirementArity.EachSubject
       )
-      " {\"attacker\":{\"type\":\"Attached\"},\"while\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[]},\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}}}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":7}}}} "
+      " {\"attacker\":{\"type\":\"Attached\"},\"while\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[]},\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":\"Graveyard\",\"player\":{\"type\":\"Relative\",\"value\":\"You\"}}}}},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":7}}}} "
   -- Gaea's Protector's shape: CR 509.1c read as ONE requirement over every able
   -- blocker, with the object axis naming the card printing it.
   Spec.it s "a group requirement" $
@@ -73,5 +73,5 @@ spec s = Spec.describe s "Parun.Codec.BlockRequirement" $ do
       s
       BlockRequirement.codec
       (BlockRequirement.MkBlockRequirement Nothing (Just (Affected.Matching Filter.IsSource)) Nothing RequirementArity.AnySubject)
-      " {\"attacker\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"arity\":{\"type\":\"AnySubject\"}} "
+      " {\"attacker\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"arity\":\"AnySubject\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s BlockRequirement.codec

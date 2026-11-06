@@ -68,20 +68,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Construct"
-          },
-          {
-            "type": "Dragon"
-          }
+          "Construct",
+          "Dragon"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

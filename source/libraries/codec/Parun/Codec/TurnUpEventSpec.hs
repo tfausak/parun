@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.TurnUpEvent" $ do
       s
       TurnUpEvent.codec
       TurnUpEvent.AssignsCombatDamage
-      " {\"type\":\"AssignsCombatDamage\"} "
+      " \"AssignsCombatDamage\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s TurnUpEvent.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s TurnUpEvent.codec

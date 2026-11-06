@@ -17,12 +17,12 @@ spec s = Spec.describe s "Parun.Codec.CounterProhibition" $ do
       s
       CounterProhibition.codec
       (CounterProhibition.MkCounterProhibition (Filter.HasCardType CardType.Creature) (Filter.And []))
-      " {\"countered\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"countered\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- Autumn's Veil's "by blue or black spells".
   Spec.it s "counterers" $
     Common.assertCodec
       s
       CounterProhibition.codec
       (CounterProhibition.MkCounterProhibition (Filter.Not Filter.IsAbility) (Filter.Or [Filter.HasColor Color.Blue, Filter.HasColor Color.Black]))
-      " {\"countered\":{\"type\":\"Not\",\"value\":{\"type\":\"IsAbility\"}},\"counterers\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasColor\",\"value\":{\"type\":\"Blue\"}},{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}}]}} "
+      " {\"countered\":{\"type\":\"Not\",\"value\":{\"type\":\"IsAbility\"}},\"counterers\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasColor\",\"value\":\"Blue\"},{\"type\":\"HasColor\",\"value\":\"Black\"}]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CounterProhibition.codec

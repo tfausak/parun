@@ -15,27 +15,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -61,27 +55,19 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Instant"
-                                    }
+                                    "value": "Instant"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Sorcery"
-                                    }
+                                    "value": "Sorcery"
                                   }
                                 ]
                               },
                               {
                                 "type": "Measures",
                                 "value": {
-                                  "comparison": {
-                                    "type": "AtMost"
-                                  },
-                                  "measure": {
-                                    "type": "ManaValue"
-                                  },
+                                  "comparison": "AtMost",
+                                  "measure": "ManaValue",
                                   "operand": {
                                     "type": "Literal",
                                     "value": 3
@@ -99,9 +85,7 @@
                         }
                       },
                       "slot": "exiled",
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   },
                   {
@@ -126,26 +110,18 @@
                       "effect": {
                         "type": "ZoneChangeR",
                         "value": {
-                          "destination": {
-                            "type": "Exile"
-                          },
+                          "destination": "Exile",
                           "matching": {
                             "whatObject": {
                               "type": "IsBound",
                               "value": "spell"
                             },
-                            "whenDestination": {
-                              "type": "Graveyard"
-                            }
+                            "whenDestination": "Graveyard"
                           }
                         }
                       },
-                      "origin": {
-                        "type": "Other"
-                      },
-                      "uses": {
-                        "type": "Unlimited"
-                      }
+                      "origin": "Other",
+                      "uses": "Unlimited"
                     }
                   }
                 ]
@@ -156,9 +132,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

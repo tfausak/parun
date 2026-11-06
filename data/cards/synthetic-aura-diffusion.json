@@ -36,17 +36,13 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Aura"
-                          }
+                          "value": "Aura"
                         },
                         {
                           "type": "AttachedTo",
                           "value": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           }
                         }
                       ]
@@ -70,9 +66,7 @@
       "name": "Synthetic Aura Diffusion",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -45,9 +43,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -75,9 +71,7 @@
                             "type": "InSlot",
                             "value": "cards"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -101,9 +95,7 @@
                         }
                       }
                     },
-                    "together": {
-                      "type": "InOneZone"
-                    }
+                    "together": "InOneZone"
                   }
                 }
               }
@@ -113,17 +105,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horror"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Horror",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

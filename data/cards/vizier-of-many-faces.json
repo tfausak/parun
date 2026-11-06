@@ -14,18 +14,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -41,18 +37,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -78,14 +70,10 @@
                       "condition": {
                         "type": "Compares",
                         "value": {
-                          "comparison": {
-                            "type": "AtLeast"
-                          },
+                          "comparison": "AtLeast",
                           "measured": {
                             "type": "HasDesignation",
-                            "value": {
-                              "type": "Embalmed"
-                            }
+                            "value": "Embalmed"
                           },
                           "threshold": {
                             "type": "Literal",
@@ -100,17 +88,13 @@
                         {
                           "type": "SetColors",
                           "value": [
-                            {
-                              "type": "White"
-                            }
+                            "White"
                           ]
                         },
                         {
                           "type": "AddSubtypes",
                           "value": [
-                            {
-                              "type": "Zombie"
-                            }
+                            "Zombie"
                           ]
                         }
                       ]
@@ -118,9 +102,7 @@
                   ],
                   "eligible": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               }
@@ -134,17 +116,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Shapeshifter"
-          }
+          "Cleric",
+          "Shapeshifter"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

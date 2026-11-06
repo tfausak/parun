@@ -23,18 +23,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -47,9 +43,7 @@
             "value": {
               "matching": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Land"
-                }
+                "value": "Land"
               },
               "produces": {
                 "type": "Colorless"
@@ -60,9 +54,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

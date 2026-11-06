@@ -32,7 +32,7 @@ spec s = Spec.describe s "Parun.Codec.TapPermanents" $ do
             TapPermanents.sharingACreatureType = False
           }
       )
-      " {\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- Weight of Conscience's pair, which must share a creature type (CR 205.3m).
   Spec.it s "sharingACreatureType" $
     Common.assertCodec
@@ -44,7 +44,7 @@ spec s = Spec.describe s "Parun.Codec.TapPermanents" $ do
             TapPermanents.sharingACreatureType = True
           }
       )
-      " {\"count\":{\"type\":\"Fixed\",\"value\":2},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"sharingACreatureType\":true} "
+      " {\"count\":{\"type\":\"Fixed\",\"value\":2},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"sharingACreatureType\":true} "
   -- Explosive Singularity's "tap any number", announced at CR 601.2b.
   Spec.it s "Announced" $
     Common.assertCodec
@@ -56,5 +56,5 @@ spec s = Spec.describe s "Parun.Codec.TapPermanents" $ do
             TapPermanents.sharingACreatureType = False
           }
       )
-      " {\"count\":{\"type\":\"Announced\",\"value\":\"X\"},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"count\":{\"type\":\"Announced\",\"value\":\"X\"},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

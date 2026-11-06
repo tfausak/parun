@@ -90,9 +90,7 @@
       "player": "alice",
       "source": "$pokey",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {
@@ -101,9 +99,7 @@
       "player": "alice",
       "source": "$pokey",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {

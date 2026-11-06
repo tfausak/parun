@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -33,9 +29,7 @@
             "type": "Matching",
             "value": {
               "type": "HasCardType",
-              "value": {
-                "type": "Creature"
-              }
+              "value": "Creature"
             }
           },
           "modifications": [
@@ -49,9 +43,7 @@
                     "value": {
                       "destinations": [
                         {
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       ]
                     }
@@ -73,17 +65,13 @@
                                         "value": {
                                           "phase": {
                                             "type": "Ending",
-                                            "value": {
-                                              "type": "EndStep"
-                                            }
+                                            "value": "EndStep"
                                           },
                                           "scope": {
                                             "type": "PlayersTurn",
                                             "value": {
                                               "type": "Relative",
-                                              "value": {
-                                                "type": "AnyPlayer"
-                                              }
+                                              "value": "AnyPlayer"
                                             }
                                           }
                                         }
@@ -97,9 +85,7 @@
                                                   {
                                                     "type": "MoveToZone",
                                                     "value": {
-                                                      "origin": {
-                                                        "type": "Graveyard"
-                                                      },
+                                                      "origin": "Graveyard",
                                                       "ref": {
                                                         "type": "InSlot",
                                                         "value": "became"
@@ -113,9 +99,7 @@
                                                           }
                                                         }
                                                       },
-                                                      "zone": {
-                                                        "type": "Battlefield"
-                                                      }
+                                                      "zone": "Battlefield"
                                                     }
                                                   }
                                                 ]
@@ -136,9 +120,7 @@
                           "target": {
                             "filter": {
                               "type": "IsPlayer",
-                              "value": {
-                                "type": "Opponent"
-                              }
+                              "value": "Opponent"
                             },
                             "pool": {
                               "type": "Players"
@@ -156,9 +138,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

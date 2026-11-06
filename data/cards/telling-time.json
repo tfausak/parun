@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -36,9 +34,7 @@
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       },
@@ -62,9 +58,7 @@
                           "slot": "looked"
                         }
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ]
@@ -76,9 +70,7 @@
                     "value": {
                       "placement": {
                         "type": "Stated",
-                        "value": {
-                          "type": "Top"
-                        }
+                        "value": "Top"
                       },
                       "ref": {
                         "type": "ChosenCardFromAmong",
@@ -90,9 +82,7 @@
                           "slot": "looked"
                         }
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -106,9 +96,7 @@
                         "type": "InSlot",
                         "value": "looked"
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -119,9 +107,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

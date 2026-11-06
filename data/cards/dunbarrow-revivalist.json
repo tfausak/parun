@@ -6,9 +6,7 @@
           "condition": {
             "type": "Enters",
             "value": {
-              "batching": {
-                "type": "OneOrMore"
-              },
+              "batching": "OneOrMore",
               "permanent": {
                 "type": "Matching",
                 "value": {
@@ -16,19 +14,13 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -65,9 +57,7 @@
                                         "value": [
                                           {
                                             "type": "HasCardType",
-                                            "value": {
-                                              "type": "Creature"
-                                            }
+                                            "value": "Creature"
                                           },
                                           {
                                             "type": "HasAttached",
@@ -102,9 +92,7 @@
                                       "value": {
                                         "destinations": [
                                           {
-                                            "zone": {
-                                              "type": "Graveyard"
-                                            }
+                                            "zone": "Graveyard"
                                           }
                                         ]
                                       }
@@ -120,9 +108,7 @@
                                                   "value": {
                                                     "player": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "Opponent"
-                                                      }
+                                                      "value": "Opponent"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -140,17 +126,11 @@
                                 ],
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Aura"
-                                    },
-                                    {
-                                      "type": "Role"
-                                    }
+                                    "Aura",
+                                    "Role"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Enchantment"
-                                    }
+                                    "Enchantment"
                                   ]
                                 }
                               }
@@ -190,9 +170,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -230,9 +208,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "TimesPaid",
                           "value": {
@@ -260,9 +236,7 @@
                               },
                               "filter": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               "players": {
                                 "type": "Scoped",
@@ -272,9 +246,7 @@
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -287,17 +259,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Warlock"
-          }
+          "Human",
+          "Warlock"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

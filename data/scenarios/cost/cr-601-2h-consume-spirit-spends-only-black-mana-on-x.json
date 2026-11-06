@@ -22,7 +22,7 @@
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Cast": { "object": "$spirit", "x": 2, "targets": ["$bob"], "mana": ["$s1", "$s2", "$m1", "$m2"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$spirit", "x": 1, "targets": ["$bob"], "mana": ["$s1", "$s2", "$m1", "$m2"] } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "ManaPool", "player": "alice", "is": [{ "manaType": { "type": "Colored", "value": { "type": "Red" } }, "tags": [], "retention": { "type": "Ordinary" }, "restriction": null, "rider": null, "sourceChoices": null }] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "ManaPool", "player": "alice", "is": [{ "manaType": { "type": "Colored", "value": "Red" }, "tags": [], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null }] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 19 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 21 } } }

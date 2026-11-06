@@ -14,7 +14,7 @@
       {
         "name": "bob",
         "life": 18,
-        "counters": [{ "key": { "type": "Poison" }, "value": 1 }],
+        "counters": [{ "key": "Poison", "value": 1 }],
         "battlefield": [
           { "card": "Plains", "label": "plains-1", "ready": true },
           { "card": "Plains", "label": "plains-2", "ready": true },
@@ -35,9 +35,9 @@
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$servant", "do": { "ChooseAttackTarget": "$bob" } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$giant", "do": { "ChooseAttackTarget": "$carol" } },
     { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Cast": { "object": "$justice", "mana": ["$plains-1", "$plains-2", "$plains-3"] } } },
-    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": { "type": "Poison" }, "count": 3 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": "Poison", "count": 3 } } },
     { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "alice", "life": 15 } } },
-    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": { "type": "Poison" }, "count": 4 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": "Poison", "count": 4 } } },
     { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "carol", "life": 16 } } }
   ]
 }

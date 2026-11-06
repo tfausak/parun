@@ -34,9 +34,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -82,15 +80,11 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Warrior"
-                      }
+                      "value": "Warrior"
                     }
                   ]
                 }
@@ -120,20 +114,12 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Equipment"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Equipment",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Kindred"
-          }
+          "Artifact",
+          "Kindred"
         ]
       }
     }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -29,17 +27,13 @@
                     "value": {
                       "placement": {
                         "type": "Stated",
-                        "value": {
-                          "type": "Top"
-                        }
+                        "value": "Top"
                       },
                       "ref": {
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -49,9 +43,7 @@
               "target": {
                 "filter": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 "pool": {
                   "type": "Permanents"
@@ -63,9 +55,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

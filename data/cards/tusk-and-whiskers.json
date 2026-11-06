@@ -18,18 +18,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -43,14 +39,10 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Ticket"
-                          },
+                          "kind": "Ticket",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -66,24 +58,14 @@
                         "type": "PutSticker",
                         "value": {
                           "kinds": [
-                            {
-                              "type": "Name"
-                            },
-                            {
-                              "type": "Ability"
-                            },
-                            {
-                              "type": "PowerToughness"
-                            },
-                            {
-                              "type": "Art"
-                            }
+                            "Name",
+                            "Ability",
+                            "PowerToughness",
+                            "Art"
                           ],
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "ref": {
                             "type": "ChosenPermanents",
@@ -95,20 +77,14 @@
                                     "type": "Not",
                                     "value": {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Land"
-                                      }
+                                      "value": "Land"
                                     }
                                   },
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Owner"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Owner",
+                                      "relation": "You"
                                     }
                                   }
                                 ]
@@ -137,18 +113,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -168,30 +140,22 @@
             "type": "PlacesSticker",
             "value": {
               "kinds": [
-                {
-                  "type": "Ability"
-                }
+                "Ability"
               ],
               "object": {
                 "type": "And",
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "IsInZone",
-                    "value": {
-                      "type": "Battlefield"
-                    }
+                    "value": "Battlefield"
                   }
                 ]
               },
-              "placer": {
-                "type": "You"
-              }
+              "placer": "You"
             }
           },
           "modal": {
@@ -226,25 +190,15 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elephant"
-          },
-          {
-            "type": "Mouse"
-          },
-          {
-            "type": "Performer"
-          }
+          "Elephant",
+          "Mouse",
+          "Performer"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -19,17 +19,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Sliver"
-          }
+          "Sliver"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

@@ -28,9 +28,7 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "Exile"
-                          },
+                          "destination": "Exile",
                           "filter": {
                             "type": "And",
                             "value": []
@@ -45,9 +43,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "slot": "exiled"
                         }
@@ -60,9 +56,7 @@
                             "value": {
                               "step": {
                                 "type": "Beginning",
-                                "value": {
-                                  "type": "Upkeep"
-                                }
+                                "value": "Upkeep"
                               }
                             }
                           },
@@ -85,9 +79,7 @@
                   "target": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -106,17 +98,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -124,9 +112,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtMost"
-              },
+              "comparison": "AtMost",
               "measured": {
                 "type": "AgainstSlot",
                 "value": {
@@ -134,9 +120,7 @@
                     "type": "PlayedBy",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     }
                   },
                   "slot": "exiled"
@@ -157,16 +141,12 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "origin": {
-                            "type": "Exile"
-                          },
+                          "origin": "Exile",
                           "ref": {
                             "type": "InSlot",
                             "value": "exiled"
                           },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       }
                     ]
@@ -187,9 +167,7 @@
       "oracleText": "{2}, {T}, Sacrifice this artifact: Search target opponent's library for a card and exile it. Then that player shuffles. Until the beginning of your next upkeep, you may play that card. At the beginning of your next upkeep, if you haven't played it, put it into its owner's graveyard.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

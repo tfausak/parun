@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -26,9 +24,7 @@
               "value": [
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Equipment"
-                  }
+                  "value": "Equipment"
                 },
                 {
                   "type": "AttachedTo",
@@ -37,17 +33,13 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       {
                         "type": "HasAttached",
                         "value": {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Aura"
-                          }
+                          "value": "Aura"
                         }
                       }
                     ]
@@ -60,23 +52,15 @@
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Land"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Land",
+                "mode": "InAddition"
               }
             },
             {
               "type": "LandSubtype",
               "value": {
-                "mode": {
-                  "type": "InAddition"
-                },
-                "subtype": {
-                  "type": "Forest"
-                }
+                "mode": "InAddition",
+                "subtype": "Forest"
               }
             }
           ]
@@ -84,9 +68,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

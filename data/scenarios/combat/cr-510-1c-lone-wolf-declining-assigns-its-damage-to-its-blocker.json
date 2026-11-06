@@ -17,7 +17,7 @@
   "timeline": [
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$wolf"] } },
     { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$beast": ["$wolf"] } } },
-    { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$wolf", "do": { "ChooseOptional": { "type": "Declines" } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$wolf", "do": { "ChooseOptional": "Declines" } },
     { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 20 } } },
     { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Damage": { "object": "$beast", "damage": 2 } } }
   ]

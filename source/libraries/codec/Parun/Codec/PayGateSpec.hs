@@ -49,7 +49,7 @@ spec s = Spec.describe s "Parun.Codec.PayGate" $ do
       s
       PayGate.codec
       manaLeak
-      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":{\"type\":\"IfNotPaid\"}} "
+      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":\"IfNotPaid\"} "
   -- CR 118.12's other branch, Merfolk Seer's: the same three keys, and only the
   -- branch differs.
   Spec.it s "MkPayGate, Merfolk Seer's clause" $
@@ -57,7 +57,7 @@ spec s = Spec.describe s "Parun.Codec.PayGate" $ do
       s
       PayGate.codec
       manaLeak {PayGate.branch = PayBranch.IfPaid}
-      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":{\"type\":\"IfPaid\"}} "
+      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":\"IfPaid\"} "
   -- CR 118.12's mandatory limb, Standstill's, and the shared offer, Don't Make
   -- a Sound's second clause -- the two keys that are elided everywhere else.
   Spec.it s "MkPayGate, Standstill's mandatory sacrifice" $
@@ -65,7 +65,7 @@ spec s = Spec.describe s "Parun.Codec.PayGate" $ do
       s
       PayGate.codec
       manaLeak {PayGate.branch = PayBranch.IfPaid, PayGate.obligation = PayObligation.Mandatory}
-      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":{\"type\":\"IfPaid\"},\"obligation\":{\"type\":\"Mandatory\"}} "
+      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":\"IfPaid\",\"obligation\":\"Mandatory\"} "
   -- CR 118.12's scaled offer: the multiplier a card writes, which is the only
   -- other key the four cases above elide. Rakshasa's Disdain's is a Count over a
   -- graveyard; a Literal is enough to prove the key round-trips.
@@ -74,14 +74,14 @@ spec s = Spec.describe s "Parun.Codec.PayGate" $ do
       s
       PayGate.codec
       manaLeak {PayGate.perEach = Just (Quantity.Literal 2)}
-      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":{\"type\":\"IfNotPaid\"},\"perEach\":{\"type\":\"Literal\",\"value\":2}} "
+      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":\"IfNotPaid\",\"perEach\":{\"type\":\"Literal\",\"value\":2}} "
   -- CR 107.3f's X, chosen as the ability resolves: Flameblast Dragon's.
   Spec.it s "MkPayGate, an X chosen during resolution" $
     Common.assertCodec
       s
       PayGate.codec
       manaLeak {PayGate.x = Just (Quantity.Literal 2)}
-      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":{\"type\":\"IfNotPaid\"},\"x\":{\"type\":\"Literal\",\"value\":2}} "
+      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":\"IfNotPaid\",\"x\":{\"type\":\"Literal\",\"value\":2}} "
   -- CR 118.6's described cost, Flash's: no mana part of its own, and a basis
   -- naming the slot whose object's mana cost it is.
   Spec.it s "MkPayGate, a cost described in terms of another object's mana cost" $
@@ -98,7 +98,7 @@ spec s = Spec.describe s "Parun.Codec.PayGate" $ do
                   CostBasis.reducedBy = ManaCost.MkManaCost [ManaSymbol.Generic 2]
                 }
         }
-      " {\"payer\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"cost\":{\"mana\":null},\"basis\":{\"slot\":\"put\",\"reducedBy\":[{\"type\":\"Generic\",\"value\":2}]},\"branch\":{\"type\":\"IfNotPaid\"}} "
+      " {\"payer\":{\"type\":\"Relative\",\"value\":\"You\"},\"cost\":{\"mana\":null},\"basis\":{\"slot\":\"put\",\"reducedBy\":[{\"type\":\"Generic\",\"value\":2}]},\"branch\":\"IfNotPaid\"} "
   -- CR 118.12's "something else" as a disjunction, Torment of Venom's: the
   -- first option under `cost`, the rest under `orCosts`, in printed order.
   Spec.it s "MkPayGate, a choice of two costs" $
@@ -106,13 +106,13 @@ spec s = Spec.describe s "Parun.Codec.PayGate" $ do
       s
       PayGate.codec
       manaLeak {PayGate.cost = CostChoice.MkCostChoice (Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 3]), Cost.components = []} NonEmpty.:| [Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost []), Cost.components = [CostComponent.PayLife (CostAmount.Fixed 3)]}])}
-      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"orCosts\":[{\"mana\":[],\"components\":[{\"type\":\"PayLife\",\"value\":{\"type\":\"Fixed\",\"value\":3}}]}],\"branch\":{\"type\":\"IfNotPaid\"}} "
+      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"orCosts\":[{\"mana\":[],\"components\":[{\"type\":\"PayLife\",\"value\":{\"type\":\"Fixed\",\"value\":3}}]}],\"branch\":\"IfNotPaid\"} "
   Spec.it s "MkPayGate, a clause hanging off an earlier clause's offer" $
     Common.assertCodec
       s
       PayGate.codec
       manaLeak {PayGate.branch = PayBranch.IfPaid, PayGate.offeredAt = Just (ClauseIndex.MkClauseIndex 0)}
-      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":{\"type\":\"IfPaid\"},\"offeredAt\":0} "
+      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":\"IfPaid\",\"offeredAt\":0} "
   -- The first three keys are required: none has a default an absent key could
   -- mean.
   Spec.it s "an omitted payer field is a decode error" $

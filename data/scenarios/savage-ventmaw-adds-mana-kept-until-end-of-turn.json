@@ -144,14 +144,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfTurn"
-              },
+              "retention": "UntilEndOfTurn",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -159,14 +155,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfTurn"
-              },
+              "retention": "UntilEndOfTurn",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -174,14 +166,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfTurn"
-              },
+              "retention": "UntilEndOfTurn",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -189,14 +177,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfTurn"
-              },
+              "retention": "UntilEndOfTurn",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -204,14 +188,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfTurn"
-              },
+              "retention": "UntilEndOfTurn",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -219,14 +199,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfTurn"
-              },
+              "retention": "UntilEndOfTurn",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -247,14 +223,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfTurn"
-              },
+              "retention": "UntilEndOfTurn",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -262,14 +234,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfTurn"
-              },
+              "retention": "UntilEndOfTurn",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -277,14 +245,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfTurn"
-              },
+              "retention": "UntilEndOfTurn",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -292,14 +256,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfTurn"
-              },
+              "retention": "UntilEndOfTurn",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -307,14 +267,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfTurn"
-              },
+              "retention": "UntilEndOfTurn",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -322,14 +278,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               },
               "tags": [],
-              "retention": {
-                "type": "UntilEndOfTurn"
-              },
+              "retention": "UntilEndOfTurn",
               "restriction": null,
               "rider": null,
               "sourceChoices": null

@@ -25,7 +25,7 @@ spec s = Spec.describe s "Parun.Codec.TopOfLibrary" $ do
             TopOfLibrary.count = Quantity.Literal 3
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"count\":{\"type\":\"Literal\",\"value\":3}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"count\":{\"type\":\"Literal\",\"value\":3}} "
   -- CR 601.2b's announced X, which is what the depth being a full Quantity buys:
   -- Commune with Lava's "exile the top X cards of your library".
   Spec.it s "MkTopOfLibrary carries the announced X Commune with Lava needs" $
@@ -37,7 +37,7 @@ spec s = Spec.describe s "Parun.Codec.TopOfLibrary" $ do
             TopOfLibrary.count = Quantity.InSlot (SlotName.MkSlotName (Text.pack "X"))
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"count\":{\"type\":\"InSlot\",\"value\":\"X\"}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"count\":{\"type\":\"InSlot\",\"value\":\"X\"}} "
   -- The bare number was the depth's whole spelling before the widening, so a card
   -- file written against it is a decode failure rather than a silent literal.
   Spec.it s "a bare number is rejected as a depth" $

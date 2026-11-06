@@ -5,9 +5,7 @@
         {
           "filter": {
             "type": "HasCardType",
-            "value": {
-              "type": "Land"
-            }
+            "value": "Land"
           },
           "pool": {
             "type": "Permanents"
@@ -19,27 +17,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -52,21 +44,15 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "HolderOfBound",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "hop": {
-                      "type": "Host"
-                    },
+                    "holder": "Controller",
+                    "hop": "Host",
                     "slot": "self"
                   }
                 }
@@ -88,16 +74,12 @@
                               "type": "IsHostOfSource"
                             }
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "mana": [
                           {
@@ -134,14 +116,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

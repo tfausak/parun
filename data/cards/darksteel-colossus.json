@@ -26,43 +26,25 @@
           "effect": {
             "type": "ZoneChangeR",
             "value": {
-              "destination": {
-                "type": "Library"
-              },
+              "destination": "Library",
               "matching": {
                 "whatObject": {
                   "type": "IsSource"
                 },
-                "whenDestination": {
-                  "type": "Graveyard"
-                }
+                "whenDestination": "Graveyard"
               },
               "revealing": true,
               "shuffling": true
             }
           },
           "functionsFrom": [
-            {
-              "type": "Library"
-            },
-            {
-              "type": "Hand"
-            },
-            {
-              "type": "Graveyard"
-            },
-            {
-              "type": "Battlefield"
-            },
-            {
-              "type": "Stack"
-            },
-            {
-              "type": "Exile"
-            },
-            {
-              "type": "Command"
-            }
+            "Library",
+            "Hand",
+            "Graveyard",
+            "Battlefield",
+            "Stack",
+            "Exile",
+            "Command"
           ]
         }
       ],
@@ -72,17 +54,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Golem"
-          }
+          "Golem"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

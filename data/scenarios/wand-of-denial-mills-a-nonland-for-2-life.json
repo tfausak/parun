@@ -5,7 +5,7 @@
   "timeline": [
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$w1", "ability": 0, "targets": ["$bob"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Pays"}}}, "source": "$w1"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseToPay": {"decision": "Pays"}}, "source": "$w1"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 18}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$w2", "ability": 0, "targets": ["$bob"]}}},

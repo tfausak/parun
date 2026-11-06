@@ -24,7 +24,7 @@ spec s = Spec.describe s "Parun.Codec.RemovePlayerCounters" $ do
             RemovePlayerCounters.tally = Nothing
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"kind\":{\"type\":\"Rad\"},\"quantity\":{\"type\":\"Literal\",\"value\":2}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"kind\":\"Rad\",\"quantity\":{\"type\":\"Literal\",\"value\":2}} "
   Spec.it s "a tally, Leeches' \"that much\"" $
     Common.assertCodec
       s
@@ -36,5 +36,5 @@ spec s = Spec.describe s "Parun.Codec.RemovePlayerCounters" $ do
             RemovePlayerCounters.tally = Just (SlotName.MkSlotName (Text.pack "lost"))
           }
       )
-      " {\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"kind\":{\"type\":\"Poison\"},\"quantity\":{\"type\":\"Literal\",\"value\":3},\"tally\":\"lost\"} "
+      " {\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"kind\":\"Poison\",\"quantity\":{\"type\":\"Literal\",\"value\":3},\"tally\":\"lost\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s RemovePlayerCounters.codec

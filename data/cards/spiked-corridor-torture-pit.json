@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -37,9 +35,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Red"
-                                  }
+                                  "Red"
                                 ],
                                 "name": "Devil Token",
                                 "power": {
@@ -57,9 +53,7 @@
                                       "value": {
                                         "destinations": [
                                           {
-                                            "zone": {
-                                              "type": "Graveyard"
-                                            }
+                                            "zone": "Graveyard"
                                           }
                                         ]
                                       }
@@ -104,14 +98,10 @@
                                 ],
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Devil"
-                                    }
+                                    "Devil"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -133,14 +123,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Room"
-          }
+          "Room"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     },
@@ -154,9 +140,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -171,20 +155,12 @@
                 "whatSource": {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
-                "whichKind": {
-                  "type": "Noncombat"
-                },
-                "whoRecipient": {
-                  "type": "Opponent"
-                }
+                "whichKind": "Noncombat",
+                "whoRecipient": "Opponent"
               },
               "rewrite": {
                 "type": "Scale",
@@ -199,14 +175,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Room"
-          }
+          "Room"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

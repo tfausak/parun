@@ -46,12 +46,8 @@
                     "filter": {
                       "type": "Measures",
                       "value": {
-                        "comparison": {
-                          "type": "AtMost"
-                        },
-                        "measure": {
-                          "type": "Power"
-                        },
+                        "comparison": "AtMost",
+                        "measure": "Power",
                         "operand": {
                           "type": "Literal",
                           "value": 2
@@ -78,9 +74,7 @@
       "oracleText": "{2}, {T}: Target creature with power 2 or less can't be blocked this turn.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

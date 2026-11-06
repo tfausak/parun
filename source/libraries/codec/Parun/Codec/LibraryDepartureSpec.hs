@@ -12,6 +12,6 @@ spec s = Spec.describe s "Parun.Codec.LibraryDeparture" $ do
       s
       LibraryDeparture.codec
       LibraryDeparture.Milled
-      " {\"type\":\"Milled\"} "
+      " \"Milled\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s LibraryDeparture.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s LibraryDeparture.codec

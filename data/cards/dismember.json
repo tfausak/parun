@@ -8,15 +8,11 @@
         },
         {
           "type": "Phyrexian",
-          "value": {
-            "type": "Black"
-          }
+          "value": "Black"
         },
         {
           "type": "Phyrexian",
-          "value": {
-            "type": "Black"
-          }
+          "value": "Black"
         }
       ],
       "name": "Dismember",
@@ -67,9 +63,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

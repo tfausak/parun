@@ -8,15 +8,11 @@
             "value": [
               {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Creature"
               },
               {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Enchantment"
-                }
+                "value": "Enchantment"
               }
             ]
           },
@@ -34,9 +30,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -51,12 +45,8 @@
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Enchantment"
-                },
-                "mode": {
-                  "type": "Replace"
-                }
+                "cardType": "Enchantment",
+                "mode": "Replace"
               }
             }
           ]
@@ -64,14 +54,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

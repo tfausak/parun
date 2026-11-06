@@ -6,18 +6,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -45,9 +41,7 @@
                 "value": {
                   "destinations": [
                     {
-                      "zone": {
-                        "type": "Graveyard"
-                      }
+                      "zone": "Graveyard"
                     }
                   ]
                 }
@@ -71,19 +65,13 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "You"
                                     }
                                   },
                                   {
@@ -97,9 +85,7 @@
                             }
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -124,9 +110,7 @@
                                     "value": {
                                       "quantity": {
                                         "type": "Measure",
-                                        "value": {
-                                          "type": "ManaValue"
-                                        }
+                                        "value": "ManaValue"
                                       },
                                       "slot": "exiled"
                                     }
@@ -138,19 +122,13 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "Measures",
                                     "value": {
-                                      "comparison": {
-                                        "type": "Exactly"
-                                      },
-                                      "measure": {
-                                        "type": "ManaValue"
-                                      },
+                                      "comparison": "Exactly",
+                                      "measure": "ManaValue",
                                       "operand": {
                                         "type": "EnclosingAmount"
                                       }
@@ -181,17 +159,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Nightmare"
-          }
+          "Nightmare"
         ],
         "types": [
-          {
-            "type": "Creature"
-          },
-          {
-            "type": "Enchantment"
-          }
+          "Creature",
+          "Enchantment"
         ]
       }
     }

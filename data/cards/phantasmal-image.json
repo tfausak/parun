@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -39,9 +37,7 @@
                         {
                           "type": "AddSubtypes",
                           "value": [
-                            {
-                              "type": "Illusion"
-                            }
+                            "Illusion"
                           ]
                         },
                         {
@@ -92,9 +88,7 @@
                   ],
                   "eligible": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               }
@@ -108,14 +102,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Illusion"
-          }
+          "Illusion"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

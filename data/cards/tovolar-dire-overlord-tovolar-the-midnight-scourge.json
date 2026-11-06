@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -55,41 +51,29 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Wolf"
-                          }
+                          "value": "Wolf"
                         },
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Werewolf"
-                          }
+                          "value": "Werewolf"
                         }
                       ]
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
                 }
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -105,9 +89,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -128,17 +110,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -146,9 +124,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -163,27 +139,19 @@
                         "value": [
                           {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Wolf"
-                            }
+                            "value": "Wolf"
                           },
                           {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Werewolf"
-                            }
+                            "value": "Werewolf"
                           }
                         ]
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       }
                     ]
@@ -193,13 +161,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -218,9 +182,7 @@
                     "effects": [
                       {
                         "type": "ItBecomes",
-                        "value": {
-                          "type": "Night"
-                        }
+                        "value": "Night"
                       },
                       {
                         "type": "Transform",
@@ -235,25 +197,17 @@
                               "value": [
                                 {
                                   "type": "HasSubtype",
-                                  "value": {
-                                    "type": "Human"
-                                  }
+                                  "value": "Human"
                                 },
                                 {
                                   "type": "HasSubtype",
-                                  "value": {
-                                    "type": "Werewolf"
-                                  }
+                                  "value": "Werewolf"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -271,22 +225,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Werewolf"
-          }
+          "Human",
+          "Werewolf"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
@@ -302,18 +248,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -380,27 +322,19 @@
                           "value": [
                             {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Wolf"
-                              }
+                              "value": "Wolf"
                             },
                             {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Werewolf"
-                              }
+                              "value": "Werewolf"
                             }
                           ]
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -416,12 +350,8 @@
         }
       ],
       "colorIndicator": [
-        {
-          "type": "Red"
-        },
-        {
-          "type": "Green"
-        }
+        "Red",
+        "Green"
       ],
       "keywords": [
         {
@@ -453,41 +383,29 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Wolf"
-                          }
+                          "value": "Wolf"
                         },
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Werewolf"
-                          }
+                          "value": "Werewolf"
                         }
                       ]
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
                 }
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -503,9 +421,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -523,19 +439,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Werewolf"
-          }
+          "Werewolf"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

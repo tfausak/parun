@@ -14,5 +14,5 @@ spec s = Spec.describe s "Parun.Codec.DrawnUnder" $ do
       s
       DrawnUnder.codec
       (DrawnUnder.MkDrawnUnder {DrawnUnder.under = ObjectId.MkObjectId 7, DrawnUnder.timing = RevealTiming.OnceCast})
-      " {\"under\":7,\"timing\":{\"type\":\"OnceCast\"}} "
+      " {\"under\":7,\"timing\":\"OnceCast\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DrawnUnder.codec

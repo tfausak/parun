@@ -5,7 +5,7 @@
   "timeline": [
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$rite", "targets": ["$bears"], "mana": ["$swamp"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$bears", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Swamp"}}}, "count": 1}}},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$giant", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Swamp"}}}, "count": 0}}}
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$bears", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": "Swamp"}}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$giant", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": "Swamp"}}, "count": 0}}}
   ]
 }

@@ -3326,7 +3326,7 @@ tokenNameOffends token
     -- subtype of another family has no entry there and its tag is the word.
     printedWord subtype = case SubtypeEngine.creatureTypeWord subtype of
       Just word -> Right word
-      Nothing -> fmap (Text.pack . fst) (Common.asTagged (Codec.encode Subtype.codec subtype))
+      Nothing -> Common.asText (Codec.encode Subtype.codec subtype)
 
 -- CR 702.16h's "protection from each [characteristic]", which a card file writes
 -- expanded, one Keyword.Protection per quality, and so carries no mark of: the

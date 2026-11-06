@@ -28,9 +28,7 @@
               },
               "matching": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Creature"
               },
               "subject": {
                 "type": "Activations",
@@ -45,9 +43,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

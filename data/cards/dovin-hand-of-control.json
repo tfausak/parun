@@ -36,9 +36,7 @@
                       {
                         "type": "PreventAllDamage",
                         "value": {
-                          "direction": {
-                            "type": "DealtBy"
-                          },
+                          "direction": "DealtBy",
                           "duration": {
                             "type": "UntilYourNextTurn"
                           },
@@ -56,12 +54,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "Opponent"
-                        }
+                        "holder": "Controller",
+                        "relation": "Opponent"
                       }
                     },
                     "pool": {
@@ -88,15 +82,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         }
@@ -122,21 +112,15 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Artifact"
-                    }
+                    "value": "Artifact"
                   },
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Instant"
-                    }
+                    "value": "Instant"
                   },
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Sorcery"
-                    }
+                    "value": "Sorcery"
                   }
                 ]
               },
@@ -152,19 +136,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dovin"
-          }
+          "Dovin"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

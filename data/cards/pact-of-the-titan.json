@@ -2,9 +2,7 @@
   "faces": [
     {
       "colorIndicator": [
-        {
-          "type": "Red"
-        }
+        "Red"
       ],
       "delayedAbilities": {
         "pay or lose": {
@@ -13,17 +11,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -38,16 +32,12 @@
                         "type": "LoseGame",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "mana": [
                           {
@@ -58,18 +48,14 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         ]
                       },
                       "payer": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -95,9 +81,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Red"
-                              }
+                              "Red"
                             ],
                             "name": "Giant Token",
                             "power": {
@@ -110,14 +94,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Giant"
-                                }
+                                "Giant"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -143,9 +123,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

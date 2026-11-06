@@ -11,9 +11,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -36,9 +34,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -51,9 +47,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -71,22 +65,16 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Siege"
-          }
+          "Siege"
         ],
         "types": [
-          {
-            "type": "Battle"
-          }
+          "Battle"
         ]
       }
     },
     {
       "colorIndicator": [
-        {
-          "type": "White"
-        }
+        "White"
       ],
       "keywords": [
         {
@@ -108,14 +96,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Angel"
-          }
+          "Angel"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

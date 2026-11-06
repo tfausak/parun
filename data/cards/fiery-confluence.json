@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -46,9 +42,7 @@
                             "type": "EachMatching",
                             "value": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             }
                           }
                         }
@@ -77,9 +71,7 @@
                             "value": {
                               "players": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "Opponent"
-                                }
+                                "value": "Opponent"
                               }
                             }
                           }
@@ -102,9 +94,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -114,9 +104,7 @@
               "target": {
                 "filter": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Artifact"
-                  }
+                  "value": "Artifact"
                 },
                 "pool": {
                   "type": "Permanents"
@@ -132,9 +120,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

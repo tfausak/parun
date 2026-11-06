@@ -14,9 +14,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -41,9 +39,7 @@
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "Red"
-                                          }
+                                          "value": "Red"
                                         }
                                       }
                                     ],
@@ -87,9 +83,7 @@
                                     },
                                     "typeLine": {
                                       "types": [
-                                        {
-                                          "type": "Sorcery"
-                                        }
+                                        "Sorcery"
                                       ]
                                     }
                                   }
@@ -103,9 +97,7 @@
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "Black"
-                                          }
+                                          "value": "Black"
                                         }
                                       }
                                     ],
@@ -123,9 +115,7 @@
                                                       "type": "OfType",
                                                       "value": {
                                                         "type": "Colored",
-                                                        "value": {
-                                                          "type": "Black"
-                                                        }
+                                                        "value": "Black"
                                                       }
                                                     }
                                                   }
@@ -137,9 +127,7 @@
                                                       "type": "OfType",
                                                       "value": {
                                                         "type": "Colored",
-                                                        "value": {
-                                                          "type": "Black"
-                                                        }
+                                                        "value": "Black"
                                                       }
                                                     }
                                                   }
@@ -151,9 +139,7 @@
                                                       "type": "OfType",
                                                       "value": {
                                                         "type": "Colored",
-                                                        "value": {
-                                                          "type": "Black"
-                                                        }
+                                                        "value": "Black"
                                                       }
                                                     }
                                                   }
@@ -166,9 +152,7 @@
                                     },
                                     "typeLine": {
                                       "types": [
-                                        {
-                                          "type": "Instant"
-                                        }
+                                        "Instant"
                                       ]
                                     }
                                   }
@@ -182,9 +166,7 @@
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "Black"
-                                          }
+                                          "value": "Black"
                                         }
                                       }
                                     ],
@@ -229,18 +211,14 @@
                                                                 "type": "Not",
                                                                 "value": {
                                                                   "type": "HasCardType",
-                                                                  "value": {
-                                                                    "type": "Creature"
-                                                                  }
+                                                                  "value": "Creature"
                                                                 }
                                                               },
                                                               {
                                                                 "type": "Not",
                                                                 "value": {
                                                                   "type": "HasCardType",
-                                                                  "value": {
-                                                                    "type": "Land"
-                                                                  }
+                                                                  "value": "Land"
                                                                 }
                                                               }
                                                             ]
@@ -258,9 +236,7 @@
                                             "target": {
                                               "filter": {
                                                 "type": "IsPlayer",
-                                                "value": {
-                                                  "type": "Opponent"
-                                                }
+                                                "value": "Opponent"
                                               },
                                               "pool": {
                                                 "type": "Players"
@@ -272,9 +248,7 @@
                                     },
                                     "typeLine": {
                                       "types": [
-                                        {
-                                          "type": "Sorcery"
-                                        }
+                                        "Sorcery"
                                       ]
                                     }
                                   }
@@ -288,9 +262,7 @@
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "Green"
-                                          }
+                                          "value": "Green"
                                         }
                                       }
                                     ],
@@ -311,21 +283,15 @@
                                                       "type": "DamageR",
                                                       "value": {
                                                         "matching": {
-                                                          "whichKind": {
-                                                            "type": "Combat"
-                                                          }
+                                                          "whichKind": "Combat"
                                                         },
                                                         "rewrite": {
                                                           "type": "PreventAll"
                                                         }
                                                       }
                                                     },
-                                                    "origin": {
-                                                      "type": "Other"
-                                                    },
-                                                    "uses": {
-                                                      "type": "Unlimited"
-                                                    }
+                                                    "origin": "Other",
+                                                    "uses": "Unlimited"
                                                   }
                                                 }
                                               ]
@@ -336,9 +302,7 @@
                                     },
                                     "typeLine": {
                                       "types": [
-                                        {
-                                          "type": "Instant"
-                                        }
+                                        "Instant"
                                       ]
                                     }
                                   }
@@ -352,9 +316,7 @@
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "Blue"
-                                          }
+                                          "value": "Blue"
                                         }
                                       }
                                     ],
@@ -376,9 +338,7 @@
                                                 }
                                               ],
                                               "payGate": {
-                                                "branch": {
-                                                  "type": "IfNotPaid"
-                                                },
+                                                "branch": "IfNotPaid",
                                                 "cost": {
                                                   "mana": [
                                                     {
@@ -390,12 +350,8 @@
                                                 "payer": {
                                                   "type": "HolderOfBound",
                                                   "value": {
-                                                    "holder": {
-                                                      "type": "Controller"
-                                                    },
-                                                    "hop": {
-                                                      "type": "Itself"
-                                                    },
+                                                    "holder": "Controller",
+                                                    "hop": "Itself",
                                                     "slot": "spell"
                                                   }
                                                 }
@@ -414,9 +370,7 @@
                                     },
                                     "typeLine": {
                                       "types": [
-                                        {
-                                          "type": "Instant"
-                                        }
+                                        "Instant"
                                       ]
                                     }
                                   }
@@ -430,9 +384,7 @@
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "Green"
-                                          }
+                                          "value": "Green"
                                         }
                                       }
                                     ],
@@ -483,9 +435,7 @@
                                     },
                                     "typeLine": {
                                       "types": [
-                                        {
-                                          "type": "Instant"
-                                        }
+                                        "Instant"
                                       ]
                                     }
                                   }
@@ -499,9 +449,7 @@
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "Red"
-                                          }
+                                          "value": "Red"
                                         }
                                       }
                                     ],
@@ -544,9 +492,7 @@
                                     },
                                     "typeLine": {
                                       "types": [
-                                        {
-                                          "type": "Instant"
-                                        }
+                                        "Instant"
                                       ]
                                     }
                                   }
@@ -560,9 +506,7 @@
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "White"
-                                          }
+                                          "value": "White"
                                         }
                                       }
                                     ],
@@ -578,9 +522,7 @@
                                                   "value": {
                                                     "player": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -603,9 +545,7 @@
                                                       "type": "InSlot",
                                                       "value": "enchantment"
                                                     },
-                                                    "regenerability": {
-                                                      "type": "Regenerable"
-                                                    }
+                                                    "regenerability": "Regenerable"
                                                   }
                                                 }
                                               ]
@@ -615,9 +555,7 @@
                                             "enchantment": {
                                               "filter": {
                                                 "type": "HasCardType",
-                                                "value": {
-                                                  "type": "Enchantment"
-                                                }
+                                                "value": "Enchantment"
                                               },
                                               "pool": {
                                                 "type": "Permanents"
@@ -660,9 +598,7 @@
                                     },
                                     "typeLine": {
                                       "types": [
-                                        {
-                                          "type": "Instant"
-                                        }
+                                        "Instant"
                                       ]
                                     }
                                   }
@@ -676,9 +612,7 @@
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "Blue"
-                                          }
+                                          "value": "Blue"
                                         }
                                       }
                                     ],
@@ -701,9 +635,7 @@
                                                         },
                                                         "player": {
                                                           "type": "Relative",
-                                                          "value": {
-                                                            "type": "You"
-                                                          }
+                                                          "value": "You"
                                                         }
                                                       }
                                                     },
@@ -727,9 +659,7 @@
                                                   "type": "Shuffle",
                                                   "value": {
                                                     "type": "Relative",
-                                                    "value": {
-                                                      "type": "You"
-                                                    }
+                                                    "value": "You"
                                                   }
                                                 }
                                               ],
@@ -744,9 +674,7 @@
                                                   "value": {
                                                     "player": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -762,9 +690,7 @@
                                     },
                                     "typeLine": {
                                       "types": [
-                                        {
-                                          "type": "Sorcery"
-                                        }
+                                        "Sorcery"
                                       ]
                                     }
                                   }
@@ -778,9 +704,7 @@
                                         "type": "OfType",
                                         "value": {
                                           "type": "Colored",
-                                          "value": {
-                                            "type": "White"
-                                          }
+                                          "value": "White"
                                         }
                                       }
                                     ],
@@ -798,9 +722,7 @@
                                                       "type": "InSlot",
                                                       "value": "creature"
                                                     },
-                                                    "zone": {
-                                                      "type": "Exile"
-                                                    }
+                                                    "zone": "Exile"
                                                   }
                                                 },
                                                 {
@@ -809,12 +731,8 @@
                                                     "player": {
                                                       "type": "HolderOfBound",
                                                       "value": {
-                                                        "holder": {
-                                                          "type": "Controller"
-                                                        },
-                                                        "hop": {
-                                                          "type": "Itself"
-                                                        },
+                                                        "holder": "Controller",
+                                                        "hop": "Itself",
                                                         "slot": "creature"
                                                       }
                                                     },
@@ -823,9 +741,7 @@
                                                       "value": {
                                                         "quantity": {
                                                           "type": "Measure",
-                                                          "value": {
-                                                            "type": "Power"
-                                                          }
+                                                          "value": "Power"
                                                         },
                                                         "slot": "creature"
                                                       }
@@ -847,9 +763,7 @@
                                     },
                                     "typeLine": {
                                       "types": [
-                                        {
-                                          "type": "Instant"
-                                        }
+                                        "Instant"
                                       ]
                                     }
                                   }
@@ -877,33 +791,23 @@
                                 "asThough": [
                                   {
                                     "type": "Colored",
-                                    "value": {
-                                      "type": "White"
-                                    }
+                                    "value": "White"
                                   },
                                   {
                                     "type": "Colored",
-                                    "value": {
-                                      "type": "Blue"
-                                    }
+                                    "value": "Blue"
                                   },
                                   {
                                     "type": "Colored",
-                                    "value": {
-                                      "type": "Black"
-                                    }
+                                    "value": "Black"
                                   },
                                   {
                                     "type": "Colored",
-                                    "value": {
-                                      "type": "Red"
-                                    }
+                                    "value": "Red"
                                   },
                                   {
                                     "type": "Colored",
-                                    "value": {
-                                      "type": "Green"
-                                    }
+                                    "value": "Green"
                                   }
                                 ],
                                 "only": false,
@@ -936,9 +840,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -946,19 +848,13 @@
       "oracleText": "{U}, {T}: Conjure a random card from Tome of the Infinite's spellbook into your hand. It perpetually gains prismatic.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Book"
-          }
+          "Book"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

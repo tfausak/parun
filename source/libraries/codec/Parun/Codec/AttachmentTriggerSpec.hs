@@ -17,5 +17,5 @@ spec s = Spec.describe s "Parun.Codec.AttachmentTrigger" $ do
       s
       AttachmentTrigger.codec
       (AttachmentTrigger.MkAttachmentTrigger AttachmentEnd.Host AttachDirection.Attaches (Filter.HasSubtype Subtype.Aura))
-      " {\"end\":{\"type\":\"Host\"},\"direction\":{\"type\":\"Attaches\"},\"other\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}} "
+      " {\"end\":\"Host\",\"direction\":\"Attaches\",\"other\":{\"type\":\"HasSubtype\",\"value\":\"Aura\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AttachmentTrigger.codec

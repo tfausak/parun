@@ -12,6 +12,6 @@ spec s = Spec.describe s "Parun.Codec.NextDamageOutcome" $ do
       s
       NextDamageOutcome.codec
       NextDamageOutcome.AlsoToSourceController
-      " {\"type\":\"AlsoToSourceController\"} "
+      " \"AlsoToSourceController\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s NextDamageOutcome.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s NextDamageOutcome.codec

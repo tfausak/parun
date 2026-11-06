@@ -6,9 +6,7 @@
           "type": "Affinity",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Cat"
-            }
+            "value": "Cat"
           }
         }
       ],
@@ -21,18 +19,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -70,19 +64,13 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "You"
-                                }
+                                "holder": "Controller",
+                                "relation": "You"
                               }
                             }
                           ]
@@ -98,9 +86,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

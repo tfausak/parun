@@ -6,9 +6,7 @@
           "type": "Affinity",
           "value": {
             "type": "HasCardType",
-            "value": {
-              "type": "Artifact"
-            }
+            "value": "Artifact"
           }
         }
       ],
@@ -36,58 +34,40 @@
                   "value": [
                     {
                       "type": "WasCastFrom",
-                      "value": {
-                        "type": "Library"
-                      }
+                      "value": "Library"
                     },
                     {
                       "type": "WasCastFrom",
-                      "value": {
-                        "type": "Hand"
-                      }
+                      "value": "Hand"
                     },
                     {
                       "type": "WasCastFrom",
-                      "value": {
-                        "type": "Graveyard"
-                      }
+                      "value": "Graveyard"
                     },
                     {
                       "type": "WasCastFrom",
-                      "value": {
-                        "type": "Exile"
-                      }
+                      "value": "Exile"
                     },
                     {
                       "type": "WasCastFrom",
-                      "value": {
-                        "type": "Command"
-                      }
+                      "value": "Command"
                     }
                   ]
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Artifact"
-                  }
+                  "value": "Artifact"
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               ]
             }
@@ -99,9 +79,7 @@
                 "type": "Affinity",
                 "value": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Artifact"
-                  }
+                  "value": "Artifact"
                 }
               }
             }
@@ -114,17 +92,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Golem"
-          }
+          "Golem"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

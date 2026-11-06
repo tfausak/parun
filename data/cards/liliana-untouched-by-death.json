@@ -23,9 +23,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -34,9 +32,7 @@
                           "tally": {
                             "filter": {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Zombie"
-                              }
+                              "value": "Zombie"
                             },
                             "slot": "milled"
                           }
@@ -48,9 +44,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "InSlot",
                           "value": "milled"
@@ -67,9 +61,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -82,9 +74,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -140,19 +130,13 @@
                                       "value": [
                                         {
                                           "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Zombie"
-                                          }
+                                          "value": "Zombie"
                                         },
                                         {
                                           "type": "HeldBy",
                                           "value": {
-                                            "holder": {
-                                              "type": "Controller"
-                                            },
-                                            "relation": {
-                                              "type": "You"
-                                            }
+                                            "holder": "Controller",
+                                            "relation": "You"
                                           }
                                         }
                                       ]
@@ -162,13 +146,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         },
-                                        "zone": {
-                                          "type": "Battlefield"
-                                        }
+                                        "zone": "Battlefield"
                                       }
                                     }
                                   }
@@ -187,19 +167,13 @@
                                       "value": [
                                         {
                                           "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Zombie"
-                                          }
+                                          "value": "Zombie"
                                         },
                                         {
                                           "type": "HeldBy",
                                           "value": {
-                                            "holder": {
-                                              "type": "Controller"
-                                            },
-                                            "relation": {
-                                              "type": "You"
-                                            }
+                                            "holder": "Controller",
+                                            "relation": "You"
                                           }
                                         }
                                       ]
@@ -209,13 +183,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         },
-                                        "zone": {
-                                          "type": "Battlefield"
-                                        }
+                                        "zone": "Battlefield"
                                       }
                                     }
                                   }
@@ -274,19 +244,13 @@
                               "from": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 },
-                                "zone": {
-                                  "type": "Graveyard"
-                                }
+                                "zone": "Graveyard"
                               },
                               "matching": {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Zombie"
-                                }
+                                "value": "Zombie"
                               }
                             }
                           },
@@ -319,18 +283,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -338,19 +298,13 @@
       "oracleText": "[+1]: Mill three cards. If at least one Zombie card is milled this way, each opponent loses 2 life and you gain 2 life.\n[−2]: Target creature gets -X/-X until end of turn, where X is the number of Zombies you control.\n[−3]: You may cast Zombie spells from your graveyard this turn.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Liliana"
-          }
+          "Liliana"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

@@ -29,7 +29,7 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
             SpellCast.copies = False
           }
       )
-      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}} "
+      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}} "
   -- Brineborn Cutthroat's "during an opponent's turn". The scope is REQUIRED,
   -- for the reason Parun.Codec.StepBegins gives.
   Spec.it s "MkSpellCast, an opponent's-turn window" $
@@ -45,7 +45,7 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
             SpellCast.copies = False
           }
       )
-      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
+      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"Opponent\"}}} "
   -- Harness the Storm's "from your hand". The zone is ELIDED when absent, which
   -- the two cases above pin; here it is written, which is what pins the key.
   Spec.it s "MkSpellCast, a window naming the zone the cast came from" $
@@ -61,7 +61,7 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
             SpellCast.copies = False
           }
       )
-      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}},\"zone\":{\"type\":\"Hand\"}} "
+      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}},\"zone\":\"Hand\"} "
   -- Clarion Spirit's "your second spell each turn". The ordinal is ELIDED when
   -- absent, which the three cases above pin; here it is written.
   Spec.it s "MkSpellCast, a window naming which cast of the turn" $
@@ -77,7 +77,7 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
             SpellCast.copies = False
           }
       )
-      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}},\"ordinal\":2} "
+      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}},\"ordinal\":2} "
   -- Zuko, Firebending Master's "during combat", elided when absent like the
   -- ordinal.
   Spec.it s "MkSpellCast, a window naming the phase" $
@@ -93,7 +93,7 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
             SpellCast.copies = False
           }
       )
-      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}},\"phase\":{\"type\":\"CombatPhase\"}} "
+      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}},\"phase\":{\"type\":\"CombatPhase\"}} "
   -- Magecraft's "or copy", elided when absent like the phase.
   Spec.it s "MkSpellCast, a window that copies fire too" $
     Common.assertCodec
@@ -108,5 +108,5 @@ spec s = Spec.describe s "Parun.Codec.SpellCast" $ do
             SpellCast.copies = True
           }
       )
-      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}},\"copies\":true} "
+      " {\"spell\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}},\"copies\":true} "
   Spec.it s "has a schema" $ Common.assertHasSchema s SpellCast.codec

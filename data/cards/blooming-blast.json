@@ -18,9 +18,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -55,16 +53,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "TimesPaid",
                       "value": {
                         "type": "Printed",
-                        "value": {
-                          "type": "Gift"
-                        }
+                        "value": "Gift"
                       }
                     },
                     "threshold": {
@@ -89,12 +83,8 @@
                               "players": {
                                 "type": "HolderOfBound",
                                 "value": {
-                                  "holder": {
-                                    "type": "Controller"
-                                  },
-                                  "hop": {
-                                    "type": "Itself"
-                                  },
+                                  "holder": "Controller",
+                                  "hop": "Itself",
                                   "slot": "target"
                                 }
                               }
@@ -119,9 +109,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

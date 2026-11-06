@@ -23,9 +23,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -76,19 +74,13 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -115,19 +107,13 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -172,25 +158,19 @@
                                     "type": "LifeTotal",
                                     "value": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "You"
-                                      }
+                                      "value": "You"
                                     }
                                   },
                                   "toughness": {
                                     "type": "LifeTotal",
                                     "value": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "You"
-                                      }
+                                      "value": "You"
                                     }
                                   }
                                 },
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  }
+                                  "White"
                                 ],
                                 "name": "Avatar Token",
                                 "power": {
@@ -201,14 +181,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Avatar"
-                                    }
+                                    "Avatar"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -241,18 +217,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -260,19 +232,13 @@
       "oracleText": "[+1]: You gain 2 life.\n[−1]: Put a +1/+1 counter on each creature you control. Those creatures gain vigilance until end of turn.\n[−6]: Create a white Avatar creature token. It has \"This token's power and toughness are each equal to your life total.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ajani"
-          }
+          "Ajani"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

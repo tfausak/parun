@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -65,9 +63,7 @@
                               "value": {
                                 "destinations": [
                                   {
-                                    "zone": {
-                                      "type": "Graveyard"
-                                    }
+                                    "zone": "Graveyard"
                                   }
                                 ]
                               }
@@ -86,16 +82,12 @@
                                               "value": "became"
                                             },
                                             "riders": {
-                                              "tapped": {
-                                                "type": "Tapped"
-                                              },
+                                              "tapped": "Tapped",
                                               "under": {
                                                 "type": "Owner"
                                               }
                                             },
-                                            "zone": {
-                                              "type": "Battlefield"
-                                            }
+                                            "zone": "Battlefield"
                                           }
                                         }
                                       ]
@@ -128,9 +120,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

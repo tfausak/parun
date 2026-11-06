@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -30,9 +28,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "White"
-                              }
+                              "White"
                             ],
                             "name": "Soldier Token",
                             "power": {
@@ -45,14 +41,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Soldier"
-                                }
+                                "Soldier"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -66,9 +58,7 @@
                         "attacking": {
                           "type": "Chosen"
                         },
-                        "tapped": {
-                          "type": "Tapped"
-                        }
+                        "tapped": "Tapped"
                       }
                     }
                   }
@@ -87,9 +77,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "White"
-                              }
+                              "White"
                             ],
                             "defense": 3,
                             "name": "Soldier Token",
@@ -103,17 +91,11 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Soldier"
-                                }
+                                "Soldier"
                               ],
                               "types": [
-                                {
-                                  "type": "Battle"
-                                },
-                                {
-                                  "type": "Creature"
-                                }
+                                "Battle",
+                                "Creature"
                               ]
                             }
                           }
@@ -127,9 +109,7 @@
                         "attacking": {
                           "type": "Chosen"
                         },
-                        "tapped": {
-                          "type": "Tapped"
-                        }
+                        "tapped": "Tapped"
                       }
                     }
                   }
@@ -148,9 +128,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "White"
-                              }
+                              "White"
                             ],
                             "name": "Soldier Token",
                             "power": {
@@ -163,14 +141,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Soldier"
-                                }
+                                "Soldier"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -195,9 +169,7 @@
               "soldierBlocked": {
                 "filter": {
                   "type": "IsAttackingPlayer",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
                 "pool": {
                   "type": "Creatures"
@@ -216,9 +188,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "White"
-                              }
+                              "White"
                             ],
                             "defense": 3,
                             "name": "Soldier Token",
@@ -232,17 +202,11 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Soldier"
-                                }
+                                "Soldier"
                               ],
                               "types": [
-                                {
-                                  "type": "Battle"
-                                },
-                                {
-                                  "type": "Creature"
-                                }
+                                "Battle",
+                                "Creature"
                               ]
                             }
                           }
@@ -267,9 +231,7 @@
               "battleBlocked": {
                 "filter": {
                   "type": "IsAttackingPlayer",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
                 "pool": {
                   "type": "Creatures"
@@ -281,9 +243,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

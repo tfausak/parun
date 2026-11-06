@@ -86,14 +86,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": {
                 "casts": {
                   "type": "And",

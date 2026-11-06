@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -65,9 +61,7 @@
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       },
@@ -86,9 +80,7 @@
                         "value": {
                           "filter": {
                             "type": "HasColor",
-                            "value": {
-                              "type": "White"
-                            }
+                            "value": "White"
                           },
                           "slot": "looked"
                         }
@@ -103,9 +95,7 @@
                         "type": "InSlot",
                         "value": "taken"
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ],
@@ -120,17 +110,13 @@
                     "value": {
                       "placement": {
                         "type": "RandomOrder",
-                        "value": {
-                          "type": "Bottom"
-                        }
+                        "value": "Bottom"
                       },
                       "ref": {
                         "type": "InSlot",
                         "value": "looked"
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -148,9 +134,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

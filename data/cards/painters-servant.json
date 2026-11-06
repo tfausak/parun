@@ -57,9 +57,7 @@
           "modifications": [
             {
               "type": "ChosenColor",
-              "value": {
-                "type": "InAddition"
-              }
+              "value": "InAddition"
             }
           ]
         }
@@ -70,17 +68,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Scarecrow"
-          }
+          "Scarecrow"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

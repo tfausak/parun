@@ -26,15 +26,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         },
@@ -43,15 +39,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         }
@@ -68,20 +60,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Frog"
-          },
-          {
-            "type": "Mutant"
-          },
-          {
-            "type": "Rebel"
-          }
+          "Frog",
+          "Mutant",
+          "Rebel"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -30,9 +30,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -51,16 +49,12 @@
                             "value": {
                               "filter": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               "slot": "revealed"
                             }
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ]
@@ -74,9 +68,7 @@
                             "type": "InSlot",
                             "value": "revealed"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -116,29 +108,21 @@
                                 "value": [
                                   {
                                     "type": "HasColor",
-                                    "value": {
-                                      "type": "Green"
-                                    }
+                                    "value": "Green"
                                   },
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   }
                                 ]
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ],
@@ -186,9 +170,7 @@
                                           "type": "PlayersTurn",
                                           "value": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "AnyPlayer"
-                                            }
+                                            "value": "AnyPlayer"
                                           }
                                         },
                                         "spell": {
@@ -198,19 +180,13 @@
                                             "value": [
                                               {
                                                 "type": "HasCardType",
-                                                "value": {
-                                                  "type": "Creature"
-                                                }
+                                                "value": "Creature"
                                               },
                                               {
                                                 "type": "HeldBy",
                                                 "value": {
-                                                  "holder": {
-                                                    "type": "Controller"
-                                                  },
-                                                  "relation": {
-                                                    "type": "You"
-                                                  }
+                                                  "holder": "Controller",
+                                                  "relation": "You"
                                                 }
                                               }
                                             ]
@@ -227,20 +203,14 @@
                                                 {
                                                   "type": "Search",
                                                   "value": {
-                                                    "destination": {
-                                                      "type": "Battlefield"
-                                                    },
+                                                    "destination": "Battlefield",
                                                     "filter": {
                                                       "type": "HasCardType",
-                                                      "value": {
-                                                        "type": "Creature"
-                                                      }
+                                                      "value": "Creature"
                                                     },
                                                     "owner": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -248,9 +218,7 @@
                                                     },
                                                     "searcher": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "You"
-                                                      }
+                                                      "value": "You"
                                                     }
                                                   }
                                                 }
@@ -291,18 +259,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -310,19 +274,13 @@
       "oracleText": "[+1]: Reveal the top five cards of your library. Put all creature cards revealed this way into your hand and the rest on the bottom of your library in any order.\n[−3]: You may put a green creature card from your hand onto the battlefield.\n[−7]: You get an emblem with \"Whenever you cast a creature spell, you may search your library for a creature card, put it onto the battlefield, then shuffle.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Garruk"
-          }
+          "Garruk"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

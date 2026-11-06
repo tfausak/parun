@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -26,18 +24,14 @@
                       "placement": {
                         "type": "ArrangedBy",
                         "value": {
-                          "position": {
-                            "type": "Top"
-                          }
+                          "position": "Top"
                         }
                       },
                       "ref": {
                         "type": "InSlot",
                         "value": "cards"
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -61,9 +55,7 @@
                     }
                   }
                 },
-                "together": {
-                  "type": "InOneZone"
-                }
+                "together": "InOneZone"
               }
             }
           }
@@ -71,9 +63,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

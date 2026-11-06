@@ -32,7 +32,7 @@ spec s = Spec.describe s "Parun.Codec.DiscardCards" $ do
             DiscardCards.selection = CardSelection.ByChoice
           }
       )
-      " {\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichCards\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}} "
+      " {\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichCards\":{\"type\":\"HasCardType\",\"value\":\"Land\"}} "
   -- Cathartic Reunion's "discard two cards", which names none.
   Spec.it s "MkDiscardCards, a filter that admits everything" $
     Common.assertCodec
@@ -68,5 +68,5 @@ spec s = Spec.describe s "Parun.Codec.DiscardCards" $ do
             DiscardCards.selection = CardSelection.AtRandom
           }
       )
-      " {\"count\":{\"type\":\"Fixed\",\"value\":1},\"selection\":{\"type\":\"AtRandom\"},\"whichCards\":{\"type\":\"And\",\"value\":[]}} "
+      " {\"count\":{\"type\":\"Fixed\",\"value\":1},\"selection\":\"AtRandom\",\"whichCards\":{\"type\":\"And\",\"value\":[]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

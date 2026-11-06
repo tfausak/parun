@@ -11,9 +11,7 @@
             },
             "whichCards": {
               "type": "HasColor",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             }
           }
         }
@@ -40,9 +38,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -61,9 +57,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   }
                 ]
@@ -83,33 +77,23 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Artifact"
-                          }
+                          "value": "Artifact"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Enchantment"
-                          }
+                          "value": "Enchantment"
                         }
                       ]
                     },
                     {
                       "type": "Measures",
                       "value": {
-                        "comparison": {
-                          "type": "AtMost"
-                        },
-                        "measure": {
-                          "type": "ManaValue"
-                        },
+                        "comparison": "AtMost",
+                        "measure": "ManaValue",
                         "operand": {
                           "type": "EnclosingAmount"
                         }
@@ -127,9 +111,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

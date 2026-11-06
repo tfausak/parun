@@ -29,7 +29,7 @@
   },
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$growth", "targets": ["$unagi"], "mana": ["$forest"] } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "ChooseToPay": { "decision": { "type": "Pays" }, "cost": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "ChooseToPay": { "decision": "Pays", "cost": [] } } },
     { "turn": 1, "step": "BeginningOfCombat", "player": "bob", "check": { "PowerToughness": { "object": "$unagi", "power": 8, "toughness": 8 } } },
     { "turn": 1, "step": "BeginningOfCombat", "player": "bob", "check": { "Tapped": { "object": "$forest", "tapped": true } } },
     { "turn": 1, "step": "BeginningOfCombat", "player": "bob", "check": { "Tapped": { "object": "$bob-piker-1", "tapped": true } } },

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -34,17 +32,13 @@
               {
                 "type": "Blocks",
                 "value": {
-                  "role": {
-                    "type": "Blocker"
-                  }
+                  "role": "Blocker"
                 }
               },
               {
                 "type": "Blocks",
                 "value": {
-                  "role": {
-                    "type": "Attacker"
-                  }
+                  "role": "Attacker"
                 }
               }
             ]
@@ -90,14 +84,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Frog"
-          }
+          "Frog"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

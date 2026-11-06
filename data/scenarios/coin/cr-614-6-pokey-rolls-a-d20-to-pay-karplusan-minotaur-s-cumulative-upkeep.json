@@ -73,9 +73,7 @@
       "player": "alice",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          }
+          "decision": "Pays"
         }
       },
       "source": "$minotaur"
@@ -87,9 +85,7 @@
       "do": {
         "Answer": {
           "prompt": "CallCoin",
-          "with": {
-            "type": "Heads"
-          }
+          "with": "Heads"
         }
       }
     },
@@ -98,9 +94,7 @@
       "step": "Upkeep",
       "player": "alice",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "source": "$pokey"
     },
@@ -120,9 +114,7 @@
       "step": "Upkeep",
       "player": "alice",
       "do": {
-        "ChooseOptional": {
-          "type": "Declines"
-        }
+        "ChooseOptional": "Declines"
       },
       "source": "$pokey"
     },

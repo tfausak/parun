@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -40,16 +38,12 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "AttackersDeclaredThisTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -76,9 +70,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -94,9 +86,7 @@
                         "value": {
                           "placement": {
                             "type": "Stated",
-                            "value": {
-                              "type": "Top"
-                            }
+                            "value": "Top"
                           },
                           "ref": {
                             "type": "ChosenCardFromAmong",
@@ -115,9 +105,7 @@
                               "slot": "looked"
                             }
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -131,9 +119,7 @@
                             "type": "InSlot",
                             "value": "looked"
                           },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       }
                     ]
@@ -146,17 +132,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Pirate"
-          },
-          {
-            "type": "Skeleton"
-          }
+          "Pirate",
+          "Skeleton"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

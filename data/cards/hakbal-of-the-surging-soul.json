@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -42,17 +38,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "BeginningOfCombat"
-                }
+                "value": "BeginningOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -72,25 +64,17 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Merfolk"
-                                }
+                                "value": "Merfolk"
                               },
                               {
                                 "type": "HeldBy",
                                 "value": {
-                                  "holder": {
-                                    "type": "Controller"
-                                  },
-                                  "relation": {
-                                    "type": "You"
-                                  }
+                                  "holder": "Controller",
+                                  "relation": "You"
                                 }
                               }
                             ]
@@ -123,9 +107,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -135,18 +117,14 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "components": [
                           {
                             "type": "PutCardFromHandOntoBattlefield",
                             "value": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Land"
-                              }
+                              "value": "Land"
                             }
                           }
                         ],
@@ -166,22 +144,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Merfolk"
-          },
-          {
-            "type": "Scout"
-          }
+          "Merfolk",
+          "Scout"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

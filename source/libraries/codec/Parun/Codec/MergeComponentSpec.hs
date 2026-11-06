@@ -28,7 +28,7 @@ spec s = Spec.describe s "Parun.Codec.MergeComponent" $ do
       s
       MergeComponent.codec
       (MergeComponent.OfCard (ComponentCard.MkComponentCard (PrintingId.MkPrintingId 18) (Just (CardIdentity.MkCardIdentity 4 (PlayerId.MkPlayerId 1))) (Just ProjectedCharacteristicsSpec.minimalCharacteristics)))
-      " {\"type\":\"OfCard\",\"value\":{\"printing\":18,\"identity\":{\"serial\":4,\"startingOwner\":1},\"duplicate\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}}} "
+      " {\"type\":\"OfCard\",\"value\":{\"printing\":18,\"identity\":{\"serial\":4,\"startingOwner\":1},\"duplicate\":{\"names\":[\"Mountain\"],\"cardTypes\":[\"Land\"]}}} "
   -- CR 111.3 / 730.2d: a DIFFERENT tag on the same payload shape, which is the
   -- whole of what rule 730.2d asks of a component.
   Spec.it s "OfToken" $

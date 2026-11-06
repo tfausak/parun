@@ -5,9 +5,7 @@
         {
           "filter": {
             "type": "HasCardType",
-            "value": {
-              "type": "Land"
-            }
+            "value": "Land"
           },
           "pool": {
             "type": "Permanents"
@@ -23,18 +21,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -49,9 +43,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 {
                   "type": "HasAttached",
@@ -66,36 +58,24 @@
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Creature"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Creature",
+                "mode": "InAddition"
               }
             },
             {
               "type": "CreatureSubtype",
               "value": {
-                "mode": {
-                  "type": "InAddition"
-                },
-                "subtype": {
-                  "type": "Treefolk"
-                }
+                "mode": "InAddition",
+                "subtype": "Treefolk"
               }
             },
             {
               "type": "Colors",
               "value": {
                 "colors": [
-                  {
-                    "type": "Green"
-                  }
+                  "Green"
                 ],
-                "mode": {
-                  "type": "Replace"
-                }
+                "mode": "Replace"
               }
             },
             {
@@ -116,14 +96,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

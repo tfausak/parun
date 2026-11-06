@@ -18,9 +18,7 @@
             "unless": {
               "type": "Compares",
               "value": {
-                "comparison": {
-                  "type": "AtMost"
-                },
+                "comparison": "AtMost",
                 "measured": {
                   "type": "Count",
                   "value": {
@@ -33,12 +31,8 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         },
                         {
@@ -46,21 +40,15 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             },
                             {
                               "type": "HasSupertype",
-                              "value": {
-                                "type": "Legendary"
-                              }
+                              "value": "Legendary"
                             },
                             {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Saga"
-                              }
+                              "value": "Saga"
                             }
                           ]
                         }
@@ -70,9 +58,7 @@
                       "type": "InHistory",
                       "value": {
                         "type": "SpellCast",
-                        "value": {
-                          "type": "ThisTurn"
-                        }
+                        "value": "ThisTurn"
                       }
                     }
                   }
@@ -95,9 +81,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -113,17 +97,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Human",
+          "Rogue"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -28,5 +28,5 @@ spec s = Spec.describe s "Parun.Codec.CardAbilities" $ do
       s
       CardAbilities.codec
       CardAbilities.MkCardAbilities {CardAbilities.from = LentCards.TopOfYourLibrary, CardAbilities.cards = Filter.And [], CardAbilities.restrictions = []}
-      " {\"from\":{\"type\":\"TopOfYourLibrary\"},\"cards\":{\"type\":\"And\",\"value\":[]}} "
+      " {\"from\":\"TopOfYourLibrary\",\"cards\":{\"type\":\"And\",\"value\":[]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CardAbilities.codec

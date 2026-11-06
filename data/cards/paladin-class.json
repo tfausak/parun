@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -55,9 +53,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -102,9 +98,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -115,16 +109,12 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "Exactly"
-              },
+              "comparison": "Exactly",
               "measured": {
                 "type": "IsActivePlayer",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -168,19 +158,13 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -189,9 +173,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "ClassLevel"
               },
@@ -227,9 +209,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "ClassLevel"
               },
@@ -250,9 +230,7 @@
                     "value": {
                       "type": "Declaration",
                       "value": {
-                        "player": {
-                          "type": "You"
-                        }
+                        "player": "You"
                       }
                     }
                   },
@@ -297,13 +275,9 @@
                                             "value": {
                                               "player": {
                                                 "type": "Relative",
-                                                "value": {
-                                                  "type": "AnyPlayer"
-                                                }
+                                                "value": "AnyPlayer"
                                               },
-                                              "zone": {
-                                                "type": "Battlefield"
-                                              }
+                                              "zone": "Battlefield"
                                             }
                                           }
                                         }
@@ -334,13 +308,9 @@
                                             "value": {
                                               "player": {
                                                 "type": "Relative",
-                                                "value": {
-                                                  "type": "AnyPlayer"
-                                                }
+                                                "value": "AnyPlayer"
                                               },
-                                              "zone": {
-                                                "type": "Battlefield"
-                                              }
+                                              "zone": "Battlefield"
                                             }
                                           }
                                         }
@@ -395,14 +365,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Class"
-          }
+          "Class"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -62,9 +60,7 @@
                       },
                       "modification": {
                         "type": "LoseEverySubtype",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       "ref": {
                         "type": "InSlot",
@@ -87,17 +83,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Shapeshifter"
-          }
+          "Shapeshifter"
         ],
         "types": [
-          {
-            "type": "Instant"
-          },
-          {
-            "type": "Kindred"
-          }
+          "Instant",
+          "Kindred"
         ]
       }
     }

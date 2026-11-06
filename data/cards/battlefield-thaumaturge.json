@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -39,15 +37,11 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Instant"
-                    }
+                    "value": "Instant"
                   },
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Sorcery"
-                    }
+                    "value": "Sorcery"
                   }
                 ]
               },
@@ -56,15 +50,11 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "IsInZone",
-                    "value": {
-                      "type": "Battlefield"
-                    }
+                    "value": "Battlefield"
                   }
                 ]
               },
@@ -95,9 +85,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               },
               "spell": {
@@ -108,12 +96,8 @@
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
@@ -158,17 +142,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

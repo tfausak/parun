@@ -52,7 +52,7 @@ spec s = Spec.describe s "Parun.Codec.Transformed" $ do
       )
       ( "{\"object\":1,\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
-          <> ",\"controller\":3,\"attachments\":[7,9],\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":5}}}]}"
+          <> ",\"controller\":3,\"attachments\":[7,9],\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":5}}}]}"
       )
   -- CR 708.2a's none, which is a real answer rather than an absence: a permanent
   -- with no name turned over triggers no "transforms into" ability at all, and

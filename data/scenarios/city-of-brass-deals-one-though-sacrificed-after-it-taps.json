@@ -71,14 +71,10 @@
               {
                 "manaType": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 },
                 "restriction": null,
-                "retention": {
-                  "type": "Ordinary"
-                },
+                "retention": "Ordinary",
                 "rider": null,
                 "sourceChoices": null,
                 "tags": []

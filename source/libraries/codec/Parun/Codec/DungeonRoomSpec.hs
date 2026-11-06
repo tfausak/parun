@@ -69,7 +69,7 @@ spec s = Spec.describe s "Parun.Codec.DungeonRoom" $ do
             DungeonRoom.exits = Set.empty
           }
       )
-      " {\"name\":\"Temple of Dumathoin\",\"ability\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Draw\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"quantity\":{\"type\":\"Literal\",\"value\":1}}}]}]}]}} "
+      " {\"name\":\"Temple of Dumathoin\",\"ability\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Draw\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"quantity\":{\"type\":\"Literal\",\"value\":1}}}]}]}]}} "
   -- CR 309.5a: a room with two arrows out of it. The ability is left at its
   -- default, which is what a room whose printed effect parun cannot express writes.
   Spec.it s "MkDungeonRoom, Cave Entrance's two arrows and no expressible ability" $

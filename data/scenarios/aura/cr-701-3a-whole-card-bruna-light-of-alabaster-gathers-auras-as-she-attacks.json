@@ -37,19 +37,19 @@
   },
   "timeline": [
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$bruna"] } },
-    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseOptional": "Exercises" } },
     {
       "turn": 1,
       "step": "DeclareAttackers",
       "player": "alice",
       "do": { "Answer": { "prompt": "ChooseLoopMembers", "with": [["Object", "$unholy"], ["Object", "$wild-growth"]] } }
     },
-    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseOptional": "Exercises" } },
     {
       "turn": 1,
       "step": "DeclareAttackers",
       "player": "alice",
-      "do": { "Answer": { "prompt": "ChooseSearchZones", "with": [{ "type": "Graveyard" }, { "type": "Hand" }] } }
+      "do": { "Answer": { "prompt": "ChooseSearchZones", "with": ["Graveyard", "Hand"] } }
     },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Answer": { "prompt": "Search", "with": ["$consecrate"] } } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Answer": { "prompt": "Search", "with": ["$library-pacifism"] } } },

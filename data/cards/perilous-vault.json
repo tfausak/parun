@@ -34,15 +34,11 @@
                               "type": "Not",
                               "value": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Land"
-                                }
+                                "value": "Land"
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -63,9 +59,7 @@
       "oracleText": "{5}, {T}, Exile this artifact: Exile all nonland permanents.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

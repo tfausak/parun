@@ -14,27 +14,21 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -46,9 +40,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -62,16 +54,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "CastUsing",
                       "value": {
                         "type": "OfFamily",
-                        "value": {
-                          "type": "Cleave"
-                        }
+                        "value": "Cleave"
                       }
                     },
                     "threshold": {
@@ -84,31 +72,23 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "RevealThenHand"
-                      },
+                      "destination": "RevealThenHand",
                       "filter": {
                         "type": "And",
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           },
                           {
                             "type": "HasSupertype",
-                            "value": {
-                              "type": "Basic"
-                            }
+                            "value": "Basic"
                           }
                         ]
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -116,9 +96,7 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -128,16 +106,12 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "CastUsing",
                       "value": {
                         "type": "OfFamily",
-                        "value": {
-                          "type": "Cleave"
-                        }
+                        "value": "Cleave"
                       }
                     },
                     "threshold": {
@@ -150,18 +124,14 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "Hand"
-                      },
+                      "destination": "Hand",
                       "filter": {
                         "type": "And",
                         "value": []
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -169,9 +139,7 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -183,9 +151,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -40,15 +38,11 @@
                                 "value": {
                                   "left": {
                                     "type": "Measure",
-                                    "value": {
-                                      "type": "Power"
-                                    }
+                                    "value": "Power"
                                   },
                                   "right": {
                                     "type": "Measure",
-                                    "value": {
-                                      "type": "Power"
-                                    }
+                                    "value": "Power"
                                   }
                                 }
                               },
@@ -63,15 +57,11 @@
                                 "value": {
                                   "left": {
                                     "type": "Measure",
-                                    "value": {
-                                      "type": "Toughness"
-                                    }
+                                    "value": "Toughness"
                                   },
                                   "right": {
                                     "type": "Measure",
-                                    "value": {
-                                      "type": "Toughness"
-                                    }
+                                    "value": "Toughness"
                                   }
                                 }
                               },
@@ -101,9 +91,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

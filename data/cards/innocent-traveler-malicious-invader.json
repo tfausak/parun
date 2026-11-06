@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -42,17 +38,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -72,9 +64,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNonePaid"
-                      },
+                      "branch": "IfNonePaid",
                       "cost": {
                         "components": [
                           {
@@ -86,9 +76,7 @@
                               },
                               "whichPermanents": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               }
                             }
                           }
@@ -97,9 +85,7 @@
                       },
                       "payer": {
                         "type": "Relative",
-                        "value": {
-                          "type": "Opponent"
-                        }
+                        "value": "Opponent"
                       }
                     }
                   }
@@ -111,22 +97,16 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          }
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
     {
       "colorIndicator": [
-        {
-          "type": "Black"
-        }
+        "Black"
       ],
       "keywords": [
         {
@@ -150,9 +130,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -164,19 +142,13 @@
                     "value": [
                       {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Human"
-                        }
+                        "value": "Human"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "Opponent"
-                          }
+                          "holder": "Controller",
+                          "relation": "Opponent"
                         }
                       }
                     ]
@@ -186,13 +158,9 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 }
@@ -226,14 +194,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Vampire"
-          }
+          "Vampire"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

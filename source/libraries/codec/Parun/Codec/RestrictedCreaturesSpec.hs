@@ -26,7 +26,7 @@ spec s = Spec.describe s "Parun.Codec.RestrictedCreatures" $ do
       s
       (RestrictedCreatures.codec ObjectRef.codec)
       (RestrictedCreatures.Matching (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- The other instantiation, which Parun.Types.ActiveAttackProhibition holds: the
   -- same two tags, with the id the ref was read as in place of the ref.
   Spec.it s "Named at an id rather than a ref" $

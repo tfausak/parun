@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -28,9 +26,7 @@
                         "value": "creature"
                       },
                       "slot": "suspended",
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   },
                   {
@@ -68,9 +64,7 @@
                             "type": "Not",
                             "value": {
                               "type": "HasKeywordFamily",
-                              "value": {
-                                "type": "Suspend"
-                              }
+                              "value": "Suspend"
                             }
                           },
                           "slot": "suspended"
@@ -93,9 +87,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

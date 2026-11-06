@@ -11,15 +11,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             }
           }
         }
@@ -39,9 +35,7 @@
                         "type": "InSlot",
                         "value": "cards"
                       },
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   },
                   {
@@ -91,9 +85,7 @@
                     }
                   }
                 },
-                "together": {
-                  "type": "InOneZone"
-                }
+                "together": "InOneZone"
               },
               "target": {
                 "pool": {
@@ -106,9 +98,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     },
@@ -123,15 +113,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             }
           }
         },
@@ -140,15 +126,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             }
           }
         }
@@ -171,22 +153,16 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Enchantment"
-                              }
+                              "value": "Enchantment"
                             }
                           ]
                         }
                       },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
+                      "regenerability": "Regenerable"
                     }
                   }
                 ]
@@ -197,9 +173,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

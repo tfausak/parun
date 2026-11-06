@@ -31,9 +31,7 @@
                                       "value": {
                                         "type": "Compares",
                                         "value": {
-                                          "comparison": {
-                                            "type": "Exactly"
-                                          },
+                                          "comparison": "Exactly",
                                           "measured": {
                                             "type": "Count",
                                             "value": {
@@ -49,13 +47,9 @@
                                                 "value": {
                                                   "player": {
                                                     "type": "Relative",
-                                                    "value": {
-                                                      "type": "You"
-                                                    }
+                                                    "value": "You"
                                                   },
-                                                  "zone": {
-                                                    "type": "Hand"
-                                                  }
+                                                  "zone": "Hand"
                                                 }
                                               }
                                             }
@@ -78,9 +72,7 @@
                                                   "value": {
                                                     "player": {
                                                       "type": "Relative",
-                                                      "value": {
-                                                        "type": "Opponent"
-                                                      }
+                                                      "value": "Opponent"
                                                     },
                                                     "quantity": {
                                                       "type": "Literal",
@@ -118,9 +110,7 @@
       "name": "Synthetic Empty Hand Idol",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -22,9 +22,7 @@
           "scope": {
             "type": "Superlative",
             "value": {
-              "comparison": {
-                "type": "GreaterThan"
-              },
+              "comparison": "GreaterThan",
               "measure": {
                 "type": "PermanentsControlled"
               }
@@ -39,21 +37,15 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Artifact"
-                  }
+                  "value": "Artifact"
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Enchantment"
-                  }
+                  "value": "Enchantment"
                 }
               ]
             }
@@ -62,9 +54,7 @@
           "scope": {
             "type": "Superlative",
             "value": {
-              "comparison": {
-                "type": "GreaterThan"
-              },
+              "comparison": "GreaterThan",
               "measure": {
                 "type": "PermanentsControlled"
               }
@@ -100,9 +90,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

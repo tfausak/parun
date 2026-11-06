@@ -34,6 +34,6 @@ spec s = Spec.describe s "Parun.Codec.ShownComponent" $ do
       s
       ShownComponent.codec
       (ShownComponent.MkShownComponent (MergeComponent.OfCard (ComponentCard.MkComponentCard (PrintingId.MkPrintingId 11) Nothing Nothing)) Nothing (Facing.faceDown FaceDownReason.Morphed))
-      " {\"component\":{\"type\":\"OfCard\",\"value\":{\"printing\":11}},\"facing\":{\"type\":\"FaceDown\",\"value\":{\"reason\":{\"type\":\"Morphed\"},\"listed\":{}}}} "
+      " {\"component\":{\"type\":\"OfCard\",\"value\":{\"printing\":11}},\"facing\":{\"type\":\"FaceDown\",\"value\":{\"reason\":\"Morphed\",\"listed\":{}}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ShownComponent.codec

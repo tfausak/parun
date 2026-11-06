@@ -11,9 +11,7 @@
                   "count": 2,
                   "whichCards": {
                     "type": "HasSupertype",
-                    "value": {
-                      "type": "Legendary"
-                    }
+                    "value": "Legendary"
                   }
                 }
               }
@@ -43,9 +41,7 @@
                             "value": {
                               "filter": {
                                 "type": "HasSupertype",
-                                "value": {
-                                  "type": "Legendary"
-                                }
+                                "value": "Legendary"
                               },
                               "graveyards": {
                                 "type": "Scoped",
@@ -70,27 +66,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -114,9 +104,7 @@
               },
               "matching": {
                 "type": "HasSupertype",
-                "value": {
-                  "type": "Legendary"
-                }
+                "value": "Legendary"
               },
               "subject": {
                 "type": "Spells"
@@ -138,22 +126,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Advisor"
-          },
-          {
-            "type": "Elf"
-          }
+          "Advisor",
+          "Elf"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

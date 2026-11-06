@@ -46,9 +46,7 @@
       "name": "Synthetic Dynamo Conduit",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

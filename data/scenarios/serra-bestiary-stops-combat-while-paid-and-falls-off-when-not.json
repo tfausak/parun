@@ -148,9 +148,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$p1",
             "$p2"
@@ -207,9 +205,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "player": "alice",

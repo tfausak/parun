@@ -141,17 +141,13 @@
                                       "value": {
                                         "phase": {
                                           "type": "Combat",
-                                          "value": {
-                                            "type": "BeginningOfCombat"
-                                          }
+                                          "value": "BeginningOfCombat"
                                         },
                                         "scope": {
                                           "type": "PlayersTurn",
                                           "value": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "You"
-                                            }
+                                            "value": "You"
                                           }
                                         }
                                       }
@@ -169,9 +165,7 @@
                                                       "faces": [
                                                         {
                                                           "colorIndicator": [
-                                                            {
-                                                              "type": "White"
-                                                            }
+                                                            "White"
                                                           ],
                                                           "name": "Soldier Token",
                                                           "power": {
@@ -184,14 +178,10 @@
                                                           },
                                                           "typeLine": {
                                                             "subtypes": [
-                                                              {
-                                                                "type": "Soldier"
-                                                              }
+                                                              "Soldier"
                                                             ],
                                                             "types": [
-                                                              {
-                                                                "type": "Creature"
-                                                              }
+                                                              "Creature"
                                                             ]
                                                           }
                                                         }
@@ -220,19 +210,13 @@
                                                         "value": [
                                                           {
                                                             "type": "HasCardType",
-                                                            "value": {
-                                                              "type": "Creature"
-                                                            }
+                                                            "value": "Creature"
                                                           },
                                                           {
                                                             "type": "HeldBy",
                                                             "value": {
-                                                              "holder": {
-                                                                "type": "Controller"
-                                                              },
-                                                              "relation": {
-                                                                "type": "You"
-                                                              }
+                                                              "holder": "Controller",
+                                                              "relation": "You"
                                                             }
                                                           }
                                                         ]
@@ -274,9 +258,7 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       {
                         "type": "Not",
@@ -288,9 +270,7 @@
                   },
                   "floor": 1
                 },
-                "player": {
-                  "type": "AnyPlayer"
-                }
+                "player": "AnyPlayer"
               }
             }
           },
@@ -307,9 +287,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "White"
-                                  }
+                                  "White"
                                 ],
                                 "name": "Soldier Token",
                                 "power": {
@@ -322,14 +300,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Soldier"
-                                    }
+                                    "Soldier"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -343,9 +317,7 @@
                             "attacking": {
                               "type": "Chosen"
                             },
-                            "tapped": {
-                              "type": "Tapped"
-                            }
+                            "tapped": "Tapped"
                           }
                         }
                       }
@@ -370,18 +342,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -389,19 +357,13 @@
       "oracleText": "[+1]: Put a +1/+1 counter on up to one target creature. It gains indestructible until end of turn.\n[−2]: Whenever one or more nontoken creatures attack this turn, create that many 1/1 white Soldier creature tokens that are tapped and attacking.\n[−6]: You get an emblem with \"At the beginning of combat on your turn, create a 1/1 white Soldier creature token, then put a +1/+1 counter on each creature you control.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Basri"
-          }
+          "Basri"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

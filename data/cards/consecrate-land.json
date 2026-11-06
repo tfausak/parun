@@ -10,9 +10,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 {
                   "type": "HasAttached",
@@ -28,9 +26,7 @@
             "value": [
               {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Aura"
-                }
+                "value": "Aura"
               },
               {
                 "type": "Not",
@@ -46,9 +42,7 @@
         {
           "filter": {
             "type": "HasCardType",
-            "value": {
-              "type": "Land"
-            }
+            "value": "Land"
           },
           "pool": {
             "type": "Permanents"
@@ -60,9 +54,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -77,9 +69,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 {
                   "type": "HasAttached",
@@ -102,14 +92,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

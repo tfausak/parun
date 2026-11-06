@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -42,22 +38,16 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           },
                           {
                             "type": "HasSupertype",
-                            "value": {
-                              "type": "Basic"
-                            }
+                            "value": "Basic"
                           },
                           {
                             "type": "HeldByBound",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
+                              "holder": "Controller",
                               "slot": "target"
                             }
                           }
@@ -80,9 +70,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

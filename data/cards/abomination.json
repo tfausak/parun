@@ -8,17 +8,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "EndOfCombat"
-                }
+                "value": "EndOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -36,9 +32,7 @@
                             "type": "InSlot",
                             "value": "thatAttacker"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       },
                       {
@@ -48,9 +42,7 @@
                             "type": "InSlot",
                             "value": "thatBlocker"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -70,18 +62,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -110,33 +98,25 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "Or",
                           "value": [
                             {
                               "type": "HasColor",
-                              "value": {
-                                "type": "Green"
-                              }
+                              "value": "Green"
                             },
                             {
                               "type": "HasColor",
-                              "value": {
-                                "type": "White"
-                              }
+                              "value": "White"
                             }
                           ]
                         }
                       ]
                     }
                   },
-                  "role": {
-                    "type": "Blocker"
-                  }
+                  "role": "Blocker"
                 }
               },
               {
@@ -149,33 +129,25 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "Or",
                           "value": [
                             {
                               "type": "HasColor",
-                              "value": {
-                                "type": "Green"
-                              }
+                              "value": "Green"
                             },
                             {
                               "type": "HasColor",
-                              "value": {
-                                "type": "White"
-                              }
+                              "value": "White"
                             }
                           ]
                         }
                       ]
                     }
                   },
-                  "role": {
-                    "type": "Attacker"
-                  }
+                  "role": "Attacker"
                 }
               }
             ]
@@ -202,14 +174,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horror"
-          }
+          "Horror"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

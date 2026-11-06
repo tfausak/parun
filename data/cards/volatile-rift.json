@@ -7,15 +7,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             }
           }
         },
@@ -24,15 +20,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             }
           }
         }
@@ -51,33 +43,21 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Owner"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Owner",
+                        "relation": "You"
                       }
                     }
                   ]
                 }
               },
-              "from": {
-                "type": "Library"
-              },
-              "to": {
-                "type": "Hand"
-              },
-              "whose": {
-                "type": "You"
-              }
+              "from": "Library",
+              "to": "Hand",
+              "whose": "You"
             }
           },
           "modal": {
@@ -100,19 +80,13 @@
                                 "value": {
                                   "aggregation": {
                                     "type": "Distinct",
-                                    "value": {
-                                      "type": "Colors"
-                                    }
+                                    "value": "Colors"
                                   },
                                   "filter": {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "You"
                                     }
                                   },
                                   "scope": {
@@ -120,13 +94,9 @@
                                     "value": {
                                       "player": {
                                         "type": "Relative",
-                                        "value": {
-                                          "type": "AnyPlayer"
-                                        }
+                                        "value": "AnyPlayer"
                                       },
-                                      "zone": {
-                                        "type": "Battlefield"
-                                      }
+                                      "zone": "Battlefield"
                                     }
                                   }
                                 }
@@ -153,9 +123,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

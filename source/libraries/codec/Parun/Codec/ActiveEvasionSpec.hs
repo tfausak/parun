@@ -28,6 +28,6 @@ spec s = Spec.describe s "Parun.Codec.ActiveEvasion" $ do
           ActiveEvasion.affected = Filter.HasCardType CardType.Creature,
           ActiveEvasion.blockers = Filter.Not (Filter.Shares Trait.Sector Anchor.Source)
         }
-      " {\"source\":1,\"controller\":4,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"blockers\":{\"type\":\"Not\",\"value\":{\"type\":\"Shares\",\"value\":{\"trait\":{\"type\":\"Sector\"},\"anchor\":{\"type\":\"Source\"}}}}} "
+      " {\"source\":1,\"controller\":4,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"affected\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"blockers\":{\"type\":\"Not\",\"value\":{\"type\":\"Shares\",\"value\":{\"trait\":{\"type\":\"Sector\"},\"anchor\":{\"type\":\"Source\"}}}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActiveEvasion.codec

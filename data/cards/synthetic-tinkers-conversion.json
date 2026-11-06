@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -26,15 +24,11 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasActivatedAbility",
-                  "value": {
-                    "type": "NonManaAbility"
-                  }
+                  "value": "NonManaAbility"
                 }
               ]
             }
@@ -43,12 +37,8 @@
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Artifact"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Artifact",
+                "mode": "InAddition"
               }
             }
           ]
@@ -56,9 +46,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

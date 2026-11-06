@@ -34,12 +34,8 @@
                     "filter": {
                       "type": "Measures",
                       "value": {
-                        "comparison": {
-                          "type": "AtMost"
-                        },
-                        "measure": {
-                          "type": "Power"
-                        },
+                        "comparison": "AtMost",
+                        "measure": "Power",
                         "operand": {
                           "type": "Literal",
                           "value": 2
@@ -65,9 +61,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -83,17 +77,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Advisor"
-          },
-          {
-            "type": "Human"
-          }
+          "Advisor",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

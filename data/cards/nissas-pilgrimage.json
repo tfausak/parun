@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -26,9 +24,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "LessThan"
-                    },
+                    "comparison": "LessThan",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -40,15 +36,11 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Instant"
-                              }
+                              "value": "Instant"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Sorcery"
-                              }
+                              "value": "Sorcery"
                             }
                           ]
                         },
@@ -57,13 +49,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
-                            "zone": {
-                              "type": "Graveyard"
-                            }
+                            "zone": "Graveyard"
                           }
                         }
                       }
@@ -78,37 +66,27 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "Reveal"
-                      },
+                      "destination": "Reveal",
                       "filter": {
                         "type": "And",
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           },
                           {
                             "type": "HasSupertype",
-                            "value": {
-                              "type": "Basic"
-                            }
+                            "value": "Basic"
                           },
                           {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Forest"
-                            }
+                            "value": "Forest"
                           }
                         ]
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -116,9 +94,7 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "slot": "found",
                       "upTo": true
@@ -130,9 +106,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -144,15 +118,11 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Instant"
-                              }
+                              "value": "Instant"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Sorcery"
-                              }
+                              "value": "Sorcery"
                             }
                           ]
                         },
@@ -161,13 +131,9 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
-                            "zone": {
-                              "type": "Graveyard"
-                            }
+                            "zone": "Graveyard"
                           }
                         }
                       }
@@ -182,37 +148,27 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "Reveal"
-                      },
+                      "destination": "Reveal",
                       "filter": {
                         "type": "And",
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           },
                           {
                             "type": "HasSupertype",
-                            "value": {
-                              "type": "Basic"
-                            }
+                            "value": "Basic"
                           },
                           {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Forest"
-                            }
+                            "value": "Forest"
                           }
                         ]
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -220,9 +176,7 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "slot": "found",
                       "upTo": true
@@ -246,13 +200,9 @@
                         }
                       },
                       "riders": {
-                        "tapped": {
-                          "type": "Tapped"
-                        }
+                        "tapped": "Tapped"
                       },
-                      "zone": {
-                        "type": "Battlefield"
-                      }
+                      "zone": "Battlefield"
                     }
                   }
                 ]
@@ -266,18 +216,14 @@
                         "type": "InSlot",
                         "value": "found"
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   },
                   {
                     "type": "Shuffle",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     }
                   }
                 ]
@@ -288,9 +234,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

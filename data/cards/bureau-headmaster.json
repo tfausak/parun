@@ -6,18 +6,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -41,9 +37,7 @@
               },
               "matching": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Equipment"
-                }
+                "value": "Equipment"
               },
               "subject": {
                 "type": "Spells"
@@ -78,9 +72,7 @@
                 "value": {
                   "grantedBy": {
                     "type": "OfFamily",
-                    "value": {
-                      "type": "Equip"
-                    }
+                    "value": "Equip"
                   }
                 }
               }
@@ -101,17 +93,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Assassin"
-          },
-          {
-            "type": "Human"
-          }
+          "Assassin",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

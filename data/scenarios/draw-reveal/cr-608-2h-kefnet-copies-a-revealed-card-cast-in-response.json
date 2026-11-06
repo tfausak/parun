@@ -19,12 +19,12 @@
     "step": "Upkeep"
   },
   "timeline": [
-    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "OfferedExtra", "with": { "type": "Exercises" } } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "OfferedExtra", "with": "Exercises" } } },
     { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Cast": { "object": "Lightning Bolt", "targets": ["$bob"], "mana": ["$m1", null] } } },
     { "turn": 2, "step": "DrawStep", "player": "alice", "do": "Pass" },
     { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } },
     { "turn": 2, "step": "DrawStep", "player": "alice", "do": "Pass" },
-    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": { "type": "Exercises" } } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": "Exercises" } } },
     { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "ChooseTargets": { "target": ["$bob"] } } },
     { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "ChooseManaSource", "with": "$m2" } } },
     { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 14 } } }

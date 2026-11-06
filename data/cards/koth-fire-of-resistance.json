@@ -21,31 +21,23 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "RevealThenHand"
-                          },
+                          "destination": "RevealThenHand",
                           "filter": {
                             "type": "And",
                             "value": [
                               {
                                 "type": "HasSupertype",
-                                "value": {
-                                  "type": "Basic"
-                                }
+                                "value": "Basic"
                               },
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Mountain"
-                                }
+                                "value": "Mountain"
                               }
                             ]
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -53,9 +45,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -101,19 +91,13 @@
                                     "value": [
                                       {
                                         "type": "HasSubtype",
-                                        "value": {
-                                          "type": "Mountain"
-                                        }
+                                        "value": "Mountain"
                                       },
                                       {
                                         "type": "HeldBy",
                                         "value": {
-                                          "holder": {
-                                            "type": "Controller"
-                                          },
-                                          "relation": {
-                                            "type": "You"
-                                          }
+                                          "holder": "Controller",
+                                          "relation": "You"
                                         }
                                       }
                                     ]
@@ -123,13 +107,9 @@
                                     "value": {
                                       "player": {
                                         "type": "Relative",
-                                        "value": {
-                                          "type": "AnyPlayer"
-                                        }
+                                        "value": "AnyPlayer"
                                       },
-                                      "zone": {
-                                        "type": "Battlefield"
-                                      }
+                                      "zone": "Battlefield"
                                     }
                                   }
                                 }
@@ -194,19 +174,13 @@
                                             "value": [
                                               {
                                                 "type": "HasSubtype",
-                                                "value": {
-                                                  "type": "Mountain"
-                                                }
+                                                "value": "Mountain"
                                               },
                                               {
                                                 "type": "HeldBy",
                                                 "value": {
-                                                  "holder": {
-                                                    "type": "Controller"
-                                                  },
-                                                  "relation": {
-                                                    "type": "You"
-                                                  }
+                                                  "holder": "Controller",
+                                                  "relation": "You"
                                                 }
                                               }
                                             ]
@@ -278,18 +252,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -297,19 +267,13 @@
       "oracleText": "[+2]: Search your library for a basic Mountain card, reveal it, put it into your hand, then shuffle.\n[−3]: Koth deals damage to target creature equal to the number of Mountains you control.\n[−7]: You get an emblem with \"Whenever a Mountain you control enters, this emblem deals 4 damage to any target.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Koth"
-          }
+          "Koth"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

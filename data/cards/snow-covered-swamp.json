@@ -5,22 +5,14 @@
       "oracleText": "({T}: Add {B}.)",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Swamp"
-          }
+          "Swamp"
         ],
         "supertypes": [
-          {
-            "type": "Basic"
-          },
-          {
-            "type": "Snow"
-          }
+          "Basic",
+          "Snow"
         ],
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

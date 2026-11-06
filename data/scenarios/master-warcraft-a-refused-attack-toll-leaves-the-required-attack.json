@@ -33,10 +33,10 @@
     {"turn": 1, "step": "BeginningOfCombat", "player": "bob", "do": {"Cast": {"object": "$warcraft", "mana": ["$p1", "$p2", "$p3", "$p4"]}}},
     {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$jugg"]}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$jugg", "do": {"ChooseAttackTarget": "$bob"}},
-    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$prison", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$prison", "do": {"ChooseToPay": {"decision": "Declines"}}},
     {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$jugg"]}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$jugg", "do": {"ChooseAttackTarget": "$bob"}},
-    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$prison", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$prison", "do": {"ChooseToPay": {"decision": "Declines"}}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Attackers": {"attackers": {"$jugg": "$carol"}}}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Tapped": {"object": "$a1", "tapped": false}}}
   ]

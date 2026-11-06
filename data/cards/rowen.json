@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -33,9 +29,7 @@
             "type": "RevealsDraw",
             "value": {
               "nth": 1,
-              "obligation": {
-                "type": "Mandatory"
-              }
+              "obligation": "Mandatory"
             }
           },
           "scope": {
@@ -53,15 +47,11 @@
                 "value": [
                   {
                     "type": "HasSupertype",
-                    "value": {
-                      "type": "Basic"
-                    }
+                    "value": "Basic"
                   },
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Land"
-                    }
+                    "value": "Land"
                   }
                 ]
               }
@@ -78,9 +68,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -98,9 +86,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

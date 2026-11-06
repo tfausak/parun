@@ -72,17 +72,11 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Scarecrow"
-                                    }
+                                    "Scarecrow"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    },
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Artifact",
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -96,9 +90,7 @@
                             }
                           },
                           "riders": {
-                            "tapped": {
-                              "type": "Tapped"
-                            }
+                            "tapped": "Tapped"
                           }
                         }
                       }
@@ -127,9 +119,7 @@
                 "type": "Permanent",
                 "value": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               },
               "kind": {
@@ -137,9 +127,7 @@
               },
               "motion": {
                 "type": "Put",
-                "value": {
-                  "type": "AnyPlayer"
-                }
+                "value": "AnyPlayer"
               }
             }
           },
@@ -176,9 +164,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

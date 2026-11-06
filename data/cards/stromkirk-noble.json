@@ -13,9 +13,7 @@
             },
             "blockers": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Human"
-              }
+              "value": "Human"
             }
           }
         }
@@ -25,9 +23,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -49,15 +45,11 @@
               "actor": {
                 "type": "Self"
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -94,17 +86,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Noble"
-          },
-          {
-            "type": "Vampire"
-          }
+          "Noble",
+          "Vampire"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

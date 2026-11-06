@@ -80,7 +80,7 @@ spec s = Spec.describe s "Parun.Codec.Conjure" $ do
             Conjure.slot = Nothing
           }
       )
-      " {\"cards\":{\"type\":\"Written\",\"value\":[\"Ponder\",\"Dark Ritual\"]},\"selection\":{\"type\":\"ByChoice\"},\"destination\":{\"type\":\"Hand\"}} "
+      " {\"cards\":{\"type\":\"Written\",\"value\":[\"Ponder\",\"Dark Ritual\"]},\"selection\":\"ByChoice\",\"destination\":{\"type\":\"Hand\"}} "
   -- The other arm of the cards key: a duplicate names an object already in the
   -- game, so the card codec is never reached and the parameter goes unused.
   Spec.it s "MkConjure of a duplicate" $

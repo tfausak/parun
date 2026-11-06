@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -44,16 +40,12 @@
                               "type": "InSlot",
                               "value": "spirit"
                             },
-                            "zone": {
-                              "type": "Hand"
-                            }
+                            "zone": "Hand"
                           }
                         }
                       ],
                       "payGate": {
-                        "branch": {
-                          "type": "IfNotPaid"
-                        },
+                        "branch": "IfNotPaid",
                         "cost": {
                           "mana": [
                             {
@@ -65,12 +57,8 @@
                         "payer": {
                           "type": "HolderOfBound",
                           "value": {
-                            "holder": {
-                              "type": "Owner"
-                            },
-                            "hop": {
-                              "type": "Itself"
-                            },
+                            "holder": "Owner",
+                            "hop": "Itself",
                             "slot": "spirit"
                           }
                         }
@@ -79,9 +67,7 @@
                         "type": "EachMatching",
                         "value": {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Spirit"
-                          }
+                          "value": "Spirit"
                         }
                       },
                       "slot": "spirit"
@@ -95,9 +81,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

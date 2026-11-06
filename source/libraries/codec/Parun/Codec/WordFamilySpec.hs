@@ -12,25 +12,25 @@ spec s = Spec.describe s "Parun.Codec.WordFamily" $ do
       s
       WordFamily.codec
       WordFamily.BasicLandType
-      " {\"type\":\"BasicLandType\"} "
+      " \"BasicLandType\" "
   Spec.it s "CreatureType" $
     Common.assertCodec
       s
       WordFamily.codec
       WordFamily.CreatureType
-      " {\"type\":\"CreatureType\"} "
+      " \"CreatureType\" "
   Spec.it s "EnchantmentType" $
     Common.assertCodec
       s
       WordFamily.codec
       WordFamily.EnchantmentType
-      " {\"type\":\"EnchantmentType\"} "
+      " \"EnchantmentType\" "
   Spec.it s "Color" $
     Common.assertCodec
       s
       WordFamily.codec
       WordFamily.Color
-      " {\"type\":\"Color\"} "
+      " \"Color\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

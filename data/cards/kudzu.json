@@ -5,9 +5,7 @@
         {
           "filter": {
             "type": "HasCardType",
-            "value": {
-              "type": "Land"
-            }
+            "value": "Land"
           },
           "pool": {
             "type": "Permanents"
@@ -23,18 +21,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -54,9 +48,7 @@
                   }
                 }
               },
-              "status": {
-                "type": "Tapped"
-              }
+              "status": "Tapped"
             }
           },
           "modal": {
@@ -72,9 +64,7 @@
                             "type": "InSlot",
                             "value": "thatTappedPermanent"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -88,20 +78,14 @@
                             "chooser": {
                               "type": "HolderOfBound",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "hop": {
-                                  "type": "Itself"
-                                },
+                                "holder": "Controller",
+                                "hop": "Itself",
                                 "slot": "thatTappedPermanent"
                               }
                             },
                             "filter": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Land"
-                              }
+                              "value": "Land"
                             }
                           },
                           "slot": "newLand"
@@ -117,12 +101,8 @@
                       "value": {
                         "type": "HolderOfBound",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "hop": {
-                            "type": "Itself"
-                          },
+                          "holder": "Controller",
+                          "hop": "Itself",
                           "slot": "thatTappedPermanent"
                         }
                       }
@@ -136,14 +116,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

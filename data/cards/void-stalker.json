@@ -18,9 +18,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -36,9 +34,7 @@
                         "value": {
                           "placement": {
                             "type": "Stated",
-                            "value": {
-                              "type": "Top"
-                            }
+                            "value": "Top"
                           },
                           "ref": {
                             "type": "AllOf",
@@ -53,9 +49,7 @@
                               }
                             ]
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       },
                       {
@@ -63,12 +57,8 @@
                         "value": {
                           "type": "HolderOfBound",
                           "value": {
-                            "holder": {
-                              "type": "Owner"
-                            },
-                            "hop": {
-                              "type": "Itself"
-                            },
+                            "holder": "Owner",
+                            "hop": "Itself",
                             "slot": "self"
                           }
                         }
@@ -78,12 +68,8 @@
                         "value": {
                           "type": "HolderOfBound",
                           "value": {
-                            "holder": {
-                              "type": "Owner"
-                            },
-                            "hop": {
-                              "type": "Itself"
-                            },
+                            "holder": "Owner",
+                            "hop": "Itself",
                             "slot": "target"
                           }
                         }
@@ -112,9 +98,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -130,14 +114,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          }
+          "Elemental"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

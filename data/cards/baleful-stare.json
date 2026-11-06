@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -48,9 +46,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Count",
@@ -63,15 +59,11 @@
                             "value": [
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Mountain"
-                                }
+                                "value": "Mountain"
                               },
                               {
                                 "type": "HasColor",
-                                "value": {
-                                  "type": "Red"
-                                }
+                                "value": "Red"
                               }
                             ]
                           },
@@ -82,9 +74,7 @@
                                 "type": "InSlot",
                                 "value": "target"
                               },
-                              "zone": {
-                                "type": "Hand"
-                              }
+                              "zone": "Hand"
                             }
                           }
                         }
@@ -98,9 +88,7 @@
               "target": {
                 "filter": {
                   "type": "IsPlayer",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
                 "pool": {
                   "type": "Players"
@@ -112,9 +100,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

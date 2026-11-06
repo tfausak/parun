@@ -37,5 +37,5 @@ spec s = Spec.describe s "Parun.Codec.ConjureCards" $ do
       s
       codec
       (ConjureCards.Reference (FromReference.MkFromReference (Filter.HasCardType CardType.Creature) Nothing))
-      " {\"type\":\"Reference\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"Reference\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

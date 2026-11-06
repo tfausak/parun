@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -50,17 +46,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -99,9 +91,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "components": [
                           {
@@ -113,9 +103,7 @@
                               },
                               "whichPermanents": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Artifact"
-                                }
+                                "value": "Artifact"
                               }
                             }
                           }
@@ -136,17 +124,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Demon"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Demon",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

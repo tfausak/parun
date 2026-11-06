@@ -15,27 +15,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -54,9 +48,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Green"
-                              }
+                              "Green"
                             ],
                             "name": "Snake Token",
                             "power": {
@@ -69,14 +61,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Snake"
-                                }
+                                "Snake"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -97,13 +85,9 @@
                             "value": {
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               },
-                              "zone": {
-                                "type": "Hand"
-                              }
+                              "zone": "Hand"
                             }
                           }
                         }
@@ -118,9 +102,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

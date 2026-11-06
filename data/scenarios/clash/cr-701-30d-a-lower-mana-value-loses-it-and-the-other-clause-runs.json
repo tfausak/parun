@@ -107,9 +107,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseClash",
-          "with": {
-            "type": "Bottom"
-          }
+          "with": "Bottom"
         }
       }
     },
@@ -120,9 +118,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseClash",
-          "with": {
-            "type": "Top"
-          }
+          "with": "Top"
         }
       }
     },

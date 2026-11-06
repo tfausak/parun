@@ -10,9 +10,7 @@
           "value": {
             "quality": {
               "type": "HasCardType",
-              "value": {
-                "type": "Instant"
-              }
+              "value": "Instant"
             },
             "spares": null
           }
@@ -30,9 +28,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -48,17 +44,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Elemental",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

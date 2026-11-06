@@ -14,9 +14,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -30,9 +28,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -48,9 +44,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -65,9 +59,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "TimesPaid",
                 "value": {
@@ -84,9 +76,7 @@
                           "type": "OfType",
                           "value": {
                             "type": "Colored",
-                            "value": {
-                              "type": "Black"
-                            }
+                            "value": "Black"
                           }
                         }
                       ]
@@ -140,17 +130,11 @@
                                         "effect": {
                                           "type": "DestructionR",
                                           "value": {
-                                            "rewrite": {
-                                              "type": "Regenerate"
-                                            }
+                                            "rewrite": "Regenerate"
                                           }
                                         },
-                                        "origin": {
-                                          "type": "Other"
-                                        },
-                                        "uses": {
-                                          "type": "Once"
-                                        }
+                                        "origin": "Other",
+                                        "uses": "Once"
                                       }
                                     }
                                   ]
@@ -182,9 +166,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "TimesPaid",
                 "value": {
@@ -197,9 +179,7 @@
                           "type": "OfType",
                           "value": {
                             "type": "Colored",
-                            "value": {
-                              "type": "Red"
-                            }
+                            "value": "Red"
                           }
                         }
                       ]
@@ -250,14 +230,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Volver"
-          }
+          "Volver"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

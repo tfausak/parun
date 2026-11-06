@@ -21,16 +21,12 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "White"
-                    }
+                    "value": "White"
                   }
                 }
               ]
             },
-            "variant": {
-              "type": "Mega"
-            }
+            "variant": "Mega"
           }
         }
       ],
@@ -43,9 +39,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -61,14 +55,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Kirin"
-          }
+          "Kirin"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

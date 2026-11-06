@@ -141,9 +141,7 @@
           "of": "Designations",
           "object": "$valeron-wardens",
           "is": [
-            {
-              "type": "Renowned"
-            }
+            "Renowned"
           ]
         }
       }

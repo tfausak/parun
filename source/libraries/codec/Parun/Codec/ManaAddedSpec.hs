@@ -20,5 +20,5 @@ spec s = Spec.describe s "Parun.Codec.ManaAdded" $ do
       s
       ManaAdded.codec
       (ManaAdded.MkManaAdded {ManaAdded.player = PlayerId.MkPlayerId 2, ManaAdded.source = ObjectId.MkObjectId 7, ManaAdded.mana = Set.fromList [ManaType.Colored Color.Red, ManaType.Colorless], ManaAdded.cause = ManaAddedCause.Resolution})
-      " {\"player\":2,\"source\":7,\"mana\":[{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}},{\"type\":\"Colorless\"}],\"cause\":{\"type\":\"Resolution\"}} "
+      " {\"player\":2,\"source\":7,\"mana\":[{\"type\":\"Colored\",\"value\":\"Red\"},{\"type\":\"Colorless\"}],\"cause\":\"Resolution\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ManaAdded.codec

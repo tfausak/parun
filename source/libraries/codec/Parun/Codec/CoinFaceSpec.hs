@@ -12,12 +12,12 @@ spec s = Spec.describe s "Parun.Codec.CoinFace" $ do
       s
       CoinFace.codec
       CoinFace.Heads
-      " {\"type\":\"Heads\"} "
+      " \"Heads\" "
   Spec.it s "Tails" $
     Common.assertCodec
       s
       CoinFace.codec
       CoinFace.Tails
-      " {\"type\":\"Tails\"} "
+      " \"Tails\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s CoinFace.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s CoinFace.codec

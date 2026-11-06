@@ -16,15 +16,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             }
           }
         },
@@ -33,15 +29,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             }
           }
         }
@@ -58,14 +50,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hag"
-          }
+          "Hag"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

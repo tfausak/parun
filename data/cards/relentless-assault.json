@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -39,21 +35,15 @@
                       "type": "EachMatching",
                       "value": {
                         "type": "DeclaredThisTurn",
-                        "value": {
-                          "type": "Attacker"
-                        }
+                        "value": "Attacker"
                       }
                     }
                   },
                   {
                     "type": "AddPhases",
                     "value": [
-                      {
-                        "type": "ExtraCombat"
-                      },
-                      {
-                        "type": "ExtraMain"
-                      }
+                      "ExtraCombat",
+                      "ExtraMain"
                     ]
                   }
                 ]
@@ -64,9 +54,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

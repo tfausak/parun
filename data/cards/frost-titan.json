@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -40,9 +36,7 @@
           "condition": {
             "type": "BecomesTargeted",
             "value": {
-              "relation": {
-                "type": "Opponent"
-              }
+              "relation": "Opponent"
             }
           },
           "modal": {
@@ -62,9 +56,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "mana": [
                           {
@@ -76,12 +68,8 @@
                       "payer": {
                         "type": "HolderOfBound",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "hop": {
-                            "type": "Itself"
-                          },
+                          "holder": "Controller",
+                          "hop": "Itself",
                           "slot": "thatTargetingObject"
                         }
                       }
@@ -150,14 +138,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Giant"
-          }
+          "Giant"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -37,7 +37,7 @@ spec s = Spec.describe s "Parun.Codec.CountersFromPermanents" $ do
             CountersFromPermanents.spread = CounterSpread.FromOne
           }
       )
-      " {\"count\":{\"type\":\"Fixed\",\"value\":1},\"kind\":{\"type\":\"OfKind\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"whichPermanent\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"count\":{\"type\":\"Fixed\",\"value\":1},\"kind\":{\"type\":\"OfKind\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"whichPermanent\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- Tayam, Luminous Enigma's three counters of any kind, divided among
   -- creatures: the spread is written only where it is not the one-permanent
   -- default.
@@ -52,10 +52,10 @@ spec s = Spec.describe s "Parun.Codec.CountersFromPermanents" $ do
             CountersFromPermanents.spread = CounterSpread.FromAmong
           }
       )
-      " {\"count\":{\"type\":\"Fixed\",\"value\":3},\"kind\":{\"type\":\"OfAnyKind\"},\"whichPermanent\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"spread\":{\"type\":\"FromAmong\"}} "
+      " {\"count\":{\"type\":\"Fixed\",\"value\":3},\"kind\":{\"type\":\"OfAnyKind\"},\"whichPermanent\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"spread\":\"FromAmong\"} "
   Spec.it s "rejects counters of any kind at a floor" $
     Spec.assertBool
       s
-      (Either.isLeft (Codec.decode codec =<< Common.parse (Text.pack "{\"count\":{\"type\":\"Fixed\",\"value\":1},\"kind\":{\"type\":\"OfAnyKind\"},\"whichPermanent\":{\"type\":\"IsSource\"},\"spread\":{\"type\":\"FromAmongAtLeast\"}}")))
+      (Either.isLeft (Codec.decode codec =<< Common.parse (Text.pack "{\"count\":{\"type\":\"Fixed\",\"value\":1},\"kind\":{\"type\":\"OfAnyKind\"},\"whichPermanent\":{\"type\":\"IsSource\"},\"spread\":\"FromAmongAtLeast\"}")))
       "expected a decode failure"
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -35,9 +33,7 @@
                 "type": "And",
                 "value": []
               },
-              "player": {
-                "type": "You"
-              }
+              "player": "You"
             }
           },
           "modal": {
@@ -80,14 +76,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Devil"
-          }
+          "Devil"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

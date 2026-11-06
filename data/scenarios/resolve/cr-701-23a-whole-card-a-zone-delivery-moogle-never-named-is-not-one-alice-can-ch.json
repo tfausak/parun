@@ -81,9 +81,7 @@
         "Answer": {
           "prompt": "ChooseSearchZones",
           "with": [
-            {
-              "type": "Exile"
-            }
+            "Exile"
           ],
           "unoffered": true
         }

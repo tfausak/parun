@@ -6,9 +6,7 @@
           "type": "BeforeStep",
           "value": {
             "type": "Combat",
-            "value": {
-              "type": "CombatDamage"
-            }
+            "value": "CombatDamage"
           }
         }
       ],
@@ -19,17 +17,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -42,9 +36,7 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "Count",
                           "value": {
@@ -60,9 +52,7 @@
                                 },
                                 {
                                   "type": "DeclaredThisTurn",
-                                  "value": {
-                                    "type": "Attacker"
-                                  }
+                                  "value": "Attacker"
                                 }
                               ]
                             },
@@ -71,13 +61,9 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
+                                  "value": "AnyPlayer"
                                 },
-                                "zone": {
-                                  "type": "Battlefield"
-                                }
+                                "zone": "Battlefield"
                               }
                             }
                           }
@@ -96,9 +82,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -114,9 +98,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -162,9 +144,7 @@
                               "value": {
                                 "quantity": {
                                   "type": "Measure",
-                                  "value": {
-                                    "type": "Power"
-                                  }
+                                  "value": "Power"
                                 },
                                 "slot": "target"
                               }
@@ -203,9 +183,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

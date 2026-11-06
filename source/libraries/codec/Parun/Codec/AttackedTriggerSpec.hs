@@ -16,7 +16,7 @@ spec s = Spec.describe s "Parun.Codec.AttackedTrigger" $ do
       s
       AttackedTrigger.codec
       (AttackedTrigger.MkAttackedTrigger (Just PlayerRelation.Opponent) (AttackedSubject.Related PlayerRelation.You))
-      " {\"attacker\":{\"type\":\"Opponent\"},\"attacked\":{\"type\":\"Related\",\"value\":{\"type\":\"You\"}}} "
+      " {\"attacker\":\"Opponent\",\"attacked\":{\"type\":\"Related\",\"value\":\"You\"}} "
   -- Curse of Vitality's "whenever enchanted player is attacked".
   Spec.it s "no attacker writes no key" $
     Common.assertCodec

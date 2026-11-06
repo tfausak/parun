@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -36,18 +32,14 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "Exile"
-                      },
+                      "destination": "Exile",
                       "filter": {
                         "type": "And",
                         "value": []
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -55,9 +47,7 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "slot": "exiled"
                     }
@@ -73,9 +63,7 @@
                         "type": "InSlot",
                         "value": "exiled"
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ],
@@ -83,9 +71,7 @@
                   "type": "Optional",
                   "value": {
                     "type": "Relative",
-                    "value": {
-                      "type": "Opponent"
-                    }
+                    "value": "Opponent"
                   }
                 }
               },
@@ -96,9 +82,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -120,9 +104,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

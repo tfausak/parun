@@ -121,29 +121,21 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": {
                 "casts": {
                   "type": "Or",
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Artifact"
-                      }
+                      "value": "Artifact"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     }
                   ]
                 }
@@ -154,29 +146,21 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": {
                 "casts": {
                   "type": "Or",
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Artifact"
-                      }
+                      "value": "Artifact"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     }
                   ]
                 }
@@ -187,29 +171,21 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": {
                 "casts": {
                   "type": "Or",
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Artifact"
-                      }
+                      "value": "Artifact"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     }
                   ]
                 }
@@ -220,29 +196,21 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": {
                 "casts": {
                   "type": "Or",
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Artifact"
-                      }
+                      "value": "Artifact"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     }
                   ]
                 }
@@ -253,29 +221,21 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": {
                 "casts": {
                   "type": "Or",
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Artifact"
-                      }
+                      "value": "Artifact"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     }
                   ]
                 }
@@ -286,29 +246,21 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": {
                 "casts": {
                   "type": "Or",
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Artifact"
-                      }
+                      "value": "Artifact"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     }
                   ]
                 }
@@ -319,29 +271,21 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": {
                 "casts": {
                   "type": "Or",
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Artifact"
-                      }
+                      "value": "Artifact"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     }
                   ]
                 }

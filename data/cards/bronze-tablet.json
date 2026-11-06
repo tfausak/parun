@@ -39,9 +39,7 @@
                             ]
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -58,16 +56,12 @@
                               "slot": "self"
                             }
                           },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "zone": "Graveyard"
                         }
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "components": [
                           {
@@ -83,12 +77,8 @@
                       "payer": {
                         "type": "HolderOfBound",
                         "value": {
-                          "holder": {
-                            "type": "Owner"
-                          },
-                          "hop": {
-                            "type": "Itself"
-                          },
+                          "holder": "Owner",
+                          "hop": "Itself",
                           "slot": "target"
                         }
                       }
@@ -102,12 +92,8 @@
                           "player": {
                             "type": "HolderOfBound",
                             "value": {
-                              "holder": {
-                                "type": "Owner"
-                              },
-                              "hop": {
-                                "type": "Itself"
-                              },
+                              "holder": "Owner",
+                              "hop": "Itself",
                               "slot": "target"
                             }
                           },
@@ -125,9 +111,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "ref": {
                             "type": "FromAnywhere",
@@ -140,9 +124,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfNotPaid"
-                      },
+                      "branch": "IfNotPaid",
                       "cost": {
                         "components": [
                           {
@@ -159,12 +141,8 @@
                       "payer": {
                         "type": "HolderOfBound",
                         "value": {
-                          "holder": {
-                            "type": "Owner"
-                          },
-                          "hop": {
-                            "type": "Itself"
-                          },
+                          "holder": "Owner",
+                          "hop": "Itself",
                           "slot": "target"
                         }
                       }
@@ -185,12 +163,8 @@
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Owner"
-                            },
-                            "relation": {
-                              "type": "Opponent"
-                            }
+                            "holder": "Owner",
+                            "relation": "Opponent"
                           }
                         }
                       ]
@@ -231,9 +205,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

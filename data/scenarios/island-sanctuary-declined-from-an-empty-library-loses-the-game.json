@@ -53,9 +53,7 @@
   "timeline": [
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Declines"
-        }
+        "ChooseOptional": "Declines"
       },
       "player": "alice",
       "source": "$sanctuary",

@@ -24,17 +24,13 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Blue"
-                              }
+                              "value": "Blue"
                             }
                           },
                           "restriction": {
                             "casts": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Enchantment"
-                              }
+                              "value": "Enchantment"
                             },
                             "turnsFaceUp": {
                               "type": "And",
@@ -64,9 +60,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -82,14 +76,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Eye"
-          }
+          "Eye"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

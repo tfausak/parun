@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -40,15 +38,11 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HasColor",
-                                  "value": {
-                                    "type": "White"
-                                  }
+                                  "value": "White"
                                 }
                               ]
                             }
@@ -64,9 +58,7 @@
                             "value": {
                               "players": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "AnyPlayer"
-                                }
+                                "value": "AnyPlayer"
                               },
                               "who": {
                                 "type": "Controls",
@@ -76,15 +68,11 @@
                                     "value": [
                                       {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Creature"
-                                        }
+                                        "value": "Creature"
                                       },
                                       {
                                         "type": "HasColor",
-                                        "value": {
-                                          "type": "White"
-                                        }
+                                        "value": "White"
                                       }
                                     ]
                                   },
@@ -108,9 +96,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

@@ -13,18 +13,14 @@
           "modifications": [
             {
               "type": "AddSupertype",
-              "value": {
-                "type": "Basic"
-              }
+              "value": "Basic"
             }
           ]
         }
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

@@ -26,7 +26,7 @@ spec s = Spec.describe s "Parun.Codec.ActivationProhibition" $ do
           ProhibitedCost.EveryCost
           Nothing
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- Realmbreaker's Grasp's "unless they're mana abilities", which names one.
   Spec.it s "MkActivationProhibition, a named kind" $
     Common.assertCodec
@@ -38,7 +38,7 @@ spec s = Spec.describe s "Parun.Codec.ActivationProhibition" $ do
           ProhibitedCost.EveryCost
           Nothing
       )
-      " {\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"NonManaAbility\"}} "
+      " {\"affected\":{\"type\":\"Attached\"},\"kind\":\"NonManaAbility\"} "
   -- CR 116.2d: Volrath's Curse names the ability its own ignore refers to, and
   -- names it on all three of the rows that one sentence declares.
   Spec.it s "MkActivationProhibition, a named ability" $
@@ -63,5 +63,5 @@ spec s = Spec.describe s "Parun.Codec.ActivationProhibition" $ do
           ProhibitedCost.WithTapSymbol
           Nothing
       )
-      " {\"affected\":{\"type\":\"Attached\"},\"costs\":{\"type\":\"WithTapSymbol\"}} "
+      " {\"affected\":{\"type\":\"Attached\"},\"costs\":\"WithTapSymbol\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ActivationProhibition.codec

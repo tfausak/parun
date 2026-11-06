@@ -9,9 +9,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -31,12 +29,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "Replace"
-                              },
-                              "subtype": {
-                                "type": "Rhino"
-                              }
+                              "mode": "Replace",
+                              "subtype": "Rhino"
                             }
                           },
                           "ref": {
@@ -105,12 +99,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "Replace"
-                              },
-                              "subtype": {
-                                "type": "Bird"
-                              }
+                              "mode": "Replace",
+                              "subtype": "Bird"
                             }
                           },
                           "ref": {
@@ -179,12 +169,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "Replace"
-                              },
-                              "subtype": {
-                                "type": "Plant"
-                              }
+                              "mode": "Replace",
+                              "subtype": "Plant"
                             }
                           },
                           "ref": {
@@ -241,9 +227,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -259,17 +243,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Human",
+          "Shaman"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

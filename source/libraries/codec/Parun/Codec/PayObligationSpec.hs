@@ -13,14 +13,14 @@ spec s = Spec.describe s "Parun.Codec.PayObligation" $ do
       s
       PayObligation.codec
       PayObligation.Optional
-      " {\"type\":\"Optional\"} "
+      " \"Optional\" "
   -- CR 118.12's other limb, Standstill's.
   Spec.it s "Mandatory" $
     Common.assertCodec
       s
       PayObligation.codec
       PayObligation.Mandatory
-      " {\"type\":\"Mandatory\"} "
+      " \"Mandatory\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

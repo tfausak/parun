@@ -135,9 +135,7 @@
               "type": "Hexproof",
               "value": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Goblin"
-                }
+                "value": "Goblin"
               }
             }
           },
@@ -158,9 +156,7 @@
               "type": "Hexproof",
               "value": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Zombie"
-                }
+                "value": "Zombie"
               }
             }
           },

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -35,28 +33,20 @@
                           "from": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
-                            "zone": {
-                              "type": "Graveyard"
-                            }
+                            "zone": "Graveyard"
                           },
                           "matching": {
                             "type": "Or",
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Instant"
-                                }
+                                "value": "Instant"
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Sorcery"
-                                }
+                                "value": "Sorcery"
                               }
                             ]
                           }
@@ -78,9 +68,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

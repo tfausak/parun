@@ -22,5 +22,5 @@ spec s = Spec.describe s "Parun.Codec.CompletedDungeon" $ do
             CompletedDungeon.dungeon = CardName.MkCardName (Text.pack "Tomb of Annihilation")
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"dungeon\":\"Tomb of Annihilation\"} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"},\"dungeon\":\"Tomb of Annihilation\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CompletedDungeon.codec

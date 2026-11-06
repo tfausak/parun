@@ -124,9 +124,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          }
+          "decision": "Pays"
         }
       },
       "player": "bob",
@@ -137,9 +135,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "player": "bob",
@@ -150,9 +146,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "player": "bob",
@@ -163,9 +157,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "player": "bob",
@@ -176,9 +168,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "player": "bob",
@@ -189,9 +179,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "player": "bob",
@@ -202,9 +190,7 @@
     {
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "player": "bob",

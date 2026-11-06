@@ -99,9 +99,7 @@
                       "value": "storage"
                     }
                   },
-                  "spread": {
-                    "type": "FromAmongAtLeast"
-                  },
+                  "spread": "FromAmongAtLeast",
                   "whichPermanent": {
                     "type": "IsSource"
                   }
@@ -143,9 +141,7 @@
       "oracleText": "{T}: Add {C}.\n{1}, {T}: Put a storage counter on this land.\n{T}, Remove any number of storage counters from this land: Add {C} for each storage counter removed this way.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

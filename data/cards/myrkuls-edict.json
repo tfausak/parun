@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -40,9 +38,7 @@
                     {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "InSlot",
                           "value": "result"
@@ -56,9 +52,7 @@
                     {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtMost"
-                        },
+                        "comparison": "AtMost",
                         "measured": {
                           "type": "InSlot",
                           "value": "result"
@@ -86,9 +80,7 @@
                     "value": {
                       "filter": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       "players": {
                         "type": "EachInSlot",
@@ -109,9 +101,7 @@
                     {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtLeast"
-                        },
+                        "comparison": "AtLeast",
                         "measured": {
                           "type": "InSlot",
                           "value": "result"
@@ -125,9 +115,7 @@
                     {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "AtMost"
-                        },
+                        "comparison": "AtMost",
                         "measured": {
                           "type": "InSlot",
                           "value": "result"
@@ -146,15 +134,11 @@
                     "value": {
                       "filter": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       "players": {
                         "type": "Relative",
-                        "value": {
-                          "type": "Opponent"
-                        }
+                        "value": "Opponent"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -168,9 +152,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "InSlot",
                       "value": "result"
@@ -190,24 +172,16 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "Measures",
                             "value": {
-                              "comparison": {
-                                "type": "AtLeast"
-                              },
-                              "measure": {
-                                "type": "Power"
-                              },
+                              "comparison": "AtLeast",
+                              "measure": "Power",
                               "operand": {
                                 "type": "OfEachOtherCandidate",
-                                "value": {
-                                  "type": "Power"
-                                }
+                                "value": "Power"
                               }
                             }
                           }
@@ -215,9 +189,7 @@
                       },
                       "players": {
                         "type": "Relative",
-                        "value": {
-                          "type": "Opponent"
-                        }
+                        "value": "Opponent"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -233,9 +205,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

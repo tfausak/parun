@@ -50,7 +50,7 @@ spec s = Spec.describe s "Parun.Codec.TokenR" $ do
             TokenR.plus = Just (TokenPlus.One soldier)
           }
       )
-      " {\"matching\":{\"whose\":{\"type\":\"You\"},\"whatToken\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"plus\":{\"type\":\"One\",\"value\":{\"faces\":[{\"name\":\"Soldier Token\",\"typeLine\":{\"types\":[{\"type\":\"Creature\"}]}}]}}} "
+      " {\"matching\":{\"whose\":{\"type\":\"You\"},\"whatToken\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"plus\":{\"type\":\"One\",\"value\":{\"faces\":[{\"name\":\"Soldier Token\",\"typeLine\":{\"types\":[\"Creature\"]}}]}}} "
   -- CR 614.1a: Chatterfang, Squirrel General appends one per token created.
   Spec.it s "an append sized by the event" $
     Common.assertCodec
@@ -62,7 +62,7 @@ spec s = Spec.describe s "Parun.Codec.TokenR" $ do
             TokenR.plus = Just (TokenPlus.ThatMany soldier)
           }
       )
-      " {\"matching\":{\"whose\":{\"type\":\"You\"}},\"plus\":{\"type\":\"ThatMany\",\"value\":{\"faces\":[{\"name\":\"Soldier Token\",\"typeLine\":{\"types\":[{\"type\":\"Creature\"}]}}]}}} "
+      " {\"matching\":{\"whose\":{\"type\":\"You\"}},\"plus\":{\"type\":\"ThatMany\",\"value\":{\"faces\":[{\"name\":\"Soldier Token\",\"typeLine\":{\"types\":[\"Creature\"]}}]}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec
 
 -- A one-face creature token with every other field at the value

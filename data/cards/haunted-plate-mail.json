@@ -21,12 +21,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Artifact"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Artifact",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -44,12 +40,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Creature"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Creature",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -67,12 +59,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "Replace"
-                              },
-                              "subtype": {
-                                "type": "Spirit"
-                              }
+                              "mode": "Replace",
+                              "subtype": "Spirit"
                             }
                           },
                           "ref": {
@@ -89,9 +77,7 @@
                           },
                           "modification": {
                             "type": "RemoveSubtype",
-                            "value": {
-                              "type": "Equipment"
-                            }
+                            "value": "Equipment"
                           },
                           "ref": {
                             "type": "InSlot",
@@ -136,9 +122,7 @@
               "value": {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "Exactly"
-                  },
+                  "comparison": "Exactly",
                   "measured": {
                     "type": "Count",
                     "value": {
@@ -150,19 +134,13 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "HeldBy",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "relation": {
-                                "type": "You"
-                              }
+                              "holder": "Controller",
+                              "relation": "You"
                             }
                           }
                         ]
@@ -172,13 +150,9 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     }
@@ -226,9 +200,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -258,14 +230,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Equipment"
-          }
+          "Equipment"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

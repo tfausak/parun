@@ -6,27 +6,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -41,18 +35,14 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "Stay"
-                      },
+                      "destination": "Stay",
                       "filter": {
                         "type": "And",
                         "value": []
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -60,18 +50,12 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "slot": "chosen",
                       "zones": [
-                        {
-                          "type": "Library"
-                        },
-                        {
-                          "type": "Graveyard"
-                        }
+                        "Library",
+                        "Graveyard"
                       ]
                     }
                   },
@@ -88,15 +72,11 @@
                               "value": [
                                 {
                                   "type": "IsInZone",
-                                  "value": {
-                                    "type": "Library"
-                                  }
+                                  "value": "Library"
                                 },
                                 {
                                   "type": "IsInZone",
-                                  "value": {
-                                    "type": "Graveyard"
-                                  }
+                                  "value": "Graveyard"
                                 }
                               ]
                             },
@@ -110,9 +90,7 @@
                           ]
                         }
                       },
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   }
                 ]
@@ -124,17 +102,13 @@
                     "value": {
                       "placement": {
                         "type": "Stated",
-                        "value": {
-                          "type": "Top"
-                        }
+                        "value": "Top"
                       },
                       "ref": {
                         "type": "InSlot",
                         "value": "chosen"
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -146,9 +120,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Quotient",
@@ -161,14 +133,10 @@
                             "type": "LifeTotal",
                             "value": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             }
                           },
-                          "rounding": {
-                            "type": "Up"
-                          }
+                          "rounding": "Up"
                         }
                       }
                     }
@@ -181,9 +149,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

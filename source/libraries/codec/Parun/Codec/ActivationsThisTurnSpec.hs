@@ -21,5 +21,5 @@ spec s = Spec.describe s "Parun.Codec.ActivationsThisTurn" $ do
             ActivationsThisTurn.criteria = ActivationCriteria.MkActivationCriteria {ActivationCriteria.grantedBy = Nothing, ActivationCriteria.whichKind = Nothing, ActivationCriteria.whichLoyalty = Nothing, ActivationCriteria.whichAbility = Nothing}
           }
       )
-      " {\"activator\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"source\":{\"type\":\"And\",\"value\":[]},\"criteria\":{}} "
+      " {\"activator\":{\"type\":\"Relative\",\"value\":\"You\"},\"source\":{\"type\":\"And\",\"value\":[]},\"criteria\":{}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ActivationsThisTurn.codec

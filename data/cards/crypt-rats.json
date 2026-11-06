@@ -29,9 +29,7 @@
                                 "type": "EachMatching",
                                 "value": {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 }
                               }
                             },
@@ -45,9 +43,7 @@
                                 "value": {
                                   "players": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   }
                                 }
                               }
@@ -66,9 +62,7 @@
               "type": "SpendOnly",
               "value": {
                 "type": "OfColor",
-                "value": {
-                  "type": "Black"
-                }
+                "value": "Black"
               }
             }
           ]
@@ -83,9 +77,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -101,14 +93,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Rat"
-          }
+          "Rat"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

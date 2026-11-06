@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.ModeMemory" $ do
       s
       ModeMemory.codec
       ModeMemory.ObjectLifetime
-      " {\"type\":\"ObjectLifetime\"} "
+      " \"ObjectLifetime\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s ModeMemory.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s ModeMemory.codec

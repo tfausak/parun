@@ -27,9 +27,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -84,9 +82,7 @@
       "oracleText": "{2}, {T}: You gain 5 life. Shuffle this artifact and your graveyard into their owner's library.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -31,9 +29,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   }
                 ]
@@ -46,15 +42,11 @@
                   "value": [
                     {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Black"
-                      }
+                      "value": "Black"
                     },
                     {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Red"
-                      }
+                      "value": "Red"
                     }
                   ]
                 },
@@ -68,9 +60,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

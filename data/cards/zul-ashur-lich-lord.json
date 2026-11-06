@@ -27,12 +27,8 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "verb": {
-                            "type": "Cast"
-                          },
-                          "zone": {
-                            "type": "Graveyard"
-                          }
+                          "verb": "Cast",
+                          "zone": "Graveyard"
                         }
                       }
                     ]
@@ -45,15 +41,11 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Zombie"
-                          }
+                          "value": "Zombie"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         }
                       ]
                     },
@@ -101,9 +93,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -119,22 +109,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Warlock"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Warlock",
+          "Zombie"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

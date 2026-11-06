@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -37,14 +33,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Spirit"
-          }
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       },
       "untapRestrictions": [
@@ -54,12 +46,8 @@
             "value": {
               "type": "HeldBy",
               "value": {
-                "holder": {
-                  "type": "Controller"
-                },
-                "relation": {
-                  "type": "You"
-                }
+                "holder": "Controller",
+                "relation": "You"
               }
             }
           },

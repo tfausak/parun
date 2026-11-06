@@ -50,42 +50,42 @@ spec s = Spec.describe s "Parun.Codec.CopyException" $ do
       s
       (CopyException.codec Common.text)
       (CopyException.CardTypes ChangeMode.InAddition (Set.fromList [CardType.Enchantment, CardType.Artifact]))
-      " {\"type\":\"CardTypes\",\"value\":{\"mode\":{\"type\":\"InAddition\"},\"cardTypes\":[{\"type\":\"Artifact\"},{\"type\":\"Enchantment\"}]}} "
+      " {\"type\":\"CardTypes\",\"value\":{\"mode\":\"InAddition\",\"cardTypes\":[\"Artifact\",\"Enchantment\"]}} "
 
   Spec.it s "AddSubtypes round-trips, ascending by subtype" $
     Common.assertCodec
       s
       (CopyException.codec Common.text)
       (CopyException.AddSubtypes (Set.fromList [Subtype.Shapeshifter, Subtype.Rogue]))
-      " {\"type\":\"AddSubtypes\",\"value\":[{\"type\":\"Rogue\"},{\"type\":\"Shapeshifter\"}]} "
+      " {\"type\":\"AddSubtypes\",\"value\":[\"Rogue\",\"Shapeshifter\"]} "
 
   Spec.it s "AddSupertypes round-trips, ascending by supertype" $
     Common.assertCodec
       s
       (CopyException.codec Common.text)
       (CopyException.AddSupertypes (Set.fromList [Supertype.Snow, Supertype.Legendary]))
-      " {\"type\":\"AddSupertypes\",\"value\":[{\"type\":\"Legendary\"},{\"type\":\"Snow\"}]} "
+      " {\"type\":\"AddSupertypes\",\"value\":[\"Legendary\",\"Snow\"]} "
 
   Spec.it s "CardTypes Replace round-trips, ascending by card type" $
     Common.assertCodec
       s
       (CopyException.codec Common.text)
       (CopyException.CardTypes ChangeMode.Replace (Set.fromList [CardType.Enchantment, CardType.Creature]))
-      " {\"type\":\"CardTypes\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"cardTypes\":[{\"type\":\"Creature\"},{\"type\":\"Enchantment\"}]}} "
+      " {\"type\":\"CardTypes\",\"value\":{\"mode\":\"Replace\",\"cardTypes\":[\"Creature\",\"Enchantment\"]}} "
 
   Spec.it s "SetCreatureSubtypes round-trips, ascending by subtype" $
     Common.assertCodec
       s
       (CopyException.codec Common.text)
       (CopyException.SetCreatureSubtypes (Set.fromList [Subtype.Shapeshifter, Subtype.Dinosaur]))
-      " {\"type\":\"SetCreatureSubtypes\",\"value\":[{\"type\":\"Dinosaur\"},{\"type\":\"Shapeshifter\"}]} "
+      " {\"type\":\"SetCreatureSubtypes\",\"value\":[\"Dinosaur\",\"Shapeshifter\"]} "
 
   Spec.it s "RemoveSupertypes round-trips, ascending by supertype" $
     Common.assertCodec
       s
       (CopyException.codec Common.text)
       (CopyException.RemoveSupertypes (Set.fromList [Supertype.Snow, Supertype.Legendary]))
-      " {\"type\":\"RemoveSupertypes\",\"value\":[{\"type\":\"Legendary\"},{\"type\":\"Snow\"}]} "
+      " {\"type\":\"RemoveSupertypes\",\"value\":[\"Legendary\",\"Snow\"]} "
 
   Spec.it s "SetName round-trips as a bare string" $
     Common.assertCodec
@@ -107,7 +107,7 @@ spec s = Spec.describe s "Parun.Codec.CopyException" $ do
       s
       (CopyException.codec Common.text)
       (CopyException.SetColors (Set.fromList [Color.Black, Color.White]))
-      " {\"type\":\"SetColors\",\"value\":[{\"type\":\"White\"},{\"type\":\"Black\"}]} "
+      " {\"type\":\"SetColors\",\"value\":[\"White\",\"Black\"]} "
 
   Spec.it s "NoManaCost round-trips as a bare tag" $
     Common.assertCodec

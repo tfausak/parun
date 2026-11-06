@@ -131,9 +131,7 @@
             "value": {
               "quality": {
                 "type": "HasColor",
-                "value": {
-                  "type": "Blue"
-                }
+                "value": "Blue"
               },
               "spares": null
             }
@@ -154,9 +152,7 @@
             "value": {
               "quality": {
                 "type": "HasColor",
-                "value": {
-                  "type": "Black"
-                }
+                "value": "Black"
               },
               "spares": null
             }
@@ -177,9 +173,7 @@
             "value": {
               "quality": {
                 "type": "HasColor",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "spares": null
             }
@@ -200,9 +194,7 @@
             "value": {
               "quality": {
                 "type": "HasColor",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               },
               "spares": null
             }

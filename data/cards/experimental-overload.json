@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -40,12 +36,8 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Blue"
-                              },
-                              {
-                                "type": "Red"
-                              }
+                              "Blue",
+                              "Red"
                             ],
                             "name": "Weird Token",
                             "power": {
@@ -59,15 +51,11 @@
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Instant"
-                                      }
+                                      "value": "Instant"
                                     },
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Sorcery"
-                                      }
+                                      "value": "Sorcery"
                                     }
                                   ]
                                 },
@@ -76,13 +64,9 @@
                                   "value": {
                                     "player": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "You"
-                                      }
+                                      "value": "You"
                                     },
-                                    "zone": {
-                                      "type": "Graveyard"
-                                    }
+                                    "zone": "Graveyard"
                                   }
                                 }
                               }
@@ -98,15 +82,11 @@
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Instant"
-                                      }
+                                      "value": "Instant"
                                     },
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Sorcery"
-                                      }
+                                      "value": "Sorcery"
                                     }
                                   ]
                                 },
@@ -115,27 +95,19 @@
                                   "value": {
                                     "player": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "You"
-                                      }
+                                      "value": "You"
                                     },
-                                    "zone": {
-                                      "type": "Graveyard"
-                                    }
+                                    "zone": "Graveyard"
                                   }
                                 }
                               }
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Weird"
-                                }
+                                "Weird"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -165,15 +137,11 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Instant"
-                                }
+                                "value": "Instant"
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Sorcery"
-                                }
+                                "value": "Sorcery"
                               }
                             ]
                           },
@@ -185,9 +153,7 @@
                           }
                         }
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ],
@@ -208,9 +174,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

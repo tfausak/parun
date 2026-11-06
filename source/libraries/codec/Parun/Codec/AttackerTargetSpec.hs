@@ -13,9 +13,9 @@ spec s = Spec.describe s "Parun.Codec.AttackerTarget" $ do
   Spec.it s "AnyTarget" $
     Common.assertCodec s AttackerTarget.codec AttackerTarget.AnyTarget " {\"type\":\"AnyTarget\"} "
   Spec.it s "Defending" $
-    Common.assertCodec s AttackerTarget.codec (AttackerTarget.Defending PlayerRelation.You) " {\"type\":\"Defending\",\"value\":{\"type\":\"You\"}} "
+    Common.assertCodec s AttackerTarget.codec (AttackerTarget.Defending PlayerRelation.You) " {\"type\":\"Defending\",\"value\":\"You\"} "
   Spec.it s "Permanent" $
-    Common.assertCodec s AttackerTarget.codec (AttackerTarget.Permanent (Filter.HasCardType CardType.Battle)) " {\"type\":\"Permanent\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Battle\"}}} "
+    Common.assertCodec s AttackerTarget.codec (AttackerTarget.Permanent (Filter.HasCardType CardType.Battle)) " {\"type\":\"Permanent\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Battle\"}} "
   Spec.it s "PlayerWithMostLife" $
     Common.assertCodec s AttackerTarget.codec AttackerTarget.PlayerWithMostLife " {\"type\":\"PlayerWithMostLife\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AttackerTarget.codec

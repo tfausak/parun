@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -44,25 +42,17 @@
                     },
                     {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Blue"
-                      }
+                      "value": "Blue"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -106,17 +96,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Vedalken"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Vedalken",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

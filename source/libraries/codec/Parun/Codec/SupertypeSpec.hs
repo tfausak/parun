@@ -12,35 +12,35 @@ spec s = Spec.describe s "Parun.Codec.Supertype" $ do
       s
       Supertype.codec
       Supertype.Basic
-      " {\"type\":\"Basic\"} "
+      " \"Basic\" "
 
   Spec.it s "Legendary" $
     Common.assertCodec
       s
       Supertype.codec
       Supertype.Legendary
-      " {\"type\":\"Legendary\"} "
+      " \"Legendary\" "
 
   Spec.it s "Ongoing" $
     Common.assertCodec
       s
       Supertype.codec
       Supertype.Ongoing
-      " {\"type\":\"Ongoing\"} "
+      " \"Ongoing\" "
 
   Spec.it s "Snow" $
     Common.assertCodec
       s
       Supertype.codec
       Supertype.Snow
-      " {\"type\":\"Snow\"} "
+      " \"Snow\" "
 
   Spec.it s "World" $
     Common.assertCodec
       s
       Supertype.codec
       Supertype.World
-      " {\"type\":\"World\"} "
+      " \"World\" "
 
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the

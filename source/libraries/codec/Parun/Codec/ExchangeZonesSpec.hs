@@ -19,5 +19,5 @@ spec s = Spec.describe s "Parun.Codec.ExchangeZones" $ do
             ExchangeZones.zones = ZonePair.GraveyardAndLibrary
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"zones\":{\"type\":\"GraveyardAndLibrary\"}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"zones\":\"GraveyardAndLibrary\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ExchangeZones.codec

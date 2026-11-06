@@ -9,9 +9,7 @@
               "type": "Fixed",
               "value": 1
             },
-            "selection": {
-              "type": "AtRandom"
-            },
+            "selection": "AtRandom",
             "whichCards": {
               "type": "And",
               "value": []
@@ -28,9 +26,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -74,9 +70,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

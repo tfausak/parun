@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -40,15 +36,11 @@
               "value": [
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Zombie"
-                  }
+                  "value": "Zombie"
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "Not",
@@ -66,9 +58,7 @@
                 "type": "Landwalk",
                 "value": {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Swamp"
-                  }
+                  "value": "Swamp"
                 }
               }
             }
@@ -82,9 +72,7 @@
               "value": [
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Zombie"
-                  }
+                  "value": "Zombie"
                 },
                 {
                   "type": "Not",
@@ -107,9 +95,7 @@
                         "type": "OfType",
                         "value": {
                           "type": "Colored",
-                          "value": {
-                            "type": "Black"
-                          }
+                          "value": "Black"
                         }
                       }
                     ]
@@ -129,17 +115,11 @@
                                   "effect": {
                                     "type": "DestructionR",
                                     "value": {
-                                      "rewrite": {
-                                        "type": "Regenerate"
-                                      }
+                                      "rewrite": "Regenerate"
                                     }
                                   },
-                                  "origin": {
-                                    "type": "Other"
-                                  },
-                                  "uses": {
-                                    "type": "Once"
-                                  }
+                                  "origin": "Other",
+                                  "uses": "Once"
                                 }
                               }
                             ]
@@ -160,14 +140,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Zombie"
-          }
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

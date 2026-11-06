@@ -23,12 +23,12 @@ spec s = Spec.describe s "Parun.Codec.BecomesTapState" $ do
             BecomesTapState.batching = Batching.EachOccurrence
           }
       )
-      " {\"actor\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"status\":{\"type\":\"Untapped\"}} "
+      " {\"actor\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}},\"status\":\"Untapped\"} "
   -- Deeproot Pilgrimage's "one or more", the batching key written.
   Spec.it s "MkBecomesTapState, a batch" $
     Common.assertCodec
       s
       BecomesTapState.codec
       (BecomesTapState.MkBecomesTapState TapState.Tapped (ActingPermanent.Matching (Filter.Not Filter.IsToken)) Batching.OneOrMore)
-      " {\"actor\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"status\":{\"type\":\"Tapped\"},\"batching\":{\"type\":\"OneOrMore\"}} "
+      " {\"actor\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"status\":\"Tapped\",\"batching\":\"OneOrMore\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s BecomesTapState.codec

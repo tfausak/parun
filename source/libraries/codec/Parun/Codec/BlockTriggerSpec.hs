@@ -16,12 +16,12 @@ spec s = Spec.describe s "Parun.Codec.BlockTrigger" $ do
       s
       BlockTrigger.codec
       (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.IsSource BlockCount.Once)
-      " {\"role\":{\"type\":\"Blocker\"}} "
+      " {\"role\":\"Blocker\"} "
   -- Venom's "whenever enchanted creature becomes blocked by a creature".
   Spec.it s "a creature and a count write their keys" $
     Common.assertCodec
       s
       BlockTrigger.codec
       (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.HasAttached Filter.IsSource) (BlockCount.EachCreature (Filter.And [])))
-      " {\"role\":{\"type\":\"Attacker\"},\"creature\":{\"type\":\"HasAttached\",\"value\":{\"type\":\"IsSource\"}},\"count\":{\"type\":\"EachCreature\",\"value\":{\"type\":\"And\",\"value\":[]}}} "
+      " {\"role\":\"Attacker\",\"creature\":{\"type\":\"HasAttached\",\"value\":{\"type\":\"IsSource\"}},\"count\":{\"type\":\"EachCreature\",\"value\":{\"type\":\"And\",\"value\":[]}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s BlockTrigger.codec

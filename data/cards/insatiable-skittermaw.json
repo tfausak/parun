@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -38,17 +36,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -59,9 +53,7 @@
               {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "AtLeast"
-                  },
+                  "comparison": "AtLeast",
                   "measured": {
                     "type": "Count",
                     "value": {
@@ -72,18 +64,14 @@
                         "type": "Not",
                         "value": {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Land"
-                          }
+                          "value": "Land"
                         }
                       },
                       "scope": {
                         "type": "InHistory",
                         "value": {
                           "type": "MovedFrom",
-                          "value": {
-                            "type": "Battlefield"
-                          }
+                          "value": "Battlefield"
                         }
                       }
                     }
@@ -97,14 +85,10 @@
               {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "AtLeast"
-                  },
+                  "comparison": "AtLeast",
                   "measured": {
                     "type": "SpellsCastUsingThisTurn",
-                    "value": {
-                      "type": "Warp"
-                    }
+                    "value": "Warp"
                   },
                   "threshold": {
                     "type": "Literal",
@@ -146,17 +130,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horror"
-          },
-          {
-            "type": "Insect"
-          }
+          "Horror",
+          "Insect"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

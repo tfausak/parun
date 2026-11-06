@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -29,9 +27,7 @@
                     "value": {
                       "instead": {
                         "slot": "delayed",
-                        "zone": {
-                          "type": "Exile"
-                        }
+                        "zone": "Exile"
                       },
                       "ref": {
                         "type": "InSlot",
@@ -74,9 +70,7 @@
                             "type": "Not",
                             "value": {
                               "type": "HasKeywordFamily",
-                              "value": {
-                                "type": "Suspend"
-                              }
+                              "value": "Suspend"
                             }
                           },
                           "slot": "delayed"
@@ -99,9 +93,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

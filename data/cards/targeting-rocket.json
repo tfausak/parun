@@ -9,9 +9,7 @@
           "condition": {
             "type": "PermanentActs",
             "value": {
-              "action": {
-                "type": "Crank"
-              },
+              "action": "Crank",
               "permanent": {
                 "type": "Self"
               }
@@ -55,14 +53,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Contraption"
-          }
+          "Contraption"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

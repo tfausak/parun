@@ -100,9 +100,7 @@
       "source": "Mana Leak",
       "refuse": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$tomb",
             null
@@ -117,9 +115,7 @@
       "do": {
         "Answer": {
           "prompt": "ReverseManaAbilities",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -130,9 +126,7 @@
       "source": "Mana Leak",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       }
     },
@@ -150,9 +144,7 @@
                 "type": "Colorless"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -162,9 +154,7 @@
                 "type": "Colorless"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null

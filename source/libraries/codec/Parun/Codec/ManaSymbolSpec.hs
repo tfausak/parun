@@ -23,28 +23,28 @@ spec s = Spec.describe s "Parun.Codec.ManaSymbol" $ do
       s
       ManaSymbol.codec
       (ManaSymbol.OfType (ManaType.Colored Color.Red))
-      " {\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}}} "
+      " {\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Red\"}} "
   -- CR 107.4e's two-halves shape, e.g. {W/U}.
   Spec.it s "Hybrid" $
     Common.assertCodec
       s
       ManaSymbol.codec
       (ManaSymbol.Hybrid (Hybrid.MkHybrid (ManaType.Colored Color.White) (ManaType.Colored Color.Blue)))
-      " {\"type\":\"Hybrid\",\"value\":{\"left\":{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}},\"right\":{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}}} "
+      " {\"type\":\"Hybrid\",\"value\":{\"left\":{\"type\":\"Colored\",\"value\":\"White\"},\"right\":{\"type\":\"Colored\",\"value\":\"Blue\"}}} "
   -- CR 107.4e's {2/B} shape.
   Spec.it s "MonocoloredHybrid" $
     Common.assertCodec
       s
       ManaSymbol.codec
       (ManaSymbol.MonocoloredHybrid (ManaType.Colored Color.Black))
-      " {\"type\":\"MonocoloredHybrid\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Black\"}}} "
+      " {\"type\":\"MonocoloredHybrid\",\"value\":{\"type\":\"Colored\",\"value\":\"Black\"}} "
   -- CR 107.4f: {G/P}, colored not by a ManaType but by a bare Color.
   Spec.it s "Phyrexian" $
     Common.assertCodec
       s
       ManaSymbol.codec
       (ManaSymbol.Phyrexian Color.Green)
-      " {\"type\":\"Phyrexian\",\"value\":{\"type\":\"Green\"}} "
+      " {\"type\":\"Phyrexian\",\"value\":\"Green\"} "
   -- CR 107.4f's other half: {G/U/P}, a PAIR of bare Colors. Tamiyo, Compleated
   -- Sage's, and the discriminating leg is what separates it from the arm above
   -- -- a hybrid Phyrexian symbol and a plain one must not share an encoding.
@@ -53,7 +53,7 @@ spec s = Spec.describe s "Parun.Codec.ManaSymbol" $ do
       s
       ManaSymbol.codec
       (ManaSymbol.HybridPhyrexian (HybridPhyrexian.MkHybridPhyrexian Color.Green Color.Blue))
-      " {\"type\":\"HybridPhyrexian\",\"value\":{\"left\":{\"type\":\"Green\"},\"right\":{\"type\":\"Blue\"}}} "
+      " {\"type\":\"HybridPhyrexian\",\"value\":{\"left\":\"Green\",\"right\":\"Blue\"}} "
     Spec.assertBool
       s
       (Codec.encode ManaSymbol.codec (ManaSymbol.HybridPhyrexian (HybridPhyrexian.MkHybridPhyrexian Color.Green Color.Blue)) /= Codec.encode ManaSymbol.codec (ManaSymbol.Phyrexian Color.Green))

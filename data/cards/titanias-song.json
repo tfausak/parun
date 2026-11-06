@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -27,17 +25,13 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Artifact"
-                  }
+                  "value": "Artifact"
                 },
                 {
                   "type": "Not",
                   "value": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               ]
@@ -53,23 +47,15 @@
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Artifact"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Artifact",
+                "mode": "InAddition"
               }
             },
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Creature"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Creature",
+                "mode": "InAddition"
               }
             },
             {
@@ -77,15 +63,11 @@
               "value": {
                 "power": {
                   "type": "Measure",
-                  "value": {
-                    "type": "ManaValue"
-                  }
+                  "value": "ManaValue"
                 },
                 "toughness": {
                   "type": "Measure",
-                  "value": {
-                    "type": "ManaValue"
-                  }
+                  "value": "ManaValue"
                 }
               }
             }
@@ -94,9 +76,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

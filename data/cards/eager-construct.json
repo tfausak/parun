@@ -47,9 +47,7 @@
                       "type": "Optional",
                       "value": {
                         "type": "Relative",
-                        "value": {
-                          "type": "AnyPlayer"
-                        }
+                        "value": "AnyPlayer"
                       }
                     }
                   }
@@ -61,17 +59,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Construct"
-          }
+          "Construct"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

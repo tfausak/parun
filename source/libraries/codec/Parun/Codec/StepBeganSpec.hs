@@ -20,5 +20,5 @@ spec s = Spec.describe s "Parun.Codec.StepBegan" $ do
             StepBegan.player = PlayerId.MkPlayerId 1
           }
       )
-      " {\"phase\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}},\"player\":1} "
+      " {\"phase\":{\"type\":\"Beginning\",\"value\":\"Upkeep\"},\"player\":1} "
   Spec.it s "has a schema" $ Common.assertHasSchema s StepBegan.codec

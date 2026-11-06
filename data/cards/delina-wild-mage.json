@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -59,9 +57,7 @@
                                   {
                                     "type": "RemoveSupertypes",
                                     "value": [
-                                      {
-                                        "type": "Legendary"
-                                      }
+                                      "Legendary"
                                     ]
                                   },
                                   {
@@ -74,17 +70,13 @@
                                           "value": {
                                             "phase": {
                                               "type": "Combat",
-                                              "value": {
-                                                "type": "EndOfCombat"
-                                              }
+                                              "value": "EndOfCombat"
                                             },
                                             "scope": {
                                               "type": "PlayersTurn",
                                               "value": {
                                                 "type": "Relative",
-                                                "value": {
-                                                  "type": "AnyPlayer"
-                                                }
+                                                "value": "AnyPlayer"
                                               }
                                             }
                                           }
@@ -102,9 +94,7 @@
                                                           "type": "InSlot",
                                                           "value": "self"
                                                         },
-                                                        "zone": {
-                                                          "type": "Exile"
-                                                        }
+                                                        "zone": "Exile"
                                                       }
                                                     }
                                                   ]
@@ -125,25 +115,19 @@
                                   "attacking": {
                                     "type": "Chosen"
                                   },
-                                  "tapped": {
-                                    "type": "Tapped"
-                                  }
+                                  "tapped": "Tapped"
                                 }
                               }
                             }
                           ],
                           "chooser": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "gate": {
                             "type": "Compares",
                             "value": {
-                              "comparison": {
-                                "type": "AtLeast"
-                              },
+                              "comparison": "AtLeast",
                               "measured": {
                                 "type": "InSlot",
                                 "value": "result"
@@ -164,12 +148,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     "pool": {
@@ -184,22 +164,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Elf",
+          "Shaman"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

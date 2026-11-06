@@ -19,5 +19,5 @@ spec s = Spec.describe s "Parun.Codec.AttackingPlayers" $ do
             AttackingPlayers.attacked = SlotName.MkSlotName (Text.pack "attackedPlayer")
           }
       )
-      " {\"relation\":{\"type\":\"Opponent\"},\"attacked\":\"attackedPlayer\"} "
+      " {\"relation\":\"Opponent\",\"attacked\":\"attackedPlayer\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AttackingPlayers.codec

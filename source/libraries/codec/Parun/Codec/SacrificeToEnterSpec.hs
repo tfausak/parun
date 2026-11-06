@@ -18,5 +18,5 @@ spec s = Spec.describe s "Parun.Codec.SacrificeToEnter" $ do
             SacrificeToEnter.filter = Filter.HasSubtype Subtype.Forest
           }
       )
-      " {\"count\":1,\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Forest\"}}} "
+      " {\"count\":1,\"filter\":{\"type\":\"HasSubtype\",\"value\":\"Forest\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s SacrificeToEnter.codec

@@ -12,6 +12,6 @@ spec s = Spec.describe s "Parun.Codec.BlockStatus" $ do
       s
       BlockStatus.codec
       BlockStatus.Unblocked
-      " {\"type\":\"Unblocked\"} "
+      " \"Unblocked\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s BlockStatus.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s BlockStatus.codec

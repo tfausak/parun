@@ -17,7 +17,7 @@ spec s = Spec.describe s "Parun.Codec.Phase" $ do
       s
       Phase.codec
       (Phase.Beginning BeginningStep.Upkeep)
-      " {\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}} "
+      " {\"type\":\"Beginning\",\"value\":\"Upkeep\"} "
   Spec.it s "PrecombatMain" $
     Common.assertCodec
       s
@@ -29,7 +29,7 @@ spec s = Spec.describe s "Parun.Codec.Phase" $ do
       s
       Phase.codec
       (Phase.Combat CombatStep.DeclareBlockers)
-      " {\"type\":\"Combat\",\"value\":{\"type\":\"DeclareBlockers\"}} "
+      " {\"type\":\"Combat\",\"value\":\"DeclareBlockers\"} "
   Spec.it s "PostcombatMain" $
     Common.assertCodec
       s
@@ -41,7 +41,7 @@ spec s = Spec.describe s "Parun.Codec.Phase" $ do
       s
       Phase.codec
       (Phase.Ending EndingStep.EndStep)
-      " {\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}} "
+      " {\"type\":\"Ending\",\"value\":\"EndStep\"} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s Phase.codec
   Spec.describe s "flat" $ do

@@ -126,14 +126,10 @@
               {
                 "manaType": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 },
                 "tags": [],
-                "retention": {
-                  "type": "Ordinary"
-                },
+                "retention": "Ordinary",
                 "restriction": null,
                 "rider": null,
                 "sourceChoices": null
@@ -141,14 +137,10 @@
               {
                 "manaType": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 },
                 "tags": [],
-                "retention": {
-                  "type": "Ordinary"
-                },
+                "retention": "Ordinary",
                 "restriction": null,
                 "rider": null,
                 "sourceChoices": null
@@ -156,14 +148,10 @@
               {
                 "manaType": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 },
                 "tags": [],
-                "retention": {
-                  "type": "Ordinary"
-                },
+                "retention": "Ordinary",
                 "restriction": null,
                 "rider": null,
                 "sourceChoices": null
@@ -180,9 +168,7 @@
       "check": {
         "PlayerCounters": {
           "player": "alice",
-          "kind": {
-            "type": "Rad"
-          },
+          "kind": "Rad",
           "count": 2
         }
       }
@@ -199,14 +185,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -214,14 +196,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null
@@ -229,14 +207,10 @@
             {
               "manaType": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "tags": [],
-              "retention": {
-                "type": "Ordinary"
-              },
+              "retention": "Ordinary",
               "restriction": null,
               "rider": null,
               "sourceChoices": null

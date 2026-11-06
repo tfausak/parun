@@ -19,5 +19,5 @@ spec s = Spec.describe s "Parun.Codec.SlotPerPlayer" $ do
             SlotPerPlayer.slot = SlotName.MkSlotName (Text.pack "thatPlayer")
           }
       )
-      " {\"players\":{\"type\":\"Opponent\"},\"slot\":\"thatPlayer\"} "
+      " {\"players\":\"Opponent\",\"slot\":\"thatPlayer\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s SlotPerPlayer.codec

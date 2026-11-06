@@ -84,9 +84,7 @@
       "do": {
         "Answer": {
           "prompt": "RerollDie",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

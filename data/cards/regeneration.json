@@ -9,9 +9,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -39,17 +37,11 @@
                                       "type": "IsBound",
                                       "value": "regenerated"
                                     },
-                                    "rewrite": {
-                                      "type": "Regenerate"
-                                    }
+                                    "rewrite": "Regenerate"
                                   }
                                 },
-                                "origin": {
-                                  "type": "Other"
-                                },
-                                "uses": {
-                                  "type": "Once"
-                                }
+                                "origin": "Other",
+                                "uses": "Once"
                               }
                             }
                           ],
@@ -86,9 +78,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -96,14 +86,10 @@
       "oracleText": "Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)\n{G}: Regenerate enchanted creature. (The next time that creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

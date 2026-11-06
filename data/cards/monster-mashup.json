@@ -18,9 +18,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -36,23 +34,13 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Fish"
-          },
-          {
-            "type": "Vampire"
-          },
-          {
-            "type": "Werewolf"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Fish",
+          "Vampire",
+          "Werewolf",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

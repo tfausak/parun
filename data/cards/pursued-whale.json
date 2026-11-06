@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -89,19 +85,13 @@
                                         "value": [
                                           {
                                             "type": "HasCardType",
-                                            "value": {
-                                              "type": "Creature"
-                                            }
+                                            "value": "Creature"
                                           },
                                           {
                                             "type": "HeldBy",
                                             "value": {
-                                              "holder": {
-                                                "type": "Controller"
-                                              },
-                                              "relation": {
-                                                "type": "You"
-                                              }
+                                              "holder": "Controller",
+                                              "relation": "You"
                                             }
                                           }
                                         ]
@@ -110,9 +100,7 @@
                                   }
                                 ],
                                 "colorIndicator": [
-                                  {
-                                    "type": "Red"
-                                  }
+                                  "Red"
                                 ],
                                 "combatRestrictions": [
                                   {
@@ -138,14 +126,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Pirate"
-                                    }
+                                    "Pirate"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -153,9 +137,7 @@
                           },
                           "creator": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -173,14 +155,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Whale"
-          }
+          "Whale"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

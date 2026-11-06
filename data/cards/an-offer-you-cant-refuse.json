@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -73,14 +71,10 @@
                             "name": "Treasure Token",
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Treasure"
-                                }
+                                "Treasure"
                               ],
                               "types": [
-                                {
-                                  "type": "Artifact"
-                                }
+                                "Artifact"
                               ]
                             }
                           }
@@ -89,12 +83,8 @@
                       "creator": {
                         "type": "HolderOfBound",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "hop": {
-                            "type": "Itself"
-                          },
+                          "holder": "Controller",
+                          "hop": "Itself",
                           "slot": "spell"
                         }
                       },
@@ -113,9 +103,7 @@
                   "type": "Not",
                   "value": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 },
                 "pool": {
@@ -128,9 +116,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -64,8 +64,8 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Exchange of Words", "do": {"ChooseTargets": {"creatures": ["$galleon", "$spy"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$galleon", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Island"}}}, "count": 1}}},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$galleon", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Swamp"}}}, "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$galleon", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": "Island"}}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$galleon", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": "Swamp"}}, "count": 0}}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Attack": ["$spy"]}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$galleon"]}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Attackers": {"attackers": {"$galleon": "$bob"}}}}

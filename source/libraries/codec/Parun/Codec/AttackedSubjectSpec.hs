@@ -9,7 +9,7 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.AttackedSubject" $ do
   Spec.it s "Related" $
-    Common.assertCodec s AttackedSubject.codec (AttackedSubject.Related PlayerRelation.You) " {\"type\":\"Related\",\"value\":{\"type\":\"You\"}} "
+    Common.assertCodec s AttackedSubject.codec (AttackedSubject.Related PlayerRelation.You) " {\"type\":\"Related\",\"value\":\"You\"} "
   Spec.it s "Enchanted" $
     Common.assertCodec s AttackedSubject.codec AttackedSubject.Enchanted " {\"type\":\"Enchanted\"} "
   Spec.it s "Source" $

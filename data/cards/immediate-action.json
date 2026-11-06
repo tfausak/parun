@@ -17,26 +17,18 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 {
                   "type": "HasChosenName",
-                  "value": {
-                    "type": "AnyChooser"
-                  }
+                  "value": "AnyChooser"
                 }
               ]
             }
@@ -53,9 +45,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Conspiracy"
-          }
+          "Conspiracy"
         ]
       }
     }

@@ -9,18 +9,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -60,18 +56,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -116,18 +108,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -142,19 +130,13 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -163,9 +145,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "ClassLevel"
               },
@@ -202,9 +182,7 @@
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "Blue"
-                                      }
+                                      "value": "Blue"
                                     }
                                   },
                                   "restriction": {
@@ -213,23 +191,17 @@
                                       "value": [
                                         {
                                           "type": "HasCardType",
-                                          "value": {
-                                            "type": "Instant"
-                                          }
+                                          "value": "Instant"
                                         },
                                         {
                                           "type": "HasCardType",
-                                          "value": {
-                                            "type": "Sorcery"
-                                          }
+                                          "value": "Sorcery"
                                         }
                                       ]
                                     },
                                     "keywordActivations": {
                                       "type": "OfFamily",
-                                      "value": {
-                                        "type": "ClassLevel"
-                                      }
+                                      "value": "ClassLevel"
                                     }
                                   }
                                 }
@@ -249,9 +221,7 @@
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "Red"
-                                      }
+                                      "value": "Red"
                                     }
                                   },
                                   "restriction": {
@@ -260,23 +230,17 @@
                                       "value": [
                                         {
                                           "type": "HasCardType",
-                                          "value": {
-                                            "type": "Instant"
-                                          }
+                                          "value": "Instant"
                                         },
                                         {
                                           "type": "HasCardType",
-                                          "value": {
-                                            "type": "Sorcery"
-                                          }
+                                          "value": "Sorcery"
                                         }
                                       ]
                                     },
                                     "keywordActivations": {
                                       "type": "OfFamily",
-                                      "value": {
-                                        "type": "ClassLevel"
-                                      }
+                                      "value": "ClassLevel"
                                     }
                                   }
                                 }
@@ -302,9 +266,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "ClassLevel"
               },
@@ -327,9 +289,7 @@
                         "type": "PlayersTurn",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                          "value": "AnyPlayer"
                         }
                       },
                       "spell": {
@@ -340,12 +300,8 @@
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "You"
-                                }
+                                "holder": "Controller",
+                                "relation": "You"
                               }
                             },
                             {
@@ -353,15 +309,11 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Instant"
-                                  }
+                                  "value": "Instant"
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Sorcery"
-                                  }
+                                  "value": "Sorcery"
                                 }
                               ]
                             }
@@ -394,12 +346,8 @@
                                               {
                                                 "type": "HeldBy",
                                                 "value": {
-                                                  "holder": {
-                                                    "type": "Controller"
-                                                  },
-                                                  "relation": {
-                                                    "type": "You"
-                                                  }
+                                                  "holder": "Controller",
+                                                  "relation": "You"
                                                 }
                                               },
                                               {
@@ -407,15 +355,11 @@
                                                 "value": [
                                                   {
                                                     "type": "HasCardType",
-                                                    "value": {
-                                                      "type": "Instant"
-                                                    }
+                                                    "value": "Instant"
                                                   },
                                                   {
                                                     "type": "HasCardType",
-                                                    "value": {
-                                                      "type": "Sorcery"
-                                                    }
+                                                    "value": "Sorcery"
                                                   }
                                                 ]
                                               }
@@ -425,9 +369,7 @@
                                             "type": "InHistory",
                                             "value": {
                                               "type": "SpellCast",
-                                              "value": {
-                                                "type": "ThisTurn"
-                                              }
+                                              "value": "ThisTurn"
                                             }
                                           }
                                         }
@@ -437,9 +379,7 @@
                                         "value": {
                                           "players": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "Opponent"
-                                            }
+                                            "value": "Opponent"
                                           }
                                         }
                                       }
@@ -476,9 +416,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -493,9 +431,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -514,14 +450,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Class"
-          }
+          "Class"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

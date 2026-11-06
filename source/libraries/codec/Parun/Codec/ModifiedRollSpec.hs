@@ -69,7 +69,7 @@ spec s = Spec.describe s "Parun.Codec.ModifiedRoll" $ do
                 },
           ModifiedRoll.limit = PermissionLimit.Unlimited
         }
-      " {\"modifier\":{\"type\":\"Reroll\"},\"cost\":{\"mana\":[],\"components\":[{\"type\":\"TapPermanents\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichPermanents\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Wall\"}}}}]}} "
+      " {\"modifier\":{\"type\":\"Reroll\"},\"cost\":{\"mana\":[],\"components\":[{\"type\":\"TapPermanents\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichPermanents\":{\"type\":\"HasSubtype\",\"value\":\"Wall\"}}}]}} "
   -- CR 706.2b's second step with a life cost and a budget, the wire form
   -- data/cards/night-shift-of-the-living-dead.json writes.
   Spec.it s "MkModifiedRoll, Night Shift of the Living Dead's budgeted adjustment" $
@@ -83,5 +83,5 @@ spec s = Spec.describe s "Parun.Codec.ModifiedRoll" $ do
           ModifiedRoll.cost = Just Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost []), Cost.components = [CostComponent.PayLife (CostAmount.Fixed 1)]},
           ModifiedRoll.limit = PermissionLimit.OnceEachTurn
         }
-      " {\"modifier\":{\"type\":\"IncreaseOrDecrease\",\"value\":1},\"cost\":{\"mana\":[],\"components\":[{\"type\":\"PayLife\",\"value\":{\"type\":\"Fixed\",\"value\":1}}]},\"limit\":{\"type\":\"OnceEachTurn\"}} "
+      " {\"modifier\":{\"type\":\"IncreaseOrDecrease\",\"value\":1},\"cost\":{\"mana\":[],\"components\":[{\"type\":\"PayLife\",\"value\":{\"type\":\"Fixed\",\"value\":1}}]},\"limit\":\"OnceEachTurn\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ModifiedRoll.codec

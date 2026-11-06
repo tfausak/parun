@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -26,9 +24,7 @@
                 "effects": [
                   {
                     "type": "ItBecomes",
-                    "value": {
-                      "type": "Night"
-                    }
+                    "value": "Night"
                   },
                   {
                     "type": "Discard",
@@ -44,9 +40,7 @@
                         "discarded": "discarded",
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     }
@@ -56,9 +50,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Plus",
@@ -83,9 +75,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

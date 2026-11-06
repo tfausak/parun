@@ -18,27 +18,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -51,13 +45,9 @@
             "value": {
               "entrants": {
                 "type": "IsInZone",
-                "value": {
-                  "type": "Battlefield"
-                }
+                "value": "Battlefield"
               },
-              "triggering": {
-                "type": "AnAdditionalTime"
-              }
+              "triggering": "AnAdditionalTime"
             }
           },
           "scope": {
@@ -75,22 +65,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          },
-          {
-            "type": "Horror"
-          }
+          "Elemental",
+          "Horror"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

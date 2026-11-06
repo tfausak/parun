@@ -14,27 +14,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -72,9 +66,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -93,9 +85,7 @@
                             "value": {
                               "filter": {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Angel"
-                                }
+                                "value": "Angel"
                               },
                               "slot": "looked"
                             }
@@ -110,9 +100,7 @@
                             "type": "InSlot",
                             "value": "angel"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ],
@@ -130,9 +118,7 @@
                             "value": {
                               "filter": {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Demon"
-                                }
+                                "value": "Demon"
                               },
                               "slot": "looked"
                             }
@@ -147,9 +133,7 @@
                             "type": "InSlot",
                             "value": "demon"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ],
@@ -167,9 +151,7 @@
                             "value": {
                               "filter": {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Dragon"
-                                }
+                                "value": "Dragon"
                               },
                               "slot": "looked"
                             }
@@ -184,9 +166,7 @@
                             "type": "InSlot",
                             "value": "dragon"
                           },
-                          "zone": {
-                            "type": "Hand"
-                          }
+                          "zone": "Hand"
                         }
                       }
                     ],
@@ -201,17 +181,13 @@
                         "value": {
                           "placement": {
                             "type": "RandomOrder",
-                            "value": {
-                              "type": "Bottom"
-                            }
+                            "value": "Bottom"
                           },
                           "ref": {
                             "type": "InSlot",
                             "value": "looked"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -224,22 +200,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Human"
-          }
+          "Cleric",
+          "Human"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

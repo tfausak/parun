@@ -19,19 +19,13 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         },
                         {
@@ -60,9 +54,7 @@
               "mana": []
             }
           },
-          "scope": {
-            "type": "EveryAttack"
-          },
+          "scope": "EveryAttack",
           "subject": {
             "type": "Matching",
             "value": {
@@ -89,19 +81,13 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         },
                         {
@@ -156,20 +142,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Golem"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Golem",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

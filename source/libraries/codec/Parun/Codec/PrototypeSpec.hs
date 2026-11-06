@@ -23,7 +23,7 @@ spec s = Spec.describe s "Parun.Codec.Prototype" $ do
             Prototype.toughness = 2
           }
       )
-      " {\"cost\":[{\"type\":\"Generic\",\"value\":1},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}}}],\"power\":2,\"toughness\":2} "
+      " {\"cost\":[{\"type\":\"Generic\",\"value\":1},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"White\"}}],\"power\":2,\"toughness\":2} "
   -- CR 718.3b: the coloured symbol is what makes a prototyped Autonomous
   -- Assembler white, so an encoding that dropped it would still round-trip the
   -- box above. Told apart from the same frame written colourless.

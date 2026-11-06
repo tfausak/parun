@@ -37,12 +37,8 @@
                           "modification": {
                             "type": "ChosenSubtype",
                             "value": {
-                              "family": {
-                                "type": "BasicLandType"
-                              },
-                              "mode": {
-                                "type": "Replace"
-                              }
+                              "family": "BasicLandType",
+                              "mode": "Replace"
                             }
                           },
                           "ref": {
@@ -58,9 +54,7 @@
                   "target": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     },
                     "pool": {
                       "type": "Permanents"
@@ -82,9 +76,7 @@
       "oracleText": "{1}, {T}: Target land becomes the basic land type of your choice until end of turn.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

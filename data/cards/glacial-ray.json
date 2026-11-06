@@ -15,18 +15,14 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Red"
-                    }
+                    "value": "Red"
                   }
                 }
               ]
             },
             "onto": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Arcane"
-              }
+              "value": "Arcane"
             }
           }
         }
@@ -40,9 +36,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -86,14 +80,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Arcane"
-          }
+          "Arcane"
         ],
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

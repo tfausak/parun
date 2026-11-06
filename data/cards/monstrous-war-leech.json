@@ -9,9 +9,7 @@
               "type": "Greatest",
               "value": {
                 "type": "Measure",
-                "value": {
-                  "type": "ManaValue"
-                }
+                "value": "ManaValue"
               }
             },
             "filter": {
@@ -23,13 +21,9 @@
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               }
             }
           }
@@ -41,9 +35,7 @@
               "type": "Greatest",
               "value": {
                 "type": "Measure",
-                "value": {
-                  "type": "ManaValue"
-                }
+                "value": "ManaValue"
               }
             },
             "filter": {
@@ -55,13 +47,9 @@
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "zone": {
-                  "type": "Graveyard"
-                }
+                "zone": "Graveyard"
               }
             }
           }
@@ -76,9 +64,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Blue"
-                  }
+                  "value": "Blue"
                 }
               }
             ]
@@ -94,9 +80,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -110,16 +94,12 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "TimesPaid",
                 "value": {
                   "type": "Printed",
-                  "value": {
-                    "type": "Kicker"
-                  }
+                  "value": "Kicker"
                 }
               },
               "threshold": {
@@ -142,9 +122,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -163,17 +141,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horror"
-          },
-          {
-            "type": "Leech"
-          }
+          "Horror",
+          "Leech"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

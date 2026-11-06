@@ -57,9 +57,7 @@
       "name": "Synthetic Shuffling Tomb",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

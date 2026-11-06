@@ -37,7 +37,7 @@ spec s = Spec.describe s "Parun.Codec.Condition" $ do
       s
       Condition.codec
       (Condition.Compares (Compares.MkCompares (Quantity.Literal 3) Comparison.AtLeast (Quantity.Literal 5)))
-      " {\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":5}}} "
+      " {\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":5}}} "
   -- CR 702.100a's "and/or". Two disjuncts, and asymmetric ones, so a codec that
   -- dropped or reordered the list is caught.
   Spec.it s "Any" $
@@ -45,7 +45,7 @@ spec s = Spec.describe s "Parun.Codec.Condition" $ do
       s
       Condition.codec
       (Condition.Any [Condition.Compares (Compares.MkCompares (Quantity.Measure Measure.Power) Comparison.AtLeast (Quantity.Literal 1)), Condition.Compares (Compares.MkCompares (Quantity.Measure Measure.Toughness) Comparison.AtMost (Quantity.Literal 2))])
-      " {\"type\":\"Any\",\"value\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}},\"comparison\":{\"type\":\"AtMost\"},\"threshold\":{\"type\":\"Literal\",\"value\":2}}}]} "
+      " {\"type\":\"Any\",\"value\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":\"Power\"},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":1}}},{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":\"Toughness\"},\"comparison\":\"AtMost\",\"threshold\":{\"type\":\"Literal\",\"value\":2}}}]} "
   -- Nissa, Steward of Elements' conjunction. Two asymmetric conjuncts, for the
   -- disjunction's reason above.
   Spec.it s "All" $
@@ -53,7 +53,7 @@ spec s = Spec.describe s "Parun.Codec.Condition" $ do
       s
       Condition.codec
       (Condition.All [Condition.Compares (Compares.MkCompares (Quantity.Measure Measure.Power) Comparison.AtLeast (Quantity.Literal 1)), Condition.Compares (Compares.MkCompares (Quantity.Measure Measure.Toughness) Comparison.AtMost (Quantity.Literal 2))])
-      " {\"type\":\"All\",\"value\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}},\"comparison\":{\"type\":\"AtMost\"},\"threshold\":{\"type\":\"Literal\",\"value\":2}}}]} "
+      " {\"type\":\"All\",\"value\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":\"Power\"},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":1}}},{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":\"Toughness\"},\"comparison\":\"AtMost\",\"threshold\":{\"type\":\"Literal\",\"value\":2}}}]} "
   -- Zurgo, Thunder's Decree's "during your end step": the window and the scope
   -- are both kept, as the activation rider's codec keeps them.
   Spec.it s "During" $
@@ -61,14 +61,14 @@ spec s = Spec.describe s "Parun.Codec.Condition" $ do
       s
       Condition.codec
       (Condition.During (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Ending EndingStep.EndStep)) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))))
-      " {\"type\":\"During\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}}} "
+      " {\"type\":\"During\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Ending\",\"value\":\"EndStep\"}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}}}} "
   -- The old untagged shapes are not conditions any more. A comparison's keys
   -- alone decoding would mean a card file written before #1304 kept working
   -- while writing something the schema does not describe.
   Spec.it s "rejects the untagged comparison shape" $
     Spec.assertBool
       s
-      (Either.isLeft (Common.parse (Text.pack " {\"measured\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}} ") >>= Codec.decode Condition.codec))
+      (Either.isLeft (Common.parse (Text.pack " {\"measured\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":1}} ") >>= Codec.decode Condition.codec))
       "expected a decode failure"
   Spec.it s "rejects the untagged disjunction shape" $
     Spec.assertBool

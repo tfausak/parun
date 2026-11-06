@@ -27,9 +27,7 @@
                         "value": {
                           "filter": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           "slot": "target"
                         }
@@ -44,17 +42,13 @@
                       "value": [
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Aura"
-                          }
+                          "value": "Aura"
                         },
                         {
                           "type": "AttachedTo",
                           "value": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           }
                         }
                       ]
@@ -79,9 +73,7 @@
       "oracleText": "{4}, {T}: Attach target Aura attached to a creature to another creature.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

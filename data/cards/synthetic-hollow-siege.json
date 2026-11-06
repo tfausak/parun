@@ -11,9 +11,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -56,14 +54,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Siege"
-          }
+          "Siege"
         ],
         "types": [
-          {
-            "type": "Battle"
-          }
+          "Battle"
         ]
       }
     }

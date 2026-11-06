@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -27,13 +25,9 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "Reveal"
-                      },
+                      "destination": "Reveal",
                       "differentIn": [
-                        {
-                          "type": "Names"
-                        }
+                        "Names"
                       ],
                       "filter": {
                         "type": "And",
@@ -41,9 +35,7 @@
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -51,9 +43,7 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "slot": "found",
                       "upTo": true
@@ -87,9 +77,7 @@
                           "slot": "found"
                         }
                       },
-                      "zone": {
-                        "type": "Graveyard"
-                      }
+                      "zone": "Graveyard"
                     }
                   }
                 ]
@@ -103,18 +91,14 @@
                         "type": "InSlot",
                         "value": "found"
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   },
                   {
                     "type": "Shuffle",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     }
                   }
                 ]
@@ -124,9 +108,7 @@
               "opponent": {
                 "filter": {
                   "type": "IsPlayer",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
                 "pool": {
                   "type": "Players"
@@ -138,9 +120,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

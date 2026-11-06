@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -62,15 +60,11 @@
                   "value": [
                     {
                       "type": "HasColor",
-                      "value": {
-                        "type": "White"
-                      }
+                      "value": "White"
                     },
                     {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Blue"
-                      }
+                      "value": "Blue"
                     }
                   ]
                 },
@@ -84,9 +78,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

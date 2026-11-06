@@ -16,7 +16,7 @@
     ]
   },
   "timeline": [
-    { "turn": 2, "step": "DrawStep", "player": "bob", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } }, "source": "Zur's Weirding" },
+    { "turn": 2, "step": "DrawStep", "player": "bob", "do": { "ChooseToPay": { "decision": "Declines" } }, "source": "Zur's Weirding" },
     { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 1 } } },
     { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Hill Giant", "count": 0 } } },
     { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Library", "card": "Mountain", "count": 1 } } },

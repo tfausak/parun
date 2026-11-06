@@ -35,5 +35,5 @@ spec s = Spec.describe s "Parun.Codec.CountedDiscard" $ do
             CountedDiscard.discarded = Just (SlotName.MkSlotName (Text.pack "discarded"))
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"discarded\":\"discarded\"} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"Opponent\"},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"discarded\":\"discarded\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CountedDiscard.codec

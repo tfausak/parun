@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -28,19 +26,11 @@
             "type": "PlacesSticker",
             "value": {
               "kinds": [
-                {
-                  "type": "Name"
-                },
-                {
-                  "type": "Ability"
-                },
-                {
-                  "type": "PowerToughness"
-                }
+                "Name",
+                "Ability",
+                "PowerToughness"
               ],
-              "placer": {
-                "type": "You"
-              }
+              "placer": "You"
             }
           },
           "modal": {
@@ -86,13 +76,9 @@
             "type": "PlacesSticker",
             "value": {
               "kinds": [
-                {
-                  "type": "Art"
-                }
+                "Art"
               ],
-              "placer": {
-                "type": "You"
-              }
+              "placer": "You"
             }
           },
           "modal": {
@@ -127,20 +113,12 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Child"
-          },
-          {
-            "type": "Guest"
-          },
-          {
-            "type": "Minotaur"
-          }
+          "Child",
+          "Guest",
+          "Minotaur"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

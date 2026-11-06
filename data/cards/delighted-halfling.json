@@ -59,15 +59,11 @@
                           "restriction": {
                             "casts": {
                               "type": "HasSupertype",
-                              "value": {
-                                "type": "Legendary"
-                              }
+                              "value": "Legendary"
                             }
                           },
                           "rider": {
-                            "effect": {
-                              "type": "CantBeCountered"
-                            }
+                            "effect": "CantBeCountered"
                           }
                         }
                       }
@@ -84,9 +80,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -102,17 +96,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Citizen"
-          },
-          {
-            "type": "Halfling"
-          }
+          "Citizen",
+          "Halfling"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

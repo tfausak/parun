@@ -9,18 +9,14 @@
               "type": "PlayersTurn",
               "value": {
                 "type": "Relative",
-                "value": {
-                  "type": "AnyPlayer"
-                }
+                "value": "AnyPlayer"
               }
             },
             "window": {
               "type": "Step",
               "value": {
                 "type": "Combat",
-                "value": {
-                  "type": "DeclareAttackers"
-                }
+                "value": "DeclareAttackers"
               }
             }
           }
@@ -38,9 +34,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -78,19 +72,13 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "You"
-                                }
+                                "holder": "Controller",
+                                "relation": "You"
                               }
                             }
                           ]
@@ -106,9 +94,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

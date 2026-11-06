@@ -17,9 +17,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -34,9 +32,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -69,19 +65,13 @@
                           "value": [
                             {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Forest"
-                              }
+                              "value": "Forest"
                             },
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "You"
-                                }
+                                "holder": "Controller",
+                                "relation": "You"
                               }
                             }
                           ]
@@ -91,20 +81,14 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Battlefield"
-                            }
+                            "zone": "Battlefield"
                           }
                         }
                       }
                     },
-                    "rounding": {
-                      "type": "Down"
-                    }
+                    "rounding": "Down"
                   }
                 },
                 "toughness": {
@@ -125,19 +109,13 @@
                           "value": [
                             {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Forest"
-                              }
+                              "value": "Forest"
                             },
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "You"
-                                }
+                                "holder": "Controller",
+                                "relation": "You"
                               }
                             }
                           ]
@@ -147,20 +125,14 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
-                            "zone": {
-                              "type": "Battlefield"
-                            }
+                            "zone": "Battlefield"
                           }
                         }
                       }
                     },
-                    "rounding": {
-                      "type": "Up"
-                    }
+                    "rounding": "Up"
                   }
                 }
               }
@@ -170,14 +142,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

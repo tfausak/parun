@@ -15,9 +15,7 @@
               "type": "Not",
               "value": {
                 "type": "HasColor",
-                "value": {
-                  "type": "Black"
-                }
+                "value": "Black"
               }
             }
           }
@@ -32,18 +30,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -59,20 +53,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Warlock"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Warlock",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

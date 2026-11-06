@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -26,18 +24,14 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "Reveal"
-                      },
+                      "destination": "Reveal",
                       "filter": {
                         "type": "And",
                         "value": []
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -45,9 +39,7 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "slot": "revealed"
                     }
@@ -56,9 +48,7 @@
                     "type": "Shuffle",
                     "value": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     }
                   }
                 ]
@@ -96,9 +86,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

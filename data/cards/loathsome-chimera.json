@@ -26,9 +26,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -44,9 +42,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -61,16 +57,12 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "CastUsing",
                 "value": {
                   "type": "OfFamily",
-                  "value": {
-                    "type": "Escape"
-                  }
+                  "value": "Escape"
                 }
               },
               "threshold": {
@@ -109,14 +101,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Chimera"
-          }
+          "Chimera"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

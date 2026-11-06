@@ -12,12 +12,12 @@ spec s = Spec.describe s "Parun.Codec.WhichTurn" $ do
       s
       WhichTurn.codec
       WhichTurn.ThisTurn
-      " {\"type\":\"ThisTurn\"} "
+      " \"ThisTurn\" "
   Spec.it s "LastTurn" $
     Common.assertCodec
       s
       WhichTurn.codec
       WhichTurn.LastTurn
-      " {\"type\":\"LastTurn\"} "
+      " \"LastTurn\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s WhichTurn.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s WhichTurn.codec

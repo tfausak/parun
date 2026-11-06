@@ -15,5 +15,5 @@ spec s = Spec.describe s "Parun.Codec.Shows" $ do
       s
       Shows.codec
       (Shows.MkShows ShownCards.TopOfLibrary Audience.ThatPlayer)
-      " {\"cards\":{\"type\":\"TopOfLibrary\"},\"to\":{\"type\":\"ThatPlayer\"}} "
+      " {\"cards\":\"TopOfLibrary\",\"to\":\"ThatPlayer\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Shows.codec

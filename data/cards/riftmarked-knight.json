@@ -7,9 +7,7 @@
           "value": {
             "quality": {
               "type": "HasColor",
-              "value": {
-                "type": "Black"
-              }
+              "value": "Black"
             },
             "spares": null
           }
@@ -30,18 +28,14 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "White"
-                    }
+                    "value": "White"
                   }
                 },
                 {
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "White"
-                    }
+                    "value": "White"
                   }
                 }
               ]
@@ -62,18 +56,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -102,9 +92,7 @@
             }
           },
           "functionsFrom": [
-            {
-              "type": "Exile"
-            }
+            "Exile"
           ],
           "modal": {
             "modes": [
@@ -119,9 +107,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Black"
-                                  }
+                                  "Black"
                                 ],
                                 "keywords": [
                                   {
@@ -132,9 +118,7 @@
                                     "value": {
                                       "quality": {
                                         "type": "HasColor",
-                                        "value": {
-                                          "type": "White"
-                                        }
+                                        "value": "White"
                                       },
                                       "spares": null
                                     }
@@ -154,14 +138,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Knight"
-                                    }
+                                    "Knight"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -183,20 +163,12 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Knight"
-          },
-          {
-            "type": "Rebel"
-          }
+          "Human",
+          "Knight",
+          "Rebel"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

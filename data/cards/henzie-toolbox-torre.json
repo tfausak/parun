@@ -6,27 +6,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -52,18 +46,14 @@
                 "type": "Paid",
                 "value": {
                   "type": "OfFamily",
-                  "value": {
-                    "type": "Blitz"
-                  }
+                  "value": "Blitz"
                 }
               },
               "perEach": {
                 "type": "CommanderCasts",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "subject": {
@@ -89,19 +79,13 @@
               "value": [
                 {
                   "type": "IsInZone",
-                  "value": {
-                    "type": "Stack"
-                  }
+                  "value": "Stack"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 {
@@ -112,19 +96,13 @@
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "Measures",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
-                    "measure": {
-                      "type": "ManaValue"
-                    },
+                    "comparison": "AtLeast",
+                    "measure": "ManaValue",
                     "operand": {
                       "type": "Literal",
                       "value": 4
@@ -137,9 +115,7 @@
           "modifications": [
             {
               "type": "GainKeywordAtManaCost",
-              "value": {
-                "type": "Blitz"
-              }
+              "value": "Blitz"
             }
           ]
         }
@@ -150,22 +126,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Devil"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Devil",
+          "Rogue"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

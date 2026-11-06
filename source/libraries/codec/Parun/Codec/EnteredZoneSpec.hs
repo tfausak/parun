@@ -14,7 +14,7 @@ spec s = Spec.describe s "Parun.Codec.EnteredZone" $ do
       s
       EnteredZone.codec
       (EnteredZone.MkEnteredZone {EnteredZone.to = Zone.Battlefield, EnteredZone.from = Set.empty})
-      " {\"to\":{\"type\":\"Battlefield\"}} "
+      " {\"to\":\"Battlefield\"} "
   -- Asymmetric on purpose, Parun.Codec.MovedBetweenSpec's reason: both keys
   -- carry a Zone.
   Spec.it s "MkEnteredZone, a named origin" $
@@ -22,5 +22,5 @@ spec s = Spec.describe s "Parun.Codec.EnteredZone" $ do
       s
       EnteredZone.codec
       (EnteredZone.MkEnteredZone {EnteredZone.to = Zone.Graveyard, EnteredZone.from = Set.singleton Zone.Battlefield})
-      " {\"from\":[{\"type\":\"Battlefield\"}],\"to\":{\"type\":\"Graveyard\"}} "
+      " {\"from\":[\"Battlefield\"],\"to\":\"Graveyard\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s EnteredZone.codec

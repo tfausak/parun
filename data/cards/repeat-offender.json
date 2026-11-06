@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -28,14 +26,10 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "HasDesignation",
-                          "value": {
-                            "type": "Suspected"
-                          }
+                          "value": "Suspected"
                         },
                         "threshold": {
                           "type": "Literal",
@@ -66,14 +60,10 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "HasDesignation",
-                          "value": {
-                            "type": "Suspected"
-                          }
+                          "value": "Suspected"
                         },
                         "threshold": {
                           "type": "Literal",
@@ -85,9 +75,7 @@
                       {
                         "type": "Designate",
                         "value": {
-                          "designation": {
-                            "type": "Suspected"
-                          },
+                          "designation": "Suspected",
                           "slot": "self"
                         }
                       }
@@ -108,9 +96,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -126,17 +112,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Assassin"
-          },
-          {
-            "type": "Human"
-          }
+          "Assassin",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

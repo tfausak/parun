@@ -45,9 +45,9 @@ spec s = Spec.describe s "Parun.Codec.Move" $ do
   Spec.it s "OrderTimestamps" $
     Common.assertCodec s Move.codec (Move.Type.OrderTimestamps (Seq.fromList [ref "first", ref "second"])) " {\"OrderTimestamps\":[\"$first\",\"$second\"]} "
   Spec.it s "ChooseOptional" $
-    Common.assertCodec s Move.codec (Move.Type.ChooseOptional OptionalDecision.Type.Exercises) " {\"ChooseOptional\":{\"type\":\"Exercises\"}} "
+    Common.assertCodec s Move.codec (Move.Type.ChooseOptional OptionalDecision.Type.Exercises) " {\"ChooseOptional\":\"Exercises\"} "
   Spec.it s "ChooseToPay" $
-    Common.assertCodec s Move.codec (Move.Type.ChooseToPay (Paying.Type.MkPaying PaymentDecision.Type.Pays Choices.Type.none)) " {\"ChooseToPay\":{\"decision\":{\"type\":\"Pays\"}}} "
+    Common.assertCodec s Move.codec (Move.Type.ChooseToPay (Paying.Type.MkPaying PaymentDecision.Type.Pays Choices.Type.none)) " {\"ChooseToPay\":{\"decision\":\"Pays\"}} "
   Spec.it s "ChooseTargets is keyed by slot" $
     Common.assertCodec s Move.codec (Move.Type.ChooseTargets (Map.singleton (SlotName.Type.MkSlotName (Text.pack "target")) (Seq.singleton (ref "moon")))) " {\"ChooseTargets\":{\"target\":[\"$moon\"]}} "
   Spec.it s "OrderTriggers, null for a sourceless trigger" $

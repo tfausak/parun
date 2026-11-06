@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -51,9 +49,7 @@
                         "value": {
                           "player": {
                             "type": "InRole",
-                            "value": {
-                              "type": "Defending"
-                            }
+                            "value": "Defending"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -66,9 +62,7 @@
                       "type": "Optional",
                       "value": {
                         "type": "InRole",
-                        "value": {
-                          "type": "Defending"
-                        }
+                        "value": "Defending"
                       }
                     }
                   }
@@ -80,14 +74,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Spirit"
-          }
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

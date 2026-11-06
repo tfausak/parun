@@ -9,9 +9,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -31,17 +29,11 @@
                           "effect": {
                             "type": "DestructionR",
                             "value": {
-                              "rewrite": {
-                                "type": "Regenerate"
-                              }
+                              "rewrite": "Regenerate"
                             }
                           },
-                          "origin": {
-                            "type": "Other"
-                          },
-                          "uses": {
-                            "type": "Once"
-                          }
+                          "origin": "Other",
+                          "uses": "Once"
                         }
                       }
                     ]
@@ -61,9 +53,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -79,14 +69,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Skeleton"
-          }
+          "Skeleton"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

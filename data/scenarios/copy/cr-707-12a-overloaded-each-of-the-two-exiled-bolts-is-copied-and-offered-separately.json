@@ -79,27 +79,21 @@
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               }
             },
             {
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               }
             },
             {
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               }
             }
           ],
@@ -143,9 +137,7 @@
       "do": {
         "Answer": {
           "prompt": "OfferedCast",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },
@@ -168,9 +160,7 @@
       "do": {
         "Answer": {
           "prompt": "OfferedCast",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },

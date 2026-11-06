@@ -15,7 +15,7 @@
     "step": "Upkeep"
   },
   "timeline": [
-    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "OfferedExtra", "with": { "type": "Declines" } } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "OfferedExtra", "with": "Declines" } } },
     { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "bob", "is": [] } } },
     { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Forest", "Plains", "Hill Giant"] } } },
     { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$island", "tapped": false } } }

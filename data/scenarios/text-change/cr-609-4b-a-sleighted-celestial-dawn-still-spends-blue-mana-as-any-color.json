@@ -36,7 +36,7 @@
           "object": "$swords",
           "targets": ["$bears"],
           "mana": ["$birds"],
-          "yields": [[{ "manaType": { "type": "Colored", "value": { "type": "Blue" } }, "tags": [], "retention": { "type": "Ordinary" }, "restriction": null, "rider": null, "sourceChoices": null }]]
+          "yields": [[{ "manaType": { "type": "Colored", "value": "Blue" }, "tags": [], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null }]]
         }
       }
     },

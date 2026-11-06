@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -23,9 +21,7 @@
                   {
                     "type": "RequireBlock",
                     "value": {
-                      "arity": {
-                        "type": "AnySubject"
-                      },
+                      "arity": "AnySubject",
                       "attacker": {
                         "type": "Named",
                         "value": {
@@ -37,9 +33,7 @@
                         "type": "Matching",
                         "value": {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         }
                       },
                       "duration": {
@@ -52,9 +46,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -77,9 +69,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

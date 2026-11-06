@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -31,15 +29,9 @@
           "condition": {
             "type": "LifeChanges",
             "value": {
-              "direction": {
-                "type": "Lost"
-              },
-              "frequency": {
-                "type": "FirstTimeEachTurn"
-              },
-              "player": {
-                "type": "You"
-              }
+              "direction": "Lost",
+              "frequency": "FirstTimeEachTurn",
+              "player": "You"
             }
           },
           "modal": {
@@ -74,17 +66,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Orc"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Orc",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

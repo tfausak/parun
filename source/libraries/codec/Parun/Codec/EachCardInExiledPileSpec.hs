@@ -17,7 +17,7 @@ spec s = Spec.describe s "Parun.Codec.EachCardInExiledPile" $ do
       s
       EachCardInExiledPile.codec
       EachCardInExiledPile.MkEachCardInExiledPile {EachCardInExiledPile.pile = ExiledPile.OwnAbilities, EachCardInExiledPile.filter = Just (Filter.HasCardType CardType.Creature)}
-      " {\"pile\":{\"type\":\"OwnAbilities\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"pile\":{\"type\":\"OwnAbilities\"},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- The whole pile, which Parun.Types.Filter has no tautological arm to say.
   Spec.it s "MkEachCardInExiledPile, the whole of a named ability's pile" $
     Common.assertCodec

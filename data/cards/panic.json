@@ -4,9 +4,7 @@
       "castingRestrictions": [
         {
           "type": "DuringCombatBefore",
-          "value": {
-            "type": "DeclareBlockers"
-          }
+          "value": "DeclareBlockers"
         }
       ],
       "delayedAbilities": {
@@ -16,17 +14,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -42,9 +36,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -65,9 +57,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -92,9 +82,7 @@
                       "duration": {
                         "type": "UntilEndOfTurn"
                       },
-                      "what": {
-                        "type": "Block"
-                      }
+                      "what": "Block"
                     }
                   }
                 ]
@@ -125,9 +113,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -24,17 +24,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Soldier"
-          }
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

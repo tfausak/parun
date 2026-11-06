@@ -41,9 +41,7 @@
                             "value": {
                               "type": "Compares",
                               "value": {
-                                "comparison": {
-                                  "type": "Exactly"
-                                },
+                                "comparison": "Exactly",
                                 "measured": {
                                   "type": "Count",
                                   "value": {
@@ -66,13 +64,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         },
-                                        "zone": {
-                                          "type": "Battlefield"
-                                        }
+                                        "zone": "Battlefield"
                                       }
                                     }
                                   }
@@ -84,9 +78,7 @@
                               }
                             }
                           },
-                          "what": {
-                            "type": "Untap"
-                          }
+                          "what": "Untap"
                         }
                       }
                     ]
@@ -96,9 +88,7 @@
                   "target": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     },
                     "pool": {
                       "type": "Permanents"
@@ -119,9 +109,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -137,14 +125,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Worm"
-          }
+          "Worm"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       },
       "untapRestrictions": [

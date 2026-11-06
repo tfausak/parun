@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -26,9 +24,7 @@
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               }
             }
           },
@@ -60,16 +56,12 @@
                       "type": "OfType",
                       "value": {
                         "type": "Colored",
-                        "value": {
-                          "type": "Green"
-                        }
+                        "value": "Green"
                       }
                     },
                     "player": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     }
                   }
                 },
@@ -80,16 +72,12 @@
                       "type": "OfType",
                       "value": {
                         "type": "Colored",
-                        "value": {
-                          "type": "Green"
-                        }
+                        "value": "Green"
                       }
                     },
                     "player": {
                       "type": "Relative",
-                      "value": {
-                        "type": "You"
-                      }
+                      "value": "You"
                     }
                   }
                 }
@@ -104,19 +92,13 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          }
+          "Elemental"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

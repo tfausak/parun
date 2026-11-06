@@ -12,19 +12,13 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "Opponent"
-                      }
+                      "holder": "Controller",
+                      "relation": "Opponent"
                     }
                   },
                   {
@@ -51,12 +45,8 @@
             "attackers": {
               "type": "Measures",
               "value": {
-                "comparison": {
-                  "type": "AtMost"
-                },
-                "measure": {
-                  "type": "Power"
-                },
+                "comparison": "AtMost",
+                "measure": "Power",
                 "operand": {
                   "type": "Literal",
                   "value": 2
@@ -83,18 +73,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -110,22 +96,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Knight"
-          }
+          "Human",
+          "Knight"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

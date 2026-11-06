@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -33,9 +31,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ],
               "permanent": {
@@ -50,9 +46,7 @@
                       "type": "Not",
                       "value": {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Demon"
-                        }
+                        "value": "Demon"
                       }
                     }
                   ]
@@ -78,12 +72,8 @@
                               {
                                 "type": "CreatureSubtype",
                                 "value": {
-                                  "mode": {
-                                    "type": "InAddition"
-                                  },
-                                  "subtype": {
-                                    "type": "Demon"
-                                  }
+                                  "mode": "InAddition",
+                                  "subtype": "Demon"
                                 }
                               }
                             ],
@@ -102,9 +92,7 @@
                               "type": "Owner"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -117,17 +105,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Human"
-          }
+          "Cleric",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

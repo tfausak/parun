@@ -14,12 +14,8 @@
             "blockers": {
               "type": "Measures",
               "value": {
-                "comparison": {
-                  "type": "AtMost"
-                },
-                "measure": {
-                  "type": "Power"
-                },
+                "comparison": "AtMost",
+                "measure": "Power",
                 "operand": {
                   "type": "Literal",
                   "value": 2
@@ -46,9 +42,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -64,14 +58,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Kavu"
-          }
+          "Kavu"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

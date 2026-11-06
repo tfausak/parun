@@ -28,9 +28,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -57,27 +55,19 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "Battlefield"
-                          },
+                          "destination": "Battlefield",
                           "filter": {
                             "type": "And",
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "Measures",
                                 "value": {
-                                  "comparison": {
-                                    "type": "Exactly"
-                                  },
-                                  "measure": {
-                                    "type": "ManaValue"
-                                  },
+                                  "comparison": "Exactly",
+                                  "measure": "ManaValue",
                                   "operand": {
                                     "type": "AmountInSlot",
                                     "value": "verses"
@@ -88,9 +78,7 @@
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -98,9 +86,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -121,9 +107,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -139,25 +123,15 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Bard"
-          },
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Bard",
+          "Human",
+          "Rogue"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }
