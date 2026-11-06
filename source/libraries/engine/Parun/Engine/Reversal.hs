@@ -404,6 +404,7 @@ objectWith before entry closed = do
   exiledFaceDown <- field Object.exiledFaceDown
   exileLookers <- field Object.exileLookers
   revealed <- field Object.revealed
+  exposed <- field Object.exposed
   damage <- field Object.damage
   sickness <- field Object.sickness
   controlClock <- field Object.controlClock
@@ -473,6 +474,7 @@ objectWith before entry closed = do
         Object.exiledFaceDown = exiledFaceDown,
         Object.exileLookers = exileLookers,
         Object.revealed = revealed,
+        Object.exposed = exposed,
         Object.damage = damage,
         Object.sickness = sickness,
         Object.controlClock = controlClock,

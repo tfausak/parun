@@ -207,6 +207,7 @@ spec s = Spec.describe s "Parun.Codec.Object" $ do
           Object.castGrant = Just Keyword.Retrace,
           Object.exileLookers = Set.singleton (ExileLooker.ThePlayer (PlayerId.MkPlayerId 27)),
           Object.revealed = Set.fromList [RevealWindow.WhileOnStack (ObjectId.MkObjectId 32), RevealWindow.UntilFirstTurn],
+          Object.exposed = True,
           Object.detainedUntil = Set.singleton (PlayerId.MkPlayerId 21),
           Object.goadedBy = Set.singleton (PlayerId.MkPlayerId 22),
           Object.doesNotUntapFor = 2,
@@ -260,6 +261,7 @@ spec s = Spec.describe s "Parun.Codec.Object" $ do
           <> ",\"castGrant\":{\"type\":\"Retrace\"}"
           <> ",\"exileLookers\":[{\"type\":\"ThePlayer\",\"value\":27}]"
           <> ",\"revealed\":[{\"type\":\"WhileOnStack\",\"value\":32},{\"type\":\"UntilFirstTurn\"}]"
+          <> ",\"exposed\":true"
           <> ",\"detainedUntil\":[21],\"goadedBy\":[22]"
           <> ",\"doesNotUntapFor\":2,\"exertedBy\":[23]"
           <> ",\"activatedOnce\":[{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]}"
