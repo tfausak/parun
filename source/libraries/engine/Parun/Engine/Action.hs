@@ -315,10 +315,9 @@ legalActions pid gs =
       -- whole chain -- until measuring bytes was judged too compiler-specific
       -- to keep. A regression here fails nothing (gap #578).
       --
-      -- Not implemented: an O(1) per-permanent non-mana path. A cost
-      -- sacrificing or tapping other permanents is still O(N) per permanent, so
-      -- is each source's supply measure under a cost with mana, and so are the
-      -- whole legal sets a mode whose slots read each other builds (#6451).
+      -- Not implemented: an O(1) per-permanent path. Each source's supply
+      -- measure under a cost with mana is still O(N) per permanent, and so are
+      -- the whole legal sets a mode whose slots read each other builds (#6463).
       grants = Projection.controlGrants gs
       pcs = Projection.projectAll gs
       -- ONE mana-source sweep of each kind for the whole enumeration. Each is a
@@ -354,7 +353,7 @@ legalActions pid gs =
       -- (Target.Pools), so building one per slot per ability walked the
       -- battlefield once per permanent. Lazy per pool, so an enumeration that
       -- targets only creatures pays for the creature walk alone (#1073).
-      pools = Target.poolsOf (Snapshot.MkSnapshot pcs grants) gs
+      pools = Target.poolsOf (Snapshot.given pcs grants gs) gs
       activations =
         let forObject oid =
               fmap (Action.Activate oid) (filter (\ab -> Activatable.activatableGiven pools supplySources pid oid ab gs) (Activatable.abilitiesForGiven pcs oid gs))

@@ -221,7 +221,7 @@ legalRecipientListGiven kind reader pools perspective unannounced bindings acqui
   -- The SAME thunk both halves read, so the whole-board projection is taken at
   -- most once per slot even when this is reached through the wrapper above, and
   -- once per enumeration when it is not (admittedGiven's own note).
-  let Snapshot.MkSnapshot pcs grants = board pools
+  let Snapshot.MkSnapshot {Snapshot.projected = pcs, Snapshot.grants = grants} = board pools
       -- CR 115.5's gate, hoisted out of the fold: one scan of the stack per
       -- slot rather than one per candidate.
       sourceOnStack = elem source (GameState.stack gs)
@@ -321,7 +321,7 @@ admittedGiven reader pools perspective unannounced bindings acquisition source s
 -- The same recipients ascending and lazily, legalRecipientListGiven's half.
 admittedListGiven :: Maybe AbilityName.AbilityName -> Pools -> Maybe PlayerId -> Bool -> Map SlotName Binding.Type.Binding -> Acquisition.Acquisition -> ObjectId -> TargetSlot -> GameState -> [Recipient]
 admittedListGiven reader pools perspective unannounced bindings acquisition source slot gs =
-  let Snapshot.MkSnapshot pcs grants = board pools
+  let Snapshot.MkSnapshot {Snapshot.projected = pcs, Snapshot.grants = grants} = board pools
       pool = TargetSlot.pool slot
       narrowing = TargetSlot.filter slot
       context = slotContext reader perspective unannounced bindings acquisition source (TargetSlot.amount slot) gs

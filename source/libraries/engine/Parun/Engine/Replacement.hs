@@ -55,7 +55,7 @@ import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
-import qualified Parun.Engine.SacrificeRestriction as SacrificeRestriction
+import qualified Parun.Engine.Snapshot as Snapshot
 import qualified Parun.Engine.SourceContext as SourceContext
 import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Extra.Int as Int
@@ -1822,16 +1822,19 @@ permanentContext gs you slots source =
 -- than its victim. data/scenarios/grim-hireling-sacrifices-x-treasures.json
 -- proves the cost reading.
 sacrificeCandidates :: Maybe PlayerId -> Map.Map SlotName.SlotName (Set Recipient.Recipient) -> PlayerId -> Maybe ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
-sacrificeCandidates you slots pid source filter_ gs =
-  let viewOf = Projection.viewsOf gs
-      context = permanentContext gs you slots source
+sacrificeCandidates you slots pid source filter_ gs = sacrificeCandidatesGiven (Snapshot.onDemand gs) you slots pid source filter_ gs
+
+-- The same pool read off a snapshot of `gs` the caller already took, which is
+-- what a gate asking it once per ability wants.
+sacrificeCandidatesGiven :: Snapshot.Snapshot -> Maybe PlayerId -> Map.Map SlotName.SlotName (Set Recipient.Recipient) -> PlayerId -> Maybe ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
+sacrificeCandidatesGiven board you slots pid source filter_ gs =
+  let context = permanentContext gs you slots source
       -- CR 608.2d: the OfEachOtherCandidate operand compares against the
       -- permanents the edict would offer were it absent (Filter.amongCandidates).
       -- Before CR 101.2's subtraction below: a creature that can't be sacrificed
       -- is still among the creatures that player controls.
-      matching = List.sort (Filter.amongCandidates context viewOf filter_ (Projection.controls pid gs))
-      forbidden = SacrificeRestriction.cantBeSacrificed matching gs
-   in filter (\oid -> not (Set.member oid forbidden)) matching
+      matching = List.sort (Filter.amongCandidates context (Snapshot.views board) filter_ (Projection.controlsGiven (Snapshot.grants board) pid gs))
+   in filter (\oid -> not (Set.member oid (Snapshot.unsacrificeable board))) matching
 
 -- CR 614.1c: the cards in the graveyards of the players `scope` names, read
 -- from this player's perspective (CR 109.5), that an as-enters exile may take,
