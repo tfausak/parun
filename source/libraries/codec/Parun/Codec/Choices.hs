@@ -4,6 +4,7 @@ module Parun.Codec.Choices where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
+import qualified Parun.Codec.CostOffer as CostOffer
 import qualified Parun.Codec.Mana as Mana
 import qualified Parun.Codec.ManaCost as ManaCost
 import qualified Parun.Codec.ModeIndex as ModeIndex
@@ -26,6 +27,7 @@ fields = do
   modes <- Fields.defaulted "modes" Nothing (Common.maybe (Common.seq ModeIndex.codec)) Choices.modes
   x <- Fields.defaulted "x" Nothing (Common.maybe Common.natural) Choices.x
   cost <- Fields.defaulted "cost" Nothing (Common.maybe ManaCost.codec) Choices.cost
+  costOffer <- Fields.defaulted "costOffer" Nothing (Common.maybe CostOffer.codec) Choices.costOffer
   costOrder <- Fields.defaulted "costOrder" Nothing (Common.maybe (Common.list Common.natural)) Choices.costOrder
   manaSources <- Fields.defaulted "mana" Seq.empty (Common.seq (Common.maybe Reference.codec)) Choices.manaSources
   manaYields <- Fields.defaulted "yields" Seq.empty (Common.seq Mana.codec) Choices.manaYields
@@ -36,6 +38,7 @@ fields = do
         Choices.modes = modes,
         Choices.x = x,
         Choices.cost = cost,
+        Choices.costOffer = costOffer,
         Choices.costOrder = costOrder,
         Choices.manaSources = manaSources,
         Choices.manaYields = manaYields

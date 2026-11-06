@@ -153,10 +153,6 @@ controlledBy pid gs =
   ]
 
 -- One player's own sight, before CR 723.4.
---
--- Not implemented: a card in an Attraction, Contraption, planar or scheme deck is
--- face down (CR 314.6, 701.31b, 701.51b, 729.5a; the Unstable FAQ's Contraption
--- back) but answers here as its facing does (#4990).
 base :: PlayerId -> ObjectId -> GameState.GameState -> Visibility.Visibility
 base pid oid gs = case Game.lookupObject oid gs of
   Nothing -> Visibility.Obscured
@@ -170,6 +166,9 @@ base pid oid gs = case Game.lookupObject oid gs of
         then Visibility.Obscured -- CR 121.8, 708.5
         else visibleIf (reviewsHandOf pid (Object.owner obj) gs) <> shownTo pid oid gs -- CR 400.2
     Just Zone.Exile -> visibleIf (Exile.mayLookAt pid oid gs) -- CR 406.3
+    -- A supplementary deck's cards are face down (CR 314.6, 701.31b, 701.51b,
+    -- 729.5a; the Unstable FAQ's Contraption back), owner included (CR 708.5).
+    Just Zone.Command | Set.member oid (Game.supplementaryDeckIds gs) -> Visibility.Obscured
     Just zone -> case Object.facing obj of
       Facing.FaceUp -> Visibility.Visible
       Facing.FaceDown _

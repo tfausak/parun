@@ -73,6 +73,7 @@ import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.PaymentSubject as PaymentSubject
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
+import qualified Parun.Types.PlayerEffect as PlayerEffect.Type
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -101,7 +102,8 @@ emptyCombat =
       Combat.removedDefending = Map.empty,
       Combat.defenders = [],
       Combat.barred = [],
-      Combat.bands = []
+      Combat.bands = [],
+      Combat.pileBlocks = Nothing
     }
 
 -- CR 511.3: as the end of combat step ends, everything is removed from combat.
@@ -1614,7 +1616,15 @@ blockCeilingGiven board pid gs =
   let (candidates, attackers, barred, (limit, most, alone)) = blockScopeGiven board pid gs
       able blocker attacker = pairAllowedGiven board barred candidates attackers blocker attacker gs
       arity = blockArityGiven candidates gs
-      requirements = BlockRequirement.instances able candidates attackers gs
+      -- CR 509.1 / Camouflage: each pile's creature able to block the attacker
+      -- the pile was assigned to does so, read as one requirement per pair
+      -- (docs/decisions.md, "Camouflage's piles are block requirements").
+      piled :: Map (ObjectId, ObjectId) Natural
+      piled = case Combat.pileBlocks (GameState.combat gs) of
+        Nothing -> Map.empty
+        Just piles -> Map.fromList [((blocker, attacker), 1) | (blocker, assigned) <- Map.toList piles, attacker <- Set.toList assigned, able blocker attacker]
+      printed = BlockRequirement.instances able candidates attackers gs
+      requirements = printed {Requirement.pairs = Map.unionWith (+) piled (Requirement.pairs printed)}
       -- CR 509.1c's cost clause is a filter on the PAIRS the search may
       -- declare, never on the requirements: a block that costs something is
       -- never one the defending player must make, while the same creature's
@@ -1726,7 +1736,12 @@ blockScopeGiven board pid gs =
   let side = sideOf pid gs
       attackers = concatMap (`attackersOn` gs) side
       seats = fmap (\p -> (p, legalBlockersGiven board p gs)) side
-      barred = CombatRestriction.barredBlocks (concatMap snd seats) attackers gs
+      -- CR 509.1 / Camouflage: a creature blocks only an attacker one of its
+      -- piles was assigned to (Combat.pileBlocks).
+      unpiled = case Combat.pileBlocks (GameState.combat gs) of
+        Nothing -> Set.empty
+        Just piles -> Set.fromList [(blocker, attacker) | blocker <- concatMap snd seats, attacker <- attackers, not (Set.member attacker (Map.findWithDefault Set.empty blocker piles))]
+      barred = Set.union unpiled (CombatRestriction.barredBlocks (concatMap snd seats) attackers gs)
       limit = foldMap (\p -> CombatRestriction.blockLimit (Just p) gs) side
       most = Map.unionsWith (<>) (fmap (\p -> CombatRestriction.blockedLimits (Just p) (attackersOn p gs) gs) side)
       candidates = concatMap snd seats
@@ -2847,7 +2862,7 @@ tollPayable payer charges gs = case charges of
 declarationChooser :: CombatDeclaration.CombatDeclaration -> PlayerId -> Game PlayerId
 declarationChooser declaration pid = do
   gs <- State.get
-  case PlayerEffect.declarationRow declaration pid gs of
+  case PlayerEffect.declarationRow (PlayerEffect.Type.YouChoose declaration) pid gs of
     Nothing -> pure pid
     Just row ->
       let you = ActivePlayerEffect.controller row
@@ -3172,6 +3187,9 @@ declareBlockers perform = do
   let attacking = Map.keys (Combat.attackers (GameState.combat start))
   Monad.unless (null attacking) $ do
     let declarers = ListUtils.nubOrd (fmap (Game.primaryOf start) (Defender.defendingPlayers start))
+    -- CR 101.4 / Camouflage: every defending player divides before any pile is
+    -- assigned or any blocker declared (pileBlocksFor).
+    asked <- pileBlocksFor declarers
     Monad.forM_ declarers $ \pid ->
       -- CR 802.4a: those creatures can block only creatures attacking that
       -- player, a planeswalker that player controls, or a battle that player
@@ -3188,7 +3206,8 @@ declareBlockers perform = do
       -- an attacker on them.
       case concatMap (`attackersOn` start) (sideOf pid start) of
         [] -> pure ()
-        theirs -> attemptBlockDeclaration perform pid Nothing theirs Set.empty
+        theirs -> attemptBlockDeclaration perform pid (Map.lookup pid asked) theirs Set.empty
+    State.modify' (setPileBlocks Nothing)
     -- CR 509.1h's other half, performed once CR 509.1g has assigned the blockers:
     -- every attacking creature the declaration named no blockers for became an
     -- UNBLOCKED creature. AttackTrigger.Unblocked is the reader.
@@ -3218,6 +3237,88 @@ declareBlockers perform = do
             Nothing -> h
             Just defending -> Event.recordEvent (GameEvent.AttackerUnblocked (AttackerUnblocked.MkAttackerUnblocked oid defending)) h
        in List.foldl' record g unblocked
+
+-- CR 509.1 / 700.3 / Camouflage: where an effect makes a declarer's blockers
+-- from piles, each defending player on that declarer's side divides the
+-- creatures they control into one pile per creature attacking them (CR
+-- 805.10e: "for whom that player is the defending player"), and those piles
+-- are assigned to those attackers at random, which asks no player
+-- (Game.drawDistinct). CR 101.4: the division is each player's simultaneous
+-- choice, so every player divides, in APNAP order, before any pile is assigned
+-- or blocker declared (CR 802.4). Combat.pileBlocks records every assignment
+-- for blockScopeGiven and blockCeilingGiven, which turn it into each
+-- declaration's bounds; the blockers are disjoint across players. Answers, for
+-- each such declarer, who then settles its declaration where a choice is left
+-- (CR 509.1c's costs, or a restriction leaving several ways to obey the
+-- piles): whoever divided its piles.
+pileBlocksFor :: [PlayerId] -> Game (Map PlayerId PlayerId)
+pileBlocksFor declarers = do
+  start <- State.get
+  let piled = filter (\pid -> Maybe.isJust (PlayerEffect.declarationRow PlayerEffect.Type.BlocksFromPiles pid start)) declarers
+  divided <- Monad.forM (concatMap (`sideOf` start) piled) $ \p -> do
+    let attacking = attackersOn p start
+    chooser <- pileChooser p
+    piles <- dividePiles chooser p attacking
+    pure (piles, attacking)
+  assigned <- Monad.forM divided $ \(piles, attacking) -> do
+    order <- Game.drawDistinct Prompt.RandomObject (List.genericLength attacking) attacking
+    pure (Map.unionsWith (<>) [Map.fromSet (const (Set.singleton attacker)) pile | (pile, attacker) <- zip piles order])
+  Monad.unless (null piled) $ State.modify' (setPileBlocks (Just (Map.unionsWith (<>) assigned)))
+  Map.fromList <$> traverse (\pid -> (,) pid <$> pileChooser pid) piled
+
+-- CR 613.11 / 509.1a: who divides `p`'s creatures into piles -- `p`, as
+-- Camouflage says, unless a later row hands `p`'s choice of blockers to its
+-- controller (Odric, Master Tactician), applying after the piles' row in
+-- timestamp order (docs/decisions.md, "Camouflage's piles are block
+-- requirements").
+pileChooser :: PlayerId -> Game PlayerId
+pileChooser p = do
+  gs <- State.get
+  let handing = PlayerEffect.declarationRow (PlayerEffect.Type.YouChoose CombatDeclaration.Blockers) p gs
+      piling = PlayerEffect.declarationRow PlayerEffect.Type.BlocksFromPiles p gs
+  case (handing, piling) of
+    (Just hand, Just pile) | ActivePlayerEffect.timestamp hand > ActivePlayerEffect.timestamp pile -> declarationChooser CombatDeclaration.Blockers p
+    _ -> pure p
+
+-- CR 700.3 / Camouflage: `chooser` divides the creatures `p` controls into one
+-- pile per creature in `attacking`, any of them empty (CR 700.3d), a creature
+-- going into no more piles than the creatures CR 509.1a lets it block. Not
+-- asked where `p` controls no creature or nothing attacks `p`. Filtered, not
+-- trusted, as bands are: a pile past the count is dropped, and so is a
+-- creature that is not `p`'s or has filled its piles.
+dividePiles :: PlayerId -> PlayerId -> [ObjectId] -> Game [Set ObjectId]
+dividePiles chooser p attacking = do
+  gs <- State.get
+  let board = Snapshot.whole gs
+      creatures = filter (\oid -> isCreatureObjectGiven (Snapshot.projected board) oid gs) (Projection.controlsGiven (Snapshot.grants board) p gs)
+      arity = blockArityGiven creatures gs
+      count :: Natural
+      count = List.genericLength attacking
+      keep (kept, used) pile =
+        let admitted = Set.filter (\oid -> List.elem oid creatures && withinLimit (arity oid) (Map.findWithDefault 0 oid used + 1)) pile
+         in (kept <> [admitted], Set.foldl' (\m oid -> Map.insertWith (+) oid 1 m) used admitted)
+  if null creatures || null attacking
+    then pure []
+    else do
+      answer <- Game.choose (Prompt.DividePiles (Decide.deciderFor chooser gs) p creatures count)
+      pure (fst (List.foldl' keep ([], Map.empty :: Map ObjectId Int) (List.genericTake count answer)))
+
+-- CR 509.1 / Camouflage: Combat.pileBlocks, set before the defending players'
+-- declarations and cleared after them.
+setPileBlocks :: Maybe (Map ObjectId (Set ObjectId)) -> GameState -> GameState
+setPileBlocks piles g = g {GameState.combat = (GameState.combat g) {Combat.pileBlocks = piles}}
+
+-- CR 509.1 / Camouflage: while `pid`'s blockers come from piles, the
+-- declaration making every block the piles ask for that CR 509.1b's pairwise
+-- restrictions allow. Nothing otherwise.
+pileDeclaration :: PlayerId -> GameState -> Maybe (Map ObjectId (Set ObjectId))
+pileDeclaration pid gs = case Combat.pileBlocks (GameState.combat gs) of
+  Nothing -> Nothing
+  Just _ ->
+    let board = Snapshot.whole gs
+        (candidates, attackers, barred, _) = blockScopeGiven board pid gs
+        able blocker attacker = pairAllowedGiven board barred candidates attackers blocker attacker gs
+     in Just (Map.filter (not . Set.null) (Map.fromList [(blocker, Set.fromList (filter (able blocker) attackers)) | blocker <- candidates]))
 
 -- CR 509.1a's record of WHICH creatures were declared as blockers this combat
 -- phase, unioned in. Shared by attemptBlockDeclaration's two writers so the
@@ -3258,7 +3359,12 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
     -- (Odric, Master Tactician), legality and payment staying `pid`'s.
     chooser <- maybe (declarationChooser CombatDeclaration.Blockers pid) pure asked
     now <- State.get
-    chosen <- Game.choose (Prompt.DeclareBlockers (Decide.deciderFor chooser now) pid candidates attacking)
+    -- CR 509.1 / Camouflage: where every block the piles ask for can be made
+    -- together at no cost, that declaration is the only legal one, so nobody
+    -- is asked.
+    chosen <- case pileDeclaration pid now of
+      Just full | legalBlockDeclaration pid full now && all (null . snd) (blockTolls pid full now) -> pure full
+      _ -> Game.choose (Prompt.DeclareBlockers (Decide.deciderFor chooser now) pid candidates attacking)
     -- CR 509.1b: an illegal declaration is illegal AS A WHOLE. NOT filtered
     -- down to its legal entries, which is unsound rather than merely inelegant
     -- -- under menace, dropping one blocker from a pair leaves an illegal

@@ -7,7 +7,9 @@ import qualified Parun.Codec.Choices as Choices
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Choices as Choices.Type
+import qualified Parun.Types.CostOffer as CostOffer.Type
 import qualified Parun.Types.Label as Label.Type
+import qualified Parun.Types.ManaCost as ManaCost.Type
 import qualified Parun.Types.ModeIndex as ModeIndex.Type
 import qualified Parun.Types.Reference as Reference.Type
 import qualified Parun.Types.SlotName as SlotName.Type
@@ -28,6 +30,15 @@ spec s = Spec.describe s "Parun.Codec.Choices" $ do
           Choices.Type.manaSources = Seq.fromList [Just (Reference.Type.Labelled (Label.Type.MkLabel (Text.pack "mountain"))), Nothing]
         }
       " {\"targets\":[\"$bob\"],\"modes\":[1],\"x\":3,\"costOrder\":[1,0],\"mana\":[\"$mountain\",null]} "
+  Spec.it s "a cost and what offered it" $
+    Common.assertCodec
+      s
+      Choices.codec
+      Choices.Type.none
+        { Choices.Type.cost = Just (ManaCost.Type.MkManaCost []),
+          Choices.Type.costOffer = Just CostOffer.Type.ByNoKeyword
+        }
+      " {\"cost\":[],\"costOffer\":{\"type\":\"ByNoKeyword\"}} "
   Spec.it s "targets by slot" $
     Common.assertCodec
       s

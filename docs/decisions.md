@@ -833,6 +833,33 @@ Entries are ordered by the first rule each cites.
   controls.
 - **Issue**: #4142.
 
+## Whose range of influence cuts a team's choice
+
+- **Question**: Under shared team turns and limited range, a team's choice
+  falls to its primary player when the team disagrees. Is it cut to the
+  primary player's range (CR 801.5a), to the union of the choosing players'
+  ranges, or not at all?
+- **Rules**: CR 725.4, 726.4, 702.22k, 801.2, 801.2b, 801.5a, 801.5c, 805.2,
+  805.9; CR of 2026-09-25.
+- **Decision**: The union of the ranges of the players whose choice it is. The
+  primary player settles the team's choice among answers its players could
+  give; it is not a new choice of one player. The active team choosing who
+  takes the monarch or initiative contains every candidate, each in their own
+  range (CR 801.2b), so nothing is cut. Banding creatures of several
+  controllers cut the active player who divides to their controllers' ranges.
+- **Rejected**: The primary player's range: when it holds no eligible
+  candidate (Jared Carthalion, True Heir on the primary player, the adjacent
+  teammate gone) the team has an answer it cannot give, and CR 801.5c's
+  hand-off speaks of an effect's controller, not a rule's team. No cut for
+  banding: CR 805.9 makes it the abilities' controllers' choice, and CR 801.5a
+  binds each of them.
+- **Site**: `Parun.Engine.Game.heirOnDeparture` and
+  `Parun.Engine.Damage.blockerChooser`, proved by the scenarios "CR 801.5a /
+  805.2 the primary player crowns a teammate outside their own range" and "CR
+  801.5a / 805.9 banding creatures of two controllers offer an active player in
+  either range".
+- **Issue**: #4918.
+
 ## Whether a melded permanent is one mutate component or two
 
 - **Question**: A mutating spell merges with a melded permanent. CR 701.42a
@@ -1032,6 +1059,27 @@ Entries are ordered by the first rule each cites.
   active player its target names".
 - **Issue**: #5458.
 
+## Who owns a face-up card off the communal planar deck
+
+- **Question**: Under the single planar deck option the planar controller owns
+  every card in the planar deck (CR 901.15b). Who owns a plane or phenomenon
+  once it is turned face up, and so is no longer in the deck? It decides what
+  leaves with a departing player (CR 800.4a, 901.10).
+- **Rules**: CR 901.6, 901.10, 901.15b, 312.5, 800.4a, 800.4p; CR of
+  2026-09-25. No ruling.
+- **Decision**: The player who moved it off the deck, the planar controller
+  then. It keeps that owner while face up: nothing transfers ownership on the
+  way off the deck, and CR 901.15b names only cards in the deck.
+- **Rejected**: (a) Whoever is planar controller now, so a face-up card never
+  leaves with a departing player: CR 901.15b's reach is the deck, which CR 312.5
+  says the card has moved off. (b) CR 901.6's "the player who started the game
+  with it in their planar deck", read as the first planar controller: it makes
+  the starting player own a card a later player turned up and has never held.
+- **Site**: `Parun.Engine.Planechase.turnUpTop`, proved by
+  `Parun.PlanechaseSpec`'s "CR 901.15b a face-up card is owned by the planar
+  controller who turned it up".
+- **Issue**: #5061.
+
 ## A silenced entry silences its departure
 
 - **Question**: Hushwing Gryff's "creatures entering don't cause abilities to
@@ -1172,3 +1220,25 @@ Entries are ordered by the first rule each cites.
   rock-hydra-divides-its-counters-away-from-the-lifelink and
   rock-hydra-divides-its-counters-onto-the-other-blocker.
 - **Issue**: #6276.
+
+## Camouflage's piles are block requirements
+
+- **Question**: "Each creature in a pile that can block the creature that pile
+  is assigned to does so." Where a pile's creatures can each block its attacker
+  but not all together (Charging Rhino), or a block costs something (Archangel
+  of Tithes), which block? And under Odric, Master Tactician, who divides?
+- **Rules**: CR 509.1, 509.1b, 509.1c, 613.11, 700.3 (CR of 2026-09-25). The
+  card has no rulings.
+- **Decision**: The defending player still declares blockers, barred from any
+  pair a pile does not hold, with each pile's pair a CR 509.1c requirement:
+  the declaration must obey as many as can be, a cost to block excusing one.
+  Where obeying them all is legal and free, it is made without asking. A later
+  Odric row hands both the division and that declaration to its controller,
+  in CR 613.11's timestamp order.
+- **Rejected**: Each pile's able creatures blocking regardless, which builds
+  an illegal block. The engine choosing among the ways to obey: that makes a
+  player's choice. Dropping a pile that can't block whole, as Forge does,
+  which blocks with fewer than can.
+- **Site**: `Parun.Engine.Combat`'s `blockScopeGiven`, `blockCeilingGiven`
+  and `pileChooser`. The scenarios under `data/scenarios/camouflage/`.
+- **Issue**: #5464.

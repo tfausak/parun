@@ -412,6 +412,13 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       (PlayerEffect.YouChoose CombatDeclaration.Blockers)
       " {\"type\":\"YouChoose\",\"value\":{\"type\":\"Blockers\"}} "
+  -- CR 509.1 / 700.3 / Camouflage.
+  Spec.it s "BlocksFromPiles" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      PlayerEffect.BlocksFromPiles
+      " {\"type\":\"BlocksFromPiles\"} "
   -- CR 701.23 / Opposition Agent.
   Spec.it s "ExilesFoundWhileSearching" $
     Common.assertCodec

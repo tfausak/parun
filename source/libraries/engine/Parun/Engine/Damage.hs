@@ -493,7 +493,11 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
 -- of the banding creature among them, asked through Game.chooseAmong among the
 -- active players still playing and within the chooser's range (CR 801.5a).
 -- Banding creatures with different controllers leave that choice to the team,
--- and CR 805.2 gives a team's unsettled choice to its primary player. The team
+-- and CR 805.2 gives a team's unsettled choice to its primary player, cut to
+-- the union of the controllers' ranges (docs/decisions.md, "Whose range of
+-- influence cuts a team's choice"; the range scenario "CR 801.5a / 805.9
+-- banding creatures of two controllers offer an active player in either range"
+-- proves it). The team
 -- scenario "CR 805.9 the banding creature's controller names the active player
 -- who divides" proves both, its "a departed teammate is not offered" sibling
 -- the still-playing cut (CR 800.4a), and the range-of-influence scenario "CR
@@ -507,7 +511,7 @@ blockerChooser gs attackers controller =
       let chooser = case controllers of
             [one] -> one
             _ -> Game.primaryOf gs (GameState.activePlayer gs)
-          live = filter (\pid -> List.elem pid (Game.stillPlaying gs) && Game.inRangeOf chooser pid gs) (Turn.activePlayers gs)
+          live = filter (\pid -> List.elem pid (Game.stillPlaying gs) && any (\c -> Game.inRangeOf c pid gs) controllers) (Turn.activePlayers gs)
        in fmap (Maybe.fromMaybe (GameState.activePlayer gs)) (Game.chooseAmong (\decider asked -> Prompt.ChoosePlayer decider asked source) chooser live)
   where
     banding = filter (\attacker -> Projection.hasKeyword Keyword.Banding attacker gs) attackers

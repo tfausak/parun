@@ -94,6 +94,7 @@ codec =
           Arm.payload "EntriesTrigger" EntriesTrigger.codec PlayerEffect.EntriesTrigger (\x -> case x of PlayerEffect.EntriesTrigger y -> Just y; _ -> Nothing),
           Arm.payload "AdditionalTriggers" filterCodec PlayerEffect.AdditionalTriggers (\x -> case x of PlayerEffect.AdditionalTriggers y -> Just y; _ -> Nothing),
           Arm.nullary "ControlledWhileSearching" PlayerEffect.ControlledWhileSearching,
+          Arm.nullary "BlocksFromPiles" PlayerEffect.BlocksFromPiles,
           Arm.payload "YouChoose" CombatDeclaration.codec PlayerEffect.YouChoose (\x -> case x of PlayerEffect.YouChoose y -> Just y; _ -> Nothing),
           Arm.nullary "ExilesFoundWhileSearching" PlayerEffect.ExilesFoundWhileSearching,
           Arm.nullary "CantAttackWithCreatures" PlayerEffect.CantAttackWithCreatures,
@@ -151,6 +152,7 @@ tagOf x = case x of
   PlayerEffect.EntriesTrigger {} -> "EntriesTrigger"
   PlayerEffect.AdditionalTriggers {} -> "AdditionalTriggers"
   PlayerEffect.ControlledWhileSearching {} -> "ControlledWhileSearching"
+  PlayerEffect.BlocksFromPiles {} -> "BlocksFromPiles"
   PlayerEffect.YouChoose {} -> "YouChoose"
   PlayerEffect.ExilesFoundWhileSearching {} -> "ExilesFoundWhileSearching"
   PlayerEffect.CantAttackWithCreatures {} -> "CantAttackWithCreatures"

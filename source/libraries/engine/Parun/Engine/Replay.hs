@@ -169,6 +169,7 @@ encode p answer = case p of
   Prompt.DeclareBands {} -> Response.DeclaredBands answer
   Prompt.ChooseExert {} -> Response.ChoseExert answer
   Prompt.DeclareBlockers {} -> Response.DeclaredBlockers answer
+  Prompt.DividePiles {} -> Response.DividedPiles answer
   Prompt.AssignCombatDamage {} -> Response.AssignedCombatDamage answer
   Prompt.ChooseTargets {} -> Response.ChoseTargets answer
   Prompt.AnnounceTargets {} -> Response.AnnouncedTargets answer
@@ -510,6 +511,9 @@ decode p response = case p of
     _ -> Nothing
   Prompt.DeclareBands {} -> case response of
     Response.DeclaredBands bands -> Just bands
+    _ -> Nothing
+  Prompt.DividePiles {} -> case response of
+    Response.DividedPiles piles -> Just piles
     _ -> Nothing
   Prompt.ChooseExert {} -> case response of
     Response.ChoseExert d -> Just d
@@ -1087,6 +1091,8 @@ defaultAnswer p = case p of
   -- (Lure) can make the empty declaration illegal -- and stays total the same
   -- way, through Combat.forcedBlockDeclaration.
   Prompt.DeclareBlockers {} -> Map.empty
+  -- CR 700.3d: every pile empty, so nothing blocks.
+  Prompt.DividePiles {} -> []
   -- Must be a WELL FORMED division (Damage.wellFormedAssignment), or CR 510.1e
   -- asks again. All power onto the first recipient of the first gate -- a
   -- blocker, else the attacked planeswalker or battle, else the player --
@@ -1133,7 +1139,7 @@ defaultAnswer p = case p of
   Prompt.ChoosePaidEnergy {} -> 0
   -- CR 107.1c: the floor is always a number the player may choose -- zero for
   -- "any number", and for a bid the high bid, which lets it stand.
-  Prompt.ChooseNumber _ _ _ least _ -> least
+  Prompt.ChooseNumber _ _ _ least _ _ -> least
   -- CR 702.155b's range opens at one, and Parun.Engine.Event never raises this
   -- prompt for a Saga whose final chapter number is 0, so the floor is always
   -- legal. The smallest answer, for ChooseX's reason.

@@ -49,10 +49,8 @@ viewFor pid gs =
     witnessedIn = filter (\logged -> Visibility.witnessed pid logged == Visibility.Type.Visible) . Foldable.toList
 
 -- | CR 400.2: a hidden zone by its size and the members `pid` may see; a public
--- one in full.
---
--- Not implemented: a fresh id for a card a shuffle moves, so a seat shown a
--- library card can still tell that copy apart after the shuffle (#5223).
+-- one in full. A library card whose id reached a seat is re-minted when
+-- shuffled (Parun.Engine.Event.forgetShown), so no seat follows it through.
 seatView :: PlayerId.PlayerId -> GameState.GameState -> PlayerId.PlayerId -> Maybe SeatView.SeatView
 seatView pid gs seat = do
   player <- Map.lookup seat (GameState.players gs)

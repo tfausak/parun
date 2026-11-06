@@ -21,6 +21,7 @@ import qualified Parun.Codec.PlayerView as Codec.PlayerView
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Driver as Driver
 import qualified Parun.Engine.Engine as Engine
+import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.PlayerView as PlayerView
 import qualified Parun.Engine.Projection as Projection
@@ -64,6 +65,7 @@ import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Label as Label
 import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Looked as Looked
@@ -82,11 +84,14 @@ import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristic
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Reply as Reply
+import qualified Parun.Types.RevealCause as RevealCause
+import qualified Parun.Types.Revealed as Revealed
 import qualified Parun.Types.Seat as Seat
 import qualified Parun.Types.SeatView as SeatView
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Parun.Types.SplitMix as SplitMix
+import qualified Parun.Types.Staged as Staged
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.Visibility as Visibility.Type
 import qualified Parun.Types.Zone as Zone
@@ -396,6 +401,50 @@ spec s registry = Spec.describe s "PlayerView" $ do
       Spec.assertEqWith s (seat <> "CR 400.2 the land, seen arriving") [ProjectedCharacteristics.names (Moved.characteristics m) | GameEvent.Moved m <- witnessedBy pid gs, ZoneChange.from (Moved.change m) == Zone.Library] [Set.singleton (CardName.MkCardName (Text.pack "Plains"))]
       Spec.assertBool s (Text.pack "Plains moves from a library to the battlefield." `elem` drawnFor pid gs) (seat <> "drawn")
     Spec.assertBool s (not ("Hill Giant" `List.isInfixOf` encodedFor S.bob gs)) "CR 701.23a the card alice saw searching reaches no part of bob's view"
+  -- Beacon of Destruction's shuffle keeps the Giant on top, where alice sees it
+  -- before and after through Vizier of the Menagerie, a look no event logs; the
+  -- Bears reached no seat.
+  Spec.it s "CR 701.24a a library card whose id reached a seat comes out of the shuffle a new object" $ do
+    let mountains = fmap (\n -> "m" <> show n) [1 :: Int .. 5]
+        mine =
+          (S.battlefield S.alice (S.settled "vizier" "Vizier of the Menagerie" : fmap (`S.settled` "Mountain") mountains))
+            { Seat.hand = Seq.singleton (S.aliased "beacon" (S.cardSetup "Beacon of Destruction")),
+              Seat.library = Seq.fromList [S.aliased "giant" (S.cardSetup "Hill Giant"), S.aliased "bears" (S.cardSetup "Grizzly Bears")]
+            }
+        setup = S.board (mine NonEmpty.:| [S.playerSetup S.bob]) S.alice S.precombatMain
+        choices = Choices.none {Choices.targets = Just [S.seatRef S.bob], Choices.manaSources = Seq.fromList (fmap (Just . S.aliasRef) mountains)}
+        answering prompt labels = Move.Answer (Answer.MkAnswer (Text.pack prompt) (Reply.Array (fmap (Reply.Text . Text.pack) labels)) False)
+        script =
+          S.turn
+            1
+            [ S.on S.precombatMain S.alice (S.castAction (S.aliasRef "beacon") choices),
+              S.on S.precombatMain S.alice Move.Pass,
+              S.on S.precombatMain S.alice (answering "Shuffle" ["$giant", "$bears", "Beacon of Destruction"])
+            ]
+        seenLibrary gs = [(ObjectView.object o, fmap ProjectedCharacteristics.names (ObjectView.characteristics o)) | seat <- Maybe.maybeToList (seatOf S.alice (PlayerView.viewFor S.alice gs)), o <- SeatView.library seat]
+        giantName = Just (Set.singleton (CardName.MkCardName (Text.pack "Hill Giant")))
+    built <- S.buildBoardOrFail s registry setup
+    let labelled name = maybe (Spec.assertFailure s ("no " <> name)) pure (Map.lookup (Label.MkLabel (Text.pack name)) (Staged.objects built))
+    giant <- labelled "giant"
+    bears <- labelled "bears"
+    after <- S.play s registry setup script S.priorityGame
+    Spec.assertEqWith s "CR 701.24a alice sees a Hill Giant atop her library after the shuffle, under a new id" (fmap (\(oid, names) -> (oid == giant, names)) (seenLibrary after)) [(False, giantName)]
+    Spec.assertEqWith s "the Bears no seat saw keeps its id" (Game.zoneOf bears after) (Just Zone.Library)
+    Spec.assertEqWith s "before the shuffle alice saw the Giant under its id" (seenLibrary (Staged.state built)) [(giant, giantName)]
+    Spec.assertEqWith s "Beacon of Destruction shuffled itself in" (length (Game.zoneMembers Zone.Library S.alice after)) 3
+  -- A reveal on alice's turn, then bob's turn begins and alice's library is
+  -- shuffled: bob's view still names the Giant by last turn's reveal.
+  Spec.it s "CR 701.24a a library card revealed on an earlier turn comes out of the shuffle a new object" $ do
+    giantCard <- S.printingOf s registry "Hill Giant"
+    bearsCard <- S.printingOf s registry "Grizzly Bears"
+    let (bears, g0) = S.addLibraryCard bearsCard S.alice (Setup.emptyGame S.bothPlayers)
+        (giant, g1) = S.addLibraryCard giantCard S.alice g0
+        (_, revealed) = Engine.runGamePure S.castAnswer g1 (Event.reveal RevealCause.Ordinary S.alice giant)
+        (_, after) = Engine.runGamePure S.castAnswer (Engine.beginTurnOf S.bob revealed) (Event.shuffleLibrary S.alice)
+        heldByBob = [Revealed.card r | GameEvent.Revealed r <- fmap LoggedEvent.event (PlayerView.Type.witnessedLastTurn (PlayerView.viewFor S.bob after))]
+    Spec.assertEqWith s "CR 701.24a no card in alice's library carries the id bob holds from last turn's reveal" (filter (`elem` Game.zoneMembers Zone.Library S.alice after) heldByBob) []
+    Spec.assertEqWith s "bob holds the Giant's id from last turn's reveal" heldByBob [giant]
+    Spec.assertEqWith s "the Bears no seat saw keeps its id" (Game.zoneOf bears after) (Just Zone.Library)
   Spec.it s "CR 700.3 Curator of Destinies's face-up pile is seen moving to the hand, and its face-down pile is not" $ do
     let islands = fmap (\n -> "i" <> show n) [1 :: Int .. 6]
         mine =

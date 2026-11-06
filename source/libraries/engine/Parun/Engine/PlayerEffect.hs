@@ -69,7 +69,6 @@ import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CastWindow as CastWindow
 import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.Chosen as Chosen
-import qualified Parun.Types.CombatDeclaration as CombatDeclaration
 import qualified Parun.Types.CostAddition as CostAddition
 import Parun.Types.CostAdjustments (CostAdjustments)
 import qualified Parun.Types.CostAdjustments as CostAdjustments
@@ -664,6 +663,7 @@ prohibitsCasting pid oid variable gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
@@ -850,6 +850,7 @@ prohibitsPlayingLand pid oid gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
@@ -901,6 +902,7 @@ prohibitsSearching pid owner causeController gs =
         -- Opposition Agent's two rows say who decides a search and where its
         -- finds go, never that it may not happen.
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         -- Every other arm is about casting, playing, targeting, countering,
@@ -969,10 +971,11 @@ searchingController :: PlayerId -> GameState -> Maybe (PlayerId, Timestamp)
 searchingController pid gs =
   Maybe.listToMaybe (reverse [(you, Object.timestamp o) | (source, PlayerEffect.ControlledWhileSearching) <- applying pid gs, Just oid <- [RowSource.object source], Just you <- [Projection.controllerOf oid gs], Just o <- [Game.lookupObject oid gs]])
 
--- CR 508.1a / 509.1a / 613.11: the stored row handing `pid`'s declaration of
--- attackers or blockers to its controller, CR 109.5's "you" (Master Warcraft,
--- Odric, Master Tactician) -- the latest, CR 613.11's timestamp order making
--- the last one created the one that applies. Nothing where none does.
+-- CR 508.1a / 509.1a / 613.11: the stored row changing how `pid` declares
+-- attackers or blockers -- handing the declaration to its controller, CR
+-- 109.5's "you" (Master Warcraft, Odric, Master Tactician), or making the
+-- blockers from piles (Camouflage) -- the latest, CR 613.11's timestamp order
+-- making the last one created the one that applies. Nothing where none does.
 -- Parun.Engine.Combat.declarationChooser asks who that leaves choosing.
 --
 -- Stored rows only, read off the record's controller, which a resolved
@@ -980,10 +983,10 @@ searchingController pid gs =
 -- or o:"you choose how those creatures block", 2026-10-27, finds five cards,
 -- every one a resolving spell or ability; a static ability printing it would
 -- be the card to refute this.
-declarationRow :: CombatDeclaration.CombatDeclaration -> PlayerId -> GameState -> Maybe ActivePlayerEffect.ActivePlayerEffect
-declarationRow declaration pid gs =
+declarationRow :: PlayerEffect.PlayerEffect -> PlayerId -> GameState -> Maybe ActivePlayerEffect.ActivePlayerEffect
+declarationRow effect pid gs =
   let hands active =
-        ActivePlayerEffect.effect active == PlayerEffect.YouChoose declaration
+        ActivePlayerEffect.effect active == effect
           && Expiry.begun gs (ActivePlayerEffect.expiry active)
           && applies pid (ActivePlayerEffect.controller active) gs (ActivePlayerEffect.scope active)
    in Maybe.listToMaybe (List.sortOn (Ord.Down . ActivePlayerEffect.timestamp) (filter hands (GameState.playerEffects gs)))
@@ -1050,6 +1053,7 @@ prohibitsCounters pid kind gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
@@ -1094,6 +1098,7 @@ prohibitsBecomingMonarch pid gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
@@ -1166,6 +1171,7 @@ schemesCantBeSetInMotion gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantBecomeMonarch -> False
@@ -1233,6 +1239,7 @@ entryTriggerings pid entrant gs =
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
@@ -1309,6 +1316,7 @@ additionalTriggers pid bearer gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.CantSetSchemesInMotion -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantBecomeMonarch -> False
@@ -1373,6 +1381,7 @@ prohibitsAttackingWithCreatures pid gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantCastSpells -> False
@@ -2065,6 +2074,7 @@ landPlayFlashGrant effect = case effect of
   PlayerEffect.EntriesTrigger _ -> Nothing
   PlayerEffect.AdditionalTriggers _ -> Nothing
   PlayerEffect.ControlledWhileSearching -> Nothing
+  PlayerEffect.BlocksFromPiles -> Nothing
   PlayerEffect.YouChoose _ -> Nothing
   PlayerEffect.ExilesFoundWhileSearching -> Nothing
   PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -2334,6 +2344,7 @@ castPermissionsFrom pid zone oid gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
@@ -2658,6 +2669,7 @@ mayCastFromHandWithoutPayingManaCost pid oid gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
@@ -2737,6 +2749,7 @@ playLandPiles pid gs =
         PlayerEffect.EntriesTrigger _ -> []
         PlayerEffect.AdditionalTriggers _ -> []
         PlayerEffect.ControlledWhileSearching -> []
+        PlayerEffect.BlocksFromPiles -> []
         PlayerEffect.YouChoose _ -> []
         PlayerEffect.ExilesFoundWhileSearching -> []
         PlayerEffect.CantAttackWithCreatures -> []
@@ -2852,6 +2865,7 @@ protectedFromTargeting rows pastHexproof caster source sourceView pid gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
@@ -2962,6 +2976,7 @@ protectedFromGiven rows aimer view gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
@@ -3056,6 +3071,7 @@ protectionCarriers gs =
         PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -3143,6 +3159,7 @@ landPlaysAllowed pid gs =
         PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -3222,6 +3239,7 @@ votesAllowed pid gs =
         PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -3287,6 +3305,7 @@ offeredExtras pid gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
@@ -3353,6 +3372,7 @@ cascadeActions pid gs =
         PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -3418,6 +3438,7 @@ drawReveals pid nth gs =
         PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -3482,6 +3503,7 @@ shownGrants pid gs =
         PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -3581,6 +3603,7 @@ maximumHandSize pid gs =
         PlayerEffect.EntriesTrigger _ -> current
         PlayerEffect.AdditionalTriggers _ -> current
         PlayerEffect.ControlledWhileSearching -> current
+        PlayerEffect.BlocksFromPiles -> current
         PlayerEffect.YouChoose _ -> current
         PlayerEffect.ExilesFoundWhileSearching -> current
         PlayerEffect.CantAttackWithCreatures -> current
@@ -3665,6 +3688,7 @@ keepsUnspentMana pid gs =
         PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -3741,6 +3765,7 @@ losesLifeForUnspentMana pid gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
@@ -3821,6 +3846,7 @@ prohibitsGainingLife pid gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
@@ -3897,6 +3923,7 @@ prohibitsLosingLife pid gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
@@ -3972,6 +3999,7 @@ precludes outcome pid gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
@@ -4045,6 +4073,7 @@ spendManaAsThoughRows pid gs =
         PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -4173,6 +4202,7 @@ cantBeCountered pid counterer oid gs =
         PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.AdditionalTriggers _ -> False
         PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.BlocksFromPiles -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
@@ -4235,6 +4265,7 @@ targetingRestrictions =
         PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -4315,6 +4346,7 @@ hexproofExemptions =
         PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -4407,6 +4439,7 @@ unpreventable gs =
         PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -4489,6 +4522,7 @@ unredirectable gs =
         PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -4600,6 +4634,7 @@ statedFlips pid gs =
         PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -4678,6 +4713,7 @@ rollModifiers pid gs =
         PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.AdditionalTriggers _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.BlocksFromPiles -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
@@ -4792,6 +4828,7 @@ overPlayerRefs f effect = case effect of
   PlayerEffect.EntriesTrigger _ -> pure effect
   PlayerEffect.AdditionalTriggers _ -> pure effect
   PlayerEffect.ControlledWhileSearching -> pure effect
+  PlayerEffect.BlocksFromPiles -> pure effect
   PlayerEffect.YouChoose _ -> pure effect
   PlayerEffect.ExilesFoundWhileSearching -> pure effect
   PlayerEffect.CantAttackWithCreatures -> pure effect
@@ -4872,6 +4909,7 @@ overDamagePatterns f effect = case effect of
   PlayerEffect.EntriesTrigger _ -> pure effect
   PlayerEffect.AdditionalTriggers _ -> pure effect
   PlayerEffect.ControlledWhileSearching -> pure effect
+  PlayerEffect.BlocksFromPiles -> pure effect
   PlayerEffect.YouChoose _ -> pure effect
   PlayerEffect.ExilesFoundWhileSearching -> pure effect
   PlayerEffect.CantAttackWithCreatures -> pure effect

@@ -2,14 +2,15 @@
 -- CR 701.31's planeswalk, and CR 901.9's planar die with the two things it can
 -- set off -- CR 311.7's chaos and CR 901.8's planeswalking ability.
 --
--- No GameSettings field, Parun.Engine.Vanguard's posture: every rule here is
--- stated of a player's planar deck or a plane card, so having a planar deck is
--- the whole of being in the variant (isPlanechase).
+-- No GameSettings field for the variant itself, Parun.Engine.Vanguard's
+-- posture: every rule here is stated of a player's planar deck or a plane card,
+-- so having a planar deck is the whole of being in the variant (isPlanechase).
+-- CR 901.15's single planar deck option is the one field, an option within it
+-- (GameSettings.singlePlanarDeck).
 --
 -- WHAT IS NOT IMPLEMENTED:
 --
 --   * CR 901.12's Two-Headed Giant and CR 901.14's Grand Melee options (#4465).
---   * CR 901.15's single planar deck option (#5061).
 module Parun.Engine.Planechase where
 
 import qualified Control.Monad as Monad
@@ -34,6 +35,7 @@ import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.Effect as Effect
 import Parun.Types.Game (Game)
 import qualified Parun.Types.GameEvent as GameEvent
+import qualified Parun.Types.GameSettings as GameSettings
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
@@ -64,9 +66,31 @@ import Parun.Types.TriggeredAbility (TriggeredAbility)
 import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Parun.Types.TurnedUpOffDeck as TurnedUpOffDeck
 
--- | CR 901.3: this player's planar deck, top first.
+-- | CR 901.3: this player's planar deck, top first; under CR 901.15c, the
+-- communal one.
 deckOf :: PlayerId -> GameState -> [ObjectId]
-deckOf = Game.sideDeckOf SideDeck.Planar
+deckOf pid gs = Game.sideDeckOf SideDeck.Planar (Plane.planarDeckHolder pid gs) gs
+
+-- | CR 901.15c: under the single planar deck option, every planar card any
+-- seat holds, gathered into one deck under the lowest seat keyed, in seat order.
+-- Nothing otherwise. For a game rebuilt from its cards, which regroups them by
+-- owner (Parun.Engine.Setup's restart and subgame return).
+gather :: GameState -> GameState
+gather gs
+  | GameSettings.singlePlanarDeck (GameState.settings gs) =
+      Game.overSideDecks SideDeck.Planar (\decks -> maybe decks (\(holder, _) -> Map.singleton holder (Foldable.fold decks)) (Map.lookupMin decks)) gs
+  | otherwise = gs
+
+-- | CR 901.15b: the cards of the communal planar deck, which its planar
+-- controller owns, and none outside the single planar deck option. CR 800.4p
+-- hands the designation on before a planar controller leaves, so no departing
+-- player owns one (Parun.Engine.Departure.objectsLeaveWith).
+-- Parun.PlanechaseSpec's "CR 901.15b the communal planar deck stays when the
+-- player who brought it leaves" proves it.
+communalDeck :: GameState -> Set.Set ObjectId
+communalDeck gs
+  | GameSettings.singlePlanarDeck (GameState.settings gs) = foldMap (Set.fromList . Foldable.toList) (Game.sideDecksOf SideDeck.Planar gs)
+  | otherwise = Set.empty
 
 -- | CR 901.1: is this a Planechase game? Some player brought a planar deck.
 isPlanechase :: GameState -> Bool
@@ -192,24 +216,30 @@ spentPhenomena waiting gs =
 -- CR 701.31b's second half: move the top card off the planar deck and turn it
 -- face up, which is joining GameState.command. A fresh timestamp (CR
 -- 613.7h), which its static abilities' effects share (CR 613.7a).
+--
+-- Off the communal deck, the card keeps the owner CR 901.15b gave it there:
+-- `pid`, the planar controller at every caller. See docs/decisions.md, "Who
+-- owns a face-up card off the communal planar deck".
 turnUpTop :: PlayerId -> Game (Maybe ObjectId)
 turnUpTop pid = do
   gs <- State.get
+  let holder = Plane.planarDeckHolder pid gs
+      owned o = if GameSettings.singlePlanarDeck (GameState.settings gs) then o {Object.owner = pid} else o
   case deckOf pid gs of
     [] -> pure Nothing
     top : rest -> do
       ts <- State.state Game.freshTimestamp
       State.modify' $ \g ->
-        (Game.overSideDecks SideDeck.Planar (Map.insert pid (Seq.fromList rest)) g)
+        (Game.overSideDecks SideDeck.Planar (Map.insert holder (Seq.fromList rest)) g)
           { GameState.command = Set.insert top (GameState.command g),
-            GameState.objects = Map.adjust (\o -> o {Object.timestamp = ts}) top (GameState.objects g)
+            GameState.objects = Map.adjust (\o -> owned o {Object.timestamp = ts}) top (GameState.objects g)
           }
       pure (Just top)
 
 -- CR 701.31b's first half: a face-up card goes to the bottom of its owner's
--- planar deck face down, and CR 311.6 / 312.6 make it a new object. The old id's
--- CR 608.2h record is filed for an ability of it still on the stack, which
--- Plane.phenomenonOwnerOf reads. Unobserved, as ownersLeft's phenomenon gate
+-- planar deck (CR 901.15c: the communal one) face down, and CR 311.6 / 312.6
+-- make it a new object. The old id's CR 608.2h record is filed for an ability
+-- of it still on the stack, which Plane.phenomenonOwnerOf reads. Unobserved, as ownersLeft's phenomenon gate
 -- is: it needs a planeswalk while that ability waits.
 toBottom :: ObjectId -> Game ()
 toBottom oid = do
@@ -218,9 +248,9 @@ toBottom oid = do
     Nothing -> pure ()
     Just obj -> do
       fresh <- State.state Game.freshObjectId
-      let owner = Object.owner obj
+      let holder = Plane.planarDeckHolder (Object.owner obj) gs
       State.modify' $ \g ->
-        (Game.overSideDecks SideDeck.Planar (Map.insertWith (flip (Seq.><)) owner (Seq.singleton fresh)) g)
+        (Game.overSideDecks SideDeck.Planar (Map.insertWith (flip (Seq.><)) holder (Seq.singleton fresh)) g)
           { GameState.command = Set.delete oid (GameState.command g),
             GameState.objects = Map.insert fresh (Object.newIncarnation obj) (Map.delete oid (GameState.objects g)),
             GameState.lastKnown = maybe id (Map.insert oid) (Event.lastKnownRecord g oid) (GameState.lastKnown g)

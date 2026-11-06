@@ -398,6 +398,12 @@ printingOfObject oid gs = case fmap Object.source (lookupObject oid gs) of
 sideDecksOf :: SideDeck.SideDeck -> GameState -> Map.Map PlayerId (Seq.Seq ObjectId)
 sideDecksOf kind gs = Map.findWithDefault Map.empty kind (GameState.sideDecks gs)
 
+-- | CR 100.2d / 729.2a: every card in every player's Attraction (CR 717.2),
+-- Contraption (the Unstable FAQ), planar (CR 901.3) and scheme (CR 904.3) deck.
+supplementaryDeckIds :: GameState -> Set.Set ObjectId
+supplementaryDeckIds gs =
+  Set.fromList (foldMap (foldMap Foldable.toList) (GameState.sideDecks gs))
+
 -- | This player's supplementary deck of this kind, top first.
 sideDeckOf :: SideDeck.SideDeck -> PlayerId -> GameState -> [ObjectId]
 sideDeckOf kind pid gs = foldMap Foldable.toList (Map.lookup pid (sideDecksOf kind gs))
@@ -3060,8 +3066,10 @@ primaryOf gs pid =
 -- docs/decisions.md, "Which active player takes the monarch or initiative
 -- under shared team turns".
 --
--- Not implemented: any CR 801.5a / 801.5c range cut on this team choice under
--- limited range (#4918).
+-- No range cut: the choosing team holds every candidate, each in their own
+-- range (CR 801.2b). docs/decisions.md, "Whose range of influence cuts a team's
+-- choice"; the range scenario "CR 801.5a / 805.2 the primary player crowns a
+-- teammate outside their own range" proves it.
 --
 -- The walk anchors on the ACTIVE seat and excludes it, unlike
 -- Engine.nextStillPlaying's CR 800.4a walk, which anchors on the departing

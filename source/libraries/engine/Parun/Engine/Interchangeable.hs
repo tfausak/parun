@@ -119,8 +119,10 @@ objects pcs gs a b =
         -- a commander is never alike with another copy of its printing, and two
         -- commanders are never alike either. The starting owner is compared,
         -- since Ante.ownershipChanges tells two cards apart by it.
+        -- Object.exposed is bookkeeping too: whether an id reached a seat
+        -- changes no rule's answer, only which ids a shuffle re-mints.
         (Just x, Just y) ->
-          withoutSerials x {Object.timestamp = Object.timestamp y} == withoutSerials y
+          withoutSerials x {Object.timestamp = Object.timestamp y, Object.exposed = Object.exposed y} == withoutSerials y
             && fmap snd (Commander.commanderCardOf a gs) == fmap snd (Commander.commanderCardOf b gs)
         _ -> False
       unserial identity = identity {CardIdentity.serial = 0}
@@ -399,7 +401,7 @@ layeredBetween a b gs = case (Map.lookup a (GameState.objects gs), Map.lookup b 
 -- a new Combat field is an arity error here.
 combatNames :: ObjectId -> Combat.Combat -> Bool
 combatNames oid combat = case combat of
-  Combat.MkCombat attackers blockers struckFirst joinedUnder attackedUnder attackedControlledBy attacked declaredAttacked declaredAttackedBy declaredAttackedThisStep declaredAttackers declaredBlockers _blockersDeclared attackingNothing blockingNothing removedDefending _defenders _barred bands ->
+  Combat.MkCombat attackers blockers struckFirst joinedUnder attackedUnder attackedControlledBy attacked declaredAttacked declaredAttackedBy declaredAttackedThisStep declaredAttackers declaredBlockers _blockersDeclared attackingNothing blockingNothing removedDefending _defenders _barred bands pileBlocks ->
     Map.member oid attackers
       || any (attackTargetNames oid) (Map.elems attackers)
       || Map.member oid blockers
@@ -418,6 +420,7 @@ combatNames oid combat = case combat of
       || Set.member oid blockingNothing
       || Map.member oid removedDefending
       || any (Set.member oid) bands
+      || maybe False (\piles -> Map.member oid piles || any (Set.member oid) piles) pileBlocks
 
 attackTargetNames :: ObjectId -> AttackTarget.AttackTarget -> Bool
 attackTargetNames oid target = case target of

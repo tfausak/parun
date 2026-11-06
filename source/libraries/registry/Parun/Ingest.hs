@@ -3,9 +3,9 @@
 -- and reading any card's printed characteristics, which `parun translate`
 -- takes over mtgish's (#5478).
 -- Everything here reads a field MTGJSON carries as structured data (CR 202.1,
--- CR 205) or a keyword name from 'Parun.Oracle.Keyword.standalone' or
--- 'Parun.Oracle.Keyword.landwalks'; a word it does not know disqualifies the
--- card rather than being guessed at.
+-- CR 205) or a keyword 'Parun.Oracle.Keyword' lists, bare or with a number or
+-- a mana cost; a word it does not know disqualifies the card rather than
+-- being guessed at.
 module Parun.Ingest where
 
 import qualified Control.Applicative as Applicative
@@ -24,6 +24,7 @@ import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.Keyword as Keyword
@@ -129,12 +130,31 @@ stamp (exact, byFace) card =
     cardName = Text.intercalate (Text.pack " // ") (fmap (CardName.unwrap . Face.name) (NonEmpty.toList (Card.faces card)))
     lookupFace name = Map.lookup (cardName, name) exact Applicative.<|> Map.lookup name byFace
 
--- | A line of normalised Oracle text as the keyword it names.
+-- | A line of normalised Oracle text as the keyword it names: a bare one, or
+-- one whose payload is a number, a mana cost (CR 107.4) or both, read by
+-- printing each keyword that payload could make and keeping the one that
+-- prints the line back.
 keyword :: Text.Text -> Either Text.Text Keyword.Keyword
-keyword line = maybe (Left (Text.pack "text: " <> line)) Right (Map.lookup line byPrinted)
+keyword line = case Map.lookup line byPrinted of
+  Just k -> Right k
+  Nothing -> case filter ((== [line]) . fmap Text.toLower . Oracle.Keyword.printed Text.empty) (payloaded line) of
+    [k] -> Right k
+    _ -> Left (Text.pack "text: " <> line)
 
 byPrinted :: Map.Map Text.Text Keyword.Keyword
 byPrinted = Map.fromList [(Text.toLower p, k) | k <- Oracle.Keyword.standalone <> Oracle.Keyword.landwalks, [p] <- [Oracle.Keyword.printed Text.empty k]]
+
+-- | Every keyword the line's last word could be the payload of: "3" in "crew
+-- 3", "{2}{w}" in "ward {2}{w}", "1\8212{1}{w}" in "reinforce 1\8212{1}{w}".
+payloaded :: Text.Text -> [Keyword.Keyword]
+payloaded line = case Text.breakOn (Text.pack "\8212") payload of
+  (n, rest)
+    | not (Text.null rest) -> [f a c | a <- number n, c <- cost (Text.drop 1 rest), f <- Oracle.Keyword.numberedCostedKeywords]
+    | otherwise -> [f a | a <- number payload, f <- Oracle.Keyword.numberedKeywords] <> [f c | c <- cost payload, f <- Oracle.Keyword.costedKeywords]
+  where
+    payload = snd (Text.breakOnEnd (Text.pack " ") line)
+    number t = [n | not (Text.null t), Text.all Char.isDigit t, Just n <- [Read.readMaybe (Text.unpack t)]]
+    cost t = [Cost.MkCost {Cost.mana = Just m, Cost.components = []} | Text.isPrefixOf (Text.pack "{") t, Right m <- [manaCost (Text.toUpper t)]]
 
 -- | A type-line word as the enumerated constructor it spells: words joined and
 -- everything but letters dropped, so "Assembly-Worker" is AssemblyWorker and

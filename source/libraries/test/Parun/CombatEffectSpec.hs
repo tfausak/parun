@@ -880,7 +880,8 @@ combatLegalitySpec s registry = Spec.describe s "CombatLegality" $ do
                       Combat.Type.removedDefending = Map.empty,
                       Combat.Type.defenders = [S.bob],
                       Combat.Type.barred = [],
-                      Combat.Type.bands = []
+                      Combat.Type.bands = [],
+                      Combat.Type.pileBlocks = Nothing
                     }
               }
     Spec.assertEqWith s "starts empty" (Combat.Type.attackers (GameState.combat gs)) Map.empty

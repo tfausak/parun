@@ -44,6 +44,7 @@ import qualified Parun.Engine.EndEffect as EndEffect
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Event.Trigger as Event.Trigger
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.Ledger as Ledger
 import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.Modal as Modal
@@ -89,6 +90,7 @@ import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Concession as Concession
 import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.CostOffer as CostOffer
 import qualified Parun.Types.CountIs as CountIs
 import qualified Parun.Types.CountersAre as CountersAre
 import qualified Parun.Types.DamageIs as DamageIs
@@ -364,6 +366,7 @@ stage registry board =
                     GameSettings.twoHeadedGiant = Board.twoHeadedGiant board,
                     GameSettings.alternatingTeams = Board.alternatingTeams board,
                     GameSettings.ante = Board.ante board,
+                    GameSettings.singlePlanarDeck = False,
                     GameSettings.teams = Teams.MkTeams (Map.fromList [(pid, team) | (seat, pid) <- NonEmpty.toList seated, Just team <- [Seat.team seat]]),
                     GameSettings.rangeOfInfluence = RangeOfInfluence.MkRangeOfInfluence (Map.fromList [(pid, range) | (seat, pid) <- NonEmpty.toList seated, Just range <- [Seat.range seat]]),
                     GameSettings.emperors = Emperors.MkEmperors (Map.fromList [(team, pid) | (seat, pid) <- NonEmpty.toList seated, Seat.emperor seat, Just team <- [Seat.team seat]])
@@ -1050,6 +1053,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseFromOutsideTheGame _ _ cards least most -> all (`elem` cards) chosen && least <= List.genericLength chosen && List.genericLength chosen <= most
   Prompt.Type.DeclareAttackers _ _ attackers -> all (`elem` attackers) chosen
   Prompt.Type.DeclareBands _ _ attackers -> all (all (`elem` attackers)) chosen
+  Prompt.Type.DividePiles _ _ creatures _ -> all (all (`elem` creatures)) chosen
   Prompt.Type.DeclareBlockers _ _ blockers attackers -> all (`elem` blockers) (Map.keys chosen) && all (all (`elem` attackers)) chosen
   Prompt.Type.ChooseTargets _ _ _ offered -> Map.isSubmapOfBy (\picked (_, legal) -> Set.isSubsetOf picked legal) chosen offered
   Prompt.Type.AnnounceTargets _ _ _ offered -> all (`Map.member` offered) (Map.keys chosen)
@@ -1080,7 +1084,7 @@ withinOffer prompt chosen = case prompt of
   -- A number up to a bound.
   Prompt.Type.ChooseAssistAmount _ _ _ most -> chosen <= most
   Prompt.Type.ChoosePaidEnergy _ _ _ most -> chosen <= most
-  Prompt.Type.ChooseNumber _ _ _ least most -> least <= chosen && all (chosen <=) most
+  Prompt.Type.ChooseNumber _ _ _ least _ most -> least <= chosen && all (chosen <=) most
   -- Every value of the answer's type is on offer: a yes or no, a coin face, a
   -- side, an end of the library, a decision whose every arm the prompt allows.
   Prompt.Type.CallCoin {} -> True
@@ -1362,13 +1366,12 @@ answerActionChoice key verb choices asked =
                   updateChoices (\current -> current {Choices.x = Nothing})
                   pure x
             _ -> unexpected
-        Prompt.Type.ChooseCost _ _ _ candidates _ -> case Choices.cost choices of
-          Just wanted -> case filter ((== Just wanted) . Cost.mana . CandidateCost.cost) candidates of
-            [cost] -> do
-              updateChoices (\current -> current {Choices.cost = Nothing})
-              pure cost
-            _ -> unexpected
-          Nothing -> unexpected
+        Prompt.Type.ChooseCost _ _ _ candidates _ -> case filter (namedCandidate choices) candidates of
+          [cost]
+            | Maybe.isJust (Choices.cost choices) || Maybe.isJust (Choices.costOffer choices) -> do
+                updateChoices (\current -> current {Choices.cost = Nothing, Choices.costOffer = Nothing})
+                pure cost
+          _ -> unexpected
         -- A PERMUTATION is the only legal answer, so the order is checked
         -- against the printed indices rather than trusted: one naming an index
         -- twice would pay one component twice and skip another.
@@ -1389,6 +1392,18 @@ answerActionChoice key verb choices asked =
               pure option
             _ -> unexpected
         _ -> unexpected
+
+-- | CR 601.2b: whether a candidate cost is the one a move's `cost` and
+-- `costOffer` name, each read only where given.
+namedCandidate :: Choices.Choices -> CandidateCost.CandidateCost -> Bool
+namedCandidate choices candidate =
+  all ((== Cost.mana (CandidateCost.cost candidate)) . Just) (Choices.cost choices)
+    && all offered (Choices.costOffer choices)
+  where
+    offered offer = case (offer, CandidateCost.keyword candidate) of
+      (CostOffer.ByKeyword designator, Just keyword) -> Keyword.designates designator keyword
+      (CostOffer.ByNoKeyword, Nothing) -> True
+      _ -> False
 
 -- | Whether a refused action left the state as it found it: the stack and the
 -- acting player's hand and battlefield unchanged.
@@ -1671,6 +1686,11 @@ resolveObject ref gs = case ref of
   Reference.SpellOf source -> do
     card <- sourceObject source
     case List.reverse (castsOf card gs) of
+      oid : _ -> pure oid
+      [] -> failWith (Failure.MkUnknownObject ref False)
+  Reference.OnStack position -> case position of
+    0 -> failWith (Failure.MkUnknownObject ref False)
+    _ -> case List.genericDrop (position - 1) (GameState.stack gs) of
       oid : _ -> pure oid
       [] -> failWith (Failure.MkUnknownObject ref False)
   where
